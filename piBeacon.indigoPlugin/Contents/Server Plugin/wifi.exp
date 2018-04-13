@@ -1,0 +1,20 @@
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set ipNumber [lindex $argv 2 ] 
+
+set timeout 10
+spawn ssh -o ConnectTimeout=5 $userID@$ipNumber
+expect {
+    "(yes/no)? " { 
+        send "yes\r"
+        sleep 0.1
+        expect "assword: " { send "$password\r"}
+    }    
+    "assword: " { 
+        send "$password\r" 
+    }
+}
+sleep 1.5
+expect " $" {  send  "sudo python /home/pi/pibeacon/interface.py \r" }
+sleep 0.5
+expect " $" {  send  "quit\r" }

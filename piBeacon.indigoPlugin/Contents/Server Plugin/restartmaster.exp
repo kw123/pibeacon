@@ -1,0 +1,24 @@
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set ipNumber [lindex $argv 2 ] 
+
+set timeout 5
+spawn ssh $userID@$ipNumber
+expect {
+    "(yes/no)? " { 
+        send "yes\r"
+        sleep 0.1
+        expect "assword: " { send "$password\r"}
+    }    
+    "assword: " { 
+        send "$password\r" 
+    }
+}
+
+sleep 1
+expect "applicable law." {
+    sleep 0.1
+    send "cd /home/pi/pibeacon;sudo python master.py\r"
+    }
+set timeout 1
+expect eof

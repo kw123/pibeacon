@@ -1,0 +1,1131 @@
+<?xml version="1.0"?>
+<MenuItems>
+      <MenuItem id="d00"> 
+      <Name>-------------BASIC setup HELP  --------------------</Name>
+        <ConfigUI>
+        <Field   id="label0" type="label">
+            <Label>To start,  here the basic steps:
+1.  in CONFIG setup at minimum userID,PassWD, ipNumber of indigo server
+2.  setup RPI: 
+    ssh pi@ipnumber      password default = pibeacon
+    passwd                   to change default pasword
+    sudo raspi-config    to set time zone, expand SD .., 
+       get ip number of RPI w ifconfig
+3.  in menu   Initial BASIC setup of rPi servers    
+        set ipNumber, userID, password of RPI# x (0-19)
+        
+Now wait until the first ibeacon and RPI devices show up in indigo
+If nothing happens, do a    Send Config/Restart/PGM/Sound/...     
+  to send all files to RPI, then
+  ssh to RPI and check programs that are running: ps -ef | grep .py
+     At minimum master.py, beaconloop.py, receiveGPIOcommands.py 
+         should be running
+     if installLibs.py is running, it is updating op-sys files. 
+         That might take several hours</Label>
+        </Field>
+        </ConfigUI>
+    </MenuItem>         
+
+      <MenuItem id="d03"> <Name>-------------setup RPI  ---------------------------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+
+      <MenuItem id="setupPiServer">
+        <Name>Initial BASIC setup of rPi servers</Name>
+        <ConfigUI>
+            <Field id="enablePiEntries"  type="checkbox" defaultValue="false" hidden="yes"> </Field>
+            <Field id="infoLabel11" type="label">
+                <Label>Initial setup of rPi: tell indigo how to find it, first select pi server# then click  CONFIRM </Label>
+            </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi to configure:</Label> 
+            </Field>
+            <Field   id="confirmPiServer" type="button" tooltip="select pi- server number and then click on confirm " >
+                <Label>Confirm rPi</Label><Title>CONFIRM</Title> <CallbackMethod>buttonConfirmPiServerCALLBACK</CallbackMethod>
+            </Field>
+            <Field    id="MSG"   type="textfield" defaultValue="" >
+                <Label> message from Plugin:</Label>
+            </Field>
+                       <Field    id="beaconOrSensor"   type="textfield" defaultValue="iBeacon" readonly="Yes">
+                <Label> rPiMode:</Label>
+            </Field>
+
+            <Field  enabledBindingId="enablePiEntries"   id="piOnOff"   type="menu" defaultValue="1">
+                <List>
+                    <Option value="0"  >off </Option>
+                    <Option value="1"  >0n </Option>
+                </List>
+                <Label>Enable THIS rPi:</Label>
+            </Field>
+            <Field  enabledBindingId="enablePiEntries"   id="userIdPi"   type="textfield" defaultValue="pi">
+                <Label>rPi user ID :</Label>
+            </Field>
+            <Field  enabledBindingId="enablePiEntries"  id="passwordPi"   type="textfield" defaultValue="pibeacon">
+                <Label>rPi password :</Label>
+            </Field>
+            <Field   enabledBindingId="enablePiEntries"  id="ipNumberPi"   type="textfield" defaultValue="192.168.1.x">
+                <Label>rPi IP Number:</Label>
+            </Field>
+            <Field   enabledBindingId="enablePiEntries"  id="enableRebootCheck"   type="menu" defaultValue="restartLoop,-">
+                <Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
+                 <List>
+                    <Option value="doNothing"            >do nothing (not recommended)</Option>
+                    <Option value="restartLoop,-"        >restart progams on rPi(default) </Option>
+                    <Option value="rebootloop,-"         >reboot rPi if internal problem</Option>
+                    <Option value="restartLoop,pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
+                    <Option value="rebootloop,pingBoot"  >reboot rPi </Option>
+                </List>
+            </Field>
+            <Field  enabledBindingId="enablePiEntries"  id="confirmPiServerConfig" type="button" tooltip="" >
+                <Label>Confirm rPi Config</Label><Title>CONFIRM</Title> <CallbackMethod>buttonConfirmPiServerConfigCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>         
+
+    <MenuItem id="configurePiServer">
+        <Name>Send Config/Restart/PGM/Sound/... to rPi server</Name>
+        <ConfigUI>
+            <Field id="configurePi" type="menu" defaultValue="999" tooltip="This will send all config files/ reboot .. to the selected rpi server ">
+                <Label>Select rPi server #:</Label>
+                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
+            </Field>
+            <Field   id="buttonSendOnly" type="button"	tooltip="send config file to rPis">
+                <Label>click to</Label><Title>send Config files</Title>
+                <CallbackMethod>buttonConfirmSendOnlyCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonSendAndRestart" type="button"	tooltip="send config file to rPis">
+                <Label>click to</Label><Title>send Config files and restart py-pgms</Title>
+                <CallbackMethod>buttonConfirmSendRestartPyCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonResetOutput" type="button"	tooltip="login to rPi and delete file execommands.current and reboot">
+                <Label>click to</Label><Title>reset GPIO output pins memory</Title>
+                <CallbackMethod>buttonResetOutputCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonsendBigFiles" type="button"	tooltip="send and sync file from ~/Documents/piBeacons/soundFiles /displayFiles to rPi ~/soundfiles">
+                <Label>click to</Label><Title>send ALL files (Programs.py,fonts,images,config ...)</Title>
+                <CallbackMethod>buttonSendBigFilesCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonSendAllandReboot" type="button"	tooltip="">
+                <Label>click to</Label><Title>send ALL files (...) and REBOOT</Title>
+                <CallbackMethod>buttonSendAllandRebootCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field   id="buttonGetSystemParameters" type="button"	tooltip="login do ps -ef grep python df etc ">
+                <Label>click to</Label><Title>get rPi system stats to logfile</Title>
+                <CallbackMethod>buttonGetSystemParametersCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonReboot" type="button"	tooltip="login to rPi and issue sudo reboot">
+                <Label>click to</Label><Title>REBOOT rPi through ssh command</Title>
+                <CallbackMethod>buttonRebootCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonShutdown" type="button"	tooltip="do a shutdown command on the rPi">
+                <Label>click to</Label><Title>Shutdown rPi through ssh command</Title>
+                <CallbackMethod>buttonShutdownCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonsocketReboot" type="button"	tooltip="">
+                <Label>click to</Label><Title>REBOOT RPI through socket command</Title>
+                <CallbackMethod>buttonRebootSocketCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonShutdownHard" type="button"	tooltip="in case ssh does not work: sync;sync;sudo halt">
+                <Label>click to</Label><Title>Shutdown rPi Force through socket</Title>
+                <CallbackMethod>buttonShutdownHardSocketCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonRebootHard" type="button"	tooltip="in case ssh does not work:  sync;sync;sudo reboot -f">
+                <Label>click to</Label><Title>Reboot rPi Force through socket</Title>
+                <CallbackMethod>buttonRebootHardSocketCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonsetTime" type="button"	tooltip="only usefull if NTP is not enabled">
+                <Label>click to</Label><Title>setTime on rPi to MAC time</Title>
+                <CallbackMethod>buttonsetTimeCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field   id="buttonrefreshNTP" type="button"	tooltip="only usefull if NTP is not enabled">
+                <Label>click to</Label><Title>restart NTP connection to get time from internet</Title>
+                <CallbackMethod>buttonrefreshNTPCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field   id="buttonstopNTP" type="button"	tooltip="only usefull if NTP is not enabled">
+                <Label>click to</Label><Title>stop NTP service</Title>
+                <CallbackMethod>buttonstopNTPCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonStopConfig" type="button"	tooltip=" stop any send activity ">
+                <Label>click to</Label><Title>STOP any send in progress</Title>
+                <CallbackMethod>buttonStopConfigCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="anycmd" type="label">
+                <Label>.               ..send YOUR unix command</Label>
+            </Field>
+            <Field id="anyCmdText" type="textfield" defaultValue="ls" tooltip="">
+                <Label>command:</Label>
+                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
+            </Field>
+            <Field   id="buttonanycommand" type="button"	tooltip="enter any unix command send through socket connection">
+                <Label>click to</Label><Title>send YOUR command</Title>
+                <CallbackMethod>buttonAnycommandCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="upgrade0" type="label">
+                <Label> -------------------------------------------------------------- </Label>
+            </Field>
+            <Field   id="upgrade" type="label">
+                <Label>you can do a complete upgrade/refresh of the op-sys on the rPi MANUALLY  with the command </Label>
+            </Field>
+
+            <Field    id="upgCommand"   type="textfield" defaultValue=" --- sudo python installLibs.py force --- " readonly="yes"> </Field>
+
+            <Field   id="upgrade3" type="label">
+                <Label>within eg wheezy or jessie..  but not from whezzy to jessie </Label>
+            </Field>
+            <Field   id="upgrade4" type="label">
+                <Label>you must "ssh pi@ x.x.x.x" to the rPi and issue the command there </Label>
+            </Field>
+           <Field   id="buttonUpgrade" type="button"	tooltip="  ">
+                <Label> OR CLICK </Label><Title>start upgrade NOW</Title>
+                <CallbackMethod>buttonUpgradeCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="upgrade5" type="label">
+                <Label> -------------------------------------------------------------- </Label>
+            </Field>
+
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="setupWiFiInterface">
+        <Name>Create WiFi network/interfaces files for rPi</Name>
+        <ConfigUI>
+            <Field id="setupWiFi" type="menu" defaultValue="999"  tooltip="This will execute sudo python interface.py  on the rPi server to make new /etc/network/interfaces file active">
+                <Label>Configure Wifi network/interface file on rPi#:</Label>
+                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
+            </Field>
+            <Field   id="buttonWiFi" type="button"	tooltip="">
+                <Label>click to</Label><Title>Configure</Title>
+                <CallbackMethod>buttonConfirmWiFiCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="changeIP">
+        <Name>Change IP number of rPi</Name>
+        <ConfigUI>
+            <Field   id="labelchangePi" type="label">
+                <Label>Change IP number of existing rPI server, it will send configuration files to the new IP number</Label>
+            </Field>
+            <Field id="PINumberForIPChange" type="menu" defaultValue="999">
+                <Label>change IP number of rPi#:</Label>
+                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
+            </Field>
+            <Field   id="buttonconfirmPIforIPChange" type="button"	tooltip="this will change the ip number used to contact the rPI server. It will send all NEW config and program files to the old ip address then reboot rPi">
+                <Label>click to</Label><Title>SELECT PI</Title>
+                <CallbackMethod>buttonConfirmoldIPCALLBACK</CallbackMethod>
+            </Field>
+            <Field    id="oldipNumberPi"   type="textfield" defaultValue="192.168.1.x">
+                <Label>Old rPi IP Number :</Label>
+            </Field>
+            <Field    id="newipNumberPi"   type="textfield" defaultValue="192.168.1.x">
+                <Label>New rPi IP Number :</Label>
+            </Field>
+            <Field   id="buttonRestart" type="button"	tooltip="">
+                <Label>click to</Label><Title>CONFIRM IP change</Title>
+                <CallbackMethod>buttonConfirmIPnumberCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="replaceRPI">
+        <Name>Replace a  RPI (move MAC number)</Name>
+        <ConfigUI>
+<Field   id="label0" type="label">
+<Label>Replace an old RPI with a new one. 
+The BLE MAC number is moved from the new to existing indigo device, 
+The indigo id and name of the old device stay.
+The indigo device, from where the MAC number was taken(new), is deleted</Label>
+            </Field>
+            
+<Field   id="label1" type="label">
+<Label>Both must exist, the old one must be expired = not active </Label>
+            </Field>
+
+            <Field id="oldID" type="menu" defaultValue="0" tooltip="Select the RPI[MAC#] to be replaced ">
+                <Label>Select the beacon with the old MAC#- will be kept: </Label>
+                <List class="self" filter="" method="filterRPIs" dynamicReload="true"/>
+            </Field>
+            <Field id="newID" type="menu" defaultValue="0" tooltip="Select the  PRI[MAC#] that will replace the old one   ">
+                <Label>Select the beacon with the new MAC#- will be deleted:</Label>
+                <List class="self" filter="" method="filterRPIs" dynamicReload="true"/>
+            </Field>
+            <Field   id="buttonExecuteReplace" type="button"	tooltip="">
+                <Label>click to </Label><Title>execute</Title>
+                <CallbackMethod>buttonExecuteReplaceRPICALLBACK</CallbackMethod>
+            </Field>
+            <Field id="msg" type="textfield" default=""	>
+                <Label>msg from Plugin:</Label>
+            </Field>
+      
+        </ConfigUI>
+    </MenuItem>
+<!--
+    <MenuItem id="restartPlugin">
+        <Name>Restart the plugin</Name>
+        <ConfigUI>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+             <Label>Restart the plugin, soft restart internally </Label>
+             <Field  id="exec" type="button"	>
+                <Label>click to</Label><Title>RESTART</Title> <CallbackMethod>restartPluginCALLBACKmenu</CallbackMethod>
+             </Field>
+
+        </ConfigUI>
+    </MenuItem>
+-->
+
+   <MenuItem id="d10"> <Name>-------------manage iBeacons--------------------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+
+    <MenuItem id="ignoreBeacons">
+        <Name>(un) Ignore INDIVIDUAL iBeacons</Name>
+        <ConfigUI>
+            <Field   id="labelDeleteFAMILY" type="label">
+                <Label>Manage beacons: include / excluded them individually from tracking</Label>
+            </Field>
+            <Field id="ignoreMAC" type="menu" defaultValue="0" tooltip="Select the beacon to be erased ">
+                <Label>Ignore / delete beacons -history:</Label>
+                <List class="self" filter="" method="filterMACs" dynamicReload="true"/>
+            </Field>
+            <Field   id="buttonunIgnore" type="button"	tooltip="This will confirm to re-include this beacon, its indigo device will be updated ">
+                <Label>click to</Label><Title>USE This beacon</Title>
+                <CallbackMethod>buttonConfirmMACunIgnoreCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonIgnore" type="button"	tooltip="This will confirm to exclude this beacon from tracking = no more updates in the device list">
+                <Label>click to</Label><Title>IGNORE THIS beacon</Title>
+                <CallbackMethod>buttonConfirmMACIgnoreCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonDelete" type="button"	tooltip="This will delete the tracking history of this beacon , internal list, can be seen in print config">
+                <Label>Delete tracking History of</Label><Title>THIS beacon</Title>
+                <CallbackMethod>buttonConfirmMACDeleteCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonDeleteALL" type="button"	tooltip="This will empty the internal history list">
+                <Label>Delete tracking History of</Label><Title>ALL beacons</Title>
+                <CallbackMethod>buttonConfirmMACDeleteALLCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonDeleteJunk2" type="button"	tooltip="This will empty the internal history list of beacons that have no corresponding devices">
+                <Label>Delete beacons history of deleted devices</Label><Title>delete</Title>
+                <CallbackMethod>buttonConfirmMACDeleteOLDHISTORYCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="ignoreFamily">
+        <Name>(un) Ignore FAMILY of iBeacons</Name>
+        <ConfigUI>
+            <Field   id="labelDeleteFAMILY" type="label">
+                <Label>Manage families of beacons, you can select the first 12 characters of beacons UUID, then select if you want them to be (un)ignored, the received messages from the ignored beacons are stored in ~/documents/iBeacon/rejects</Label>
+            </Field>
+            <Field id="ignoreMACfamily" type="menu" defaultValue="0">
+                <Label>familily of beacons:</Label>
+                <List class="self" filter="" method="filterMACfamilies" dynamicReload="true"/>
+            </Field>
+            <Field   id="buttonDeleteFAMILY" type="button"	tooltip="This will confirm to ignore future messages from beacons which UUID starts with the same 12 characters of the UUID">
+                <Label>click to </Label><Title>Ignore Family</Title>
+                <CallbackMethod>buttonConfirmMACIgnoreFamilyCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonUnDeleteFAMILY" type="button"	tooltip="This will confirm to un-ignore future messages from beacons which UUID that start with the same 12 characters of the UUID">
+                <Label>click to </Label><Title>Un-Ignore Family</Title>
+                <CallbackMethod>buttonConfirmMACunIgnoreFamilyCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonemptyFAMILY" type="button"	tooltip="All beacons will be looked at again, only usefull if accept new ibeacon = true">
+                <Label>Erase ignore list</Label><Title>Empty Family List</Title>
+                <CallbackMethod>buttonConfirmMACemptyFamilyCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonSetAllExistingDevicesToActive" type="button"	tooltip="use this if all ibeacons are expired and went to ignore due to ...??wtf?? ">
+                <Label>Set all ALL existing iBeacon devices to active</Label><Title>Set All to Active</Title>
+                <CallbackMethod>buttonSetAllExistingDevicesToActiveCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="defineIphoneUUIDtoMAC">
+        <Name>Define iPhone/iPad - UUID link</Name>
+        <ConfigUI>
+            <Field   id="labeldefineIphoneUUIDtoMAC" type="label">
+                <Label>Define which UUID belongs to which iPhone/iPad/... device
+Use this to identify apple devices through their fixed UUID-MAJOR-MINOR parameters </Label>
+            </Field>
+            <Field   id="constantUUIDmajMIN" type="menu" defaultValue="no"	tooltip=" special selections">
+                <Label>select devices where:</Label>
+                 <List>
+                    <Option value="uuid--"         > uuid is fixed</Option>
+                    <Option value="uuid-maj-"      > uuid-maj is fixed</Option>
+                    <Option value="uuid--min"      > uuid--min fixed</Option>
+                    <Option value="uuid-maj-min"   > uuid-maj-min is fixed</Option>
+                </List>
+            </Field>
+            <Field   id="lenOfUUID" type="menu" defaultValue="no"	tooltip="">
+                <Label>and devices where:</Label>
+                 <List>
+                    <Option value="1"         > uuid is 1  char long eg: 1</Option>
+                    <Option value="2"         > uuid is 2  char long eg: 10</Option>
+                    <Option value="3"         > uuid is 3  char long eg: 101</Option>
+                    <Option value="4"         > uuid is 4  char long eg: 1010</Option>
+                    <Option value="5"         > uuid is 5  char long </Option>
+                    <Option value="6"         > uuid is 6  char long </Option>
+                    <Option value="7"         > uuid is 7  char long </Option>
+                    <Option value="8"         > uuid is 8  char long </Option>
+                    <Option value="9"         > uuid is 9  char long </Option>
+                    <Option value="10"        > uuid is 10 char long ie: 010607ff4c (ie iphone)</Option>
+                    <Option value="11"        > uuid is 11 char long  </Option>
+                    <Option value="12"        > uuid is 12 char long  </Option>
+                    <Option value="14"        > uuid is 14 char long  </Option>
+                    <Option value="15"        > uuid is 15 char long  </Option>
+                    <Option value="16"        > uuid is 16 char long  </Option>
+                    <Option value="17"        > uuid is 17 char long  </Option>
+                    <Option value="18"        > uuid is 18 char long ie: 011a0bff4c00090603 (eg appleTV)</Option>
+                    <Option value="19"        > uuid is 19 char long </Option>
+                    <Option value="20"        > uuid is 20 char long </Option>
+                    <Option value="21"        > uuid is 21 char long </Option>
+                    <Option value="22"        > uuid is 22 char long </Option>
+                    <Option value="23"        > uuid is 23 char long</Option>
+                    <Option value="24"        > uuid is 24 char long</Option>
+                    <Option value="25"        > uuid is 25 char long</Option>
+                    <Option value="26"        > uuid is 26 char long</Option>
+                    <Option value="27"        > uuid is 27 char long</Option>
+                    <Option value="28"        > uuid is 28 char long</Option>
+                    <Option value="29"        > uuid is 29 char long</Option>
+                    <Option value="30"        > uuid is 30 char long</Option>
+                    <Option value="31"        > uuid is 31 char long</Option>
+                    <Option value="32"        > uuid is 32 char long eg: d5a50200baafe211a88400f9e13906ff = std length</Option>
+                </List>
+            </Field>
+            <Field   id="idbuttonconfirmPreselect" type="button"	tooltip="">
+                <Label>click to </Label><Title>confirm preselection</Title>
+                <CallbackMethod>buttonconfirmPreselectCALLBACK</CallbackMethod>
+            </Field>
+            <Field id="selectUUIDiphone" type="menu" defaultValue="0">
+                <Label>iPhone/iPad/appleTV candidates:</Label>
+                <List class="self" filter="" method="filterUUIDiphone" dynamicReload="true"/>
+            </Field>
+            <Field   id="idbuttonconfirmUUIDiphoneName" type="button"	tooltip="">
+                <Label>click to </Label><Title>confirm device</Title>
+                <CallbackMethod>buttonconfirmUUIDiphoneNameCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="nameForIphone" type="textfield"	tooltip="option to overwrite UUID with name">
+                <Label>overwrite UUID with nick-name if desired</Label>
+            </Field>
+            <Field   id="buttonSelectIphoneUUIDtoMAC" type="button"	tooltip=" once you add the link, a mapping file will be send to each rPi. For this UUID-Major-Minor it will ignore the MAC number but will use the UUID to id the device">
+                <Label>click to </Label><Title>Establish UUID-iPhone link</Title>
+                <CallbackMethod>buttonConfirmSelectIphoneUUIDtoMACCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonDeleteIphoneUUIDtoMAC" type="button"	tooltip="if you remove the linke the mapping file have the uuid-iphone map removed and send to each rPi">
+                <Label>click to </Label><Title>remove UUID-iPhone link</Title>
+                <CallbackMethod>buttonConfirmDeleteUUIDtoMACCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="defineUUIDtoName">
+        <Name>Map UUID to a NAME</Name>
+        <ConfigUI>
+            <Field   id="label" type="label">
+                <Label>Map UUID to a name (for Display in Notes field only)</Label>
+            </Field>
+            <Field id="selectUUID" type="menu" defaultValue="0">
+                <Label>UUID:</Label>
+                <List class="self" filter="" method="filterUUIDName" dynamicReload="true"/>
+            </Field>
+            <Field   id="uuidtoName" type="textfield" >
+                <Label>enter Name to be used </Label>
+            </Field>
+            <Field   id="buttonSelectUUIDtoName" type="button"	tooltip=" once you add the map the name will be used instead of the UUID to show in the Notes field">
+                <Label>click to </Label><Title>Add UUID-Name map</Title>
+                <CallbackMethod>buttonConfirmSelectUUIDtoNameCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="label2" type="label">
+                <Label>Remove Map UUID to a name (for Display in Notes field only)</Label>
+            </Field>
+            <Field id="selectUUIDexistingMap" type="menu" defaultValue="0">
+                <Label>UUID:</Label>
+                <List class="self" filter="" method="filterUUIDNameExisting" dynamicReload="true"/>
+            </Field>
+            <Field   id="buttonDeleteUUIDtoName" type="button"	tooltip="remove the map and use the UUID again">
+                <Label>click to </Label><Title>remove UUID-Name map</Title>
+                <CallbackMethod>buttonConfirmDeleteUUIDtoNameCALLBACK</CallbackMethod>
+            </Field>
+      
+        </ConfigUI>
+    </MenuItem>
+
+
+    <MenuItem id="replacebeacon">
+        <Name>Replace an iBeacon (move MAC number)</Name>
+        <ConfigUI>
+<Field   id="label0" type="label">
+<Label>Replace an old existing iBeacon with a new one. 
+This for eg TITLEs that have to be replaced when the battery is empty 
+or you lost an iBeacon and want to replace it
+but want to preserve history and triggers etc.
+The MAC number is moved from the new to old indigo device, 
+The indigo id and name of the old device stay.
+The indigo device, from where the MAC number was taken, is deleted</Label>
+            </Field>
+            
+<Field   id="label1" type="label">
+<Label>Both must exist, the old one must be expired = not active </Label>
+            </Field>
+
+            <Field id="oldMAC" type="menu" defaultValue="0" tooltip="Select the beacon[MAC#] to be replaced ">
+                <Label>Select the beacon with the old MAC#:</Label>
+                <List class="self" filter="" method="filterMACs" dynamicReload="true"/>
+            </Field>
+            <Field id="newMAC" type="menu" defaultValue="0" tooltip="Select the  beacon[MAC#] that will replace the old one   ">
+                <Label>Select the beacon with the new MAC#:</Label>
+                <List class="self" filter="" method="filterMACs" dynamicReload="true"/>
+            </Field>
+            <Field   id="buttonExecuteReplace" type="button"	tooltip="">
+                <Label>click to </Label><Title>execute</Title>
+                <CallbackMethod>buttonExecuteReplaceBeaconCALLBACK</CallbackMethod>
+            </Field>
+            <Field id="msg" type="textfield" default=""	>
+                <Label>msg from Plugin:</Label>
+            </Field>
+      
+        </ConfigUI>
+    </MenuItem>
+
+  <MenuItem id="d19"> <Name>-------------fix indigo webserver -----------------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+
+
+    <MenuItem id="changeIndigoconnFileID">
+        <Name>Replace Indigowebserver file by reduced Logging option version</Name>
+        <ConfigUI>
+            <Field   id="lableLogfile" type="label">
+                <Label>Replace/restore Indigowebserver file by reduced Logging option version... you will need to restart indigo SERVER to activate the change, </Label>
+            </Field>
+            <Field   id="exeLogfile" type="button">
+                <Label>click to </Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>buttonConfirmchangeLogfile</CallbackMethod>
+            </Field>
+           <Field   id="exeReverse" type="button">
+                <Label>click to </Label>
+                <Title>REVERSE</Title>
+                <CallbackMethod>buttonConfirmReversechangeLogfile</CallbackMethod>
+            </Field>
+
+        </ConfigUI>
+    </MenuItem>         
+
+  <MenuItem id="d15"> <Name>-------------print configs etc ---------------------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+
+    <MenuItem id="enableLoggingStuff">
+        <Name>Enable special beacon logging</Name>
+        <ConfigUI>
+
+            <Field   id="labelnewBeaconsLogTimer" type="label">
+                <Label>Enable new beacon logging.. 
+        will print extra info for each iBeacon that is younger than xx minutes 
+        to logfile as new messages arrive</Label>
+            </Field>
+            <Field   id="newBeaconsLogTimer" type="menu" defaultValue="no"	tooltip="">
+                <Label>enter minutes</Label>
+                 <List>
+                    <Option value="0"         >  off</Option>
+                    <Option value="1"         >  for 1 minute</Option>
+                    <Option value="2"         >  for 2 minutes</Option>
+                    <Option value="3"         >  for 3 minutes</Option>
+                    <Option value="4"         >  for 4 minutes</Option>
+                    <Option value="5"         >  for 5 minutes</Option>
+                    <Option value="7"         >  for 7 minutes</Option>
+                    <Option value="10"        >  for 10 minutes</Option>
+                    <Option value="15"        >  for 15 minutes</Option>
+                    <Option value="30"        >  for 30 minutes</Option>
+                    <Option value="60"        >  for 1 hour</Option>
+                    <Option value="120"       >  for 2 hours</Option>
+                    <Option value="1440"      >  for 1 day</Option>
+                    <Option value="44000"     >  for 1 month</Option>
+                 </List>
+            </Field>
+            <Field   id="idbuttonsetTimer" type="button"	tooltip="">
+                <Label>click to </Label><Title>set logging timer</Title>
+                <CallbackMethod>buttonConfirmnewBeaconsLogTimerCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field   id="labelnewBeaconsLogTimerStop0" type="label">  <Label> </Label>  </Field>
+            <Field   id="labelnewBeaconsLogTimerStop" type="label">
+                <Label>Enable specific beacon logging.. 
+        will print extra info for selected iBeacon to logfile
+        as new messages arrive</Label>
+            </Field>
+            <Field id="selectBEACON" type="menu" defaultValue="0">
+                <Label>ibeacon :</Label>
+                <List class="self" filter="" method="filterActiveBEACONs" dynamicReload="false"/>
+            </Field>
+            <Field   id="selectBEACONlen" type="menu" defaultValue="17"	tooltip="">
+                <Label>enter minutes</Label>
+                 <List>
+                    <Option value="17"        >  complete MAC#  =all 6 pairs </Option>
+                    <Option value="14"        >  first  5 pairs in MAC#</Option>
+                    <Option value="11"        >  first  4 pairs in MAC#</Option>
+                    <Option value="8"         >  first  3 pairs in MAC#</Option>
+                    <Option value="5"         >  first  2 pairs in MAC#</Option>
+                    <Option value="2"         >  first    pair  in MAC#</Option>
+                </List>
+            </Field>
+            <Field   id="idselectBEACON" type="button"	tooltip="">
+                <Label>click to </Label><Title>select</Title>
+                <CallbackMethod>buttonConfirmSelectBeaconCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="idstopselectBEACON" type="button"	tooltip="">
+                <Label>click to </Label><Title>delete all tracking</Title>
+                <CallbackMethod>buttonConfirmStopSelectBeaconCALLBACK</CallbackMethod>
+            </Field>
+
+
+      
+            <Field   id="labeltrackSignalStrengthIfGeaterThan0" type="label">  <Label> </Label>  </Field>
+            <Field   id="labeltrackSignalStrengthIfGeaterThan" type="label">
+                <Label>Enable logging of large change in signal strength..
+        will print extra info to logfile .. 
+        use this to check moving an ibeacon 
+        from one RPI to another to id the beacon</Label>
+            </Field>
+            <Field id="trackSignalStrengthIfGeaterThan" type="menu" defaultValue="0">
+                <Label>pick min change of signal to log [dBm]</Label>
+                <List>
+                    <Option value="9999,-"      >  off</Option>
+                    <Option value="5,x"         >  5  dBm exclude ON-off/off-ON</Option>
+                    <Option value="10,x"        >  10 dBm exclude ON-off/off-ON</Option>
+                    <Option value="15,x"        >  15 dBm exclude ON-off/off-ON</Option>
+                    <Option value="20,x"        >  20 dBm exclude ON-off/off-ON</Option>
+                    <Option value="25,x"        >  25 dBm exclude ON-off/off-ON</Option>
+                    <Option value="30,x"        >  30 dBm exclude ON-off/off-ON</Option>
+                    <Option value="35,x"        >  35 dBm exclude ON-off/off-ON</Option>
+                    <Option value="40,x"        >  40 dBm exclude ON-off/off-ON</Option>
+                    <Option value="45,x"        >  45 dBm exclude ON-off/off-ON</Option>
+                    <Option value="50,x"        >  50 dBm exclude ON-off/off-ON</Option>
+                    <Option value="5,i"         >  5  dBm include ON-off/off-ON</Option>
+                    <Option value="10,i"        >  10 dBm include ON-off/off-ON</Option>
+                    <Option value="15,i"        >  15 dBm include ON-off/off-ON</Option>
+                    <Option value="20,i"        >  20 dBm include ON-off/off-ON</Option>
+                    <Option value="25,i"        >  25 dBm include ON-off/off-ON</Option>
+                    <Option value="30,i"        >  30 dBm include ON-off/off-ON</Option>
+                    <Option value="35,i"        >  35 dBm include ON-off/off-ON</Option>
+                    <Option value="40,i"        >  40 dBm include ON-off/off-ON</Option>
+                    <Option value="45,i"        >  45 dBm include ON-off/off-ON</Option>
+                    <Option value="50,i"        >  50 dBm include ON-off/off-ON</Option>
+                 </List>
+            </Field>
+            <Field   id="idbuttontrackSignalStrengthIfGeaterThan" type="button"	tooltip="">
+                <Label>click to </Label><Title>execute</Title>
+                <CallbackMethod>buttonConfirmselectLargeChangeInSignalCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field   id="labeltrackSignalChangeOfRPI0" type="label">  <Label> </Label>  </Field>
+            <Field   id="labeltrackSignalChangeOfRPI" type="label">
+                <Label>Enable beacon logging if they change closest RPI
+        will print extra info for iBeacon to logfile as 
+        new messages arrive if it changes closes RPI</Label>
+            </Field>
+            <Field id="trackSignalChangeOfRPI" type="menu" defaultValue="0">
+                <Label>ibeacon :</Label>
+                <List>
+                    <Option value="0"         >  off</Option>
+                    <Option value="1"         >  ON</Option>
+                 </List>
+            </Field>
+            <Field   id="idbuttontrackSignalChangeOfRPI" type="button"	tooltip="">
+                <Label>click to </Label><Title>execute</Title>
+                <CallbackMethod>buttonConfirmselectChangeOfRPICALLBACK</CallbackMethod>
+            </Field>
+      
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="printStuff">
+        <Name>Print various info to logfile </Name>
+        <ConfigUI>
+
+           <Field   id="printConfigMenu" type="button"	tooltip="">
+                <Label>Print Config parameters to logfile</Label><Title>execute</Title>
+            <CallbackMethod>printConfigMenu</CallbackMethod>
+            </Field>
+
+            <Field   id="printGroups" type="button"	tooltip="">
+                <Label>Print GROUPS to logfile</Label><Title>execute</Title>
+                <CallbackMethod>buttonPrintGroupsCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field   id="printstats" type="button"	tooltip="">
+                <Label>Print Stats  to logfile</Label><Title>execute</Title>
+                <CallbackMethod>buttonPrintStatsCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="printignorediBeacons" type="button"	tooltip="">
+                <Label>... Reset Stats</Label><Title>execute</Title>
+                <CallbackMethod>resetStatsMenu</CallbackMethod>
+            </Field>
+
+            <Field   id="printBeaconsIgnored" type="button"	tooltip="">
+                <Label>Print ignored iBeacons to logfile</Label><Title>execute</Title>
+                <CallbackMethod>printBeaconsIgnoredButton</CallbackMethod>
+            </Field>
+
+            <Field id="printDeviceDictLabel0"   type="label"> <Label></Label>   </Field>
+            <Field id="printDeviceDictLabel"   type="label"> <Label>Print device info to logfile ...</Label>   </Field>
+            <Field id="printDeviceDict"   type="menu" defaultValue="0" tooltip="select device and then click on confirm " >
+                <List class="indigo.devices" filter="self" />
+                <Label>...select piBeacon device to print all info:</Label>
+            </Field>
+            <Field  id="execprintDeviceDictCALLBACK" type="button"	>
+                <Label> ....after selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>printDeviceDictCALLBACK</CallbackMethod>
+            </Field>
+
+
+            <Field id="printBLEreportLabel0"   type="label"> <Label> </Label>   </Field>
+            <Field id="printBLEreportLabel"   type="label"> <Label>Print BLE info from RPI to logfile...</Label>   </Field>
+            <Field  id="label1printBLEreport" type="label"	>                 <Label>The command will stop any BLE activity on the RPI (kill master.py , beaconloop.py ...), 
+then it will collect LESCAN info for 20 secs and simple SCAN for 25 secs 
+then it will reboot the RPI  
+PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
+            </Field>
+            <Field id="configurePi"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true"/>
+                <Label>...select rPi-server to request report:</Label> 
+            </Field>
+            <Field  id="execprintBLEreportCALLBACK" type="button"	>
+                <Label> ....after selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>printBLEreportCALLBACK</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+
+
+  <MenuItem id="d20"> <Name>-------------manage sensor   devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+
+    <MenuItem id="resetGPIOCount">
+        <Name>Reset counter of channel of GPIO/TOUCH/PULSE devices</Name>
+        <ConfigUI>
+            <Field id="header" type="label" > <Label>Reset counter of channel of GPIO/TOUCH/PULSE devices</Label> </Field>
+
+            <Field id="inputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterINPUTdevices" />
+                        <Label> select device</Label>
+            </Field>
+            <Field  id="buttonDeviceID" type="button"	>
+                <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDINPUTBUTTONmenu</CallbackMethod>
+            </Field>
+            <Field id="i0"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i1"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i2"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i3"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i4"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i5"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i6"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i7"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i8"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i9"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i10"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i11"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i12"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i13"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i14"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i15"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i16"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i17"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i18"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i19"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i20"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i21"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i22"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i23"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i24"	type="checkbox" default="false"	hidden="yes"></Field>
+            <Field id="i25"	type="checkbox" default="false"	hidden="yes"></Field>
+
+            <Field id="header2" type="label" > <Label>check the INPUT channels you like to reset</Label> </Field>
+
+            <Field id="INPUT_0"	    type="checkbox" default="false" visibleBindingId="i0" visibleBindingValue="true"	><Label>INPUT 0</Label></Field>
+            <Field id="INPUT_1"	    type="checkbox" default="false" visibleBindingId="i1" visibleBindingValue="true"	><Label>INPUT 1</Label></Field>
+            <Field id="INPUT_2"	    type="checkbox" default="false" visibleBindingId="i2" visibleBindingValue="true"	><Label>INPUT 2</Label></Field>
+            <Field id="INPUT_3"	    type="checkbox" default="false" visibleBindingId="i3" visibleBindingValue="true"	><Label>INPUT 3</Label></Field>
+            <Field id="INPUT_4"	    type="checkbox" default="false" visibleBindingId="i4" visibleBindingValue="true"	><Label>INPUT 4</Label></Field>
+            <Field id="INPUT_5"	    type="checkbox" default="false" visibleBindingId="i5" visibleBindingValue="true"	><Label>INPUT 5</Label></Field>
+            <Field id="INPUT_6"	    type="checkbox" default="false" visibleBindingId="i6" visibleBindingValue="true"	><Label>INPUT 6</Label></Field>
+            <Field id="INPUT_7"	    type="checkbox" default="false" visibleBindingId="i7" visibleBindingValue="true"	><Label>INPUT 7</Label></Field>
+            <Field id="INPUT_8"	    type="checkbox" default="false" visibleBindingId="i8" visibleBindingValue="true"	><Label>INPUT 8</Label></Field>
+            <Field id="INPUT_9"	    type="checkbox" default="false" visibleBindingId="i9" visibleBindingValue="true"	><Label>INPUT 9</Label></Field>
+            <Field id="INPUT_10"	type="checkbox" default="false" visibleBindingId="i10" visibleBindingValue="true"	><Label>INPUT 10</Label></Field>
+            <Field id="INPUT_11"	type="checkbox" default="false" visibleBindingId="i11" visibleBindingValue="true"	><Label>INPUT 11</Label></Field>
+            <Field id="INPUT_12"	type="checkbox" default="false" visibleBindingId="i12" visibleBindingValue="true"	><Label>INPUT 12</Label></Field>
+            <Field id="INPUT_13"	type="checkbox" default="false" visibleBindingId="i13" visibleBindingValue="true"	><Label>INPUT 13</Label></Field>
+            <Field id="INPUT_14"	type="checkbox" default="false" visibleBindingId="i14" visibleBindingValue="true"	><Label>INPUT 14</Label></Field>
+            <Field id="INPUT_15"	type="checkbox" default="false" visibleBindingId="i15" visibleBindingValue="true"	><Label>INPUT 15</Label></Field>
+            <Field id="INPUT_16"	type="checkbox" default="false" visibleBindingId="i16" visibleBindingValue="true"	><Label>INPUT 16</Label></Field>
+            <Field id="INPUT_17"	type="checkbox" default="false" visibleBindingId="i17" visibleBindingValue="true"	><Label>INPUT 17</Label></Field>
+            <Field id="INPUT_18"	type="checkbox" default="false" visibleBindingId="i18" visibleBindingValue="true"	><Label>INPUT 18</Label></Field>
+            <Field id="INPUT_19"	type="checkbox" default="false" visibleBindingId="i19" visibleBindingValue="true"	><Label>INPUT 19</Label></Field>
+            <Field id="INPUT_20"	type="checkbox" default="false" visibleBindingId="i20" visibleBindingValue="true"	><Label>INPUT 20</Label></Field>
+            <Field id="INPUT_21"	type="checkbox" default="false" visibleBindingId="i21" visibleBindingValue="true"	><Label>INPUT 21</Label></Field>
+            <Field id="INPUT_22"	type="checkbox" default="false" visibleBindingId="i22" visibleBindingValue="true"	><Label>INPUT 22</Label></Field>
+            <Field id="INPUT_23"	type="checkbox" default="false" visibleBindingId="i23" visibleBindingValue="true"	><Label>INPUT 23</Label></Field>
+            <Field id="INPUT_24"	type="checkbox" default="false" visibleBindingId="i24" visibleBindingValue="true"	><Label>INPUT 24</Label></Field>
+            <Field id="INPUT_25"	type="checkbox" default="false" visibleBindingId="i25" visibleBindingValue="true"	><Label>INPUT 25</Label></Field>
+            <Field  id="execsetPin" type="button"	>
+                <Label> ....after selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>resetGPIOCountCALLBACKmenu</CallbackMethod>
+            </Field>
+
+        </ConfigUI>
+    </MenuItem>
+    <MenuItem id="newMessage">
+        <Name>Request new data from rPi sensors</Name>
+        <ConfigUI>
+             <Label>Request new data from rPi sensors</Label>
+             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                <Label>select rPi #</Label>
+                <List class="self" filter="" method="filterPiNoAll" dynamicReload="false"/>
+             </Field>
+             <Field id="typeId"   type="menu" defaultValue="all" tooltip="" >
+              <List>
+                    <Option value= "BLEconnect"          >BLE-connect devices</Option>
+                    <Option value= "beaconloop"          >iBeacons</Option>
+                    <Option value= "INPUTgpio"           >INPUT - gpio</Option>
+                    <Option value= "INPUTtouch12"        >INPUT - capacitor-12</Option>
+                    <Option value= "INPUTtouch16"        >INPUT - capacitor-16</Option>
+                    <Option value= "getsensorvalues"     >sensor values = regular i2c etc sensors </Option>
+                    <Option value= "ultrasoundDistance"  >ultrasound Distance</Option>
+                    <Option value= "vcnl40xxDistance"    >vcnl40xx Distance</Option>
+                    <Option value= "vl6180xDistance"     >vl6180x Distance</Option>
+                    <Option value= "vl503l0xDistance"    >vl503l0x Distance</Option>
+                    <Option value= "apds9960"            >apds9960 gesture</Option>
+                    <Option value= "mysensor"            >mysensor</Option>
+                    <Option value= "ina219"              >ina219</Option>
+                    <Option value= "bno095"              >bno095</Option>
+                    <Option value= "mag3110"             >mag3110</Option>
+                    <Option value= "myprogram"           >myprogram</Option>
+                    <Option value= "all"                 >all</Option>
+                </List>
+                <Label>device type that should be asked to send new data:</Label>
+             </Field>
+
+             <Field  id="exec" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setnewMessageCALLBACKmenu</CallbackMethod>
+             </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="newCalibration">
+        <Name>Start Calibration of sensors on  rPi sensors</Name>
+        <ConfigUI>
+             <Label>Start Calibration of sensors</Label>
+             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                <Label>select rPi #</Label>
+                <List class="self" filter="" method="filterPiNoAll" dynamicReload="false"/>
+             </Field>
+             <Field id="typeId"   type="menu" defaultValue="all" tooltip="" >
+              <List>
+                    <Option value= "mysensor"            >mysensor</Option>
+                    <Option value= "mag3110"             >mag3110</Option>
+                    <Option value= "bme680"              >bme680</Option>
+                    <Option value= "myprogram"           >myprogram</Option>
+                    <Option value= "all"                 >all</Option>
+                </List>
+                <Label>device type that should be asked to recalibrate:</Label>
+             </Field>
+
+
+             <Field  id="exec" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>startCalibrationCALLBACKmenu</CallbackMethod>
+             </Field>
+
+        </ConfigUI>
+    </MenuItem>
+
+  <MenuItem id="d20o"> <Name>-------------manage output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+    <MenuItem id="OUTPUTgpio">
+        <Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterOUTPUTdevicesACTION" />
+                <Label>select OUTPgpio device to set gpio pins:</Label>
+            </Field>
+            <Field  id="buttonDeviceID" type="button"	>
+                <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
+            </Field>
+
+            <Field id="GPIOpin"   type="menu"  tooltip="select the OUTPUT state for which to pick the GPIO" >
+                <Label>pick GPIO-pin:</Label>
+                    <List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true"/>
+            </Field>
+            <Field id="cmd"	type="menu" default="up"	 >
+                <List>
+                    <Option value= "down"             >LOW  = 0 </Option>
+                    <Option value= "up"               >HIGH = 1</Option>
+                    <Option value= "pulseUp"          >one pulse UP </Option>
+                    <Option value= "pulseDown"        >one pulse down </Option>
+                    <Option value= "continuousUpDown" >continuous pulses Up Down</Option>
+                    <Option value= "analogWrite"      >set out to analog volage (PWM-mode)</Option>
+                    <Option value= "disable"          >disable pin</Option>
+                </List>
+                <Label>set output of pin/variable  to</Label>
+            </Field>
+
+            <Field id="pulseUp"	visibleBindingId="cmd"	visibleBindingValue="pulseUp,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse UP in secs:</Label>
+            </Field>
+            <Field id="pulseDown"	visibleBindingId="cmd"	visibleBindingValue="pulseDown,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse down in secs:</Label>
+            </Field>
+            <Field id="nPulses"	visibleBindingId="cmd"	visibleBindingValue="continuousUpDown"  type="textfield" default="0"	>
+                <Label>number of pulses:</Label>
+            </Field>
+            <Field id="analogValue"	visibleBindingId="cmd"	visibleBindingValue="analogWrite"  type="textfield" default="0"	>
+                <Label>analog Value: 0-100% = (0-3300mV):</Label>
+            </Field>
+            <Field id="restoreAfterBoot"	visibleBindingId="cmd"	visibleBindingValue="down,up,pulseDown,pulseUp,analogWrite"  type="menu" default="0">
+                    <List>
+                     <Option value= "1"  >yes, set to above value</Option>
+                     <Option value= "0"  >no keep it inactive </Option>
+                </List>
+            <Label>After reboot set pin to:</Label>
+            </Field>
+            <Field id="startAtDateTime"  type="textfield" default="0" >
+                <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+            </Field>
+
+
+            <Field  id="execsetPin" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setPinCALLBACKmenu</CallbackMethod>
+            </Field>
+
+        </ConfigUI>
+    </MenuItem>         
+
+    <MenuItem id="setMCP4725">
+        <Name>Set output voltage of DAC-MCP4725 to.. </Name>
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="indigo.devices" filter="self.setMCP4725" />
+                <Label>select OUTPUT DAC MCP4725 device to set voltage:</Label> 
+            </Field>
+            <Field id="cmd"	type="menu" default="up"	 >
+                <List>
+                    <Option value= "pulseUp"          >one pulse UP </Option>
+                    <Option value= "pulseDown"        >one pulse down </Option>
+                    <Option value= "continuousUpDown" >continuous pulses Up Down</Option>
+                    <Option value= "analogWrite"      >set out to analog volage , constant</Option>
+                    <Option value= "rampUp"           >set ramp voltage up to ..</Option>
+                    <Option value= "rampDown"         >set ramp voltage down from ... to 0</Option>
+                    <Option value= "rampUpDown"       >set ramp voltage Up to .. down to 0</Option>
+                    <Option value= "disable"          >disable</Option>
+                </List>
+                <Label>set output of pin/variable  to</Label>
+            </Field>
+
+            <Field id="pulseUp"	visibleBindingId="cmd"	visibleBindingValue="pulseUp,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse UP in secs:</Label>
+            </Field>
+            <Field id="pulseDown"	visibleBindingId="cmd"	visibleBindingValue="pulseDown,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse down in secs:</Label>
+            </Field>
+            <Field id="nPulses"	visibleBindingId="cmd"	visibleBindingValue="continuousUpDown"  type="textfield" default="0"	>
+                <Label>number of pulses:</Label>
+            </Field>
+            <Field id="analogValue"  type="textfield" default="0"	>
+                <Label>Voltage: 0-3300mV:</Label>
+            </Field>
+            <Field id="rampTime"  type="textfield" default="0"	visibleBindingId="cmd"	visibleBindingValue="rampUp,rampDown,rampUpDown" >
+                <Label>ramp time in seconds: 0...xx:</Label>
+            </Field>
+            <Field id="startAtDateTime"  type="textfield" default="0" >
+                <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+            </Field>
+            <Field id="restoreAfterBoot"  type="menu" default="0">
+                     <List>
+                     <Option value= "1"  >yes, set to above value</Option>
+                     <Option value= "0"  >no keep it inactive </Option>
+                     </List>
+            <Label>After reboot set pin to:</Label>
+            </Field>
+            <Field  id="execsetPin" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setMCP4725CALLBACKmenu</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+    
+    
+  
+    <MenuItem id="setPCF8591dac">
+        <Name>Set output voltage of DAC-PCF8591 to.. </Name>
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="indigo.devices" filter="self.setPCF8591dac" />
+                <Label>select OUTPUT DAC PCF8591 device to set voltage:</Label> 
+            </Field>
+
+            <Field id="cmd"	type="menu" default="up"	 >
+                <List>
+                    <Option value= "pulseUp"          >one pulse UP </Option>
+                    <Option value= "pulseDown"        >one pulse down </Option>
+                    <Option value= "continuousUpDown" >continuous pulses Up Down</Option>
+                    <Option value= "analogWrite"      >set out to analog volage , constant</Option>
+                    <Option value= "rampUp"           >set ramp voltage up to ..</Option>
+                    <Option value= "rampDown"         >set ramp voltage down from ... to 0</Option>
+                    <Option value= "rampUpDown"       >set ramp voltage Up to .. down to 0</Option>
+                    <Option value= "disable"          >disable</Option>
+                </List>
+                <Label>set output of pin/variable  to</Label>
+            </Field>
+
+            <Field id="pulseUp"	visibleBindingId="cmd"	visibleBindingValue="pulseUp,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse UP in secs:</Label>
+            </Field>
+            <Field id="pulseDown"	visibleBindingId="cmd"	visibleBindingValue="pulseDown,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse down in secs:</Label>
+            </Field>
+            <Field id="nPulses"	visibleBindingId="cmd"	visibleBindingValue="continuousUpDown"  type="textfield" default="0"	>
+                <Label>number of pulses:</Label>
+            </Field>
+            <Field id="analogValue"  type="textfield" default="0"	>
+                <Label>Voltage: 0-3300mV:</Label>
+            </Field>
+            <Field id="rampTime"  type="textfield" default="0"	visibleBindingId="cmd"	visibleBindingValue="rampUp,rampDown,rampUpDown" >
+                <Label>ramp time in seconds: 0...xx:</Label>
+            </Field>
+            <Field id="startAtDateTime"  type="textfield" default="0" >
+                <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+            </Field>
+            <Field id="restoreAfterBoot"  type="menu" default="0">
+                     <List>
+                     <Option value= "1"  >yes, set to above value</Option>
+                     <Option value= "0"  >no keep it inactive </Option>
+                     </List>
+            <Label>After reboot set pin to:</Label>
+            </Field>
+            <Field  id="execsetPin" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setPCF8591dacCALLBACKmenu</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+    
+    
+ 
+    <MenuItem id="i2cTEA5767">
+        <Name>Set FM radio TEA5767 parameters</Name>
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number " >
+                        <List class="indigo.devices" filter="self.setTEA5767" />
+                <Label>select OUTPUT FM - TEA5767:</Label> 
+            </Field>
+            <Field id="frequency"	 type="textfield" default="90.1"	>
+                <Label>Frequency to tune to:</Label>
+            </Field>
+            <Field id="mute"	 type="menu" default="0"	>
+                    <List>
+                     <Option value= "1"  >mute</Option>
+                     <Option value= "0"  >un-mute </Option>
+                     <Option value= ""   >leave as is</Option>
+                     </List>
+                <Label>Mute radio:</Label>
+            </Field>
+            <Field id="mono"	 type="menu" default="0">
+                     <List>
+                     <Option value= "1"  >mono</Option>
+                     <Option value= "0"  >stereo</Option>
+                     <Option value= ""   >leave as is</Option>
+                     </List>
+                <Label>Stereo/Mono:</Label>
+            </Field>
+            <Field id="restart" type="menu" default="0">
+                     <List>
+                     <Option value= "0"  >do not restart</Option>
+                     <Option value= "1"  >restart radio</Option>
+                     </List>
+                <Label>restart the radio:</Label>
+            </Field>
+            <Field id="scan" type="menu" default="0">
+                     <List>
+                     <Option value= "1"  >SCAN</Option>
+                     <Option value= "0"  >no scan</Option>
+                     </List>
+                <Label>Scan for Stations:</Label>
+            </Field>
+            <Field id="minSignal"	 type="menu" default="11"   visibleBindingId="scan" visibleBindingValue="1">
+                     <List>
+                     <Option value= "9"  >9</Option>
+                     <Option value= "10" >10</Option>
+                     <Option value= "11" >11</Option>
+                     <Option value= "12" >12</Option>
+                     <Option value= "13" >13</Option>
+                     <Option value= "14" >14</Option>
+                     </List>
+                <Label>Min Signal for Scan to accept channel:</Label>
+            </Field>
+            <Field  id="execadd" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setTEA5767CALLBACKmenu</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+
+
+    <MenuItem id="myoutput">
+        <Name>Set MYOUPUT.py  parameters on rPi </Name>
+        <ConfigUI>
+            <Label>send command string to myoutput.py program on rPi</Label>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+               <Label>select rPi #</Label>
+                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
+            </Field>
+            <Field id="text"  type="textfield" default=""	>
+                <Label>Enter text to be send to myoutput.py:</Label>
+            </Field>
+            <Field  id="exec" type="button"	>
+                    <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setMyoutputCALLBACKmenu</CallbackMethod>
+            </Field>
+
+        </ConfigUI>
+    </MenuItem>
+
+
+
+    <MenuItem id="playSoundFile">
+        <Name>Play SOUND file on rPi </Name>
+        <ConfigUI>
+             <Label>Play sound file on rPi</Label>
+             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                <Label>select rPi #</Label>
+                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
+             </Field>
+             <Field id="cmd"   type="menu" defaultValue="omxplayer" tooltip="" >
+              <List>
+                    <Option value= "omxplayer"  >omxplayer for .mp3 files</Option>
+                    <Option value= "aplay"      >aplay     for .wav files</Option>
+                </List>
+                <Label>which player to use:</Label>
+             </Field>
+
+             <Field id="soundFile"   type="menu" defaultValue="0" tooltip="" >
+                        <List class="self" filter="" method="filterSoundFiles" dynamicReload="true"/>
+                <Label>select sound file from list:</Label>
+             </Field>
+
+             <Field  id="exec" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>playSoundFileCALLBACKmenu</CallbackMethod>
+             </Field>
+
+        </ConfigUI>
+    </MenuItem>
+
+
+</MenuItems>

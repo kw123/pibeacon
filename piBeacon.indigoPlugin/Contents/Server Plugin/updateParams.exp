@@ -1,0 +1,40 @@
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set ipNumber [lindex $argv 2 ] 
+set ipParms  [lindex $argv 3 ] 
+set piPath   [lindex $argv 4 ] 
+set indigoPath   [lindex $argv 5 ] 
+set timeOUT [lindex $argv 6 ] 
+
+set timeout $timeOUT
+
+
+spawn sftp -o ConnectTimeout=$timeOUT $userID@$ipNumber
+ 
+expect {
+    "(yes/no)? " { 
+        send "yes\r"
+        sleep 0.1
+        expect "assword: " { send "$password\r"}
+    }    
+    "assword: " { 
+        send "$password\r" 
+    }
+}
+
+set timeout $timeOUT
+sleep 0.1
+expect "sftp>" {  send  "cd /home/pi/pibeacon \r" }
+expect "sftp>" {  send  "lcd '$piPath//interfaceFiles' \r" }
+expect "sftp>" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
+expect "sftp>" {  send  "lcd '$piPath//rejected' \r" }
+expect "sftp>" {  send  "get /home/pi/pibeacon/temp/rejects 'rejects.$ipParms'\r" }
+expect "sftp>" {  send  "rm /home/pi/pibeacon/temp/rejec* \r" }
+expect "sftp>" {  send  "lcd '$piPath//all' \r" }
+expect "sftp>" {  send  "put *  /home/pi/pibeacon/ \r" }
+expect "sftp>" {  send  "put touchFile  /home/pi/pibeacon/temp/ \r" }
+expect "sftp>" {  send  "quit\r" }
+set timeout 0.1
+expect eof
+
+

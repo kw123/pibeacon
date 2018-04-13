@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<Events>
+    <Event id="Family-allAway">	<Name>Family-allAway  .. ALL devices                in the group must be AWAY to trigger</Name> </Event>
+    <Event id="Family-oneAway">	<Name>Family-oneAway  .. ONE device  of the devices in the group must be AWAY to trigger</Name> </Event>
+    <Event id="Family-oneHome">	<Name>Family-oneHome  .. ONE device  of the devices in the group must be HOME to trigger</Name> </Event>
+    <Event id="Family-allHome">	<Name>Family-allHome  .. ALL devices                in the group must be HOME to trigger</Name> </Event>
+
+    <Event id="Guests-allAway">	<Name>Guests-allAway  .. ALL devices  ....</Name> </Event>
+    <Event id="Guests-oneAway">	<Name>Guests-oneAway</Name> </Event>
+    <Event id="Guests-oneHome">	<Name>Guests-oneHome</Name> </Event>
+    <Event id="Guests-allHome">	<Name>Guests-allHome</Name> </Event>
+
+    <Event id="Other1-allAway">	<Name>Other1-allAway</Name> </Event>
+    <Event id="Other1-oneAway">	<Name>Other1-oneAway</Name> </Event>
+    <Event id="Other1-oneHome">	<Name>Other1-oneHome</Name> </Event>
+    <Event id="Other1-allHome">	<Name>Other1-allHome</Name> </Event>
+
+    <Event id="Other2-allAway">	<Name>Other2-allAway</Name> </Event>
+    <Event id="Other2-oneAway">	<Name>Other2-oneAway</Name> </Event>
+    <Event id="Other2-oneHome">	<Name>Other2-oneHome</Name> </Event>
+    <Event id="Other2-allHome">	<Name>Other2-allHome</Name> </Event>
+    <Event id="someStatusHasChanged">	<Name>the status of at least one beacon has changed</Name> </Event>
+    <Event id="someClosestrPiHasChanged">	<Name>the status of at least one CLOSEST RPI has changed</Name> </Event>
+</Events>
