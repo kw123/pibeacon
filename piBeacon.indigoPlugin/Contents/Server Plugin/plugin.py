@@ -11038,6 +11038,10 @@ class Plugin(indigo.PluginBase):
                             #self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + piNReceived,dev=dev)
                         self.beacons[piMACSend][u"lastUp"] = time.time()
                         self.RPI[unicode(piNReceived)][u"piDevId"] = dev.id
+                        if dev.description != "rPI-"+ unicode(piNReceived)+"-"+ipAddress:
+                            dev.description = "rPI-"+ unicode(piNReceived)+"-"+ipAddress
+                            dev.replaceOnServer()
+                            
                     else:
                         indigo.device.delete(dev)
                         self.ML.myLog( errorType = u"smallErr", text =u"deleting beacon: " + dev.name + " replacing simple beacon with rPi model(1)")
