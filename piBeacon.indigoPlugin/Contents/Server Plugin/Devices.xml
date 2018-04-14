@@ -12031,6 +12031,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                      <Option value= "1"  >1, no cable connection</Option>
                      </List>
             </Field>
+            
+            <Field id="flipDisplay" type="menu"     defaultValue="0" enableBindingId="devType" enableBindingValue="screen" visibleBindingId="devType" visibleBindingValue="screen"> 
+            <Label>flip display:</Label>
+                     <List>
+                     <Option value= "0"  >no</Option>
+                     <Option value= "1"  >yes</Option>
+                     </List>
+            </Field>
 
             <Field id="intensity"  type="menu" defaultValue="100" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
                      <List>
