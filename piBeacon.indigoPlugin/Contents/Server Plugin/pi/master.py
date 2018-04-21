@@ -23,43 +23,26 @@ G.program = "master"
 
 
 
-################################
-
-
-def sendi2cToPlugin():
-    global lastI2C
-    try:
-        i2c= U.geti2c()
-        ret = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
-        try:    temp = ret.split("=")[1].split("'")[0]
-        except: temp = 0
-        U.sendURL(data={"i2c":i2c,"temp":temp},sendAlive="alive")
-    except  Exception, e :
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
-    return 
-
 
 
 def cleanupOldFiles():
 
 
-    os.system("rm -r "+G.homeDir+"logs                  >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"iPhoneBLE.py          >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"rejects.*             >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"logfile               >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"logfile-1             >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"call-log              >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"alive                 >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"master.log            >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"interface             >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"logfile               >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"beaconloop            >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"DHT.dat               >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"DHT.py                >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"wire18B20.py          >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"wire18B20.dat         >/dev/null 2>&1")
-    os.system("rm    "+G.homeDir+"errlog                >/dev/null 2>&1")
-
+    os.system("rm -r "+G.homeDir+"logs                    >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"iPhoneBLE.py            >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"rejects.*               >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"logfile                 >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"logfile-1               >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"call-log                >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"alive                   >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"master.log              >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"interface               >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"logfile                 >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"beaconloop              >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"errlog                  >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"getsensorvalues.py      >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"rennameMeTo_myoutput.py >/dev/null 2>&1")
+    os.system("rm    "+G.homeDir+"renameMyTo_mysensors.py >/dev/null 2>&1")
     restart=False
     for ff in G.parameterFileList:
         if "beacon_" in ff and "parameters" not in ff:
@@ -78,7 +61,7 @@ def readNewParams(force=False):
         global sensorEnabled, enableiBeacons, beforeLoop, cAddress,rebootHour,rebooted,BLEserial,BLEserialOLD,sensors,enableShutDownSwitch, rebootWatchDogTime
         global shutDownPinInput, shutDownPinOutput,sensorAlive,useRamDiskForLogfiles, displayActive
         global actions, output
-        global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive
+        global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active, getspiMCP3008Active, getpmairqualityActive
         global activePGMdict, bluetoothONoff
         global oldRaw,  lastRead
 
@@ -257,14 +240,54 @@ def readNewParams(force=False):
         setACTIVEorKILL("INPUTtouch","INPUTtouch.py","INPUTtouch")
         setACTIVEorKILL("INPUTtouch16","INPUTtouch16.py","INPUTtouch16")
 
-        if unicode(sensorList).find("spi")>-1 or unicode(sensorList).find("i2c")>-1 or unicode(sensorList).find("Wire")>-1 or unicode(sensorList).find("DHT")>-1:
-            if getSensorsActive !=1:
-                startProgam("getsensorvalues.py", params="", reason=" at startup ")
-            getSensorsActive  = 1
+            
+        if  unicode(sensorList).find("Wire18B20")>-1 :
+            if getWire18B20Active !=1:
+                startProgam("Wire18B20.py", params="", reason=" at startup ")
+            getWire18B20Active  = 1
         else: 
-            if getSensorsActive !=-1:
-                U.killOldPgm(-1,"getsensorvalues.py")
-            getSensorsActive  = -1
+            if getWire18B20Active !=-1:
+                U.killOldPgm(-1,"Wire18B20.py")
+            getWire18B20Active  = -1
+            
+        if  unicode(sensorList).find("spiMCP3008")>-1 :
+            if getWire18B20Active !=1:
+                startProgam("spiMCP3008.py", params="", reason=" at startup ")
+            getspiMCP3008Active  = 1
+        else: 
+            if getspiMCP3008Active !=-1:
+                U.killOldPgm(-1,"spiMCP3008.py")
+            getspiMCP3008Active  = -1
+            
+        if  unicode(sensorList).find("DHT")>-1 :
+            if getDHTActive !=1:
+                startProgam("DHT.py", params="", reason=" at startup ")
+            getDHTActive  = 1
+        else: 
+            if getDHTActive !=-1:
+                U.killOldPgm(-1,"DHT.py")
+            getDHTActive  = -1
+
+            
+        if  unicode(sensorList).find("pmairquality")>-1 :
+            if getDHTActive !=1:
+                startProgam("pmairquality.py", params="", reason=" at startup ")
+            getpmairqualityActive  = 1
+        else: 
+            if getpmairqualityActive !=-1:
+                U.killOldPgm(-1,"pmairquality.py")
+            getpmairqualityActive  = -1
+
+
+            
+        if unicode(sensorList).find("i2c")>-1 :
+            if geti2cActive !=1:
+                startProgam("simplei2csensors.py", params="", reason=" at startup ")
+            geti2cActive  = 1
+        else: 
+            if geti2cActive !=-1:
+                U.killOldPgm(-1,"simplei2csensors.py")
+            geti2cActive  = -1
             
 
         setACTIVEorKILL("myprogram","myprogram.py","")
@@ -773,18 +796,6 @@ def checkRamDisk():
 
 
 
-def checkIfAliveNeedsToBeSend():
-        tt = time.time()
-        lastSend = 0
-        if os.path.isfile(G.homeDir+"temp/messageSend"):
-            try:
-                lastSend = os.path.getmtime(G.homeDir+"temp/messageSend")
-            except:
-                pass
-        if tt - lastSend > 85.:  # do we have to send alive signal to plugin?
-            sendi2cToPlugin()
-        return
-
 
 def delayAndWatchDog():
     global shutDownPinInput, rebootWatchDogTime,lastrebootWatchDogTime
@@ -863,16 +874,21 @@ global sensorEnabled,  restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootH
 global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
 
 global shutDownPinInput, shutDownPinOutput
-global displayActive, tea5767Active, getSensorsActive, neopixelActive, neopixelClockActive
+global displayActive, tea5767Active, neopixelActive, neopixelClockActive
+global getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active,getspiMCP3008Active, getpmairqualityActive
 global actions, output, sensors, sensorList
 global activePGMdict, bluetoothONoff
-global lastI2C
 global oldRaw,  lastRead
 oldRaw                  = ""
 lastRead                = 0
 bluetoothONoff          = "on"
-lastI2C                 = ""
 getSensorsActive        = 0
+geti2cActive            = 0
+getDHTActive            = 0
+getWire18B20Active      = 0
+getspiMCP3008Active     = 0
+getmyprogramActive      = 0
+getpmairqualityActive   = 0
 G.debug                 = 5
 tea5767Active           = False
 displayActive           = False 
@@ -995,8 +1011,8 @@ if G.networkType  in G.useNetwork and G.wifiType =="normal":
 
 
 
-os.system("sudo mkdir "+G.logDir+" &")
-os.system("sudo chown -R  pi:pi  /run/user/1000/pibeacon")
+os.system("sudo mkdir "+G.logDir+" > /dev/null 2>&1 ")
+os.system("sudo chown -R  pi:pi  "+G.logDir)
 
 
 
@@ -1096,7 +1112,7 @@ os.system("sudo chmod a+x  /lib/udev/hwclock-set")
 
 G.tStart      = time.time()
 
-sendi2cToPlugin()        
+U.sendi2cToPlugin()        
 tAtLoopSTart =time.time()
 
 U.testNetwork()
@@ -1151,7 +1167,7 @@ while True:
 
                 
         if loopCount%60 == 0: # every 10 minutes
-            sendi2cToPlugin()        
+            U.sendi2cToPlugin()        
             if (unicode(subprocess.Popen("echo x > x" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate())).find("Read-only file system") > 0:
                 U.doReboot(10.," reboot due to bad SD, 'file system is read only'")                
                 time.sleep(10)
@@ -1191,9 +1207,21 @@ while True:
 
         if neopixelClockActive: 
             checkIfNeopixelIsRunning(pgm= "neopixelClock")
+
+        if getspiMCP3008Active ==1:
+            checkIfPGMisRunning("spiMCP3008.py" )
+
+        if getWire18B20Active ==1:
+            checkIfPGMisRunning("Wire18B20.py" )
             
-        if getSensorsActive ==1:
-            checkIfPGMisRunning("getsensorvalues.py" )
+        if geti2cActive ==1:
+            checkIfPGMisRunning("simplei2csensors.py" )
+            
+        if getDHTActive ==1:
+            checkIfPGMisRunning("DHT.py" )
+            
+        if getpmairqualityActive ==1:
+            checkIfPGMisRunning("pmairquality.py" )
             
         if tea5767Active: 
             checkIfPGMisRunning("setTEA5767.py")
@@ -1218,7 +1246,7 @@ while True:
             checkIfNightReboot()
             if datetime.datetime.now().hour > rebootHour: rebooted = False
 
-        checkIfAliveNeedsToBeSend()
+        U.checkIfAliveNeedsToBeSend()
         
 
         if loopCount %4 ==0: # check network every 40 secs

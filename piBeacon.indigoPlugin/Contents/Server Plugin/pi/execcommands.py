@@ -174,7 +174,7 @@ def execCMDS(data):
                     if next["device"].find(",")> 1:
                         list = next["device"].split(",")
                     elif next["device"]== "all":
-                        list = G.files
+                        list = G.programFiles
                     else:
                         list = [next["device"]]
                     for pgm in list:

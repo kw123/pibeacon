@@ -594,8 +594,8 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
     <Field    id="logFilePath"      type="menu"      defaultValue="no"      > <Label> send logs to ..:</Label>
         <List>
             <Option value="no"       > no special unifi logfile, std indigo logfile</Option>
-            <Option value="user"     > ~/indigo/pibeacon/unifi.log                    </Option>
-            <Option value="indigo"   > .. Perceptive Automation/Indigo 7/Logs/com.karlwachs.PiBeacon/unifi.log </Option>
+            <Option value="user"     > ~/indigo/pibeacon/pibeacon.log                    </Option>
+            <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/pibeacon.log </Option>
         </List>
     </Field>
 

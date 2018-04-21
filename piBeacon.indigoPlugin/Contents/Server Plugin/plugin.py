@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 25.10
+dataVersion = 25.11
 
 
 
@@ -199,6 +199,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"i2cBMPxx", u"i2cT5403", u"i2cBMP280","i2cMS5803",                         # temp / press
                          u"i2cBMExx",                                                            # temp / press/ hum /
                          u"bme680",                                                                # temp / press/ hum / gas
+                         u"pmairquality",
                          u"amg88xx",                                                                # infrared camera
                          u"ccs811",                                                                # co2 voc 
                          u"sgp30",                                                                # co2 voc 
@@ -9494,7 +9495,7 @@ class Plugin(indigo.PluginBase):
                         
                     if u"badSensor" in uData:
                         self.addToStatesUpdateDict(unicode(dev.id),u"status",u"bad Sensor data, disconnected?",dev=dev)
-                        try: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+                        try: dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
                         except: pass
                         continue
 
@@ -9666,8 +9667,24 @@ class Plugin(indigo.PluginBase):
                     elif dev.deviceTypeId == "INPUTpulse":
                         self.updatePULSE(dev,data,whichKeysToDisplay)
                         continue
+
+                    if sensor =="pmairquality":
+                        self.updatePMAIRQUALITY(dev,data,whichKeysToDisplay)
+                        continue
                         
                     newStatus = dev.states[u"status"]
+
+                    if sensor in [u"sgp30",u"ccs811"]:
+                        try:
+                            x, UI  = int(float(data[u"CO2"])),   "CO2 %d[ppm] "%(float(data[u"CO2"]))
+                            newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+                            x, UI  = int(float(data[u"VOC"])),   " VOC %d[ppb]"%(float(data[u"VOC"]))
+                            newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+                        except  Exception, e:
+                            self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                            self.ML.myLog( text =  unicode(props))
+                        
+
                         
                     if u"temp" in data:
                         temp = data[u"temp"]
@@ -9715,17 +9732,6 @@ class Plugin(indigo.PluginBase):
                             self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                             self.ML.myLog( text =  unicode(props))
                             self.ML.myLog( text =  unicode(len(data[u"rawData"]))+"  "+data[u"rawData"])
-
-                    if sensor in [u"sgp30",u"ccs811"]:
-                        try:
-                            x, UI  = int(float(data[u"CO2"])),   "CO2 %d[ppm] "%(float(data[u"CO2"]))
-                            newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
-                            x, UI  = int(float(data[u"VOC"])),   " VOC %d[ppb]"%(float(data[u"VOC"]))
-                            newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
-                        except  Exception, e:
-                            self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                            self.ML.myLog( text =  unicode(props))
-
 
                     if u"Vertical" in data:
                         try:
@@ -9775,6 +9781,42 @@ class Plugin(indigo.PluginBase):
                 if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text =  u"pi# "+unicode(pi) + "  " + unicode(sensors))
 
         return
+
+####-------------------------------------------------------------------------####
+    def updatePMAIRQUALITY(self, dev, data, whichKeysToDisplay):
+        try:
+            for cc in ["pm10_standard","pm25_standard","pm100_standard", "pm10_env","pm25_env","pm100_env","particles_03um","particles_05um","particles_10um","particles_25um","particles_50um","particles_100um"]:
+                if cc in data:
+                    if cc.find("pm") >-1: units = "ug/m3"
+                    else:                 units = "C/0.1L"
+                    x, UI  = int(float(data[cc])),   cc+"=%d["%(int(float(data[cc])))+units+"]"
+                    
+                    if whichKeysToDisplay == cc: 
+                            self.addToStatesUpdateDict(unicode(dev.id),u"status", UI,dev=dev) 
+                    self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = 0, dev=dev) 
+
+                    if cc == "pm25_standard":
+                        if    x < 12:       airQuality = "Good"
+                        elif  x < 35.4:     airQuality = "Moderate" 
+                        elif  x < 55.4:     airQuality = "Unhealthy Sensitve" 
+                        elif  x < 150.4:    airQuality = "Unhealthy" 
+                        elif  x < 250.4:    airQuality = "Very Unhealthy" 
+                        else:               airQuality = "Hazardous"
+                        
+                        if   airQuality == "Good":       dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                        elif airQuality == "Moderate":   dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+                        else:                            dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+
+                        self.addToStatesUpdateDict(unicode(dev.id),u"airQuality", airQuality,dev=dev) 
+                        if whichKeysToDisplay =="airQuality": 
+                            self.addToStatesUpdateDict(unicode(dev.id),u"status", "Air Quality is "+airQuality,dev=dev) 
+
+        except  Exception, e:
+            self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            self.ML.myLog( text =  unicode(data))
+        return
+
+
 
 ####-------------------------------------------------------------------------####
     def setPressureDisplay(self,dev,data,whichKeysToDisplay,newStatus):

@@ -12,8 +12,6 @@ from __future__ import division
 import math
 
 import  sys, os, time, json, datetime,subprocess,copy
-import Adafruit_DHT
-###import Adafruit_GPIO.I2C as I2C
 
 
 import struct
@@ -27,15 +25,12 @@ except: pass
 import re
 
 import logging
-import RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-G.program = "getsensorvalues"
+G.program = "simplei2csensors"
 
 
-
-GPIO.setmode(GPIO.BCM)
 
 
 
@@ -2856,125 +2851,6 @@ def getT5403(sensor, data):
 
 
 
-
-# ===========================================================================
-# DHT
-# ===========================================================================
-
-def getDATAdht(DHTpin,Type):
-        global sensorDHT, startDHT
-        t,h="",""
-        try:
-            ii=startDHT[str(DHTpin)]
-        except:
-            if startDHT =="":
-                startDHT={}
-                sensorDHT={}
-            startDHT[str(DHTpin)]  = 1
-            if Type.lower() == "dht11":     
-                sensorDHT[str(DHTpin)] = Adafruit_DHT.DHT11
-            else:     
-                sensorDHT[str(DHTpin)] = Adafruit_DHT.DHT22
-        try:
-            h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
-            if unicode(h) == "None" or unicode(t) == "None":
-                print " return data failed: "+str(h)+" "+str(t), Type,  "pin",str(DHTpin), " try again"
-                time.sleep(1)
-                h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
-            #f h is not None and t is not None:
-            #print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpin)
-#           # sensorDHT=""
-            return ("%5.1f"%float(t)).strip(),("%3d"%float(h)).strip()
-            #else: return "" ,""  
-        except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u" pin: "+ str(DHTpin)+" return  value: t="+ unicode(t)+"; h=" + unicode(h)  )
-        return "",""
-# ===========================================================================
-# 18B20
-# ===========================================================================
-def get18B20(sensor, data):
-    global sensors, sValues, displayInfo, addNewOneWireSensors
-    if sensor not in sensors:    return data 
-    if len(sensors[sensor]) == 0:return data 
-
-    try:
-        data[sensor]={}
-        try:
-            devs=subprocess.Popen("cat  /sys/bus/w1/devices/w1_bus_master1/w1_master_slaves",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].split("\n")
-            #print " getting data devs= "+str( devs )+ "<< "
-            ret = {}
-            for line in devs:
-                if len(line) < 5: continue
-                if line.find("28-")==-1: continue  # should be something like: "28-800000035de5"
-                U.toLog(2,"wire18B20 return data1 "+ unicode(line))
-                if not os.path.isfile("/sys/bus/w1/devices/"+line+"/w1_slave"): continue
-                oneWirecmd="cat  /sys/bus/w1/devices/"+line+"/w1_slave"
-                dataW= subprocess.Popen(oneWirecmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
-                U.toLog(2,"wire18B20 return data2 "+ unicode(dataW))
-                ##59 01 ff ff 7f ff ff ff 82 : crc=82 YES
-                ##59 01 ff ff 7f ff ff ff 82 t=21562
-                #print data
-                if len(dataW) ==2:
-                    if "YES" in dataW[0]:
-                        t1=dataW[1].split("t=")
-                        if len(t1)==2:
-                            ret[line] = ("%5.1f"%(float(t1[1])/1000.)).strip()
-            tempList= ret # {"28-800000035de5": "21.6", ...}  
-        except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"return  value: data="+ unicode(data))
-            tempList = {} 
-
-        devId0 = sensors[sensor].keys()[0] # get any key 
-
-        if tempList!={}:
-            if "serialNumber" not in sensors[sensor][devId0]: sensors[sensor][devId0]["serialNumber"] = "0"
-            if "serialNumber" in sensors[sensor][devId0] and sensors[sensor][devId0]["serialNumber"].find("28-") ==-1: # nothing registed yet: add first sensor
-                for ss in tempList:
-                    data[sensor][devId0] ={"temp":[{ss:tempList[ss]}]} # not registered in indigo yet, add first one to it 
-                    return data
-            elif "serialNumber" in sensors[sensor][devId0]:
-                #print tempList
-                for serialNumber in tempList:
-                    foundId =""
-                    for devId in sensors[sensor]:
-                        #print "trying devId", devId ,sensors[sensor][devId]
-                        if "serialNumber" in sensors[sensor][devId] and serialNumber == sensors[sensor][devId]["serialNumber"]:
-                            try:     tempList[serialNumber]  = str(  float(tempList[serialNumber]) + float(sensors[sensor][devId]["offsetTemp"])  )
-                            except:  pass
-                            if devId not in data[sensor]: data[sensor][devId]={}
-                            if "temp" not in data[sensor][devId] : 
-                                #print devId,serialNumber, data[sensor][devId],  "adding temp"
-                                data[sensor][devId]["temp"]=[]
-                            data[sensor][devId]["temp"].append({serialNumber:tempList[serialNumber]})
-                            #print "1",devId,  data[sensor]
-                            foundId = devId
-
-                            if "displayEnable" in sensors[sensor][devId] and sensors[sensor][devId]["displayEnable"]=="1":
-                                if "temp"  in data[sensor][devId]:
-                                    for tempItem in data[sensor][devId]["temp"]:
-                                        t= data[sensor][devId]["temp"][tempItem]
-                                        putValText(sensors[sensor][devId],[t],["temp"])
-                            break
-                    
-                    if foundId =="" and addNewOneWireSensors =="1":
-                            if devId0 not in data[sensor]:         data[sensor][devId0]={}
-                            if "temp" not in data[sensor][devId0]: data[sensor][devId0]["temp"] =[]
-                            data[sensor][devId0]["temp"].append({serialNumber:tempList[serialNumber]}) # not registered in indigo yet, add it to the last devId
-                            #print "2", devId0, data[sensor][devId0]
-                
-                
-                if devId in badSensors: del badSensors[devId]
-                time.sleep(0.1)
-        else:
-                data= incrementBadSensor(devId0,sensor,data,text="badSensor, no info")
-
-    except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-    if sensor in data and data[sensor]=={}: del data[sensor]
-    return data    
-
 # ===========================================================================
 # BMP
 # ===========================================================================
@@ -3290,47 +3166,6 @@ def getMCP9808(sensor, data):
 
         
 
-# ===========================================================================
-# TMP102
-# ===========================================================================
-def getTMP102(sensor, data):
-    global sensorTMP102, TMP102Started
-    global sensors, sValues, displayInfo
-   
-    if sensor not in sensors: return data
-
-    try:
-        ii= TMP102Started
-    except:    
-        TMP102Started=1
-        sensorTMP102 ={}
-
-    try:
-        data[sensor] ={}
-        for devId in sensors[sensor] :
-            i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
-            if devId not in sensorTMP102:
-                sensorTMP102[devId] = smbus.SMBus(1)
-            tRaw =  sensorTMP102[devId].read_word_data(i2cAdd,0)
-            t = (((tRaw << 8) & 0xFF00) + (tRaw >> 8)>>4)
-            if t > 2047: t = t-4096
-            t= ("%5.1f"%(float(t)*0.0625)).strip()
-            if t!="":
-                try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
-                except: pass
-                data[sensor][devId]={"temp":t.strip(" ")}
-                putValText(sensors[sensor][devId],[t],["temp"])
-                if devId in badSensors: del badSensors[devId]
-                time.sleep(0.1) 
-            else:    
-                data= incrementBadSensor(devId,sensor,data)
-    except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-    if sensor in data and data[sensor]=={}: del data[sensor]
-    U.muxTCA9548Areset()
-    return data    
-
-
 
 # ===========================================================================
 # TCS34725
@@ -3602,6 +3437,46 @@ def getVEML6040(sensor, data):
     return data
 
 #
+# ===========================================================================
+# TMP102
+# ===========================================================================
+def getTMP102(sensor, data):
+    global sensorTMP102, TMP102Started
+    global sensors, sValues, displayInfo
+   
+    if sensor not in sensors: return data
+
+    try:
+        ii= TMP102Started
+    except:    
+        TMP102Started=1
+        sensorTMP102 ={}
+
+    try:
+        data[sensor] ={}
+        for devId in sensors[sensor] :
+            i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+            if devId not in sensorTMP102:
+                sensorTMP102[devId] = smbus.SMBus(1)
+            tRaw =  sensorTMP102[devId].read_word_data(i2cAdd,0)
+            t = (((tRaw << 8) & 0xFF00) + (tRaw >> 8)>>4)
+            if t > 2047: t = t-4096
+            t= ("%5.1f"%(float(t)*0.0625)).strip()
+            if t!="":
+                try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+                except: pass
+                data[sensor][devId]={"temp":t.strip(" ")}
+                putValText(sensors[sensor][devId],[t],["temp"])
+                if devId in badSensors: del badSensors[devId]
+                time.sleep(0.1) 
+            else:    
+                data= incrementBadSensor(devId,sensor,data)
+    except  Exception, e:
+        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+    if sensor in data and data[sensor]=={}: del data[sensor]
+    U.muxTCA9548Areset()
+    return data    
+
 
 # ===========================================================================
 # getIS1145
@@ -3790,124 +3665,6 @@ def getADS1x15(sensor, data):
 
 
 
-# ===========================================================================
-# MCP3008
-# ===========================================================================
-
-
-def startMCP3008(devId):
-        global spi0,spi1
-
-        spiAdd=0
-        try:
-            ss= ""
-            if "spiMCP3008" in sensors:
-                ss="spiMCP3008"
-            if "spiMCP3008-1" in sensors:
-                ss="spiMCP3008-1"
-            if ss!="" :  
-                if sensors[ss][devId]["spiAddress"]!="":
-                    spiAdd=int(sensors[ss][devId]["spiAddress"])
-                    if spiAdd >1 : spiAdd = 1
-                    if spiAdd <0 : spiAdd = 0
-
-                    if spiAdd == 0:
-                        spi0 = spidev.SpiDev()
-                        spi0.open(0,0)
-                    if spiAdd == 1:
-                        spi1 = spidev.SpiDev()
-                        spi1.open(0,1)
-                    #print spiAdd, spi0,spi1    
-        except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"spi channel used: "+ unicode(spiAdd)+";    dev= "+unicode(dev))
-
-def getMCP3008(sensor, data):
-    global sensorMCP3008, MCP3008Started
-    global sensors, sValues, displayInfo
-    global spi0,spi1
-
-    if "spiMCP3008" in sensors:
-        spiAdd = int(sensors["spiMCP3008"][devId]["spiAddress"])
-    if "spiMCP3008-1" in sensors:
-        spiAdd = int(sensors["spiMCP3008-1"][devId]["spiAddress"])
-
-    data[sensor] ={}
-
-    try:
-        if sensor.find("-1") ==-1:
-            for devId in sensors[sensor]:
-                data[sensor][devId]={}
-                # read the analog pin
-                v=["","","","","","","",""]
-                s,e=0,8
-                for pin in range(s,e):
-                    if spiAdd == 0:
-                        adc = spi0.xfer2([1,(8+pin)<<4,0])
-                    if spiAdd==1:
-                        adc = spi1.xfer2([1,(8+pin)<<4,0])
-                    v = int(1000*(((adc[1]&3) << 8) + adc[2])*3.3/1024.)
-                    data[sensor][devId]["INPUT_"+str(pin)]  =v
-                    if devId in badSensors: del badSensors[devId]
-            if sensor in data and data[sensor]=={}: del data[sensor]
-        else:
-            for devId in sensors[sensor]:
-                data[sensor][devId]={}
-                if "input" in sensors[sensor][devId]:
-                    pin= int(sensors[sensor][devId]["input"])
-                else:
-                    pin=0
-                if spiAdd == 0:
-                    adc = spi0.xfer2([1,(8+pin)<<4,0])
-                if spiAdd==1:
-                    adc = spi1.xfer2([1,(8+pin)<<4,0])
-                v = int(1000*(((adc[1]&3) << 8) + adc[2])*3.3/1024.)
-                data[sensor][devId]["INPUT_0"]  =v
-                if devId in badSensors: del badSensors[devId]
-    except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        data= incrementBadSensor(devId,sensor,data)
-    if sensor in data and data[sensor]=={}: del data[sensor]
-    return data    
-
-
-
-
-# ===========================================================================
-# DHT
-# ===========================================================================
-
-
-def getDHT(sensor,data):
-    global badSensors
-    global sensors, sValues, displayInfo
-    try:
-        if sensor in sensors :
-            data[sensor]={}
-            for devId in sensors[sensor]:
-                t,h =getDATAdht(sensors[sensor][devId]["gpioPin"],sensor)
-                if t!="":
-                    try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
-                    except: pass
-                    data[sensor][devId] = {"temp":str(t).strip(" ")}
-                    if h!= "":
-                        try:    h = str(float(h)  + float(sensors[sensor][devId]["offsetHum"]))
-                        except: pass
-                        data[sensor][devId]["hum"]=str(h).strip(" ")
-                        if devId in badSensors: del badSensors[devId]
-                        putValText(sensors[sensor][devId],[t,h],["temp","hum"])
-                    time.sleep(0.1)
-                else:
-                    data= incrementBadSensor(devId,sensor,data)
-    except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-
-    if sensor in data and data[sensor]== {}: del data[sensor]
-    return data
-
-
-
-
 
 # ===========================================================================
 # MLX90614
@@ -4066,33 +3823,6 @@ def getPCF8591(sensor, data):
     return data
 
 
-def getMyprogram(sensor, data):
-    global sensors, sValues, displayInfo
-
-    if sensor not in sensors : return data    
-    try:
-        data[sensor] ={}
-        for devId in sensors[sensor]:
-            if "freeParameter" in sensors[sensor][devId]: freeParameter = sensors[sensor][devId]["freeParameter"]
-            else: freeParameter =""
-            params = json.dumps({"devId":devId,"freeParameter":freeParameter})
-            cmd ="/usr/bin/python "+G.homeDir+"myprogram.py  '" +params+"'"
-            #print "getsensorvalue cmd to myprogra"+cmd
-            v =subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
-            try:    v=json.loads(v)
-            except: v={}
-            #print "v:", v
-            if v!={}:
-                data[sensor][devId] = copy.copy(v)
-                if devId in badSensors: del badSensors[devId]
-            else:
-                data= incrementBadSensor(devId,sensor,data)
-    except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-    if sensor in data and data[sensor]=={}: del data[sensor]
-    return data
-
-
 # ===========================================================================
 # utils II
 # ===========================================================================
@@ -4156,7 +3886,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 
 
 def readParams():
-        global sensorList, sensors, sendToIndigoSecs,enableTXpinsAsGpio,enableSPIpinsAsGpio, sensorRefreshSecs
+        global sensorList, sensors, sendToIndigoSecs, sensorRefreshSecs
         global output
         global tempUnits, pressureUnits, distanceUnits
         global oldRaw, lastRead
@@ -4180,8 +3910,6 @@ def readParams():
 
         U.getGlobalParams(inp)
         if "debugRPI"             in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
-        if "enableSPIpinsAsGpio"  in inp: enableSPIpinsAsGpio=     (inp["enableSPIpinsAsGpio"])
-        if "enableTXpinsAsGpio"   in inp: enableTXpinsAsGpio=      (inp["enableTXpinsAsGpio"])
         if "output"               in inp: output=                  (inp["output"])
         if "tempUnits"            in inp: tempUnits=               (inp["tempUnits"])
         if "pressureUnits"        in inp: pressureUnits=           (inp["pressureUnits"])
@@ -4198,29 +3926,21 @@ def readParams():
 
 
         ### any changes?
-        sensorUp = U.doWeNeedToStartSensor(sensors,sensorsOld)
-        if sensorUp: rCode=True
+        sensorUp = U.doWeNeedToStartSensor(sensors, sensorsOld, sensorType="i2c")
         if outputOld != unicode(output): rCode=True
         
         
                  
-        if sensorUp !={}:
-            if os.path.isfile(G.homeDir+"temp/getsensorvalues.dat"):
-                os.remove(G.homeDir+"temp/getsensorvalues.dat")
+        if sensorUp =={}:
+            if os.path.isfile(G.homeDir+"temp/simplei2csensors.dat"):
+                os.remove(G.homeDir+"temp/simplei2csensors.dat")
+            exit(0)
 
         return rCode
 
 
 
 
-#################################
-def checkIfAliveNeedsToBeSend():
-    try:
-        if time.time() - G.lastAliveSend> 330:  # do we have to send alive signal to plugin?
-            U.sendURL(sendAlive=True )
-    except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
-    return
 
 #################################
 def doDisplay():
@@ -4242,19 +3962,19 @@ def doDisplay():
             a=initDisplay  # this fails if fist time
         except:
             initDisplay=time.time() # start display.py if we come here after startup first time
-            print " starting display from getsensorvalues 1"
+            print " starting display from simplei2csensors 1"
             os.system("/usr/bin/python "+G.homeDir+"display.py  &" )
             time.sleep(0.2)
 
         if time.time() - initDisplay > 3600*3: # once every 3 hour restart display
-            print " starting display from getsensorvalues 2"
+            print " starting display from simplei2csensors 2"
             os.system("/usr/bin/python "+G.homeDir+"display.py  &" )
             initDisplay =time.time()
             time.sleep(0.2)
 
         
         if not U.pgmStillRunning("display.py"):
-            print " starting display from getsensorvalues 3"
+            print " starting display from simplei2csensors 3"
             os.system("/usr/bin/python "+G.homeDir+"display.py  &" )
             time.sleep(0.2)
             initDisplay =time.time()
@@ -4667,18 +4387,6 @@ def doDisplay():
         print sValues
 
 
-#################################
-def checkSPSstatus():
-    global sensorList, sensors,spi0,spi1, enableSPIpinsAsGpio
-    if spi0 ==0 and spi1 ==0 and enableSPIpinsAsGpio=="0" and "spiMCP3008" in sensorList:
-        #print "point1", spi0, spi1 , enableSPIpinsAsGpio, sensorList
-        import spidev
-        if enableSPIpinsAsGpio=="0" and "spiMCP3008" in sensors:
-            for devId in sensors["spiMCP3008"] :
-                startMCP3008(devId)
-        if enableSPIpinsAsGpio=="0" and "spiMCP3008-1" in sensors:
-            for devId in sensors["spiMCP3008-1"] :
-                startMCP3008(devId)
 
 
 
@@ -4711,24 +4419,7 @@ def makeLightsensorFile(data):
         f.write(out)
         f.close()
 
-def testBad(newX, lastX, inXXX):
-
-    xxx = inXXX
-    try:
-        if newX.find("bad") ==-1:
-            if lastX.find("bad") ==-1:
-                xxx = max(xxx, abs( float(lastX) - float(newX) )/ max(0.1, abs(float(lastX) + float(newX)) )   )
-            else:
-                xxx = 99999.
-        else:
-            if lastX.find("bad") >-1:
-                xxx = 0
-            else:
-                xxx = 99999.
-    except : xxx = 99999.
-    return xxx
-    
-    
+   
 #################################
 #################################
 #################################
@@ -4738,10 +4429,8 @@ def testBad(newX, lastX, inXXX):
 #################################
 #################################
              
-global sensorList, sensors,spi0,spi1,badSensors
+global sensorList, sensors,badSensors
 global c1,c2,c3,c4,c5,c6,c7,c8
-global enableTXpinsAsGpio,enableSPIpinsAsGpio
-global startDHT
 global tempUnits, pressureUnits, distanceUnits
 global regularCycle
 global sValues, displayInfo
@@ -4755,7 +4444,6 @@ sensorRefreshSecs   = 90
 clockLightSensor    = "0"
 oldRaw              = ""
 lastRead            = 0
-startDHT            = ""
 tempUnits           ="Celsius"
 pressureUnits       = "mBar"
 distanceUnits       = "1"
@@ -4765,21 +4453,11 @@ sensors             = {}
 DHTpin              = 17
 spi0                = 0
 spi1                = 0
-enableTXpinsAsGpio  = "0"
-enableSPIpinsAsGpio = "0"
 authentication      = "digest"
 quick               = False
 output              = {}
 
 readParams()
-if enableSPIpinsAsGpio=="0" and ( "spiMCP3008" in sensors or "spiMCP3008-1" in sensors):
-    import spidev
-if enableSPIpinsAsGpio=="0" and "spiMCP3008" in sensors :
-    for devId in sensors["spiMCP3008"]:
-        startMCP3008(devId)
-if enableSPIpinsAsGpio=="0" and "spiMCP3008-1" in sensors:
-    for devId in sensors["spiMCP3008-1"]:
-        startMCP3008(devId)
 
 if U.getIPNumber() > 0:
     U.toLog(-1," getsensors no ip number  exiting ", doPrint =True)
@@ -4803,7 +4481,6 @@ tt                  = time.time()
 badSensors          = {}
 lastData            = {}
 lastMsg             = 0
-lastAliveSend       = tt
 G.tStart            = tt
 lastregularCycle    = tt
 lastRead            = tt
@@ -4819,9 +4496,6 @@ while True:
         
         if "i2cMLX90614"        in sensors: data  = getMLX90614("i2cMLX90614",  data)
         if regularCycle:
-            if "Wire18B20"      in sensors: data = get18B20("Wire18B20",     data)
-            if "DHTxx"          in sensors: data = getDHT("DHTxx",           data)
-            if "DHT11"          in sensors: data = getDHT("DHT11",           data)
             if "i2cBMExx"       in sensors: data = getBME("i2cBMExx",        data)
             if "i2cBMP280"      in sensors: data = getBME("i2cBMP280",       data,BMP=True)
             if "i2cBMPxx"       in sensors: data = getBMP("i2cBMPxx",        data)
@@ -4845,9 +4519,6 @@ while True:
             if "i2cADS1x15-1"   in sensors: data = getADS1x15("i2cADS1x15-1",data)
             if "i2cMS5803"      in sensors: data = getMS5803("i2cMS5803",data)
             if "i2cADC121"      in sensors: data = getADC121("i2cADC121",data)
-            if "spiMCP3008"     in sensors: data = getMCP3008("spiMCP3008",  data)
-            if "spiMCP3008-1"   in sensors: data = getMCP3008("spiMCP3008-1",data)
-            if "myprogram"      in sensors: data = getMyprogram("myprogram", data)
 
 
         doDisplay()
@@ -4876,18 +4547,7 @@ while True:
                             break
                         try:
                             #print dd, lastData[sens][dd], data[sens][dd]
-                            xxx = 0
-                            if sens =="Wire18B20":
-                                nSens = len(data[sens][devid][devType])
-                                if nSes != len(lastData[sens][devid][devType]):
-                                    changed =7
-                                    break
-                                for nnn in range(nSens):
-                                    for serialNumber in data[sens][devid][devType][nnn]:
-                                        if serialNumber in lastData[sens][devid][devType][nnn]: 
-                                            xxx = testBad( data[sens][devid][devType][nnn][serialNumber],lastData[sens][devid][devType][nnn][serialNumber], xxx )
-                            else:
-                                xxx = testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
+                            xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 
                             if xxx > (G.deltaChangedSensor/100.): 
                                 changed= xxx
@@ -4930,15 +4590,12 @@ while True:
         for n in range(NSleep):
             if quick: break
 
-            newParameterFile = readParams()
+            readParams()
             time.sleep(0.5)
             quick = U.checkNowFile(G.program)                
-            if tt - lastRead > 5 or newParameterFile:
+            if tt - lastRead > 5:
                 lastRead = tt
-                if newParameterFile:
-                    checkSPSstatus()        
-                    break
-                checkIfAliveNeedsToBeSend()
+                U.checkIfAliveNeedsToBeSend()
     except  Exception, e:
         U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
         time.sleep(5.)

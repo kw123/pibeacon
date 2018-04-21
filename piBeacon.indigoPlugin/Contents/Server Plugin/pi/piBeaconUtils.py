@@ -70,6 +70,12 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
             if G.program =="":
                 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " toLog   G.program not defined msg= "+ msg 
                 return 
+            if  not os.path.isdir(G.logDir):
+                print " logfile not ready"
+                os.system("sudo mkdir "+G.logDir+" &")
+                os.system("sudo chown -R  pi:pi  "+G.logDir)
+                return
+
             f=open(G.logDir+G.program+".log","a")
             f.write((datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+msg+"\n").encode("utf8"))
             f.close()
@@ -1103,13 +1109,65 @@ def checkIfrebootAction(action):
     return
 
 
+################################
+
+
+def sendi2cToPlugin():
+    try:
+        i2c= geti2c()
+        ret = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+        try:    temp = ret.split("=")[1].split("'")[0]
+        except: temp = 0
+        sendURL(data={"i2c":i2c,"temp":temp},sendAlive="alive")
+    except  Exception, e :
+        toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+    return 
 
 #################################
-def doWeNeedToStartSensor(sensors, sensorsOld, selectedSensor=""):
+def testBad(newX, lastX, inXXX):
+
+    xxx = inXXX
+    try:
+        if newX.find("bad") ==-1:
+            if lastX.find("bad") ==-1:
+                xxx = max(xxx, abs( float(lastX) - float(newX) )/ max(0.1, abs(float(lastX) + float(newX)) )   )
+            else:
+                xxx = 99999.
+        else:
+            if lastX.find("bad") >-1:
+                xxx = 0
+            else:
+                xxx = 99999.
+    except : xxx = 99999.
+    return xxx
+
+
+
+#################################
+def checkIfAliveNeedsToBeSend():
+    try:
+        tt = time.time()
+        lastSend = 0
+        if os.path.isfile(G.homeDir+"temp/messageSend"):
+            try:
+                lastSend = os.path.getmtime(G.homeDir+"temp/messageSend")
+            except:
+                pass
+        if time.time() - lastSend> 330:  # do we have to send alive signal to plugin?
+            sendURL(sendAlive=True )
+    except  Exception, e:
+        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+    return
+
+
+
+#################################
+def doWeNeedToStartSensor(sensors, sensorsOld, selectedSensor="",sensorType=""):
     if selectedSensor =="":
-        sensorUp={}
+        sensorUp ={}
         for sensor in sensors:
-            if sensor.find("INPUTgpio") >-1: continue
+            if sensor.find("INPUTgpio") >-1:                       continue
+            if sensorType !=""  and sensor.find(sensorType) ==-1:  continue
             if sensor not  in sensorsOld:                           sensorUp[sensor] = 1; continue
             for devId in sensors[sensor] :
                     if devId not in sensorsOld[sensor] :            sensorUp[sensor] = 1; continue
@@ -1118,7 +1176,8 @@ def doWeNeedToStartSensor(sensors, sensorsOld, selectedSensor=""):
                         if sensors[sensor][devId][prop] != sensorsOld[sensor][devId][prop]:
                                                                     sensorUp[sensor] = 1; break
         for sensor in  sensorsOld:
-            if sensor.find("INPUTgpio") >-1: continue
+            if sensor.find("INPUTgpio") >-1:                       continue
+            if sensorType !=""  and sensor.find(sensorType) ==-1:  continue
             if sensor not  in sensors:                              sensorUp[sensor] = 1; continue
             for devId in sensorsOld[sensor] :
                     if devId not in sensors[sensor] :               sensorUp[sensor] = 1; continue

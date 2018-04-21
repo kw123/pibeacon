@@ -1114,9 +1114,9 @@ sensorWasBad = False
 while True:
     try:
         tt = time.time()
-        data = {"sensors": {sensor:{}}}
         sendData = False
         if sensor in sensors:
+            data = {"sensors": {sensor:{}}}
             for devId in sensors[sensor]:
                 if devId not in lastValues: 
                     lastValues[devId]  =copy.copy(lastValues0)
@@ -1151,11 +1151,14 @@ while True:
                 else:
                     continue
                 if (   ( deltaN > deltaX[devId]  ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or  quick   ) and  ( tt - G.lastAliveSend > minSendDelta ):
-                        if not firstValue: # do not send first measurement, it is always OFFFF
+                        if time.time() - startTime < 120 and delatN > 0.5: 
+                            sendData = false
+                        else:
                             sendData = True
+                        if not firstValue: # do not send first measurement, it is always OFFFF
                             lastValues2[devId] = copy.copy(lastValues[devId])
                         firstValue = False
-        if sendData and time.time() - startTime > 60:
+        if sendData:
             U.sendURL(data)
 
         loopCount +=1
