@@ -1151,7 +1151,7 @@ while True:
                 else:
                     continue
                 if (   ( deltaN > deltaX[devId]  ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or  quick   ) and  ( tt - G.lastAliveSend > minSendDelta ):
-                        if time.time() - startTime < 120 and delatN > 0.5: 
+                        if time.time() - startTime < 120 and deltaN > 0.5: 
                             sendData = false
                         else:
                             sendData = True
