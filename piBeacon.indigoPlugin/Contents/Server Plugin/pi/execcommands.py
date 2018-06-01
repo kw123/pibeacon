@@ -16,7 +16,7 @@ import  piBeaconUtils   as U
 import  piBeaconGlobals as G
 G.program = "execcommands"
 
-allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","startCalibration","file","BLEreport"]
+allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","startCalibration","file","BLEreport"]
 
 
 def execCMDS(data):
@@ -182,6 +182,18 @@ def execCMDS(data):
                     continue
 
 
+            if  cmd == "resetDevice":
+                    if next["device"].find(",")> 1:
+                        list = next["device"].split(",")
+                    elif next["device"]== "all":
+                        list = G.programFiles
+                    else:
+                        list = [next["device"]]
+                    for pgm in list:
+                        os.system("echo x > "+G.homeDir+"temp/"+pgm+".reset")
+                    continue
+
+
 
 
             if  cmd == "startCalibration":
@@ -258,10 +270,9 @@ def execCMDS(data):
                         else:
                             try: del execcommands[str(pin)]
                             except: pass
-                        U.killOldPgm(-1,"'setGPIO.py "+pin+" '" )
+                        #U.killOldPgm(-1,"'setGPIO.py "+pin+" '" )
                         if cmd =="disable" :
                             continue
-                        time.sleep(0.01)
                         cmdJ= json.dumps({"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM })
                         cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJ+"'  &"
                         U.toLog(1," cmd= "+cmdOut)

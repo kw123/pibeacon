@@ -119,36 +119,40 @@ class ccs811_class(object):
         self.start(mode = mode)
 
     def start(self, mode = CCS811_DRIVE_MODE_250MS):
-        self._TVOC = 0
-        self._eCO2 = 0
-        self.tempOffset = 0
-        self.SWReset()
-        time.sleep(0.5)
+        try:
+            self._TVOC = 0
+            self._eCO2 = 0
+            self.tempOffset = 0
+            self.SWReset()
+            time.sleep(0.5)
         
-            #check that the HW id is correct
-        tp =  self.readU8(CCS811_HW_ID)  
-        tpOk = "ok" if tp== 0x81 else "error" 
-        U.toLog(2, "-- id code    %x  =   %s "% (tp, tpOk)  )
+                #check that the HW id is correct
+            tp =  self.readU8(CCS811_HW_ID)  
+            tpOk = "ok" if tp== 0x81 else "error" 
+            U.toLog(2, "-- id code    %x  =   %s "% (tp, tpOk)  )
 
-        #try to start the app
-        self.writeList(CCS811_BOOTLOADER_APP_START, [])
-        time.sleep(1.5)
-        #make sure there are no errors and we have entered application mode
+            #try to start the app
+            self.writeList(CCS811_BOOTLOADER_APP_START, [])
+            time.sleep(1.5)
+            #make sure there are no errors and we have entered application mode
 
-        tp = self.checkError()
-        tpOk = "ok" if tp==1 else "error" 
-        U.toLog(2, "-- error code %x  =   %s "% (tp, tpOk)  )
+            tp = self.checkError()
+            tpOk = "ok" if tp==1 else "error" 
+            U.toLog(2, "-- error code %x  =   %s "% (tp, tpOk)  )
 
-        tp =  self._status.FW_MODE  
-        tpOk = "ok" if tp== 1 else "error" 
-        U.toLog(2, "-- mode code  %x  =   %s "% (tp, tpOk)  )
+            tp =  self._status.FW_MODE  
+            tpOk = "ok" if tp== 1 else "error" 
+            U.toLog(2, "-- mode code  %x  =   %s "% (tp, tpOk)  )
 
-        time.sleep(1)
+            time.sleep(1)
         
-        self.disableInterrupt()
+            self.disableInterrupt()
         
-        #default to read every second
-        self.setDriveMode(mode)
+            #default to read every second
+            self.setDriveMode(mode)
+        except  Exception, e:
+            U.toLog(-1, u" error in starting css sensor in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        
 
 
     def setDriveMode(self, mode):
@@ -180,20 +184,23 @@ class ccs811_class(object):
 
     def readData(self):
 
-        if(not self.available()):
-            return False
-        else:
-            buf = self.readList(CCS811_ALG_RESULT_DATA, 8)
-
-            self._eCO2 = (buf[0] << 8) | (buf[1])
-            self._TVOC = (buf[2] << 8) | (buf[3])
-            
-            if(self._status.ERROR):
-                return buf[5]
-                
+        try:
+            if(not self.available()):
+                return False
             else:
-                return 0
-        
+                buf = self.readList(CCS811_ALG_RESULT_DATA, 8)
+
+                self._eCO2 = (buf[0] << 8) | (buf[1])
+                self._TVOC = (buf[2] << 8) | (buf[3])
+            
+                if(self._status.ERROR):
+                    return buf[5]
+                
+                else:
+                    return 0
+        except  Exception, e:
+            U.toLog(-1, u" error in starting css sensor in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return  0       
 
 
     def setEnvironmentalData(self, humidity, temperature):
@@ -271,17 +278,30 @@ class ccs811_class(object):
 
 ######## io methods        
     def writeList(self, command,buf):
-        self.bus.write_i2c_block_data(self.i2c_address, command, buf)
+        try:
+            self.bus.write_i2c_block_data(self.i2c_address, command, buf)
+        except  Exception, e:
+            U.toLog(-1, u"writeList  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
     def readList(self, command,  length):
-        return self.bus.read_i2c_block_data(self.i2c_address,command,length)
-        
-    def readU8(self, reg):
-         return  self.bus.read_byte_data(self.i2c_address, reg)
+        try:
+            return self.bus.read_i2c_block_data(self.i2c_address,command,length)
+        except  Exception, e:
+            U.toLog(-1, u"readList  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return []
 
+    def readU8(self, reg):
+        try:
+            return  self.bus.read_byte_data(self.i2c_address, reg)
+        except  Exception, e:
+            U.toLog(-1, u"readU8  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return 0
     def write8(self, reg,value):
-        self.bus.write_byte_data(self.i2c_address, reg, value)
-        
+        try:
+            self.bus.write_byte_data(self.i2c_address, reg, value)
+        except  Exception, e:
+            U.toLog(-1, u"write8  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+
 
 
  # ===========================================================================
@@ -315,6 +335,7 @@ def readParams():
           
         if "sensorList"         in inp:  sensorList=             (inp["sensorList"])
         if "sensors"            in inp:  sensors =               (inp["sensors"])
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
         
  
         if sensor not in sensors:
@@ -448,6 +469,8 @@ def getValues(devId):
         CO2      = 0
         VOC      = 0
         TEMP     = 0
+        co2      = 0
+        voc      = 0
         for kk in range(15):
         
             for ii in range(20):
@@ -456,7 +479,7 @@ def getValues(devId):
                     except: temp = lastTemp
                     if temp < -20   or   temp > 50   or   (lastTemp !=-100 and abs(temp-lastTemp) > 10):  temp = lastTemp
                     lastTemp = temp
-                    if not ccs811sensor[devId].readData():
+                    if  not ccs811sensor[devId].readData():
                         co2 = ccs811sensor[devId].geteCO2()
                         voc = ccs811sensor[devId].getTVOC()
 

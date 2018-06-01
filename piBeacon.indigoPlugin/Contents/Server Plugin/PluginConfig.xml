@@ -17,6 +17,14 @@
             <Option value="Kelvin"     >Kelvin</Option>
         </List>
    </Field>
+   <Field    id="tempDigits"   type="menu" defaultValue="1">
+        <Label>Temperature digits to show and store:</Label>
+        <List>
+            <Option value="0" >0 </Option>
+            <Option value="1" >1</Option>
+            <Option value="2" >2</Option>
+        </List>
+   </Field>
    <Field    id="pressureUnits"   type="menu" defaultValue="Pascal">
         <Label>Pressure displayed in:</Label>
         <List>

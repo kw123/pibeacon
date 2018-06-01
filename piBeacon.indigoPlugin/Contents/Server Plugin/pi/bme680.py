@@ -818,6 +818,7 @@ def readParams():
           
         if "sensorList"         in inp:  sensorList=             (inp["sensorList"])
         if "sensors"            in inp:  sensors =               (inp["sensors"])
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
         
  
         if sensor not in sensors:
@@ -1026,7 +1027,7 @@ def getValues(devId):
             hum   +=  float(sensors[sensor][devId]["offsetHum"])  
             gas   +=  float(sensors[sensor][devId]["offsetGas"])
              
-            data = {"temp":         ("%7.1f"%( temp   ) ).strip(), 
+            data = {"temp":         ("%.2f"%( temp   ) ).strip(), 
                     "press":        (  "%7d"%( press  ) ).strip(), 
                     "hum":          (  "%7d"%( hum    ) ).strip(), 
                     "GasResistance":(  "%7d"%( gas    ) ).strip(), 

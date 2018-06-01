@@ -40,9 +40,8 @@ except:
 
 
 try:    G.debug= command["debug"]
-except: pass
-U.toLog(1, "setGPIO  command :" + unicode(sys.argv))
-
+except: G.debug = 1
+U.toLog(0, "setGPIO  command :" + unicode(sys.argv))
 try:    PWM= command["PWM"]
 except: pass
 

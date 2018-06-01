@@ -50,6 +50,7 @@ def readParams():
          
         if "sensors"                in inp:  sensors =           (inp["sensors"])
         if "distanceUnits"          in inp:  distanceUnits=      (inp["distanceUnits"])
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
         
         if "output"                 in inp:  output=             (inp["output"])
    

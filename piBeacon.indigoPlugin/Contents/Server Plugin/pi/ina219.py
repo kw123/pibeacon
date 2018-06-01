@@ -210,6 +210,7 @@ def readParams():
           
         if "sensorList"         in inp:  sensorList=             (inp["sensorList"])
         if "sensors"            in inp:  sensors =               (inp["sensors"])
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
         
  
         if sensor not in sensors:

@@ -50,7 +50,7 @@ def get18B20(sensor, data):
                     if "YES" in dataW[0]:
                         t1=dataW[1].split("t=")
                         if len(t1)==2:
-                            ret[line] = ("%5.1f"%(float(t1[1])/1000.)).strip()
+                            ret[line] = ("%.2f"%(float(t1[1])/1000.)).strip()
             tempList= ret # {"28-800000035de5": "21.6", ...}  
         except  Exception, e:
             U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))

@@ -1780,7 +1780,7 @@ The myBLUE sensor in the app shows the MAC revers and only the front and back pa
 
 
     <Device type="custom" id="Wire18B20">
-      <Name>INPUT-Wire18B20-Temp</Name>
+      <Name>INPUT-Temp-Wire18B20</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
@@ -2267,7 +2267,112 @@ The myBLUE sensor in the app shows the MAC revers and only the front and back pa
 
          </States>
     </Device>
- 
+
+
+    <Device type="custom" id="i2cLM35A">
+      <Name>INPUT-Temp-i2cLM75A-35</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabeli2cLM35A" type="label">
+                <Label>Setup i2cLM75A temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+            </Field>
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c address of device:</Label>
+                <List>
+                    <Option value="72"   >0x48 = 72 Ax=0,0,0 default</Option>
+                    <Option value="73"   >0x49 = 73 AX=1,0,0</Option>
+                    <Option value="74"   >0x4A = 74 Ax=0,1,0</Option>
+                    <Option value="75"   >0x4B = 75 Ax=1,1,0</Option>              
+                    <Option value="76"   >0x4C = 76 Ax=0,0,1</Option>    
+                    <Option value="77"   >0x4D = 77 Ax=1,0,1</Option>       
+                    <Option value="78"   >0x4E = 78 Ax=0,1,1</Option>
+                    <Option value="79"   >0x4F = 79 Ax=1,1,1</Option>
+                </List>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="Temperature"  >Temperature</Option>
+                </List>
+            </Field>
+            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+            <Field id="displayEnable" type="menu"     defaultValue="0"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="1"  >yes</Option>
+                    <Option value="0"  >No</Option>
+                </List>
+            </Field>
+            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="Temperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Temperature</TriggerLabel>
+                    <ControlPageLabel>Temperature</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+                </State>
+
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+
+    </Device>
+
+
     <Device type="custom" id="i2cT5403">
       <Name>INPUT-Temp+Press-i2cT5403</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
@@ -2515,111 +2620,6 @@ The myBLUE sensor in the app shows the MAC revers and only the front and back pa
 
         </States>
     </Device>
-
-    <Device type="custom" id="i2cADC121">
-      <Name>INPUT-ADC-i2cADC121</Name>
-      <UiDisplayStateId>status</UiDisplayStateId>
-        <ConfigUI>
-            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-            <Field id="infoLabel" type="label">
-                <Label>Setup i2cADC121 ADC sensor on individual rPis.. connect 5V, GND, SLA,SLC
-It can be used as a linear ADC converter or as a frontend to various sensors 
-ie MG gas sensors, Hall-efect and Current sensors
-For the MQ gas sensors you need to understand the required heating voltage. 
-  That heating voltage sets the sensitivity for various gases. 
-  Check the web pages and PDFs for the sensitivies
-  Teh plugin has preset sensitivities for various sensors. 
-  They are ONLY valid for the mentioned gas.  
-</Label>
-            </Field>
-
-            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-                <Label>select rPi-server to which the sensor is connect to:</Label> 
-            </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="62"> <Label>i2c address of device:</Label>
-                <List>
-                    <Option value="80"  >0x50 = 80  (default)</Option>
-                    <Option value="81"  >0x51 = 81 </Option>
-                    <Option value="82"  >0x52 = 82 </Option>
-                    <Option value="83"  >0x53 = 83 </Option>
-                    <Option value="84"  >0x54 = 84 </Option>
-                    <Option value="85"  >0x55 = 85 </Option>
-                    <Option value="86"  >0x56 = 86 </Option>
-                 </List>
-            </Field>
-            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-                <Label>use TCA9548A multiplexer for this sensor:</Label> 
-                <List>
-                    <Option value="-1"    >off </Option>
-                    <Option value="0"     >channel 0  </Option>
-                    <Option value="1"     >channel 1  </Option>
-                    <Option value="2"     >channel 2  </Option>
-                    <Option value="3"     >channel 3  </Option>
-                    <Option value="4"     >channel 4  </Option>
-                    <Option value="5"     >channel 5  </Option>
-                    <Option value="6"     >channel 6  </Option>
-                    <Option value="7"     >channel 7  </Option>
-                 </List>
-            </Field>
-            <Field id="type" type="menu"     defaultValue="MQ7"> <Label>sub type of sensor:</Label>
-                <List>
-                    <Option value="MQ3-Alcohol" >MQ3        Gas sensor @5V   Alcohol</Option>
-                    <Option value="MQ3-Benzene" >MQ3        Gas sensor @5V   Benzene</Option>
-                    <Option value="MQ4"         >MQ4        Gas sensor @5V   CNG</Option>
-                    <Option value="MQ7"         >MQ7        Gas sensor @1.5V CO</Option>
-                    <Option value="MQ9"         >MQ9        Gas sensor @1.5V CO </Option>
-                    <Option value="MQ9-5CH4"    >MQ9        Gas sensor @5V   CH4 </Option>
-                    <Option value="MQ9-5LPG"    >MQ9        Gas sensor @5V   LPG</Option>
-                    <Option value="MQ131"       >MQ131      Gas sensor @5V   Ozon</Option>
-                    <Option value="A13XX"       >A13XX      Hall effect Sensor</Option>
-                    <Option value="TA12_200"    >TA12_200   current sensor </Option>
-                    <Option value="adc"         >adc        Plain ADC </Option>
-                 </List>
-            </Field>
-            <Field id="infoLabelMQ" type="label" visibleBindingId="type" visibleBindingValue="MQ3-Alcohol,MQ3-Benzene,MQ4,MQ7,MQ9,MQ131,MQ9-5CH4,MQ9-5LPG">
-                <Label>Power up sensor and measure V (at pin2 of sensor -- potentiometer)  in calibration condition, use that voltage for Vca</Label>
-            </Field>
-            <Field id="Vca" type="textfield"     defaultValue="3300" visibleBindingId="type" visibleBindingValue="MQ3-Alcohol,MQ3-Benzene,MQ4,MQ7,MQ9,MQ131,MQ9-5CH4,MQ9-5LPG"> <Label>Vca sensor in mV:</Label>  </Field>
-
-
-            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Value"> <Label>Property to display in the State Column:</Label>
-                <List>
-                    <Option value="adc"     >adc</Option>
-                    <Option value="value"   >value</Option>
-                </List>
-            </Field>
-            <Field id="offset" type="textfield"     defaultValue="0"> <Label>offset added to measured value:</Label> </Field>
-            <Field id="mult"   type="textfield"     defaultValue="1"> <Label>multiply measured value:</Label> </Field>
-
-        </ConfigUI>
-        <States>
-                <State id="status">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>status</TriggerLabel>
-                    <ControlPageLabel>status</ControlPageLabel>
-                </State>
-                <State id="adc">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>adc</TriggerLabel>
-                    <ControlPageLabel>adc</ControlPageLabel>
-                </State>
-                  <State id="value">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>value</TriggerLabel>
-                    <ControlPageLabel>value</ControlPageLabel>
-                </State>
-                <State id="lastSensorChange">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>lastSensorChange</TriggerLabel>
-                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
-                </State>
-        </States>
-    </Device>
-
    
     <Device type="custom" id="i2cBMPxx">
       <Name>INPUT-Temp+Press-i2cBMPxx</Name>
@@ -2745,640 +2745,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
      </States>
     </Device>
 
-   
-    <Device type="custom" id="mlx90614">
-      <Name>INPUT-Temp-Ambient+Infrared-mlx90614</Name>
-      <UiDisplayStateId>status</UiDisplayStateId>
-        <ConfigUI>
-            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-            <Field id="infoLabeli2cMLX90614" type="label">
-                <Label>Setup i2cMLX90614 IR remote temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
-            </Field>
-
-            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-                <Label>select rPi-server to which the sensor is connect to:</Label> 
-            </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="90"> <Label>i2c address of device:</Label>
-                <List>
-                    <Option value="90"   >0x5a = 90 </Option>
-                 </List>
-            </Field>
-            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-                <Label>use TCA9548A multiplexer for this sensor:</Label> 
-                <List>
-                    <Option value="-1"    >off </Option>
-                    <Option value="0"     >channel 0  </Option>
-                    <Option value="1"     >channel 1  </Option>
-                    <Option value="2"     >channel 2  </Option>
-                    <Option value="3"     >channel 3  </Option>
-                    <Option value="4"     >channel 4  </Option>
-                    <Option value="5"     >channel 5  </Option>
-                    <Option value="6"     >channel 6  </Option>
-                    <Option value="7"     >channel 7  </Option>
-                 </List>
-            </Field>
-            <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
-             <Label>read sensor every xx secs :</Label>
-                <List>
-                    <Option value="0.5" > 0.5 secs - a lot of updates for indigo</Option>
-                    <Option value="1"   > 1   secs </Option>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                    <Option value="12"  > 12  secs</Option>
-                    <Option value="15"  > 15  secs</Option>
-                    <Option value="20"  > 20  secs</Option>
-                    <Option value="30"  > 30  secs</Option>
-                    <Option value="40"  > 40  secs</Option>
-                    <Option value="60"  > 60  secs</Option>
-                    <Option value="80"  > 80  secs</Option>
-                    <Option value="100" > 100 secs</Option>
-                    <Option value="120" > 2   minutes</Option>
-                    <Option value="180" > 3   minutes</Option>
-                </List>
-            </Field>
-            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-             <Label>min delta secs between indigo updates :</Label>
-                <List>
-                    <Option value="0.2" > 0.2 secs </Option>
-                    <Option value="0.5" > 0.5 secs </Option>
-                    <Option value="1"   > 1   secs </Option>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                </List>
-            </Field>
-            <Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 
-             <Label>delta X(%) to trigger update:</Label>
-                <List>
-                    <Option value="0.5" > 0.5</Option>
-                    <Option value="1"    > 1  = 0.2ºC at 20C</Option>
-                    <Option value="2"    > 2</Option>
-                    <Option value="3"    > 3</Option>
-                    <Option value="5"    > 5</Option>
-                    <Option value="15"   > 15</Option>
-                    <Option value="10"   > 10   </Option>
-                    <Option value="15"   > 15   </Option>
-                    <Option value="20"   > 20   </Option>
-                    <Option value="25"   > 25   </Option>
-                    <Option value="30"   > 30   </Option>
-                </List>
-            </Field>
-
-            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
-                <List>
-                    <Option value="Temperature"  >Temperature</Option>
-                    <Option value="AmbientTemperature"      >Ambient Temperature</Option>
-                    <Option value="Temperature/AmbientTemperature" >Temperature/Ambient</Option>
-               </List>
-            </Field>
-            <Field id="offsetTemp" type="textfield"   defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-            <Field id="displayEnable" type="menu"     defaultValue="0"> 
-                <Label>use local display to show values:</Label> 
-                <List>
-                    <Option value="1"  >yes</Option>
-                    <Option value="0"  >No</Option>
-                </List>
-            </Field>
-           <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
-           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">   </Field>
-
-        </ConfigUI>
-      <States>
-                <State id="status">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>status</TriggerLabel>
-                    <ControlPageLabel>status</ControlPageLabel>
-                </State>
-                <State id="Temperature">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Temperature</TriggerLabel>
-                    <ControlPageLabel>Temperature</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
-                </State>
-                
-                 <State id="AmbientTemperature">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperature</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperature</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-                </State>
-                <State id="lastSensorChange">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>lastSensorChange</TriggerLabel>
-                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
-                </State>
-
-     </States>
-    </Device>
-
-
-  
-    <Device type="custom" id="i2cBMExx">
-      <Name>INPUT-Temp+Press+Hum-i2cBME280</Name>
-      <UiDisplayStateId>status</UiDisplayStateId>
-        <ConfigUI>
-            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-            <Field id="infoLabel" type="label">
-                <Label>Setup i2cBME280 temp pressure humidity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
-            </Field>
-
-            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-                <Label>select rPi-server to which the sensor is connect to:</Label> 
-            </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="118"> <Label>i2c address of device:</Label>
-                <List>
-                    <Option value="118"   >0x76 = 118 (SDO-Gnd)default </Option>
-                    <Option value="119"   >0x77 = 119 (SDO-V+)</Option>
-                 </List>
-            </Field>
-            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-                <Label>use TCA9548A multiplexer for this sensor:</Label> 
-                <List>
-                    <Option value="-1"    >off </Option>
-                    <Option value="0"     >channel 0  </Option>
-                    <Option value="1"     >channel 1  </Option>
-                    <Option value="2"     >channel 2  </Option>
-                    <Option value="3"     >channel 3  </Option>
-                    <Option value="4"     >channel 4  </Option>
-                    <Option value="5"     >channel 5  </Option>
-                    <Option value="6"     >channel 6  </Option>
-                    <Option value="7"     >channel 7  </Option>
-                 </List>
-            </Field>
-
-            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
-                <List>
-                    <Option value="Temperature"  >Temperature</Option>
-                    <Option value="Humidity"      >Humidity</Option>
-                    <Option value="Pressure"      >Pressure</Option>
-                    <Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
-                    <Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
-                    <Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
-                    <Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
-                </List>
-            </Field>
-            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-            <Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
-            <Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
-
-            <Field id="displayEnable" type="menu"     defaultValue="0"> 
-                <Label>use local display to show values:</Label> 
-                <List>
-                    <Option value="1"  >yes</Option>
-                    <Option value="0"  >No</Option>
-                </List>
-            </Field>
-            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
-           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
-
-        </ConfigUI>
-        <States>
-                <State id="status">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>status</TriggerLabel>
-                    <ControlPageLabel>status</ControlPageLabel>
-                </State>
-                <State id="Temperature">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Temperature</TriggerLabel>
-                    <ControlPageLabel>Temperature</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
-                </State>
-
-                <State id="Humidity">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Humidity</TriggerLabel>
-                    <ControlPageLabel>Humidity</ControlPageLabel>
-                </State>
-                <State id="HumidityMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
-                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
-                </State>
-                <State id="HumidityMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMinToday</TriggerLabel>
-                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
-                </State>
-                <State id="HumidityMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="HumidityMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
-                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
-                </State>
-
-                <State id="Pressure">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Pressure</TriggerLabel>
-                    <ControlPageLabel>Pressure</ControlPageLabel>
-                </State>
-                <State id="PressureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMaxToday</TriggerLabel>
-                    <ControlPageLabel>PressureMaxToday</ControlPageLabel>
-                </State>
-                <State id="PressureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMinToday</TriggerLabel>
-                    <ControlPageLabel>PressureMinToday</ControlPageLabel>
-                </State>
-                <State id="PressureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="PressureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-                </State>
-                <State id="lastSensorChange">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>lastSensorChange</TriggerLabel>
-                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
-                </State>
-
-        </States>
-    </Device>
-
-
-   
-    <Device type="custom" id="bme680">
-      <Name>INPUT-Temp+Press+Hum-i2cBME680</Name>
-      <UiDisplayStateId>status</UiDisplayStateId>
-        <ConfigUI>
-            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-            <Field id="infoLabel" type="label">
-                <Label>Setup i2cBME680 temp pressure humidity sensor on individual rPis.. 
-    connect 3.3, GND, SLA,SLC.
-It measures Temp, humidity and pressure like eg bme280 and in addition 
-     a gas value that is a resistance that chnages with air quality. 
-In clean air the resistance is the highest, if it senses eg VOC gases the 
-  resistance becomes lower.
-airQuality/GasSore is curent resistance / baseline
-The program can use differnt modes for airQuality/gasScore calibration: 
-- auto calibration: it will run until it finds stable gas resistance and sets that as 
-     its basline to be clean air, 
-  if the values goes above that baseline it will recalibrate and use the new baseline  
-  once calibrated, it will save value to bme680.Calibration file on RPi
-- or you can overwrite that by setting your own value statically.
-- or read last calibration from calibration file, if error do regular calibration steps
-The sensor read rate will impact the baseline, that is due to the heat cycle
-   if you change the read cyle time, it must be recalibrated 
-After some days of running in clean air, proposed setup is: 
-====set baseline to fixed value of clean air====
-  </Label>
-            </Field>
-
-            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-                <Label>select rPi-server to which the sensor is connect to:</Label> 
-            </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="119"> <Label>i2c address of device:</Label>
-                <List>
-                    <Option value="118"   >0x76 = 118 (SDO-Gnd) </Option>
-                    <Option value="119"   >0x77 = 119 (SDO-V+)default</Option>
-                 </List>
-            </Field>
-            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-                <Label>use TCA9548A multiplexer for this sensor:</Label> 
-                <List>
-                    <Option value="-1"    >off </Option>
-                    <Option value="0"     >channel 0  </Option>
-                    <Option value="1"     >channel 1  </Option>
-                    <Option value="2"     >channel 2  </Option>
-                    <Option value="3"     >channel 3  </Option>
-                    <Option value="4"     >channel 4  </Option>
-                    <Option value="5"     >channel 5  </Option>
-                    <Option value="6"     >channel 6  </Option>
-                    <Option value="7"     >channel 7  </Option>
-                 </List>
-            </Field>
-            <Field id="calibrateIfgt" type="menu"     defaultValue="110" hidden="no"> 
-             <Label>recalibrate automatically if AirQuality gt:</Label>
-                <List>
-                    <Option value="8888888" > set to static value</Option>
-                    <Option value="9999999" > read calibration from file</Option>
-                    <Option value="103"    > 103 percent</Option>
-                    <Option value="105"    > 105 percent</Option>
-                    <Option value="107"    > 107 percent</Option>
-                    <Option value="110"    > 110 percent</Option>
-                    <Option value="115"    > 115 percent</Option>
-                    <Option value="120"    > 120 percent</Option>
-                </List>
-            </Field>
-            <Field id="setCalibration" type="textfield"     defaultValue="180000" hidden="no"  visibleBindingId="calibrateIfgt" visibleBindingValue="8888888"> 
-               <Label>set Calibration value fixed to:</Label>
-            </Field>
-            <Field id="sensorRefreshSecs" type="menu"     defaultValue="3" hidden="no"> 
-             <Label>read sensor every xx secs :</Label>
-                <List>
-                    <Option value="1"   > 1   secsfor testing</Option>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs default</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="5"   > 5   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                    <Option value="12"  > 12  secs</Option>
-                    <Option value="15"  > 15  secs</Option>
-                    <Option value="20"  > 20  secs</Option>
-                    <Option value="30"  > 30  secs</Option>
-                    <Option value="40"  > 40  secs</Option>
-                    <Option value="60"  > 60  secs</Option>
-                </List>
-            </Field>
-            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-             <Label>min delta secs between indigo updates :</Label>
-                <List>
-                    <Option value="1"   > 1   secs </Option>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                </List>
-            </Field>
-            <Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
-             <Label>delta value (%) to trigger indigo update:</Label>
-                <List>
-                    <Option value="1"    > 1</Option>
-                    <Option value="2"    > 2</Option>
-                    <Option value="3"    > 3</Option>
-                    <Option value="5"    > 5</Option>
-                    <Option value="10"   > 10   </Option>
-                    <Option value="15"   > 15   </Option>
-                    <Option value="20"   > 20   </Option>
-                    <Option value="25"   > 25   </Option>
-                    <Option value="30"   > 30   </Option>
-                </List>
-            </Field>
-
-            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
-                <List>
-                    <Option value="Temperature"  >Temperature</Option>
-                    <Option value="Humidity"      >Humidity</Option>
-                    <Option value="Pressure"      >Pressure</Option>
-                    <Option value="GasResistance" >Gas  (raw resistance)</Option>
-                    <Option value="AirQuality"    >AirQuality (in % after calibration set)</Option>
-                    <Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
-                    <Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
-                    <Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
-                    <Option value="Temperature/Humidity/Pressure/AirQuality"     >Temperature/Humidity/Pressure/AirQuality</Option>
-                    <Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
-                    <Option value="Temperature/GasResistance"     >Temperature/GasResistance</Option>
-                    <Option value="Temperature/AirQuality"     >Temperature/AirQuality</Option>
-                </List>
-            </Field>
-            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-            <Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
-            <Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
-            <Field id="offsetGas" type="textfield"      defaultValue="0"> <Label>offset added to measured Gas(Ohm):</Label> </Field>
-
-            <Field id="displayEnable" type="menu"     defaultValue="0"> 
-                <Label>use local display to show values:</Label> 
-                <List>
-                    <Option value="1"  >yes</Option>
-                    <Option value="0"  >No</Option>
-                </List>
-            </Field>
-            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
-           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
-
-        </ConfigUI>
-        <States>
-                <State id="status">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>status</TriggerLabel>
-                    <ControlPageLabel>status</ControlPageLabel>
-                </State>
-                <State id="Temperature">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Temperature</TriggerLabel>
-                    <ControlPageLabel>Temperature</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
-                </State>
-
-                <State id="Humidity">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Humidity</TriggerLabel>
-                    <ControlPageLabel>Humidity</ControlPageLabel>
-                </State>
-                <State id="HumidityMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
-                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
-                </State>
-                <State id="HumidityMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMinToday</TriggerLabel>
-                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
-                </State>
-                <State id="HumidityMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="HumidityMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
-                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
-                </State>
-                <State id="HumidityMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
-                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
-                </State>
-                <State id="HumidityMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMinToday</TriggerLabel>
-                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
-                </State>
-                <State id="HumidityMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="HumidityMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
-                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
-                </State>
-
-
-
-                <State id="Pressure">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Pressure</TriggerLabel>
-                    <ControlPageLabel>Pressure</ControlPageLabel>
-                </State>
-                <State id="PressureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMaxToday</TriggerLabel>
-                    <ControlPageLabel>PressureMaxToday</ControlPageLabel>
-                </State>
-                <State id="PressureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMinToday</TriggerLabel>
-                    <ControlPageLabel>PressureMinToday</ControlPageLabel>
-                </State>
-                <State id="PressureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="PressureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>PressureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-                </State>
-
-                <State id="GasResistance">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>GasResistance</TriggerLabel>
-                    <ControlPageLabel>GasResistance</ControlPageLabel>
-                </State>
-                
-                <State id="AirQuality">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>AirQuality</TriggerLabel>
-                    <ControlPageLabel>AirQuality</ControlPageLabel>
-                </State>
-                <State id="AirQualityMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AirQualityMaxToday</TriggerLabel>
-                    <ControlPageLabel>AirQualityMaxToday</ControlPageLabel>
-                </State>
-                <State id="AirQualityMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AirQualityMinToday</TriggerLabel>
-                    <ControlPageLabel>AirQualityMinToday</ControlPageLabel>
-                </State>
-                <State id="AirQualityMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AirQualityMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>AirQualityMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="AirQualityMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AirQualityMinYesterday</TriggerLabel>
-                    <ControlPageLabel>AirQualityMinYesterday</ControlPageLabel>
-                </State>
-                
-                <State id="GasBaseline">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>GasBaseline</TriggerLabel>
-                    <ControlPageLabel>GasBaseline</ControlPageLabel>
-                </State>
-                <State id="lastSensorChange">
-                    <ValueType>String</ValueType>
-                    <TriggerLabel>lastSensorChange</TriggerLabel>
-                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
-                </State>
-        </States>
-    </Device>
-
-  
+    
     <Device type="custom" id="i2cBMP280">
       <Name>INPUT-Temp+Press-i2cBMP280</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
@@ -3756,32 +3123,27 @@ After some days of running in clean air, proposed setup is:
    
 
   
-    <Device type="custom" id="i2cLM35A">
-      <Name>INPUT-Temp-i2cLM75A-35</Name>
+  
+    <Device type="custom" id="i2cBMExx">
+      <Name>INPUT-Temp+Press+Hum-i2cBME280</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-            <Field id="infoLabeli2cLM35A" type="label">
-                <Label>Setup i2cLM75A temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+            <Field id="infoLabel" type="label">
+                <Label>Setup i2cBME280 temp pressure humidity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
             </Field>
 
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                         <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
                 <Label>select rPi-server to which the sensor is connect to:</Label> 
             </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c address of device:</Label>
+            <Field id="i2cAddress" type="menu"     defaultValue="118"> <Label>i2c address of device:</Label>
                 <List>
-                    <Option value="72"   >0x48 = 72 Ax=0,0,0 default</Option>
-                    <Option value="73"   >0x49 = 73 AX=1,0,0</Option>
-                    <Option value="74"   >0x4A = 74 Ax=0,1,0</Option>
-                    <Option value="75"   >0x4B = 75 Ax=1,1,0</Option>              
-                    <Option value="76"   >0x4C = 76 Ax=0,0,1</Option>    
-                    <Option value="77"   >0x4D = 77 Ax=1,0,1</Option>       
-                    <Option value="78"   >0x4E = 78 Ax=0,1,1</Option>
-                    <Option value="79"   >0x4F = 79 Ax=1,1,1</Option>
-                </List>
+                    <Option value="118"   >0x76 = 118 (SDO-Gnd)default </Option>
+                    <Option value="119"   >0x77 = 119 (SDO-V+)</Option>
+                 </List>
             </Field>
             <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
                 <Label>use TCA9548A multiplexer for this sensor:</Label> 
@@ -3802,9 +3164,17 @@ After some days of running in clean air, proposed setup is:
             <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
                 <List>
                     <Option value="Temperature"  >Temperature</Option>
+                    <Option value="Humidity"      >Humidity</Option>
+                    <Option value="Pressure"      >Pressure</Option>
+                    <Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
+                    <Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
+                    <Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
+                    <Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
                 </List>
             </Field>
             <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+            <Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+            <Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
 
             <Field id="displayEnable" type="menu"     defaultValue="0"> 
                 <Label>use local display to show values:</Label> 
@@ -3849,6 +3219,57 @@ After some days of running in clean air, proposed setup is:
                     <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
                 </State>
 
+                <State id="Humidity">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Humidity</TriggerLabel>
+                    <ControlPageLabel>Humidity</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+                </State>
+
+                <State id="Pressure">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Pressure</TriggerLabel>
+                    <ControlPageLabel>Pressure</ControlPageLabel>
+                </State>
+                <State id="PressureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMaxToday</TriggerLabel>
+                    <ControlPageLabel>PressureMaxToday</ControlPageLabel>
+                </State>
+                <State id="PressureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMinToday</TriggerLabel>
+                    <ControlPageLabel>PressureMinToday</ControlPageLabel>
+                </State>
+                <State id="PressureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="PressureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+                </State>
                 <State id="lastSensorChange">
                     <ValueType>String</ValueType>
                     <TriggerLabel>lastSensorChange</TriggerLabel>
@@ -3856,11 +3277,311 @@ After some days of running in clean air, proposed setup is:
                 </State>
 
         </States>
-
     </Device>
-   
 
-  
+
+   
+    <Device type="custom" id="bme680">
+      <Name>INPUT-Temp+Press+Hum-AirQ-i2cBME680</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup i2cBME680 temp pressure humidity sensor on individual rPis.. 
+    connect 3.3, GND, SLA,SLC.
+It measures Temp, humidity and pressure like eg bme280 and in addition 
+     a gas value that is a resistance that chnages with air quality. 
+In clean air the resistance is the highest, if it senses eg VOC gases the 
+  resistance becomes lower.
+airQuality/GasSore is curent resistance / baseline
+The program can use differnt modes for airQuality/gasScore calibration: 
+- auto calibration: it will run until it finds stable gas resistance and sets that as 
+     its basline to be clean air, 
+  if the values goes above that baseline it will recalibrate and use the new baseline  
+  once calibrated, it will save value to bme680.Calibration file on RPi
+- or you can overwrite that by setting your own value statically.
+- or read last calibration from calibration file, if error do regular calibration steps
+The sensor read rate will impact the baseline, that is due to the heat cycle
+   if you change the read cyle time, it must be recalibrated 
+After some days of running in clean air, proposed setup is: 
+====set baseline to fixed value of clean air====
+  </Label>
+            </Field>
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="119"> <Label>i2c address of device:</Label>
+                <List>
+                    <Option value="118"   >0x76 = 118 (SDO-Gnd) </Option>
+                    <Option value="119"   >0x77 = 119 (SDO-V+)default</Option>
+                 </List>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+            <Field id="calibrateIfgt" type="menu"     defaultValue="110" hidden="no"> 
+             <Label>recalibrate automatically if AirQuality gt:</Label>
+                <List>
+                    <Option value="8888888" > set to static value</Option>
+                    <Option value="9999999" > read calibration from file</Option>
+                    <Option value="103"    > 103 percent</Option>
+                    <Option value="105"    > 105 percent</Option>
+                    <Option value="107"    > 107 percent</Option>
+                    <Option value="110"    > 110 percent</Option>
+                    <Option value="115"    > 115 percent</Option>
+                    <Option value="120"    > 120 percent</Option>
+                </List>
+            </Field>
+            <Field id="setCalibration" type="textfield"     defaultValue="180000" hidden="no"  visibleBindingId="calibrateIfgt" visibleBindingValue="8888888"> 
+               <Label>set Calibration value fixed to:</Label>
+            </Field>
+            <Field id="sensorRefreshSecs" type="menu"     defaultValue="3" hidden="no"> 
+             <Label>read sensor every xx secs :</Label>
+                <List>
+                    <Option value="1"   > 1   secsfor testing</Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs default</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="5"   > 5   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                    <Option value="12"  > 12  secs</Option>
+                    <Option value="15"  > 15  secs</Option>
+                    <Option value="20"  > 20  secs</Option>
+                    <Option value="30"  > 30  secs</Option>
+                    <Option value="40"  > 40  secs</Option>
+                    <Option value="60"  > 60  secs</Option>
+                </List>
+            </Field>
+            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+             <Label>min delta secs between indigo updates :</Label>
+                <List>
+                    <Option value="1"   > 1   secs </Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                </List>
+            </Field>
+            <Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
+             <Label>delta value (%) to trigger indigo update:</Label>
+                <List>
+                    <Option value="1"    > 1</Option>
+                    <Option value="2"    > 2</Option>
+                    <Option value="3"    > 3</Option>
+                    <Option value="5"    > 5</Option>
+                    <Option value="10"   > 10   </Option>
+                    <Option value="15"   > 15   </Option>
+                    <Option value="20"   > 20   </Option>
+                    <Option value="25"   > 25   </Option>
+                    <Option value="30"   > 30   </Option>
+                </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="Temperature"  >Temperature</Option>
+                    <Option value="Humidity"      >Humidity</Option>
+                    <Option value="Pressure"      >Pressure</Option>
+                    <Option value="GasResistance" >Gas  (raw resistance)</Option>
+                    <Option value="AirQuality"    >AirQuality (in % after calibration set)</Option>
+                    <Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
+                    <Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
+                    <Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
+                    <Option value="Temperature/Humidity/Pressure/AirQuality"     >Temperature/Humidity/Pressure/AirQuality</Option>
+                    <Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
+                    <Option value="Temperature/GasResistance"     >Temperature/GasResistance</Option>
+                    <Option value="Temperature/AirQuality"     >Temperature/AirQuality</Option>
+                </List>
+            </Field>
+            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+            <Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+            <Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
+            <Field id="offsetGas" type="textfield"      defaultValue="0"> <Label>offset added to measured Gas(Ohm):</Label> </Field>
+
+            <Field id="displayEnable" type="menu"     defaultValue="0"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="1"  >yes</Option>
+                    <Option value="0"  >No</Option>
+                </List>
+            </Field>
+            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="Temperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Temperature</TriggerLabel>
+                    <ControlPageLabel>Temperature</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+                </State>
+
+                <State id="Humidity">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Humidity</TriggerLabel>
+                    <ControlPageLabel>Humidity</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+                </State>
+
+
+
+                <State id="Pressure">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Pressure</TriggerLabel>
+                    <ControlPageLabel>Pressure</ControlPageLabel>
+                </State>
+                <State id="PressureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMaxToday</TriggerLabel>
+                    <ControlPageLabel>PressureMaxToday</ControlPageLabel>
+                </State>
+                <State id="PressureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMinToday</TriggerLabel>
+                    <ControlPageLabel>PressureMinToday</ControlPageLabel>
+                </State>
+                <State id="PressureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="PressureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>PressureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+                </State>
+
+                <State id="GasResistance">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>GasResistance</TriggerLabel>
+                    <ControlPageLabel>GasResistance</ControlPageLabel>
+                </State>
+                
+                <State id="AirQuality">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>AirQuality</TriggerLabel>
+                    <ControlPageLabel>AirQuality</ControlPageLabel>
+                </State>
+                <State id="AirQualityMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AirQualityMaxToday</TriggerLabel>
+                    <ControlPageLabel>AirQualityMaxToday</ControlPageLabel>
+                </State>
+                <State id="AirQualityMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AirQualityMinToday</TriggerLabel>
+                    <ControlPageLabel>AirQualityMinToday</ControlPageLabel>
+                </State>
+                <State id="AirQualityMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AirQualityMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>AirQualityMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="AirQualityMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AirQualityMinYesterday</TriggerLabel>
+                    <ControlPageLabel>AirQualityMinYesterday</ControlPageLabel>
+                </State>
+                
+                <State id="GasBaseline">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>GasBaseline</TriggerLabel>
+                    <ControlPageLabel>GasBaseline</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+        </States>
+    </Device>
+
+
+   
     <Device type="custom" id="pmairquality">
       <Name>INPUT-air quality particulate</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
@@ -3875,7 +3596,9 @@ After some days of running in clean air, proposed setup is:
       pm and standard  in ug/m**3
     Air Quality is derived from pm25_standard using USA definitions
     On RPI do sudo raspi-config / interface options / Serial
-       disable login shell / enable serial port hardware and reboot</Label>
+       disable login shell / enable serial port hardware and reboot
+    TX is currently not used, 
+    Reset pin -if used- will reset the unit if bad comm.</Label>
             </Field>
 
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3885,8 +3608,12 @@ After some days of running in clean air, proposed setup is:
             <Field id="pmSensorType" type="menu"     defaultValue="PMS5003" hidden="no"> 
              <Label>PM sensor Type:</Label>
                 <List>
-                    <Option value="PMS5003"   >PMS5003 connect 5V(pin2), Gnd(pin6), RX(pin 10) to Vcc,GND,TX</Option>
+                    <Option value="PMS5003"   >PMS 7/5003 connect 5V(pin2)-V+, Gnd(pin6)-GND, RX(pin 10)-TX, and TX(pin8)-RX, Reset(23)-RST</Option>
                 </List>
+            </Field>
+            <Field id="resetPin"   type="menu" defaultValue="23" tooltip="set this pin to low will cause the sensor to reset to shutdown">
+                <Label>Which pin to use as reset pin only if Reset pin is connected:</Label>
+                <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>
             </Field>
             <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
              <Label>read sensor every xx secs :</Label>
@@ -4200,9 +3927,10 @@ It measures CO2 VOC
                         <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
                 <Label>select rPi-server to which the sensor is connect to:</Label> 
             </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="88"> <Label>i2c address of device:</Label>
+            <Field id="i2cAddress" type="menu"     defaultValue="90"> <Label>i2c address of device:</Label>
                 <List>
-                    <Option value="90"   >0x5A = 90  </Option>
+                    <Option value="88"   >0x58 = 88  </Option>
+                    <Option value="90"   >0x5A = 90 default </Option>
                  </List>
             </Field>
             <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
@@ -4894,6 +4622,135 @@ It measures CO2 VOC
     </Device>
 
 
+    <Device type="custom" id="i2cVEML7700">
+      <Name>INPUT-visible Light -veml7700 </Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup veml7700 light -eye response sensor on individual rPis.. connect 3.3, GND, SLA,SLC
+  range is from 0.01Lux to 85k Lux </Label>
+            </Field>
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="16"> <Label>i2c address of device:</Label>
+                <List>
+                    <Option value="16"   >0x10  = 16 </Option>
+                 </List>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="white"    >white</Option>
+                    <Option value="ambient"  >ambient</Option>
+                </List>
+            </Field>
+            <Field id="displayEnable" type="menu"     defaultValue="0"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="1"  >yes</Option>
+                    <Option value="0"  >No</Option>
+                </List>
+            </Field> 
+            <Field id="logScale" type="menu"     defaultValue="0"> 
+                <Label>show status as linear or log number:</Label> 
+                <List>
+                    <Option value="0"  >linear</Option>
+                    <Option value="1"  >log of number</Option>
+                </List>
+            </Field> 
+            <Field id="unit"       type="textfield"     defaultValue="[Lux]">          <Label>...unit:</Label></Field>
+            <Field id="format"     type="textfield"     defaultValue="%7.1f">          <Label>...format:</Label></Field>
+           <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="white">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>white</TriggerLabel>
+                    <ControlPageLabel>white</ControlPageLabel>
+                </State>
+                <State id="whiteMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>whiteMinToday</TriggerLabel>
+                    <ControlPageLabel>whiteMinToday</ControlPageLabel>
+                </State>
+                <State id="whiteMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>whiteMaxToday</TriggerLabel>
+                    <ControlPageLabel>whiteMaxToday</ControlPageLabel>
+                </State>
+                <State id="whiteMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>whiteMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>whiteMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="whiteMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>whiteMinYesterday</TriggerLabel>
+                    <ControlPageLabel>whiteMinYesterday</ControlPageLabel>
+                </State>
+                <State id="ambient">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>ambient</TriggerLabel>
+                    <ControlPageLabel>ambient</ControlPageLabel>
+                </State>
+                <State id="ambientMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>ambientMinToday</TriggerLabel>
+                    <ControlPageLabel>ambientMinToday</ControlPageLabel>
+                </State>
+                <State id="ambientMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>ambientMaxToday</TriggerLabel>
+                    <ControlPageLabel>ambientMaxToday</ControlPageLabel>
+                </State>
+                <State id="ambientMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>ambientMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>ambientMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="ambientMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>ambientMinYesterday</TriggerLabel>
+                    <ControlPageLabel>ambientMinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+
+    </Device>
+
+
     <Device type="custom" id="i2cVEML6030">
       <Name>INPUT-Ambient-White-i2cVEML6030</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
@@ -5337,7 +5194,7 @@ It measures CO2 VOC
 
 
     <Device type="custom" id="i2cTSL2561">
-      <Name>INPUT-Lux-i2cTSL2561</Name>
+      <Name>INPUT-Ambient-IR-i2cTSL2561</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -5489,35 +5346,28 @@ It measures CO2 VOC
                 </State>
 
         </States>
-
     </Device>
 
 
-    <Device type="custom" id="ina219">
-      <Name>INPUT-current and voltage ina219</Name>
+    <Device type="custom" id="mlx90614">
+      <Name>INPUT-Temp-Ambient+Infrared-mlx90614</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-            <Field id="infoLabel" type="label">
-                <Label>Setup i2c INA-219  current (+-3.2A) and voltage sensor on individual rPis
-            the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-            .. connect 3.3, GND, SLA,SLC</Label>
+            <Field id="infoLabeli2cMLX90614" type="label">
+                <Label>Setup i2cMLX90614 IR remote temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
             </Field>
+
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                         <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-                <Label>select rPi-server to which the INA-219 is connect to:</Label> 
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
             </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of ADC, connect A0,A1 to GND :</Label>
+            <Field id="i2cAddress" type="menu"     defaultValue="90"> <Label>i2c address of device:</Label>
                 <List>
-                    <Option value="64"   >0x40 = 64: A0-    A1-   </Option>
-                    <Option value="65"   >0x41 = 65: A0-GND A1-   </Option>
-                    <Option value="68"   >0x44 = 68: A0-    A1-GND</Option>
-                    <Option value="69"   >0x45 = 69: A0-GND A1-GND</Option>
-                </List>
-            </Field>
-            <Field id="shuntResistor" type="textfield"     defaultValue="0.1"> <Label>shunt resistor value</Label>
+                    <Option value="90"   >0x5a = 90 </Option>
+                 </List>
             </Field>
             <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
                 <Label>use TCA9548A multiplexer for this sensor:</Label> 
@@ -5536,7 +5386,7 @@ It measures CO2 VOC
             <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
              <Label>read sensor every xx secs :</Label>
                 <List>
-                    <Option value="0.5" > 0.5 secs - only with dedicated rPi</Option>
+                    <Option value="0.5" > 0.5 secs - a lot of updates for indigo</Option>
                     <Option value="1"   > 1   secs </Option>
                     <Option value="2"   > 2   secs</Option>
                     <Option value="3"   > 3   secs</Option>
@@ -5570,13 +5420,15 @@ It measures CO2 VOC
                     <Option value="10"  > 10  secs</Option>
                 </List>
             </Field>
-            <Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
-             <Label>delta current(%) to trigger update:</Label>
+            <Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 
+             <Label>delta X(%) to trigger update:</Label>
                 <List>
-                    <Option value="1"    > 1</Option>
+                    <Option value="0.5" > 0.5</Option>
+                    <Option value="1"    > 1  = 0.2ºC at 20C</Option>
                     <Option value="2"    > 2</Option>
                     <Option value="3"    > 3</Option>
                     <Option value="5"    > 5</Option>
+                    <Option value="15"   > 15</Option>
                     <Option value="10"   > 10   </Option>
                     <Option value="15"   > 15   </Option>
                     <Option value="20"   > 20   </Option>
@@ -5586,46 +5438,81 @@ It measures CO2 VOC
             </Field>
 
             <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Current"> <Label>Property to display in the State Column:</Label>
+            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
                 <List>
-                    <Option value="Current"      >Current  through shunt resistor (Resolution = 0.1mA)</Option>
-                    <Option value="ShuntVoltage" >ShuntVoltage = voltage across shunt resistor (Resolution = 0.1mV)</Option>
-                    <Option value="Power"        >Power = Current*BusV (Resolution = 1mW)</Option>
-                    <Option value="BusVoltage"   >BusVoltage = voltage shunt-ground (Resolution = 1mV)</Option>
+                    <Option value="Temperature"  >Temperature</Option>
+                    <Option value="AmbientTemperature"      >Ambient Temperature</Option>
+                    <Option value="Temperature/AmbientTemperature" >Temperature/Ambient</Option>
+               </List>
+            </Field>
+            <Field id="offsetTemp" type="textfield"   defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+            <Field id="displayEnable" type="menu"     defaultValue="0"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="1"  >yes</Option>
+                    <Option value="0"  >No</Option>
                 </List>
             </Field>
-            <Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
-            <Field id="offset"     type="textfield"     defaultValue="0">              <Label>...add offset:</Label></Field>
-            <Field id="mult"       type="textfield"     defaultValue="1">              <Label>...multiply number by :</Label></Field>
-            <Field id="format"     type="textfield"     defaultValue="">               <Label>...format number (eg %5.1f):</Label></Field>
-            <Field id="unit"       type="textfield"     defaultValue="[mV]">           <Label>...unit:</Label></Field>
+           <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">   </Field>
 
         </ConfigUI>
-        <States>
+      <States>
                 <State id="status">
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
-                <State id="Current">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>Current</TriggerLabel>
-                    <ControlPageLabel>Current</ControlPageLabel>
+                <State id="Temperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Temperature</TriggerLabel>
+                    <ControlPageLabel>Temperature</ControlPageLabel>
                 </State>
-                <State id="BusVoltage">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>BusVoltage</TriggerLabel>
-                    <ControlPageLabel>BusVoltage</ControlPageLabel>
+                <State id="TemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
                 </State>
-                <State id="ShuntVoltage">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>ShuntVoltage</TriggerLabel>
-                    <ControlPageLabel>ShuntVoltage</ControlPageLabel>
+                <State id="TemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
                 </State>
-                <State id="Power">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>Power</TriggerLabel>
-                    <ControlPageLabel>Power</ControlPageLabel>
+                <State id="TemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+                </State>
+                
+                 <State id="AmbientTemperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperature</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperature</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
                 </State>
                 <State id="lastSensorChange">
                     <ValueType>String</ValueType>
@@ -5633,41 +5520,44 @@ It measures CO2 VOC
                     <ControlPageLabel>lastSensorChange</ControlPageLabel>
                 </State>
 
-        </States>
-
+     </States>
     </Device>
 
-
-    <Device type="custom" id="ina3221">
-      <Name>INPUT-current and voltage 3 channels ina3221</Name>
+   
+    <Device type="custom" id="amg88xx">
+      <Name>INPUT-amg88xx-infraredCamera</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
             <Field id="infoLabel" type="label">
-                <Label>Setup i2c ina-3221  current (+-3.2A) and voltage sensor on individual rPis
-            the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-            .. connect 3.3, GND, SLA,SLC and set i2c
-            .. if you replace the shunt restsor please change the shunt value for that channel</Label>
+                <Label>Setup i2camg88xx infrared camera sensor on individual rPis.. 
+    connect 3.3, GND, SLA,SLC.
+It measures - all temp values are converted to std temp (set in config)
+        -Ambient Temperature, 
+        -Average Temperature of pixels,
+        -MinimumPixel  = min Temperature val of all pixels,
+        -MaximumPixel  = max Temperature val of all pixels,
+        -Movement: delta pixel Temp to last measuremnt, large val indicates Movement: 
+                   100*sqrt(sum ((pixT-lastT)/(pixT+lastT))**2)/64
+        -Uniformity of pixel temperature, low value indicates Structure: 
+                   100/sqrt(sum ((pixT-aveT)/(pixT+aveT))**2)/64
+you can setup 
+        - number of measurement per second
+        - delta value to trigger sending update to indigo
+  </Label>
             </Field>
+
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                         <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-                <Label>select rPi-server to which the INA-219 is connect to:</Label> 
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
             </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of ADC, connect A0 to xxx :</Label>
+            <Field id="i2cAddress" type="menu"     defaultValue="105"> <Label>i2c address of device:</Label>
                 <List>
-                    <Option value="64"   >0x40 = 64: A0-GND </Option>
-                    <Option value="65"   >0x41 = 65: A0-VS  </Option>
-                    <Option value="66"   >0x42 = 68: A0-SDA </Option>
-                    <Option value="67"   >0x43 = 69: A0-SCL </Option>
-                </List>
-            </Field>
-            <Field id="shuntResistor1" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 1 value</Label>
-            </Field>
-            <Field id="shuntResistor2" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 2 value</Label>
-            </Field>
-            <Field id="shuntResistor3" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 3 value:</Label>
+                     <Option value="105"   >0x69 = 105 default </Option>
+                     <Option value="107"   >0x6B = 107 </Option>
+                 </List>
             </Field>
             <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
                 <Label>use TCA9548A multiplexer for this sensor:</Label> 
@@ -5683,10 +5573,14 @@ It measures CO2 VOC
                     <Option value="7"     >channel 7  </Option>
                  </List>
             </Field>
-            <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
-             <Label>read sensor every xx secs :</Label>
+            <Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
+             <Label>time between reading sensor:</Label>
                 <List>
-                    <Option value="0.5" > 0.5 secs - only with dedicated rPi</Option>
+                    <Option value="0.1" > 0.1   secs </Option>
+                    <Option value="0.2" > 0.2   secs </Option>
+                    <Option value="0.3" > 0.3   secs </Option>
+                    <Option value="0.5" > 0.5   secs </Option>
+                    <Option value="0.7" > 0.7   secs </Option>
                     <Option value="1"   > 1   secs </Option>
                     <Option value="2"   > 2   secs</Option>
                     <Option value="3"   > 3   secs</Option>
@@ -5694,23 +5588,11 @@ It measures CO2 VOC
                     <Option value="6"   > 6   secs</Option>
                     <Option value="8"   > 8   secs</Option>
                     <Option value="10"  > 10  secs</Option>
-                    <Option value="12"  > 12  secs</Option>
-                    <Option value="15"  > 15  secs</Option>
-                    <Option value="20"  > 20  secs</Option>
-                    <Option value="30"  > 30  secs</Option>
-                    <Option value="40"  > 40  secs</Option>
-                    <Option value="60"  > 60  secs</Option>
-                    <Option value="80"  > 80  secs</Option>
-                    <Option value="100" > 100 secs</Option>
-                    <Option value="120" > 2   minutes</Option>
-                    <Option value="180" > 3   minutes</Option>
                 </List>
             </Field>
             <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
              <Label>min delta secs between indigo updates :</Label>
                 <List>
-                    <Option value="0.2" > 0.2 secs </Option>
-                    <Option value="0.5" > 0.5 secs </Option>
                     <Option value="1"   > 1   secs </Option>
                     <Option value="2"   > 2   secs</Option>
                     <Option value="3"   > 3   secs</Option>
@@ -5720,40 +5602,115 @@ It measures CO2 VOC
                     <Option value="10"  > 10  secs</Option>
                 </List>
             </Field>
-            <Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
-             <Label>delta current(%) to trigger update:</Label>
+            <Field id="deltaX" type="menu"     defaultValue="30" hidden="no" > 
+             <Label>delta value(temp...[%]) to trigger indigo update:</Label>
                 <List>
-                    <Option value="1"    > 1</Option>
-                    <Option value="2"    > 2</Option>
-                    <Option value="3"    > 3</Option>
-                    <Option value="5"    > 5</Option>
+                    <Option value="1"    > any change</Option>
+                    <Option value="5"    > 5     </Option>
                     <Option value="10"   > 10   </Option>
                     <Option value="15"   > 15   </Option>
                     <Option value="20"   > 20   </Option>
                     <Option value="25"   > 25   </Option>
-                    <Option value="30"   > 30   </Option>
+                    <Option value="30"   > 30 (default)  </Option>
+                    <Option value="40"   > 40   </Option>
+                    <Option value="50"   > 50   </Option>
+                    <Option value="70"   > 70   </Option>
+                    <Option value="100"  > 100   </Option>
+                    <Option value="150"  > 150   </Option>
+                    <Option value="200"  > 200   </Option>
                 </List>
             </Field>
 
             <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Current1"> <Label>Property to display in the State Column:</Label>
+            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
                 <List>
-                    <Option value="Current1"      >Current1  through shunt resistor (Resolution = 0.1mA)</Option>
-                    <Option value="ShuntVoltage1" >ShuntVoltage1 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
-                    <Option value="BusVoltage1"   >BusVoltage1 = voltage shunt-ground (Resolution = 1mV)</Option>
-                    <Option value="Current2"      >Current2  through shunt resistor (Resolution = 0.1mA)</Option>
-                    <Option value="ShuntVoltage2" >ShuntVoltage2 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
-                    <Option value="BusVoltage2"   >BusVoltage2 = voltage shunt-ground (Resolution = 1mV)</Option>
-                    <Option value="Current3"      >Current3  through shunt resistor (Resolution = 0.1mA)</Option>
-                    <Option value="ShuntVoltage3" >ShuntVoltage3 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
-                    <Option value="BusVoltage3"   >BusVoltage3 = voltage shunt-ground (Resolution = 1mV)</Option>
+                    <Option value="Temperature"       >Temperature</Option>
+                    <Option value="AmbientTemperature">AmbientTemperature</Option>
+                    <Option value="Uniformity"        >Uniformity</Option>
+                    <Option value="Movement"          >Movement</Option>
                 </List>
             </Field>
-            <Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
-            <Field id="offset"     type="textfield"     defaultValue="0">              <Label>...add offset:</Label></Field>
-            <Field id="mult"       type="textfield"     defaultValue="1">              <Label>...multiply number by :</Label></Field>
-            <Field id="format"     type="textfield"     defaultValue="">               <Label>...format number (eg %5.1f):</Label></Field>
-            <Field id="unit"       type="textfield"     defaultValue="[mV]">           <Label>...unit:</Label></Field>
+            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+           <Field id="imageFilesaveRawData" type="menu"     defaultValue="0"> 
+                <List>
+                    <Option value="0"   >off</Option>
+                    <Option value="1"   >ON</Option>
+                </List>
+                <Label>save raw pixel data to device state:</Label> 
+            </Field>
+
+           <Field id="imageFileNumberOfDots" type="menu"     defaultValue="-" tooltip="this is NOT the number of pixel of the camera, but the numebr of pixels in one dimension on the image displayed. it is upscaled / inetrpolatedfrom 8x8 to nxn"> 
+                <List>
+                    <Option value="-"   >off</Option>
+                    <Option value="8"   >8</Option>
+                    <Option value="16"  >16</Option>
+                    <Option value="32"  >32</Option>
+                    <Option value="64"  >64</Option>
+                    <Option value="128" >128</Option>
+                    <Option value="256" >256</Option>
+                    <Option value="512" >512</Option>
+                    <Option value="1024">1024</Option>
+                </List>
+                <Label>number of pixels in Display one axis:</Label> 
+            </Field>
+           <Field id="imageFilelogLevel" type="menu"     defaultValue="0" visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
+                <List>
+                    <Option value="0"   >off</Option>
+                    <Option value="1"   >ON</Option>
+                </List>
+                <Label>logLevel:</Label> 
+            </Field>
+           <Field id="imageFileCompress" type="menu"     defaultValue="0" visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
+                <List>
+                    <Option value="0"   >off</Option>
+                    <Option value="1"   >ON</Option>
+                </List>
+                <Label>compress png file:</Label> 
+            </Field>
+            <Field id="imageFileName" type="textfield"     defaultValue=""  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
+                <Label>create png file from pixels, set filename (bl=no):</Label> 
+            </Field>
+            <Field id="imageFileDynamic" type="menu"     defaultValue="0"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
+                <List>
+                    <Option value="0"      > dynamic</Option>
+                    <Option value="1"    > +-1 C around midpoint </Option>
+                    <Option value="2"    > +-2 C around midpoint</Option>
+                    <Option value="3"    > +-4 C around midpoint</Option>
+                    <Option value="5"    > +-5 C around midpoint</Option>
+                    <Option value="6"    > +-6 C around midpoint</Option>
+                    <Option value="8"    > +-8 C around midpoint</Option>
+                    <Option value="10"   > +-10 C around midpoint</Option>
+                    <Option value="0,20"   >  0-20 C</Option>
+                    <Option value="0,30"   >  0-30 C</Option>
+                    <Option value="0,40"   >  0-40 C</Option>
+                    <Option value="10,30"  > 10-30 C</Option>
+                    <Option value="15,20"  > 15-20 C</Option>
+                    <Option value="15,25"  > 15-25 C</Option>
+                    <Option value="20,25"  > 20-25 C</Option>
+                    <Option value="20,30"  > 20-30 C</Option>
+                    <Option value="20,40"  > 20-40 C</Option>
+                </List>
+                <Label>dynamic / fixed temp scale:</Label> 
+            </Field>
+            <Field id="imageFileColorBar" type="menu"     defaultValue="color,noBar"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
+                <List>
+                    <Option value="color,noBar"   > color no bar </Option>
+                    <Option value="grey,noBar"    > grey no bar</Option>
+                    <Option value="color,bar"     > color w bar </Option>
+                    <Option value="grey,bar"      > grey w bar </Option>
+                </List>
+                <Label>show color/grey wbar /wobar on the side:</Label> 
+            </Field>
+
+            <Field id="displayEnable" type="menu"     defaultValue="0" hidden = "yes"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="0"  >No</Option>
+                </List>
+            </Field>
+            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
 
         </ConfigUI>
         <States>
@@ -5762,60 +5719,106 @@ It measures CO2 VOC
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
-                <State id="Current1">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>Current1</TriggerLabel>
-                    <ControlPageLabel>Current1</ControlPageLabel>
+                <State id="Temperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Temperature</TriggerLabel>
+                    <ControlPageLabel>Temperature</ControlPageLabel>
                 </State>
-                <State id="BusVoltage1">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>BusVoltage1</TriggerLabel>
-                    <ControlPageLabel>BusVoltage1</ControlPageLabel>
+                <State id="TemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
                 </State>
-                <State id="ShuntVoltage1">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>ShuntVoltage1</TriggerLabel>
-                    <ControlPageLabel>ShuntVoltage1</ControlPageLabel>
+                <State id="TemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
                 </State>
-                <State id="Current2">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>Current2</TriggerLabel>
-                    <ControlPageLabel>Current2</ControlPageLabel>
+                <State id="TemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
                 </State>
-                <State id="BusVoltage2">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>BusVoltage2</TriggerLabel>
-                    <ControlPageLabel>BusVoltage2</ControlPageLabel>
+                <State id="TemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
                 </State>
-                <State id="ShuntVoltage2">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>ShuntVoltage2</TriggerLabel>
-                    <ControlPageLabel>ShuntVoltage2</ControlPageLabel>
+                <State id="AmbientTemperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperature</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperature</ControlPageLabel>
                 </State>
-                <State id="Current3">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>Current3</TriggerLabel>
-                    <ControlPageLabel>Current3</ControlPageLabel>
+                <State id="AmbientTemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
                 </State>
-                <State id="BusVoltage3">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>BusVoltage3</TriggerLabel>
-                    <ControlPageLabel>BusVoltage3</ControlPageLabel>
+                <State id="AmbientTemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
                 </State>
-                <State id="ShuntVoltage3">
-                    <ValueType>number</ValueType>
-                    <TriggerLabel>ShuntVoltage3</TriggerLabel>
-                    <ControlPageLabel>ShuntVoltage3</ControlPageLabel>
+                <State id="AmbientTemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
                 </State>
+                <State id="AmbientTemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
+                </State>
+                <State id="Movement">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Movement</TriggerLabel>
+                    <ControlPageLabel>Movement</ControlPageLabel>
+                </State>
+                <State id="MovementAbs">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>MovementAbs</TriggerLabel>
+                    <ControlPageLabel>MovementAbs</ControlPageLabel>
+                </State>
+                <State id="Uniformity">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Uniformity</TriggerLabel>
+                    <ControlPageLabel>Uniformity</ControlPageLabel>
+                </State>
+                <State id="MaximumPixel">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>MaximumPixel</TriggerLabel>
+                    <ControlPageLabel>MaximumPixel</ControlPageLabel>
+                </State>
+                <State id="MinimumPixel">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>MinimumPixel</TriggerLabel>
+                    <ControlPageLabel>MinimumPixel</ControlPageLabel>
+                </State>
+                <State id="VerticalMovement">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>VerticalMovement</TriggerLabel>
+                    <ControlPageLabel>VerticalMovement</ControlPageLabel>
+                </State>
+                <State id="HorizontalMovement">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HorizontalMovement</TriggerLabel>
+                    <ControlPageLabel>HorizontalMovement</ControlPageLabel>
+                </State>
+                <State id="rawData">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>rawData</TriggerLabel>
+                    <ControlPageLabel>rawData</ControlPageLabel>
+                </State>
+
+
                 <State id="lastSensorChange">
                     <ValueType>String</ValueType>
                     <TriggerLabel>lastSensorChange</TriggerLabel>
                     <ControlPageLabel>lastSensorChange</ControlPageLabel>
                 </State>
-
         </States>
-
     </Device>
+   
 
 
     <Device type="custom" id="l3g4200">
@@ -7206,40 +7209,39 @@ It measures CO2 VOC
         </States>
 
     </Device>
-   
-    <Device type="custom" id="amg88xx">
-      <Name>INPUT-amg88xx-infraredCamera</Name>
+
+    <Device type="custom" id="i2cADC121">
+      <Name>INPUT-ADC-i2cADC121</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
             <Field id="infoLabel" type="label">
-                <Label>Setup i2camg88xx infrared camera sensor on individual rPis.. 
-    connect 3.3, GND, SLA,SLC.
-It measures - all temp values are converted to std temp (set in config)
-        -Ambient Temperature, 
-        -Average Temperature of pixels,
-        -MinimumPixel  = min Temperature val of all pixels,
-        -MaximumPixel  = max Temperature val of all pixels,
-        -Movement: delta pixel Temp to last measuremnt, large val indicates Movement: 
-                   100*sqrt(sum ((pixT-lastT)/(pixT+lastT))**2)/64
-        -Uniformity of pixel temperature, low value indicates Structure: 
-                   100/sqrt(sum ((pixT-aveT)/(pixT+aveT))**2)/64
-you can setup 
-        - number of measurement per second
-        - delta value to trigger sending update to indigo
-  </Label>
+                <Label>Setup i2cADC121 ADC sensor on individual rPis.. connect 5V, GND, SLA,SLC
+It can be used as a linear ADC converter or as a frontend to various sensors 
+ie MG gas sensors, Hall-efect and Current sensors
+For the MQ gas sensors you need to understand the required heating voltage. 
+  That heating voltage sets the sensitivity for various gases. 
+  Check the web pages and PDFs for the sensitivies
+  Teh plugin has preset sensitivities for various sensors. 
+  They are ONLY valid for the mentioned gas.  
+</Label>
             </Field>
 
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                         <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
                 <Label>select rPi-server to which the sensor is connect to:</Label> 
             </Field>
-            <Field id="i2cAddress" type="menu"     defaultValue="105"> <Label>i2c address of device:</Label>
+            <Field id="i2cAddress" type="menu"     defaultValue="62"> <Label>i2c address of device:</Label>
                 <List>
-                     <Option value="105"   >0x69 = 105 default </Option>
-                     <Option value="107"   >0x6B = 107 </Option>
+                    <Option value="80"  >0x50 = 80  (default)</Option>
+                    <Option value="81"  >0x51 = 81 </Option>
+                    <Option value="82"  >0x52 = 82 </Option>
+                    <Option value="83"  >0x53 = 83 </Option>
+                    <Option value="84"  >0x54 = 84 </Option>
+                    <Option value="85"  >0x55 = 85 </Option>
+                    <Option value="86"  >0x56 = 86 </Option>
                  </List>
             </Field>
             <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
@@ -7256,144 +7258,36 @@ you can setup
                     <Option value="7"     >channel 7  </Option>
                  </List>
             </Field>
-            <Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
-             <Label>time between reading sensor:</Label>
+            <Field id="type" type="menu"     defaultValue="MQ7"> <Label>sub type of sensor:</Label>
                 <List>
-                    <Option value="0.1" > 0.1   secs </Option>
-                    <Option value="0.2" > 0.2   secs </Option>
-                    <Option value="0.3" > 0.3   secs </Option>
-                    <Option value="0.5" > 0.5   secs </Option>
-                    <Option value="0.7" > 0.7   secs </Option>
-                    <Option value="1"   > 1   secs </Option>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                </List>
+                    <Option value="MQ3-Alcohol" >MQ3        Gas sensor @5V   Alcohol</Option>
+                    <Option value="MQ3-Benzene" >MQ3        Gas sensor @5V   Benzene</Option>
+                    <Option value="MQ4"         >MQ4        Gas sensor @5V   CNG</Option>
+                    <Option value="MQ7"         >MQ7        Gas sensor @1.5V CO</Option>
+                    <Option value="MQ9"         >MQ9        Gas sensor @1.5V CO </Option>
+                    <Option value="MQ9-5CH4"    >MQ9        Gas sensor @5V   CH4 </Option>
+                    <Option value="MQ9-5LPG"    >MQ9        Gas sensor @5V   LPG</Option>
+                    <Option value="MQ131"       >MQ131      Gas sensor @5V   Ozon</Option>
+                    <Option value="A13XX"       >A13XX      Hall effect Sensor</Option>
+                    <Option value="TA12_200"    >TA12_200   current sensor </Option>
+                    <Option value="adc"         >adc        Plain ADC </Option>
+                 </List>
             </Field>
-            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-             <Label>min delta secs between indigo updates :</Label>
-                <List>
-                    <Option value="1"   > 1   secs </Option>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                </List>
+            <Field id="infoLabelMQ" type="label" visibleBindingId="type" visibleBindingValue="MQ3-Alcohol,MQ3-Benzene,MQ4,MQ7,MQ9,MQ131,MQ9-5CH4,MQ9-5LPG">
+                <Label>Power up sensor and measure V (at pin2 of sensor -- potentiometer)  in calibration condition, use that voltage for Vca</Label>
             </Field>
-            <Field id="deltaX" type="menu"     defaultValue="30" hidden="no" > 
-             <Label>delta value(temp...[%]) to trigger indigo update:</Label>
-                <List>
-                    <Option value="1"    > any change</Option>
-                    <Option value="5"    > 5     </Option>
-                    <Option value="10"   > 10   </Option>
-                    <Option value="15"   > 15   </Option>
-                    <Option value="20"   > 20   </Option>
-                    <Option value="25"   > 25   </Option>
-                    <Option value="30"   > 30 (default)  </Option>
-                    <Option value="40"   > 40   </Option>
-                    <Option value="50"   > 50   </Option>
-                    <Option value="70"   > 70   </Option>
-                    <Option value="100"  > 100   </Option>
-                    <Option value="150"  > 150   </Option>
-                    <Option value="200"  > 200   </Option>
-                </List>
-            </Field>
+            <Field id="Vca" type="textfield"     defaultValue="3300" visibleBindingId="type" visibleBindingValue="MQ3-Alcohol,MQ3-Benzene,MQ4,MQ7,MQ9,MQ131,MQ9-5CH4,MQ9-5LPG"> <Label>Vca sensor in mV:</Label>  </Field>
+
 
             <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+            <Field id="displayS" type="menu"     defaultValue="Value"> <Label>Property to display in the State Column:</Label>
                 <List>
-                    <Option value="Temperature"       >Temperature</Option>
-                    <Option value="AmbientTemperature">AmbientTemperature</Option>
-                    <Option value="Uniformity"        >Uniformity</Option>
-                    <Option value="Movement"          >Movement</Option>
+                    <Option value="adc"     >adc</Option>
+                    <Option value="value"   >value</Option>
                 </List>
             </Field>
-            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-
-           <Field id="imageFilesaveRawData" type="menu"     defaultValue="0"> 
-                <List>
-                    <Option value="0"   >off</Option>
-                    <Option value="1"   >ON</Option>
-                </List>
-                <Label>save raw pixel data to device state:</Label> 
-            </Field>
-
-           <Field id="imageFileNumberOfDots" type="menu"     defaultValue="-" tooltip="this is NOT the number of pixel of the camera, but the numebr of pixels in one dimension on the image displayed. it is upscaled / inetrpolatedfrom 8x8 to nxn"> 
-                <List>
-                    <Option value="-"   >off</Option>
-                    <Option value="8"   >8</Option>
-                    <Option value="16"  >16</Option>
-                    <Option value="32"  >32</Option>
-                    <Option value="64"  >64</Option>
-                    <Option value="128" >128</Option>
-                    <Option value="256" >256</Option>
-                    <Option value="512" >512</Option>
-                    <Option value="1024">1024</Option>
-                </List>
-                <Label>number of pixels in Display one axis:</Label> 
-            </Field>
-           <Field id="imageFilelogLevel" type="menu"     defaultValue="0" visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
-                <List>
-                    <Option value="0"   >off</Option>
-                    <Option value="1"   >ON</Option>
-                </List>
-                <Label>logLevel:</Label> 
-            </Field>
-           <Field id="imageFileCompress" type="menu"     defaultValue="0" visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
-                <List>
-                    <Option value="0"   >off</Option>
-                    <Option value="1"   >ON</Option>
-                </List>
-                <Label>compress png file:</Label> 
-            </Field>
-            <Field id="imageFileName" type="textfield"     defaultValue=""  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
-                <Label>create png file from pixels, set filename (bl=no):</Label> 
-            </Field>
-            <Field id="imageFileDynamic" type="menu"     defaultValue="0"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
-                <List>
-                    <Option value="0"      > dynamic</Option>
-                    <Option value="1"    > +-1 C around midpoint </Option>
-                    <Option value="2"    > +-2 C around midpoint</Option>
-                    <Option value="3"    > +-4 C around midpoint</Option>
-                    <Option value="5"    > +-5 C around midpoint</Option>
-                    <Option value="6"    > +-6 C around midpoint</Option>
-                    <Option value="8"    > +-8 C around midpoint</Option>
-                    <Option value="10"   > +-10 C around midpoint</Option>
-                    <Option value="0,20"   >  0-20 C</Option>
-                    <Option value="0,30"   >  0-30 C</Option>
-                    <Option value="0,40"   >  0-40 C</Option>
-                    <Option value="10,30"  > 10-30 C</Option>
-                    <Option value="15,20"  > 15-20 C</Option>
-                    <Option value="15,25"  > 15-25 C</Option>
-                    <Option value="20,25"  > 20-25 C</Option>
-                    <Option value="20,30"  > 20-30 C</Option>
-                    <Option value="20,40"  > 20-40 C</Option>
-                </List>
-                <Label>dynamic / fixed temp scale:</Label> 
-            </Field>
-            <Field id="imageFileColorBar" type="menu"     defaultValue="color,noBar"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
-                <List>
-                    <Option value="color,noBar"   > color no bar </Option>
-                    <Option value="grey,noBar"    > grey no bar</Option>
-                    <Option value="color,bar"     > color w bar </Option>
-                    <Option value="grey,bar"      > grey w bar </Option>
-                </List>
-                <Label>show color/grey wbar /wobar on the side:</Label> 
-            </Field>
-
-            <Field id="displayEnable" type="menu"     defaultValue="0" hidden = "yes"> 
-                <Label>use local display to show values:</Label> 
-                <List>
-                    <Option value="0"  >No</Option>
-                </List>
-            </Field>
-            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
-           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
+            <Field id="offset" type="textfield"     defaultValue="0"> <Label>offset added to measured value:</Label> </Field>
+            <Field id="mult"   type="textfield"     defaultValue="1"> <Label>multiply measured value:</Label> </Field>
 
         </ConfigUI>
         <States>
@@ -7402,98 +7296,16 @@ you can setup
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
-                <State id="Temperature">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Temperature</TriggerLabel>
-                    <ControlPageLabel>Temperature</ControlPageLabel>
+                <State id="adc">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>adc</TriggerLabel>
+                    <ControlPageLabel>adc</ControlPageLabel>
                 </State>
-                <State id="TemperatureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+                  <State id="value">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>value</TriggerLabel>
+                    <ControlPageLabel>value</ControlPageLabel>
                 </State>
-                <State id="TemperatureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="TemperatureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperature">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperature</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperature</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMaxToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMinToday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMaxYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-                </State>
-                <State id="AmbientTemperatureMinYesterday">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-                    <ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-                </State>
-                <State id="Movement">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Movement</TriggerLabel>
-                    <ControlPageLabel>Movement</ControlPageLabel>
-                </State>
-                <State id="MovementAbs">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>MovementAbs</TriggerLabel>
-                    <ControlPageLabel>MovementAbs</ControlPageLabel>
-                </State>
-                <State id="Uniformity">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>Uniformity</TriggerLabel>
-                    <ControlPageLabel>Uniformity</ControlPageLabel>
-                </State>
-                <State id="MaximumPixel">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>MaximumPixel</TriggerLabel>
-                    <ControlPageLabel>MaximumPixel</ControlPageLabel>
-                </State>
-                <State id="MinimumPixel">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>MinimumPixel</TriggerLabel>
-                    <ControlPageLabel>MinimumPixel</ControlPageLabel>
-                </State>
-                <State id="VerticalMovement">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>VerticalMovement</TriggerLabel>
-                    <ControlPageLabel>VerticalMovement</ControlPageLabel>
-                </State>
-                <State id="HorizontalMovement">
-                    <ValueType>Number</ValueType>
-                    <TriggerLabel>HorizontalMovement</TriggerLabel>
-                    <ControlPageLabel>HorizontalMovement</ControlPageLabel>
-                </State>
-                <State id="rawData">
-                    <ValueType>string</ValueType>
-                    <TriggerLabel>rawData</TriggerLabel>
-                    <ControlPageLabel>rawData</ControlPageLabel>
-                </State>
-
-
                 <State id="lastSensorChange">
                     <ValueType>String</ValueType>
                     <TriggerLabel>lastSensorChange</TriggerLabel>
@@ -7501,11 +7313,336 @@ you can setup
                 </State>
         </States>
     </Device>
-   
+
+
+    <Device type="custom" id="ina219">
+      <Name>INPUT-ADC-current and voltage ina219</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup i2c INA-219  current (+-3.2A) and voltage sensor on individual rPis
+            the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
+            .. connect 3.3, GND, SLA,SLC</Label>
+            </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the INA-219 is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of ADC, connect A0,A1 to GND :</Label>
+                <List>
+                    <Option value="64"   >0x40 = 64: A0-    A1-   </Option>
+                    <Option value="65"   >0x41 = 65: A0-GND A1-   </Option>
+                    <Option value="68"   >0x44 = 68: A0-    A1-GND</Option>
+                    <Option value="69"   >0x45 = 69: A0-GND A1-GND</Option>
+                </List>
+            </Field>
+            <Field id="shuntResistor" type="textfield"     defaultValue="0.1"> <Label>shunt resistor value</Label>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+            <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
+             <Label>read sensor every xx secs :</Label>
+                <List>
+                    <Option value="0.5" > 0.5 secs - only with dedicated rPi</Option>
+                    <Option value="1"   > 1   secs </Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                    <Option value="12"  > 12  secs</Option>
+                    <Option value="15"  > 15  secs</Option>
+                    <Option value="20"  > 20  secs</Option>
+                    <Option value="30"  > 30  secs</Option>
+                    <Option value="40"  > 40  secs</Option>
+                    <Option value="60"  > 60  secs</Option>
+                    <Option value="80"  > 80  secs</Option>
+                    <Option value="100" > 100 secs</Option>
+                    <Option value="120" > 2   minutes</Option>
+                    <Option value="180" > 3   minutes</Option>
+                </List>
+            </Field>
+            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+             <Label>min delta secs between indigo updates :</Label>
+                <List>
+                    <Option value="0.2" > 0.2 secs </Option>
+                    <Option value="0.5" > 0.5 secs </Option>
+                    <Option value="1"   > 1   secs </Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                </List>
+            </Field>
+            <Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
+             <Label>delta current(%) to trigger update:</Label>
+                <List>
+                    <Option value="1"    > 1</Option>
+                    <Option value="2"    > 2</Option>
+                    <Option value="3"    > 3</Option>
+                    <Option value="5"    > 5</Option>
+                    <Option value="10"   > 10   </Option>
+                    <Option value="15"   > 15   </Option>
+                    <Option value="20"   > 20   </Option>
+                    <Option value="25"   > 25   </Option>
+                    <Option value="30"   > 30   </Option>
+                </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="Current"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="Current"      >Current  through shunt resistor (Resolution = 0.1mA)</Option>
+                    <Option value="ShuntVoltage" >ShuntVoltage = voltage across shunt resistor (Resolution = 0.1mV)</Option>
+                    <Option value="Power"        >Power = Current*BusV (Resolution = 1mW)</Option>
+                    <Option value="BusVoltage"   >BusVoltage = voltage shunt-ground (Resolution = 1mV)</Option>
+                </List>
+            </Field>
+            <Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
+            <Field id="offset"     type="textfield"     defaultValue="0">              <Label>...add offset:</Label></Field>
+            <Field id="mult"       type="textfield"     defaultValue="1">              <Label>...multiply number by :</Label></Field>
+            <Field id="format"     type="textfield"     defaultValue="">               <Label>...format number (eg %5.1f):</Label></Field>
+            <Field id="unit"       type="textfield"     defaultValue="[mV]">           <Label>...unit:</Label></Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="Current">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>Current</TriggerLabel>
+                    <ControlPageLabel>Current</ControlPageLabel>
+                </State>
+                <State id="BusVoltage">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>BusVoltage</TriggerLabel>
+                    <ControlPageLabel>BusVoltage</ControlPageLabel>
+                </State>
+                <State id="ShuntVoltage">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>ShuntVoltage</TriggerLabel>
+                    <ControlPageLabel>ShuntVoltage</ControlPageLabel>
+                </State>
+                <State id="Power">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>Power</TriggerLabel>
+                    <ControlPageLabel>Power</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+
+    </Device>
+
+
+    <Device type="custom" id="ina3221">
+      <Name>INPUT-ADC-current and voltage 3 channels ina3221</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup i2c ina-3221  current (+-3.2A) and voltage sensor on individual rPis
+            the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
+            .. connect 3.3, GND, SLA,SLC and set i2c
+            .. if you replace the shunt restsor please change the shunt value for that channel</Label>
+            </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the INA-219 is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of ADC, connect A0 to xxx :</Label>
+                <List>
+                    <Option value="64"   >0x40 = 64: A0-GND </Option>
+                    <Option value="65"   >0x41 = 65: A0-VS  </Option>
+                    <Option value="66"   >0x42 = 68: A0-SDA </Option>
+                    <Option value="67"   >0x43 = 69: A0-SCL </Option>
+                </List>
+            </Field>
+            <Field id="shuntResistor1" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 1 value</Label>
+            </Field>
+            <Field id="shuntResistor2" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 2 value</Label>
+            </Field>
+            <Field id="shuntResistor3" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 3 value:</Label>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+            <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
+             <Label>read sensor every xx secs :</Label>
+                <List>
+                    <Option value="0.5" > 0.5 secs - only with dedicated rPi</Option>
+                    <Option value="1"   > 1   secs </Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                    <Option value="12"  > 12  secs</Option>
+                    <Option value="15"  > 15  secs</Option>
+                    <Option value="20"  > 20  secs</Option>
+                    <Option value="30"  > 30  secs</Option>
+                    <Option value="40"  > 40  secs</Option>
+                    <Option value="60"  > 60  secs</Option>
+                    <Option value="80"  > 80  secs</Option>
+                    <Option value="100" > 100 secs</Option>
+                    <Option value="120" > 2   minutes</Option>
+                    <Option value="180" > 3   minutes</Option>
+                </List>
+            </Field>
+            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+             <Label>min delta secs between indigo updates :</Label>
+                <List>
+                    <Option value="0.2" > 0.2 secs </Option>
+                    <Option value="0.5" > 0.5 secs </Option>
+                    <Option value="1"   > 1   secs </Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                </List>
+            </Field>
+            <Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
+             <Label>delta current(%) to trigger update:</Label>
+                <List>
+                    <Option value="1"    > 1</Option>
+                    <Option value="2"    > 2</Option>
+                    <Option value="3"    > 3</Option>
+                    <Option value="5"    > 5</Option>
+                    <Option value="10"   > 10   </Option>
+                    <Option value="15"   > 15   </Option>
+                    <Option value="20"   > 20   </Option>
+                    <Option value="25"   > 25   </Option>
+                    <Option value="30"   > 30   </Option>
+                </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="Current1"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="Current1"      >Current1  through shunt resistor (Resolution = 0.1mA)</Option>
+                    <Option value="ShuntVoltage1" >ShuntVoltage1 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
+                    <Option value="BusVoltage1"   >BusVoltage1 = voltage shunt-ground (Resolution = 1mV)</Option>
+                    <Option value="Current2"      >Current2  through shunt resistor (Resolution = 0.1mA)</Option>
+                    <Option value="ShuntVoltage2" >ShuntVoltage2 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
+                    <Option value="BusVoltage2"   >BusVoltage2 = voltage shunt-ground (Resolution = 1mV)</Option>
+                    <Option value="Current3"      >Current3  through shunt resistor (Resolution = 0.1mA)</Option>
+                    <Option value="ShuntVoltage3" >ShuntVoltage3 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
+                    <Option value="BusVoltage3"   >BusVoltage3 = voltage shunt-ground (Resolution = 1mV)</Option>
+                </List>
+            </Field>
+            <Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
+            <Field id="offset"     type="textfield"     defaultValue="0">              <Label>...add offset:</Label></Field>
+            <Field id="mult"       type="textfield"     defaultValue="1">              <Label>...multiply number by :</Label></Field>
+            <Field id="format"     type="textfield"     defaultValue="">               <Label>...format number (eg %5.1f):</Label></Field>
+            <Field id="unit"       type="textfield"     defaultValue="[mV]">           <Label>...unit:</Label></Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="Current1">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>Current1</TriggerLabel>
+                    <ControlPageLabel>Current1</ControlPageLabel>
+                </State>
+                <State id="BusVoltage1">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>BusVoltage1</TriggerLabel>
+                    <ControlPageLabel>BusVoltage1</ControlPageLabel>
+                </State>
+                <State id="ShuntVoltage1">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>ShuntVoltage1</TriggerLabel>
+                    <ControlPageLabel>ShuntVoltage1</ControlPageLabel>
+                </State>
+                <State id="Current2">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>Current2</TriggerLabel>
+                    <ControlPageLabel>Current2</ControlPageLabel>
+                </State>
+                <State id="BusVoltage2">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>BusVoltage2</TriggerLabel>
+                    <ControlPageLabel>BusVoltage2</ControlPageLabel>
+                </State>
+                <State id="ShuntVoltage2">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>ShuntVoltage2</TriggerLabel>
+                    <ControlPageLabel>ShuntVoltage2</ControlPageLabel>
+                </State>
+                <State id="Current3">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>Current3</TriggerLabel>
+                    <ControlPageLabel>Current3</ControlPageLabel>
+                </State>
+                <State id="BusVoltage3">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>BusVoltage3</TriggerLabel>
+                    <ControlPageLabel>BusVoltage3</ControlPageLabel>
+                </State>
+                <State id="ShuntVoltage3">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>ShuntVoltage3</TriggerLabel>
+                    <ControlPageLabel>ShuntVoltage3</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+
+    </Device>
+
 
 
     <Device type="custom" id="i2cADS1x15-1">
-      <Name>INPUT-Analog-1x16bit-i2cADS1x15 - one channel</Name>
+      <Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -7614,7 +7751,7 @@ you can setup
 
 
     <Device type="custom" id="i2cADS1x15">
-      <Name>INPUT-Analog-4x16bit-i2cADS1x15</Name>
+      <Name>INPUT-ADC-4x16bit-i2cADS1x15</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -7733,7 +7870,7 @@ you can setup
 
 
     <Device type="custom" id="spiMCP3008">
-      <Name>INPUT-Analog-8x10bit-spiMCP3008</Name>
+      <Name>INPUT-ADC-8x10bit-spiMCP3008</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -7847,7 +7984,7 @@ you can setup
 
 
     <Device type="custom" id="spiMCP3008-1">
-      <Name>INPUT-Analog-8x10bit-one-channel-spiMCP3008</Name>
+      <Name>INPUT-ADC-8x10bit-one-channel-spiMCP3008</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -7927,7 +8064,7 @@ you can setup
 
 
     <Device type="custom" id="i2cPCF8591-1">
-      <Name>INPUT-Analog-4x8bit-one-channel-i2cPCF8591</Name>
+      <Name>INPUT-ADC-4x8bit-one-channel-i2cPCF8591</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -8019,7 +8156,7 @@ you can setup
 
 
     <Device type="custom" id="i2cPCF8591">
-      <Name>INPUT-Analog-4x8bit-i2cPCF8591</Name>
+      <Name>INPUT-ADC-4x8bit-i2cPCF8591</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12017,7 +12154,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
     <Device type="custom" id="setMCP4725">
-      <Name>OUTPUT-Analog-1x12bit-i2cMCP4725</Name>
+      <Name>OUTPUT-ADC-1x12bit-i2cMCP4725</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
 
         <ConfigUI>            
@@ -12303,6 +12440,130 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
                     <ControlPageLabel>OUTPUT</ControlPageLabel>
                 </State>
         </States>
+    </Device>
+
+
+
+
+    <Device type="sprinkler" id="sprinkler">
+      <Name>OUTPUT-Sprinkler</Name>
+
+        <ConfigUI>            
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+            <Field id="isSprinklerDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="infoLabelINPUT" type="label">
+                <Label>Setup sprinkler device</Label>
+            </Field>
+            <Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+                <Label>msg from plugin</Label>
+            </Field>
+            
+            
+            <Field type="menu" id="NumZones" defaultValue="4">
+                <Label>Number of zones:</Label>
+                <List>
+                    <Option value="4">4</Option>
+                    <Option value="5">5</Option>
+                    <Option value="6">6</Option>
+                    <Option value="7">7</Option>
+                    <Option value="8">8</Option>
+                    <Option value="9">9</Option>
+                    <Option value="10">10</Option>
+                    <Option value="11">11</Option>
+                    <Option value="12">12</Option>
+                    <Option value="13">13</Option>
+                    <Option value="14">14</Option>
+                    <Option value="15">15</Option>
+                    <Option value="16">16</Option>
+                </List>
+            </Field>
+
+            <Field type="textfield" id="ZoneNames" defaultValue="" >
+                <Label>Zone Names eg kitchen,front,back,left... :</Label>
+            </Field>
+            
+            <Field type="textfield" id="MaxZoneDurations" defaultValue="10,10,10,10">
+                <Label>Maximum zone durations[Minutes] eg 10,20,15,12...:</Label>
+            </Field>
+
+            <Field type="checkbox" id="PumpControlOn" defaultValue="false">
+                <Label>Enable pump control:</Label>
+                <Description>Last zone is control Valve</Description>
+            </Field>
+
+            <Field type="separator" id="simpleSeparator1" />
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
+                <Label>select rPi-server of the sprinkler system:</Label> 
+            </Field>
+
+            <Field id="infoLabelZONES" type="label">
+                <Label>Setup the zones on the RPI,     select the GPIO of the relay for the zones:</Label>
+            </Field>
+
+            <Field id="GPIOzone1"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 1:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone2"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 2:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone3"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 3:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone4"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 4:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone5"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="5,6,7,8,9,10,11,12,13,14,15,16" > <Label>gpio# for zone 5:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone6"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="6,7,8,9,10,11,12,13,14,15,16" >   <Label>gpio# for zone 6:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone7"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="7,8,9,10,11,12,13,14,15,16" >     <Label>gpio# for zone 7:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone8"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="8,9,10,11,12,13,14,15,16" >       <Label>gpio# for zone 8:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone9"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="9,10,11,12,13,14,15,16" >         <Label>gpio# for zone 9:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone10" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="10,11,12,13,14,15,16" >           <Label>gpio# for zone 10:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone11" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="11,12,13,14,15,16" >              <Label>gpio# for zone 11:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone12" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="12,13,14,15,16" >                 <Label>gpio# for zone 12:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone13" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="13,14,15,16" >                    <Label>gpio# for zone 13:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone14" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="14,15,16" >                       <Label>gpio# for zone 14:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone15" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="15,16" >                          <Label>gpio# for zone 15:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone16" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="16" >                             <Label>gpio# for zone 16:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+
+            <Field type="checkbox" id="OverrideScheduleActions" defaultValue="false" hidden ="yes">
+                <Label>Override schedule actions:</Label>
+                <Description>Plugin overrides high-level actions</Description>
+            </Field>
+
+        </ConfigUI>
+
+        <States>
+                <State id="minutesRunToday">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>minutesRunToday</TriggerLabel>
+                    <ControlPageLabel>minutesRunToday</ControlPageLabel>
+                </State>
+                <State id="minutesRunYesterday">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>minutesRunYesterday</TriggerLabel>
+                    <ControlPageLabel>minutesRunYesterday</ControlPageLabel>
+                </State>
+                <State id="minutesRunThisWeek">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>minutesRunThisWeek</TriggerLabel>
+                    <ControlPageLabel>minutesRunThisWeek</ControlPageLabel>
+                </State>
+                <State id="minutesRunLastWeek">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>minutesRunLastWeek</TriggerLabel>
+                    <ControlPageLabel>minutesRunLastWeek</ControlPageLabel>
+                </State>
+                <State id="minutesRunThisMonth">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>minutesRunThisMonth</TriggerLabel>
+                    <ControlPageLabel>minutesRunThisMonth</ControlPageLabel>
+                </State>
+                <State id="minutesRunLastMonth">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>minutesRunLastMonth</TriggerLabel>
+                    <ControlPageLabel>minutesRunLastMonth</ControlPageLabel>
+                </State>
+                <State id="activeZoneStarted">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>activeZoneStarted</TriggerLabel>
+                    <ControlPageLabel>activeZoneStarted</ControlPageLabel>
+                </State>
+         </States>
+
     </Device>
 
 
@@ -13004,7 +13265,7 @@ States:
             <Field id="beaconKey1"   type="menu" defaultValue="0" tooltip="select the iBeacon that on key ring 1" >
                         <List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
                 <Label>select the iBeacon for car key1:</Label> 
-            </Field>    def getDeviceDisplayStateId(self, dev):
+            </Field>    
 
             <Field id="beaconKey2"   type="menu" defaultValue="0" tooltip="select the iBeacon that on key ring 2" >
                         <List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
@@ -13061,18 +13322,6 @@ States:
                     <ControlPageLabel>LastLeaveFromHome</ControlPageLabel>
                 </State>
         </States>
-    </Device>
-
-
-    <Device type="custom" id="OUTgpio">
-      <Name>OUTPUT-gpio - depreciated, please switch to OUTPUT-GPIO-x</Name>
-    </Device>
-
-    <Device type="custom" id="INPgpio">
-      <Name>INPUT-gpio-depreciated</Name>
-    </Device>
-    <Device type="custom" id="i2cMLX90614">
-      <Name>INPUT-i2cMLX90614  depreciated , use new version ... -mlx90614</Name>
     </Device>
 
     

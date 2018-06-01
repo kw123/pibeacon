@@ -25,6 +25,10 @@ G.debug = 0
 import serial 
 import struct
 
+import RPi.GPIO as GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+
 
 
 class thisSensorClass:
@@ -37,6 +41,7 @@ class thisSensorClass:
         self.ser.baudrate   = 9600
         self.ser.timeout    = 1
         self.debugPrint     = 0
+        
 
         self.ser.open()
 
@@ -44,7 +49,7 @@ class thisSensorClass:
         nGoodMeasurements   = 0
         acumValues          = [ 0 for ii in range(12)]
         receivedCharacters  = ""
-
+        self.debugPrint = G.debug
         try:
             for jj in range(3): # do 3 comple reads
             
@@ -119,7 +124,7 @@ class thisSensorClass:
                 acumValues[kk] = int( float(acumValues[kk]) / nGoodMeasurements  + 0.5 )
             
 
-            if self.debugPrint > 2: # debug print out 
+            if self.debugPrint  > 2: # debug print out 
                 print "---------------------------------------"
                 print "Concentration Units (standard)"
                 print "PM 1.0: %d\tPM2.5: %d\tPM10: %d" % (acumValues[0], acumValues[1], acumValues[2])
@@ -155,6 +160,7 @@ def readParams():
     global deltaX, minSendDelta
     global oldRaw, lastRead
     global startTime
+    global resetPin
     try:
 
 
@@ -176,7 +182,8 @@ def readParams():
           
         if "sensorList"         in inp:  sensorList=             (inp["sensorList"])
         if "sensors"            in inp:  sensors =               (inp["sensors"])
-        
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
+
  
         if sensor not in sensors:
             U.toLog(-1, G.program+" is not in parameters = not enabled, stopping BME680.py" )
@@ -184,6 +191,9 @@ def readParams():
             
 
         U.toLog(1, G.program+" reading new parameter file" )
+
+
+ 
 
         if sensorRefreshSecs == 91:
             try:
@@ -195,6 +205,8 @@ def readParams():
         restart = False
         for devId in sensors[sensor]:
             deltaX[devId]  = 0.1
+            if "resetPin"           in sensors[sensor][devId]:      resetPin[devId]= sensors[sensor][devId]["resetPin"]
+
             old = sensorRefreshSecs
             try:
                 if "sensorRefreshSecs" in sensors[sensor][devId]:
@@ -202,7 +214,6 @@ def readParams():
                     sensorRefreshSecs = float(xx[0]) 
             except:
                 sensorRefreshSecs = 12    
-            if old != sensorRefreshSecs: restart = True
             
 
             old = deltaX[devId]
@@ -220,6 +231,7 @@ def readParams():
             except:
                 minSendDelta = 5.
             if old != minSendDelta: restart = True
+
 
                 
             if devId not in thisSensor or  restart:
@@ -276,8 +288,8 @@ def startSensor(devId):
         subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
         if serials[0].find("serial0 -> ttyAMA0") ==-1 :
-            U.toLog(-1, " wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0")
-            print       " wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
+            U.toLog(-1, "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0")
+            print       "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
             time.sleep(10)
             exit()
 
@@ -289,8 +301,8 @@ def startSensor(devId):
         subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
         if serials[0].find("serial0 -> ttyS0")==-1:
-            U.toLog(-1, " wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
-            print       " wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
+            U.toLog(-1, "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
+            print       "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
             time.sleep(10)
             exit()
      
@@ -336,7 +348,23 @@ def getValues(devId):
     if badSensor >3: return "badSensor"
     return ""
 
-
+def resetSensor(devId =""):
+    global resetPin
+    for id in resetPin:
+        if devId == "" or id == devId:
+            pin = resetPin[id]
+            if pin == "": continue
+            pin = int(pin)
+            if pin > 26:  continue 
+            if pin < 2:   continue  
+            U.toLog(-1, u"resetting pmAirquality device")
+            GPIO.setup(pin, GPIO.OUT)
+            GPIO.output(pin, True)
+            time.sleep(0.1)
+            GPIO.output(pin,False)
+            time.sleep(0.5)
+            GPIO.output(pin,True)
+    return 
 
 
 
@@ -346,8 +374,9 @@ global sensor, sensors, badSensor
 global deltaX, thisSensor, minSendDelta
 global oldRaw, lastRead
 global startTime, firstValue
+global resetPin
 
-
+resetPin                    = {}
 firstValue                  = True
 startTime                   = time.time()
 lastMeasurement             = time.time()
@@ -387,8 +416,7 @@ lastRead = time.time()
 
 U.echoLastAlive(G.program)
 
-
-
+resetSensor()
 
 lastValues0         = {"particles_03um":0,"particles_05um":0,"particles_10um":0,"particles_25um":0,"particles_50um":0, "particles_100m":0}
 lastValues          = {}
@@ -400,7 +428,6 @@ startTime           = time.time()
 G.lastAliveSend     = time.time() -1000
 
 
-loopSleep = sensorRefreshSecs
 sensorWasBad = False
 while True:
     try:
@@ -421,14 +448,13 @@ while True:
                     if badSensor < 5: 
                         U.toLog(-1," bad sensor")
                         U.sendURL(data)
+                        resetSensor(devId=devId)
                     else:
                         U.restartMyself(param="", reason="badsensor",doPrint=True)
                     lastValues2[devId] =copy.copy(lastValues0)
                     lastValues[devId]  =copy.copy(lastValues0)
                     continue
                 elif values["particles_03um"] !="" :
-                    if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-                        U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
                     
                     data["sensors"][sensor][devId] = values
                     deltaN =0
@@ -441,7 +467,8 @@ while True:
                         except: pass
                 else:
                     continue
-                if (   ( deltaN > deltaX[devId]  ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or  quick   ) and  ( tt - G.lastAliveSend > minSendDelta ):
+                if sensorWasBad or (   ( deltaN > deltaX[devId]  ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or  quick   ) and  ( tt - G.lastAliveSend > minSendDelta ):
+                        sensorWasBad = False
                         sendData = True
                         if not firstValue: # do not send first measurement, it is always OFFFF
                             lastValues2[devId] = copy.copy(lastValues[devId])
@@ -451,19 +478,25 @@ while True:
 
         loopCount +=1
 
-        ##U.makeDATfile(G.program, data)
-        quick = U.checkNowFile(G.program)                
+                     
         U.echoLastAlive(G.program)
 
-        if loopCount %5 ==0 and not quick:
+        if loopCount %2 ==0:
             xx= time.time()
             if xx - lastRead > 5.:  
                 readParams()
                 lastRead = xx
-        #if gasBaseLine ==0: loopSleep = 1
-        #else:               loopSleep = sensorRefreshSecs
-        if not quick:
-            time.sleep(max(1,loopSleep - (time.time()-tt)))
+
+        nsleep = int(max(5,sensorRefreshSecs-5)/5.)
+        for ii in range(nsleep):
+                quick = U.checkNowFile(G.program)                
+                if U.checkResetFile(G.program): 
+                    quick = True
+                    for devId in sensors[sensor]:
+                        resetSensor(devId=devId) 
+                if quick: break
+                time.sleep(5.)
+
     except  Exception, e:
         U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)

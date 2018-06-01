@@ -4,7 +4,6 @@
 # march 2
 # this program will be called if indigo plugin sends a myoutput command
 ##
-import SocketServer
 import json
 import sys
 import subprocess
@@ -45,15 +44,15 @@ try:
 
         # rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
         if len(sys.argv) >1 :
-            text1 = json.loads(sys.argv[1])
+            text = sys.argv[1]
 
             #eg reboot if you send the reboot command
-            if unicode(text1).find("reboot") > -1 :
+            if unicode(text).find("reboot") > -1 :
                 os.system("reboot")
 
 
             # if set gpoio high ..
-            elif unicode(text1).find("gpio 21 high") > -1:
+            elif unicode(text).find("gpio 21 high") > -1:
                 import RPi.GPIO as GPIO
                 GPIO.setmode(GPIO.BCM)
                 GPIO.setwarnings(False)

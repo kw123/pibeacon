@@ -788,9 +788,9 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
         </ConfigUI>
     </MenuItem>
     <MenuItem id="newMessage">
-        <Name>Request new data from rPi sensors</Name>
+        <Name>Reset or Request new data from rPi sensors</Name>
         <ConfigUI>
-             <Label>Request new data from rPi sensors</Label>
+             <Label>Reset or  Request new data from rPi sensors</Label>
              <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                 <Label>select rPi #</Label>
                 <List class="self" filter="" method="filterPiNoAll" dynamicReload="false"/>
@@ -815,14 +815,18 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
                     <Option value= "ina219"              >ina219</Option>
                     <Option value= "bno095"              >bno095</Option>
                     <Option value= "mag3110"             >mag3110</Option>
+                    <Option value= "pmairquality"        >pmairquality</Option>
                     <Option value= "myprogram"           >myprogram</Option>
                     <Option value= "all"                 >all</Option>
                 </List>
                 <Label>device type that should be asked to send new data:</Label>
              </Field>
 
-             <Field  id="exec" type="button"	>
-                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setnewMessageCALLBACKmenu</CallbackMethod>
+             <Field  id="execnewData" type="button"	>
+                <Label> ....after selection click</Label><Title>NewData</Title> <CallbackMethod>setnewMessageCALLBACKmenu</CallbackMethod>
+             </Field>
+             <Field  id="execReset" type="button"	>
+                <Label> ....after selection click</Label><Title>RESET</Title> <CallbackMethod>setresetDeviceCALLBACKmenu</CallbackMethod>
              </Field>
         </ConfigUI>
     </MenuItem>
@@ -1078,6 +1082,12 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
                 <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setTEA5767CALLBACKmenu</CallbackMethod>
             </Field>
         </ConfigUI>
+    </MenuItem>
+
+
+    <MenuItem id="resetSprinkler">
+        <Name>Reset Sprinkler stats </Name>
+        <CallbackMethod>resetSprinklerStats</CallbackMethod>
     </MenuItem>
 
 

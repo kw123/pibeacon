@@ -145,6 +145,7 @@ def readParams():
 
         U.getGlobalParams(inp)
         if "sensors"            in inp:  sensors =               (inp["sensors"])
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
  
         if sensor not in sensors:
             U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )

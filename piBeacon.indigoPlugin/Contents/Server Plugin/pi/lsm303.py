@@ -191,7 +191,8 @@ def readParams():
         sensorsOld= copy.copy(sensors)
 
         if "sensors"            in inp:  sensors =               (inp["sensors"])
-        
+        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
+
         U.getGlobalParams(inp)
         
         

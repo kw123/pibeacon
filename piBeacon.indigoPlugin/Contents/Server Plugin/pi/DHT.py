@@ -47,7 +47,7 @@ def getDATAdht(DHTpin,Type):
             #f h is not None and t is not None:
             #print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpin)
 #           # sensorDHT=""
-            return ("%5.1f"%float(t)).strip(),("%3d"%float(h)).strip()
+            return ("%.2f"%float(t)).strip(),("%3d"%float(h)).strip()
             #else: return "" ,""  
         except  Exception, e:
             U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))

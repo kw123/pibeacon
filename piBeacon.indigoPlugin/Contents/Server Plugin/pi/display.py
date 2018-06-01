@@ -40,7 +40,7 @@ sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
 
-
+_defaultDateStampFormat            = u"%Y-%m-%d %H:%M:%S"
 
 class LCD1602():
     def __init__(self, i2caddr=0x3f,backgroundLightEnabed=1): 
@@ -1156,6 +1156,56 @@ def dotWRadius( x0, y0,  fill, widthX, widthY,outline=None):
 
 ################### ###################   analogClock  ############################################### END
     
+
+################### ###################  digitalClock  ############################################### START
+def digitalClockInit(intensity, intensityDevice, inParms={}):
+        global digitalClockParams, minStartForNegative
+        defparams = {"position":[0,0],                                                    ## top left corner
+                     "width":   40,                                                       ## font size 
+                     "fill":    [255,255,255],                                            ## color of digits
+                     "flipY":    -1,                                                      ## if display is flipped 
+                     "format":   "%H:%M:%S",                                              ## digfital clock  
+                     "font":    "Arial.ttf",
+                              }  
+        minStartForNegative = 0.1
+        try:
+            #print " into analogClock init2", inParms
+            ## set clock parameters
+            digitalClockParams = copy.copy(defparams)
+            ## show first pic
+            for pp in defparams:
+                if pp in inParms:
+                    digitalClockParams[pp] = copy.copy(inParms[pp])
+            digitalClockShow()
+        except  Exception, e:
+                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return 
+        
+    
+    
+def digitalClockShow(hours=True, minutes=True, seconds=True):
+        global digitalClockParams
+        try:        
+
+            P      = digitalClockParams["position"]
+            fillD  = digitalClockParams["fill"]
+            format = digitalClockParams["format"]
+
+            nowST = datetime.datetime.now().strftime(format)
+            fontF =  mkfont(digitalClockParams)
+
+            draw.text(P, nowST, font=fontx[fontF], fill=(int(fillD[0]*intensity),int(fillD[1]*intensity),int(fillD[2]*intensity)))
+             
+
+        except  Exception, e:
+                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return 
+
+
+
+
+################### ###################   analogClock  ############################################### END
+    
     
     
     
@@ -1529,7 +1579,10 @@ U.toLog(-1,"looping over input",doPrint=True )
 
 loopCount           = 0
 lastAnalog          = time.time()
-clockInitialized    = ""
+lastDigital         = time.time()
+digitalclockInitialized    = ""
+analogclockInitialized    = ""
+
 while True:
     try:
         for item in items:
@@ -1679,8 +1732,8 @@ while True:
                         offTime1 = 0
                         if "offONTime" in cmd:
                             try:
-                                onTime   = int(float(cmd["offONTime"][1]))
                                 offTime0 = int(float(cmd["offONTime"][0]))
+                                onTime   = int(float(cmd["offONTime"][1]))
                                 offTime1 = int(float(cmd["offONTime"][2]))
                             except:
                                 onTime   = 9999999999999
@@ -1957,8 +2010,8 @@ while True:
                         elif cType == "analogClock" and onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti)            : ###########################################################################
                                 if offTime0 ==0 and  offTime1 ==0:   secs = True
                                 else:                                secs = False
-                                if cmd != clockInitialized or newRead:
-                                    clockInitialized = copy.copy(cmd)
+                                if cmd != analogclockInitialized or newRead:
+                                    analogclockInitialized = copy.copy(cmd)
                                     analogClockInit(intensity, intensityDevice, inParms=cmd)
                                     lastAnalog     = int(time.time())
                                  
@@ -1968,6 +2021,21 @@ while True:
                                     time.sleep( 1.02 - (tt - lastAnalog) ) 
                                 lastAnalog = int(time.time())
                                 analogClockShow( seconds = secs)
+
+                        elif cType == "digitalClock" and onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti)            : ###########################################################################
+                                if offTime0 ==0 and  offTime1 ==0:   secs = True
+                                else:                                secs = False
+                                if cmd != digitalclockInitialized or newRead:
+                                    digitalclockInitialized = copy.copy(cmd)
+                                    digitalClockInit(intensity, intensityDevice, inParms=cmd)
+                                    lastDigital    = int(time.time())
+                                 
+                                tt= time.time()
+                                #print "tt - lastAnalog", tt - lastAnalog 
+                                if int(tt)  == lastDigital: 
+                                    time.sleep( 1.02 - (tt - lastDigital) ) 
+                                lastDigital = int(time.time())
+                                digitalClockShow( seconds = secs)
 
 
 

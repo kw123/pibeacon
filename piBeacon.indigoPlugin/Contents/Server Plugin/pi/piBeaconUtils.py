@@ -41,7 +41,7 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
                 if param2 != "":
                     if line[linef:].find(param2) == -1: continue
                     
-            toLog(-1, "killing "+pgmToKill)
+            toLog(-1, "killing "+pgmToKill+"  "+param1 +" "+param2)
             os.system("kill -9 "+str(pid))
     except Exception, e:
         toLog(-1, u"killOldPgm  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -74,6 +74,7 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
                 print " logfile not ready"
                 os.system("sudo mkdir "+G.logDir+" &")
                 os.system("sudo chown -R  pi:pi  "+G.logDir)
+            if  not os.path.isdir(G.logDir):
                 return
 
             f=open(G.logDir+G.program+".log","a")
@@ -98,6 +99,29 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
             except  Exception, e:
                 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, " in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
     return 
+
+
+
+def checkrclocalFile():
+    
+    replace = False
+    if not os.path.isfile("/etc/rc.local"):  # does not exist
+        replace = True
+    else:
+        f = open("/etc/rc.local","r")
+        if "python" not in f.read():
+            replace=True
+        f.close()
+
+    if replace:
+        os.system("sudo cp "+G.homeDir+"rc.local.default /etc/rc.local ")
+        os.system("sudo chmod a+x /etc/rc.local")
+        toLog(-1, u"replacing rc.local file" )
+
+
+    return 
+
+
 
 def fixoutofdiskspace():
     print " trying to fix oput of disk space" 
@@ -313,11 +337,14 @@ def setUpRTC(useRTCnew):
     except:
             initRTC=True
         
+
+    if useRTCnew not in ["ds3231","ds1307"]: useRTCnew ="0"
+
     if  G.useRTC == useRTCnew and not initRTC: # return if not first and no change
         return
     
-    if useRTCnew =="ds3231":
-        if findString("dtoverlay=i2c-rtc,ds3231",   "/boot/config.txt") ==2:
+    if useRTCnew == "ds3231":
+        if findString("dtoverlay=i2c-rtc,ds3231",   "/boot/config.txt") == 2: # already there ?
             G.useRTC = useRTCnew
             return 
         
@@ -325,11 +352,11 @@ def setUpRTC(useRTCnew):
         removefromFile("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt")
         uncommentOrAdd("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt", before="")
         removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
-        os.system("apt-get remove fake-hwclock")
+        os.system("apt-get -y remove fake-hwclock")
         doReboot(30,"installing HW clock" ,cmd="")
 
-    elif useRTCnew =="ds1307":
-        if findString("dtoverlay=i2c-rtc,ds1307",   "/boot/config.txt") ==2:
+    elif useRTCnew == "ds1307":
+        if findString("dtoverlay=i2c-rtc,ds1307",   "/boot/config.txt") == 2: # already done ?
             G.useRTC = useRTCnew
             return 
         uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local",    before="(sleep ")
@@ -342,28 +369,27 @@ def setUpRTC(useRTCnew):
         #fi
         removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
         os.system("sudo chmod a+x  /lib/udev/hwclock-set")
-        os.system("apt-get remove fake-hwclock")
+        os.system("apt-get -y remove fake-hwclock")
         doReboot(30,"installing HW clock" ,cmd="")
 
     else:
-        if (findString("dtoverlay=i2c-rtc,ds1307",   "/boot/config.txt") !=2 and 
-            findString("dtoverlay=i2c-rtc,ds3231",   "/boot/config.txt") !=2 ) : 
+        if (findString("dtoverlay=i2c-rtc,ds1307",   "/boot/config.txt") != 2 and 
+            findString("dtoverlay=i2c-rtc,ds3231",   "/boot/config.txt") != 2 ) : # already done ?
             G.useRTC = useRTCnew
             return 
 
         removefromFile("dtoverlay=i2c-rtc,ds3231",  "/boot/config.txt")
         removefromFile("dtoverlay=i2c-rtc,ds1307",  "/boot/config.txt")
-        removefromFile("/sbin/hwclock -s",          "/etc/rc.local" )
+        removefromFile('/sbin/hwclock -s|| echo "hwclock not working"',          "/etc/rc.local" )
         # in /lib/udev/hwclock-set REMOVE # infront of 
         #if [ -e /run/systemd/system ] ; then
         # exit 0
         #fi
-        uncommentOrAdd("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set", before="",nLines =3)
+        os.system("cp "+G.homeDir+"hwclock.set.nohwclock /lib/udev/hwclock-set") 
         os.system("sudo chmod a+x  /lib/udev/hwclock-set")
-        os.system("apt-get install fake-hwclock") 
+        os.system("apt-get -y install fake-hwclock") 
 
-
-        doReboot(30,"de installing HW clock" ,cmd="")
+        doReboot(30," .. reason de installing HW clock" ,cmd="")
 
 #################################
 def getIPNumber():
@@ -721,7 +747,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
                                 toLog(-1,"curl err:"+ ret[0])
                                 toLog(-1,"curl err:"+ ret[1])
                             else:
-                                os.system("echo x > "+ G.homeDir+"temp/messageSend")
+                                os.system("echo '"+G.program+":  "+data0+"' > "+ G.homeDir+"temp/messageSend")
                         else:
                             cmd.append(" &")
                             subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -744,7 +770,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
                                 response = soc.recv(512)
 
                                 if response.find("ok") >-1:
-                                    os.system("echo x > "+ G.homeDir+"temp/messageSend")
+                                    os.system("echo '"+G.program+":  "+data0+"' > "+ G.homeDir+"temp/messageSend")
                                     sendMSG =True
                                     break
                                 else:# try again
@@ -881,6 +907,9 @@ def calcStartTime(data,timeStamp):
 #################################
 def checkNowFile(xxx):
     return doFileCheck(xxx, "now")
+#################################
+def checkResetFile(xxx):
+    return doFileCheck(xxx, "reset")
 
 #################################
 def checkNewCalibration(xxx):
@@ -1731,7 +1760,7 @@ def uncommentOrAdd(string,file,before="",nLines=1):
 
             text0+="\n"+string+"\n"
             f=open(file,"w")
-            f.write(text0)
+            f.write(text0.replace("\n\n","\n"))
             f.close()
             return 1
             
@@ -1768,7 +1797,7 @@ def removefromFile(string,file,nLines =1):
         text0 = f.read()
         text  = text0.split("\n")
         f.close()
-        out=[]
+        out=""
         for line in text:
             lineItems = line.split()
             nFound  = 0
@@ -1779,9 +1808,10 @@ def removefromFile(string,file,nLines =1):
                         if item == item2:
                             nFound +=1
                             break
-            if nFound == nItems: continue
+            if nFound == nItems: 
+                continue
             out+=line+"\n"
-            
+        out = out.replace("\n\n","\n")
         if out != text0: 
             f=open(file,"w")
             f.write(out)

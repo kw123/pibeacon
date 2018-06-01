@@ -21,45 +21,25 @@ G.program = "mysensors"
 # read params do not change
 # ===========================================================================
 def readParams():
-        global debug, sensorList,cAddress,sensorRefreshSecs, sensors
+        global debug, sensorList,freeParameter,sensorRefreshSecs, sensors
 
         sensorList  = "0"
-        cAddressOld = copy.copy(cAddress)
-        cAddress    = {}
+        oldfreeParameter = copy.copy(freeParameter)
         inp,inRaw = U.doRead()
 
         U.getGlobalParams(inp)
-        if u"debugRPI"          in inp:  debug=                   int(inp["debugRPI"]["debugRPImystuff"])
-
-        if "sensorList"         in inp:  sensorList =                (inp["sensorList"])
-        if "sensorRefreshSecs"  in inp:  sensorRefreshSecs =    float(inp["sensorRefreshSecs"])
-        if "cAddress"           in inp:  xxx =                        inp["cAddress"]
+        if u"debugRPI"          in inp:  G.debug=                    int(inp["debugRPI"]["debugRPImystuff"])
         if "sensors"            in inp:  sensors =                   (inp["sensors"])
 
-        if sensorList.find("mysensors") == -1 : return
-        if "mysensors" not in xxx: return
-
-        same=True
-        cAddress= copy.copy(xxx["mysensors"])
+        if G.program not in sensors: 
+            exit()
+        sensor = sensors[G.program]
+        for id in sensor:
+            if "freeParameter"  in sensor[id]:  freeParameter[id] =             sensor[id]["freeParameter"]
 
         # check if anything new
-        if "mysensors" not in cAddressOld :
-            same=False
-        else:
-            for addr in cAddress:
-                if addr not in cAddressOld :
-                    same=False
-                    break
-                elif len(cAddress) != len(cAddressOld) :
-                    same=False
-                    break
-                if cAddressOld[addr] != cAddress[addr] :
-                    same=False
-                    break
-
-            # start each "channel, device or what every you like to do
-            for addr in cAddress:
-                startMySensors(addr=addr)
+        if id not in oldfreeParameter or freeParameter[id] != oldfreeParameter[id]:
+            startMySensors(freeParameter[id])
 
 
 
@@ -67,21 +47,18 @@ def readParams():
 # sensor start  adopt to your needs
 # ===========================================================================
 
-def startMySensors(addr=0):
-        global cAddress
+def startMySensors(parameter):
         try:
             # do your init here
-            parameter= cAddress[addr]
+
             ## add any init code here for address # addr
-            U.toLog(-1, u"starting my sensors " + unicode(cAddress) + ";    dev= " + unicode(addr))
+            U.toLog(-1, u"starting my sensors " + unicode(parameter) )
         except  Exception, e:
             U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"channel used: " + unicode(cAddress) + ";    addr= " + unicode(addr))
+            U.toLog(-1, u"channel used: " + unicode(parameter) )
 
-def getMySensors(addr=0):
-        global cAddress
+def getMySensors(parameter):
         try:
-            parameter = cAddress[addr]
             v = ["","","","","","","","","","",]   # set return to empty
             # do your stuff here, this if for testing to something into the data
             x = time.time()  # some dummy data
@@ -102,15 +79,15 @@ def getMySensors(addr=0):
 # ===========================================================================
 
 
-global debug, sensorList, externalSensor,cAddress,sensorRefreshSecs, ipAddress, sensors
+global debug, sensorList, externalSensor,freeParameter,indigoIds, ipAddress, sensors
 
 debug             = 5 # will be overwritten in readParams
 nInputs           = 10 # number of input channels 1...10 max
 
 loopCount         = 0  # for loop,  not used could be deleted, but you might need it
-sensorRefreshSecs = 33 # will be overwritten in readParams, number of seconds to sleep in each loop
+sensorRefreshSecs = 10 # will be overwritten in readParams, number of seconds to sleep in each loop
 sensorList        = [] # list of sensor, we are looking for "mysensors"
-cAddress          = [] # store address / parameters we get from indigo in device config of mysensors in readParams
+freeParameter     = {}  # store address / parameters we get from indigo in device config of mysensors in readParams
 
 sensor            = G.program
 readParams()           # get parameters send from indigo
@@ -126,22 +103,23 @@ U.killOldPgm(myPID, G.program+".py")# kill old instances of myself if they are s
 quick    = False
 lastData = {}
 loopCount = 0
+
 while True:  # loop for ever
+        loopCount +=1
         data={}
         try:
             ### get data
-            if sensor in sensors > -1 :# do mysensor
-                for  nAddr in range(len(cAddress)) :
-                    v = getMySensors(addr=nAddr)
+            
+            if sensor in sensors:# do mysensor
+                data["sensors"]={sensor:{}}
+                for id in sensors[sensor]:
+                    v = getMySensors(freeParameter[id])
                     if v != "" :
-                        addr = cAddress[nAddr]
-                        data[sensor] = {}
-                        data[sensor][addr] = { }
+                        data["sensors"][sensor][id] = {}
                         for ii in range(min(nInputs,len(v))):
-                            data[sensors][addr]["INPUT_"+str(ii)]  = v[ii]
-            loopCount +=1
+                            data["sensors"][sensor][id]["INPUT_"+str(ii)]  = v[ii]
             ### send data to plugin
-            if loopcount%100 == 0 or quick or lastData != data: 
+            if loopCount%1 == 0 or quick or lastData != data: 
                 U.sendURL(data)
             lastData = copy.copy(data)
             

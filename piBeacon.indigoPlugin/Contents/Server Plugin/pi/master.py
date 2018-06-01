@@ -927,8 +927,7 @@ activePGMdict           = {}
 os.system("rm "+G.homeDir+"*.pyc  > /dev/null 2>&1")
 
 # make dir for our logfiles if they do not exist
-os.system("mkdir "+G.logDir +"  > /dev/null 2>&1")
-
+os.system("mkdir "+G.logDir+"> /dev/null 2>&1" )
 
 if  os.path.isdir(G.homeDir+"temp"):
     os.system("rm  "+G.homeDir+"temp/* > /dev/null 2>&1")
@@ -986,6 +985,7 @@ if G.networkType  in G.useNetwork and G.wifiType =="normal":
 readNewParams()
 
 
+
 if  G.wifiType =="normal" and G.networkType !="clockMANUAL" and  rPiCommandPORT >0:
         startProgam("receiveGPIOcommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
 
@@ -1011,7 +1011,6 @@ if G.networkType  in G.useNetwork and G.wifiType =="normal":
 
 
 
-os.system("sudo mkdir "+G.logDir+" > /dev/null 2>&1 ")
 os.system("sudo chown -R  pi:pi  "+G.logDir)
 
 
@@ -1248,7 +1247,9 @@ while True:
 
         U.checkIfAliveNeedsToBeSend()
         
-
+        if loopCount%5 == 0: 
+            U.checkrclocalFile()
+        
         if loopCount %4 ==0: # check network every 40 secs
             U.testNetwork(force = True)
             U.checkNTP()

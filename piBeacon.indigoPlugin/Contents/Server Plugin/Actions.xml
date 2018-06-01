@@ -2239,16 +2239,90 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-            <Field id ="sepl90"  type="separator"/>
+            <Field id ="sepl97"  type="separator"/>
 
-            <Field id ="sepl99"  type="separator"/>
+            <Field id ="sepl98"  type="separator"/>
+
+            <Field id ="type98"  type="menu" defaultValue="">
+                     <List>
+                     <Option value= "0"           >not active </Option>
+                     <Option value= "digitalClock" >Digital Clock</Option>
+                     </List>
+                <Label>ELEMENT 98:  .......................................digital Clock:</Label> 
+            </Field>
+
+            <Field id="delayStart98"  type="textfield" default="0" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                <Label>Delay above command by xx seconds:</Label>
+            </Field>
+            <Field id="offONTime98"  type="textfield" default="0,9999999,0" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                <Label>seconds off,on,off eg 5,3,2:</Label>
+            </Field>
+
+            <Field id="reset98"  type="textfield" default="" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                <Label>bf display do nothing:"", blank:0</Label>
+            </Field>
+
+            <Field id="format98"  type="textfield" default="%H:%H:%S" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                <Label>format String  (%H:%M:%S)... :</Label>
+            </Field>            
+
+            <Field id="fill98"  type="textfield" default="255,0,0" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                <Label>Colors RGB:(0-255,0-255,0-255) ... :</Label>
+            </Field>            
+
+            <Field id="font98"  type="menu" default="Arial.ttf" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                     <List>
+                     <Option value= "Arial.ttf"              >Arial</Option>
+                     </List>
+                <Label>select TTF font:</Label>
+            </Field>
+
+            <Field id="width98"  type="menu" default="40" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                     <List>
+                     <Option value= "8"    >8</Option>
+                     <Option value= "10"   >10</Option>
+                     <Option value= "12"   >12</Option>
+                     <Option value= "14"   >14</Option>
+                     <Option value= "16"   >16</Option>
+                     <Option value= "18"   >18</Option>
+                     <Option value= "20"   >20</Option>
+                     <Option value= "24"   >24</Option>
+                     <Option value= "30"   >30</Option>
+                     <Option value= "40"   >40</Option>
+                     <Option value= "50"   >50</Option>
+                     <Option value= "64"   >64</Option>
+                     <Option value= "72"   >72</Option>
+                     <Option value= "86"   >86</Option>
+                     <Option value= "100"  >100</Option>
+                     <Option value= "120"  >120</Option>
+                     <Option value= "140"  >140</Option>
+                     <Option value= "160"  >160</Option>
+                     </List>
+             <Label>enter font size:</Label>
+            </Field>
+
+            <Field  id="position98" type="textfield" default="245,370" alignText="right" fontSize="small" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+            <Label>top left  x,y </Label> </Field>
+
+
+            <Field id="display98"  type="menu" default="immediate" visibleBindingId="type98"  visibleBindingValue="digitalClock">
+                     <List>
+                     <Option value= "immediate" >immediate</Option>
+                     <Option value= "wait" >wait  until all data created</Option>
+                     </List>
+                <Label>display:</Label>
+            </Field>            
+
+
+
+
 
             <Field id ="type99"  type="menu" defaultValue="">
                      <List>
                      <Option value= "0"           >not active </Option>
                      <Option value= "analogClock" >Analog Clock</Option>
                      </List>
-                <Label>ELEMENT 99:  ..................................analogClock:</Label> 
+                <Label>ELEMENT 99:  .............................analog/digital Clock:</Label> 
             </Field>
 
             <Field id="delayStart99"  type="textfield" default="0" visibleBindingId="type99"  visibleBindingValue="analogClock">
@@ -2329,7 +2403,7 @@ The action menu offers 70 elements, you can use python script for more elements-
                      <Option value= "hide"          >hide</Option>
                      <Option value= "0"             >off</Option>
                      <Option value= "box"           >box</Option>
-                     <Option value= "circle"        >circle</Option>
+                     <Option value= "circle"        >circle (for analog)</Option>
                      </List>
              <Label>Draw xxx around Clock:</Label>
             </Field>
@@ -2337,6 +2411,8 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>color 80,80,80:</Label> </Field>
             <Field  id="widthBox99" type="textfield" default="30" alignText="right" fontSize="small" visibleBindingId="box99"  visibleBindingValue="box,circle">
             <Label>width of box line(pts):</Label> </Field>
+            <Field  id="heightBox99" type="textfield" default="30" alignText="right" fontSize="small" visibleBindingId="box99"  visibleBindingValue="box">
+            <Label>height of box line(pts):</Label> </Field>
 
 
             <Field id="display99"  type="menu" default="immediate" visibleBindingId="type99"  visibleBindingValue="analogClock">
@@ -2592,6 +2668,26 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
              </Field>
         </ConfigUI>
      </Action>
+
+     <Action id="resetDevice">
+        <Name>Reset Sensor device on rPi</Name>
+        <CallbackMethod>setresetDeviceCALLBACKAction</CallbackMethod>
+        <ConfigUI>
+             <Label>Reset Sensor device on rPi</Label>
+           <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                <List class="self" filter="" method="filterAllpiSimple" dynamicReload="false"/>
+                <Label>select rPi-server:</Label>
+            </Field>
+             <Field id="typeId"   type="menu" defaultValue="" tooltip="" >
+                <List>
+                    <Option value= "pmairquality"        >pmairquality</Option>
+                    <Option value= "all"                 >all</Option>
+                </List>
+                <Label>device type that should be reset:</Label>
+             </Field>
+        </ConfigUI>
+     </Action>
+
 
     <Action id="newCalibration">
         <Name>Start Calibration of sensors on  rPi sensors</Name>

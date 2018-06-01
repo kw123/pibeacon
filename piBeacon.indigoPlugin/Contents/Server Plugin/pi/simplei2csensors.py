@@ -1656,70 +1656,6 @@ class MCP9808:
 
 
 
-# ===========================================================================
-# MLX90614
-# ===========================================================================
-
-"""
-MLX90614 driver. 
-You might need to enter this command on your Raspberry Pi:
-echo "Y" > /sys/module/i2c_bcm2708/parameters/combined
-done now in this program when MLX sensor starts first
-"""
-
-
-class MLX90614:
-
-    MLX90614_RAWIR1     = 0x04
-    MLX90614_RAWIR2     = 0x05
-    MLX90614_TA         = 0x06  # remote data temp
-    MLX90614_TOBJ1      = 0x07  #  ambient data 
-    MLX90614_TOBJ2      = 0x08
-
-    MLX90614_TOMAX      = 0x20
-    MLX90614_TOMIN      = 0x21
-    MLX90614_PWMCTRL    = 0x22
-    MLX90614_TARANGE    = 0x23
-    MLX90614_EMISS      = 0x24
-    MLX90614_CONFIG     = 0x25
-    MLX90614_ADDR       = 0x0E
-    MLX90614_ID1        = 0x3C
-    MLX90614_ID2        = 0x3D
-    MLX90614_ID3        = 0x3E
-    MLX90614_ID4        = 0x3F
-
-
-    def __init__(self, address=0x5a, bus_num=1):
-        self.bus_num = bus_num
-        self.address = address
-        self.bus = smbus.SMBus(bus=bus_num)
-
-    def test(self):
-        print  "MLX90614_CONFIG", self.bus.read_word_data(self.address, self.MLX90614_CONFIG)
-        print  "MLX90614_PWMCTRL",self.bus.read_word_data(self.address, self.MLX90614_PWMCTRL)
-        print  "MLX90614_EMISS",  self.bus.read_word_data(self.address, self.MLX90614_EMISS)
-        print  "MLX90614_TOMAX",  self.bus.read_word_data(self.address, self.MLX90614_TOMAX)
-        print  "MLX90614_TOMIN",  self.bus.read_word_data(self.address, self.MLX90614_TOMIN)
-        """ example read
-        MLX90614_CONFIG 40884
-        MLX90614_PWMCTRL 513
-        MLX90614_EMISS 65535
-        MLX90614_TOMAX 39315
-        MLX90614_TOMIN 25315
-        """
-        
-        #print  = self.bus.read_word_data(self.address, MLX90614_RAWIR2)
-        return 
-
-    def get_amb_temp(self):
-        data = self.bus.read_word_data(self.address, self.MLX90614_TA)
-        return (data*0.02) - 273.15
-
-    def get_obj_temp(self):
-        data = self.bus.read_word_data(self.address, self.MLX90614_TOBJ1)
-        return (data*0.02) - 273.15
-
-
 
 # ===========================================================================
 # VEML6030
@@ -1873,6 +1809,161 @@ class VEML6030:
                     time.sleep(waitTime)
                 if ii==1: # skip 3. round?
                     if abs(alsDataL[0]-alsDataL[1])/max(0.1,alsDataL[0]+alsDataL[1]) < 0.05: break
+                self.gainLast = gain
+                self.itLast   = IT 
+            
+            ## pick the middle value of the three values
+            ##print  "end result:",alsData,alsDataL, whiteData, whiteDataL
+            A = sorted(alsDataL)[1]
+            W = sorted(whiteDataL)[1]
+            #print A,W
+            return  A,W
+        except  Exception, e:
+            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return "",""
+
+
+# ===========================================================================
+# VEML7700
+# ===========================================================================
+
+
+class VEML7700:
+    # With ADDR pin plugged to power supply = high = VDD : address = 0x48
+    # With ADDR pin plugged to ground = low :              address = 0x10
+    VEML7700_I2C_ADDRESS   = 0x10
+
+
+    #ALS integration time setting (BIT 9:6)
+    VEML7700_IT_25MS       = 0b0000001100000000
+    VEML7700_IT_50MS       = 0b0000001000000000
+    VEML7700_IT_100MS      = 0b0000000000000000
+    VEML7700_IT_200MS      = 0b0000000001000000
+    VEML7700_IT_400MS      = 0b0000000010000000
+    VEML7700_IT_800MS      = 0b0000000011000000
+    integrationTimeBits    = [[  "25",VEML7700_IT_25MS,0.25],
+                              [  "50",VEML7700_IT_50MS,0.5],
+                              [ "100",VEML7700_IT_100MS,1.],
+                              [ "200",VEML7700_IT_200MS,2.],
+                              [ "400",VEML7700_IT_400MS,4.],
+                              [ "800",VEML7700_IT_800MS,8.]]
+                              
+    integrationTimeGainFactor  = 0.0576 # for integration time = 100, gain =1, rest is multiply
+
+    #ALS integration time setting (BIT 12:11)
+    VEML7700_Gain_1        = 0b0000000000000000
+    VEML7700_Gain_2        = 0b0000100000000000
+    VEML7700_Gain_1_8      = 0b0001000000000000
+    VEML7700_Gain_1_4      = 0b0001100000000000
+    gainBits               = [["1/8", VEML7700_Gain_1_8,0.125],
+                              ["1/4", VEML7700_Gain_1_4,0.25],
+                              [  "1", VEML7700_Gain_1,1.0],
+                              [  "2", VEML7700_Gain_2,2.0]]
+
+
+
+    #ALS interrupt enable setting (BIT 1)
+    VEML7700_INT_DISABLE   = 0b0000000000000000
+    VEML7700_INT_ENABLE    = 0b0000000000000010
+
+
+    # REGISTER 03H SETTINGS
+    #Power saving mode
+    VEML7700_Mode0        = 0x0000 #  use this , is fastest 
+    VEML7700_Mode1        = 0x0020
+    VEML7700_Mode2        = 0x0040
+    VEML7700_Mode3        = 0x0060
+    VEML7700_PSM_DISABLE  = 0x0001
+    VEML7700_PSM_ENABLE   = 0x0000
+
+    # COMMAND CODES
+    COMMAND_CODE_CONF     = 0x00
+    COMMAND_CODE_WH       = 0x01 #ALS high threshold window setting
+    COMMAND_CODE_WL       = 0x02 #ALS low threshold window setting
+    COMMAND_CODE_PSM      = 0x03 #Power saving mode (BIT :0)
+    COMMAND_CODE_ALS      = 0x04 #whole ALS 16 bits
+    COMMAND_CODE_WHITE    = 0x05 #whole WHITE 16 bits
+    COMMAND_CODE_IF       = 0x06 #ALS crossing low/high threshold INT trigger event(BIT 15:14)
+
+
+
+    def __init__(self,address=""):
+        U.setStopCondition(on=True)
+
+        if address =="":
+            self._DeviceAddress = self.VEML7700_I2C_ADDRESS 
+        else:
+            self._DeviceAddress  =   address  
+        self.bus = smbus.SMBus(1)
+        # disable power save mode ... 
+
+
+        self.minWaitTime=0.65
+        self.minResult = 200
+        self.maxResult = 20000
+        self.gainLast  = 0
+        self.itLast    = 0
+        configuration   = self. VEML7700_Mode0 | self.integrationTimeBits[self.itLast][1] | self.gainBits[self.gainLast][1] | self.VEML7700_INT_DISABLE 
+        self.bus.write_word_data(self._DeviceAddress,self.COMMAND_CODE_CONF, configuration)
+        
+    def getLight(self):
+        try:
+            alsData   = [0,0,0]
+            whiteData = [0,0,0]
+            alsDataL   = [0,0,0]
+            whiteDataL = [0,0,0]
+            for ii in range(3):
+                # Loop for polling
+                gain = self.gainLast
+                IT   = self.itLast
+                configuration   = self.integrationTimeBits[IT][1] | self.gainBits[gain][1] | self.VEML7700_INT_DISABLE 
+                waitTime = self.minWaitTime + self.integrationTimeBits[IT][2]*0.1
+                factor= self.integrationTimeGainFactor /( self.gainBits[gain][2] * self.integrationTimeBits[IT][2])
+                #print "trying: gain=",gain, "IT=",IT,"factor", factor, "waitTime",waitTime
+                self.bus.write_word_data(self._DeviceAddress,self.COMMAND_CODE_CONF, configuration)
+                time.sleep(waitTime)
+
+
+                #count should be between 400 and 20,000, if not adjust gain and int time after first measurement 
+
+                while True:
+                    #print "1 trying: gain=",gain, "IT=",IT,"factor", factor, "waitTime",waitTime
+                    alsData[ii]         = self.bus.read_word_data(self._DeviceAddress,self.COMMAND_CODE_ALS)
+                    whiteData[ii]       = self.bus.read_word_data(self._DeviceAddress,self.COMMAND_CODE_WHITE)
+                    alsDataL[ii]        = alsData[ii]*factor
+                    whiteDataL[ii]      = whiteData[ii]*factor
+                    #print  "result:",alsData[ii],alsDataL[ii], whiteData[ii], whiteDataL[ii]
+                    if alsData[ii] < self.minResult: 
+                        multF = int(self.minResult/max(alsData[ii],0.01))+1
+                        if gain == 3:
+                            if IT ==5: break
+                            IT =min(multF,5)
+                        else: 
+                            left = multF - (3-gain)
+                            if gain == min(multF,3): gain +=1
+                            else:
+                                gain = min(multF,3)
+                            if left >1:
+                                if IT == min(IT+left,5):
+                                    IT = min(IT+left+1,5)
+                                else:
+                                    IT =min(IT+left,5)
+                    elif alsData[ii] > self.maxResult: 
+                        if IT ==0: 
+                            if gain == 0:break
+                            gain = max(gain-3,0)
+                        else: 
+                            IT =max(IT-3,0)
+                    else:
+                        break
+                    configuration   =  self.integrationTimeBits[IT][1] | self.gainBits[gain][1] |  self.VEML7700_INT_DISABLE 
+                    waitTime = self.minWaitTime + self.integrationTimeBits[IT][2]/10.
+                    factor= self.integrationTimeGainFactor /( self.gainBits[gain][2] * self.integrationTimeBits[IT][2])
+                    #print "2 trying: gain=",gain, "IT=",IT,"factor", factor, "waitTime",waitTime
+                    self.bus.write_word_data(self._DeviceAddress,self.COMMAND_CODE_CONF, configuration)
+                    time.sleep(waitTime)
+                if ii==1: # skip 3. round?
+                    if abs(alsDataL[0]-alsDataL[1])/max(0.1,alsDataL[0]+alsDataL[1]) < 0.1: break
                 self.gainLast = gain
                 self.itLast   = IT 
             
@@ -2824,7 +2915,7 @@ def getT5403(sensor, data):
             o = (((( c8 * temp_raw) >> 15) * temp_raw) >> 4) + (( c7 * temp_raw) >> 3) + (c6 * 0x4000)
             press= (s * pressure_raw + o) >> 14
             #U.toLog(5, u" temp press "+ str(temp_raw)+ " "+ str(pressure_raw))
-            t =("%5.1f"%(temp_actual)).strip()
+            t =("%.2f"%(temp_actual)).strip()
             p = ("%7d"%float(press)).strip()
 
             if t!="":
@@ -2875,7 +2966,7 @@ def getBMP(sensor, data):
                 sensorBMP[devId]= BMP085(address=i2cAdd)
             try:
                 t =float(sensorBMP[devId].read_temperature())
-                t =("%5.1f"%t).strip()
+                t =("%.2f"%t).strip()
                 p =sensorBMP[devId].read_pressure()
                 if p < 0: 
                     raise ValueError("bad return value, pressure < 0") 
@@ -2934,7 +3025,7 @@ def getBME(sensor, data,BMP=False):
                 sensorBME280[devId]= BME280(mode=4,address=i2cAdd)
             try:
                 t =float(sensorBME280[devId].read_temperature())
-                t =("%5.1f"%t).strip()
+                t =("%.2f"%t).strip()
                 p =sensorBME280[devId].read_pressure()
                 if p < 0: 
                     
@@ -3008,7 +3099,7 @@ def getSHT21(sensor, data):
                 if devId not in sensorSHT21:
                     sensorSHT21[devId]= SHT21(i2cAdd=i2cAdd)
 
-                t =("%5.1f"%float(sensorSHT21[devId].read_temperature())).strip()
+                t =("%.2f"%float(sensorSHT21[devId].read_temperature())).strip()
                 h =("%3d"%sensorSHT21[devId].read_humidity()).strip()
                 if t!="":
                     try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
@@ -3056,7 +3147,7 @@ def getLM75A(sensor, data):
                 i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
                 if devId not in sensorLM75A:
                     sensorLM75A[devId]= LM75A(i2cAdd=i2cAdd)
-                t =("%5.1f"%float(sensorLM75A[devId].read_temperature())).strip()
+                t =("%.2f"%float(sensorLM75A[devId].read_temperature())).strip()
                 if t!="":
                     try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
                     except:  pass
@@ -3101,7 +3192,7 @@ def getAM2320(sensor, data):
                     if devId not in sensorAM2320:
                         sensorAM2320[devId]= AM2320(i2cAdd=i2cAdd)
                     t,h =sensorAM2320[devId].read()
-                    t =("%5.1f"%t).strip()
+                    t =("%.2f"%t).strip()
                     h =("%3d"%h).strip()
                     if t!="":
                         try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
@@ -3147,7 +3238,7 @@ def getMCP9808(sensor, data):
                 sensorMCP9808[devId] = MCP9808(int(i2cAdd))
                 sensorMCP9808[devId].begin()
             t=sensorMCP9808[devId].readTempC()
-            t = ("%5.1f"%float(t)).strip()
+            t = ("%.2f"%float(t)).strip()
             if t!="" :
                 try:   t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
                 except: pass
@@ -3355,6 +3446,46 @@ def getOPT3001(sensor, data):
 
 
 # ===========================================================================
+# getVEM7700
+# ===========================================================================
+def getVEML7700(sensor, data):
+    global sensorVEML7700, VEML7700Started
+    global sensors, sValues, displayInfo
+
+    if sensor not in sensors: return data
+
+    try:
+        data[sensor] ={}
+        for devId in sensors[sensor] :
+            i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+            try:
+                    ii= VEML7700Started
+            except:
+                    VEML7700Started=1
+                    sensorVEML7700 ={}
+            try :
+                if devId   not in  sensorVEML7700:
+                    sensorVEML7700[devId] = VEML7700(address=i2cAdd)
+                ambient,white= sensorVEML7700[devId].getLight()
+                if ambient>=0:
+                    data[sensor][devId]                 = {}
+                    data[sensor][devId]["ambient"]      = round(ambient,2)
+                    data[sensor][devId]["white"]        = round(white,2)
+                    putValText(sensors[sensor][devId],[ambient],["lux"])
+                    U.toLog(2, u"VEML7700: "+ unicode(data[sensor][devId]))
+                    time.sleep(0.1)    
+                if devId in badSensors: del badSensors[devId]
+            except  Exception, e:
+                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                data= incrementBadSensor(devId,sensor,data)
+    except  Exception, e:
+        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+    if sensor in data and data[sensor]=={}: del data[sensor]
+    U.muxTCA9548Areset()
+    return data
+
+
+# ===========================================================================
 # getVEML6030
 # ===========================================================================
 def getVEML6030(sensor, data):
@@ -3376,11 +3507,10 @@ def getVEML6030(sensor, data):
                 if devId   not in  sensorVEML6030:
                     sensorVEML6030[devId] = VEML6030(address=i2cAdd)
                 ambient,white= sensorVEML6030[devId].getLight()
-                ambient= round(float(ambient),1)
                 if ambient>=0:
                     data[sensor][devId]                 = {}
-                    data[sensor][devId]["ambient"]      = ambient
-                    data[sensor][devId]["white"]        = round(white,1)
+                    data[sensor][devId]["ambient"]      = round(ambient,2)
+                    data[sensor][devId]["white"]        = round(white,2)
                     putValText(sensors[sensor][devId],[ambient],["lux"])
                     U.toLog(2, u"VEML6030: "+ unicode(data[sensor][devId]))
                     time.sleep(0.1)    
@@ -3461,7 +3591,7 @@ def getTMP102(sensor, data):
             tRaw =  sensorTMP102[devId].read_word_data(i2cAdd,0)
             t = (((tRaw << 8) & 0xFF00) + (tRaw >> 8)>>4)
             if t > 2047: t = t-4096
-            t= ("%5.1f"%(float(t)*0.0625)).strip()
+            t= ("%.2f"%(float(t)*0.0625)).strip()
             if t!="":
                 try:    t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
                 except: pass
@@ -3665,66 +3795,6 @@ def getADS1x15(sensor, data):
 
 
 
-
-# ===========================================================================
-# MLX90614
-# ===========================================================================
-def getMLX90614(sensor, data):
-        global sensorMLX90614, MLX90614Started
-        global regularCycle
-        global sensors, sValues, displayInfo
-
-        try:
-            if sensor not in sensors: return data
-            t=""
-            a=""   
-            try:
-                ii= MLX90614Started
-            except:    
-                MLX90614Started=1
-                sensorMLX90614 ={}
-                U.setStopCondition(on=True)
-
-                data[sensor] ={}
-                for devId in sensors[sensor]:
-                    i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
-
-                    if devId not in sensorMLX90614 :
-                        sensorMLX90614[devId]=MLX90614(address=i2cAdd)
-
-                    a = ("%5.1f"%sensorMLX90614[devId].get_amb_temp()).strip()
-                    t = ("%5.1f"%sensorMLX90614[devId].get_obj_temp()).strip()
-                    if t!="":
-                        try:    
-                            t = (float(t) + float(sensors[sensor][devId]["offsetTemp"]))
-                            if not regularCycle:
-                                try: 
-                                    if abs(t- float(lastData[sensor][devId]["temp"]) ) < 0.25: 
-                                        continue 
-                                except  Exception, e:
-                                    pass
-                        except: pass
-                        t = str(t)
-                        data[sensor][devId] = {"temp":t.strip(" ")}
-
-                        if a!="":
-                            try:    a = str(float(a) + float(sensors[sensor][devId]["offsetTemp"]))
-                            except: pass
-                            data[sensor][devId]["AmbientTemperature"]=str(a).strip(" ")
-
-
-                        if devId in badSensors: del badSensors[devId]
-                        putValText(sensors[sensor][devId],[t,a],["temp","ambient"])
-                        time.sleep(0.25)
-                    else:
-                        data= incrementBadSensor(devId,sensor,data)
-        except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        if sensor in data and data[sensor]=={}: del data[sensor]
-        U.muxTCA9548Areset()
-        return data
- 
-
 # ===========================================================================
 # VEML6070
 # ===========================================================================
@@ -3758,7 +3828,7 @@ def getVEML6070(sensor, data):
                     else: 
                         sensorVEML6070[devId]=VEML6070()
                         sensorVEML6070[devId].set_integration_time(2)
-                uv = ("%5.1f"%sensorVEML6070[devId].get_uva_light_intensity()).strip()
+                uv = ("%.1f"%sensorVEML6070[devId].get_uva_light_intensity()).strip()
                 if uv !="":
                     uv= float(uv)
                     if uv >= 0:
@@ -4222,7 +4292,7 @@ def doDisplay():
                             tu= " Temp[C]"
                         if theText[ii] !="":
                             tu= theText[ii]
-                        t = "%5.1f" % t
+                        t = "%.1f" % t
                         if devType not in ["sh1106","ssd1306"]:
                             fillT+= [0,255,0]
                         posText0.append([nPages*dx+x0T,nPages*dy+ posy0])
@@ -4494,30 +4564,35 @@ while True:
         sValues={"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"lux":[[],[],[]]}      
         displayInfo={}
         
-        if "i2cMLX90614"        in sensors: data  = getMLX90614("i2cMLX90614",  data)
         if regularCycle:
+# temp+ press .. 
             if "i2cBMExx"       in sensors: data = getBME("i2cBMExx",        data)
             if "i2cBMP280"      in sensors: data = getBME("i2cBMP280",       data,BMP=True)
             if "i2cBMPxx"       in sensors: data = getBMP("i2cBMPxx",        data)
+            if "i2cT5403"       in sensors: data = getT5403("i2cT5403",      data)
+            if "i2cMS5803"      in sensors: data = getMS5803("i2cMS5803",data)
+## only temp 
+            if "i2cMCP9808"     in sensors: data = getMCP9808("i2cMCP9808",  data)
+            if "i2cTMP102"      in sensors: data = getTMP102("i2cTMP102",    data)
+            if "i2cLM35A"       in sensors: data = getLM75A("i2cLM35A",      data)
+            if "i2cSHT21"       in sensors: data = getSHT21("i2cSHT21",      data)
+            if "i2cAM2320"      in sensors: data = getAM2320("i2cAM2320",    data)
+## light sensors 
             if "i2cTCS34725"    in sensors: data = getTCS34725("i2cTCS34725",data)
             if "i2cOPT3001"     in sensors: data = getOPT3001("i2cOPT3001",  data)
+            if "i2cVEML7700"    in sensors: data = getVEML7700("i2cVEML7700",  data)
             if "i2cVEML6030"    in sensors: data = getVEML6030("i2cVEML6030",data)
             if "i2cVEML6040"    in sensors: data = getVEML6040("i2cVEML6040",data)
             if "i2cVEML6070"    in sensors: data = getVEML6070("i2cVEML6070",data)
             if "i2cVEML6075"    in sensors: data = getVEML6075("i2cVEML6075",data)
-            if "i2cLM35A"       in sensors: data = getLM75A("i2cLM35A",      data)
-            if "i2cSHT21"       in sensors: data = getSHT21("i2cSHT21",      data)
-            if "i2cAM2320"      in sensors: data = getAM2320("i2cAM2320",    data)
-            if "i2cMCP9808"     in sensors: data = getMCP9808("i2cMCP9808",  data)
-            if "i2cT5403"       in sensors: data = getT5403("i2cT5403",      data)
-            if "i2cTMP102"      in sensors: data = getTMP102("i2cTMP102",    data)
+
             if "i2cIS1145"      in sensors: data = getIS1145("i2cIS1145",    data)
             if "i2cTSL2561"     in sensors: data = getTSL2561("i2cTSL2561",  data)
+## adc sensors
             if "i2cPCF8591-1"   in sensors: data = getPCF8591("i2cPCF8591-1",data)
             if "i2cPCF8591"     in sensors: data = getPCF8591("i2cPCF8591",  data)
             if "i2cADS1x15"     in sensors: data = getADS1x15("i2cADS1x15",  data)
             if "i2cADS1x15-1"   in sensors: data = getADS1x15("i2cADS1x15-1",data)
-            if "i2cMS5803"      in sensors: data = getMS5803("i2cMS5803",data)
             if "i2cADC121"      in sensors: data = getADC121("i2cADC121",data)
 
 
@@ -4578,11 +4653,7 @@ while True:
 
 
         tt= time.time()
-        if "i2cMLX90614" in sensorList: 
-            Nsleep = 2
-            regularCycle = False
-        else:
-            NSleep = int(sensorRefreshSecs)*2
+        NSleep = int(sensorRefreshSecs)*2
         if tt- lastregularCycle > sensorRefreshSecs:
             regularCycle = True
             lastregularCycle  = tt
