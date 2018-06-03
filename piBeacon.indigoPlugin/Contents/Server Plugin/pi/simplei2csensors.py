@@ -1919,20 +1919,24 @@ class VEML7700:
                 configuration   = self.integrationTimeBits[IT][1] | self.gainBits[gain][1] | self.VEML7700_INT_DISABLE 
                 waitTime = self.minWaitTime + self.integrationTimeBits[IT][2]*0.1
                 factor= self.integrationTimeGainFactor /( self.gainBits[gain][2] * self.integrationTimeBits[IT][2])
-                #print "trying: gain=",gain, "IT=",IT,"factor", factor, "waitTime",waitTime
                 self.bus.write_word_data(self._DeviceAddress,self.COMMAND_CODE_CONF, configuration)
                 time.sleep(waitTime)
 
 
                 #count should be between 400 and 20,000, if not adjust gain and int time after first measurement 
 
-                while True:
-                    #print "1 trying: gain=",gain, "IT=",IT,"factor", factor, "waitTime",waitTime
+                gainLast = -10
+                ITLast   = -10
+                for kkk in range(5):
+                    if gainLast == gain and ITLast == IT: break
+                    gainLast = gain
+                    ITLast   = IT
+                    ##print kkk," trying: gain=",gain, "IT=",IT,"factor", factor, "waitTime",waitTime
                     alsData[ii]         = self.bus.read_word_data(self._DeviceAddress,self.COMMAND_CODE_ALS)
                     whiteData[ii]       = self.bus.read_word_data(self._DeviceAddress,self.COMMAND_CODE_WHITE)
                     alsDataL[ii]        = alsData[ii]*factor
                     whiteDataL[ii]      = whiteData[ii]*factor
-                    #print  "result:",alsData[ii],alsDataL[ii], whiteData[ii], whiteDataL[ii]
+                    ##print  "result:",alsData[ii],alsDataL[ii], whiteData[ii], whiteDataL[ii]
                     if alsData[ii] < self.minResult: 
                         multF = int(self.minResult/max(alsData[ii],0.01))+1
                         if gain == 3:
@@ -1971,7 +1975,7 @@ class VEML7700:
             ##print  "end result:",alsData,alsDataL, whiteData, whiteDataL
             A = sorted(alsDataL)[1]
             W = sorted(whiteDataL)[1]
-            #print A,W
+            ##print A,W
             return  A,W
         except  Exception, e:
             U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -3467,6 +3471,7 @@ def getVEML7700(sensor, data):
                 if devId   not in  sensorVEML7700:
                     sensorVEML7700[devId] = VEML7700(address=i2cAdd)
                 ambient,white= sensorVEML7700[devId].getLight()
+                ## print ambient,white
                 if ambient>=0:
                     data[sensor][devId]                 = {}
                     data[sensor][devId]["ambient"]      = round(ambient,2)

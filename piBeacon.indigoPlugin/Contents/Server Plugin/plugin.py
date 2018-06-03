@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 25.11
+dataVersion = 26.11
 
 
 
@@ -99,6 +99,7 @@ _GlobalConst_emptyRPI =   {
     u"piMAC": u"",
     u"piNumberReceived": u"",
     u"piOnOff": u"0",
+    u"authKeyOrPassword": u"assword",
     u"piUpToDate": [],
     u"sensorList": u"0,",
     u"lastMessage":0,
@@ -121,6 +122,7 @@ _GlobalConst_emptyRPISENSOR =   {
     u"lastUpPi": 0,
     u"output": {},
     u"passwordPi": u"raspberry",
+    u"authKeyOrPassword": u"assword",
     u"piDevId": 0,
     u"piMAC": u"",
     u"piNumberReceived": u"",
@@ -220,7 +222,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
 i2cSensors               =     ["bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",  "ina219","ina3221","as726x",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
 _GlobalConst_allowedOUTPUT         = [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725", u"display", u"setPCF8591dac", u"setTEA5767"]
-_GlobalConst_allowedpiSends        = [u"updateParams", u"resetGPIOCount", u"reboot", u"resetOutput", u"updateAllFiles", u"shutdown", u"getStats", u"upgradeOpSys"]
+_GlobalConst_allowedpiSends        = [u"updateParamsFTP", u"resetGPIOCountFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
 
 
 _GlobalConst_groupList             = [u"Family", u"Guests", u"Other1", u"Other2"]
@@ -380,6 +382,9 @@ class Plugin(indigo.PluginBase):
                 if _GlobalConst_typeOfBeacons[xx] != "":
                     self.UUIDtoType[_GlobalConst_typeOfBeacons[xx]] = xx
 
+        
+            self.sprinklerDeviceActive = False
+
             ######## fix  battery prop  and signal if not used 
             try:
                 for dev in indigo.devices.iter(self.pluginId):
@@ -389,6 +394,7 @@ class Plugin(indigo.PluginBase):
                                 if unicode(dev.states[u"Pi_"+unicode(pi)+u"_Signal"]) == "0":
                                     self.addToStatesUpdateDict(unicode(dev.id),u"Pi_"+unicode(pi)+u"_Signal",-999,dev=dev)
                         self.executeUpdateStatesDict(calledFrom="startupFIXES1")
+
 
                     upd = False
                     props = dev.pluginProps
@@ -1420,7 +1426,7 @@ class Plugin(indigo.PluginBase):
                     dev.replacePluginPropsOnServer(props)
                 self.executeUpdateStatesDict(onlyDevID=carIds,calledFrom="setupCARS ")
             if update: 
-                self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         except  Exception, e:
             self.ML.myLog( text = u"setupCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e))
             return props
@@ -1491,9 +1497,13 @@ class Plugin(indigo.PluginBase):
             # first reset all relays -- besides the new and controll 
             if dev.pluginProps["PumpControlOn"]: nValves = dev.zoneCount-1
             else: nValves = dev.zoneCount
-            GPIOpin =[]
-            cmd=[]
-            inverseGPIO =[]
+            try:    activeZone = int(int(action.zoneIndex))
+            except: activeZone = 0
+            if activeZone == 0: return 
+            
+            GPIOpin            = []
+            cmd                = []
+            inverseGPIO        = []
             for nn in range(nValves):
                 if nn+1 == int(action.zoneIndex):                            continue
                 ##if nn-1 ==  nValves and dev.pluginProps["PumpControlOn"]: continue 
@@ -1515,8 +1525,53 @@ class Plugin(indigo.PluginBase):
             dictForRPI["cmd"]        = "pulseUp"
             dictForRPI["pulseUp"]    = dev.zoneMaxDurations[action.zoneIndex-1]*60
             self.setPin(dictForRPI)
-            self.addToStatesUpdateDict(str(dev.id), "activeZone", action.zoneIndex)
-            self.addToStatesUpdateDict(str(dev.id),"activeZoneStarted", datetime.datetime.now().strftime(_defaultDateStampFormat))
+
+            durations        = dev.zoneScheduledDurations
+            zoneMaxDurations = dev.zoneMaxDurations
+            activeZone       = int(int(action.zoneIndex))
+            zoneStarted      = datetime.datetime.now().strftime(_defaultDateStampFormat)
+            timeLeft = 0
+            dur = 0
+            if activeZone > 0:
+                secDone = (datetime.datetime.now() - datetime.datetime.strptime(zoneStarted, "%Y-%m-%d %H:%M:%S")).total_seconds()
+                minutes  = int(secDone/60)
+
+
+                if len(durations) == nValves:
+                    dur     = min(durations[activeZone-1], zoneMaxDurations[activeZone-1]) + 0.2
+                    allDur = 0.1
+                    for mm in durations:
+                        allDur += mm
+                    allMinutes = 0.1
+                    if activeZone <= len(durations) and activeZone > 1:
+                        for mm in durations[0:activeZone-1]:
+                            allMinutes += mm
+                else : # single zone manual, check if overwrite max duration
+                    if "sprinklerActiveZoneSetManualDuration" in indigo.variables:
+                        try:    dur = max(0,float(indigo.variables["sprinklerActiveZoneSetManualDuration"].value ) )
+                        except  Exception, e:
+                            indigo.server.log( u"actionControlSprinkler for variable sprinklerActiveZoneSetManualDuration in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+" using max value instead")
+                            dur = 0
+                    if dur == 0:  # no overwrite, use max duration
+                                dur = zoneMaxDurations[activeZone-1]
+                    allMinutes = 0
+                    allDur = dur
+
+                timeLeft    = int(max(0,(dur )))
+                timeLeftAll = int(max(0,allDur-allMinutes +0.1) )
+                dur         = int(dur)
+                allDur      = int(allDur)
+
+                self.addToStatesUpdateDict(str(dev.id), "activeZone",                action.zoneIndex)
+                self.addToStatesUpdateDict(str(dev.id), "activeZoneStarted",         datetime.datetime.now().strftime(_defaultDateStampFormat))
+                self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",     timeLeft)
+                self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesDuration", dur)
+                self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesDuration",   allDur)
+                self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",       timeLeftAll)
+
+
+
+
 
         ###### ALL ZONES OFF ######
         elif action.sprinklerAction == indigo.kSprinklerAction.AllZonesOff:
@@ -1530,8 +1585,12 @@ class Plugin(indigo.PluginBase):
                 cmd.append("down")
                 inverseGPIO.append(True)
             self.sendGPIOCommands( ipNumberPi, pi, cmd, GPIOpin, inverseGPIO)
-            self.addToStatesUpdateDict(str(dev.id),"activeZoneStarted", "")
-            self.addToStatesUpdateDict(str(dev.id), "activeZone", 0)
+            self.addToStatesUpdateDict(str(dev.id), "activeZoneStarted",        "")
+            self.addToStatesUpdateDict(str(dev.id), "activeZone",                0)
+            self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",     0)
+            self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesDuration", 0)
+            self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",       0)
+            self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesDuration",   0)
 
         self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="")
         return 
@@ -1540,9 +1599,11 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
     def initSprinkler(self, force = False):
+        #self.lastSprinklerStats = "2018-05-31 23:23:00"
         self.lastSprinklerStats = datetime.datetime.now().strftime(_defaultDateStampFormat)
 
         for dev in indigo.devices.iter("props.isSprinklerDevice"):
+            self.sprinklerDeviceActive = True
             for xx in ["minutesRunToday", "minutesRunThisWeek","minutesRunYesterday","minutesRunLastWeek","minutesRunThisMonth","minutesRunLastMonth"]:
                 lastList = dev.states[xx].split(",")
                 if len(lastList) != dev.zoneCount or force:
@@ -1554,13 +1615,14 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-    def resetSprinklerStats(self): 
+    def resetSprinklerStats(self):   ### called from the plugin menu
         self.initSprinkler(force=True)
 
 
 ####-------------------------------------------------------------------------####
     def sprinklerStats(self): 
         try: 
+            if not self.sprinklerDeviceActive: return  
             now = datetime.datetime.now()
             dateString = now.strftime(_defaultDateStampFormat)
             # 2019-11-12 09:33:11
@@ -1570,14 +1632,16 @@ class Plugin(indigo.PluginBase):
             if dateString[0:17] == self.lastSprinklerStats[0:17]: return
 
 
+
+
             newDay = False
             newWeek = False
             newMonth = False
             if dateString[0:10] != self.lastSprinklerStats[0:10]:
                 newDay = True
-                if now.weekday() ==0:
+                if now.weekday() == 0:
                     newWeek = True
-                if now.day ==0:
+                if now.day == 1:
                     newMonth = True
             
             self.lastSprinklerStats = dateString
@@ -1609,25 +1673,59 @@ class Plugin(indigo.PluginBase):
 
 
             for dev in indigo.devices.iter("props.isSprinklerDevice"):
-                props = dev.pluginProps
-                for xx in ["minutesRunToday", "minutesRunThisWeek", "minutesRunThisMonth"]:
-                    lastList = dev.states[xx].split(",")
-                    if len(lastList) != dev.zoneCount:
-                        lastList = ["0" for ii in range(dev.zoneCount)]
+                props              = dev.pluginProps
+                try:    activeZone = int(dev.states["activeZone"])
+                except: activeZone = 0
+                if activeZone == 0: 
+                    self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",     0)
+                    self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesDuration", 0)
+                    self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",       0)
+                    self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesDuration",   0)
 
-                    try:    
-                        activeZone = int(dev.states["activeZone"])
-                        if activeZone == 0: continue
-                    except: 
-                        continue
+                else:
+                    if props["PumpControlOn"]: nValves = dev.zoneCount-1
+                    else: nValves    = dev.zoneCount
+                    durations        = dev.zoneScheduledDurations
+                    zoneMaxDurations = dev.zoneMaxDurations
+                    zoneStarted      = dev.states["activeZoneStarted"] 
 
-                    lastList[activeZone-1] = str( int(lastList[activeZone-1])+1 )
-                    
-                    if props["PumpControlOn"] :
-                        lastList[dev.zoneCount-1] = str( int(lastList[dev.zoneCount-1])+1 )
+                    if len(zoneStarted) > 10:  
+                        secDone = (datetime.datetime.now() - datetime.datetime.strptime(zoneStarted, "%Y-%m-%d %H:%M:%S")).total_seconds()
+                        minutes  = int(secDone/60)
 
-                    lastList = ",".join(lastList)
-                    self.addToStatesUpdateDict(str(dev.id),xx,lastList)
+                        try:    allDur = int(dev.states["allZonesMinutesDuration"])
+                        except: allDur = 0
+                        if len(durations) == nValves:
+                            dur     = min(durations[activeZone-1], zoneMaxDurations[activeZone-1])
+                            allMinutes = minutes
+                            if activeZone <= len(durations) and activeZone > 1:
+                                for mm in durations[0:activeZone-1]:
+                                    allMinutes += mm
+                        else :
+                            dur        = int(dev.states["activeZoneMinutesDuration"])
+                            allMinutes = minutes
+
+                        timeLeft    =  int(max(0,(dur    - minutes)+0.1) )
+                        timeLeftAll =  int(max(0,(allDur - allMinutes)+0.1) )
+
+
+                        self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",   timeLeft)
+                        self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",     timeLeftAll)
+
+                    else:
+                        self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",   0)
+                        self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",     0)
+
+
+                    for xx in ["minutesRunToday", "minutesRunThisWeek", "minutesRunThisMonth"]:
+                        lastList = dev.states[xx].split(",")
+                        if len(lastList) != dev.zoneCount:
+                            lastList = ["0" for ii in range(dev.zoneCount)]
+                        lastList[activeZone-1] = str( int(lastList[activeZone-1])+1 )
+                        if props["PumpControlOn"] :
+                            lastList[dev.zoneCount-1] = str( int(lastList[dev.zoneCount-1])+1 )
+                        lastList = ",".join(lastList)
+                        self.addToStatesUpdateDict(str(dev.id),xx,lastList)
                         
 
                 self.executeUpdateStatesDict(onlyDevID=str(dev.id))
@@ -1710,7 +1808,7 @@ class Plugin(indigo.PluginBase):
             for pi in range(_GlobalConst_numberOfRPI):
                 if self.RPI[unicode(pi)][u"piOnOff"] == "0": 
                     self.upDateNotSuccessful[pi] == 0
-                    self.removeONErPiV(pi, u"piUpToDate", [u"updateParams", u"updateAllFiles"])
+                    self.removeONErPiV(pi, u"piUpToDate", [u"updateAllFilesFTP"])
 
 
             self.beacons           = self.getParamsFromFile(self.piDir+ "beacons")
@@ -2510,6 +2608,10 @@ class Plugin(indigo.PluginBase):
                     piN = props[u"piServerNumber"]    
                     self.updateNeeded = "enable-"+unicode(piN)
                 self.statusChanged=2
+
+            if dev.deviceTypeId == "sprinkler":
+                self.sprinklerDeviceActive = True
+
         except  Exception, e:
             self.ML.myLog( text =  u"deviceStartComm in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
@@ -2711,19 +2813,19 @@ class Plugin(indigo.PluginBase):
                         self.beacons[beacon][u"note"] = "beacon-" + valuesDict[u"typeOfBeacon"]
                         self.addToStatesUpdateDict(unicode(dev.id),"note", self.beacons[beacon][u"note"],dev=dev)
                         if valuesDict[u"typeOfBeacon"] != self.beacons[beacon][u"typeOfBeacon"]:
-                            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"update RPI due to typeOfBeacon")
                         if int(valuesDict[u"signalDelta"]) != self.beacons[beacon][u"signalDelta"]:
-                            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"update RPI due to signalDelta")
                         if int(valuesDict[u"minSignalCutoff"]) != self.beacons[beacon][u"minSignalCutoff"]:
-                            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"update RPI due to minSignalCutoff")
                         if int(valuesDict[u"fastDown"]) != self.beacons[beacon][u"fastDown"]:
-                            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"update RPI due to fastDown")
                         if int(valuesDict[u"fastDownMinSignal"]) != self.beacons[beacon][u"fastDownMinSignal"]:
-                            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"update RPI due to fastDownMinSignal")
 
                         self.beacons[beacon][u"showBeaconOnMap"]         = valuesDict[u"showBeaconOnMap"]
@@ -2750,35 +2852,35 @@ class Plugin(indigo.PluginBase):
                         break
                 if pi >= 0:
                     if u"shutDownPinInput"  not in props  or (u"shutDownPinInput"  in props and valuesDict[u"shutDownPinInput"]  != props[u"shutDownPinInput"]):
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.rPiRestartCommand[pi] = "master"
                     if u"shutDownPinOutput" not in props  or (u"shutDownPinOutput" in props and valuesDict[u"shutDownPinOutput"] != props[u"shutDownPinOutput"]):
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.rPiRestartCommand[pi] = "master"
                     if u"useRamDiskForLogfiles" not in props  or (u"useRamDiskForLogfiles" in props and valuesDict[u"useRamDiskForLogfiles"] != props[u"useRamDiskForLogfiles"]):
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.rPiRestartCommand[pi] = "master"
                     if u"useRTC" not in props  or (u"useRTC" in props and valuesDict[u"useRTC"] != props[u"useRTC"]):
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.rPiRestartCommand[pi] = "master"
 
                     srf = valuesDict[u"sendToIndigoSecs"]
                     if srf != self.RPI[unicode(pi)][u"sendToIndigoSecs"] :
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.updateNeeded += " fixConfig sendToIndigoSecs "
                         self.rPiRestartCommand[pi] = "master"
                     self.RPI[unicode(pi)][u"sendToIndigoSecs"] = srf
 
                     srf = valuesDict[u"sensorRefreshSecs"]
                     if srf != self.RPI[unicode(pi)][u"sensorRefreshSecs"] :
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.updateNeeded += " fixConfig sensorRefreshSecs "
                         self.rPiRestartCommand[pi] = "master"
                     self.RPI[unicode(pi)][u"sensorRefreshSecs"] = srf
 
                     srf = valuesDict[u"deltaChangedSensor"]
                     if srf != self.RPI[unicode(pi)][u"deltaChangedSensor"] :
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.updateNeeded += " fixConfig deltaChangedSensor "
                         self.rPiRestartCommand[pi] = "master"
                     self.RPI[unicode(pi)][u"deltaChangedSensor"] = srf
@@ -2795,7 +2897,7 @@ class Plugin(indigo.PluginBase):
 
                     srf = valuesDict[u"BLEserial"]
                     if not (u"BLEserial" in props and srf == props[u"BLEserial"]) :
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.updateNeeded += " fixConfig BLEserial "
                         self.rPiRestartCommand[pi] = "BLEconnect"
                     self.RPI[unicode(pi)][u"BLEserial"] = srf
@@ -2829,7 +2931,7 @@ class Plugin(indigo.PluginBase):
                                 pi = pi0
                                 break
                         if pi >= 0:
-                            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         return (True, valuesDict)
 
 
@@ -2892,7 +2994,7 @@ class Plugin(indigo.PluginBase):
                     if update==1:
                         self.rPiRestartCommand[pi] +="BLEconnect,"
                         self.updateNeeded += " fixConfig "
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                 return (True, valuesDict)
 
 
@@ -2911,17 +3013,17 @@ class Plugin(indigo.PluginBase):
                     if typeId not in self.RPI[unicode(pi0)][u"input"]:                continue
                     if unicode(devId) not in self.RPI[unicode(pi0)][u"input"][typeId]:continue
                     del self.RPI[unicode(pi0)][u"input"][typeId][unicode(devId)]
-                    self.setONErPiV(pi0,"piUpToDate",[u"updateParams"])
+                    self.setONErPiV(pi0,"piUpToDate",[u"updateParamsFTP"])
                     self.rPiRestartCommand[pi0] += typeINPUT+","
                     update = 1
 
                 if pi >= 0:
                     if u"piServerNumber" in props:
                         if pi != int(props[u"piServerNumber"]):
-                            self.setONErPiV(pi0,"piUpToDate",[u"updateParams"])
+                            self.setONErPiV(pi0,"piUpToDate",[u"updateParamsFTP"])
                             self.rPiRestartCommand[int(props[u"piServerNumber"])] += typeINPUT+","
                             update = 1
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                     self.rPiRestartCommand[pi] += typeINPUT+","
 
                 if typeId not in self.RPI[unicode(pi)][u"input"]:
@@ -2964,7 +3066,7 @@ class Plugin(indigo.PluginBase):
                 if update == 1:
                     self.rPiRestartCommand[pi] += typeINPUT+","
                     self.updateNeeded += " fixConfig "
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
                 valuesDict[u"piDone"] = False
                 valuesDict[u"stateDone"] = False
@@ -2986,12 +3088,12 @@ class Plugin(indigo.PluginBase):
                     if typeId not in self.RPI[unicode(pi0)][u"output"]:                 continue
                     if unicode(devId) not in self.RPI[unicode(pi0)][u"output"][typeId]: continue
                     del self.RPI[unicode(pi0)][u"output"][typeId][unicode(devId)]
-                    self.setONErPiV(pi0,"piUpToDate",[u"updateParams"])
+                    self.setONErPiV(pi0,"piUpToDate",[u"updateParamsFTP"])
 
                 if pi >= 0:
                     if u"piServerNumber" in props:
                         if pi != int(props[u"piServerNumber"]):
-                            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                             update=1
 
                 
@@ -3029,7 +3131,7 @@ class Plugin(indigo.PluginBase):
                 if update == 1:
                     self.rPiRestartCommand[pi] += typeId+","
                     self.updateNeeded += " fixConfig "
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
                 valuesDict[u"piDone"] = False
                 valuesDict[u"stateDone"] = False
@@ -3050,7 +3152,7 @@ class Plugin(indigo.PluginBase):
                              self.updateNeeded += " fixConfig "
                              self.rPiRestartCommand[pi] += "master,"
                              self.rPiRestartCommand[int(props[u"piServerNumber"])] += "master,"
-                             self.setONErPiV(props[u"piServerNumber"],"piUpToDate",[u"updateParams"])
+                             self.setONErPiV(props[u"piServerNumber"],"piUpToDate",[u"updateParamsFTP"])
 
                     valuesDict[u"address"] = "PI-" + unicode(pi)
                     if typeId not in self.RPI[unicode(pi)][u"input"]:
@@ -3061,7 +3163,7 @@ class Plugin(indigo.PluginBase):
                     if unicode(dev.id) not in self.RPI[unicode(pi)][u"input"][typeId]:
                         self.RPI[unicode(pi)][u"input"][typeId][unicode(dev.id)]={}
                         self.updateNeeded += " fixConfig "
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
 
                 if u"BLEsensor" == typeId :
@@ -3135,12 +3237,12 @@ class Plugin(indigo.PluginBase):
                     pinMappings = "gpio="+valuesDict[u"gpio"]+ "," +valuesDict[u"risingOrFalling"]+ " Edge, u" +valuesDict[u"deadTime"]+ "secs deadTime"
                     valuesDict[u"description"] = pinMappings
 
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                 self.updateNeeded += " fixConfig "
                 valuesDict[u"msg"] =error
                 if error ==u"":
                     self.updateNeeded += " fixConfig "
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                     return (True, valuesDict)
                 else:
                     errorDict[u"msg"]= error
@@ -3156,7 +3258,7 @@ class Plugin(indigo.PluginBase):
                         propsX = neopixelDevice.pluginProps
                         pi = int(propsX[u"piServerNumber"])
                         self.rPiRestartCommand[pi] += "neopixel,"
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"]) 
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"]) 
                         valuesDict[u"address"] = neopixelDevice.name
                         try: 
                             xxx= propsX[u"devType"].split(u"x")
@@ -3207,7 +3309,7 @@ class Plugin(indigo.PluginBase):
                         valuesDict[u"address"]       = "Pi-"+valuesDict[u"piServerNumber"]
                         valuesDict[u"devType"]       = valuesDict[u"devTypeROWs"] +"x"+valuesDict[u"devTypeLEDs"]
                         valuesDict[u"description"]   = "type="+valuesDict[u"devType"]
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"]) 
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"]) 
                     except:
                         pass
                 else:
@@ -3241,14 +3343,14 @@ class Plugin(indigo.PluginBase):
                         self.RPI[unicode(pi)][pi] = 1
                         self.updateNeeded += " fixConfig "
                         self.rPiRestartCommand[pi] += "receiveGPIOcommands,"
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
 
                         if typeId==u"display":
                             valuesDict = self.fixDisplayProps(valuesDict,typeId,devType)
                     
                             self.rPiRestartCommand[pi] += "display,"
-                            self.setONErPiV(pi,"piUpToDate", [u"updateAllFiles"]) # this will send images and fonts too
+                            self.setONErPiV(pi,"piUpToDate", [u"updateAllFilesFTP"]) # this will send images and fonts too
                             valuesDict,error = self.addBracketsPOS(valuesDict,"pos1")
                             if error ==u"":
                                 valuesDict,error = self.addBracketsPOS(valuesDict,"pos2")
@@ -3258,7 +3360,7 @@ class Plugin(indigo.PluginBase):
 
                         if typeId==u"setTEA5767":
                             dev = indigo.devices[devId]
-                            self.setONErPiV(pi,"piUpToDate", [u"updateParams"]) # this will send config only
+                            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"]) # this will send config only
                             self.addToStatesUpdateDict(devId,"status"   ,"f= "+valuesDict[u"defFreq"] + "; mute= " +valuesDict[u"mute"],dev=dev)
                             self.addToStatesUpdateDict(devId,"frequency",valuesDict[u"defFreq"] )
                             self.addToStatesUpdateDict(devId,"mute"     ,valuesDict[u"mute"])
@@ -3507,9 +3609,10 @@ class Plugin(indigo.PluginBase):
         ###self.ML.myLog( text =  u"before "+ pi+"  "+item+"  "+ unicode(value)+"  "+ unicode(self.RPI[pi][item]))
         if pi in self.RPI:
             for v in value:
-                if v in self.RPI[pi][item]:
-                    self.RPI[pi][item].remove(v)
-        ###self.ML.myLog( text =  u"after"+  unicode(self.RPI[pi][item]))
+                vv = v.split(".exp")[0]
+                if vv in self.RPI[pi][item]:
+                    self.RPI[pi][item].remove(vv)
+        self.ML.myLog( text =  u"after  for:"+unicode(value)+" [item]:" + unicode(self.RPI[pi][item]))
         return
 
 
@@ -4078,7 +4181,7 @@ class Plugin(indigo.PluginBase):
         try:
             valuesDict = action1.props
             if valuesDict[u"configurePi"] ==u"": return
-            return self.execButtonConfig(valuesDict, level="0,", action=[u"updateParams"], Text="send Config Files to pi# ")
+            return self.execButtonConfig(valuesDict, level="0,", action=[u"updateParamsFTP"], Text="send Config Files to pi# ")
         except:
             self.ML.myLog( text =  u"sendConfigCALLBACKaction  bad rPi number:"+ unicode(valuesDict))
 
@@ -4088,42 +4191,46 @@ class Plugin(indigo.PluginBase):
         return self.buttonConfirmSendOnlyCALLBACK(action1.props)
 
 ####-------------------------------------------------------------------------####
-    def buttonConfirmSendOnlyCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"updateParams"], Text="send Config Files to pi# ")
+    def buttonConfirmSendOnlyParamsCALLBACK(self, valuesDict=None, typeId="", devId=0):
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"updateParamsFTP"], Text="send Config Files to pi# ")
 
 ####-------------------------------------------------------------------------####
     def buttonConfirmSendRestartPyCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="master,", action=[u"updateParams"], Text="send Config Files and restart master.py  ")
+        return self.execButtonConfig(valuesDict, level="master,", action=[u"updateParamsFTP"], Text="send Config Files and restart master.py  ")
 
 ####-------------------------------------------------------------------------####
     def buttonConfirmConfigureCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="reboot,", action=[u"updateParams"], Text="send Config Files and restart rPI")
+        return self.execButtonConfig(valuesDict, level="reboot,", action=[u"updateParamsFTP"], Text="send Config Files and restart rPI")
 
     def buttonUpgradeCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"upgradeOpSys"], Text="upgrade rPi")
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"upgradeOpSysSSH"], Text="upgrade rPi")
 
 ####-------------------------------------------------------------------------####
     def buttonResetOutputCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"resetOutput"], Text="reset output file  and reboot pi# ")
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"resetOutputSSH"], Text="reset output file  and reboot pi# ")
 
 ####-------------------------------------------------------------------------####
     def buttonSendBigFilesCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="master,", action=[u"updateAllFiles"], Text="send ALL Files to pi# ")
+        return self.execButtonConfig(valuesDict, level="master,", action=[u"updateAllFilesFTP"], Text="send ALL Files to pi# ")
+
+####-------------------------------------------------------------------------####
+    def buttonSendINITCALLBACK(self, valuesDict=None, typeId="", devId=0):
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"initSSH",u"updateAllFilesFTP","rebootSSH"], Text="make dirs etc on RPI, send pgms,... only once")
 
 ####-------------------------------------------------------------------------####
     def buttonShutdownCALLBACK(self, valuesDict=None, typeId="", devId=0):
         self.currentlyBooting = time.time()+self.bootWaitTime
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"shutdown"], Text="shut down rPi#  ")
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"shutdownSSH"], Text="shut down rPi#  ")
 
 ####-------------------------------------------------------------------------####
     def buttonSendAllandRebootCALLBACK(self, valuesDict=None, typeId="", devId=0):
         self.currentlyBooting = time.time()+self.bootWaitTime
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"updateAllFiles","reboot"], Text="rPi configure and reboot pi# ")
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"updateAllFilesFTP","rebootSSH"], Text="rPi configure and reboot pi# ")
 
 ####-------------------------------------------------------------------------####
     def buttonRebootCALLBACK(self, valuesDict=None, typeId="", devId=0):
         self.currentlyBooting = time.time()+self.bootWaitTime
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"reboot"], Text="rPi reboot")
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"rebootSSH"], Text="rPi reboot")
 
 ####-------------------------------------------------------------------------####
     def buttonStopConfigCALLBACK(self, valuesDict=None, typeId="", devId=0):
@@ -4131,7 +4238,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
     def buttonGetSystemParametersCALLBACK(self, valuesDict=None, typeId="", devId=0):
-        return self.execButtonConfig(valuesDict, level="0,", action=[u"getStats"], Text="get stats from rpi")
+        return self.execButtonConfig(valuesDict, level="0,", action=[u"getStatsSSH"], Text="get stats from rpi")
 
 
 ####-------------------------------------------------------------------------####
@@ -4194,11 +4301,11 @@ class Plugin(indigo.PluginBase):
             return valuesDict
         if pi == 999:
             for pi in range(_GlobalConst_numberOfRPI):
-                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo halt &"}])
+                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python ;sudo halt &"}])
                 self.ML.myLog( text =  u"hard shutdown of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
                 self.presendtoRPI(pi,out)
         else:
-                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo halt &"}])
+                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo killall python; sudo halt &"}])
                 self.ML.myLog( text =  u"hard shutdown of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
                 self.presendtoRPI(pi,out)
         return
@@ -4217,11 +4324,11 @@ class Plugin(indigo.PluginBase):
             return valuesDict
         if pi == 999:
             for pi in range(_GlobalConst_numberOfRPI):
-                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo reboot -f &"}])
+                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python ;sudo reboot -f &"}])
                 self.ML.myLog( text =  u"hard reboot of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
                 self.presendtoRPI(pi,out)
         else:
-                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo reboot -f &"}])
+                out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python ;sudo reboot -f &"}])
                 self.ML.myLog( text =  u"hard reboot of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
                 self.presendtoRPI(pi,out)
         return
@@ -4239,11 +4346,11 @@ class Plugin(indigo.PluginBase):
             return valuesDict
         if pi == 999:
             for pi in range(_GlobalConst_numberOfRPI):
-                out= json.dumps([{u"command":"general","cmdLine":"sudo reboot &"}])
+                out= json.dumps([{u"command":"general","cmdLine":";sudo killall python; sudo reboot &"}])
                 self.ML.myLog( text =  u"regular reboot of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
                 self.presendtoRPI(pi,out)
         else:
-                out= json.dumps([{u"command":"general","cmdLine":"sudo reboot &"}])
+                out= json.dumps([{u"command":"general","cmdLine":";sudo killall python; sudo reboot &"}])
                 self.ML.myLog( text =  u"regular reboot of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
                 self.presendtoRPI(pi,out)
         
@@ -4715,7 +4822,7 @@ class Plugin(indigo.PluginBase):
                 ff =  self.findUUIDcompare(uuid,self.beaconsUUIDtoIphone, self.constantUUIDmajMIN,self.lenOfUUID)
                 if ff == 1 or ff ==0: 
                     for pi in range(_GlobalConst_numberOfiBeaconRPI):
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.upDateNotSuccessful[pi]= 0
                 valuesDict[u"nameForIphone"] = self.beaconsUUIDtoIphone[beacon][3]
                 
@@ -4739,7 +4846,7 @@ class Plugin(indigo.PluginBase):
                 if ff==0:
                     del self.beaconsUUIDtoIphone[beacon]
                     for pi in range(_GlobalConst_numberOfiBeaconRPI):
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         self.upDateNotSuccessful[pi] = 0
 
         except  Exception, e:
@@ -4970,7 +5077,7 @@ class Plugin(indigo.PluginBase):
                 self.newIgnoreMAC += 1
 
                 for pi in range(_GlobalConst_numberOfiBeaconRPI):
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                     self.upDateNotSuccessful[pi] = 0
         else:
             self.beacons[mac] = copy.deepcopy(_GlobalConst_emptyBeacon)
@@ -4986,7 +5093,7 @@ class Plugin(indigo.PluginBase):
                 pass
         self.makeBeacons_parameterFile()
         for pi in range(_GlobalConst_numberOfiBeaconRPI):
-            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
             self.upDateNotSuccessful[pi] = 0
         
             
@@ -5022,7 +5129,7 @@ class Plugin(indigo.PluginBase):
 
         self.makeBeacons_parameterFile()
         for pi in range(_GlobalConst_numberOfiBeaconRPI):
-            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
             self.upDateNotSuccessful[pi] = 0
 
         return valuesDict
@@ -5064,7 +5171,7 @@ class Plugin(indigo.PluginBase):
         mac = valuesDict[u"ignoreMAC"]
         if mac in self.beacons:
             for pi in range(_GlobalConst_numberOfiBeaconRPI):
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                 self.upDateNotSuccessful[pi] = 0
             del self.beacons[mac]
         self.fixConfig(checkOnly = ["all","rpi"],fromPGM="buttonConfirmMACDeleteCALLBACK")
@@ -5075,7 +5182,7 @@ class Plugin(indigo.PluginBase):
         self.beacons = {}
         self.fixConfig(checkOnly = ["all","rpi"],fromPGM="buttonConfirmMACDeleteALLCALLBACK")
         for pi in range(_GlobalConst_numberOfiBeaconRPI):
-            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
             self.upDateNotSuccessful[pi] = 0
         try:
             os.system(u"rm "+ self.piDir + "rejected/reject-1" )
@@ -5231,7 +5338,7 @@ class Plugin(indigo.PluginBase):
         uuid = valuesDict[u"ignoreMACfamily"]
         if uuid not in self.beaconsIgnoreUUID:
             self.beaconsIgnoreUUID[uuid]=True # 1a13ff4c00 up to here0c0e00931210948d9701e5
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.upDateNotSuccessful =[0 for ii in range(_GlobalConst_numberOfRPI)]
         return valuesDict
 
@@ -5241,13 +5348,13 @@ class Plugin(indigo.PluginBase):
         if uuid in self.beaconsIgnoreUUID:
             del self.beaconsIgnoreUUID[uuid]
             self.upDateNotSuccessful = [0 for ii in range(_GlobalConst_numberOfRPI)]
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 
 ####-------------------------------------------------------------------------####
     def buttonConfirmMACemptyFamilyCALLBACK(self, valuesDict=None, typeId="", devId=0):
         self.beaconsIgnoreUUID = {}
         for pi in range(_GlobalConst_numberOfiBeaconRPI):
-            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
             self.upDateNotSuccessful[pi] = 0
         return valuesDict
 
@@ -7029,8 +7136,8 @@ class Plugin(indigo.PluginBase):
         if valuesDict[u"oldipNumberPi"] != valuesDict[u"newipNumberPi"]:
             self.RPI[unicode(pi)][u"ipNumberPiSendTo"] = valuesDict[u"oldipNumberPi"]
             self.RPI[unicode(pi)][u"ipNumberPi"] = valuesDict[u"newipNumberPi"]
-            self.setONErPiV(pi,"piUpToDate",[u"updateParams","reboot"])
-            self.rPiRestartCommand[pi]      = "reboot"  ## which part need to restart on rpi
+            self.setONErPiV(pi,"piUpToDate",[u"updateParamsFTP","rebootSSH"])
+            self.rPiRestartCommand[pi]      = "rebootSSH"  ## which part need to restart on rpi
             self.configureWifi(pi)
             self.RPI[unicode(pi)][u"ipNumberPiSendTo"] = self.RPI[unicode(pi)][u"ipNumberPi"]
         return valuesDict
@@ -7278,14 +7385,14 @@ class Plugin(indigo.PluginBase):
         #### check pi on/off
             p01 = valuesDict[u"piOnOff"]
             if p01 != self.RPI[unicode(pi)][u"piOnOff"] and self.RPI[unicode(pi)][u"piOnOff"] == "0":
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                 self.upDateNotSuccessful[pi] = 0
             self.RPI[unicode(pi)][u"piOnOff"] = p01
             
             
             if p01 ==u"0":
                 self.upDateNotSuccessful[pi] == 0
-                self.removeONErPiV(pi, u"piUpToDate", [u"updateParams"])
+                self.removeONErPiV(pi, u"piUpToDate", [u"updateParamsFTP"])
 
         ####### check ipnumber
             ipn = valuesDict[u"ipNumberPi"]
@@ -7310,21 +7417,25 @@ class Plugin(indigo.PluginBase):
 
             if self.RPI[unicode(pi)][u"ipNumberPi"]   != ipn:
                 self.RPI[unicode(pi)][u"ipNumberPi"]   = ipn
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
             self.RPI[unicode(pi)][u"ipNumberPiSendTo"] = ipn
+
+        #### check authkey vs std password ..
+            self.RPI[unicode(pi)][u"authKeyOrPassword"]     = valuesDict[u"authKeyOrPassword"]
+
 
         #### check userid password ..
             if self.RPI[unicode(pi)][u"userIdPi"]     != valuesDict[u"userIdPi"]:
                 self.RPI[unicode(pi)][u"userIdPi"]     = valuesDict[u"userIdPi"]
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
             if self.RPI[unicode(pi)][u"passwordPi"]   != valuesDict[u"passwordPi"]:
                 self.RPI[unicode(pi)][u"passwordPi"]   = valuesDict[u"passwordPi"]
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
             if self.RPI[unicode(pi)][u"enableRebootCheck"] != valuesDict[u"enableRebootCheck"]:
                 self.RPI[unicode(pi)][u"enableRebootCheck"] = valuesDict[u"enableRebootCheck"]
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
             
             valuesDict[u"MSG"] = "Pi server configuration set"
@@ -7355,7 +7466,7 @@ class Plugin(indigo.PluginBase):
                                         props[u"ipNumber"] = ipn
                                         dev.replacePluginPropsOnServer(props)
                                         self.updateNeeded += "fixConfig"
-                                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                                         
                                     self.RPI[unicode(pi)][u"piDevId"] = dev.id
                                     found = True
@@ -7385,7 +7496,7 @@ class Plugin(indigo.PluginBase):
                                 self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi)+"-"+ipn)
                                 self.RPI[unicode(pi)][u"piDevId"] = dev.id
                                 self.updateNeeded += "fixConfig"
-                                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         else:
                             try:
                                 dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
@@ -7413,7 +7524,7 @@ class Plugin(indigo.PluginBase):
                                     self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi)+"-"+ipn)
                                     self.RPI[unicode(pi)][u"piDevId"] = dev.id
                                     self.updateNeeded += "fixConfig"
-                                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                                 else: return valuesDict    
                         dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
                         props= dev.pluginProps
@@ -7474,38 +7585,38 @@ class Plugin(indigo.PluginBase):
 
   
         try:               
-            if self.debugRPILevel[u"debugRPICALL"]     != int(valuesDict[u"debugRPICALL"]):    self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if self.debugRPILevel[u"debugRPICALL"]     != int(valuesDict[u"debugRPICALL"]):    self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.debugRPILevel[u"debugRPICALL"]         = int(valuesDict[u"debugRPICALL"])
         except:            pass
         try:               
-            if self.debugRPILevel[u"debugRPIBEACON"]   != int(valuesDict[u"debugRPIBEACON"]):  self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if self.debugRPILevel[u"debugRPIBEACON"]   != int(valuesDict[u"debugRPIBEACON"]):  self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.debugRPILevel[u"debugRPIBEACON"]       = int(valuesDict[u"debugRPIBEACON"])
         except:            pass
         try:               
-            if self.debugRPILevel[u"debugRPISENSOR"]   != int(valuesDict[u"debugRPISENSOR"]):  self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if self.debugRPILevel[u"debugRPISENSOR"]   != int(valuesDict[u"debugRPISENSOR"]):  self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.debugRPILevel[u"debugRPISENSOR"]       = int(valuesDict[u"debugRPISENSOR"])
         except:            pass
         try:               
-            if self.debugRPILevel[u"debugRPIOUTPUT"]   != int(valuesDict[u"debugRPIOUTPUT"]):  self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if self.debugRPILevel[u"debugRPIOUTPUT"]   != int(valuesDict[u"debugRPIOUTPUT"]):  self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.debugRPILevel[u"debugRPIOUTPUT"]       = int(valuesDict[u"debugRPIOUTPUT"])
         except:            pass
         try:               
-            if self.debugRPILevel[u"debugRPIBLE"]      != int(valuesDict[u"debugRPIBLE"]):     self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if self.debugRPILevel[u"debugRPIBLE"]      != int(valuesDict[u"debugRPIBLE"]):     self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.debugRPILevel[u"debugRPIBLE"]          = int(valuesDict[u"debugRPIBLE"])
         except:            pass
         try:               
-            if self.debugRPILevel[u"debugRPImystuff"]  != int(valuesDict[u"debugRPImystuff"]): self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if self.debugRPILevel[u"debugRPImystuff"]  != int(valuesDict[u"debugRPImystuff"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.debugRPILevel[u"debugRPImystuff"]      = int(valuesDict[u"debugRPImystuff"])
         except:            pass
         try:        
-            if unicode(self.acceptNewiBeacons) != unicode(valuesDict[u"acceptNewiBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            if unicode(self.acceptNewiBeacons) != unicode(valuesDict[u"acceptNewiBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.acceptNewiBeacons              = int(valuesDict[u"acceptNewiBeacons"])
         except:            pass
 
-        if unicode(self.acceptJunkBeacons) != unicode(valuesDict[u"acceptJunkBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+        if unicode(self.acceptJunkBeacons) != unicode(valuesDict[u"acceptJunkBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.acceptJunkBeacons              = valuesDict[u"acceptJunkBeacons"]
 
-        if self.sendFullUUID               != valuesDict[u"sendFullUUID"]: self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+        if self.sendFullUUID               != valuesDict[u"sendFullUUID"]: self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.sendFullUUID                   = valuesDict[u"sendFullUUID"]
 
         try: self.txPowerCutoffDefault      = int(valuesDict[u"txPowerCutoffDefault"])
@@ -7524,7 +7635,7 @@ class Plugin(indigo.PluginBase):
         self.removeJunkBeacons              = valuesDict[u"removeJunkBeacons"]==u"1"
         xxx                                 = valuesDict[u"restartBLEifNoConnect"] == "1"
         if xxx != self.restartBLEifNoConnect:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.restartBLEifNoConnect          = xxx
         
         try: self.enableRebootRPIifNoMessages    = int(valuesDict[u"enableRebootRPIifNoMessages"])
@@ -7569,7 +7680,7 @@ class Plugin(indigo.PluginBase):
 
         xxx = valuesDict[u"rebootWatchDogTime"]
         if xxx != self.rebootWatchDogTime:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.rebootWatchDogTime = xxx
 
         self.expectTimeout = valuesDict[u"expectTimeout"]
@@ -7579,7 +7690,7 @@ class Plugin(indigo.PluginBase):
         except:
             delH = 86400
         if delH != self.deleteHistoryAfterSeconds:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.deleteHistoryAfterSeconds = delH
 
         try:
@@ -7587,7 +7698,7 @@ class Plugin(indigo.PluginBase):
         except:
             xx = 9999
         if xx != self.rPiCommandPORT:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.rPiCommandPORT = xx
 
 
@@ -7598,7 +7709,7 @@ class Plugin(indigo.PluginBase):
         if xx != self.indigoInputPORT:
             self.quitNow = u"restart needed, commnunication was switched "
             self.ML.myLog( text =  u"switching communication, will send new config to all RPI and restart plugin")
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.indigoInputPORT = xx
 
         try:
@@ -7608,7 +7719,7 @@ class Plugin(indigo.PluginBase):
         if xx != self.IndigoOrSocket:
             self.quitNow = u"restart, commnunication was switched "
             self.ML.myLog( text =  u"switching communication, will send new config to all RPI and restart plugin")
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.IndigoOrSocket = xx
 
         try:
@@ -7645,32 +7756,32 @@ class Plugin(indigo.PluginBase):
 
         pp = valuesDict[u"myIpNumber"]
         if pp != self.myIpNumber:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.myIpNumber = pp
 
         pp = valuesDict[u"portOfServer"]
         if pp != self.portOfServer:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.portOfServer = pp
 
         pp = valuesDict[u"userIdOfServer"]
         if pp != self.userIdOfServer:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.userIdOfServer = pp
 
         pp = valuesDict[u"passwordOfServer"]
         if pp != self.passwordOfServer:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.passwordOfServer = pp
 
         pp = valuesDict[u"authentication"]
         if pp != self.authentication:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.authentication = pp
 
         pp = valuesDict[u"GPIOpwm"]
         if pp != self.GPIOpwm:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
         self.GPIOpwm = pp
 
 
@@ -7685,11 +7796,11 @@ class Plugin(indigo.PluginBase):
             self.key_mgmt       = kk
             self.routerIP       = ll
             self.wifiOFF        = mm
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 
         pp = int(valuesDict[u"sendAfterSeconds"])
         if pp != self.sendAfterSeconds:
-            self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+            self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
             self.sendAfterSeconds = pp
 
         self.ML.myLogSet(debugLevel = self.debugLevel ,logFileActive=self.logFileActive, logFile = self.logFileName, maxFileSize = 30000000)
@@ -7810,11 +7921,11 @@ class Plugin(indigo.PluginBase):
             self.ML.myLog( text =  u" ..  new py programs  etc will be send  to rPis")
             for pi in range(_GlobalConst_numberOfRPI) :
                 if self.RPI[unicode(pi)][u"ipNumberPi"] != "" :
-                    self.setONErPiV(pi,"piUpToDate", [u"updateAllFiles","restartmaster"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateAllFilesFTP","restartmasterSSH"])
                     self.upDateNotSuccessful[pi] = 0
                     self.sendFilesToPiServerFTP(pi, fileToSend="updateAllFiles.exp")
-                    self.sshToRPI(pi, fileToSend=u"restartmaster.exp")
-                    self.removeONErPiV(pi,u"piUpToDate", [])
+                    self.sshToRPI(pi, fileToSend=u"restartmasterSSH.exp")
+                    self.RPI[unicode(pi)][u"piUpToDate"] =[]
                     self.upDateNotSuccessful[pi] = 0
             self.ML.myLog( text =  u" ..  new versions send to rPis")
 
@@ -8112,14 +8223,14 @@ class Plugin(indigo.PluginBase):
 
             if time.time()- self.lastUpdateSend > 3600:  ## send config every hour, no other action
                 self.rPiRestartCommand = [u"" for ii in range(_GlobalConst_numberOfRPI)]  # soft update, no restart required
-                self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 
             if self.updateNeeded.find(u"enable") > -1 or self.updateNeeded.find(u"disable") > -1: 
                 self.syncSensors()
                 self.setupFilesForPi()
                 try:
                     pi = self.updateNeeded.split(u"-")[1]
-                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                     if self.ML.decideMyLog(u"BeaconData"): self.ML.myLog( text =  u"sending update to pi#"+ unicode(pi))
                 except: pass    
 
@@ -8151,19 +8262,22 @@ class Plugin(indigo.PluginBase):
                         self.checkSSHsend()
 
 
-                        if u"upgradeOpSys" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                            self.sshToRPI(pi, fileToSend="upgradeOpSys.exp")
+                        if u"initSSH" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                            self.sshToRPI(pi, fileToSend="initSSH.exp")
+
+                        if u"upgradeOpSysSSH" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                            self.sshToRPI(pi, fileToSend="upgradeOpSysSSH.exp")
                             self.RPI[unicode(pi)][u"piUpToDate"] = []
 
-                        if u"resetGPIOCount" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                            self.sendFilesToPiServerFTP(pi, fileToSend="resetGPIOCount.exp")
+                        if u"resetGPIOCountFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                            self.sendFilesToPiServerFTP(pi, fileToSend="resetGPIOCountFTP.exp")
                             self.RPI[unicode(pi)][u"piUpToDate"] = []
 
-                        if u"updateAllFiles" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                            self.sendFilesToPiServerFTP(pi, fileToSend="updateAllFiles.exp")
+                        if u"updateAllFilesFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                            self.sendFilesToPiServerFTP(pi, fileToSend="updateAllFilesFTP.exp")
 
-                        if u"updateParams" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                            self.sendFilesToPiServerFTP(pi, fileToSend="updateParams.exp")
+                        if u"updateParamsFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                            self.sendFilesToPiServerFTP(pi, fileToSend="updateParamsFTP.exp")
 
                         if self.updateRejectListsCount < _GlobalConst_numberOfRPI:
                             self.updateRejectListsCount +=1
@@ -8171,21 +8285,21 @@ class Plugin(indigo.PluginBase):
                         else:
                             self.printpiUpToDate()
 
-                    if self.findTaskPi(u"piUpToDate","getStats"):
+                    if self.findTaskPi(u"piUpToDate","getStatsSSH"):
                         for pi in range(_GlobalConst_numberOfRPI) :
-                            if u"getStats" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                                self.sshToRPI(pi,fileToSend="getStats.exp")
+                            if u"getStatsSSH" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                                self.sshToRPI(pi,fileToSend="getStatsSSH.exp")
 
 
 
                     if self.findTaskPi(u"piUpToDate","shutdown"):
                         for pi in range(_GlobalConst_numberOfRPI) :
-                            if u"shutdown" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                                self.sshToRPI(pi,fileToSend="shutdown.exp")
+                            if u"shutdownSSH" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                                self.sshToRPI(pi,fileToSend="shutdownSSH.exp")
 
-                    if self.findTaskPi(u"piUpToDate","reboot"):
+                    if self.findTaskPi(u"piUpToDate","rebootSSH"):
                         for pi in range(_GlobalConst_numberOfRPI) :
-                            if u"reboot" in self.RPI[unicode(pi)][u"piUpToDate"]  and not  "updateParams" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                            if u"rebootSSH" in self.RPI[unicode(pi)][u"piUpToDate"]  and not  "updateParamsFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
                                 reboot=""
                                 try: 
                                     props0 = indigo.devices[self.RPI[unicode(pi)][u"piDevId"]].pluginProps
@@ -8193,14 +8307,14 @@ class Plugin(indigo.PluginBase):
                                         reboot = props0[u"rebootCommand"]
                                 except: pass
                                 if reboot !="":
-                                    self.sshToRPI(pi,fileToSend="rebootF.exp")
+                                    self.sshToRPI(pi,fileToSend="rebootFSSH.exp")
                                 else:
-                                    self.sshToRPI(pi,fileToSend="reboot.exp")
+                                    self.sshToRPI(pi,fileToSend="rebootSSH.exp")
 
-                    if self.findTaskPi(u"piUpToDate","resetOutput"):
+                    if self.findTaskPi(u"piUpToDate","resetOutputSSH"):
                         for pi in range(_GlobalConst_numberOfRPI) :
-                            if u"resetOutput" in self.RPI[unicode(pi)][u"piUpToDate"]  and not  "updateParams" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                                self.sshToRPI(pi,fileToSend="resetOutput.exp")
+                            if u"resetOutputSSH" in self.RPI[unicode(pi)][u"piUpToDate"]  and not  "updateParamsFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
+                                self.sshToRPI(pi,fileToSend="resetOutputSSH.exp")
 
         except  Exception, e:
             if len(unicode(e)) > 5 :
@@ -8227,7 +8341,7 @@ class Plugin(indigo.PluginBase):
             if now.minute % 5 == 0:
                 if self.newIgnoreMAC > 0:
                     for pi in range(_GlobalConst_numberOfRPI) :
-                        self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                        self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                     self.newIgnoreMAC = 0
 
                 for pi in range(_GlobalConst_numberOfRPI):
@@ -8619,11 +8733,11 @@ class Plugin(indigo.PluginBase):
             try:
                 if now.hour == 0:
                     self.deleteAndCeateVariables(True)  # delete and recreate the variables at midnight to remove their sql database entries
-                    self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                    self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                     ##self.rPiRestartCommand = [u"" for ii in range(_GlobalConst_numberOfRPI)] # dont do this use the default for each pibeacon
                     self.setupFilesForPi()
                     for pi in range(0, _GlobalConst_numberOfRPI) :
-                        self.sendFilesToPiServerFTP(pi, fileToSend=u"updateParams.exp")
+                        self.sendFilesToPiServerFTP(pi, fileToSend=u"updateParamsFTP.exp")
                     self.updateRejectLists()
             except  Exception, e:
                 if len(unicode(e)) > 5 :
@@ -8703,7 +8817,7 @@ class Plugin(indigo.PluginBase):
                 self.ML.myLog( text =  u"fixing 1  " + name + "  " + unicode(devId) + " pi " + unicode(pi) + "; sensor: " + sensor+" devName: "+name)
                 self.ML.myLog( text =  u"fixing 1  rpi " + unicode(self.RPI[unicode(pi)][io]))
                 self.RPI[unicode(pi)][io][sensor] = {unicode(devId): ""}
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
             if len(self.RPI[unicode(pi)][io][sensor]) == 0:
                 self.RPI[unicode(pi)][io][sensor] = {unicode(devId): ""}
@@ -8879,7 +8993,7 @@ class Plugin(indigo.PluginBase):
                         return
                     self.RPI[unicode(pi)][u"input"][sensor] = {}
             if sensorList != self.RPI[unicode(pi)][u"sensorList"]:
-                self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
             self.RPI[unicode(pi)][u"sensorList"] = sensorList
 
         except  Exception, e:
@@ -9023,7 +9137,7 @@ class Plugin(indigo.PluginBase):
                         ipAddress = data[u"ipAddress"]
                         if self.RPI[unicode(pi)][u"ipNumberPi"] != "" and self.RPI[unicode(pi)][u"ipNumberPi"] != ipAddress:
                             if ipAddress == "":
-                                self.setONErPiV(pi,"piUpToDate", [u"updateParams","reboot"])
+                                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP","rebootSSH"])
                                 self.ML.myLog( text =  u"rPi#: " + unicode(pi) + u"  >>" + ipAddress + u"<<   ip#  send from rPi is empty, will restart rPi, ip# should be" + self.RPI[unicode(pi)][u"ipNumberPi"])
                                 return
                             else:
@@ -9044,7 +9158,7 @@ class Plugin(indigo.PluginBase):
                         if  self.RPI[unicode(pi)][u"emptyMessages"] > self.enableRebootRPIifNoMessages:
                             self.ML.myLog( text =  "RPI# "+unicode(pi)+" check , too many empty messages in a row: " + str(self.RPI[unicode(pi)][u"emptyMessages"]) )
                             self.ML.myLog( text =  "sending reboot command to RPI")
-                            self.setONErPiV(pi,"piUpToDate",[u"updateParams","reboot"])
+                            self.setONErPiV(pi,"piUpToDate",[u"updateParamsFTP","rebootSSH"])
                             self.RPI[unicode(pi)][u"emptyMessages"] = 0
                 
 
@@ -9246,7 +9360,7 @@ class Plugin(indigo.PluginBase):
             self.RPI[unicode(pi)][u"lastMessage"] = time.time()
 
             if u"reboot" in varJson:
-                self.setRPIonline(pi,new="reboot")
+                self.setRPIonline(pi,new="rebootSSH")
                 indigo.variable.updateValue(self.ibeaconNameDefault+u"Rebooting","reset from :"+unicode(pi)+" at "+datetime.datetime.now().strftime(_defaultDateStampFormat))
                 if u"text" in varJson and varJson[u"text"].find(u"bluetooth_startup.ERROR:") >-1:
                     self.ML.myLog( text =  u"RPI# "+unicode(pi)+ " "+varJson[u"text"]+u" Please check that RPI ")
@@ -10146,7 +10260,7 @@ class Plugin(indigo.PluginBase):
                     if dev.states[u"serialNumber"] == "" or  dev.states[u"serialNumber"] == serialNumber: # ==u"" new, ==Serial# already setup
                         if dev.states[u"serialNumber"] == "": 
                             self.addToStatesUpdateDict(unicode(dev.id),"serialNumber",serialNumber,dev=dev)
-                            self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                            self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                         if serialNumber != u"sN= " + dev.description:
                             if dev.description.find("sN= ") == 0:
                                 snOld =  dev.description.split(" ")
@@ -10196,7 +10310,7 @@ class Plugin(indigo.PluginBase):
                                     self.addToStatesUpdateDict(unicode(dev1.id),"serialNumber",serialNumber,dev=dev1)
                                     self.setStatusCol( dev1, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev1.states[u"status"], decimalPlaces = decimalPlaces )
                                     self.executeUpdateStatesDict(onlyDevID=str(dev1.id),calledFrom="updateOneWire")
-                                    self.setONErPiV(pi,"piUpToDate", [u"updateParams"])
+                                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
                                     self.saveConfig()
                             except  Exception, e:
                                 self.ML.myLog( text =  u"updateOneWire in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -11280,7 +11394,7 @@ class Plugin(indigo.PluginBase):
                                 self.RPI[unicode(fromPi)][u"piMAC"]  = piMACSend
                                 self.RPI[unicode(fromPi)][u"ipNumberPi"] = ipAddress
                                 if oldMAC in self.beacons: del self.beacons[oldMAC]
-                                self.setALLrPiV(u"piUpToDate", [u"updateParams"])
+                                self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
                                 self.fixConfig(checkOnly = ["all","rpi"],fromPGM="updateBeaconStates pichanged") # updateBeaconStates # ok only if new MAC for rpi ...
                             else:
                                 if self.beacons[piMACSend][u"typeOfBeacon"].lower() !="rpi": 
@@ -11431,7 +11545,7 @@ class Plugin(indigo.PluginBase):
                 self.RPI[unicode(fromPi)][u"piDevId"]            = dev.id  # used to quickly look up the rPI devices in indigo
                 self.RPI[unicode(fromPi)][u"piNumberReceived"]   = piNReceived
                 self.RPI[unicode(fromPi)][u"piMAC"]              = piMACSend
-                self.setONErPiV(fromPi,"piUpToDate", [u"updateParams","reboot"])
+                self.setONErPiV(fromPi,"piUpToDate", [u"updateParamsFTP","rebootSSH"])
                 self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="updateBeaconStates1") # updateBeaconStates # ok only if new MAC for rpi ...
 
 
@@ -12560,10 +12674,10 @@ class Plugin(indigo.PluginBase):
 
         
 ####-------------------------------------------------------------------------####
-    def sendFilesToPiServerFTP(self, pi, fileToSend=u"updateParams.exp"):
+    def sendFilesToPiServerFTP(self, pi, fileToSend=u"updateParamsFTP.exp"):
         try:
             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"enter  sendFilesToPiServerFTP #" + unicode(pi) +"  fileToSend:"+ fileToSend)
-            if fileToSend==u"updateParams.exp": self.newIgnoreMAC = 0
+            if fileToSend==u"updateParamsFTP.exp": self.newIgnoreMAC = 0
             self.lastUpdateSend = time.time()
             if 5 < self.upDateNotSuccessful[pi] and self.upDateNotSuccessful[pi] < 10:
                 if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"last updates were not successful wait, then try again")
@@ -12590,8 +12704,10 @@ class Plugin(indigo.PluginBase):
                 self.setRPIonline(pi,new="offline")
                 return 1
 
+            prompt = self.getPrompt(pi,fileToSend)
+
             cmd0 = "/usr/bin/expect '" + self.pathToPlugin + fileToSend + u"'" + u" "
-            cmd0+=  self.RPI[unicode(pi)][u"userIdPi"] + " " + self.RPI[unicode(pi)][u"passwordPi"]+" "
+            cmd0+=  self.RPI[unicode(pi)][u"userIdPi"] + " " + self.RPI[unicode(pi)][u"passwordPi"]+" " + prompt+" "
             cmd0+=  self.RPI[unicode(pi)][u"ipNumberPiSendTo"] + " "
             cmd0+=  unicode(pi) + " " + self.piDir + " '" + self.pathToPlugin + "pi'" + " "+self.expectTimeout
 
@@ -12599,7 +12715,8 @@ class Plugin(indigo.PluginBase):
             p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             ret = p.communicate()
 
-            if fileToSend == u"upgrade.exp" :
+            if fileToSend == u"upgradeOpSysSSH.exp" :
+                self.updatepiUpToDate(pi,ret,remove=fileToSend)
                 self.upDateNotSuccessful[pi] = 0
                 return
                 
@@ -12644,13 +12761,13 @@ class Plugin(indigo.PluginBase):
                 self.upDateNotSuccessful[pi] = 0
             else:
                 if ret[0][-600:].find(u"sftp> ") > -1:
-                    self.updatepiUpToDate(pi,ret)
+                    self.updatepiUpToDate(pi,ret,remove=fileToSend)
                 else:
                     self.sleep(2)  # try it again after 2 seconds
                     p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     ret = p.communicate()
                     if ret[0][-600:].find(u"sftp> ") > -1:
-                        self.updatepiUpToDate(pi,ret)
+                        self.updatepiUpToDate(pi,ret,remove=fileToSend)
                     else:
                         self.ML.myLog( text =  u"setup pi response (2) message \n" + ret[0])
                         self.ML.myLog( text =  u"setup pi response (2) error   \n" + ret[1])
@@ -12663,16 +12780,18 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-    def updatepiUpToDate(self, pi,ret):
+    def updatepiUpToDate(self, pi,ret,remove=""):
 
-        if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"setup Pi ok: \n" + ret[0].replace(u"\n\n", u"\n")+u"\n....\n"+ ret[0][-300:].replace(u"\n\n", u"\n"))
-        if u"resetGPIOCount" in self.RPI[unicode(pi)][u"piUpToDate"]:
-            self.removeONErPiV(pi, u"piUpToDate", [u"resetGPIOCount"])
+        if self.ML.decideMyLog(u"UpdateRPI"): 
+            try:    self.ML.myLog( text =  u"setup Pi ok: \n" + unicode(ret[0]).replace(u"\n\n", u"\n")+u"\n....\n"+ unicode(ret[0])[-300:].replace(u"\n\n", u"\n"))
+            except: 
+                indigo.server.log( u"setup Pi ok: \n")
+                indigo.server.log(ret[0])
+        if remove =="" and u"resetGPIOCountFTP" in self.RPI[unicode(pi)][u"piUpToDate"] or remove ==u"resetGPIOCountFTP" :
+            self.removeONErPiV(pi, u"piUpToDate", [u"resetGPIOCountFTP"])
             os.remove(self.piDir + u"interfaceFiles/resetGPIOCount." + unicode(pi))
-        elif u"updateAllFiles" in self.RPI[unicode(pi)][u"piUpToDate"]:
-            self.removeONErPiV(pi, u"piUpToDate", [u"updateAllFiles"])
-        elif u"updateParams" in self.RPI[unicode(pi)][u"piUpToDate"]:
-            self.removeONErPiV(pi, u"piUpToDate", [u"updateParams"])
+        elif remove !="":
+            self.removeONErPiV(pi, u"piUpToDate", [remove])
         else:
             self.RPI[unicode(pi)][u"piUpToDate"] = []
 
@@ -12681,6 +12800,18 @@ class Plugin(indigo.PluginBase):
         self.setRPIonline(pi)
 
 
+
+####-------------------------------------------------------------------------####
+    def getPrompt(self, pi,fileToSend):
+        prompt ="assword"
+
+        if self.RPI[unicode(pi)][u"authKeyOrPassword"] == "login:":
+            if fileToSend.find("FTP") >-1:
+                prompt ="connect"
+            else: 
+                prompt ="login:"
+
+        return prompt
 ####-------------------------------------------------------------------------####
     def sshToRPI(self, pi,fileToSend=""):
         try:
@@ -12704,11 +12835,15 @@ class Plugin(indigo.PluginBase):
             except:
                 pass
 
-            if fileToSend in [u"shutdown.exp",u"reboot.exp",u"rebootF.exp",u"resetOutput.exp",u"shutdown.exp"]:
+
+            if fileToSend in [u"shutdownSSH.exp",u"rebootSSH.exp",u"rebootFSSH.exp",u"resetOutputSSH.exp",u"shutdownSSH.exp"]:
                 batch =" &"
             else: 
                 batch =" "
-            cmd = "/usr/bin/expect '" + self.pathToPlugin + fileToSend+"' " + " " + self.RPI[unicode(pi)][u"userIdPi"] + " " + self.RPI[unicode(pi)][u"passwordPi"] + " " + self.RPI[unicode(pi)][u"ipNumberPiSendTo"]+ " "+self.expectTimeout+ " "+batch
+                
+            prompt = self.getPrompt(pi,fileToSend)
+            
+            cmd = "/usr/bin/expect '" + self.pathToPlugin + fileToSend+"' " + " " + self.RPI[unicode(pi)][u"userIdPi"] + " " + self.RPI[unicode(pi)][u"passwordPi"] + " " + prompt+" "+ self.RPI[unicode(pi)][u"ipNumberPiSendTo"]+ " "+self.expectTimeout+ " "+batch
             if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  fileToSend+u"  rPi# " + unicode(pi) + "\n" + cmd)
             if batch ==u" ":
                 ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -12717,12 +12852,14 @@ class Plugin(indigo.PluginBase):
                 ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 ret=[u"",""]
                 
-            self.RPI[unicode(pi)][u"piUpToDate"] = []
+            self.updatepiUpToDate(pi,ret,remove=fileToSend)
+            
             if fileToSend.find(u"shutdown") >-1: 
                 self.upDateNotSuccessful[pi] = 0
                 return
             if len(ret[1]) > 0:
                 self.ML.myLog( text =  fileToSend+" Pi# "+unicode(pi) + unicode(ret).replace(u"\n\n", u"\n"))
+
             if fileToSend.find(u"getStats") >-1: 
                 try:
                     self.upDateNotSuccessful[pi] = 0
@@ -12747,7 +12884,10 @@ class Plugin(indigo.PluginBase):
                 if self.ML.decideMyLog(u"OfflineRPI"): self.ML.myLog( text =  u" pi server # " + unicode(pi) + u"  PI# " + self.RPI[unicode(pi)][
                     u"ipNumberPiSendTo"] + u"  not online - does not answer ping - , skipping update")
                 return 1
-            cmd = "/usr/bin/expect '" + self.pathToPlugin + u"wifi.exp' " + u" " + self.RPI[unicode(pi)][u"userIdPi"] + u" " + self.RPI[unicode(pi)][u"passwordPi"]+ u" "+self.expectTimeout
+
+            prompt = self.getPrompt(pi,"wifi")
+
+            cmd = "/usr/bin/expect '" + self.pathToPlugin + u"wifi.exp' " + u" " + self.RPI[unicode(pi)][u"userIdPi"] + u" " + self.RPI[unicode(pi)][u"passwordPi"]+ u" "+ prompt+" "+self.expectTimeout
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             ret = p.communicate()
 

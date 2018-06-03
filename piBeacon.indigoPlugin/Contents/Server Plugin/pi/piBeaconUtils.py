@@ -751,7 +751,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
                         else:
                             cmd.append(" &")
                             subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-                            os.system("echo x > "+ G.homeDir+"temp/messageSend")
+                            os.system("echo '"+G.program+":  "+data0+"' > "+ G.homeDir+"temp/messageSend")
 
             else:
                         

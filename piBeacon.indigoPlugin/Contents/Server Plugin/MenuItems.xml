@@ -65,6 +65,13 @@ If nothing happens, do a    Send Config/Restart/PGM/Sound/...
             <Field   enabledBindingId="enablePiEntries"  id="ipNumberPi"   type="textfield" defaultValue="192.168.1.x">
                 <Label>rPi IP Number:</Label>
             </Field>
+            <Field   enabledBindingId="enablePiEntries"  id="authKeyOrPassword"   type="menu" defaultValue="assword">
+                 <List>
+                    <Option value="assword"    >uses std Login/Password</Option>
+                    <Option value="login:"     >uses authkey (uses login: as prompt, skips password entry)</Option>
+                  </List>
+           <Label>normal login, or authkey - no password entry:</Label>
+            </Field>
             <Field   enabledBindingId="enablePiEntries"  id="enableRebootCheck"   type="menu" defaultValue="restartLoop,-">
                 <Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
                  <List>
@@ -88,11 +95,11 @@ If nothing happens, do a    Send Config/Restart/PGM/Sound/...
                 <Label>Select rPi server #:</Label>
                 <List class="self" filter="" method="filterPi" dynamicReload="false"/>
             </Field>
-            <Field   id="buttonSendOnly" type="button"	tooltip="send config file to rPis">
+            <Field   id="buttonSendOnlyParams" type="button"	tooltip="send config file to rPis">
                 <Label>click to</Label><Title>send Config files</Title>
-                <CallbackMethod>buttonConfirmSendOnlyCALLBACK</CallbackMethod>
+                <CallbackMethod>buttonConfirmSendOnlyParamsCALLBACK</CallbackMethod>
             </Field>
-            <Field   id="buttonSendAndRestart" type="button"	tooltip="send config file to rPis">
+            <Field   id="buttonSendAndRestart" type="button"	tooltip="send config file to rPis and restart">
                 <Label>click to</Label><Title>send Config files and restart py-pgms</Title>
                 <CallbackMethod>buttonConfirmSendRestartPyCALLBACK</CallbackMethod>
             </Field>
@@ -153,6 +160,11 @@ If nothing happens, do a    Send Config/Restart/PGM/Sound/...
             <Field   id="buttonstopNTP" type="button"	tooltip="only usefull if NTP is not enabled">
                 <Label>click to</Label><Title>stop NTP service</Title>
                 <CallbackMethod>buttonstopNTPCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonInit" type="button"	tooltip="send and sync file from ~/Documents/piBeacons/soundFiles /displayFiles to rPi ~/soundfiles">
+                <Label>click to</Label><Title>ONLY ONCE: setup directories, send pgm reboot</Title>
+                <CallbackMethod>buttonSendINITCALLBACK</CallbackMethod>
             </Field>
 
             <Field   id="buttonStopConfig" type="button"	tooltip=" stop any send activity ">

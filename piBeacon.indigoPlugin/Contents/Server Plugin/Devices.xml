@@ -12562,6 +12562,26 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
                     <TriggerLabel>activeZoneStarted</TriggerLabel>
                     <ControlPageLabel>activeZoneStarted</ControlPageLabel>
                 </State>
+                <State id="activeZoneMinutesLeft">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>activeZoneMinutesLeft</TriggerLabel>
+                    <ControlPageLabel>activeZoneMinutesLeft</ControlPageLabel>
+                </State>
+                <State id="activeZoneMinutesDuration">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>activeZoneMinutesDuration</TriggerLabel>
+                    <ControlPageLabel>activeZoneMinutesDuration</ControlPageLabel>
+                </State>
+                <State id="allZonesMinutesLeft">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>allZonesMinutesLeft</TriggerLabel>
+                    <ControlPageLabel>allZonesMinutesLeft</ControlPageLabel>
+                </State>
+                <State id="allZonesMinutesDuration">
+                    <ValueType>number</ValueType>
+                    <TriggerLabel>allZonesMinutesDuration</TriggerLabel>
+                    <ControlPageLabel>allZonesMinutesDuration</ControlPageLabel>
+                </State>
          </States>
 
     </Device>

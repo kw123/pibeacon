@@ -1,50 +1,31 @@
 set userID [lindex $argv 0 ] 
 set password [lindex $argv 1 ] 
-set ipNumber [lindex $argv 2 ] 
-set ipParms  [lindex $argv 3 ] 
-set piPath   [lindex $argv 4 ] 
-set indigoPath   [lindex $argv 5 ] 
-
-set timeout 20
-spawn ssh $userID@$ipNumber
-expect {
-        "assword:" {
-                exp_send -- "$password\r"
-        }
-}
-
-sleep 1
-expect "applicable law." {
-    send "mkdir /home/pi/pibeacon \r"
-    sleep 0.1
-    send "rm /home/pi/pibeacon/soundfiles/*\r"
-    }
-sleep 1
-send  "quit\n"
-
+set authKeyOrPassword [lindex $argv 2 ] 
+set ipNumber [lindex $argv 3 ] 
+set ipParms  [lindex $argv 4 ] 
+set piPath   [lindex $argv 5 ] 
+set indigoPath   [lindex $argv 6 ] 
 
 set timeout 20
 spawn sftp -o ConnectTimeout=2 $userID@$ipNumber
  
-expect {
-    "(yes/no)? " { 
-        send "yes\r"
-        sleep 0.1
-        expect "assword: " { send "$password\r"}
-    }    
-    "assword: " { 
-        send "$password\r" 
+if {$authKeyOrPassword == "assword"} { 
+    expect {
+        "(yes/no)? " { 
+            send "yes\r"
+            sleep 0.1
+            expect "$authKeyOrPassword" { send "$password\r"}
+        }    
+        "$authKeyOrPassword" { 
+            send "$password\r" 
+        }
     }
 }
 
 sleep 0.1
-set timeout 20
+set timeout 10
 
 sleep 0.1
-expect "sftp>" {  send  "mkdir /home/pi/pibeacon \r" }
-expect "sftp>" {  send  "mkdir /home/pi/pibeacon/fonts \r" }
-expect "sftp>" {  send  "mkdir /home/pi/pibeacon/displayfiles \r" }
-expect "sftp>" {  send  "mkdir /home/pi/pibeacon/soundfiles \r" }
 expect "sftp>" {  send  "lcd '$indigoPath' \r" }
 expect "sftp>" {  send  "put callbeacon.py  /home/pi/callbeacon.py\r" }
 expect "sftp>" {  send  "put -r * /home/pi/pibeacon/ \r" }
@@ -66,7 +47,7 @@ expect "sftp>" {  send  "put -r  * /home/pi/pibeacon/displayfiles/ \r" }
 expect "sftp>" {  send  "lcd '$piPath//all' \r" }
 expect "sftp>" {  send  "put *  /home/pi/pibeacon/ \r" }
 expect "sftp>" {  send  "put touchFile  /home/pi/pibeacon/temp/ \r" }
-expect "sftp>" {}
+expect "sftp>" {  send  "quit\r" }
 set timeout 0.1
 expect eof
 
