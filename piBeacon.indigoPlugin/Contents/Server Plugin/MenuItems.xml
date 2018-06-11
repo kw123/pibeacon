@@ -844,24 +844,24 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
     </MenuItem>
 
     <MenuItem id="newCalibration">
-        <Name>Start Calibration of sensors on  rPi sensors</Name>
+        <Name>Calibration of sensors on  rPi sensors</Name>
         <ConfigUI>
-             <Label>Start Calibration of sensors</Label>
+             <Label>Calibration of sensors</Label>
              <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                 <Label>select rPi #</Label>
                 <List class="self" filter="" method="filterPiNoAll" dynamicReload="false"/>
              </Field>
              <Field id="typeId"   type="menu" defaultValue="all" tooltip="" >
               <List>
-                    <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "mag3110"             >mag3110</Option>
-                    <Option value= "bme680"              >bme680</Option>
+                    <Option value= "bme680"              >bme680 air quality sensor</Option>
+                    <Option value= "mhz16"               >MH-Z16 CO2 sensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>
+                    <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "all"                 >all</Option>
                 </List>
                 <Label>device type that should be asked to recalibrate:</Label>
              </Field>
-
 
              <Field  id="exec" type="button"	>
                 <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>startCalibrationCALLBACKmenu</CallbackMethod>

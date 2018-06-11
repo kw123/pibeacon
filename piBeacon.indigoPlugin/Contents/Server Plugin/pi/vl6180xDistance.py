@@ -720,10 +720,10 @@ while True:
                     continue
                 elif distance !="" :
                     data["sensors"][sensor][devId]["distance"] = distance
-                    dist = float(distance)
-                    delta= dist-lastDist[devId]
-                    deltaN= abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
-                    if loopCount %20 ==0 or deltaN > 0.1:
+                    dist   = float(distance)
+                    delta  = dist-lastDist[devId]
+                    deltaN  = abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
+                    if loopCount %20 == 0 or deltaN > 0.1:
                         lux = getLight()
                         if lux !="": 
                                 data["sensors"][sensor][devId]["lux"] =lux

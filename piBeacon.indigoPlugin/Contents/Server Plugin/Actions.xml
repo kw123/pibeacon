@@ -2690,19 +2690,20 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 
     <Action id="newCalibration">
-        <Name>Start Calibration of sensors on  rPi sensors</Name>
+        <Name>Calibration of sensors on  rPi sensors</Name>
         <CallbackMethod>startCalibrationCALLBACKaction</CallbackMethod>
         <ConfigUI>
-             <Label>Start Calibration of sensors</Label>
+             <Label>Calibration of sensors</Label>
              <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                 <Label>select rPi #</Label>
                 <List class="self" filter="" method="filterPiNoAll" dynamicReload="False"/>
              </Field>
              <Field id="typeId"   type="menu" defaultValue="all" tooltip="" >
               <List>
-                    <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "mag3110"             >mag3110</Option>
                     <Option value= "bme680"              >bme680</Option>
+                    <Option value= "mhz16"               >mhz16</Option>
+                    <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>
                     <Option value= "all"                 >all</Option>
                 </List>

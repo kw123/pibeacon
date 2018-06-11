@@ -639,7 +639,8 @@ while True:
                             current = float(values[xx])
                             delta= abs(current-lastValues2[devId][xx])
                             if delta < deltaMin[xx]: continue
-                            deltaN= max(deltaN,delta) / max (0.5,(current+lastValues2[devId][xx])/2.)
+                            delta  /= max (0.5,(current+lastValues2[devId][xx])/2.)
+                            deltaN  = max(deltaN,delta) 
                             lastValues[devId][xx] = current
                         except: pass
                 else:

@@ -734,14 +734,15 @@ while True:
                     for color in values:
                         value  = values[color]
                         #print value, lastValue[devId][color]
-                        delta  = value-lastValue[devId][color]
-                        deltaN = max(deltaN, abs(delta) / max (0.01,( value+lastValue[devId][color] )/2.  ) ) 
-                if ( ( deltaN > deltaX[devId]                          ) or 
+                        delta   = value-lastValue[devId][color]
+                        delta  /=  max (0.5,(current+lastValues2[devId][color])/2.)
+                        deltaN  = max(deltaN, abs(delta) )
+
+                if ( ( deltaN > deltaX[devId]                           ) or 
                      (  tt - G.lastAliveSend  > abs(G.sendToIndigoSecs) ) or  
-                     ( quick                                           )   \
-                    )  and  (
-                     ( doAverage == 0  and   tt - minSendDelta  > G.lastAliveSend  )  or avsend  \
-                    )   : 
+                     ( quick                                            )   
+                    )  and  (          \
+                     ( doAverage == 0  and   tt - minSendDelta  > G.lastAliveSend  )  or avsend     )   : 
                         sendURLnow = True
                         lastValue[devId]  = values
                         #print " sending",avsend, deltaN ,deltaX[devId],  tt - G.lastAliveSend ,tt - minSendDelta  , G.sendToIndigoSecs

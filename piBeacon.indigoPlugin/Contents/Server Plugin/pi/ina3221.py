@@ -401,8 +401,9 @@ while True:
                     current=[0,0,0]
                     for ii in range(3):
                         current[ii] = float(values["Current"+str(ii+1)])
-                        delta= current[ii]-lastCurrent[devId][ii]
-                        deltaN= max(deltaN, abs(delta) / max (0.5,(current[ii]+lastCurrent[devId][ii])/2.) )
+                        delta   = current[ii]-lastCurrent[devId][ii]
+                        delta  /=  max (0.5,(current[ii]+lastValues2[devId][ii])/2.)
+                        deltaN  = max(deltaN, abs(delta) )
                 
                 if ( ( deltaN > deltaX[devId]                          ) or 
                      (  tt - G.lastAliveSend  > abs(G.sendToIndigoSecs) ) or  

@@ -1145,8 +1145,9 @@ while True:
                     for xx in lastValues0:
                         try:
                             current = float(values[xx])
-                            delta= current-lastValues2[devId][xx]
-                            deltaN= max(deltaN,abs(delta) / max (0.5,(current+lastValues2[devId][xx])/2.))
+                            delta   = current-lastValues2[devId][xx]
+                            delta  /=  max (0.5,(current+lastValues2[devId][xx])/2.)
+                            deltaN  = max(deltaN,abs(delta) )
                             lastValues[devId][xx] = current
                         except: pass
                 else:

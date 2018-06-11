@@ -24,6 +24,8 @@ if {$authKeyOrPassword == "assword"} {
 
 sleep 0.1
 set timeout 10
+expect "sftp>"
+send "\r"
 
 sleep 0.1
 expect "sftp>" {  send  "lcd '$indigoPath' \r" }

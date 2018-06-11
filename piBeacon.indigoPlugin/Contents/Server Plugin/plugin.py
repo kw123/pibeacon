@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 26.11
+dataVersion = 27.12
 
 
 
@@ -204,6 +204,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"pmairquality",
                          u"amg88xx",                                                                # infrared camera
                          u"ccs811",                                                                # co2 voc 
+                         u"mhz16",                                                                # co2 temp 
                          u"sgp30",                                                                # co2 voc 
                          u"i2cMLX90614", u"mlx90614",                                                  # remote  temp &ambient temp 
                          u"ina219",                                                                  # current and V 
@@ -222,7 +223,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
 i2cSensors               =     ["bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",  "ina219","ina3221","as726x",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
 _GlobalConst_allowedOUTPUT         = [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725", u"display", u"setPCF8591dac", u"setTEA5767"]
-_GlobalConst_allowedpiSends        = [u"updateParamsFTP", u"resetGPIOCountFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
+_GlobalConst_allowedpiSends        = [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
 
 
 _GlobalConst_groupList             = [u"Family", u"Guests", u"Other1", u"Other2"]
@@ -3169,6 +3170,10 @@ class Plugin(indigo.PluginBase):
                 if u"BLEsensor" == typeId :
                     valuesDict[u"description"] = valuesDict[u"type"] +"-"+ valuesDict[u"mac"]
 
+
+                if  typeId  == "mhz16":
+                    dev.updateStateOnServer("CO2calibration",valuesDict["CO2calibration"])
+
                         
                 elif  typeId =="pmairquality" :
                     if valuesDict[u"resetPin"] !="-1" and valuesDict[u"resetPin"] !="":
@@ -3612,7 +3617,6 @@ class Plugin(indigo.PluginBase):
                 vv = v.split(".exp")[0]
                 if vv in self.RPI[pi][item]:
                     self.RPI[pi][item].remove(vv)
-        self.ML.myLog( text =  u"after  for:"+unicode(value)+" [item]:" + unicode(self.RPI[pi][item]))
         return
 
 
@@ -7923,7 +7927,7 @@ class Plugin(indigo.PluginBase):
                 if self.RPI[unicode(pi)][u"ipNumberPi"] != "" :
                     self.setONErPiV(pi,"piUpToDate", [u"updateAllFilesFTP","restartmasterSSH"])
                     self.upDateNotSuccessful[pi] = 0
-                    self.sendFilesToPiServerFTP(pi, fileToSend="updateAllFiles.exp")
+                    self.sendFilesToPiServerFTP(pi, fileToSend="updateAllFilesFTP.exp")
                     self.sshToRPI(pi, fileToSend=u"restartmasterSSH.exp")
                     self.RPI[unicode(pi)][u"piUpToDate"] =[]
                     self.upDateNotSuccessful[pi] = 0
@@ -8267,10 +8271,6 @@ class Plugin(indigo.PluginBase):
 
                         if u"upgradeOpSysSSH" in self.RPI[unicode(pi)][u"piUpToDate"]:
                             self.sshToRPI(pi, fileToSend="upgradeOpSysSSH.exp")
-                            self.RPI[unicode(pi)][u"piUpToDate"] = []
-
-                        if u"resetGPIOCountFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
-                            self.sendFilesToPiServerFTP(pi, fileToSend="resetGPIOCountFTP.exp")
                             self.RPI[unicode(pi)][u"piUpToDate"] = []
 
                         if u"updateAllFilesFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
@@ -10032,6 +10032,19 @@ class Plugin(indigo.PluginBase):
                             self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                             self.ML.myLog( text =  unicode(props))
                         
+
+                    if sensor == "mhz16":
+                        try:
+                            x, UI  = int(float(data[u"CO2"])),   "CO2 %d[ppm] "%(float(data[u"CO2"]))
+                            newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+                            if abs( float(dev.states["CO2offset"]) - float(data[u"CO2offset"])  ) > 1: 
+                                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+                            self.addToStatesUpdateDict(unicode(dev.id),"calibration", data[u"calibration"],   dev=dev) 
+                            self.addToStatesUpdateDict(unicode(dev.id),"raw", float(data[u"raw"]),  decimalPlaces = 1, dev=dev) 
+                            self.addToStatesUpdateDict(unicode(dev.id),"CO2offset", float(data[u"CO2offset"]),  decimalPlaces = 1, dev=dev) 
+                        except  Exception, e:
+                            self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                            self.ML.myLog( text =  unicode(props))
 
                         
                     if u"temp" in data:
@@ -12395,6 +12408,10 @@ class Plugin(indigo.PluginBase):
                                 sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"BLEtimeout",elseSet=10)
                                 sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"macAddress")
                                 
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeaboveCalibrationMAX")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], dev.states, u"CO2offset")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensitivity")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"CO2calibration")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"resetPin")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"shuntResistor")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"shuntResistor1")
@@ -12787,10 +12804,7 @@ class Plugin(indigo.PluginBase):
             except: 
                 indigo.server.log( u"setup Pi ok: \n")
                 indigo.server.log(ret[0])
-        if remove =="" and u"resetGPIOCountFTP" in self.RPI[unicode(pi)][u"piUpToDate"] or remove ==u"resetGPIOCountFTP" :
-            self.removeONErPiV(pi, u"piUpToDate", [u"resetGPIOCountFTP"])
-            os.remove(self.piDir + u"interfaceFiles/resetGPIOCount." + unicode(pi))
-        elif remove !="":
+        if remove !="":
             self.removeONErPiV(pi, u"piUpToDate", [remove])
         else:
             self.RPI[unicode(pi)][u"piUpToDate"] = []

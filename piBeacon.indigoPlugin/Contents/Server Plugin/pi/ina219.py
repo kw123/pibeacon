@@ -392,8 +392,8 @@ while True:
                     
                     data["sensors"][sensor][devId] = values
                     current = float(values["Current"])
-                    delta= current-lastCurrent[devId]
-                    deltaN= abs(delta) / max (0.5,(current+lastCurrent[devId])/2.)
+                    delta   = current-lastCurrent[devId]
+                    deltaN  = abs(delta) / max (0.5,(current+lastCurrent[devId])/2.)
                 else:
                     continue
                 
