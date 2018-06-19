@@ -159,6 +159,7 @@ def startBlueTooth(pi):
         else:
             print "beaconLoop start BLE :",HCIs
             return 0, -1, 0
+        print HCIs
         #useHCI  = "hci1"
         #myBLEmac= HCIs[useHCI]["BLEmac"]
         #devId   = HCIs[useHCI]["numb"]
@@ -870,6 +871,7 @@ try:
         bluez.hci_filter_all_events(flt)
         bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
         sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
+        sock.settimeout(12)
 
 
         sendAfter= sendAfterSeconds
@@ -893,7 +895,10 @@ try:
             ## get new data
 #            allBeaconMSGs = parse_events(sock, collectMsgs,offsetUUID,batteryLevelPosition,maxParseSec ) # get the data:  get up to #collectMsgs at one time
             allBeaconMSGs=[]
-            pkt = sock.recv(255)
+            try: pkt = sock.recv(255)
+            except: 
+                print " timeout exception"
+                pkt=""
             doP = False
             U.toLog(5, "loopCount:"+unicode(loopCount)+ "  #:"+unicode(iiWhile)+"  len:"+unicode(len(pkt))) 
             pkLen = len(pkt)

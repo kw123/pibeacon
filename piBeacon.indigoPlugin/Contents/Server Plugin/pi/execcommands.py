@@ -62,10 +62,11 @@ def execCMDS(data):
                         if "fileMode" in next and next["fileMode"].lower() =="a": m="a"
                         #print "write to",next["fileName"], json.dumps(next["fileContents"]), m
                         f=open(next["fileName"],m)
-                        f.write(json.dumps(next["fileContents"]))
+                        f.write(next["fileContents"])
                         f.close()
                         if "touchFile" in next and next["touchFile"]:
                             os.system("echo  "+str(time.time())+" > "+G.homeDir+"temp/touchFile" )
+                        os.system("sudo chown -R  pi  "+G.homeDir)
                     except  Exception, e:
                         U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                 continue

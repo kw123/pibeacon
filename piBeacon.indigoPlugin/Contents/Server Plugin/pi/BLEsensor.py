@@ -270,6 +270,7 @@ def readParams(init):
 def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
     global BLEsensorMACs, sensor
     try:
+        data[sensor][devId] ={}
         if time.time() - BLEsensorMACs[mac]["lastUpdate"]  < BLEsensorMACs[mac]["updateIndigoTiming"]: 
             #print "rejecting ", time.time() - BLEsensorMACs[mac]["lastUpdate"] ,  BLEsensorMACs[mac]["updateIndigoTiming"]
             return 
@@ -287,6 +288,17 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
             try:    temp  = (sensorData + BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multiplyTemp"]
             except: temp  = sensorData
             data[sensor][devId] = {"temp":temp,"type":BLEsensorMACs[mac]["type"],"mac":mac,"rssi":float(rx),"txPower":float(tx),"UUID":UUID}
+        elif BLEsensorMACs[mac]["type"] =="blueRadio":
+            return 
+            #RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33  (starts at # 0 , #33 has sign, if !=0 subtract 2**15
+            #if RawData[2] != 0: tSign = 0x10000 # == 65536 == 2<<15
+            #else:               tSign = 0
+            #r8          = RawData[1] << 8 
+            #sensorData  = ( r8 + RawData[0] - tSign ) /100.
+            #UUID        = UUID[0:12]+"-"+Maj+"-"+Min
+            #try:    temp  = (sensorData + BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multiplyTemp"]
+            #except: temp  = sensorData
+            #data[sensor][devId] = {"temp":temp,"type":BLEsensorMACs[mac]["type"],"mac":mac,"rssi":float(rx),"txPower":float(tx),"UUID":UUID}
         elif BLEsensorMACs[mac]["type"] =="windWeatherFlow":
             print mac, UUID, Maj,Min,"pkt: ", len(pkt), pkt
             RawData = list(struct.unpack("BBBBBBBBB", pkt[31:31+(2+2+2+2+1)])) # get 25 bytes  

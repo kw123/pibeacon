@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # 2018-01-28
@@ -10,39 +11,24 @@
 ####################
 
 import sys, os, time, json, datetime,subprocess,copy
-import math
-import copy
-from collections import OrderedDict
-import smbus
-
+import serial
+import  RPi.GPIO as GPIO  
 
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-G.program = "mhz16"
+G.program = "mhz-SERIAL"
 G.debug = 0
-#simple bitfield object
 
-
-#H.yasuhiro,2017/1/17
-
-class mhz16_class:
-    type
-    ppm         = 0
-     
-    IOCONTROL   = 0X0E << 3
-    FCR         = 0X02 << 3
-    LCR         = 0X03 << 3
-    DLL         = 0x00 << 3
-    DLH         = 0X01 << 3
-    THR         = 0X00 << 3
-    RHR         = 0x00 << 3
-    TXLVL       = 0X08 << 3
-    RXLVL       = 0X09 << 3
-         
-    def __init__(self, address = 0x4d, sensorType=1):
-        self.i2c_addr = address
-        self.i2c      = smbus.SMBus(1)
+#################################        
+#################################        
+class mhz_class:
+    pass
+    
+#################################        
+    def __init__(self,serialPort="/dev/serial0",sensorType = 2):
+    
+    
         if sensorType ==1:
             self.cmd_measure       = [0xFF,0x01,0x9C,0x00,0x00,0x00,0x00,0x00,0x63]
             self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
@@ -50,122 +36,110 @@ class mhz16_class:
             self.commandByteReturn = self.cmd_measure[2]
         else:
             self.cmd_measure       = [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
-            self.cmd_calibrateZero = [0xFF,0x87,0x87,0x00,0x00,0x00,0x00,0x00,0xF2]  # does not work 
+            self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+#            self.cmd_calibrateZero = [0xFF,0x87,0x87,0x00,0x00,0x00,0x00,0x00,0xF2]  # does not work 
 #            self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
             self.beginData         = 2 
             self.commandByteReturn = self.cmd_measure[2]
-     
-    def start(self):
-        try:
-            self.write_register(self.IOCONTROL, 0x08)
-        except IOError:
-            pass
-                     
-        self.write_register(self.FCR, 0x07)
-        self.write_register(self.LCR, 0x83)
-        self.write_register(self.DLL, 0x60)
-        self.write_register(self.DLH, 0x00)
-        self.write_register(self.LCR, 0x03)
- 
-    def calibrate(self):
-        try:
-            self.write_register(self.FCR, 0x07)
-            self.send(self.cmd_calibrateZero)
-            time.sleep(0.1)
-            return
-        except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+
+        self.amplification={ "1000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x03, 0xE8, 0x7B],
+                             "2000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x07, 0xD0, 0x8F],
+                             "3000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x0B, 0xB8, 0xA3],
+                             "5000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x13, 0x88, 0xCB]}
+    
+        print "mhz_class port: ", serialPort
+        self.port = serialPort
+        #print 'Trying port %s ' % self.port
         self.co2 = -1
- 
+        self.ser            = serial.Serial()
+        self.ser.port       = self.port 
+        self.ser.stopbits   = serial.STOPBITS_ONE
+        self.ser.bytesize   = serial.EIGHTBITS
+        self.ser.baudrate   = 9600
+        self.ser.timeout    = 2
+        self.ser.open()
+
+#################################        
     def measure(self):
         try:
-            self.write_register(self.FCR, 0x07)
             self.send(self.cmd_measure)
             self.parse(self.receive())
             return
         except  Exception, e:
             U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
         self.co2 = -1
- 
+
+#################################        
+    def setRange(self,range):
+        r = str(range)
+        try:
+            if r in self.amplification:
+                #print "setting range:"+ r+ "  "+unicode(self.amplification[str(r)])
+                self.send(self.amplification[str(r)])
+                return
+        except  Exception, e:
+            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+
+#################################        
+    def calibrate(self):
+        try:
+            self.send(self.cmd_calibrateZero)
+            self.parse(self.receive())
+            return
+        except  Exception, e:
+            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        self.co2 = -1
+
+
+#################################        
+    def send(self,cmd):
+        self.ser.write(cmd)
+
+#################################        
+    def receive(self):            
+        s = self.ser.read(9)
+        z=bytearray(s)
+        retV =[]
+        for x in z:
+            retV.append(x)
+        #print retV
+        return retV
+
+#################################        
     def parse(self, response):
         checksum = 0
         #print response
- 
-        if len(response) < 9:
-            if len(response) == 8 and response[0] !=255:
-                response = [255] + response
-                #print "fixed"
-            else:
-                self.co2 = -1
-                return
- 
+
+        self.co2 = -1
+        self.raw = response
+        try: 
+            ll = len(response)
+        except  Exception, e:
+            print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+            return 
+        if ll != 9: return
         for i in range (0, 9):
             checksum += response[i]
             
-        self.co2 = -1
         if response[0] == 0xFF:
             if response[1] == self.commandByteReturn:
                 if checksum % 256 == 0xFF:
                     self.co2  = (response[self.beginData]<<8) + response[self.beginData+1]
-        #print self.co2
- 
-    def read_register(self, reg_addr):
-        time.sleep(0.001)
-        return self.i2c.read_byte_data(self.i2c_addr, reg_addr)
-         
-    def write_register(self, reg_addr, val):
-        time.sleep(0.001)
-        self.i2c.write_byte_data(self.i2c_addr, reg_addr, val)
-         
-    def send(self, command):
-        self.commandByte= command[2]
-        if self.read_register(self.TXLVL) >= len(command):  # can we send enough bytes , should be 9
-            self.i2c.write_i2c_block_data(self.i2c_addr, self.THR, command)
- 
-    def receive(self):
-        try:
-            n     = 9
-            buf   = []
-            start = time.clock()
-            errcountMAX = 2
-            while n > 0:
-                try: 
-                    rx_level = self.read_register(self.RXLVL) # are there enough bytes available to read , should be 9.
-                except Exception, e:
-                    time.sleep(0.004)
-                    errcountMAX -= 1
-                    if errcountMAX == 0: 
-                        U.toLog(0, u"receive read_register too may tries stopping read,  has error='%s'" % ( e))
-                        return buf
-                    continue
-                    
-                if rx_level > n:
-                    rx_level = n
- 
-                buf.extend(self.i2c.read_i2c_block_data(self.i2c_addr, self.RHR, rx_level))
-                n = n - rx_level
- 
-                if time.clock() - start > 0.2:
-                    break
-                
-            return buf
-        except  Exception, e:
-            U.toLog(-1, u"receive in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        return []
+        #print self.co2, response, [hex(no) for no in response]
+        return 
 
-
- # ===========================================================================
+# ===========================================================================
 # read params
 # ===========================================================================
 
 #################################        
 def readParams():
-    global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, displayEnable
-    global rawOld,i2cAddress
-    global deltaX, mhz16, minSendDelta
+    global sensorList, sensors, logDir, sensor,  sensorRefreshSecs
+    global rawOld,calibrationPin, amplification
+    global deltaX, mhz19, minSendDelta
     global oldRaw, lastRead
     global startTime
-    global CO2calibration, CO2offset,sensitivity,timeaboveCalibrationMAX
+    global CO2normal, CO2offset,sensitivity,timeaboveCalibrationMAX
     try:
 
 
@@ -213,15 +187,28 @@ def readParams():
                     sensorRefreshSecs = float(xx[0]) 
             except:
                 sensorRefreshSecs = 5    
-            
-            old = i2cAddress
-            try:
-                if "i2cAddress" in sensors[sensor][devId]: 
-                    i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
-            except:
-                i2cAddress = ""    
-            if old != i2cAddress: restart = True
 
+            try:
+                old = calibrationPin
+                if "calibrationPin" in sensors[sensor][devId]:
+                    old = int(sensors[sensor][devId]["calibrationPin"])
+            except:
+                calibrationPin = 18    
+            if  calibrationPin != old:
+                calibrationPin  = old 
+                restart = True
+            
+
+            try:
+                old = amplification
+                if "amplification" in sensors[sensor][devId]:
+                    old = sensors[sensor][devId]["amplification"]
+            except:
+                amplification = 5000    
+            if  amplification != old:
+                amplification  = old 
+                restart = True
+            
             try:
                 if "deltaX" in sensors[sensor][devId]: 
                     deltaX[devId]= float(sensors[sensor][devId]["deltaX"])/100.
@@ -229,10 +216,10 @@ def readParams():
                 deltaX[devId] = 0.1
 
             try:
-                if "CO2calibration" in sensors[sensor][devId]: 
-                    CO2calibration[devId]= float(sensors[sensor][devId]["CO2calibration"])
+                if "CO2normal" in sensors[sensor][devId]: 
+                    CO2normal[devId]= float(sensors[sensor][devId]["CO2normal"])
             except:
-                CO2calibration[devId] = 410
+                CO2normal[devId] = 410
 
             try:
                 if "CO2offset" in sensors[sensor][devId]: 
@@ -260,20 +247,20 @@ def readParams():
                 minSendDelta = 5.
 
                 
-            if devId not in mhz16sensor or  restart:
-                startSensor(devId, i2cAddress)
-                if mhz16sensor[devId] =="":
+            if devId not in mhz19sensor or  restart:
+                startSensor(devId, calibrationPin)
+                if mhz19sensor[devId] =="":
                     return
-            U.toLog(-1," new parameters read: i2cAddress:" +unicode(i2cAddress) +";  minSendDelta:"+unicode(minSendDelta)+
+            U.toLog(-1," new parameters read:  minSendDelta:"+unicode(minSendDelta)+
                        ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"  restart:"+str(restart))
                 
         deldevID={}        
-        for devId in mhz16sensor:
+        for devId in mhz19sensor:
             if devId not in sensors[sensor]:
                 deldevID[devId]=1
         for dd in  deldevID:
-            del mhz16sensor[dd]
-        if len(mhz16sensor) ==0: 
+            del mhz19sensor[dd]
+        if len(mhz19sensor) ==0: 
             ####exit()
             pass
 
@@ -286,71 +273,73 @@ def readParams():
 
 
 #################################
-def startSensor(devId,i2cAddress):
-    global sensors, sensor
+def startSensor(devId,calibrationPin):
+ 
+    global sensors,sensor
     global startTime
-    global mhz16sensor 
-    
-    U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+    global mhz19sensor, amplification
+    U.toLog(-1,"==== Start "+G.program+" ===== ")
     startTime =time.time()
-
-
-    i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-    
     try:
-        mhz16sensor[devId]  =  mhz16_class(address=i2cAdd, sensorType=2)
-            
-        time.sleep(1)
-        mhz16sensor[devId].start()
-                        
+        sP = U.getSerialDEV()     
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(calibrationPin, GPIO.OUT)
+        restartSensor()
+        
+        mhz19sensor[devId]  = mhz_class(serialPort = sP)
+        mhz19sensor[devId].setRange(amplification)
+        calibrateSensor(devId)
+        
     except  Exception, e:
         U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        mhz16sensor[devId]   =""
+        mhz19sensor[devId] =""
+    return
+
+
+
+
+#################################
+def restartSensor():
+    global mhz19sensor, calibrationPin
+    try: 
+        GPIO.output(calibrationPin, False)
+        time.sleep(7)
+        GPIO.output(calibrationPin, True)
+        time.sleep(0.1)
+    except  Exception, e:
+        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
     time.sleep(.1)
 
-    U.muxTCA9548Areset()
+
 #################################
 def calibrateSensor(devId):
     global sensors, sensor
-    global mhz16sensor
-    global CO2calibration, CO2offset,sensitivity   
+    global mhz19sensor, calibrationPin
+    global CO2normal, CO2offset,sensitivity   
     
-    i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
     #print "calibrating"
     ret ="" 
     try: 
-         CO2offset[devId] = 0  
-         mhz16sensor[devId].calibrate()
-         time.sleep(5)
-         ret = getValues(devId,nMeasurements=3)
-         if ret == "badSensor":
-            print " calibration did not work exit " 
-            print ret
-            time.sleep(5)
-            return
-            
-         co2 = ret["CO2"]
-
-         CO2offset[devId] = CO2calibration[devId] - co2 
-         #print "calib co2, CO2offset, CO2calibration: ", co2, CO2offset[devId], CO2calibration[devId]
+        CO2offset[devId] = 0  
+        mhz19sensor[devId].measure()
+        co2 =  mhz19sensor[devId].co2
+        CO2offset[devId] = CO2normal[devId] - co2 
+        #print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
     except  Exception, e:
-        print "ret =", ret
+        print "co2", co2
         U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
     time.sleep(.1)
 
 
 #################################
 def getValues(devId,nMeasurements=5):
-    global sensor, sensors,  mhz16sensor, badSensor
-    global startTime, CO2offset, CO2calibration, sensitivity
+    global sensor, sensors,  mhz19sensor, badSensor
+    global startTime, CO2offset, CO2normal, sensitivity
 
     try:
         ret ="badSensor"
-        if mhz16sensor[devId] =="": 
-            badSensor +=1
-            return "badSensor"
-        i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-        if mhz16sensor[devId] =="": 
+        if mhz19sensor[devId] =="": 
             badSensor +=1
             return "badSensor"
         nnn      = max(2,nMeasurements)
@@ -358,10 +347,13 @@ def getValues(devId,nMeasurements=5):
         nMeas    = 0.
         addIfBad = 2
         ii       = 0
+        rawData  =[]
         while ii < nnn:
             ii+=1
-            mhz16sensor[devId].measure()
-            co2 =  mhz16sensor[devId].co2
+            mhz19sensor[devId].measure()
+            co2 =  mhz19sensor[devId].co2
+            try: rawData =  mhz19sensor[devId].raw
+            except: pass
             U.toLog(1, " co2 raw: %d" %co2 )
             if co2 ==-1: 
                 ii -= addIfBad  # onetime only 
@@ -378,15 +370,16 @@ def getValues(devId,nMeasurements=5):
             needRestart =True
             badSensor+=1
             if badSensor >3: ret = "badSensor"
-            mhz16sensor[devId].start()
             return ret
-            
+        
         raw /= nMeas 
+            
         CO2 = raw + CO2offset[devId]
-        #print "raw, CO2, CO2offset, CO2calibration", raw, CO2, CO2offset[devId], CO2calibration[devId]
+        #print "raw, CO2, CO2offset, CO2normal", raw, CO2, CO2offset[devId], CO2normal[devId]
         ret  = {"CO2":           ( round(CO2,1)            )
                ,"CO2offset":     ( round(CO2offset[devId],1)      )
-               ,"CO2calibration":( round(CO2calibration[devId],1) ) 
+               ,"CO2calibration":( round(CO2normal[devId],1) ) 
+               ,"rawData":       ( rawData                 ) 
                ,"raw":           ( round(raw,1)            ) }
         U.toLog(1, unicode(ret)) 
         badSensor = 0
@@ -394,30 +387,28 @@ def getValues(devId,nMeasurements=5):
         U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
         badSensor+=1
         if badSensor >3: ret = "badSensor"
-        mhz16sensor[devId].start()
  
-    U.muxTCA9548Areset()
     return ret
 
 
 
 
 
-
 ############################################
-global rawOld,i2cAddress
+global rawOld,calibrationPin, amplification
 global sensor, sensors, badSensor
-global deltaX, mhz16sensor, minSendDelta
+global deltaX, mhz19sensor, minSendDelta
 global  lastRead
 global startTime,  lastMeasurement, reStartReq 
-global CO2offset, CO2calibration, sensitivity,timeaboveCalibrationMAX
+global CO2offset, CO2normal, sensitivity,timeaboveCalibrationMAX
 
 
-i2cAddress                  =""
+amplification               =5000
+calibrationPin              =18
 timeOKCalibration           ={}
 timeaboveCalibrationMAX     ={}
 sensitivity                 = {}
-CO2calibration              = {}
+CO2normal              = {}
 CO2offset                   = {}
 reStartReq                  = False
 startTime                   = time.time()
@@ -438,9 +429,8 @@ output                      = {}
 badSensor                   = 0
 sensorActive                = False
 rawOld                      = ""
-mhz16sensor                 ={}
+mhz19sensor                 ={}
 deltaX                      = {}
-displayEnable               = 0
 myPID       = str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -449,6 +439,7 @@ if U.getIPNumber() > 0:
     time.sleep(10)
     exit()
 readParams()
+
 
 time.sleep(1)
 
@@ -509,17 +500,20 @@ while True:
                 elif values["CO2"] !="" :
                     if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
                         U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+                    if values["raw"]  < 300:
+                        U.restartMyself(reason=" sensor value below 300ppm, need to restart to get sensors reset, waiting 2 minute ",doPrint="False")
+                        time.sleep(120.)
                     
                     data["sensors"][sensor][devId] = values
                     needCalibration  = False
-                    x1 =       data["sensors"][sensor][devId]["CO2"] - CO2calibration[devId] 
+                    x1 =       data["sensors"][sensor][devId]["CO2"] - CO2normal[devId] 
 
                     if   sensitivity[devId] =="small" : recalib = [20,20]
                     elif sensitivity[devId] =="medium": recalib = [30,30]
                     else                              : recalib = [50,50]
 
                     if (  x1 < -recalib[0]   )   or   (  abs(x1) > recalib[1] and time.time() - calibTime < calibrationWaitTime   ): 
-                        #print "delta calib",  data["sensors"][sensor][devId]["CO2"], CO2calibration[devId],data["sensors"][sensor][devId]["CO2"] - CO2calibration[devId] , time.time() - calibTime 
+                        #print "delta calib",  data["sensors"][sensor][devId]["CO2"], CO2normal[devId],data["sensors"][sensor][devId]["CO2"] - CO2normal[devId] , time.time() - calibTime 
                         needCalibration  = True
                     else:
                         if abs(x1)  > recalib[1]:
@@ -538,7 +532,7 @@ while True:
                             deltaN  = max(deltaN,delta) 
                             lastValues[devId][xx] = current
                         except: pass
-                    print "delta %.4f" % deltaN, deltaX[devId]
+                    #print "delta %.4f" % deltaN, deltaX[devId]
                     #print " delta co2 compared to last:", delta
                     if   time.time() - calibTime > calibrationWaitTime: 
                         data["sensors"][sensor][devId]["calibration"] ="set"

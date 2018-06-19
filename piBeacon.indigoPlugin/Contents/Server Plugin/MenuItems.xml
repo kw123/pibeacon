@@ -855,7 +855,7 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
               <List>
                     <Option value= "mag3110"             >mag3110</Option>
                     <Option value= "bme680"              >bme680 air quality sensor</Option>
-                    <Option value= "mhz16"               >MH-Z16 CO2 sensor</Option>
+                    <Option value= "mhz-I2C,mhz-SERIAL"  >MH-Zxx CO2 sensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>
                     <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "all"                 >all</Option>

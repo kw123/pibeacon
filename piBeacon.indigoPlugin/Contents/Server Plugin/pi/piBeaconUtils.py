@@ -175,7 +175,7 @@ def doRead(inFile=G.homeDir+"temp/parameters",lastTimeStamp=""):
             if lastTimeStamp == t: return "","",t
         
         f=open(inFile,"r")
-        inRaw =f.read()
+        inRaw =f.read().strip('"')
         inp =json.loads(inRaw)
     except  Exception, e :
             toLog(1, u"doRead in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -187,7 +187,7 @@ def doRead(inFile=G.homeDir+"temp/parameters",lastTimeStamp=""):
                 time.sleep(0.1)
                 f=open(inFile,"r")
                 inRaw =f.read()
-                inp =json.loads(inRaw)
+                inp =json.loads(inRaw).strip('"')
             except  Exception, e :
                 if inFile == G.homeDir+"temp/parameters":
                     toLog(1, u"doRead in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -551,6 +551,8 @@ def setWLANoffIFeth0ON(wifi0IP,eth0IP):
             toLog(-1,u"switching wifi off as ethernet is connected",doPrint=True)
             cmd="ifconfig wlan0 down "
             os.system(cmd) 
+            cmd="iwconfig wlan0 txpower off"
+            os.system(cmd) 
             return "",eth0IP, True
     return wifi0IP,eth0IP, False
         
@@ -605,6 +607,53 @@ def testPing(ipIn=""):
     except  Exception, e :
         toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
     return 2
+
+
+
+#################################
+def getSerialDEV():    
+    version = subprocess.Popen("cat /proc/device-tree/model" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+    # return eg 
+    # Raspberry Pi 2 Model B Rev 1.1
+    #return "/dev/ttyAMA0"
+    serials = subprocess.Popen("ls -l /dev/ | grep serial" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+    # should return something like:
+    #lrwxrwxrwx 1 root root           5 Apr 20 11:17 serial0 -> ttyS0
+    #lrwxrwxrwx 1 root root           7 Apr 20 11:17 serial1 -> ttyAMA0
+
+
+    if version[0].find("Raspberry") ==-1:
+        toLog(-1,"cat /proc/device-tree/model something is wrong... "+unicode(version) )
+        print "cat /proc/device-tree/model something is wrong... "+unicode(version) 
+        time.sleep(10)
+        exit(1)
+        
+    if version[0].find("Pi 3") == -1 and version[0].find("Pi Zero") == -1:  # not RPI3
+        sP = "/dev/ttyAMA0"
+
+        ### disable and remove tty usage for console
+        subprocess.Popen("systemctl stop serial-getty@ttyAMA0.service" ,    shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
+        if serials[0].find("serial0 -> ttyAMA0") ==-1 :
+            toLog(-1, "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0")
+            print       "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
+            time.sleep(10)
+            exit(1)
+
+    else:# RPI3
+        sP = "/dev/ttyS0"
+
+        ### disable and remove tty usage for console
+        subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,    shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
+        if serials[0].find("serial0 -> ttyS0")==-1:
+            U.toLog(-1, "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
+            print       "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
+            time.sleep(10)
+            exit(1)
+    return sP
 
 
 #################################
@@ -795,7 +844,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
                         if sendMSG:
                                     toLog(0,"msg: " + unicode(sendData)+"\n" )
                         else:
-                                    toLog(0,"msg not send ")
+                                    toLog(0,"msg not send "+sendData)
                         try:    soc.shutdown(socket.SHUT_RDWR)
                         except: pass
                         try:    soc.close()

@@ -204,8 +204,10 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"pmairquality",
                          u"amg88xx",                                                                # infrared camera
                          u"ccs811",                                                                # co2 voc 
-                         u"mhz16",                                                                # co2 temp 
+                         u"mhz-I2C",                                                                # co2 temp 
+                         u"mhz-SERIAL",
                          u"sgp30",                                                                # co2 voc 
+                         u"as3935",                                                                 # lightning sensor 
                          u"i2cMLX90614", u"mlx90614",                                                  # remote  temp &ambient temp 
                          u"ina219",                                                                  # current and V 
                          u"ina3221",                                                                  # current and V 3 channels
@@ -220,7 +222,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"INPUTpulse",
                          u"mysensors", u"myprogram",
                          u"BLEconnect"]
-i2cSensors               =     ["bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",  "ina219","ina3221","as726x",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
+i2cSensors               = ["bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",  "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
 _GlobalConst_allowedOUTPUT         = [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725", u"display", u"setPCF8591dac", u"setTEA5767"]
 _GlobalConst_allowedpiSends        = [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
@@ -713,6 +715,13 @@ class Plugin(indigo.PluginBase):
                 self.speedUnits             = 1.0
 
             try:
+                self.lightningTimeWindow             = float(self.pluginPrefs.get(u"lightningTimeWindow", 10.))
+            except:
+                self.lightningTimeWindow             = 10.0
+
+
+
+            try:
                 self.maxParseSec            = self.pluginPrefs.get(u"maxParseSec", u"1.0")
             except:
                 self.maxParseSec            = 1.0
@@ -1079,6 +1088,11 @@ class Plugin(indigo.PluginBase):
                 indigo.variable.create(u"pi_IN_" + unicode(pi), u"", piFolder)
             except:
                 pass
+                
+        try:            indigo.variable.create(u"lightningEventDate", u"", piFolder)
+        except:         pass
+        try:            indigo.variable.create(u"lightningEventDevices", u"0", piFolder)
+        except:         pass
 
 ####-------------------------------------------------------------------------####
     def getFolderIdOfBeacons(self):
@@ -3171,32 +3185,35 @@ class Plugin(indigo.PluginBase):
                     valuesDict[u"description"] = valuesDict[u"type"] +"-"+ valuesDict[u"mac"]
 
 
-                if  typeId  == "mhz16":
-                    dev.updateStateOnServer("CO2calibration",valuesDict["CO2calibration"])
+                if  typeId  in ["mhz-I2C","mhz-SERIAL"]:
+                    dev.updateStateOnServer("CO2calibration",valuesDict["CO2normal"])
 
                         
-                elif  typeId =="pmairquality" :
+                if  typeId =="pmairquality" :
                     if valuesDict[u"resetPin"] !="-1" and valuesDict[u"resetPin"] !="":
                         valuesDict[u"description"] = "reset-GPIO: " +valuesDict[u"resetPin"]
                     else:
                         valuesDict[u"description"] = "reset-GPIO not used"
 
                         
-                elif  typeId.find(u"DHT") >-1:
+                if  typeId.find(u"DHT") >-1:
                     if u"gpioPin" in valuesDict:
                         valuesDict[u"description"] = "GPIO-PIN: " +valuesDict[u"gpioPin"]
                         
-                elif ("i2c" in typeId or typeId in i2cSensors)  and "i2cAddress" in valuesDict:
-                    try:
-                        addrhex = "  = #"+hex(int(valuesDict[u"i2cAddress"]))
-                    except:
-                        addrhex =""
-                    if u"useMuxChannel" in valuesDict and valuesDict[u"useMuxChannel"] !="-1":
-                        valuesDict[u"description"] = "i2c: " +valuesDict[u"i2cAddress"]+addrhex +u"; mux-channel: "+valuesDict[u"useMuxChannel"]
-                    else:
-                        valuesDict[u"description"] = "i2c: " +valuesDict[u"i2cAddress"]+addrhex
+                if ("i2c" in typeId.lower() or typeId in i2cSensors):  
+                    if "i2cAddress" in valuesDict:
+                        try:
+                            addrhex = "  = #"+hex(int(valuesDict[u"i2cAddress"]))
+                        except:
+                            addrhex =""
+                        if u"useMuxChannel" in valuesDict and valuesDict[u"useMuxChannel"] !="-1":
+                            valuesDict[u"description"] = "i2c: " +valuesDict[u"i2cAddress"]+addrhex +u"; mux-channel: "+valuesDict[u"useMuxChannel"]
+                        else:
+                            valuesDict[u"description"] = "i2c: " +valuesDict[u"i2cAddress"]+addrhex
+                if  "calibrationPin" in valuesDict:
+                            valuesDict[u"description"] = "CalibGPIO: " +valuesDict[u"calibrationPin"]
                     
-                elif "ultrasoundDistance" == typeId :
+                if "ultrasoundDistance" == typeId :
                     self.rPiRestartCommand[pi] += "ultrasoundDistance,"
                     if u"gpioTrigger" not in props or (props[u"gpioTrigger"] != valuesDict[u"gpioTrigger"]): 
                         self.rPiRestartCommand[pi] += "ultrasoundDistance,"
@@ -3213,7 +3230,7 @@ class Plugin(indigo.PluginBase):
                         if error ==u"":
                             valuesDict,error = self.addBracketsPOS(valuesDict,"pos3")
 
-                elif "vl503l0xDistance" == typeId :
+                if "vl503l0xDistance" == typeId :
                     self.rPiRestartCommand[pi] += "vl503l0xDistance,"
                     if u"sensorRefreshSecs" not in props or (props[u"sensorRefreshSecs"] != valuesDict[u"sensorRefreshSecs"]): 
                         self.rPiRestartCommand[pi] += "vl503l0xDistance,"
@@ -3222,7 +3239,7 @@ class Plugin(indigo.PluginBase):
                     if u"deltaDist" not in props or (props[u"deltaDist"] != valuesDict[u"deltaDist"]): 
                         self.rPiRestartCommand[pi] += "vl503l0xDistance,"
 
-                elif "vl6180xDistance" == typeId :
+                if "vl6180xDistance" == typeId :
                     if typeId not in self.RPI[unicode(pi)][u"input"]:
                         self.RPI[unicode(pi)][u"input"][typeId] = {}
                         self.rPiRestartCommand[pi] += "vl6180xDistance,"
@@ -3238,7 +3255,7 @@ class Plugin(indigo.PluginBase):
                     if u"deltaDist" not in props or (props[u"deltaDist"] != valuesDict[u"deltaDist"]): 
                         self.rPiRestartCommand[pi] += "vcnl4010Distance,"
 
-                elif "INPUTpulse" == typeId :
+                if "INPUTpulse" == typeId :
                     pinMappings = "gpio="+valuesDict[u"gpio"]+ "," +valuesDict[u"risingOrFalling"]+ " Edge, u" +valuesDict[u"deadTime"]+ "secs deadTime"
                     valuesDict[u"description"] = pinMappings
 
@@ -3517,14 +3534,14 @@ class Plugin(indigo.PluginBase):
         f = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py', u"r")
         g = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py-1', u"w")
         lev = 0
-        tab = " "
+        tab = "	"
         for line in f.readlines():
             if lev == 0:
                 if line.find('def ServerWriteLog(self, logMessage):') > -1:
                     lev = 1
                     g.write(line)
                     if line[0] == tab:
-                        tab = u"    "
+                        tab = u"	"
                     else:
                         tab = u"    "
                 else:
@@ -3909,10 +3926,6 @@ class Plugin(indigo.PluginBase):
         valuesDict[u"stateDone"] = True
         return valuesDict
 
-####-------------------------------------------------------------------------####
-    def filtergpioListI(self, valuesDict=None, filter="", typeId="", devId="x"):
-        list= copy.deepcopy(_GlobalConst_allGPIOlist)
-        return list
 
 ####-------------------------------------------------------------------------####
     def confirmSelectionBUTTONI(self, valuesDict=None, typeId="", devId="x"):
@@ -4059,14 +4072,8 @@ class Plugin(indigo.PluginBase):
             return valuesDict
 
 ####-------------------------------------------------------------------------####
-    def filtergpioListO(self, valuesDict=None, filter="", typeId="", devId="x"):
+    def filtergpioList(self, valuesDict=None, filter="", typeId="", devId="x"):
             list = copy.deepcopy(_GlobalConst_allGPIOlist)
-            return list
-
-####-------------------------------------------------------------------------####
-    def filtergpioListS(self, valuesDict=None, filter="", typeId="", devId="x"):
-            list = copy.deepcopy(_GlobalConst_allGPIOlist)
-            list.append((-1, u"Off"))
             return list
 
 ####-------------------------------------------------------------------------####
@@ -6305,8 +6312,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
     def sendFileToRPIviaSocket(self,ip, pi, fileName,fileContents,fileMode="w",touchFile=True):
         try: 
-            out= json.dumps([{u"command":"file","fileName":fileName,"fileContents":fileContents,"fileMode":fileMode,"touchFile":touchFile}])
-            #if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =  u"sending file to  "+ip+";  "+ json.dumps(out) )
+            out= (json.dumps([{u"command":"file","fileName":fileName,"fileContents":fileContents,"fileMode":fileMode,"touchFile":touchFile}]))
+            if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =  u"sending file to  "+ip+";  "+ out )
             self.sendtoRPI(ip, pi,  out)
         except  Exception, e:
                 self.ML.myLog( text =  u"sendFileToRPIviaSocket in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -7171,7 +7178,7 @@ class Plugin(indigo.PluginBase):
 
             fileContents = self.makeParametersFile(piS,retFile=True)
             if len(fileContents) >0:
-                if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =  u"sending parameters file via socket: "+unicode(v))
+                if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =  u"sending parameters file via socket: "+unicode(v)+" \n"+fileContents)
                 self.sendFileToRPIviaSocket(ip,piS,"/home/pi/pibeacon/parameters",fileContents,fileMode="w")
 
         except  Exception, e:
@@ -7204,7 +7211,7 @@ class Plugin(indigo.PluginBase):
                     color = self.convertVariableOrDeviceStateToText(v[u"extraPage"+unicode(ii)+"Color"])
                     fileContents.append([line0,line1,color])
             if len(fileContents) >0:
-                self.sendFileToRPIviaSocket(ip, piS, "/home/pi/pibeacon/temp/extraPageForDisplay.inp",fileContents,fileMode="w",touchFile=False)
+                self.sendFileToRPIviaSocket(ip, piS, "/home/pi/pibeacon/temp/extraPageForDisplay.inp",json.dumps(fileContents),fileMode="w",touchFile=False)
 
         except  Exception, e:
             self.ML.myLog( text =  u"sendExtraPagesToRpiViaSocketCALLBACKaction in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -7630,6 +7637,9 @@ class Plugin(indigo.PluginBase):
         except: self.speedUnits             = 1.
         try: self.distanceUnits             = int(valuesDict[u"distanceUnits"])
         except: self.distanceUnits          = 1.
+        try: self.lightningTimeWindow       = float(valuesDict[u"lightningTimeWindow"])
+        except: self.lightningTimeWindow    = 10.
+
 
 
         self.pressureUnits                  = valuesDict[u"pressureUnits"]  # 1 for Pascal
@@ -7956,7 +7966,7 @@ class Plugin(indigo.PluginBase):
         else:    
             indigo.server.log(u" ..  initalized, starting loop ")
         theHourToCheckversion = 12
-
+            
         ########   ------- here the loop starts    --------------
         try:
             while self.quitNow == "":
@@ -7973,6 +7983,7 @@ class Plugin(indigo.PluginBase):
         except self.StopThread:
             indigo.server.log( u"stop requested from indigo ")
         ## stop and processing of messages received 
+        indigo.server.log( "quitNow: "+self.quitNow)
         
         self.stackReady  = False 
         self.pluginState = "stop"
@@ -10033,7 +10044,47 @@ class Plugin(indigo.PluginBase):
                             self.ML.myLog( text =  unicode(props))
                         
 
-                    if sensor == "mhz16":
+                    if sensor == "as3935":
+                        try:
+                            if data[u"eventType"]  == "no Action yet":
+                                 self.addToStatesUpdateDict(unicode(dev.id),"eventType", "no Data", dev=dev) 
+                            elif data[u"eventType"]  == "no lightning today":
+                                 self.addToStatesUpdateDict(unicode(dev.id),"eventType", "no lightning today", dev=dev) 
+                            elif data[u"eventType"]  == "measurement":
+                                self.addToStatesUpdateDict(unicode(dev.id),"eventType", "measurement", dev=dev) 
+                                if data[u"lightning"]  == "lightning detected":
+                                    x, UI  = int(float(data[u"distance"])),   "Distance %d[km] "%(float(data[u"distance"]))
+                                    newStatus = self.setStatusCol( dev, u"distance", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+                                    self.addToStatesUpdateDict(unicode(dev.id),"energy", float(data[u"energy"]), dev=dev) 
+                                    newStatus = self.setStatusCol( dev, u"lightning", data[u"lightning"], "lightning "+datetime.datetime.now().strftime("%m-%d %H:%M:%S"), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus)
+                                    self.addToStatesUpdateDict(unicode(dev.id),"lastLightning", datetime.datetime.now().strftime(_defaultDateStampFormat), dev=dev) 
+                                    rightNow = time.time()
+                                    nDevs = 1
+                                    indigo.server.log("  checking devL for "+ dev.name )
+                                    for devL in indigo.devices.iter("props.isLightningDevice"):
+                                        if devL.id == dev.id: continue
+                                        lastLightning = devL.states["lastLightning"]
+                                        try:    deltaTime = (datetime.datetime.now() - datetime.datetime.strptime(lastLightning, "%Y-%m-%d %H:%M:%S")).total_seconds()
+                                        except: continue
+                                        if deltaTime < self.lightningTimeWindow : 
+                                            nDevs += 1
+                                        indigo.server.log(" deltaTime: "+ str(deltaTime))
+                                    if nDevs > 1:
+                                        indigo.variable.updateValue("lightningEventDevices",str(nDevs))
+                                        time.sleep(0.01) # make shure the # of devs gets updated first
+                                        indigo.variable.updateValue("lightningEventDate",datetime.datetime.now().strftime(_defaultDateStampFormat))
+                                        
+                                elif data[u"lightning"].find("Noise") == 0: 
+                                     self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- sensitivity ", dev=dev) 
+                                elif data[u"lightning"].find("Disturber") == 0: 
+                                     self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- Disturber event ", dev=dev) 
+                        except  Exception, e:
+                            self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                            self.ML.myLog( text =  unicode(props) +"\n"+ unicode(data))
+                        continue
+
+
+                    if sensor in["mhz-I2C","mhz-SERIAL"]:
                         try:
                             x, UI  = int(float(data[u"CO2"])),   "CO2 %d[ppm] "%(float(data[u"CO2"]))
                             newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
@@ -10045,6 +10096,7 @@ class Plugin(indigo.PluginBase):
                         except  Exception, e:
                             self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                             self.ML.myLog( text =  unicode(props))
+                        continue
 
                         
                     if u"temp" in data:
@@ -10291,7 +10343,7 @@ class Plugin(indigo.PluginBase):
                     else: # try to somewhere else
                         #indigo.server.log("  not present, checking other " )
                         foundSelf   = False
-                        for dev0 in indigo.devices.iter("isSensorDevice"):
+                        for dev0 in indigo.devices.iter("props.isSensorDevice"):
                             if dev0.deviceTypeId != "Wire18B20": continue
                             if dev0.name == dev.name: continue
                             if dev0.states[u"serialNumber"] == serialNumber: 
@@ -12410,14 +12462,21 @@ class Plugin(indigo.PluginBase):
                                 
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeaboveCalibrationMAX")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], dev.states, u"CO2offset")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"amplification")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensitivity")
-                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"CO2calibration")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"CO2normal")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"resetPin")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"shuntResistor")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"shuntResistor1")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"shuntResistor2")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"shuntResistor3")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"useMuxChannel")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"inside")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"minStrikes")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"tuneCapacitor")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"calibrationDynamic")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"minNoiseFloor")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"noiseFloor")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"i2cAddress")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"displayEnable")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"freeParameter")
@@ -12738,62 +12797,69 @@ class Plugin(indigo.PluginBase):
                 return
                 
             if len(ret[1]) > 0:
-                if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"setup pi response (1)\n" + unicode(ret))
-                if ret[0].find(u".ssh/known_hosts:") > -1:
-                    if (subprocess.Popen(u"/usr/bin/csrutil status" , shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].find(u"enabled")) >-1:
-                        if self.ML.decideMyLog(u"bigErr"): 
-                            self.ML.myLog( errorType = u"bigErr", text =u'ERROR can not update hosts known_hosts file,  "/usr/bin/csrutil status" shows system enabled SIP; please edit manually with \n"nano '+self.MAChome+u'/.ssh/known_hosts"\n and delete line starting with '+self.RPI[unicode(pi)][u"ipNumberPiSendTo"])
-                            self.ML.myLog( errorType = u"bigErr", text =u"trying to from within plugin, if it happens again you need to do it manually")
-                        try:
-                            f=open(self.MAChome+u'/.ssh/known_hosts',u"r")
-                            lines= f.readlines()
-                            f.close()
-                            f=open(self.MAChome+u'/.ssh/known_hosts',u"w")
-                            for line in lines:
-                                if line.find(self.RPI[unicode(pi)][u"ipNumberPiSendTo"]) >-1:continue
-                                f.write(line+u"\n")
-                            f.close()
-                        except  Exception, e:
-                            self.ML.myLog( text =  u" fix did not work: error  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                            
-                        return 
-                    fix1 = ret[0].split(u"Offending RSA key in ")
-                    if len(fix1) > 1:
-                        fix2 = fix1[1].split(u"\n")[0].strip(u"\n").strip(u"\n")
-                        fix3 = fix2.split(u":")
-                        if len(fix3) > 1:
-                            fixcode = u"/usr/bin/perl -pi -e 's/\Q$_// if ($. == " + fix3[1] + ");' " + fix3[0]
-                            self.ML.myLog( text =  u"wrong RSA key, trying to fix with: " + fixcode)
-                            p = subprocess.Popen(fixcode, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                            ret = p.communicate()
-
-                            self.ML.myLog( text =  u"return code from fix " + unicode(ret) + u" trying again to configure PI")
-                            p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                            ret = p.communicate()
- 
-
-            if len(ret[1]) > 0:
-                self.ML.myLog( text =  u"setup pi response (1) message \n" + ret[0])
-                self.ML.myLog( text =  u"setup pi response (1) error   \n" + ret[1])
-                self.upDateNotSuccessful[pi] = 0
+                ret, ok = self.fixHostsFile(ret, pi)
+                if not ok: return
+                self.ML.myLog( text =  u"return code from fix " + unicode(ret) + u" trying again to configure PI")
+                p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                ret = p.communicate()
+                
+            if ret[0][-600:].find(u"sftp> ") > -1:
+                self.updatepiUpToDate(pi,ret,remove=fileToSend)
             else:
+                self.sleep(2)  # try it again after 2 seconds
+                p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                ret = p.communicate()
                 if ret[0][-600:].find(u"sftp> ") > -1:
                     self.updatepiUpToDate(pi,ret,remove=fileToSend)
                 else:
-                    self.sleep(2)  # try it again after 2 seconds
-                    p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    ret = p.communicate()
-                    if ret[0][-600:].find(u"sftp> ") > -1:
-                        self.updatepiUpToDate(pi,ret,remove=fileToSend)
-                    else:
-                        self.ML.myLog( text =  u"setup pi response (2) message \n" + ret[0])
-                        self.ML.myLog( text =  u"setup pi response (2) error   \n" + ret[1])
-                        self.upDateNotSuccessful[pi] += 1
-                        self.setRPIonline(pi,new="offline")
+                    self.ML.myLog( text =  u"setup pi response (2) message \n" + ret[0])
+                    self.ML.myLog( text =  u"setup pi response (2) error   \n" + ret[1])
+                    self.upDateNotSuccessful[pi] += 1
+                    self.setRPIonline(pi,new="offline")
                         
         except  Exception, e:
             self.ML.myLog( text =  u"sendFilesToPiServerFTP in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
         return 1
+
+    
+####-------------------------------------------------------------------------####
+    def fixHostsFile(self, ret, pi):
+        try:    
+            if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"setup pi response (1)\n" + unicode(ret))
+            if ret[0].find(u".ssh/known_hosts:") > -1:
+                if (subprocess.Popen(u"/usr/bin/csrutil status" , shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].find(u"enabled")) >-1:
+                    if self.ML.decideMyLog(u"bigErr"): 
+                        self.ML.myLog( errorType = u"bigErr", text =u'ERROR can not update hosts known_hosts file,  "/usr/bin/csrutil status" shows system enabled SIP; please edit manually with \n"nano '+self.MAChome+u'/.ssh/known_hosts"\n and delete line starting with '+self.RPI[unicode(pi)][u"ipNumberPiSendTo"])
+                        self.ML.myLog( errorType = u"bigErr", text =u"trying to from within plugin, if it happens again you need to do it manually")
+                    try:
+                        f=open(self.MAChome+u'/.ssh/known_hosts',u"r")
+                        lines= f.readlines()
+                        f.close()
+                        f=open(self.MAChome+u'/.ssh/known_hosts',u"w")
+                        for line in lines:
+                            if line.find(self.RPI[unicode(pi)][u"ipNumberPiSendTo"]) >-1:continue
+                            f.write(line+u"\n")
+                        f.close()
+                    except  Exception, e:
+                        self.ML.myLog( text =  u" fix did not work: error  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                        
+                    return ["",""], False
+                    
+                fix1 = ret[0].split(u"Offending RSA key in ")
+                if len(fix1) > 1:
+                    fix2 = fix1[1].split(u"\n")[0].strip(u"\n").strip(u"\n")
+                    fix3 = fix2.split(u":")
+                    if len(fix3) > 1:
+                        fixcode = u"/usr/bin/perl -pi -e 's/\Q$_// if ($. == " + fix3[1] + ");' " + fix3[0]
+                        self.ML.myLog( text =  u"wrong RSA key, trying to fix with: " + fixcode)
+                        p = subprocess.Popen(fixcode, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        ret = p.communicate()
+ 
+        except  Exception, e:
+            self.ML.myLog( text =  u"sendFilesToPiServerFTP in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        return ret, True
+
+
 
 
 ####-------------------------------------------------------------------------####
@@ -12862,6 +12928,11 @@ class Plugin(indigo.PluginBase):
             if batch ==u" ":
                 ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
                 if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text =  u"response: " + unicode(ret) )
+                if len(ret[1]) > 0:
+                    ret, ok = self.fixHostsFile(ret,pi)
+                    if not ok: return
+                    ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
             else:
                 ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 ret=[u"",""]
@@ -13750,6 +13821,7 @@ class Plugin(indigo.PluginBase):
             lsofCMD  =u"/usr/sbin/lsof -i tcp:"+unicode(indigoInputPORT)
             ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
             if self.ML.decideMyLog(u"Socket"): self.ML.myLog( text = u"lsof output:"+ unicode(ret))
+            self.killHangingProcess(ret)
             for ii in range(50):  #  gives port busy for ~ 60 secs if restart, new start it is fine, error message continues even if it works -- indicator =ok: if lsof gives port number  
                 try:    
                     socketServer = ThreadedTCPServer((myIpNumber,int(indigoInputPORT)), ThreadedTCPRequestHandler)
@@ -13771,6 +13843,7 @@ class Plugin(indigo.PluginBase):
                 except  Exception, e:
                     if unicode(e).find("serve_forever") ==-1:
                         indigo.server.log(u"startTcpipListening in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                    self.killHangingProcess(ret)
  
                 if   ii <=2:    tcpWaitTime = 7
                 else:           tcpWaitTime = 1
@@ -13787,6 +13860,20 @@ class Plugin(indigo.PluginBase):
                 indigo.server.log(u"handlesockReporting in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                 self.quitNow=u" tcpip stack did not load, restart"
             return  socketServer, stackReady
+
+    def killHangingProcess(self, ret):
+
+            test = (ret[0].strip("\n")).split("\n")
+
+            if len(test) ==2:
+                try: 
+                    pidTokill = int((test[1].split())[1])
+                    killcmd = "/bin/kill -9 "+str(pidTokill)
+                    if self.ML.decideMyLog(u"Socket"): self.ML.myLog( text = u"trying to kill hanging process with: "+killcmd)
+                    os.system(killcmd)
+                except  Exception, e:
+                    indigo.server.log(u"handlesockReporting in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+
 
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####

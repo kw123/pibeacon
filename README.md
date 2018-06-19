@@ -19,26 +19,28 @@ beacon
 BLEconnect   
    
 ===BLE temp sensor    
-BLEsensor   
+BLEsensor   tenmp sensor through BLE
    
-===Temp Pressure humidity quir quality ..    
+===Temp Pressure humidity, air quality ..
 Wire18B20   
-DHTxx   
-DHT11   
-TMP102   
-MCP9808   
-LM35A   
-T5403   
-MS5803   
-BMPxx   
-BMP280   
-SHT21   
-AM2320   
-BMExx   
-bme680   
-pmairquality   
-sgp30   
-ccs811   
+DHTxx   T,H
+DHT11   T,H
+TMP102   T
+MCP9808  T
+LM35A   T
+T5403   T
+MS5803 T
+BMPxx   T,P
+BMP280   T,H,P
+SHT21   T
+AM2320   T,H
+BMExx    T,H,PP
+bme680   T,H,P, VOC
+pmairquality   measures concentration of particles in the air
+sgp30   CO2
+ccs811 Co2, VOC
+MHZ-xxx serial and i2c  Infrared absoption CO2 measurement
+
    
 ===light: white, RGB infrared, ultraviolet ..    
 TCS34725   
@@ -52,9 +54,12 @@ VEML6070
 VEML6075   
 TSL2561   
 mlx90614   
-   
+
+===Lightning
+as3935  frankling type sensor that detect lighning stickes  up to 30Km away. best is to use 2 to suppress miss identification of local electrical disturbances
+
 ===Infrared Camera    
-amg88xx   
+amg88xx    8x8 infrared temperature camera
    
 ===Movements, gyroscopes, Magetometers   
 l3g4200   

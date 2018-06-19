@@ -81,44 +81,45 @@ def setupLibs(upgradeOpSys):
         #    U.toLog(-1, "need to reboot, added 'dtparam=i2c1=on'  to /boot/config.txt")
         #    reBootNeeded=True
 
-        if upgradeOpSys.find("force")>-1 or upgradeOpSys.find("dist-upgrade"):
-            cmd="apt-get -y update"
-            print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs ==== getting "+cmd+"  this might take an hour"
-            U.toLog(-1, "==== getting "+cmd+"  updates")
-            ret=subprocess.Popen(cmd +" &",shell=True)
-            time.sleep(10)
-            for ii in range(300):  # max 3 hours
-                if U.pgmStillRunning(cmd):
-                    U.toLog(-1, "==== "+cmd+"  still running")
-                    time.sleep(10)
-                else:
-                    break
-            U.toLog(-1,"==== "+cmd+" finished ")
-
-            cmd="apt-get -y upgrade"
-            print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs ==== getting "+cmd+"  this might take an hour"
-            ret=subprocess.Popen(cmd +" &",shell=True)
-            time.sleep(10)
-            for ii in range(300) :  # max 3 hours
-                if U.pgmStillRunning(cmd) :
-                    U.toLog(-1, "==== "+cmd+"  still running")
-                    time.sleep(10)
-                else :
-                    break
-            U.toLog(-1,"==== "+cmd+" finished")
-
-            if upgradeOpSys.find("dist-upgrade")>-1: # not automatically if force, only if explicitly requested
-                cmd="apt-get dist-upgrade"
-                U.toLog(-1, "==== installing "+cmd+"  -- this might take an hour+ ")
+        if False:
+            if upgradeOpSys.find("force")>-1 or upgradeOpSys.find("dist-upgrade"):
+                cmd="apt-get -y update"
+                print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs ==== getting "+cmd+"  this might take an hour"
+                U.toLog(-1, "==== getting "+cmd+"  updates")
                 ret=subprocess.Popen(cmd +" &",shell=True)
                 time.sleep(10)
-                for ii in range(400) :  # max 3 hours
+                for ii in range(300):  # max 3 hours
+                    if U.pgmStillRunning(cmd):
+                        U.toLog(-1, "==== "+cmd+"  still running")
+                        time.sleep(10)
+                    else:
+                        break
+                U.toLog(-1,"==== "+cmd+" finished ")
+
+                cmd="apt-get -y upgrade"
+                print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs ==== getting "+cmd+"  this might take an hour"
+                ret=subprocess.Popen(cmd +" &",shell=True)
+                time.sleep(10)
+                for ii in range(300) :  # max 3 hours
                     if U.pgmStillRunning(cmd) :
                         U.toLog(-1, "==== "+cmd+"  still running")
                         time.sleep(10)
                     else :
                         break
                 U.toLog(-1,"==== "+cmd+" finished")
+
+                if upgradeOpSys.find("dist-upgrade")>-1: # not automatically if force, only if explicitly requested
+                    cmd="apt-get dist-upgrade"
+                    U.toLog(-1, "==== installing "+cmd+"  -- this might take an hour+ ")
+                    ret=subprocess.Popen(cmd +" &",shell=True)
+                    time.sleep(10)
+                    for ii in range(400) :  # max 3 hours
+                        if U.pgmStillRunning(cmd) :
+                            U.toLog(-1, "==== "+cmd+"  still running")
+                            time.sleep(10)
+                        else :
+                            break
+                    U.toLog(-1,"==== "+cmd+" finished")
 
             cmd="apt-get -y autoremove"
             U.toLog(-1, "==== cleaning up  "+cmd)

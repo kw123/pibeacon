@@ -263,48 +263,8 @@ def startSensor(devId):
     global thisSensor, firstValue
     U.toLog(-1,"==== Start "+G.program+" ===== ")
     startTime =time.time()
-    
-    version = subprocess.Popen("cat /proc/device-tree/model" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-    # return eg 
-    # Raspberry Pi 2 Model B Rev 1.1
-    
-    serials = subprocess.Popen("ls -l /dev/ | grep serial" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-    # should return something like:
-    #lrwxrwxrwx 1 root root           5 Apr 20 11:17 serial0 -> ttyS0
-    #lrwxrwxrwx 1 root root           7 Apr 20 11:17 serial1 -> ttyAMA0
-
-
-    if version[0].find("Raspberry") ==-1:
-        U.toLog(-1,"cat /proc/device-tree/model something is wrong... "+unicode(version) )
-        print "cat /proc/device-tree/model something is wrong... "+unicode(version) 
-        time.sleep(10)
-        exit(0)
-        
-    if version[0].find("Pi 3") == -1:  # not RPI3
-        sP = "/dev/ttyAMA0"
-
-        ### disable and remove tty usage for console
-        subprocess.Popen("systemctl stop serial-getty@ttyAMA0.service" ,    shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-        subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-
-        if serials[0].find("serial0 -> ttyAMA0") ==-1 :
-            U.toLog(-1, "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0")
-            print       "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
-            time.sleep(10)
-            exit()
-
-    else:# RPI3
-        sP = "/dev/ttyS0"
-
-        ### disable and remove tty usage for console
-        subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,    shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-        subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-
-        if serials[0].find("serial0 -> ttyS0")==-1:
-            U.toLog(-1, "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
-            print       "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
-            time.sleep(10)
-            exit()
+ 
+    sP = U.getSerialDEV()
      
     try:
         thisSensor[devId]  = thisSensorClass(serialPort = sP)

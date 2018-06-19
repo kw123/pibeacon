@@ -173,12 +173,12 @@
 
             <Field id="shutDownPinOutput"   type="menu" defaultValue="14" tooltip="set this pin to low and connect to reset pin on rpi" >
                 <Label>...which pin to use as shutdown/reboot-OUTOUT pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="shutDownPinInput"   type="menu" defaultValue="15" tooltip="set this pin to low will cause the rpi to shutdown= trigger sfotware shutdown command">
                 <Label>...which pin to use as shutdown-INPUT pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
 
@@ -639,12 +639,12 @@
 
             <Field id="shutDownPinOutput"   type="menu" defaultValue="14" tooltip="set this pin to low and connect to reset pin on rpi" >
                 <Label>...which pin to use as shutdown/reboot-OUTOUT pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="shutDownPinInput"   type="menu" defaultValue="15" tooltip="set this pin to low will cause the rpi to shutdown= trigger sfotware shutdown command">
                 <Label>...which pin to use as shutdown-INPUT pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
 
@@ -1677,6 +1677,7 @@ The myBLUE sensor in the app shows the MAC revers and only the front and back pa
             <Field id="type" type="menu"     defaultValue="myBLUEt"> 
                 <List>
                     <Option value="myBLUEt"          >myBLUEt</Option>
+                    <Option value="blueRadio"        >blueRadio</Option>
                 </List>
                 <Label>type of sensor:</Label> 
             </Field>
@@ -1875,7 +1876,7 @@ The myBLUE sensor in the app shows the MAC revers and only the front and back pa
 
             <Field id="gpioPin"   type="menu" defaultValue="17" >
                 <Label>which GPIO-pin is the DHT connected to:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
 
@@ -1985,7 +1986,7 @@ The myBLUE sensor in the app shows the MAC revers and only the front and back pa
 
             <Field id="gpioPin"   type="menu" defaultValue="17" >
                 <Label>which GPIO-pin is the DHT connected to:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
 
@@ -3613,7 +3614,7 @@ After some days of running in clean air, proposed setup is:
             </Field>
             <Field id="resetPin"   type="menu" defaultValue="23" tooltip="set this pin to low will cause the sensor to reset to shutdown">
                 <Label>Which pin to use as reset pin only if Reset pin is connected:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
              <Label>read sensor every xx secs :</Label>
@@ -3909,15 +3910,15 @@ It measures CO2 VOC
    
 
    
-    <Device type="custom" id="mhz16">
-      <Name>INPUT-CO2-VOC-i2c-MH-Z16</Name>
+    <Device type="custom" id="mhz-I2C">
+      <Name>INPUT-CO2-MH-Zxx-i2c</Name>
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
             <Field id="infoLabel" type="label">
-                <Label>Setup i2c-MH-Z16 CO2 VOC sensor on individual rPis.. 
+                <Label>Setup i2c-MH-Zxx CO2 VOC sensor on individual rPis.. 
     sensor with serial to i2c converter 
     connect 5V, GND, SLA,SLC, 
     set switch to i2c (right)
@@ -4004,10 +4005,172 @@ It measures CO2 and temp using infraed light absorption
                 </List>
                 <Label>Re-calibrate if CO2 above(set by sensitivity)  Calibration point for xx minutes :</Label>
              </Field>
+             <Field id="CO2normal"   type="textfield" defaultValue="410" tooltip="" >
+                <Label>normal CO2 level [ppm]:</Label>
+             </Field>
 
 
             <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-            <Field id="displayS" type="menu"     defaultValue="Temperature"  hidden="YES"> <Label>Property to display in the State Column:</Label>
+            <Field id="displayS" type="menu"     defaultValue="CO2"  hidden="YES"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="CO2"     >CO2</Option>
+                </List>
+            </Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                
+                <State id="CO2">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2</TriggerLabel>
+                    <ControlPageLabel>CO2</ControlPageLabel>
+                </State>
+                <State id="raw">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>raw</TriggerLabel>
+                    <ControlPageLabel>raw</ControlPageLabel>
+                </State>
+                <State id="calibration">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>calibration</TriggerLabel>
+                    <ControlPageLabel>calibration</ControlPageLabel>
+                </State>
+                <State id="CO2MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2MaxToday</TriggerLabel>
+                    <ControlPageLabel>CO2MaxToday</ControlPageLabel>
+                </State>
+                <State id="CO2MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2MinToday</TriggerLabel>
+                    <ControlPageLabel>CO2MinToday</ControlPageLabel>
+                </State>
+                <State id="CO2MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>CO2MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="CO2MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2MinYesterday</TriggerLabel>
+                    <ControlPageLabel>CO2MinYesterday</ControlPageLabel>
+                </State>
+                <State id="CO2calibration">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2calibration</TriggerLabel>
+                    <ControlPageLabel>CO2calibration</ControlPageLabel>
+                </State>
+                <State id="CO2offset">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>CO2offset</TriggerLabel>
+                    <ControlPageLabel>CO2offset</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+        </States>
+    </Device>
+   
+
+   
+    <Device type="custom" id="mhz-SERIAL">
+      <Name>INPUT-CO2-MH-Zxx-serial</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup serial-MH-Zxx CO2 VOC sensor on individual rPis.. 
+    sensor with serial to i2c converter 
+    connect 5V, GND, TX,RX, Calibration pin 
+It measures CO2 and temp using infraed light absorption 
+the MH-z19 has a range 400-1000/2000/3000/4000/5000 ppm
+the MH-Z16 has a range of 400-5000
+====set baseline to fixed value of clean air====
+  </Label>
+            </Field>
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
+            </Field>
+            <Field id="calibrationPin" type="menu"     defaultValue="18"> <Label>which GPIO is used to start calibration:</Label>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+            </Field>
+            <Field id="sensorRefreshSecs" type="menu"     defaultValue="2" hidden="no"> 
+             <Label>read sensor every xx secs :</Label>
+                <List>
+                    <Option value="2"   > 2   secs </Option>
+                </List>
+            </Field>
+            <Field id="minSendDelta" type="menu"     defaultValue="20" hidden="no" > 
+             <Label>min delta secs between indigo updates :</Label>
+                <List>
+                    <Option value="20"  > 20  secs</Option>
+                    <Option value="40"  > 40  secs</Option>
+                    <Option value="60"  > 60  secs</Option>
+                </List>
+            </Field>
+            <Field id="deltaX" type="menu"     defaultValue="2" hidden="no" > 
+             <Label>delta value (%) to trigger indigo update:</Label>
+                <List>
+                    <Option value="0.25" > 0.25 ~ 1ppm</Option>
+                    <Option value="0.5"  > 0.5  ~2 ppm</Option>
+                    <Option value="1"    > 1 ~ 4ppm</Option>
+                    <Option value="2"    > 2 ~ 8ppm</Option>
+                    <Option value="4"    > 4 ~ 16ppm</Option>
+                    <Option value="8"    > 8 ~ 32ppm</Option>
+                </List>
+            </Field>
+            <Field id="sensitivity" type="menu"     defaultValue="medium" hidden="no"> 
+             <Label>sensitivity for auto re-calibration:</Label>
+                <List>
+                    <Option value="small"   > sensitive to small  changes (recalib:  6 above,15 above) </Option>
+                    <Option value="medium"  > sensitive to medium changes (recalib: 10 below,20 above)</Option>
+                    <Option value="large"   > sensitive to large  changes (recalib: 20 below,50 above) </Option>
+                </List>
+            </Field>
+             <Field id="timeaboveCalibrationMAX"   type="menu" defaultValue="1200" tooltip="" >
+                <List>
+                    <Option value="300"   > 5 </Option>
+                    <Option value="600"   > 10 </Option>
+                    <Option value="900"   > 15</Option>
+                    <Option value="1200"  > 20 </Option>
+                    <Option value="1800"  > 30 </Option>
+                    <Option value="2100"  > 45 </Option>
+                    <Option value="3600"  > 60 </Option>
+                    <Option value="7200"  > 120 </Option>
+                    <Option value="99999999"  > never </Option>
+                </List>
+                <Label>Re-calibrate if CO2 above(set by sensitivity)  Calibration point for xx minutes :</Label>
+             </Field>
+             <Field id="amplification"   type="menu" defaultValue="5000" tooltip="" >
+                <List>
+                    <Option value="1000"   > 1000 ppm </Option>
+                    <Option value="2000"   > 2000 ppm </Option>
+                    <Option value="3000"   > 3000 ppm </Option>
+                    <Option value="4000"   > 4000 ppm </Option>
+                    <Option value="5000"   > 5000 ppm </Option>
+                </List>
+                <Label>max range / amplification (only for MH-Z19):</Label>
+             </Field>
+
+
+             <Field id="CO2normal"   type="textfield" defaultValue="410" tooltip="" >
+                <Label>normal CO2 level [ppm]:</Label>
+             </Field>
+
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="CO2"  hidden="No"> <Label>Property to display in the State Column:</Label>
                 <List>
                     <Option value="CO2"     >CO2</Option>
                 </List>
@@ -6571,7 +6734,7 @@ you can setup
             </Field>
             <Field id="resetPin"   type="menu" defaultValue="15" >
                 <Label>if you want to use hardware reset, select GPIO-pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="false"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
             <Field id="i2cAddress" type="menu"     defaultValue="40"> <Label>i2c address of sensor:</Label>
                 <List>
@@ -7013,7 +7176,7 @@ you can setup
             </Field>
             <Field id="resetPin"   type="menu" defaultValue="15" >
                 <Label>if you want to use hardware reset, select GPIO-pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="false"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
             <Field id="i2cAddress" type="menu"     defaultValue="104"> <Label>i2c address of sensor:</Label>
                 <List>
@@ -7192,7 +7355,7 @@ you can setup
             </Field>
             <Field id="resetPin"   type="menu" defaultValue="15" >
                 <Label>if you want to use hardware reset, select GPIO-pin:</Label>
-                <List class="self" filter="" method="filtergpioListS" dynamicReload="false"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
             <Field id="i2cAddress" type="menu"     defaultValue="30"> <Label>i2c address of sensor:</Label>
                 <List>
@@ -8480,7 +8643,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" tooltip="select gpio pin# for the INPUT channel" >
                 <Label> Which gpio pin for sensor input pin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="false"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
 
             <Field id="inpType" type="menu"     defaultValue="open" >
@@ -8819,10 +8982,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="simpleSeparator22" type="separator"/>
             <Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SCLPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SDOPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field  id="buttonPiNumber" type="button"    >
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -8962,10 +9125,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="simpleSeparator20" type="separator"/>
             <Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SCLPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SDOPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field  id="buttonPiNumber" type="button"    >
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -9117,10 +9280,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="simpleSeparator20" type="separator"/>
             <Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SCLPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SDOPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field  id="buttonPiNumber" type="button"    >
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -9312,10 +9475,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="simpleSeparator20" type="separator"/>
             <Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SCLPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">       <Label>Which gpio pin for SDOPin:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field  id="buttonPiNumber" type="button"    >
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -9528,7 +9691,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this INPUT channel/state:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -9657,7 +9820,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this INPUT channel/state:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -9783,7 +9946,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this INPUT channel/state:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -9942,7 +10105,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this INPUT channel/state:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -10160,13 +10323,13 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             </Field>
 
             <Field id="gpioTrigger"   type="menu" defaultValue="20" >
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
                 <Label>which GPIO-pin is the TRIGGER connected to:</Label>
             </Field>
             
             <Field id="gpioEcho"   type="menu" defaultValue="21" >
                 <Label>which GPIO-pin is the  ECHO connected to:</Label>
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
 
             <Field id="sensorRefreshSecs" type="menu"     defaultValue="20" hidden="no"> 
@@ -10932,7 +11095,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             </Field>
 
             <Field id="interruptGPIO"   type="menu" defaultValue="21" tooltip="must not be a onewire, i2c.. pin ">
-                <List class="self" filter="" method="filtergpioListI" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
                 <Label>which GPIO-pin is the INTERRUP line connected to:</Label>
             </Field>
             <Field id="i2cAddress" type="menu"     defaultValue="57"> <Label>i2c address of device:</Label>
@@ -11164,6 +11327,154 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <TriggerLabel>illuminanceMinYesterday</TriggerLabel>
                     <ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
                  </State>
+               
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+
+    </Device>
+
+
+    <Device type="custom" id="as3935">
+      <Name>INPUT lightning -as3935</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"        type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="isLightningDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"  defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabelAPDS9960r" type="label">
+                <Label>Setup lightning sensor  as3935on individual rPis.. 
+        connect 3.3, GND, SLA,SLC and int pin to gpio and board-Si to V+</Label>
+            </Field>
+            <Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+                <Label>msg from plugin</Label>
+            </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label>
+            </Field>
+
+            <Field id="interruptGPIO"   type="menu" defaultValue="21" tooltip="must not be a onewire, i2c.. pin ">
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+                <Label>which GPIO-pin is the INTERRUP line connected to:</Label>
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="3"> <Label>i2c address of device:</Label>
+                <List>
+                    <Option value="1"   >0x01   pin5 =+,   pin6=gnd  not used </Option>
+                    <Option value="2"   >0x02   pin5 =gnd, pin6=+    switch doc lab may be</Option>
+                    <Option value="3"   >0x03   pin5 =+,   pin6=+    default </Option>
+                 </List>
+            </Field>
+            <Field id="inside" type="menu"     defaultValue="1"> <Label>location of sensor:</Label>
+                <List>
+                    <Option value="1"   >sensor is inside  </Option>
+                    <Option value="0"   >sensor is outside  (higher thresholds)</Option>
+                 </List>
+            </Field>
+            <Field id="noiseFloor" type="menu"     defaultValue="3"> <Label>initial Noise floor (0= most sensitive):</Label>
+                <List>
+                    <Option value="0"   >0</Option>
+                    <Option value="1"   >1</Option>
+                    <Option value="2"   >2</Option>
+                    <Option value="3"   >3</Option>
+                    <Option value="4"   >4</Option>
+                    <Option value="5"   >5</Option>
+                    <Option value="6"   >6</Option>
+                    <Option value="7"   >7</Option>
+                 </List>
+            </Field>
+            <Field id="minNoiseFloor" type="menu"     defaultValue="2"> <Label>min Noise floor (0= most sensitive):</Label>
+                <List>
+                    <Option value="0"   >0</Option>
+                    <Option value="1"   >1</Option>
+                    <Option value="2"   >2</Option>
+                    <Option value="3"   >3</Option>
+                    <Option value="4"   >4</Option>
+                    <Option value="5"   >5</Option>
+                    <Option value="6"   >6</Option>
+                 </List>
+            </Field>
+            <Field id="tuneCapacitor" type="menu"     defaultValue="6"> <Label>tune Capacitor in LC resonator:</Label>
+                <List>
+                    <Option value="0"   > 0 =0pF</Option>
+                    <Option value="1"   > 1 =8pF</Option>
+                    <Option value="2"   > 2 =16pF</Option>
+                    <Option value="3"   > 3 =24pF</Option>
+                    <Option value="4"   > 4 =32pF</Option>
+                    <Option value="5"   > 5 =40pF</Option>
+                    <Option value="6"   > 6 =48pF  default for  playing w fusion devices </Option>
+                    <Option value="7"   > 7 =56pF</Option>
+                    <Option value="8"   > 8 =64pF</Option>
+                    <Option value="9"   > 9 =72pF  (switch doc lab default)</Option>
+                    <Option value="10"  >10 =80pF</Option>
+                    <Option value="11"  >11 =88pF</Option>
+                    <Option value="12"  >12 =96pF</Option>
+                    <Option value="13"  >13 =104pF</Option>
+                    <Option value="14"  >14 =112pF</Option>
+                    <Option value="15"  >15 =120pF</Option>
+                 </List>
+            </Field>
+            <Field id="minStrikes" type="menu"     defaultValue="3"> <Label>min # of strikes to accept lighning:</Label>
+                <List>
+                    <Option value="0"   >0</Option>
+                    <Option value="1"   >1</Option>
+                    <Option value="5"   >5</Option>
+                    <Option value="9"   >3</Option>
+                    <Option value="16"  >16</Option>
+                 </List>
+            </Field>
+            <Field id="calibrationDynamic" type="menu"     defaultValue="3"> <Label>set calibration fixed or allow dynamic changes in parameters:</Label>
+                <List>
+                    <Option value="0"   >static</Option>
+                    <Option value="1"   >dynamic</Option>
+                 </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
+            
+            <Field id="displayS"     type="menu"       defaultValue="lightning" > 
+             <Label>show what in status column :</Label>
+                <List>
+                    <Option value="lightning"          >lightning</Option>
+                </List>
+            </Field>
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="lightning">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>lightning</TriggerLabel>
+                    <ControlPageLabel>lightning</ControlPageLabel>
+                </State>
+                <State id="distance">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>distance</TriggerLabel>
+                    <ControlPageLabel>distance</ControlPageLabel>
+                </State>
+                <State id="energy">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>energy</TriggerLabel>
+                    <ControlPageLabel>energy</ControlPageLabel>
+                </State>
+                <State id="eventType">
+                    <ValueType>string</ValueType>
+                    <TriggerLabel>eventType</TriggerLabel>
+                    <ControlPageLabel>eventType</ControlPageLabel>
+                </State>
+                <State id="lastLightning">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastLightning</TriggerLabel>
+                    <ControlPageLabel>lastLightning</ControlPageLabel>
+                </State>
                
                 <State id="lastSensorChange">
                     <ValueType>String</ValueType>
@@ -11458,7 +11769,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this OUTPUT channel:</Label>
-                <List class="self" filter="" method="filtergpioListO" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
              <Label> OUTPUT type:</Label>
@@ -11534,7 +11845,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this OUTPUT channel:</Label>
-                <List class="self" filter="" method="filtergpioListO" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
              <Label> OUTPUT type:</Label>
@@ -11613,7 +11924,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this OUTPUT channel:</Label>
-                <List class="self" filter="" method="filtergpioListO" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select output mode inverse: on= pull low" >
              <Label> OUTPUT type:</Label>
@@ -11706,7 +12017,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this OUTPUT channel:</Label>
-                <List class="self" filter="" method="filtergpioListO" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select output mode inverse: on= pull low" >
              <Label> OUTPUT type:</Label>
@@ -11829,7 +12140,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
                 <Label>(2) select gpio# for this OUTPUT channel:</Label>
-                <List class="self" filter="" method="filtergpioListO" dynamicReload="true"/>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
             </Field>
             <Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select output mode inverse: on= pull low" >
              <Label> OUTPUT type:</Label>
@@ -12671,22 +12982,22 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
                 <Label>Setup the zones on the RPI,     select the GPIO of the relay for the zones:</Label>
             </Field>
 
-            <Field id="GPIOzone1"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 1:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone2"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 2:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone3"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 3:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone4"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 4:</Label> <List class="self"  method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone5"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="5,6,7,8,9,10,11,12,13,14,15,16" > <Label>gpio# for zone 5:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone6"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="6,7,8,9,10,11,12,13,14,15,16" >   <Label>gpio# for zone 6:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone7"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="7,8,9,10,11,12,13,14,15,16" >     <Label>gpio# for zone 7:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone8"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="8,9,10,11,12,13,14,15,16" >       <Label>gpio# for zone 8:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone9"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="9,10,11,12,13,14,15,16" >         <Label>gpio# for zone 9:</Label>  <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone10" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="10,11,12,13,14,15,16" >           <Label>gpio# for zone 10:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone11" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="11,12,13,14,15,16" >              <Label>gpio# for zone 11:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone12" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="12,13,14,15,16" >                 <Label>gpio# for zone 12:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone13" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="13,14,15,16" >                    <Label>gpio# for zone 13:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone14" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="14,15,16" >                       <Label>gpio# for zone 14:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone15" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="15,16" >                          <Label>gpio# for zone 15:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
-            <Field id="GPIOzone16" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="16" >                             <Label>gpio# for zone 16:</Label> <List class="self" method="filtergpioListI" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone1"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 1:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone2"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 2:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone3"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 3:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone4"  type="menu" defaultValue="-1" >                                                                 <Label>gpio# for zone 4:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone5"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="5,6,7,8,9,10,11,12,13,14,15,16" > <Label>gpio# for zone 5:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone6"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="6,7,8,9,10,11,12,13,14,15,16" >   <Label>gpio# for zone 6:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone7"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="7,8,9,10,11,12,13,14,15,16" >     <Label>gpio# for zone 7:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone8"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="8,9,10,11,12,13,14,15,16" >       <Label>gpio# for zone 8:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone9"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="9,10,11,12,13,14,15,16" >         <Label>gpio# for zone 9:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone10" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="10,11,12,13,14,15,16" >           <Label>gpio# for zone 10:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone11" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="11,12,13,14,15,16" >              <Label>gpio# for zone 11:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone12" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="12,13,14,15,16" >                 <Label>gpio# for zone 12:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone13" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="13,14,15,16" >                    <Label>gpio# for zone 13:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone14" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="14,15,16" >                       <Label>gpio# for zone 14:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone15" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="15,16" >                          <Label>gpio# for zone 15:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+            <Field id="GPIOzone16" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="16" >                             <Label>gpio# for zone 16:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
 
             <Field type="checkbox" id="OverrideScheduleActions" defaultValue="false" hidden ="yes">
                 <Label>Override schedule actions:</Label>
@@ -13064,11 +13375,11 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
                 <Label>transition between LEDs:</Label>
             </Field>
             
-            <Field id="GPIOsetA"  type="menu" defaultValue="20" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set A(Hours):</Label>   <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>  </Field>
-            <Field id="GPIOsetB"  type="menu" defaultValue="21" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set B(Minutes):</Label> <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>  </Field>
-            <Field id="GPIOsetC"  type="menu" defaultValue="16" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set C(Lights):</Label>  <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>  </Field>
-            <Field id="GPIOup"    type="menu" defaultValue="26" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for UP:</Label>             <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>  </Field>
-            <Field id="GPIOdown"  type="menu" defaultValue="19" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for DOWN:</Label>           <List class="self" filter="" method="filtergpioListS" dynamicReload="true"/>  </Field>
+            <Field id="GPIOsetA"  type="menu" defaultValue="20" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set A(Hours):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
+            <Field id="GPIOsetB"  type="menu" defaultValue="21" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set B(Minutes):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
+            <Field id="GPIOsetC"  type="menu" defaultValue="16" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set C(Lights):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
+            <Field id="GPIOup"    type="menu" defaultValue="26" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for UP:</Label>             <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
+            <Field id="GPIOdown"  type="menu" defaultValue="19" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for DOWN:</Label>           <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
 
             <Field id="clockLightSet"  type="menu" defaultValue="auto"  hidden = "no">
                      <List>

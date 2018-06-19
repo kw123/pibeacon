@@ -1173,8 +1173,8 @@ while True:
                 os.system("reboot now")
             os.system("rm x")
             
-            os.system("sudo chown -R  pi  "+G.homeDir)
-            os.system("sudo chown -R  pi  /run/user/1000/pibeacon")
+            os.system("sudo chown -R  pi:pi  "+G.homeDir)
+            os.system("sudo chown -R  pi:pi  /run/user/1000/pibeacon")
 
             #check if IP number has changed, or if we should switch off IP for wifi if eth0 is present 
         if loopCount%24 == 0: # every 2 minutes
