@@ -11349,7 +11349,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
             <Field id="infoLabelAPDS9960r" type="label">
                 <Label>Setup lightning sensor  as3935on individual rPis.. 
-        connect 3.3, GND, SLA,SLC and int pin to gpio and board-Si to V+</Label>
+        connect 3.3, GND, SLA,SLC and int pin to gpio 
+        and board-Si to V+; EN_V to GND
+        if no other i2c device a 10Kohm SLC to V+ is required</Label>
             </Field>
             <Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
                 <Label>msg from plugin</Label>
@@ -11365,9 +11367,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             </Field>
             <Field id="i2cAddress" type="menu"     defaultValue="3"> <Label>i2c address of device:</Label>
                 <List>
-                    <Option value="1"   >0x01   pin5 =+,   pin6=gnd  not used </Option>
-                    <Option value="2"   >0x02   pin5 =gnd, pin6=+    switch doc lab may be</Option>
-                    <Option value="3"   >0x03   pin5 =+,   pin6=+    default </Option>
+                    <Option value="1"   >0x01   pin5/A0 =+,   pin6/A1=gnd  not used </Option>
+                    <Option value="2"   >0x02   pin5/A0 =gnd, pin6/A1=+    switch doc lab may be</Option>
+                    <Option value="3"   >0x03   pin5/A0 =+,   pin6/A1=+    default </Option>
                  </List>
             </Field>
             <Field id="inside" type="menu"     defaultValue="1"> <Label>location of sensor:</Label>
@@ -11484,6 +11486,104 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
         </States>
 
+    </Device>
+
+
+    <Device type="custom" id="launchpgm">
+      <Name>OUTPUT-launchpgm.py</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+            <Field id="infoLabel" type="label">
+                <Label>Setup launch program on individual rPis
+                this will cause the master py program on the rpi to 
+                a) launch the program at start
+                b) check if running, if not: relaunch it;  
+                    if "CHECK" is empty no checking is done 
+                the device status will reflect if the program is running </Label>
+            </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server on which launch pgm should run:</Label>
+            </Field>
+
+            <Field id="launchlabel" type="label"  > <Label>LAUNCH command , must include path to command
+            eg "/path/To/Pgm/launchpgm parameter1 parameter2"
+            can have spaces and special characters, will be submitted with an &amp; 
+                to put it into the background
+            full screen apps probably do not work eg "top" does not work:</Label>
+            </Field>
+            <Field id="launchCommand" type="textfield"     defaultValue=""> <Label>LAUNCH command:</Label>
+            </Field>
+
+            <Field id="launchChecklabel" type="label"  > <Label>CHECK if pgm is running;
+             used with ps -ef | grep STRING; enter STRING to check for, can have spaces
+             if CHECK is empty no checking is performed
+             can be the same as the LAUNCH command:</Label>
+            </Field>
+
+            <Field id="launchCheck" type="textfield"     defaultValue=""> <Label> CHECK:</Label>
+            </Field>
+
+            <Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
+             <Label>read status of launch pgm every xx secs :</Label>
+                <List>
+                    <Option value="1"   > 1   secs</Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                    <Option value="12"  > 12  secs</Option>
+                    <Option value="15"  > 15  secs</Option>
+                    <Option value="20"  > 20  secs</Option>
+                    <Option value="30"  > 30  secs</Option>
+                    <Option value="40"  > 40  secs</Option>
+                    <Option value="60"  > 60  secs</Option>
+                    <Option value="80"  > 80  secs</Option>
+                    <Option value="100" > 100 secs</Option>
+                    <Option value="120" > 2   minutes</Option>
+                    <Option value="180" > 3   minutes</Option>
+                    <Option value="300" > 5   minutes</Option>
+                </List>
+            </Field>
+             <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+             <Label>min delta secs between indigo updates :</Label>
+                <List>
+                    <Option value="0.2" > 0.2 secs </Option>
+                    <Option value="0.5" > 0.5 secs </Option>
+                    <Option value="1"   > 1   secs </Option>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                </List>
+            </Field>
+
+        
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="status"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="status"  >status</Option>
+                </List>
+            </Field>
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+            </States>
     </Device>
 
 

@@ -244,7 +244,7 @@ class RPi_AS3935:
     def read_data(self):
         try:    ret = self.i2cbus.read_i2c_block_data(self.address, 0x00)
         except: ret=[]
-        U.toLog(2, unicode(ret), doPrint = True)
+        U.toLog(2, unicode(ret), doPrint = False)
         return ret
         
 # ===========================================================================
@@ -545,7 +545,7 @@ lastMeasurement             = time.time()
 oldRaw                      = ""
 lastRead                    = 0
 minSendDelta                = 5.
-G.debug                     = 5
+G.debug                     = 2
 loopCount                   = 0
 sensorRefreshSecs           = 91
 sensorList                  = []

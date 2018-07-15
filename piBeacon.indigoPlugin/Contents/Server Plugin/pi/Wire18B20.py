@@ -197,7 +197,7 @@ global sensorRefreshSecs
 global addNewOneWireSensors
 
 addNewOneWireSensors="0"
-
+sensorRefreshSecs   = 90
 oldRaw              = ""
 lastRead            = 0
 tempUnits           ="Celsius"

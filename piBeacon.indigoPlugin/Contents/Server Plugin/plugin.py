@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 27.12
+dataVersion = 28.12
 
 
 
@@ -206,6 +206,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"ccs811",                                                                # co2 voc 
                          u"mhz-I2C",                                                                # co2 temp 
                          u"mhz-SERIAL",
+                         u"launchpgm",
                          u"sgp30",                                                                # co2 voc 
                          u"as3935",                                                                 # lightning sensor 
                          u"i2cMLX90614", u"mlx90614",                                                  # remote  temp &ambient temp 
@@ -10030,6 +10031,17 @@ class Plugin(indigo.PluginBase):
                     if sensor =="pmairquality":
                         self.updatePMAIRQUALITY(dev,data,whichKeysToDisplay)
                         continue
+                    if sensor =="launchpgm":
+                        st = data[u"status"]
+                        indigo.server.log("launchpgm: "+ dev.name +"  msg: "+ st)
+                        self.addToStatesUpdateDict(unicode(dev.id), "status", st,dev=dev)
+                        if st == "running": 
+                            dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                        elif st =="not running": 
+                            dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+                        elif st =="not checked": 
+                            dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+                        continue
                         
                     newStatus = dev.states[u"status"]
 
@@ -10060,7 +10072,7 @@ class Plugin(indigo.PluginBase):
                                     self.addToStatesUpdateDict(unicode(dev.id),"lastLightning", datetime.datetime.now().strftime(_defaultDateStampFormat), dev=dev) 
                                     rightNow = time.time()
                                     nDevs = 1
-                                    indigo.server.log("  checking devL for "+ dev.name )
+                                    #indigo.server.log("  checking devL for "+ dev.name )
                                     for devL in indigo.devices.iter("props.isLightningDevice"):
                                         if devL.id == dev.id: continue
                                         lastLightning = devL.states["lastLightning"]
@@ -10068,7 +10080,7 @@ class Plugin(indigo.PluginBase):
                                         except: continue
                                         if deltaTime < self.lightningTimeWindow : 
                                             nDevs += 1
-                                        indigo.server.log(" deltaTime: "+ str(deltaTime))
+                                        #indigo.server.log(" deltaTime: "+ str(deltaTime))
                                     if nDevs > 1:
                                         indigo.variable.updateValue("lightningEventDevices",str(nDevs))
                                         time.sleep(0.01) # make shure the # of devs gets updated first
@@ -12462,6 +12474,8 @@ class Plugin(indigo.PluginBase):
                                 
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeaboveCalibrationMAX")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], dev.states, u"CO2offset")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"launchCommand")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"launchCheck")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"amplification")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensitivity")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"CO2normal")
