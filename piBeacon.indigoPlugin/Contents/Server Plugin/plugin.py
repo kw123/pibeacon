@@ -3186,6 +3186,10 @@ class Plugin(indigo.PluginBase):
                     valuesDict[u"description"] = valuesDict[u"type"] +"-"+ valuesDict[u"mac"]
 
 
+                if u"launchpgm" == typeId :
+                    valuesDict[u"description"] =  "pgm: "+valuesDict[u"launchCommand"]
+
+
                 if  typeId  in ["mhz-I2C","mhz-SERIAL"]:
                     dev.updateStateOnServer("CO2calibration",valuesDict["CO2normal"])
 
@@ -10033,7 +10037,6 @@ class Plugin(indigo.PluginBase):
                         continue
                     if sensor =="launchpgm":
                         st = data[u"status"]
-                        indigo.server.log("launchpgm: "+ dev.name +"  msg: "+ st)
                         self.addToStatesUpdateDict(unicode(dev.id), "status", st,dev=dev)
                         if st == "running": 
                             dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
