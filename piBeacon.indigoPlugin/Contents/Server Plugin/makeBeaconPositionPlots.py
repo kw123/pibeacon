@@ -65,6 +65,7 @@ toLog("u'imageTextRotation  :"+unicode(plotData["TextRotation"]) )
 toLog("u'distanceUnits      :"+unicode(plotData["distanceUnits"]) )
 toLog("u'imageOutfile       :"+unicode(plotData["Outfile"]) )
 toLog("u'compressImag       :"+unicode(plotData["compress"]) )
+toLog("u'Zlevels            :"+unicode(plotData["Zlevels"]) )
 
 
 toLog("u'beacon data:")
@@ -72,8 +73,13 @@ toLog("u'beacon data:")
 for mac in plotData["mac"]:
     toLog(mac+"  "+unicode(plotData["mac"][mac]) )
 
-Yscale                    = float(plotData["Yscale"])
-Xscale                    = float(plotData["Xscale"])
+Yscale                  = float(plotData["Yscale"])
+Xscale                  = float(plotData["Xscale"])
+Zlevels                 = plotData["Zlevels"].split(",")
+nZlevels = min(len(Zlevels),4)
+for i in range(nZlevels):
+    Zlevels[i] = int(Zlevels[i])
+hatches = ["","//","\\","+"]
 
 dotsY                   = int(plotData["dotsY"])
 dotsX                   = dotsY *( Xscale/Yscale) 
@@ -174,10 +180,11 @@ for mac in plotData["mac"]: # get the next beacon
                 else:
                     Dtype =""
             
-                if pos[2] !=0:
-                    hatch="//"
-                else:
-                    hatch=""
+                hatch=""
+                for ii in range(nZlevels):
+                    if int(pos[2]) == Zlevels[ii]:
+                        hatch = hatches[ii]
+                        break
 
                 if this["status"] == u"up":
                     edgecolor= "#000000"
@@ -225,13 +232,13 @@ if plotData["ShowCaption"] !="0":
     ax.add_patch(square)
     ax.text(textDeltaX*12,y,"expired" ,size=imageTextSize-3)
 
-    ax.text(textDeltaX*18,y,"//upstairs" ,size=imageTextSize-3)
+    ax.text(textDeltaX*18,y,"levels "+unicode(hatches) ,size=imageTextSize-3)
     #ax.plot(textDeltaX*14,y+textOffY,marker="o",color="#9F9F9F", markeredgecolor= "#FFFFFF")
 
 
     if plotData["ShowRPIs"] !="0":
-        ax.plot(textDeltaX*27,y+textOffY,marker="s",color=piColor)
-        ax.text(textDeltaX*28,y,"RPIs" ,size=imageTextSize-3)
+        ax.plot(textDeltaX*34,y+textOffY,marker="s",color=piColor)
+        ax.text(textDeltaX*35,y,"RPIs" ,size=imageTextSize-3)
 
 
 # 

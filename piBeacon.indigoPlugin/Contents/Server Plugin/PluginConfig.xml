@@ -5,86 +5,37 @@
         <Label>RaspberryPi (rPi) Presence and Sensor app for Indigo           Developed by Karl Wachs</Label>
     </Field>
 
+
+   <Field id="simpleSeparatorfoldernames" type="separator"/>
+
+    <Field id="folderLabel" type="label">
+        <Label>Names for Indigo device/variables </Label>
+    </Field>
+
+       <Field    id="iBeaconFolderName"   type="textfield" defaultValue="Pi_Beacons_new" >
+        <Label>... DEVICES folder:</Label>
+   </Field>
+
+       <Field    id="iBeaconFolderNameVariables"   type="textfield" defaultValue="piBeacons" >
+        <Label>... VARIABLES folder:</Label>
+   </Field>
+
+
+   <Field    id="groupCountNameDefault"   type="textfield" defaultValue="iBeacon_Count_">
+        <Label>... COUNT variables start w:</Label>
+   </Field>
+
+
+   <Field    id="ibeaconNameDefault"   type="textfield" defaultValue="iBeacon_">
+        <Label>...STATUS changed variables start w:</Label>
+   </Field>
+
+
+
    <Field id="simpleSeparator22" type="separator"/>
    <Field id="infoLabel22" type="label">
-        <Label>Parameters for Plugin </Label>
+        <Label>Parameters for iBeacons </Label>
    </Field>
-   <Field    id="tempUnits"   type="menu" defaultValue="Celsius">
-        <Label>Temperature displayed in:</Label>
-        <List>
-            <Option value="Celsius"    >Celsius </Option>
-            <Option value="Fahrenheit" >Fahrenheit</Option>
-            <Option value="Kelvin"     >Kelvin</Option>
-        </List>
-   </Field>
-   <Field    id="tempDigits"   type="menu" defaultValue="1">
-        <Label>Temperature digits to show and store:</Label>
-        <List>
-            <Option value="0" >0 </Option>
-            <Option value="1" >1</Option>
-            <Option value="2" >2</Option>
-        </List>
-   </Field>
-   <Field    id="pressureUnits"   type="menu" defaultValue="Pascal">
-        <Label>Pressure displayed in:</Label>
-        <List>
-            <Option value="Pascal"    >Pascal </Option>
-            <Option value="hPascal"   >Hecto Pascal (Pa/100)</Option>
-            <Option value="bar"       >Bar       (Pa*0.00001)</Option>
-            <Option value="mbar"      >mBar      (Pa*0.01)</Option>
-            <Option value="atm"       >atm       (Pa*0.000009869233)</Option>
-            <Option value="inches"    >inches Hg (Pa*0.000295299802)</Option>
-            <Option value="mm"        >mm Hg     (Pa*0.00750063)</Option>
-            <Option value="Torr"      >Torr      (Pa*0.00750063)</Option>
-            <Option value="PSI"       >PSI       (Pa*0.00014503779906556894)</Option>
-
-        </List>
-   </Field>
-   <Field    id="distanceUnits"   type="menu" defaultValue="1.0">
-        <Label>distance measured in:</Label>
-        <List>
-            <Option value="1.0"     >meter</Option>
-            <Option value="0.01"    >cm</Option>
-            <Option value="0.0254"  >inches</Option>
-            <Option value="0.348"   >feet</Option>
-            <Option value="0.9144"  >yard</Option>
-        </List>
-   </Field>
-   <Field    id="speedUnits"   type="menu" defaultValue="1.0">
-        <Label>speed measured in:</Label>
-        <List>
-            <Option value="1.0"      >meter/s</Option>
-            <Option value="0.01"     >cm/s</Option>
-            <Option value="0.0254"   >inches/s</Option>
-            <Option value="0.348"    >feet/s</Option>
-            <Option value="0.9144"   >yard/s</Option>
-            <Option value="3.6"      >km/h</Option>
-            <Option value="2.2369356">m/h</Option>
-        </List>
-   </Field>
-
-       <Field    id="lightningTimeWindow"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
-        <Label>Time window for lightning devices:</Label>
-        <List>
-            <Option value="2"  >  2 secs  for testing</Option>
-            <Option value="3"  >  3 secs </Option>
-            <Option value="5"  >  5 secs </Option>
-            <Option value="7"  >  7 secs </Option>
-            <Option value="10" > 10 secs </Option>
-            <Option value="15" > 15 secs </Option>
-            <Option value="20" > 20 secs </Option>
-            <Option value="30" > 30 secs </Option>
-            <Option value="60" > 60 secs </Option>
-            <Option value="90" > 90 secs </Option>
-            <Option value="120"> 2 minutes - for testing</Option>
-            <Option value="180"> 3 minutes - for testing</Option>
-            <Option value="240"> 4 minutes - for testing</Option>
-            <Option value="300"> 5 minutes - for testing</Option>
-            <Option value="600">10 minutes - for testing</Option>
-            <Option value="999999999" >time window = infinit - for testing</Option>
-        </List>
-   </Field>
-
    <Field    id="secToDown"   type="menu" defaultValue="80" tooltip="this is the default value, can be overwritten in each device edit">
         <Label>Status goes from UP 2 DOWN 2 EXP if no signal in:</Label>
         <List>
@@ -185,29 +136,299 @@
             <Option value="1" >delete</Option>
         </List>
    </Field>
-    <Field id="folderLabel" type="label">
-        <Label>          Names for Indigo device/variables </Label>
+
+
+   <Field id="simpleSeparator33" type="separator"/>
+   <Field id="infoLabel33" type="label">
+        <Label>Parameters for ALL rPi servers</Label>
+   </Field>
+   <Field    id="myIpNumber"   type="textfield" defaultValue="192.168.1.x">
+        <Label>IP Number of indigo MAC server:</Label>
+   </Field>
+
+   <Field id="IndigoOrSocket"   type="menu" defaultValue="socket" tooltip="web server wil go thorugh curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
+Socket communication will go directly through socket communication to plugin that updates the device states etc." >
+        <List>
+            <Option value="indigo" >use indigo std web server  </Option>
+            <Option value="socket" >use direct socket communication </Option>
+        </List>    
+        <Label>use RPI to indigo web server or RPI to indigo through sockets:</Label> 
+   </Field>
+
+
+   <Field id="portOfServer"   type="textfield" defaultValue="8176" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
+        <Label>define IP-PORT of default Indigo web server:</Label> 
+   </Field>
+
+   <Field id="indigoInputPORT"   type="textfield" defaultValue="12087" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+        <Label>define IP-PORT for socket communication RPI to Indigo:</Label> 
+   </Field>
+   <Field id="maxSocksErrorTime"   type="menu" defaultValue="10" tooltip="if socket communication has issues ie short or incomplete packages this parameter 
+allows to set a threshold on when to report. Eg if set to 10: if 2 events happen within 10 minutes it is reported, otherwise not" 
+             visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+        <Label>Report on bad data received if time between bad msgs less xx minutes:</Label> 
+                <List>
+            <Option value="0"    >error reporting off</Option>
+            <Option value="30"   >30 secs </Option>
+            <Option value="60"   >1 minute </Option>
+            <Option value="300"  >5 minute </Option>
+            <Option value="600"  >10 minute </Option>
+            <Option value="1200" >20 minute </Option>
+            <Option value="3600" >1 hour </Option>
+        </List>    
+
+   </Field>
+   
+   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, if blank use no security" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
+        <Label>userid for indigo webserver:</Label> 
+   </Field>
+   
+   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
+        <Label>password for indigo webserver:</Label> 
+   </Field>
+   <Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
+        <List>
+            <Option value="digest" >use DIGEST  </Option>
+            <Option value="basic"  >use BASIC </Option>
+            <Option value="none"   >use do not use security ie no userid or password </Option>
+        </List>    
+        <Label>DIGEST, BASIC or no  authentication:</Label> 
+   </Field>
+
+   <Field id="infoLabelwifi" type="label">
+        <Label>the next info is used to create files on the RPI to help setup Wifi</Label>
+   </Field>
+   <Field    id="routerIP"   type="textfield" defaultValue="192.168.1.1">
+        <Label>router IP Number :</Label>
+   </Field>
+
+
+   <Field id="wifiSSID"   type="textfield" defaultValue="" tooltip="used to configure  wifi connection files on the PI, not activated, you can use it with sudo python interface.py on the RPI" >
+        <Label>wifi SSID of your router:</Label> 
+   </Field>
+
+   <Field id="wifiPassword"   type="textfield" defaultValue="" tooltip="used to configure  wifi connection files on the PI, not activated, you can use it with sudo python interface.py on the RPI" >
+        <Label>wifi password of your router:</Label> 
+   </Field>
+   <Field    id="key_mgmt"   type="menu" defaultValue="NONE" tooltip="used to configure  wifi connection file on the PI, not activated, you can use it with sudo python interface.py on the RPI">
+        <Label>WiFi Security :</Label>
+        <List>
+            <Option value="NONE"     >NONE </Option>
+            <Option value="WPA-PSK"  >WPA-PSK </Option>
+        </List>    
+   </Field>
+
+
+   <Field id="infoLabel44" type="label">
+        <Label>EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
+   </Field>
+
+   <Field    id="wifiOFF"   type="menu" defaultValue="off" tooltip="if you have both active (wifi and ethernet), the plugin might get confused, with off wifi will be switched off if ethernet is active ">
+        <Label>WiFi switch off if ethernet cable active:</Label>
+        <List>
+            <Option value="ON"   >keep Wifi on even when ethernet working switch Wifi Off </Option>
+            <Option value="off"  >switch Wifi Off</Option>
+        </List>    
+   </Field>
+
+   <Field    id="piUpdateWindow"   type="menu" defaultValue="0">
+        <Label>Update indigo states of rPi devices :</Label>
+        <List>
+            <Option value="0"    >like other beacons </Option>
+            <Option value="320"  >every 5 minutes</Option>
+        </List>    
+   </Field>
+
+
+
+   <Field    id="rPiCommandPORT"   type="textfield" defaultValue="9999" tooltip="port on RPI to receive commands from the plugin" >
+        <Label>rPi PORT to receive GPIO commands (0=off):</Label>
+   </Field>
+
+
+
+   <Field id="deleteHistoryAfterSeconds"   type="menu" defaultValue="86400" tooltip="this will tell the rPis to stop sending updates for beacons that do not show up anymore" >
+        <Label>after what time of no messages should an iBeacon be ignored:</Label> 
+        <List>
+            <Option value="21600"  >6 hours </Option>
+            <Option value="43200"  >12 hours </Option>
+            <Option value="86400"  >1 day </Option>
+            <Option value="172800" >2 days </Option>
+        </List>
+   </Field>
+   <Field id="sendAfterSeconds"   type="menu" defaultValue="60" tooltip="this determines how LONG the BLUEZ system will be asked before data is send. This will collect the data and send in one package, use small number for a lot of updates ; is an or with the number of loops" >
+        <Label>How many SECONDS before rPi will send iBeacon data:</Label> 
+        <List>
+            <Option value="10"  >10 seconds </Option>
+            <Option value="30"  >30 seconds </Option>
+            <Option value="45"  >45 seconds </Option>
+            <Option value="60"  >60 seconds </Option>
+            <Option value="70"  >70 seconds </Option>
+            <Option value="80"  >80 seconds </Option>
+            <Option value="90"  >90 seconds </Option>
+            <Option value="100" >100 seconds </Option>
+            <Option value="120" >120 seconds </Option>
+            <Option value="180" >180 seconds </Option>
+        </List>
+   </Field>
+   <Field id="rebootSeconds"   type="menu" defaultValue="9999999999999" tooltip="set reboot vs restart loop in setup rPi " >
+        <Label>Should the rPi systems reboot/restart loop after:</Label>
+        <List>
+            <Option value="300"      >5  minutes - for testing </Option>
+            <Option value="3600"     >1  hour </Option>
+            <Option value="43200"    >12 hours </Option>
+            <Option value="86400"    >1 day </Option>
+            <Option value="604800"   >1 week </Option>
+            <Option value="9999999999999" >do not use this feature </Option>
+        </List>
+   </Field>
+   <Field id="rebootHour"   type="menu" defaultValue="1" tooltip="this is an OR with the above option" >
+        <Label>Should the rPi systems reboot themselves after midnight:</Label>
+        <List>
+            <Option value="0"   >at 0:00, midnight</Option>
+            <Option value="1"   >at 1:00 am  (default)</Option>
+            <Option value="2"   >at 2:00 am </Option>
+            <Option value="3"   >at 3:00 am </Option>
+            <Option value="4"   >at 4:00 am </Option>
+            <Option value="-1"  >do not use this feature</Option>
+        </List>
+   </Field>
+   <Field id="expectTimeout"   type="menu" defaultValue="15" tooltip="used in expect when loggin into rPi " >
+        <Label>Timeout for sending fields to rPi:</Label>
+        <List>
+            <Option value="5"    > 5 seconds</Option>
+            <Option value="10"   >10 seconds</Option>
+            <Option value="15"   >15 seconds (default)</Option>
+            <Option value="20"   >20 seconds</Option>
+            <Option value="30"   >30 seconds (slow connection)</Option>
+        </List>
+    </Field>
+   <Field id="automaticRPIReplacement"   type="checkbox" defaultValue="false" tooltip="enable only when you replace an existing RPI with a new one and with different BLE device. After relacement is finished switch to off again." >
+        <Label>replace RPI automatically when new MAC number is detected?:</Label>
     </Field>
 
-       <Field    id="iBeaconFolderName"   type="textfield" defaultValue="Pi_Beacons_new" >
-        <Label>... DEVICES folder:</Label>
+
+
+    <Field id="restartBLEifNoConnect"   type = "menu" defaultValue = "1" tooltip="BLEconnect will request a BLE stack restart from beaconloop if no messages in 5/10 .. minutes" >
+        <Label>Should BLEconnect do a restart of the BLE stack if no responses:</Label>
+        <List>
+            <Option value="0"   >no</Option>
+            <Option value="1"   >yes</Option>
+        </List>
+    </Field>
+
+    <Field id="rebootWatchDogTime"   type = "menu" defaultValue = "-1" tooltip="callbeacon.py (main program) will launch a 'shutdown -r x' command, if not killed by the main program it will reboot the rPi. after x minutes" >
+        <Label>rebootWatchDog timer function for rPi:</Label>
+        <List>
+            <Option value="-1"  >off (default)</Option>
+            <Option value="1"   >after 1 minutes</Option>
+            <Option value="2"   >after 2 minutes</Option>
+            <Option value="3"   >after 3 minutes</Option>
+            <Option value="4"   >after 4 minutes</Option>
+            <Option value="5"   >after 5 minutes</Option>
+            <Option value="6"   >after 6 minutes</Option>
+        </List>
+    </Field>
+    <Field id="GPIOpwm"   type = "menu" defaultValue = "1" tooltip="pulse width modulation, 100 Hz ok , max ~ 300 HZ" >
+        <Label>Pulse Width Modulation for analogWrite of GPIO:</Label>
+        <List>
+            <Option value="1"   > 100 Hz</Option>
+            <Option value="2"   > 200 Hz</Option>
+            <Option value="3"   > 300 Hz</Option>
+        </List>
+    </Field>
+
+   <Field id="simpleSeparatorSensors" type="separator"/>
+
+    <Field id="SensorsLabel" type="label">  <Label>Sensor parameters, units etc </Label>    </Field>
+
+   <Field    id="tempUnits"   type="menu" defaultValue="Celsius">
+        <Label>Temperature displayed in:</Label>
+        <List>
+            <Option value="Celsius"    >Celsius </Option>
+            <Option value="Fahrenheit" >Fahrenheit</Option>
+            <Option value="Kelvin"     >Kelvin</Option>
+        </List>
+   </Field>
+   <Field    id="tempDigits"   type="menu" defaultValue="1">
+        <Label>Temperature digits to show and store:</Label>
+        <List>
+            <Option value="0" >0 </Option>
+            <Option value="1" >1</Option>
+            <Option value="2" >2</Option>
+        </List>
    </Field>
 
-       <Field    id="iBeaconFolderNameVariables"   type="textfield" defaultValue="piBeacons" >
-        <Label>... VARIABLES folder:</Label>
+   <Field    id="distanceUnits"   type="menu" defaultValue="1.0">
+        <Label>distance measured in:</Label>
+        <List>
+            <Option value="1.0"     >meter</Option>
+            <Option value="0.01"    >cm</Option>
+            <Option value="0.0254"  >inches</Option>
+            <Option value="0.348"   >feet</Option>
+            <Option value="0.9144"  >yard</Option>
+        </List>
+   </Field>
+   <Field    id="speedUnits"   type="menu" defaultValue="1.0">
+        <Label>speed measured in:</Label>
+        <List>
+            <Option value="1.0"      >meter/s</Option>
+            <Option value="0.01"     >cm/s</Option>
+            <Option value="0.0254"   >inches/s</Option>
+            <Option value="0.348"    >feet/s</Option>
+            <Option value="0.9144"   >yard/s</Option>
+            <Option value="3.6"      >km/h</Option>
+            <Option value="2.2369356">m/h</Option>
+        </List>
    </Field>
 
+   <Field    id="pressureUnits"   type="menu" defaultValue="Pascal">
+        <Label>Pressure displayed in:</Label>
+        <List>
+            <Option value="Pascal"    >Pascal </Option>
+            <Option value="hPascal"   >Hecto Pascal (Pa/100)</Option>
+            <Option value="bar"       >Bar       (Pa*0.00001)</Option>
+            <Option value="mbar"      >mBar      (Pa*0.01)</Option>
+            <Option value="atm"       >atm       (Pa*0.000009869233)</Option>
+            <Option value="inches"    >inches Hg (Pa*0.000295299802)</Option>
+            <Option value="mm"        >mm Hg     (Pa*0.00750063)</Option>
+            <Option value="Torr"      >Torr      (Pa*0.00750063)</Option>
+            <Option value="PSI"       >PSI       (Pa*0.00014503779906556894)</Option>
 
-   <Field    id="groupCountNameDefault"   type="textfield" defaultValue="iBeacon_Count_">
-        <Label>... COUNT variables start w:</Label>
+        </List>
    </Field>
 
-
-   <Field    id="ibeaconNameDefault"   type="textfield" defaultValue="iBeacon_">
-        <Label>...STATUS changed variables start w:</Label>
+       <Field    id="lightningTimeWindow"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
+        <Label>Time window for lightning devices:</Label>
+        <List>
+            <Option value="2"  >  2 secs  for testing</Option>
+            <Option value="3"  >  3 secs </Option>
+            <Option value="5"  >  5 secs </Option>
+            <Option value="7"  >  7 secs </Option>
+            <Option value="10" > 10 secs </Option>
+            <Option value="15" > 15 secs </Option>
+            <Option value="20" > 20 secs </Option>
+            <Option value="30" > 30 secs </Option>
+            <Option value="60" > 60 secs </Option>
+            <Option value="90" > 90 secs </Option>
+            <Option value="120"> 2 minutes - for testing</Option>
+            <Option value="180"> 3 minutes - for testing</Option>
+            <Option value="240"> 4 minutes - for testing</Option>
+            <Option value="300"> 5 minutes - for testing</Option>
+            <Option value="600">10 minutes - for testing</Option>
+            <Option value="999999999" >time window = infinit - for testing</Option>
+        </List>
    </Field>
 
-
+       <Field    id="lightningNumerOfSensors"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
+        <Label>Hpw many Lightning sensor have to fire to set variable:</Label>
+        <List>
+            <Option value="1"  > 1 sensor in time window</Option>
+            <Option value="2"  > 2 sensors in time window</Option>
+            <Option value="3"  > 3 sensors in time window</Option>
+            <Option value="4"  > 4 sensors in time window</Option>
+        </List>
+   </Field>
 
 
    <Field id="simpleSeparatorplotbeacons" type="separator"/>
@@ -255,6 +476,13 @@
         <Label>...X scale:</Label></Field>
    <Field    id="beaconPositionsimageYscale"   type="textfield" defaultValue="30" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
         <Label>...Y scale:</Label></Field>
+
+   <Field    id="beaconPositionsimageZlevels"   type="textfield" defaultValue="0,5" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
+        <Label>...z levels:</Label></Field>
+    <Field id="posLabelZlevel" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+    <Label>is used to set the heights / levels (z-coordinate) of your floors; enter one number for each floor eg 0,5,10 for 3 floors, then use THESE z levels in RPI device edit for the x,y,z position of the RPI</Label>    </Field>
+
+
    <Field    id="beaconPositionsimageDotsY"     type="textfield" defaultValue="600" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
         <Label>...image size = # of y-dots:</Label></Field>
    <Field    id="beaconPositionsimageOutfile"  type="textfield" defaultValue="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">               
@@ -339,207 +567,6 @@
    </Field>
 -->
 
-
-   <Field id="simpleSeparator33" type="separator"/>
-   <Field id="infoLabel33" type="label">
-        <Label>Parameters for ALL rPi servers</Label>
-   </Field>
-   <Field    id="myIpNumber"   type="textfield" defaultValue="192.168.1.x">
-        <Label>IP Number of indigo MAC server:</Label>
-   </Field>
-
-   <Field id="IndigoOrSocket"   type="menu" defaultValue="indigo" tooltip="web server wil go thorugh curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
-Socket communication will go directly through socket communication to plugin that updates the device states etc." >
-        <List>
-            <Option value="indigo" >use indigo std web server  </Option>
-            <Option value="socket" >use direct socket communication </Option>
-        </List>    
-        <Label>use RPI to indigo web server or RPI to indigo through sockets:</Label> 
-   </Field>
-
-
-   <Field id="portOfServer"   type="textfield" defaultValue="8176" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
-        <Label>define IP-PORT of default Indigo web server:</Label> 
-   </Field>
-
-   <Field id="indigoInputPORT"   type="textfield" defaultValue="12087" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
-        <Label>define IP-PORT for socket communication RPI to Indigo:</Label> 
-   </Field>
-   <Field id="maxSocksErrorTime"   type="menu" defaultValue="10" tooltip="if socket communication has issues ie short or incomplete packages this parameter 
-allows to set a threshold on when to report. Eg if set to 10: if 2 events happen within 10 minutes it is reported, otherwise not" 
-             visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
-        <Label>Report on bad data received if time between bad msgs less xx minutes:</Label> 
-                <List>
-            <Option value="0"    >error reporting off</Option>
-            <Option value="30"   >30 secs </Option>
-            <Option value="60"   >1 minute </Option>
-            <Option value="300"  >5 minute </Option>
-            <Option value="600"  >10 minute </Option>
-            <Option value="1200" >20 minute </Option>
-            <Option value="3600" >1 hour </Option>
-        </List>    
-
-   </Field>
-   
-   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
-        <Label>userid for indigo webserver:</Label> 
-   </Field>
-   
-   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
-        <Label>password for indigo webserver:</Label> 
-   </Field>
-   <Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
-        <List>
-            <Option value="digest" >use DIGEST  </Option>
-            <Option value="basic"  >use BASIC </Option>
-        </List>    
-        <Label>DIGEST or BASIC authentication:</Label> 
-   </Field>
-
-   <Field id="infoLabelwifi" type="label">
-        <Label>the next info is used to create files on the RPI to help setup Wifi</Label>
-   </Field>
-   <Field    id="routerIP"   type="textfield" defaultValue="192.168.1.1">
-        <Label>router IP Number :</Label>
-   </Field>
-
-
-   <Field id="wifiSSID"   type="textfield" defaultValue="" tooltip="used to configure  wifi connection files on the PI, not activated, you can use it with sudo python interface.py on the RPI" >
-        <Label>wifi SSID of your router:</Label> 
-   </Field>
-
-   <Field id="wifiPassword"   type="textfield" defaultValue="" tooltip="used to configure  wifi connection files on the PI, not activated, you can use it with sudo python interface.py on the RPI" >
-        <Label>wifi password of your router:</Label> 
-   </Field>
-   <Field    id="key_mgmt"   type="menu" defaultValue="NONE" tooltip="used to configure  wifi connection file on the PI, not activated, you can use it with sudo python interface.py on the RPI">
-        <Label>WiFi Security :</Label>
-        <List>
-            <Option value="NONE"     >NONE </Option>
-            <Option value="WPA-PSK"  >WPA-PSK </Option>
-        </List>    
-   </Field>
-
-
-   <Field id="infoLabel44" type="label">
-        <Label>EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
-   </Field>
-
-   <Field    id="wifiOFF"   type="menu" defaultValue="off" tooltip="if you have both active (wifi and ethernet), the plugin might get confused, with off wifi will be switched off if ethernet is active ">
-        <Label>WiFi switch off if ethernet cable active:</Label>
-        <List>
-            <Option value="ON"   >keep Wifi on even when ethernet working switch Wifi Off </Option>
-            <Option value="off"  >switch Wifi Off</Option>
-        </List>    
-   </Field>
-
-   <Field    id="piUpdateWindow"   type="menu" defaultValue="0">
-        <Label>Update indigo states of rPi devices :</Label>
-        <List>
-            <Option value="0"    >like other beacons </Option>
-            <Option value="320"  >every 5 minutes</Option>
-        </List>    
-   </Field>
-   <Field id="simpleSeparator44" type="separator"/>
-
-
-
-   <Field    id="rPiCommandPORT"   type="textfield" defaultValue="9999" tooltip="port on RPI to receive commands from the plugin" >
-        <Label>rPi PORT to receive GPIO commands (0=off):</Label>
-   </Field>
-
-
-
-   <Field id="deleteHistoryAfterSeconds"   type="menu" defaultValue="86400" tooltip="this will tell the rPis to stop sending updates for beacons that do not show up anymore" >
-        <Label>after what time of no messages should an iBeacon be ignored:</Label> 
-        <List>
-            <Option value="21600"  >6 hours </Option>
-            <Option value="43200"  >12 hours </Option>
-            <Option value="86400"  >1 day </Option>
-            <Option value="172800" >2 days </Option>
-        </List>
-   </Field>
-   <Field id="sendAfterSeconds"   type="menu" defaultValue="60" tooltip="this determines how LONG the BLUEZ system will be asked before data is send. This will collect the data and send in one package, use small number for a lot of updates ; is an or with the number of loops" >
-        <Label>How many SECONDS before rPi will send iBeacon data:</Label> 
-        <List>
-            <Option value="10"  >10 seconds </Option>
-            <Option value="30"  >30 seconds </Option>
-            <Option value="45"  >45 seconds </Option>
-            <Option value="60"  >60 seconds </Option>
-            <Option value="70"  >70 seconds </Option>
-            <Option value="80"  >80 seconds </Option>
-            <Option value="90"  >90 seconds </Option>
-            <Option value="100" >100 seconds </Option>
-            <Option value="120" >120 seconds </Option>
-            <Option value="180" >180 seconds </Option>
-        </List>
-   </Field>
-   <Field id="rebootSeconds"   type="menu" defaultValue="9999999999999" tooltip="set reboot vs restart loop in setup rPi " >
-        <Label>Should the rPi systems reboot/restart loop after:</Label>
-        <List>
-            <Option value="300"      >5  minutes - for testing </Option>
-            <Option value="3600"     >1  hour </Option>
-            <Option value="43200"    >12 hours </Option>
-            <Option value="86400"    >1 day </Option>
-            <Option value="604800"   >1 week </Option>
-            <Option value="9999999999999" >do not use this feature </Option>
-        </List>
-   </Field>
-   <Field id="rebootHour"   type="menu" defaultValue="1" tooltip="this is an OR with the above option" >
-        <Label>Should the rPi systems reboot themselves after midnight:</Label>
-        <List>
-            <Option value="0"   >at 0:00, midnight</Option>
-            <Option value="1"   >at 1:00 am  (default)</Option>
-            <Option value="2"   >at 2:00 am </Option>
-            <Option value="3"   >at 3:00 am </Option>
-            <Option value="4"   >at 4:00 am </Option>
-            <Option value="-1"  >do not use this feature</Option>
-        </List>
-   </Field>
-   <Field id="expectTimeout"   type="menu" defaultValue="15" tooltip="used in expect when loggin into rPi " >
-        <Label>Timeout for sending fields to rPi:</Label>
-        <List>
-            <Option value="5"    > 5 seconds</Option>
-            <Option value="10"   >10 seconds</Option>
-            <Option value="15"   >15 seconds (default)</Option>
-            <Option value="20"   >20 seconds</Option>
-            <Option value="30"   >30 seconds (slow connection)</Option>
-        </List>
-    </Field>
-   <Field id="automaticRPIReplacement"   type="checkbox" defaultValue="false" tooltip="enable only when you replace an existing RPI with a new one and with different BLE device. After relacement is finished switch to off again." >
-        <Label>replace RPI automatically when new MAC number is detected?:</Label>
-    </Field>
-
-    <Field id="simpleSeparator56" type="separator"/>
-
-
-    <Field id="restartBLEifNoConnect"   type = "menu" defaultValue = "1" tooltip="BLEconnect will request a BLE stack restart from beaconloop if no messages in 5/10 .. minutes" >
-        <Label>Should BLEconnect do a restart of the BLE stack if no responses:</Label>
-        <List>
-            <Option value="0"   >no</Option>
-            <Option value="1"   >yes</Option>
-        </List>
-    </Field>
-
-    <Field id="rebootWatchDogTime"   type = "menu" defaultValue = "-1" tooltip="callbeacon.py (main program) will launch a 'shutdown -r x' command, if not killed by the main program it will reboot the rPi. after x minutes" >
-        <Label>rebootWatchDog timer function for rPi:</Label>
-        <List>
-            <Option value="-1"  >off (default)</Option>
-            <Option value="1"   >after 1 minutes</Option>
-            <Option value="2"   >after 2 minutes</Option>
-            <Option value="3"   >after 3 minutes</Option>
-            <Option value="4"   >after 4 minutes</Option>
-            <Option value="5"   >after 5 minutes</Option>
-            <Option value="6"   >after 6 minutes</Option>
-        </List>
-    </Field>
-    <Field id="GPIOpwm"   type = "menu" defaultValue = "1" tooltip="pulse width modulation, 100 Hz ok , max ~ 300 HZ" >
-        <Label>Pulse Width Modulation for analogWrite of GPIO:</Label>
-        <List>
-            <Option value="1"   > 100 Hz</Option>
-            <Option value="2"   > 200 Hz</Option>
-            <Option value="3"   > 300 Hz</Option>
-        </List>
-    </Field>
 
     <Field id="simpleSeparator57" type="separator"/>
 

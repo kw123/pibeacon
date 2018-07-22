@@ -258,7 +258,7 @@ def readParams():
     global as3935sensor, minSendDelta
     global oldRaw, lastRead
     global startTime
-    global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO,calibrationDynamic, noiseFloor
+    global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO,calibrationDynamic, noiseFloor, CapValue
     try:
 
 
@@ -382,7 +382,8 @@ def readParams():
                 U.toLog(-1," new parameters read: \n  i2cAddress:" +unicode(i2cAddress) +";  minSendDelta:"+unicode(minSendDelta)+";"+
                         "  interruptGPIO:"+unicode(interruptGPIO)+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"\n"+
                         "  minStrikes:"+unicode(minStrikes)      +";  calibrationDynamic:"+unicode(calibrationDynamic) +"  inside:"+str(inside)+";"+
-                        "  tuneCapacitor:"+unicode(tuneCapacitor)+";  minNoiseFloor:"+unicode(minNoiseFloor)           +"  noiseFloor:"+str(noiseFloor)+"\n"+
+                        "  tuneCapacitor:"+unicode(tuneCapacitor)+ " = "+CapValue[tuneCapacitor]+"pF;"+
+                        "  minNoiseFloor:"+unicode(minNoiseFloor)           +"  noiseFloor:"+str(noiseFloor)+"\n"+
                         "  restart:"+str(restart),doPrint=True)
                 
         deldevID={}        
@@ -408,7 +409,7 @@ def startSensor(devId):
     global sensors, sensor, badSensor
     global startTime
     global as3935sensor 
-    global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO, noiseFlorSet,calibrationDynamic, noiseFloor
+    global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO, noiseFlorSet,calibrationDynamic, noiseFloor, CapValue
     
     U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress),doPrint=True)
     startTime =time.time()
@@ -445,6 +446,7 @@ def startSensor(devId):
 
     GPIO.setup(interruptGPIO, GPIO.IN)
     GPIO.add_event_detect(interruptGPIO, GPIO.RISING, callback=handle_interrupt)
+    print "end of event setup"
     return 
 
 #################################
@@ -504,12 +506,19 @@ def handle_interrupt(channel):
                 U.toLog(0, "unknown read error, reason: "+unicode(reason), doPrint=True)
                 restartNeededCounter +=1
                 continue
+
+
+            if msg !="lightning detected":
+                #print "reject ", msg
+                if time.time() - lastSend  < 180: return 
+
+
             data["sensors"][sensor][devId]=msg
-            U.toLog(1,  " sending:"+ unicode(data), doPrint=True)
+            U.toLog(1,  " sending:"+ unicode(data), doPrint=False)
             U.sendURL(data,squeeze=False)
             msg["lastEvent"] = lastEvent
             msg["lastTime"]  = lastTime
-            lastSend =time.time()
+            lastSend = time.time()
             f=open(G.homeDir+"lightning.dat","w")
             f.write(json.dumps(msg))
             f.close()
@@ -522,10 +531,12 @@ global lastRead
 global startTime, reStartReq
 global sensorList, sensors, logDir, sensor,  sensorRefreshSecs
 global badSensor
-global lastEvent,lastTime,lastSend,restartNeededCounter
+global lastEvent,lastTime,lastSend,restartNeededCounter, CapValue
+
 
 global inside, minStrikes, tuneCapacitor, minNoiseFloor,interruptGPIO, noiseFlorSet, calibrationDynamic,noiseFloor
 
+CapValue                    = {0:"0",1:"8",2:"16",3:"24",4:"32",5:"40",6:"48",7:"56",8:"64",9:"72",10:"80",11:"88",12:"96",13:"104",14:"112",15:"120"}
 inside                      = 0
 minStrikes                  = 1
 tuneCapacitor               = 15
@@ -534,7 +545,7 @@ interruptGPIO               = 17
 noiseFlorSet                = 0
 calibrationDynamic          = 1
 noiseFloor                  = 3
-
+lastSend                    = 0
 restartNeededCounter        = 0
 lastEvent                   = ""
 lastTime                    = 0
@@ -578,6 +589,7 @@ except:
     
 if time.time() - lastTime > 60*60*24*33: lastTime = 0
 
+
 U.echoLastAlive(G.program)
 lastSend = 0
 while True:
@@ -603,10 +615,9 @@ while True:
                 if time.time() - lastTime > 600 and calibrationDynamic ==1:
                     as3935sensor[devId].lower_noise_floor()
                     lastTime = time.time() - 400
-                    
+                lastSend = time.time()    
                 U.sendURL(data,squeeze=False)
 
-            lastSend = time.time()    
 
     if reStartReq:
         time.sleep(5)

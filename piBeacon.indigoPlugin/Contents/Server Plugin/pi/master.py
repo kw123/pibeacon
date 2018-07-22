@@ -55,6 +55,22 @@ def cleanupOldFiles():
 
 
 
+def checkIfGpioIsInstalled():
+    try:
+        ret = subprocess.Popen("gpio -v",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+        if ret[0].find("version:") ==-1:
+            os.system("rm -R /tmp/wiringPi")
+            installGPIO = "cd /tmp; git clone git://git.drogon.net/wiringPi; cd wiringPi; ./build ;  rm -R /tmp/wiringPi"
+            U.toLog(-1,"installing gpio wiringPi .... "+ unicode(ret)+"\n with: "+installGPIO,doPrint=True)
+            ret = subprocess.Popen(installGPIO,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+            U.toLog(-1,"result of installing gpio wiringPi .... "+ unicode(ret),doPrint=True)
+    except  Exception, e:
+        U.toLog(-1, u"checkIfGpioIsInstalled in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+
+
+
+
+
     
 def readNewParams(force=False):
         global enableRebootCheck,  restart,sensorList,rPiCommandPORT, firstRead
@@ -1103,7 +1119,7 @@ os.system("sudo chown -R  pi:pi  /run/user/1000/pibeacon")
 os.system("sudo chmod a+x  /lib/udev/hwclock-set")
 
 
-
+checkIfGpioIsInstalled()
 
 
 #startProgam("actions.py", params="", reason=" at startup ")

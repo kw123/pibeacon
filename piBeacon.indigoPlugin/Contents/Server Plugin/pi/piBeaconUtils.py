@@ -763,30 +763,21 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
                         if squeeze: 
                             data0 = data0.replace(" ","")
                         cmd=[]
-                        if G.userIdOfServer =="":
-                                cmd.append("/usr/bin/curl")
-                                cmd.append("-X")
-                                cmd.append("PUT")
-                                cmd.append("-d")
-                                cmd.append("value="+data0)
+                        cmd.append("/usr/bin/curl")
+                        if G.userIdOfServer =="" or G.authentication =="none":
+                                pass  # no id password ...
                         else:
                             if G.authentication == "basic":    
-                                cmd.append("/usr/bin/curl")
                                 cmd.append("--user")
                                 cmd.append(G.userIdOfServer+":"+G.passwordOfServer)
-                                cmd.append("-X")
-                                cmd.append("PUT")
-                                cmd.append("-d")
-                                cmd.append("value="+data0)
                             else:
-                                cmd.append("/usr/bin/curl")
                                 cmd.append("-u")
                                 cmd.append(G.userIdOfServer+":"+G.passwordOfServer)
                                 cmd.append("--digest")
-                                cmd.append("-X")
-                                cmd.append("PUT")
-                                cmd.append("-d")
-                                cmd.append("value="+data0)
+                        cmd.append("-X")
+                        cmd.append("PUT")
+                        cmd.append("-d")
+                        cmd.append("value="+data0)
                         cmd.append("http://"+G.ipOfServer+":"+G.portOfServer+var)  ##+" > /dev/null 2>&1 &"
                         #print cmd
                         toLog(0,"msg: " + unicode(cmd)+"\n" )

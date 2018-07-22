@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <MenuItems>
       <MenuItem id="d00"> 
-      <Name>-------------BASIC setup HELP  --------------------</Name>
+      <Name>BASIC setup HELP</Name>
         <ConfigUI>
         <Field   id="label0" type="label">
             <Label>To start,  here the basic steps:

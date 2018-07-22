@@ -34,17 +34,21 @@
 
 
             <Field id="PosXYZ" type="textfield"     defaultValue="0,0,0"  tooltip="use x,y,z coordinates in integer 0..100"> 
-                <Label>... Where is the rPi located::</Label>
-            </Field>
+                <Label>... Where is the rPi located :</Label>            </Field>
+            <Field id="PosXYZlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+            <Label>x,y,z coordinates, for z use the levels for the floors defined in Config </Label>    </Field>
+
             <Field id="beaconTxPower" type="textfield"     defaultValue="999" tooltip=" use a number to overwrite received value or set to 999"> 
-                <Label>.... set txPower,-dBm=</Label>
-            </Field>
+                <Label>.... set txPower,-dBm=</Label>            </Field>
+            <Field id="beaconTxPowerlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+            <Label> used to overwrite the received TX power if less than, for 999 no overwrite</Label>    </Field>
+
             <Field id="rssiOffset" type="textfield"     defaultValue="0" tooltip=" correction to received rssi eg -10 would reduce rssi by 10"> 
                 <Label>.... rssi offset; measured + dBm=</Label>
             </Field>
-            <Field id="labelrssiOffset"               type="label" alignWithControl="true" fontSize="small" alignText="left"> 
-                <Label> -300: use 4 up/down, not distance</Label>
-            </Field>
+            <Field id="rssiOffsetlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+            <Label> correction to received rssi eg -10 would reduce rssi by 10; -300: use for up/down, not distance</Label>    </Field>
+
             <Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300" tooltip="How often should we update the signal and distance states"> 
                 <Label>....      update indigo states every:</Label>
                 <List>
@@ -57,22 +61,29 @@
                     <Option value="1200">after 20 minutes</Option>
                 </List>
             </Field>
-            <Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>Member of Family:</Label>  
-            </Field>
-            <Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>Member of Guests:</Label>
-            </Field>
-            <Field id="memberOfOther1" type="checkbox"   defaultValue="false"> <Label>Member of Other-1:</Label>  
-            </Field>
-            <Field id="memberOfOther2" type="checkbox"   defaultValue="false"> <Label>Member of Other-2:</Label>  
-            </Field>
-
-            <Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI">
-                <Label>..  BLEconnect queries seq. or parallel on THIS rPi:</Label>
+            <Field id="BLELabel" type="label" >  
+            <Label>BLEconnect ...</Label>    </Field>
+            <Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" ">
+                <Label> .... queries seq. or parallel on THIS rPi:</Label>
                 <List>
                     <Option value="sequential" > run BLEconnect in sequential in one program</Option>
                     <Option value="parallel"   > run BLEconnect in parallel </Option>
                 </List>
            </Field>
+            <Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+            <Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>    </Field>
+
+
+            <Field id="memberOfLabel" type="label" >  
+            <Label> Make this RPI memebr of group ...</Label>    </Field>
+            <Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>...Family:</Label>  
+            </Field>
+            <Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>...Guests:</Label>
+            </Field>
+            <Field id="memberOfOther1" type="checkbox"   defaultValue="false"> <Label>...Other-1:</Label>  
+            </Field>
+            <Field id="memberOfOther2" type="checkbox"   defaultValue="false"> <Label>...Other-2:</Label>  
+            </Field>
 
 
             <Field id="displayS" type="menu"     defaultValue="status" hidden ="YES"> <Label>Property to display in the State Column:</Label>
@@ -82,7 +93,7 @@
             </Field>
 
             <Field id="label2"               type="label" > 
-                <Label>for attached sensors:</Label>
+                <Label>For attached sensors ...</Label>
             </Field>
             <Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
                 <Label>...read sensor every xx secs :</Label>
@@ -145,14 +156,14 @@
                 </List>
             </Field>
             <Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
-                <Label>Allow to add new ONEWIRE sensors as they get detected:</Label> 
+                <Label>... add new ONEWIRE sensors as they get detected:</Label> 
                 <List>
-                    <Option value="1"  >yes</Option>
-                    <Option value="0"  >No</Option>
+                    <Option value="1"  >yes, automatically add new ONEwire sensors</Option>
+                    <Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
                 </List>
             </Field>
             <Field id="enableMuxI2C" type="menu"     defaultValue="0"> 
-                <Label>enable TCA9548A select i2c for multiplexing:</Label> 
+                <Label>... enable TCA9548A select i2c for multiplexing:</Label> 
                 <List>
                     <Option value="0"     >off </Option>
                     <Option value="112"   >0x70 = 112  </Option>
@@ -168,7 +179,7 @@
 
 
             <Field id="label3"               type="label" > 
-                <Label>Hardware / reboot configs:</Label>
+                <Label>Hardware / reboot configs...</Label>
             </Field>
 
             <Field id="shutDownPinOutput"   type="menu" defaultValue="14" tooltip="set this pin to low and connect to reset pin on rpi" >
@@ -234,28 +245,21 @@
 
             <Field id="simpleSeparator6" type="separator"/>
             <Field id="label6"               type="label"  > 
-                <Label>EXPERTS ONLY!! </Label>
+                <Label>EXPERTS ONLY!!---------------- </Label>
             </Field>
             <Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
-                <Label>Ignore state of this beacon:</Label>
+                <Label>... Ignore state of this beacon:</Label>
                 <List>
                     <Option value="0" >keep or make active = normal</Option>
                     <Option value="1" >set to short term ignore</Option>
                     <Option value="2" >set to long term ignore (= delete = junk)</Option>
                 </List>
             </Field>
-            <Field id="label61"               type="label"  > 
-                <Label>Overwrite a current BLE-MAC number, 
-        Must not be equal to an existing ACTIVE device.
-        Use this to eg replace a BLE dongle of an RPI. 
-        Write MAC address of new BLE dongle here
-        This will then ONLY replace the BLE-MAC number 
-        and keep history of THIS device.
-        But do NOT use an existing MAC number</Label>
-            </Field>
             <Field id="newMACNumber" type="textfield"     defaultValue=""> 
-                <Label>overwrite the current MAC number with:</Label>
+                <Label>... overwrite the current MAC number with:</Label>
             </Field>
+            <Field id="label61" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+            <Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>    </Field>
  
 
         </ConfigUI>
@@ -609,17 +613,16 @@
                     <Option value="120" > 120  </Option>
                 </List>
             </Field>
-
             <Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
-                <Label>Allow to add new ONEWIRE sensors as they get detected:</Label> 
+                <Label>... add new ONEWIRE sensors as they get detected:</Label> 
                 <List>
-                    <Option value="1"  >yes</Option>
-                    <Option value="0"  >No</Option>
+                    <Option value="1"  >yes, automatically add new ONEwire sensors</Option>
+                    <Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
                 </List>
             </Field>
 
             <Field id="enableMuxI2C" type="menu"     defaultValue="0"> 
-                <Label>enable TCA9548A select i2c for multiplexing:</Label> 
+                <Label>...enable TCA9548A select i2c for multiplexing:</Label> 
                 <List>
                     <Option value="0"     >off </Option>
                     <Option value="112"   >0x70 = 112  </Option>

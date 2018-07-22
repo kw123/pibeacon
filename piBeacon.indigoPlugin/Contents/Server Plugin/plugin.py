@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 28.12
+dataVersion = 29.13
 
 
 
@@ -721,6 +721,12 @@ class Plugin(indigo.PluginBase):
                 self.lightningTimeWindow             = 10.0
 
 
+            try:
+                self.lightningNumerOfSensors             = int(self.pluginPrefs.get(u"lightningNumerOfSensors", 1))
+            except:
+                self.lightningNumerOfSensors             = 1
+
+
 
             try:
                 self.maxParseSec            = self.pluginPrefs.get(u"maxParseSec", u"1.0")
@@ -865,6 +871,7 @@ class Plugin(indigo.PluginBase):
             self.beaconPositionsData                               = {u"mac":{}}
             self.beaconPositionsData[u"Xscale"]                     = self.pluginPrefs.get(u"beaconPositionsimageXscale", u"20" )
             self.beaconPositionsData[u"Yscale"]                     = self.pluginPrefs.get(u"beaconPositionsimageYscale", u"30" )
+            self.beaconPositionsData[u"Zlevels"]                    = self.pluginPrefs.get(u"beaconPositionsimageZlevels", u"0,5" )
             self.beaconPositionsData[u"dotsY"]                      = self.pluginPrefs.get(u"beaconPositionsimageDotsY", u"600" )
             self.beaconPositionsData[u"Outfile"]                    = self.pluginPrefs.get(u"beaconPositionsimageOutfile", u"" )
             self.beaconPositionsData[u"Text"]                       = self.pluginPrefs.get(u"beaconPositionsimageText", u"text on top" )
@@ -876,7 +883,7 @@ class Plugin(indigo.PluginBase):
             self.beaconPositionsData[u"compress"]                   = self.pluginPrefs.get(u"beaconPositionsimageCompress",True )
             self.beaconPositionsData[u"ShowRPIs"]                   = self.pluginPrefs.get(u"beaconPositionsimageShowRPIs", u"0" )
             self.beaconPositionsData[u"ShowExpiredBeacons"]         = self.pluginPrefs.get(u"beaconShowExpiredBeacons", u"0" )
-            self.beaconPositionsLastCheck                          = time.time() - 20
+            self.beaconPositionsLastCheck                           = time.time() - 20
             
         except  Exception, e:
             self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
@@ -1497,6 +1504,7 @@ class Plugin(indigo.PluginBase):
     ######################
     def actionControlSprinkler(self, action, dev):
         props       = dev.pluginProps
+        #indigo.server.log("actionControlSprinkler: "+ unicode(props)+"\n\n"+ unicode(action))
         pi          = str(props["piServerNumber"])
         ipNumberPi  = self.RPI[pi]["ipNumberPi"]
         devId       = int(self.RPI[pi]["piDevId"])
@@ -1703,9 +1711,9 @@ class Plugin(indigo.PluginBase):
                     else: nValves    = dev.zoneCount
                     durations        = dev.zoneScheduledDurations
                     zoneMaxDurations = dev.zoneMaxDurations
-                    zoneStarted      = dev.states["activeZoneStarted"] 
+                    zoneStarted      = dev.states["activeZoneStarted"] # show date time when started . long string 
 
-                    if len(zoneStarted) > 10:  
+                    if len(zoneStarted) > 10:  # show date time when started . long string 
                         secDone = (datetime.datetime.now() - datetime.datetime.strptime(zoneStarted, "%Y-%m-%d %H:%M:%S")).total_seconds()
                         minutes  = int(secDone/60)
 
@@ -1728,7 +1736,7 @@ class Plugin(indigo.PluginBase):
                         self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",   timeLeft)
                         self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",     timeLeftAll)
 
-                    else:
+                    else: # show date time when started .if short , not started
                         self.addToStatesUpdateDict(str(dev.id), "activeZoneMinutesLeft",   0)
                         self.addToStatesUpdateDict(str(dev.id), "allZonesMinutesLeft",     0)
 
@@ -1996,7 +2004,9 @@ class Plugin(indigo.PluginBase):
             if changed or self.beaconPositionsUpdated>0: 
                     self.savebeaconPositionsFile()
                     cmd = self.pythonPath + " '" + self.pathToPlugin + "makeBeaconPositionPlots.py' '"+self.piDir+"plotPositions/' & "
-                    if self.ML.decideMyLog(u"PlotPositions"): self.ML.myLog( text =  u"makeNewBeaconPositionPlots ..  beaconPositionsUpdated: "+ unicode(self.beaconPositionsUpdated))
+                    if self.ML.decideMyLog(u"PlotPositions"): 
+                        self.ML.myLog( text =  u"makeNewBeaconPositionPlots ..  beaconPositionsUpdated: "+ unicode(self.beaconPositionsUpdated))
+                        self.ML.myLog( text =  u"makeNewBeaconPositionPlots cmd:  "+ cmd)
                     os.system(cmd)
 
         except  Exception, e:
@@ -6373,25 +6383,27 @@ class Plugin(indigo.PluginBase):
                     sock.sendall(theString + "\n")
             except  Exception, e:
                     if len(unicode(e)) > 5 :
-                        self.ML.myLog( text =  u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
-                        try:    self.ML.myLog( text =  u"line:%s;  err:%s" % (sys.exc_traceback.tb_lineno, e))
-                        except: pass
+                        if  time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
+                            self.ML.myLog( text =  u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
+                            try:    self.ML.myLog( text =  u"line:%s;  err:%s" % (sys.exc_traceback.tb_lineno, e))
+                            except: pass
+                            self.checkIPSendSocketOk[ip][u"count"] += 1 
+                            self.checkIPSendSocketOk[ip][u"time"]   = time.time()
                         try:    sock.close()
                         except: pass
-                        self.checkIPSendSocketOk[ip][u"count"] += 1 
-                        self.checkIPSendSocketOk[ip][u"time"]   = time.time()
                         return -1
             finally:
                     sock.close()
         except  Exception, e:
             if len(unicode(e)) > 5 :
-                self.ML.myLog( text =  u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
-                self.ML.myLog( text =  u"sendtoRPI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                self.ML.myLog( text =  unicode(self.checkIPSendSocketOk))
+                if  time.time() > self.currentlyBooting: # NO MSG IF RPIS ARE BOOTING
+                    self.ML.myLog( text =  u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
+                    self.ML.myLog( text =  u"sendtoRPI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                    self.ML.myLog( text =  unicode(self.checkIPSendSocketOk))
+                    self.checkIPSendSocketOk[ip]["count"] += 1 
+                    self.checkIPSendSocketOk[ip]["time"]   = -time.time()
                 try:    sock.close()
                 except: pass
-                self.checkIPSendSocketOk[ip]["count"] += 1 
-                self.checkIPSendSocketOk[ip]["time"]   = -time.time()
                 return -1
         self.checkIPSendSocketOk[ip]["count"] = 0 
         self.checkIPSendSocketOk[ip]["time"]  = time.time()
@@ -7644,6 +7656,8 @@ class Plugin(indigo.PluginBase):
         except: self.distanceUnits          = 1.
         try: self.lightningTimeWindow       = float(valuesDict[u"lightningTimeWindow"])
         except: self.lightningTimeWindow    = 10.
+        try: self.lightningNumerOfSensors       = int(valuesDict[u"lightningNumerOfSensors"])
+        except: self.lightningNumerOfSensors    = 1
 
 
 
@@ -7682,6 +7696,7 @@ class Plugin(indigo.PluginBase):
         except: pass
         self.beaconPositionsData[u"Xscale"]             = (valuesDict[u"beaconPositionsimageXscale"])
         self.beaconPositionsData[u"Yscale"]             = (valuesDict[u"beaconPositionsimageYscale"])
+        self.beaconPositionsData[u"Zlevels"]            = (valuesDict[u"beaconPositionsimageZlevels"])
         self.beaconPositionsData[u"dotsY"]              = (valuesDict[u"beaconPositionsimageDotsY"])
         self.beaconPositionsData[u"Outfile"]            = (valuesDict[u"beaconPositionsimageOutfile"])
         self.beaconPositionsData[u"ShowRPIs"]           = (valuesDict[u"beaconPositionsimageShowRPIs"])
@@ -9376,7 +9391,7 @@ class Plugin(indigo.PluginBase):
             self.RPI[unicode(pi)][u"lastMessage"] = time.time()
 
             if u"reboot" in varJson:
-                self.setRPIonline(pi,new="rebootSSH")
+                self.setRPIonline(pi,new="reboot")
                 indigo.variable.updateValue(self.ibeaconNameDefault+u"Rebooting","reset from :"+unicode(pi)+" at "+datetime.datetime.now().strftime(_defaultDateStampFormat))
                 if u"text" in varJson and varJson[u"text"].find(u"bluetooth_startup.ERROR:") >-1:
                     self.ML.myLog( text =  u"RPI# "+unicode(pi)+ " "+varJson[u"text"]+u" Please check that RPI ")
@@ -9475,26 +9490,6 @@ class Plugin(indigo.PluginBase):
                 self.ML.myLog( text =  u"setRPIonline in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                 self.ML.myLog( text =  u" pi" + unicode(pi)+"  RPI"+ unicode(self.RPI[unicode(pi)]) )
         return
-        
-####-------------------------------------------------------------------------####
-    def updateReboot(self, pi):
-        try:
-            pi = int(pi)
-            if pi >= _GlobalConst_numberOfRPI:
-                self.ML.myLog( text =  u"pi# out of range: " + unicode(pi))
-                return
-            self.setRPIonline(pi,new="reboot")
-            
-        except  Exception, e:
-            if unicode(e).find(u"timeout waiting") > -1:
-                self.ML.myLog( text =  u"updateReboot in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                self.ML.myLog( text =  u"communication to indigo is interrupted")
-                return
-            if len(unicode(e)) > 5 :
-                self.ML.myLog( text =  u"updateReboot in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-
-        return
-
 ####-------------------------------------------------------------------------####
     def checkSensorPiSetup(self, pi,data,piN):
 
@@ -10084,7 +10079,7 @@ class Plugin(indigo.PluginBase):
                                         if deltaTime < self.lightningTimeWindow : 
                                             nDevs += 1
                                         #indigo.server.log(" deltaTime: "+ str(deltaTime))
-                                    if nDevs > 1:
+                                    if nDevs >= self.lightningNumerOfSensors:
                                         indigo.variable.updateValue("lightningEventDevices",str(nDevs))
                                         time.sleep(0.01) # make shure the # of devs gets updated first
                                         indigo.variable.updateValue("lightningEventDate",datetime.datetime.now().strftime(_defaultDateStampFormat))
