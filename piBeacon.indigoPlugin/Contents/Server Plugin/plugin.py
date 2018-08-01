@@ -64,6 +64,7 @@ _GlobalConst_emptyBeaconProps = {u"note": u"beacon",
                     u"memberOfOther1": 0,
                     u"memberOfOther2": 0,
                     u"ignore": 0,
+                    u"enableBroadCastEvents": "0",
                     u"fastDownMinSignal": -999,
                     u"showBeaconOnMap": u"0",u"showBeaconNickName": u"",u"showBeaconSymbolType": u",",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
                     u"fastDown": u"0"}
@@ -82,12 +83,14 @@ _GlobalConst_emptyrPiProps    ={     u"typeOfBeacon":             u"rPI",
                         u"minSignalCutoff" :         u"-999",
                         u"expirationTime" :          u"90",
                         u"fastDown" :                u"0",
+                        u"enableBroadCastEvents":    "0",
                         u"rssiOffset" :              0,
                         u"shutDownPinOutput" :       u"-1" }
 
 _GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC"]
 
 _GlobalConst_emptyRPI =   {
+    u"rpiType": u"rPi",
     u"enableRebootCheck": u"restartLoop",
     u"enableiBeacons": u"1",
     u"input": {},
@@ -114,6 +117,7 @@ _GlobalConst_emptyRPI =   {
 
 
 _GlobalConst_emptyRPISENSOR =   {
+    u"rpiType": u"rPiSensor",
     u"enableRebootCheck": u"restartLoop",
     u"enableiBeacons": u"0",
     u"input": {},
@@ -163,6 +167,7 @@ _GlobalConst_allGPIOlist = [
     , [u"16", u"GPIO16 = pin  # 36"]
     , [u"20", u"GPIO20 = pin  # 38"]
     , [u"21", u"GPIO21 = pin  # 40"]]
+
 _GlobalConst_ICONLIST   = [   [u"None", u"None"],
                  [u"None", u"Error"],
                  [u"PowerOff", u"PowerOn"],
@@ -187,8 +192,6 @@ _GlobalConst_ICONLIST   = [   [u"None", u"None"],
 _GlobalConst_beaconPlotSymbols      = [u"text", u"dot", u"smallCircle", u"largeCircle", u"square"] # label/text only, dot, small circle, circle prop to dist to rpi, square (for RPI)
 
 
-# allow only certain GPIO for output
-_GlobalConst_mapPiToName           = [u"2,3,0", u"1", u"2,3,0"]
 
 _GlobalConst_allowedCommands       = [u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", u"startCalibration", u"rampUp", u"rampDown", u"rampUpDown"]  # commands support for GPIO pins
 _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
@@ -562,6 +565,7 @@ class Plugin(indigo.PluginBase):
             if self.pluginPrefs.get(u"debugOfflineRPI", False):   self.debugLevel.append(u"OfflineRPI")
             if self.pluginPrefs.get(u"debugFing", False):         self.debugLevel.append(u"Fing")
             if self.pluginPrefs.get(u"debugBLE", False):          self.debugLevel.append(u"BLE")
+            if self.pluginPrefs.get(u"debugBC", False):           self.debugLevel.append(u"BC")
             if self.pluginPrefs.get(u"debugCAR", False):          self.debugLevel.append(u"CAR")
             if self.pluginPrefs.get(u"debugall", False):          self.debugLevel.append(u"all")
             if self.pluginPrefs.get(u"debugSpecial", False):      self.debugLevel.append(u"Special")
@@ -744,10 +748,6 @@ class Plugin(indigo.PluginBase):
                 self.secToDown              = float(self.pluginPrefs.get(u"secToDown", u"80"))
             except:
                 self.secToDown              = 80.
-            try:
-                self.enableFING             = self.pluginPrefs.get(u"enableFING", u"0")
-            except:
-                self.enableFING             = u"0"
 
             try:
                 self.acceptNewiBeacons      = int(self.pluginPrefs.get(u"acceptNewiBeacons", 999))
@@ -829,7 +829,15 @@ class Plugin(indigo.PluginBase):
             self.key_mgmt                   = self.pluginPrefs.get(u"key_mgmt", u"")
             self.routerIP                   = self.pluginPrefs.get(u"routerIP", u"192.168.1.1")
             self.wifiOFF                    = self.pluginPrefs.get(u"wifiOFF", u"on")
+
             self.fingscanTryAgain           = False
+            try:
+                self.enableFING             = self.pluginPrefs.get(u"enableFING", u"0")
+            except:
+                self.enableFING             = u"0"
+            self.sendBroadCastEventsList    = []
+            self.enableBroadCastEvents      = self.pluginPrefs.get(u"enableBroadCastEvents", u"0" )
+
             self.freezeAddRemove            = False
             self.outdeviceForOUTPUTgpio     = ""
             self.queueList                  = ""
@@ -840,7 +848,6 @@ class Plugin(indigo.PluginBase):
             self.groupStatusListALL         = {u"nHome":0,"nAway":0,u"anyChange":False}
             self.groupCountNameDefault      = self.pluginPrefs.get(u"groupCountNameDefault",u"iBeacon_Count_")
             self.ibeaconNameDefault         = self.pluginPrefs.get(u"ibeaconNameDefault",u"iBeacon_")
-
             self.triggerList                = []
             self.newADDRESS                 = {}
 
@@ -7604,12 +7611,14 @@ class Plugin(indigo.PluginBase):
         if valuesDict[u"debugFing"]:          self.debugLevel.append(u"Fing")
         if valuesDict[u"debugBLE"]:           self.debugLevel.append(u"BLE")
         if valuesDict[u"debugCAR"]:           self.debugLevel.append(u"CAR")
+        if valuesDict[u"debugBC"]:            self.debugLevel.append(u"BC")
         if valuesDict[u"debugall"]:           self.debugLevel.append(u"all")
         if valuesDict[u"debugSocket"]:        self.debugLevel.append(u"Socket")
         if valuesDict[u"debugSpecial"]:       self.debugLevel.append(u"Special")
         if valuesDict[u"debugPlotPositions"]: self.debugLevel.append(u"debugPlotPositions")
         self.debugPlotPositions=                          valuesDict[u"debugPlotPositions"]
      
+        self.enableBroadCastEvents                  = valuesDict[u"enableBroadCastEvents"]
 
   
         try:               
@@ -7999,7 +8008,8 @@ class Plugin(indigo.PluginBase):
                     self.checkGroups()
                     if self.enableFING == "1":
                         self.updateFING(u"loop ")
-
+                    if len(self.sendBroadCastEventsList) >0: self.sendBroadCastNOW()
+                    
         except self.StopThread:
             indigo.server.log( u"stop requested from indigo ")
         ## stop and processing of messages received 
@@ -8083,6 +8093,36 @@ class Plugin(indigo.PluginBase):
                 self.ML.myLog( text =  u"updateFING in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
         return
+    ####----------------- if FINGSCAN is enabled send update signal  ---------
+    def sendBroadCastNOW(self):
+        try:
+            x = ""
+            if  self.enableBroadCastEvents =="0":
+                self.sendBroadCastEventsList = []
+                return x
+            if self.sendBroadCastEventsList == []:  
+                return x
+            if self.countLoop < 10:
+                self.sendBroadCastEventsList = [] 
+                return x  ## only after stable ops for 10 loops ~ 20 secs
+                
+            msg = copy.copy(self.sendBroadCastEventsList)
+            self.sendBroadCastEventsList = []
+            if len(msg) >0:
+                msg ={"pluginId":self.pluginId,"data":msg}
+                try:
+                    if self.ML.decideMyLog(u"BC"): self.ML.myLog( text=u"updating BC with " + unicode(msg),mType=u"BroadCast" )
+                    indigo.server.broadcastToSubscribers(u"deviceStatusChanged", json.dumps(msg))
+                except  Exception, e:
+                    if len(unicode(e)) > 5:
+                        indigo.server.log( u"updating sendBroadCastNOW has error in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+u" finscan update failed")
+
+        except  Exception, e:
+            if len(unicode(e)) > 5:
+                indigo.server.log( u"updating sendBroadCastNOW has error in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            else:
+                x = "break"
+        return x
 
 
 ####-------------------------------------------------------------------------####
@@ -9135,6 +9175,7 @@ class Plugin(indigo.PluginBase):
         self.messagesQueue.task_done()
         self.queueActive  = False
         self.queueList = ""  
+        if len(self.sendBroadCastEventsList) >0: self.sendBroadCastNOW()
         return
  
 ####-------------------------------------------------------------------------####
@@ -9712,6 +9753,8 @@ class Plugin(indigo.PluginBase):
             self.queueListBLE = "update"  
             updateFing = self.BLEconnectupdate(item[0],item[1])
             if updateFing: self.updateFING(u"event")
+
+        if len(self.sendBroadCastEventsList) >0: self.sendBroadCastNOW()
         self.messagesQueueBLE.task_done()
         self.queueActiveBLE  = False
         self.queueListBLE = ""  
@@ -13558,16 +13601,21 @@ class Plugin(indigo.PluginBase):
                         for key in changedOnly[devId]:
                             if key ==u"status":  
                                 self.statusChanged = max(1,self.statusChanged)
+                                value =changedOnly[devId][key][0]
                                 if u"lastStatusChange" in dev.states and u"lastStatusChange" not in changedOnly[devId]:
                                     try:    
-                                        st  = dev.states[u"status"].upper() 
-                                        if st == "UP" or st == "DOWN" or st == "EXPIRED" or st == u"ON" or st == u"OFF" or st == u"1" or st == u"0":  
+                                        st  = unicode(value).lower() 
+                                        if st in ["up","down","expired","on",u"off",u"1","0"]:
+                                            props =dev.pluginProps
+                                            if  self.enableBroadCastEvents == "all" or  ("enableBroadCastEvents" in props and props["enableBroadCastEvents"] == "1" ):
+                                                msg = {"action":"event", "id":str(dev.id), "name":dev.name, "state":"status", "valueForON":"up", "newValue":st}
+                                                if self.ML.decideMyLog(u"BC"): self.ML.myLog( text = u"executeUpdateStatesDict  msg added :" + unicode(msg))
+                                                self.sendBroadCastEventsList.append(msg)
                                             if dateString != dev.states[u"lastStatusChange"]:
                                                 chList.append({u"key": u"lastStatusChange", u"value":dateString})
                                     except: pass
 
                                 if dev.deviceTypeId ==u"beacon" or dev.deviceTypeId.find(u"rPI") > -1 or dev.deviceTypeId == u"BLEconnect": 
-                                    value =changedOnly[devId][key][0]
                                     chList.append({u"key":"displayStatus","value":self.padDisplay(value)+dateString[5:] })
                                     if   value == u"up":
                                         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)

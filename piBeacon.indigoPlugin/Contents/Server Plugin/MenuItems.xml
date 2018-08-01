@@ -4,9 +4,9 @@
       <Name>BASIC setup HELP</Name>
         <ConfigUI>
         <Field   id="label0" type="label">
-            <Label>To start,  here the basic steps:
+            <Label>To START,  here the basic steps:
 1.  in CONFIG setup at minimum userID,PassWD, ipNumber of indigo server
-2.  setup RPI: 
+2.  Setup of rPi servers: 
     ssh pi@ipnumber      password default = pibeacon
     passwd                   to change default pasword
     sudo raspi-config    to set time zone, expand SD .., 
@@ -29,11 +29,18 @@ If nothing happens, do a    Send Config/Restart/PGM/Sound/...
       <MenuItem id="d03"> <Name>-------------setup RPI  ---------------------------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
 
       <MenuItem id="setupPiServer">
-        <Name>Initial BASIC setup of rPi servers</Name>
+        <Name>Initial BASIC setup of rPi servers, Do this to create rPi devices</Name>
         <ConfigUI>
             <Field id="enablePiEntries"  type="checkbox" defaultValue="false" hidden="yes"> </Field>
             <Field id="infoLabel11" type="label">
-                <Label>Initial setup of rPi: tell indigo how to find it, first select pi server# then click  CONFIRM </Label>
+                <Label>Initial setup of rPi: tell indigo how to find it:
+    Userid, password, IP number, basic parameters. 
+Then the plugin will login (ssh userid@ip ... with EXPECT) to the rPi 
+    and update all programs and config files and reboot the RPI,
+When done click  CONFIRM to start sending to rPi. 
+Then the rPi will start sending data to plugin 
+    and will create an indigo RPI device and iBeacons devices 
+    as they get detected</Label>
             </Field>
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
                         <List class="self" filter="" method="filterPiD" dynamicReload="true"/>

@@ -31,6 +31,22 @@
    </Field>
 
 
+    <Field    id="enableBroadCastEvents" type="menu"  defaultValue="false" tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
+        <List>
+            <Option value="0"          >disable</Option>
+            <Option value="all"        >ENABLE ALL:   for all devices that have an up/ down status</Option>
+            <Option value="individual" >ENABLE INDIVIDUAL:  individual devices must be enabled in device edit</Option>
+        </List>
+        <Label>Enable BC of up/ down status:</Label>
+    </Field>
+    <Field    id="enableFING"   type="menu" defaultValue="0" tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
+        <Label>Trigger FINGSCAN:</Label>
+        <List>
+            <Option value="0"  > disable </Option>
+            <Option value="1"  > enable </Option>
+        </List>    
+   </Field>
+
 
    <Field id="simpleSeparator22" type="separator"/>
    <Field id="infoLabel22" type="label">
@@ -64,13 +80,6 @@
             <Option value="50"   >50  dBm</Option>
             <Option value="999"  >no limit</Option>
         </List>
-   </Field>
-    <Field    id="enableFING"   type="menu" defaultValue="0" tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
-        <Label>Trigger FINGSCAN:</Label>
-        <List>
-            <Option value="0"  > disable </Option>
-            <Option value="1"  > enable </Option>
-        </List>    
    </Field>
     <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="1" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
         <Label>reboot RPI if GT xx empty beacon messages received:</Label>
@@ -640,11 +649,12 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
     <Field    id="debugUpdateRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6) update RPI:</Label>  </Field>
     <Field    id="debugOfflineRPI"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6a) show error messages if RPI is offline:</Label>  </Field>
     <Field    id="debugFing"          type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (7) update Fingscan:</Label>  </Field>
-    <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8) update BLE-connect:</Label>  </Field>
-    <Field    id="debugCAR"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9) CAR type devices:</Label>  </Field>
-    <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (10) all of the above .. everything:</Label>  </Field>
-    <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (11) tcpip socket comm:</Label>  </Field>
-    <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (12)beacon position plots:</Label>  </Field>
+    <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8) send BC for status updates:</Label>  </Field>
+    <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9) update BLE-connect:</Label>  </Field>
+    <Field    id="debugCAR"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (10) CAR type devices:</Label>  </Field>
+    <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (11) all of the above .. everything:</Label>  </Field>
+    <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (12) tcpip socket comm:</Label>  </Field>
+    <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (13)beacon position plots:</Label>  </Field>
 
     <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (s) special debug (only for development):</Label>  </Field>
 

@@ -73,6 +73,14 @@
             <Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
             <Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>    </Field>
 
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
 
             <Field id="memberOfLabel" type="label" >  
             <Label> Make this RPI memebr of group ...</Label>    </Field>
@@ -240,6 +248,14 @@
                     <Option value="10"> sync if  10 secs apart</Option>
                     <Option value="20"> sync if  20 secs apart</Option>
                     <Option value="50"> sync if  50 secs apart</Option>
+                </List>
+            </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
                 </List>
             </Field>
 
@@ -717,6 +733,14 @@
                     <Option value="clock"      > enable no network neoPixel Clock</Option>
                 </List>
             </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
 
 
         </ConfigUI>
@@ -1022,6 +1046,14 @@ use eg to track someone moving around - going from one room to the next" >
                 </List>
             </Field>
 
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
   
             <Field id="simpleSeparator6" type="separator"/>
             <Field id="label6"               type="label"  > 
@@ -1436,6 +1468,14 @@ You can use this also to create a new iBeacon device
                 <List>
                     <Option value="displayStatus"  >displayStatus</Option>
                </List>
+            </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
             </Field>
 
 
@@ -9072,6 +9112,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="actionDOWN"         type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for DOWN:</Label></Field>
             <Field id="actionDoubleClick"  type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for DoubleClick (2 in 3 secs):</Label></Field>
             <Field id="actionLongClick"    type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for actionLongClick > 3 secs:</Label></Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
         </ConfigUI>
 
         <States>
@@ -9205,6 +9253,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
                         <List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
                 <Label>select the icon pair you like to use for down/up:</Label>
+            </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
             </Field>
 
         </ConfigUI>
@@ -9360,6 +9416,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
                         <List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
                 <Label>select the icon pair you like to use for down/up:</Label>
+            </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
             </Field>
 
         </ConfigUI>
@@ -9555,6 +9619,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
                         <List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
                 <Label>select the icon pair you like to use for down/up:</Label>
+            </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
             </Field>
         </ConfigUI>
         <States>
@@ -9763,6 +9835,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="actionDOWN"         type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for DOWN:</Label></Field>
             <Field id="actionDoubleClick"  type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for DoubleClick (2 in 3 secs):</Label></Field>
             <Field id="actionLongClick"    type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for actionLongClick > 3 secs:</Label></Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
 
 
         </ConfigUI>
@@ -9874,8 +9954,15 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="offset" type="textfield"             defaultValue="0"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>add offset:</Label></Field>
             <Field id="mult"   type="textfield"             defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>multiply number by :</Label></Field>
             <Field id="format" type="textfield"             defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">     <Label>format number (eg %3.1f):</Label></Field>
-            <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
-                                                                                    <Label> display = </Label>  </Field>
+            <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">       <Label> display = </Label>  </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
         </ConfigUI>
         <States>
                 <State id="status">
@@ -10002,6 +10089,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="mult"   type="textfield"             defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>multiply number by :</Label></Field>
             <Field id="format" type="textfield"             defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">     <Label>format number (eg %3.1f):</Label></Field>
             <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES"><Label> display = </Label>  </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
         </ConfigUI>
         <States>
                 <State id="status">
@@ -10159,8 +10254,15 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="offset" type="textfield"             defaultValue="0"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>add offset:</Label></Field>
             <Field id="mult"   type="textfield"             defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>multiply number by :</Label></Field>
             <Field id="format" type="textfield"             defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">     <Label>format number (eg %3.1f):</Label></Field>
-            <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
-                                                                                    <Label> display = </Label>  </Field>
+            <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES"> <Label> display = </Label>  </Field>
+            <Field id="sep-03" type="separator"/>
+            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <List>
+                    <Option value="0" >NO </Option>
+                    <Option value="1" >YES send BC, must be enabled in config  </Option>
+                </List>
+            </Field>
         </ConfigUI>
         <States>
                 <State id="status">
