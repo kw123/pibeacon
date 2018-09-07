@@ -3746,7 +3746,8 @@ def getADS1x15(sensor, data):
     global sensorADS1x15, ADS1x15Started
     global sensors, sValues, displayInfo
 
-    if sensor not in sensorList : return data    
+
+    if sensor not in sensors : return data    
     data[sensor] ={}
 
     try:
@@ -3759,7 +3760,7 @@ def getADS1x15(sensor, data):
             i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
             if devId not in sensorADS1x15 :
                 rm=0x01
-                if sensors[sensor][devId]["resModel"]!="":
+                if sensors[sensor][devId]["resModel"] != "":
                     rm=sensors[sensor][devId]["resModel"]
                     if rm!=0:   rm=0x01
                     else:       rm=0x00
@@ -4643,7 +4644,7 @@ while True:
             lastMsg = tt
             lastData=copy.copy(data)
             try:
-                #U.toLog(2, u"sending url: "+unicode(data))
+                U.toLog(2, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
                 U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)

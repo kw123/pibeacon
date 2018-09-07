@@ -144,7 +144,7 @@ class MLX():
 
         except  Exception, e:
             if len(unicode(e)) > 5:
-                indigo.server.log(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                indigo.server.log(u"myLog in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
                 indigo.server.log(text)
                 try: f.close()
                 except: pass

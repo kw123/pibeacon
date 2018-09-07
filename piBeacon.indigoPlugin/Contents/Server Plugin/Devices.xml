@@ -73,15 +73,8 @@
             <Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
             <Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>    </Field>
 
-            <Field id="sep-03" type="separator"/>
-            <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
-                <List>
-                    <Option value="0" >NO </Option>
-                    <Option value="1" >YES send BC, must be enabled in config  </Option>
-                </List>
-            </Field>
-
+            <Field id="sep-031" type="separator"/>
+ 
             <Field id="memberOfLabel" type="label" >  
             <Label> Make this RPI memebr of group ...</Label>    </Field>
             <Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>...Family:</Label>  
@@ -252,7 +245,7 @@
             </Field>
             <Field id="sep-03" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -733,9 +726,9 @@
                     <Option value="clock"      > enable no network neoPixel Clock</Option>
                 </List>
             </Field>
-            <Field id="sep-03" type="separator"/>
+            <Field id="sep-031" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -1048,7 +1041,7 @@ use eg to track someone moving around - going from one room to the next" >
 
             <Field id="sep-03" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -1469,9 +1462,9 @@ You can use this also to create a new iBeacon device
                     <Option value="displayStatus"  >displayStatus</Option>
                </List>
             </Field>
-            <Field id="sep-03" type="separator"/>
+            <Field id="sep-031" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -8120,6 +8113,36 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <TriggerLabel>INPUT_0</TriggerLabel>
                     <ControlPageLabel>INPUT_0</ControlPageLabel>
                 </State>
+                <State id="INPUT_0MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
        </States>
     </Device>
 
@@ -8239,6 +8262,36 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <TriggerLabel>INPUT_3</TriggerLabel>
                     <ControlPageLabel>INPUT_3</ControlPageLabel>
                 </State>
+                <State id="INPUT_0MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
        </States>
     </Device>
 
@@ -8351,6 +8404,36 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <TriggerLabel>INPUT_7</TriggerLabel>
                     <ControlPageLabel>INPUT_7</ControlPageLabel>
                 </State>
+                <State id="INPUT_0MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
 
 
         </States>
@@ -8430,6 +8513,36 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <ValueType>String</ValueType>
                     <TriggerLabel>INPUT_0</TriggerLabel>
                     <ControlPageLabel>INPUT_0</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
                 </State>
 
         </States>
@@ -8521,6 +8634,36 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <ValueType>String</ValueType>
                     <TriggerLabel>INPUT_0</TriggerLabel>
                     <ControlPageLabel>INPUT_0</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
                 </State>
 
         </States>
@@ -8638,6 +8781,36 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <ValueType>String</ValueType>
                     <TriggerLabel>INPUT_3</TriggerLabel>
                     <ControlPageLabel>INPUT_3</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinToday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="INPUT_0MinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
+                    <ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
                 </State>
 
         </States>
@@ -9114,7 +9287,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="actionLongClick"    type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for actionLongClick > 3 secs:</Label></Field>
             <Field id="sep-03" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -9254,9 +9427,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                         <List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
                 <Label>select the icon pair you like to use for down/up:</Label>
             </Field>
-            <Field id="sep-03" type="separator"/>
+            <Field id="sep-031" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -9419,7 +9592,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             </Field>
             <Field id="sep-03" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -9620,9 +9793,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                         <List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
                 <Label>select the icon pair you like to use for down/up:</Label>
             </Field>
-            <Field id="sep-03" type="separator"/>
+            <Field id="sep-031" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -9837,7 +10010,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="actionLongClick"    type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for actionLongClick > 3 secs:</Label></Field>
             <Field id="sep-03" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -9955,9 +10128,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="mult"   type="textfield"             defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>multiply number by :</Label></Field>
             <Field id="format" type="textfield"             defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">     <Label>format number (eg %3.1f):</Label></Field>
             <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">       <Label> display = </Label>  </Field>
-            <Field id="sep-03" type="separator"/>
+            <Field id="sep-031" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -10091,7 +10264,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES"><Label> display = </Label>  </Field>
             <Field id="sep-03" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -10255,9 +10428,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
             <Field id="mult"   type="textfield"             defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">     <Label>multiply number by :</Label></Field>
             <Field id="format" type="textfield"             defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">     <Label>format number (eg %3.1f):</Label></Field>
             <Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES"> <Label> display = </Label>  </Field>
-            <Field id="sep-03" type="separator"/>
+            <Field id="sep-031" type="separator"/>
             <Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-                <Label>:send broadcasts to other plugins for status up/x changes</Label>
+                <Label>send broadcasts to other plugins for status up/x changes</Label>
                 <List>
                     <Option value="0" >NO </Option>
                     <Option value="1" >YES send BC, must be enabled in config  </Option>

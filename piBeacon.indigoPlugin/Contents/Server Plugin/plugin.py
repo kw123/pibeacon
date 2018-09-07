@@ -87,7 +87,7 @@ _GlobalConst_emptyrPiProps    ={     u"typeOfBeacon":             u"rPI",
                         u"rssiOffset" :              0,
                         u"shutDownPinOutput" :       u"-1" }
 
-_GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC"]
+_GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC","INPUT_0"]
 
 _GlobalConst_emptyRPI =   {
     u"rpiType": u"rPi",
@@ -9012,16 +9012,16 @@ class Plugin(indigo.PluginBase):
             self.ML.myLog( text =  u"resetMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 ####----------------------reset sensor min max at midnight -----------------------------------####
-    def fillMinMaxSensors(self,dev,type,value,decimalPlaces):
+    def fillMinMaxSensors(self,dev,stateName,value,decimalPlaces):
         try:
-            if type not in _GlobalConst_fillMinMaxStates: return 
-            if type in dev.states and type+u"MaxToday" in dev.states:
-                if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text =  u"fillMinMaxSensors "+dev.name+"  "+type+";  newV= "+unicode(value)+";  in dev.states= "+unicode(dev.states[type])+"  dec_pl="+ unicode(decimalPlaces) )
+            if stateName not in _GlobalConst_fillMinMaxStates: return 
+            if stateName in dev.states and stateName+u"MaxToday" in dev.states:
+                if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text =  u"fillMinMaxSensors "+dev.name+"  "+stateName+";  newV= "+unicode(value)+";  in dev.states= "+unicode(dev.states[stateName])+"  dec_pl="+ unicode(decimalPlaces) )
                 val = float(value)
-                if val > float(dev.states[type+u"MaxToday"]):
-                    self.addToStatesUpdateDict(unicode(dev.id),type+u"MaxToday",    val, decimalPlaces=decimalPlaces,dev=dev)
-                if val < float(dev.states[type+u"MinToday"]):
-                    self.addToStatesUpdateDict(unicode(dev.id),type+u"MinToday",    val, decimalPlaces=decimalPlaces,dev=dev)
+                if val > float(dev.states[stateName+u"MaxToday"]):
+                    self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MaxToday",    val, decimalPlaces=decimalPlaces,dev=dev)
+                if val < float(dev.states[stateName+u"MinToday"]):
+                    self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MinToday",    val, decimalPlaces=decimalPlaces,dev=dev)
         except  Exception, e:
             self.ML.myLog( text =  u"fillMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
@@ -10529,6 +10529,7 @@ class Plugin(indigo.PluginBase):
        
 
 ####-------------------------------------------------------------------------####
+####-------------------------------------------------------------------------####
     def updateINPUT(self, dev, data, upState, nInputs,sensor):
         # {u"pi_IN_":"0","sensors":{u"spiMCP3008":{u"INPUT_6":3,"INPUT_7":9,"INPUT_4":0,"INPUT_5":0,"INPUT_2":19,"INPUT_3":534,"INPUT_0":3296,"INPUT_1":3296}}}
         #                                    {u'INPUT_6': 0, u'INPUT_7': 0, u'INPUT_4': 0, u'INPUT_5': 0, u'INPUT_2': 0, u'INPUT_3': 518, u'INPUT_0': 3296, u'INPUT_1': 3296}
@@ -10557,6 +10558,24 @@ class Plugin(indigo.PluginBase):
                     #self.ML.myLog( text =  dev.name+"  input in data "+unicode(ss) + " "+ ssUI )
                     if dev.states[inputState] != ss:
                         self.addToStatesUpdateDict(unicode(dev.id),inputState, ss,dev=dev)
+                        ### minmax if deice.xml has that field
+                        if inputState+"MaxYesterday" in dev.states:
+                            decimalPlaces = 1
+                            v = ss
+                            if upState == inputState:
+                                try: 
+                                    v = float(self.getNumber(ssUI))
+                                    dp = str(v).split(".")
+                                    if len(dp) == 0:
+                                        decimalPlaces = 0
+                                    elif len(dp) == 2:
+                                        decimalPlaces = len(dp[1])
+                                    else:
+                                        pass
+                                except:
+                                    pass
+                            self.fillMinMaxSensors(dev,inputState,v,decimalPlaces=decimalPlaces)
+
                         #self.ML.myLog( text =  dev.name+" adding to update")
                     if upState == inputState:
                         if dev.states[u"status"] != ssUI + unit:
