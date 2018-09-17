@@ -407,6 +407,22 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         </List>
    </Field>
 
+   <Field    id="rainUnits"   type="menu" defaultValue="mm">
+        <Label>Rain values displayed in (rain-rate is in units/hour):</Label>
+        <List>
+            <Option value="inch"  >inches </Option>
+            <Option value="mm"    >mm</Option>
+        </List>
+   </Field>
+   <Field    id="rainDigits"   type="menu" defaultValue="1">
+        <Label>Rain values digits to show:</Label>
+        <List>
+            <Option value="0" >0 </Option>
+            <Option value="1" >1</Option>
+            <Option value="2" >2</Option>
+        </List>
+   </Field>
+
        <Field    id="lightningTimeWindow"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
         <Label>Time window for lightning devices:</Label>
         <List>

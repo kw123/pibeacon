@@ -3617,6 +3617,130 @@ After some days of running in clean air, proposed setup is:
         </States>
     </Device>
 
+  
+    <Device type="custom" id="si7021">
+      <Name>INPUT-Temp+Hum-si7021</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup si7021 temp  humidity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+            </Field>
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of device:</Label>
+                <List>
+                    <Option value="64"   >0x40 = 64 default </Option>
+                 </List>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="Temperature"  >Temperature</Option>
+                    <Option value="Humidity"      >Humidity</Option>
+                    <Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
+                </List>
+            </Field>
+            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+            <Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+
+            <Field id="displayEnable" type="menu"     defaultValue="0"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="1"  >yes</Option>
+                    <Option value="0"  >No</Option>
+                </List>
+            </Field>
+            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="Temperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Temperature</TriggerLabel>
+                    <ControlPageLabel>Temperature</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+                </State>
+
+                <State id="Humidity">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Humidity</TriggerLabel>
+                    <ControlPageLabel>Humidity</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinToday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinToday</ControlPageLabel>
+                </State>
+                <State id="HumidityMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="HumidityMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>HumidityMinYesterday</TriggerLabel>
+                    <ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+    </Device>
+
 
    
     <Device type="custom" id="pmairquality">
@@ -8818,6 +8942,269 @@ For the MQ gas sensors you need to understand the required heating voltage.
     </Device>
 
 
+
+
+
+   <Device type="custom" id="rainSensorRG11">
+      <Name>INPUT-Rain Sensor RG11</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+            <Field id="infoLabelINPUT" type="label">
+                <Label>This sensor setup </Label> 
+            </Field>
+            
+        <Field id="infoLabelRPI" type="label">                      <Label>==RPI setup:  -----------------------------</Label> </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiI" dynamicReload="false"/>
+                <Label>select rPi-server to which the INPUT is connect to:</Label>
+            </Field>
+
+            <Field id="gpioIn"   type="menu" defaultValue="24" tooltip="select gpio pin# for the INPUT channel" >
+                <Label> Which gpio pin for sensor input pin:</Label>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+            </Field>
+
+
+            <Field id="gpioSW5"   type="menu" defaultValue="15" tooltip="for mode change" >
+                <Label> Which gpio pin for SW 5:</Label>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+            </Field>
+
+
+            <Field id="gpioSW2"   type="menu" defaultValue="18" tooltip="sensitivity 1" >
+                <Label> Which gpio pin for SW 2:</Label>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+            </Field>
+
+
+            <Field id="gpioSW1"   type="menu" defaultValue="23" tooltip="sensitivity 2" >
+                <Label> Which gpio pin for SW 1:</Label>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+            </Field>
+
+            <Field id="gpioSWP"   type="menu" defaultValue="12" tooltip="12 v power line to sensor, will be used to cycle power when settings change" >
+                <Label> Which gpio pin for 12VPower:</Label>
+                <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+            </Field>
+
+            <Field id="cyclePower"   type="menu" defaultValue="1" tooltip="when using a relay for 12 v power line to sensor, it can be used to cycle power when settings change" >
+                <Label>cycle power when switching settings:</Label>
+                <List>
+                    <Option value="0"   > do not cycle power</Option>
+                    <Option value="1"   > cycle power</Option>
+              </List>
+            </Field>
+
+        <Field id="infoLabeltime" type="label">               <Label>==max time between rain drops to switch to lower sensitivity (larger buckets)</Label> </Field>
+            <Field id="TimeSwitchSensitivityRainToHigh"   type="menu" defaultValue="0">
+                <Label>no rain to high:</Label>
+                <List>
+                    <Option value="0"   > 0   secs default = after first drop</Option>
+                    <Option value="5"   > 5   secs</Option>
+              </List>
+            </Field>
+            <Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="0">
+                <Label>high to medium:</Label>
+                <List>
+                    <Option value="0"   > 0   secs  for testing</Option>
+                    <Option value="5"   > 1   secs</Option>
+              </List>
+            </Field>
+            <Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="0">
+                <Label>medium to low:</Label>
+                <List>
+                    <Option value="0"   > 0   secs  for testing</Option>
+                    <Option value="5"   > 1   secs default </Option>
+              </List>
+            </Field>
+        <Field id="infoLabeltime2" type="label">               <Label>==Time w no event to switch to higher sensitivity level</Label> </Field>
+            <Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="0">
+                <Label>low to medium:</Label>
+                <List>
+                    <Option value="10"   > 10   secs  for testing</Option>
+                    <Option value="100"  > 100   secs</Option>
+                    <Option value="300"  > 300   secs</Option>
+              </List>
+            </Field>
+            <Field id="TimeSwitchSensitivityMedToHigh"   type="menu" defaultValue="100">
+                <Label>medium to high:</Label>
+                <List>
+                    <Option value="10"   > 10   secs  for testing</Option>
+                    <Option value="100"  > 100   secs</Option>
+                    <Option value="300"  > 300   secs</Option>
+              </List>
+            </Field>
+            <Field id="TimeSwitchSensitivityHighToRain"   type="menu" defaultValue="100">
+                <Label>high to any rain:</Label>
+                <List>
+                    <Option value="10"   > 10   secs  for testing</Option>
+                    <Option value="100"  > 100   secs default </Option>
+                    <Option value="300"  > 300   secs</Option>
+              </List>
+            </Field>
+            <Field id="rainMsgMap"   type="textfield" defaultValue="no;drizzle;rain;Heavy_Rain">
+                <Label>lables to show for rain level 0;1;2;3:</Label>
+            </Field>
+             
+        <Field id="infoLabelINDIGO" type="label">               <Label>==INDIGO setup:  --------------------------</Label> </Field>
+            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="collect info for min xx seconds before sending new data to indigo"> 
+             <Label>min secs between indigo updates:</Label>
+                <List>
+                    <Option value="2"   > 2   secs</Option>
+                    <Option value="3"   > 3   secs</Option>
+                    <Option value="4"   > 4   secs</Option>
+                    <Option value="6"   > 6   secs</Option>
+                    <Option value="8"   > 8   secs</Option>
+                    <Option value="10"  > 10  secs</Option>
+                    <Option value="15"  > 15  secs</Option>
+                    <Option value="20"  > 20  secs</Option>
+                    <Option value="30"  > 30  secs</Option>
+                    <Option value="60"  > 60  secs</Option>
+                </List>
+            </Field>
+
+            
+            <Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
+
+            <Field id="displayS"     type="menu"         defaultValue="lastEventDate">
+                <List>
+                    <Option value="rainLevel"         >Rain level</Option>
+                    <Option value="rainRate"          >rain Rate</Option>
+                    <Option value="hourRain"          >hour Rain</Option>
+                    <Option value="todayRain"         >today Rain</Option>
+                    <Option value="weekRain"          >week Rain</Option>
+                    <Option value="monthRain"         >month Rain</Option>
+                    <Option value="yearRain"          >year Rain</Option>
+                    <Option value="totalRain"         >total Rain</Option>
+                </List>
+                <Label>State to display in the State Column:</Label>
+             </Field>
+
+            <Field id="lastDateCheck"       type="textfield"     defaultValue="0-0-0-0" hidden="yes"> </Field>
+            <Field id="hourRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="lasthourRainTotal"   type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="dayRainTotal"        type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="lastdayRainTotal"    type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="weekRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="lastWeekRainTotal"   type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="monthRainTotal"      type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="lastmonthRainTotal"  type="textfield"     defaultValue="0" hidden="yes"> </Field>
+            <Field id="yearRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
+
+        </ConfigUI>
+
+        <States>
+                 <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="rainLevel">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>rainLevel</TriggerLabel>
+                    <ControlPageLabel>rainLevel</ControlPageLabel>
+                </State>
+                <State id="mode">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>mode</TriggerLabel>
+                    <ControlPageLabel>mode</ControlPageLabel>
+                </State>
+                <State id="measurentTime">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>measurentTime</TriggerLabel>
+                    <ControlPageLabel>measurentTime</ControlPageLabel>
+                </State>
+                <State id="rainRate">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>rainRate</TriggerLabel>
+                    <ControlPageLabel>rainRate</ControlPageLabel>
+                </State>
+                <State id="minrainRateToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>minrainRateToday</TriggerLabel>
+                    <ControlPageLabel>minrainRateToday</ControlPageLabel>
+                </State>
+                <State id="maxrainRateToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>maxrainRateToday</TriggerLabel>
+                    <ControlPageLabel>maxrainRateToday</ControlPageLabel>
+                </State>
+                <State id="minrainRateYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>minrainRateYesterday</TriggerLabel>
+                    <ControlPageLabel>minrainRateYesterday</ControlPageLabel>
+                </State>
+                <State id="maxrainRateToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>maxrainRateToday</TriggerLabel>
+                    <ControlPageLabel>maxrainRateToday</ControlPageLabel>
+                </State>
+                <State id="hourRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>hourRain</TriggerLabel>
+                    <ControlPageLabel>hourRain</ControlPageLabel>
+                </State>
+                <State id="lasthourRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>lasthourRain</TriggerLabel>
+                    <ControlPageLabel>lasthourRain</ControlPageLabel>
+                </State>
+                <State id="dayRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>dayRain</TriggerLabel>
+                    <ControlPageLabel>dayRain</ControlPageLabel>
+                </State>
+                <State id="lastdayRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>lastdayRain</TriggerLabel>
+                    <ControlPageLabel>lastdayRain</ControlPageLabel>
+                </State>
+                <State id="weekRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>weekRain</TriggerLabel>
+                    <ControlPageLabel>weekRain</ControlPageLabel>
+                </State>
+                <State id="lastweekRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>lastweekRain</TriggerLabel>
+                    <ControlPageLabel>lastweekRain</ControlPageLabel>
+                </State>
+                <State id="monthRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>monthRain</TriggerLabel>
+                    <ControlPageLabel>monthRain</ControlPageLabel>
+                </State>
+                <State id="lastmonthRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>lastmonthRain</TriggerLabel>
+                    <ControlPageLabel>lastmonthRain</ControlPageLabel>
+                </State>
+                <State id="yearRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>yearRain</TriggerLabel>
+                    <ControlPageLabel>yearRain</ControlPageLabel>
+                </State>
+                <State id="lastyearRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>lastyearRain</TriggerLabel>
+                    <ControlPageLabel>lastyearRain</ControlPageLabel>
+                </State>
+                <State id="totalRain">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>totalRain</TriggerLabel>
+                    <ControlPageLabel>totalRain</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+        </States>
+    </Device>
 
 
 

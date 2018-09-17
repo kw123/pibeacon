@@ -1046,6 +1046,27 @@ def writeINPUTcount(IPC):
     except  Exception, e:
         if unicode(e).find("Read-only file system:") >-1:
             os.system("sudo reboot")
+            
+######################################
+def readRainStatus():
+        try:
+            f=open(G.homeDir+G.program+".status","r")
+            status =json.loads(f.read())
+            f.close()
+            return status
+        except:
+            pass
+        return {}
+
+######################################
+def writeRainStatus(status):
+    try:
+        f=open(G.homeDir+G.program+".status","w")
+        f.write(json.dumps(status))
+        f.close()
+    except  Exception, e:
+        if unicode(e).find("Read-only file system:") >-1:
+            os.system("sudo reboot")
 
 ######################################
 def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAction=""): # theAction can be 1 2 3 4 5

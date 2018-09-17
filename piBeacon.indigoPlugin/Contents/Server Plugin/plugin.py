@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 29.13
+dataVersion = 30.13
 
 
 
@@ -200,7 +200,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"i2cVEML6075", u"i2cIS1145", u"i2cOPT3001",                                   # light   
                          u"BLEsensor",
                          u"Wire18B20", u"i2cTMP102", u"i2cMCP9808", u"i2cLM35A",                         # temp 
-                         u"DHTxx", u"DHT11", u"i2cAM2320", u"i2cSHT21",                                   # temp / hum
+                         u"DHTxx", u"DHT11", u"i2cAM2320", u"i2cSHT21","si7021",                         # temp / hum
                          u"i2cBMPxx", u"i2cT5403", u"i2cBMP280","i2cMS5803",                         # temp / press
                          u"i2cBMExx",                                                            # temp / press/ hum /
                          u"bme680",                                                                # temp / press/ hum / gas
@@ -209,6 +209,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"ccs811",                                                                # co2 voc 
                          u"mhz-I2C",                                                                # co2 temp 
                          u"mhz-SERIAL",
+                         u"rainSensorRG11",
                          u"launchpgm",
                          u"sgp30",                                                                # co2 voc 
                          u"as3935",                                                                 # lightning sensor 
@@ -226,7 +227,7 @@ _GlobalConst_allowedSensors        = [u"ultrasoundDistance", u"vl503l0xDistance"
                          u"INPUTpulse",
                          u"mysensors", u"myprogram",
                          u"BLEconnect"]
-i2cSensors               = ["bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",  "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
+i2cSensors               = ["si7021","bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",  "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
 _GlobalConst_allowedOUTPUT         = [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725", u"display", u"setPCF8591dac", u"setTEA5767"]
 _GlobalConst_allowedpiSends        = [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
@@ -247,7 +248,8 @@ class Plugin(indigo.PluginBase):
         ## = /Library/Application Support/Perceptive Automation/Indigo 6/Plugins/piBeacon.indigoPlugin/Contents/Server Plugin
         p = max(0, self.pathToPlugin.lower().find(u"/plugins/")) + 1
         self.indigoPath         = self.pathToPlugin[:p]
-        self.indigoVersion      = indigo.server.version.split(".")[0]
+        major, minor, release = map(int, indigo.server.version.split("."))
+        self.indigoVersion      = major
         self.pluginVersion      = pluginVersion
         self.pluginId           = pluginId
         self.pluginName         = pluginId.split(".")[-1]
@@ -698,6 +700,16 @@ class Plugin(indigo.PluginBase):
                 self.tempDigits              = int(self.pluginPrefs.get(u"tempDigits", 1))
             except:
                 self.tempDigits              = 1
+
+            try:
+                self.rainUnits              = self.pluginPrefs.get(u"rainUnits", u"mm")
+            except:
+                self.rainUnits              = u"mm"
+
+            try:
+                self.rainDigits              = int(self.pluginPrefs.get(u"rainDigits", 0))
+            except:
+                self.rainDigits              = 0
 
             try:
                 self.pressureUnits          = self.pluginPrefs.get(u"pressureUnits", u"hPascal")
@@ -2043,27 +2055,15 @@ class Plugin(indigo.PluginBase):
                 if self.RPI[unicode(ii)][u"piDevId"] ==u"": continue
                 devii = indigo.devices[self.RPI[unicode(ii)][u"piDevId"]]
                 propsii= devii.pluginProps
-                try: 
-                    Pii = propsii[u"PosXYZ"].split(u",")
-                    if len(Pii) != 3: continue
-                    Pii = [float(Pii[0]),float(Pii[1]),float(Pii[2])]
-                    self.piPosition[ii]=Pii
-                except  Exception, e:
-                    self.ML.myLog( text =  u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                    continue
+                Pii = self.getPosXYZ(dev,propsii,ii)
+                self.piPosition[ii]=Pii
                 for jj in range(ii+1, _GlobalConst_numberOfiBeaconRPI):
                     try:
                         if self.RPI[unicode(jj)][u"piDevId"] == 0: continue
                         if self.RPI[unicode(jj)][u"piDevId"] ==u"": continue
                         devjj = indigo.devices[self.RPI[unicode(jj)][u"piDevId"]]
                         propsjj= devjj.pluginProps
-                        try: 
-                            Pjj = propsjj[u"PosXYZ"].split(u",")
-                            if len(Pjj) != 3: continue
-                            Pjj = [float(Pjj[0]),float(Pjj[1]),float(Pjj[2])]
-                        except  Exception, e:
-                            self.ML.myLog( text =  u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                            continue
+                        Pjj = self.getPosXYZ(dev,propsjj,jj)
                         deltaDist =0
                         for kk in range(2):
                             delD = Pii[kk]-Pjj[kk] 
@@ -2078,7 +2078,27 @@ class Plugin(indigo.PluginBase):
             except  Exception, e:
                 self.ML.myLog( text =  u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
+####-------------------------------------------------------------------------####
+    def getPosXYZ(self,dev,props,jj):
+        try: 
+            if u"PosXYZ" not in props:
+                props[u"PosXYZ"] ="0,0,0"
+                dev.replacePluginPropsOnServer(props)
+                self.ML.myLog( text =  u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+" fixing props, you might need to edit RPI#"+unicode(jj))
+            Pjj = props[u"PosXYZ"].split(u",")
 
+            if len(Pjj) != 3:
+                props[u"PosXYZ"] ="0,0,0"
+                dev.replacePluginPropsOnServer(props)
+
+            Pjj = props[u"PosXYZ"].split(u",")
+            return [float(Pjj[0]),float(Pjj[1]),float(Pjj[2])]
+
+        except  Exception, e:
+            self.ML.myLog( text =  u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+" fixing props, you might need to edit RPI#"+unicode(jj))
+            props[u"PosXYZ"] ="0,0,0"
+            dev.replacePluginPropsOnServer(props)
+        return [0,0,0]
 
 ####-------------------------------------------------------------------------####
     def fixConfig(self,checkOnly = ["all"],fromPGM=""):
@@ -3209,6 +3229,10 @@ class Plugin(indigo.PluginBase):
 
                 if  typeId  in ["mhz-I2C","mhz-SERIAL"]:
                     dev.updateStateOnServer("CO2calibration",valuesDict["CO2normal"])
+
+
+                if  typeId  =="rainSensorRG11":
+                        valuesDict[u"description"] = "INP:"+valuesDict[u"gpioIn"]+"-SW5:"+valuesDict[u"gpioSW5"]+"-SW2:"+valuesDict[u"gpioSW2"]+"-SW1:"+valuesDict[u"gpioSW1"]
 
                         
                 if  typeId =="pmairquality" :
@@ -7425,7 +7449,7 @@ class Plugin(indigo.PluginBase):
             self.RPI[unicode(pi)][u"piOnOff"] = p01
             
             
-            if p01 ==u"0":
+            if p01 == u"0":
                 self.upDateNotSuccessful[pi] == 0
                 self.removeONErPiV(pi, u"piUpToDate", [u"updateParamsFTP"])
 
@@ -7443,34 +7467,35 @@ class Plugin(indigo.PluginBase):
                 return valuesDict
 
             # first test if already used somewhere else
-            for jj in range(_GlobalConst_numberOfRPI):
-                if pi == jj: continue
-                if self.RPI[unicode(jj)][u"piOnOff"] == "0": continue
-                if self.RPI[unicode(jj)][u"ipNumberPi"] == ipn:
-                        valuesDict[u"MSG"] = "ip number already in use"
-                        return valuesDict
+            if self.RPI[unicode(pi)][u"piOnOff"] != u"0":
+                for jj in range(_GlobalConst_numberOfRPI):
+                    if pi == jj: continue
+                    if self.RPI[unicode(jj)][u"piOnOff"] == "0": continue
+                    if self.RPI[unicode(jj)][u"ipNumberPi"] == ipn:
+                            valuesDict[u"MSG"] = "ip number already in use"
+                            return valuesDict
 
-            if self.RPI[unicode(pi)][u"ipNumberPi"]   != ipn:
-                self.RPI[unicode(pi)][u"ipNumberPi"]   = ipn
-                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-            self.RPI[unicode(pi)][u"ipNumberPiSendTo"] = ipn
+                if self.RPI[unicode(pi)][u"ipNumberPi"]   != ipn:
+                    self.RPI[unicode(pi)][u"ipNumberPi"]   = ipn
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+                self.RPI[unicode(pi)][u"ipNumberPiSendTo"] = ipn
 
-        #### check authkey vs std password ..
-            self.RPI[unicode(pi)][u"authKeyOrPassword"]     = valuesDict[u"authKeyOrPassword"]
+            #### check authkey vs std password ..
+                self.RPI[unicode(pi)][u"authKeyOrPassword"]     = valuesDict[u"authKeyOrPassword"]
 
 
-        #### check userid password ..
-            if self.RPI[unicode(pi)][u"userIdPi"]     != valuesDict[u"userIdPi"]:
-                self.RPI[unicode(pi)][u"userIdPi"]     = valuesDict[u"userIdPi"]
-                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+            #### check userid password ..
+                if self.RPI[unicode(pi)][u"userIdPi"]     != valuesDict[u"userIdPi"]:
+                    self.RPI[unicode(pi)][u"userIdPi"]     = valuesDict[u"userIdPi"]
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
-            if self.RPI[unicode(pi)][u"passwordPi"]   != valuesDict[u"passwordPi"]:
-                self.RPI[unicode(pi)][u"passwordPi"]   = valuesDict[u"passwordPi"]
-                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+                if self.RPI[unicode(pi)][u"passwordPi"]   != valuesDict[u"passwordPi"]:
+                    self.RPI[unicode(pi)][u"passwordPi"]   = valuesDict[u"passwordPi"]
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
-            if self.RPI[unicode(pi)][u"enableRebootCheck"] != valuesDict[u"enableRebootCheck"]:
-                self.RPI[unicode(pi)][u"enableRebootCheck"] = valuesDict[u"enableRebootCheck"]
-                self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+                if self.RPI[unicode(pi)][u"enableRebootCheck"] != valuesDict[u"enableRebootCheck"]:
+                    self.RPI[unicode(pi)][u"enableRebootCheck"] = valuesDict[u"enableRebootCheck"]
+                    self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 
             
             valuesDict[u"MSG"] = "Pi server configuration set"
@@ -7673,6 +7698,8 @@ class Plugin(indigo.PluginBase):
         self.pressureUnits                  = valuesDict[u"pressureUnits"]  # 1 for Pascal
         self.tempUnits                      = valuesDict[u"tempUnits"]  # Celsius, Fahrenheit, Kelvin
         self.tempDigits                     = int(valuesDict[u"tempDigits"])  # 0/1/2
+        self.rainUnits                      = valuesDict[u"rainUnits"]  # mm inches
+        self.rainDigits                     = int(valuesDict[u"rainDigits"])  # 0/1/2
         self.rebootHour                     = int(valuesDict[u"rebootHour"])
         self.removeJunkBeacons              = valuesDict[u"removeJunkBeacons"]==u"1"
         xxx                                 = valuesDict[u"restartBLEifNoConnect"] == "1"
@@ -8752,6 +8779,7 @@ class Plugin(indigo.PluginBase):
         if now.hour == self.lastHour: return
         if now.hour ==0:
             self.resetMinMaxSensors()
+        self.resetRainSensors()
             
         try:
             self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="checkHour")
@@ -9024,6 +9052,41 @@ class Plugin(indigo.PluginBase):
                     self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MinToday",    val, decimalPlaces=decimalPlaces,dev=dev)
         except  Exception, e:
             self.ML.myLog( text =  u"fillMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+
+####----------------------reset rain sensor every hour/day/week/month/year -----------------------------------####
+    def resetRainSensors(self):
+        try:
+            dd = datetime.datetime.now()
+            dateTest = (dd.strftime("%Y-%m-%d-%H")).split("-")
+            weekNumber = dd.isocalendar()[1]
+            
+            for dev in indigo.devices.iter("props.isSensorDevice"):
+                if dev.deviceTypeId.find(u"rainSensorRG11") == -1: continue
+                if  not dev.enabled: continue
+                props = dev.pluginProps
+                lasttest = props["lastDateCheck"].split("-")
+                try:
+                    ff = datetime.datetime.strptime(props["lastDateCheck"], "%Y-%m-%d-%H")
+                    lastweek = ff.isocalendar()[1]
+                except:
+                    lastweek = -1
+                    
+                for test in ["hour","day","week","month","year"]:
+                    if test == "hour"   and int(lasttest[3]) == int(dateTest[3]): continue
+                    if test == "day"    and int(lasttest[2]) == int(dateTest[2]): continue
+                    if test == "month"  and int(lasttest[1]) == int(dateTest[1]): continue
+                    if test == "year"   and int(lasttest[0]) == int(dateTest[0]): continue
+                    if test == "week"   and lastweek         == weekNumber:       continue
+                    ttx = test+"Rain"
+                    val = dev.states[ttx]
+                    self.addToStatesUpdateDict(unicode(dev.id),"last"+ttx, val,decimalPlaces=self.rainDigits,dev=dev)
+                    self.addToStatesUpdateDict(unicode(dev.id),ttx, 0,decimalPlaces=self.rainDigits,dev=dev)
+                    props[test+"RainTotal"]  = val
+                props["lastDateCheck"] = dd.strftime("%Y-%m-%d-%H")
+                dev.replacePluginPropsOnServer(props)
+                self.executeUpdateStatesDict(onlyDevID =str(dev.id),calledFrom="resetRainSensors")
+        except  Exception, e:
+            self.ML.myLog( text =  u"resetMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 
 ####-------------------------------------------------------------------------####
@@ -10070,6 +10133,12 @@ class Plugin(indigo.PluginBase):
                         self.updatePULSE(dev,data,whichKeysToDisplay)
                         continue
 
+
+                    if sensor =="rainSensorRG11":
+                        self.updaterainSensorRG11(dev,data,whichKeysToDisplay)
+                        continue
+
+
                     if sensor =="pmairquality":
                         self.updatePMAIRQUALITY(dev,data,whichKeysToDisplay)
                         continue
@@ -10151,6 +10220,12 @@ class Plugin(indigo.PluginBase):
                             self.ML.myLog( text =  unicode(props))
                         continue
 
+
+                    if u"hum" in data:
+                        hum= data[u"hum"]
+                        x, UI, decimalPlaces  = self.convHum(hum)
+                        newStatus = self.setStatusCol( dev, u"Humidity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
+
                         
                     if u"temp" in data:
                         temp = data[u"temp"]
@@ -10219,12 +10294,6 @@ class Plugin(indigo.PluginBase):
                         x, UI, decimalPlaces  = self.convTemp(data[u"MaximumPixel"])
                         newStatus = self.setStatusCol( dev, u"MaximumPixel", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces)
 
-                    if u"hum" in data:
-                        hum= data[u"hum"]
-                        x, UI, decimalPlaces  = self.convHum(hum)
-                        newStatus = self.setStatusCol( dev, u"Humidity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
-
-
                     if u"GasResistance" in data:
                         gr,grUI, aq, aqUI, gb, gbUI = self.convGas(  [ data[u"GasResistance"], data[u"AirQuality"], data[u"GasBaseline"] ]  )
                         newStatus = self.setStatusCol( dev, u"GasResistance", gr, grUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
@@ -10247,6 +10316,76 @@ class Plugin(indigo.PluginBase):
                 if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text =  u"pi# "+unicode(pi) + "  " + unicode(sensors))
 
         return
+
+####-------------------------------------------------------------------------####
+    def updaterainSensorRG11(self, dev, data, whichKeysToDisplay):
+        try:
+            props = dev.pluginProps
+            updateDev = False
+            ##indigo.server.log(unicode(data))
+            for cc in ["totalRain", "rainRate", "measurentTime", "mode", "rainLevel"]:
+                if cc in data:
+                    
+                    if cc =="totalRain":
+                        x = float(data[cc])
+                        if self.rainUnits == "inches":
+                            x /=2.54
+                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits, dev=dev) 
+                        if whichKeysToDisplay == cc: 
+                                self.addToStatesUpdateDict(unicode(dev.id),u"status", cc+"= %."+str(self.rainDigits)+"f"%x,dev=dev) 
+                        for zz in ["hourRain","dayRain","weekRain","monthRain","yearRain"]:
+                            #indigo.server.log(" testing: "+zz)
+                            zzP= zz+"Total"
+                            if zzP in props:
+                                oldV = float(props[zzP])
+                                #indigo.server.log(" ok: "+zzP+"  old: "+ str(oldV)+"  new: "+ str(x) )
+                                if oldV > x:
+                                    props[zzP] = x
+                                    updateDev = True
+                                    oldV = x
+                                self.addToStatesUpdateDict(unicode(dev.id),zz, x-oldV,  decimalPlaces = self.rainDigits, dev=dev) 
+                                if whichKeysToDisplay == zz: 
+                                        self.addToStatesUpdateDict(unicode(dev.id),u"status", zz+"= %."+str(self.rainDigits)+"f"%(x-oldV),dev=dev) 
+
+
+                    elif cc =="rainRate":
+                        x = float(data[cc])
+                        if self.rainUnits =="inches":
+                            x /=2.54
+                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits, dev=dev) 
+                        if whichKeysToDisplay == cc: 
+                                self.addToStatesUpdateDict(unicode(dev.id),u"status", cc+"= %."+str(self.rainDigits)+"f"%x,dev=dev)
+                        self.fillMinMaxSensors(dev,"rainRate",x,self.rainDigits)
+                                
+                        
+                    elif cc == "measurentTime":
+                        x = data[cc]
+                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = 0, dev=dev) 
+                        if whichKeysToDisplay == cc: 
+                                self.addToStatesUpdateDict(unicode(dev.id),u"status", cc+"= %d"%x,dev=dev) 
+                    elif cc == "rainLevel":
+                        try: x = int(data[cc])
+                        except: x = 0
+                        if x in [0,1,2,3]:
+                            labels = (props["rainMsgMap"]).split(";")
+                            #indigo.server.log("  x:"+str(x)+"  labels:"+ str(labels))
+                            self.addToStatesUpdateDict(unicode(dev.id),cc, labels[x],  dev=dev) 
+                            if whichKeysToDisplay == cc: 
+                                    self.addToStatesUpdateDict(unicode(dev.id),u"status", labels[x],dev=dev) 
+                    else:
+                        x = data[cc]
+                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,                     dev=dev) 
+                        if whichKeysToDisplay == cc: 
+                                self.addToStatesUpdateDict(unicode(dev.id),u"status", x,dev=dev) 
+            if updateDev: 
+                dev.replacePluginPropsOnServer(props)
+
+        except  Exception, e:
+            self.ML.myLog( text =  u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            self.ML.myLog( text =  unicode(data))
+        return
+
+
 
 ####-------------------------------------------------------------------------####
     def updatePMAIRQUALITY(self, dev, data, whichKeysToDisplay):
@@ -12532,6 +12671,19 @@ class Plugin(indigo.PluginBase):
                                 sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"BLEtimeout",elseSet=10)
                                 sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"macAddress")
                                 
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityRainToHigh")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityHighToMed")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityMedToLow")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityLowToMed")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityMedToHigh")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityHighToRain")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioIn")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSW1")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSW2")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSW5")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSWP")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"cyclePower")
+
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeaboveCalibrationMAX")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], dev.states, u"CO2offset")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"launchCommand")
