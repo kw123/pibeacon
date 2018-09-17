@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 30.13
+dataVersion = 31.14
 
 
 
@@ -2055,7 +2055,7 @@ class Plugin(indigo.PluginBase):
                 if self.RPI[unicode(ii)][u"piDevId"] ==u"": continue
                 devii = indigo.devices[self.RPI[unicode(ii)][u"piDevId"]]
                 propsii= devii.pluginProps
-                Pii = self.getPosXYZ(dev,propsii,ii)
+                Pii = self.getPosXYZ(devii,propsii,ii)
                 self.piPosition[ii]=Pii
                 for jj in range(ii+1, _GlobalConst_numberOfiBeaconRPI):
                     try:
@@ -2063,7 +2063,7 @@ class Plugin(indigo.PluginBase):
                         if self.RPI[unicode(jj)][u"piDevId"] ==u"": continue
                         devjj = indigo.devices[self.RPI[unicode(jj)][u"piDevId"]]
                         propsjj= devjj.pluginProps
-                        Pjj = self.getPosXYZ(dev,propsjj,jj)
+                        Pjj = self.getPosXYZ(devjj,propsjj,jj)
                         deltaDist =0
                         for kk in range(2):
                             delD = Pii[kk]-Pjj[kk] 
@@ -3196,8 +3196,6 @@ class Plugin(indigo.PluginBase):
 
             elif typeId in _GlobalConst_allowedSensors:
                 update = 0
-                
-                
                 pi = int(valuesDict[u"piServerNumber"])
                 if pi >= 0:
                     if u"piServerNumber" in props:
@@ -3232,7 +3230,7 @@ class Plugin(indigo.PluginBase):
 
 
                 if  typeId  =="rainSensorRG11":
-                        valuesDict[u"description"] = "INP:"+valuesDict[u"gpioIn"]+"-SW5:"+valuesDict[u"gpioSW5"]+"-SW2:"+valuesDict[u"gpioSW2"]+"-SW1:"+valuesDict[u"gpioSW1"]
+                        valuesDict[u"description"] = "INP:"+valuesDict[u"gpioIn"]+"-SW5:"+valuesDict[u"gpioSW5"]+"-SW2:"+valuesDict[u"gpioSW2"]+"-SW1:"+valuesDict[u"gpioSW1"]+"-SW12V:"+valuesDict[u"gpioSWP"]
 
                         
                 if  typeId =="pmairquality" :
@@ -12683,6 +12681,7 @@ class Plugin(indigo.PluginBase):
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSW5")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSWP")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"cyclePower")
+                            sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensorMode")
 
                             sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeaboveCalibrationMAX")
                             sens[devIdS] = self.updateSensProps(sens[devIdS], dev.states, u"CO2offset")

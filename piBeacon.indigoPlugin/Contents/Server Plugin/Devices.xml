@@ -8954,19 +8954,40 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
             <Field id="infoLabelINPUT" type="label">
-                <Label>This sensor setup </Label> 
+                <Label>option for setup:
+    Minimal setup:  Sensor output to a GPIO and ground- polarity does not matter, 
+       connect 12V - polatity does not matter, set mode to static sensitivity.
+    Dynamic setup connect sensor output, and 
+       4 GPIOs to 4 relays to 12V,(dipsw 1,2,5 )-ground to sensor, 
+       select the GPIOs used below
+    Every time the mode changes the 12 V power needs be recycled to activate the setting
+    dip-sw 1, sets sensitivity, dip-sw 5 sets mode any rain or count buckets</Label> 
             </Field>
             
         <Field id="infoLabelRPI" type="label">                      <Label>==RPI setup:  -----------------------------</Label> </Field>
+
             <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-                        <List class="self" filter="" method="filterPiI" dynamicReload="false"/>
-                <Label>select rPi-server to which the INPUT is connect to:</Label>
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
             </Field>
+
+            <Field id="sensorMode"   type="menu" defaultValue="dynamic" tooltip="" >
+                <List>
+                    <Option value="dynamic"          >dynamic switch of sensitivity rain-high-med-low </Option>
+                    <Option value="checkIfIsRaining" >any rain </Option>
+                    <Option value="highSensitive"    >0.0001 inch per bucket - static sensitivity high </Option>
+                    <Option value="medSensitive"     >0.001  inch per bucket - static sensitivity medium </Option>
+                    <Option value="lowSensitive"     >0.01   inch per bucket - static sensitivity low </Option>
+              </List>
+                <Label>select mode for sensor:</Label>
+            </Field>
+
 
             <Field id="gpioIn"   type="menu" defaultValue="24" tooltip="select gpio pin# for the INPUT channel" >
                 <Label> Which gpio pin for sensor input pin:</Label>
                 <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
+
 
 
             <Field id="gpioSW5"   type="menu" defaultValue="15" tooltip="for mode change" >
