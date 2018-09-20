@@ -818,6 +818,7 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
               <List>
                     <Option value= "BLEconnect"          >BLE-connect devices</Option>
                     <Option value= "beaconloop"          >iBeacons</Option>
+                    <Option value= "rainSensorRG11"      >rain Sensor RG11 - reset only</Option>
                     <Option value= "INPUTgpio"           >INPUT - gpio</Option>
                     <Option value= "INPUTtouch12"        >INPUT - capacitor-12</Option>
                     <Option value= "INPUTtouch16"        >INPUT - capacitor-16</Option>
@@ -1102,6 +1103,7 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
             </Field>
         </ConfigUI>
     </MenuItem>
+
 
 
     <MenuItem id="resetSprinkler">

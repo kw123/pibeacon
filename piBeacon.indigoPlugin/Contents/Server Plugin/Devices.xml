@@ -8954,14 +8954,43 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
             <Field id="infoLabelINPUT" type="label">
-                <Label>option for setup:
-    Minimal setup:  Sensor output to a GPIO and ground- polarity does not matter, 
-       connect 12V - polatity does not matter, set mode to static sensitivity.
-    Dynamic setup connect sensor output, and 
-       4 GPIOs to 4 relays to 12V,(dipsw 1,2,5 )-ground to sensor, 
-       select the GPIOs used below
-    Every time the mode changes the 12 V power needs be recycled to activate the setting
-    dip-sw 1, sets sensitivity, dip-sw 5 sets mode any rain or count buckets</Label> 
+                <Label>MINIMAL setup:  Sensor output to a GPIO and ground-- polarity does not matter, 
+   connect 12V - polarity does not matter, set mode to medium sensitivity.
+   
+For NORMAL -dynamic- setup connect sensor output, and 
+   4 GPIOs to 4 relays to 12V, dipsw 1,2,5/ground to sensor, 
+   set the GPIOs used below
+Every time the mode changes the 12 V power is recycled 
+  to activate the setting
+Dip-sw 1,2 set sensitivity, 
+Dip-sw 5 sets mode "any rain" or "count buckets"
+General info:
+    In check for rain mode the signal stays on for an 
+      extened period of time ie 30 secs .. several minutes
+      The progam on the RPi will reset the sensor after 30 sec 
+        to enable a new rain test
+    During heavy rain and in "High sensitivity" mode 
+       the relay clicks ~ twice per sec until count finished 
+       ie number of buckets reported 
+
+Default pins:
+    pin  2  +5V to relay board, to run the board 
+    pin  8 GPIO14 : 12 V relay #4
+    pin 10 GPIO15 : dip sw 5 relay #3
+    pin 12 GPIO18 : dip sw 2 relay #2
+    pin 14 ground to relay board 
+    pin 16 GPIO23 : dip sw 1 relay #1
+    pin 18 GPIO24 : input = sensor output relay on sensor board; 
+    pin 20 ground : input = ...    polarity does not matter
+    power supply: 
+    +12V -- relay # 4 NC ---- sensor power in; polarity does not matter
+    -12V -------------------- sensor power in; power is delivered when relay is off
+    relay NO # 3 —  sw 5  sensor
+    relay NO # 2 —  sw 2  sensor
+    relay NO # 1 —  sw 1  sensor
+    connect middle of relay(1,2,3) out  1,2,3 to ground on sensor
+    NO = normally open
+    NC = normally closed</Label> 
             </Field>
             
         <Field id="infoLabelRPI" type="label">                      <Label>==RPI setup:  -----------------------------</Label> </Field>
@@ -9007,7 +9036,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
                 <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
 
-            <Field id="gpioSWP"   type="menu" defaultValue="12" tooltip="12 v power line to sensor, will be used to cycle power when settings change" >
+            <Field id="gpioSWP"   type="menu" defaultValue="14" tooltip="12 v power line to sensor, will be used to cycle power when settings change" >
                 <Label> Which gpio pin for 12VPower:</Label>
                 <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
             </Field>
@@ -9020,81 +9049,70 @@ For the MQ gas sensors you need to understand the required heating voltage.
               </List>
             </Field>
 
-        <Field id="infoLabeltime" type="label">               <Label>==max time between rain drops to switch to lower sensitivity (larger buckets)</Label> </Field>
+        <Field id="infoLabeltime" type="label">               <Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
             <Field id="TimeSwitchSensitivityRainToHigh"   type="menu" defaultValue="0">
-                <Label>no rain to high:</Label>
+                <Label>no rain to high Sensitivity:</Label>
                 <List>
-                    <Option value="0"   > 0   secs default = after first drop</Option>
-                    <Option value="5"   > 5   secs</Option>
+                    <Option value="0"   > 0  after first drop</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="0">
-                <Label>high to medium:</Label>
+            <Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="2">
+                <Label>high to medium Sensitivity:</Label>
                 <List>
-                    <Option value="0"   > 0   secs  for testing</Option>
-                    <Option value="5"   > 1   secs</Option>
+                    <Option value="1"   >2 clicks in 1 secs</Option>
+                    <Option value="2"   >2 clicks in 2 secs</Option>
+                    <Option value="5"   >2 clicks in 5 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="0">
-                <Label>medium to low:</Label>
+            <Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="2">
+                <Label>medium to low Sensitivity:</Label>
                 <List>
-                    <Option value="0"   > 0   secs  for testing</Option>
-                    <Option value="5"   > 1   secs default </Option>
+                    <Option value="1"   >2 clicks in 1 secs</Option>
+                    <Option value="2"   >2 clicks in 2 secs</Option>
+                    <Option value="5"   >2 clicks in 5 secs</Option>
               </List>
             </Field>
-        <Field id="infoLabeltime2" type="label">               <Label>==Time w no event to switch to higher sensitivity level</Label> </Field>
-            <Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="0">
-                <Label>low to medium:</Label>
+        <Field id="infoLabeltime2" type="label">               <Label>==Time w no event = click of relay to switch to higher sensitivity level</Label> </Field>
+            <Field id="infoLabeltime21" type="label" alignText="right" fontSize="small" >
+             <Label>must be &gt; time between messages, ie 60 secs</Label> </Field>
+             
+            <Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="0" tooltip="">
+                <Label>low to medium Sensitivity:</Label>
                 <List>
-                    <Option value="10"   > 10   secs  for testing</Option>
-                    <Option value="100"  > 100   secs</Option>
-                    <Option value="300"  > 300   secs</Option>
+                    <Option value="10"   >no click in 10 secs only for testing</Option>
+                    <Option value="100"  >no click in 100 secs</Option>
+                    <Option value="300"  >no click in 300 secs</Option>
               </List>
             </Field>
             <Field id="TimeSwitchSensitivityMedToHigh"   type="menu" defaultValue="100">
-                <Label>medium to high:</Label>
+                <Label>medium to high Sensitivity:</Label>
                 <List>
-                    <Option value="10"   > 10   secs  for testing</Option>
-                    <Option value="100"  > 100   secs</Option>
-                    <Option value="300"  > 300   secs</Option>
+                    <Option value="10"   >no click in 10 secs secs only for testing</Option>
+                    <Option value="100"  >no click in 100 secs</Option>
+                    <Option value="300"  >no click in 300 secs</Option>
               </List>
             </Field>
             <Field id="TimeSwitchSensitivityHighToRain"   type="menu" defaultValue="100">
                 <Label>high to any rain:</Label>
                 <List>
-                    <Option value="10"   > 10   secs  for testing</Option>
-                    <Option value="100"  > 100   secs default </Option>
-                    <Option value="300"  > 300   secs</Option>
+                    <Option value="10"   >no click in 10 secs secs only for testing</Option>
+                    <Option value="100"  >no click in 100 secs</Option>
+                    <Option value="300"  >no click in 300 secs</Option>
               </List>
-            </Field>
-            <Field id="rainMsgMap"   type="textfield" defaultValue="no;drizzle;rain;Heavy_Rain">
-                <Label>lables to show for rain level 0;1;2;3:</Label>
             </Field>
              
         <Field id="infoLabelINDIGO" type="label">               <Label>==INDIGO setup:  --------------------------</Label> </Field>
-            <Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="collect info for min xx seconds before sending new data to indigo"> 
-             <Label>min secs between indigo updates:</Label>
-                <List>
-                    <Option value="2"   > 2   secs</Option>
-                    <Option value="3"   > 3   secs</Option>
-                    <Option value="4"   > 4   secs</Option>
-                    <Option value="6"   > 6   secs</Option>
-                    <Option value="8"   > 8   secs</Option>
-                    <Option value="10"  > 10  secs</Option>
-                    <Option value="15"  > 15  secs</Option>
-                    <Option value="20"  > 20  secs</Option>
-                    <Option value="30"  > 30  secs</Option>
-                    <Option value="60"  > 60  secs</Option>
-                </List>
-            </Field>
 
+            <Field id="rainMsgMap"   type="textfield" defaultValue="no;drizzle;rain;heavy rain">
+                <Label>text to show for rain level 0;1;2;3:</Label>
+            </Field>
             
             <Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
 
             <Field id="displayS"     type="menu"         defaultValue="lastEventDate">
                 <List>
                     <Option value="rainLevel"         >Rain level</Option>
-                    <Option value="rainRate"          >rain Rate</Option>
+                    <Option value="rainRate"          >Rain Rate</Option>
                     <Option value="hourRain"          >hour Rain</Option>
                     <Option value="todayRain"         >today Rain</Option>
                     <Option value="weekRain"          >week Rain</Option>
@@ -9133,6 +9151,11 @@ For the MQ gas sensors you need to understand the required heating voltage.
                     <ValueType>String</ValueType>
                     <TriggerLabel>mode</TriggerLabel>
                     <ControlPageLabel>mode</ControlPageLabel>
+                </State>
+                <State id="sensitivity">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>sensitivity</TriggerLabel>
+                    <ControlPageLabel>sensitivity</ControlPageLabel>
                 </State>
                 <State id="measurentTime">
                     <ValueType>String</ValueType>
@@ -9659,6 +9682,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -9813,6 +9838,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -9976,6 +10003,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -10179,6 +10208,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -10382,6 +10413,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -10519,6 +10552,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -10653,6 +10688,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -10819,6 +10856,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -12224,6 +12263,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>
@@ -12342,6 +12383,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <Option value="x"           >regular 0-1</Option>
                     <Option value="ON-off"      >show 1 as off; 0 as ON</Option>
                     <Option value="off-ON"      >show 1 as ON; 0 as off</Option>
+                    <Option value="on-off"      >show 1 as off; 0 as on</Option>
+                    <Option value="off-on"      >show 1 as on; 0 as off</Option>
                     <Option value="open-closed" >show 1 as open; 0 as closed</Option>
                     <Option value="closed-open" >show 1 as closed; 0 as open</Option>
                     <Option value="up-down"     >show 1 as up; 0 as down</Option>

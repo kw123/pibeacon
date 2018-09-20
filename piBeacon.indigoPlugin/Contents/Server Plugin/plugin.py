@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 31.14
+dataVersion = 31.15
 
 
 
@@ -6464,6 +6464,12 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
+    def resetSprinklerStats(self, valuesDict=None, typeId="", devId=0):
+        valuesDict[u"cmd"]       = "startCalibration"
+        self.setPin(valuesDict)
+
+
+####-------------------------------------------------------------------------####
     def startCalibrationCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
         valuesDict[u"cmd"]       = "startCalibration"
         self.setPin(valuesDict)
@@ -6477,6 +6483,25 @@ class Plugin(indigo.PluginBase):
     def setresetDeviceCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
         valuesDict[u"cmd"]       = "resetDevice"
         self.setPin(valuesDict)
+        if valuesDict["typeId"] != "rainSensorRG11": return 
+        
+        # reseting plugin data for rain sensor:
+        piServerNumber = int(valuesDict["piServerNumber"] )
+        for dev in indigo.devices.iter("props.isSensorDevice"):
+            if dev.deviceTypeId !="rainSensorRG11": continue
+            
+            for key in ["rainRate","minrainRateToday","maxrainRateToday","minrainRateYesterday","maxrainRateToday","hourRain","lasthourRain","dayRain","lastdayRain","weekRain","lastweekRain","monthRain","lastmonthRain","yearRain","lastyearRain"]:
+                self.addToStatesUpdateDict(dev.id, key, 0)
+            self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="setresetDeviceCALLBACKmenu")
+
+            dev2 = indigo.devices[dev.id]
+            props= dev2.pluginProps
+            for key in ["hourRainTotal","lasthourRainTotal","dayRainTotal" ,"lastdayRainTotal","weekRainTotal","lastWeekRainTotal","monthRainTotal" ,"lastmonthRainTotal","yearRainTotal"]:
+                props[key] = 0
+            dev2.replacePluginPropsOnServer(props)
+        return 
+
+
 
 ####-------------------------------------------------------------------------####
     def setMyoutputCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
@@ -10321,7 +10346,7 @@ class Plugin(indigo.PluginBase):
             props = dev.pluginProps
             updateDev = False
             ##indigo.server.log(unicode(data))
-            for cc in ["totalRain", "rainRate", "measurentTime", "mode", "rainLevel"]:
+            for cc in ["totalRain", "rainRate", "measurentTime", "mode", "rainLevel", "sensitivity"]:
                 if cc in data:
                     
                     if cc =="totalRain":
@@ -10350,9 +10375,9 @@ class Plugin(indigo.PluginBase):
                         x = float(data[cc])
                         if self.rainUnits =="inches":
                             x /=2.54
-                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits, dev=dev) 
+                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits+1, dev=dev) 
                         if whichKeysToDisplay == cc: 
-                                self.addToStatesUpdateDict(unicode(dev.id),u"status", cc+"= %."+str(self.rainDigits)+"f"%x,dev=dev)
+                                self.addToStatesUpdateDict(unicode(dev.id),u"status", cc+"= %."+str(self.rainDigits+1)+"f"%x,dev=dev)
                         self.fillMinMaxSensors(dev,"rainRate",x,self.rainDigits)
                                 
                         
@@ -11255,9 +11280,21 @@ class Plugin(indigo.PluginBase):
                     else:
                         return "0", u"ON",  u""
 
+                if props[u"onOff"] == "on-off":
+                    if ui ==1.:
+                        return "1", u"off", u""
+                    else:
+                        return "0", u"on",  u""
+
                 if props[u"onOff"] == "off-ON":
                     if ui ==1.:
                         return "1", u"ON",  u""
+                    else:
+                        return "0", u"off", u""
+
+                if props[u"onOff"] == "off-on":
+                    if ui ==1.:
+                        return "1", u"on",  u""
                     else:
                         return "0", u"off", u""
 
@@ -13634,6 +13671,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
     def addToStatesUpdateDict(self,devId,key,value,dev ="",newStates="",decimalPlaces=""):
+        devId=str(devId)
         try:
             try:
 
@@ -13641,7 +13679,7 @@ class Plugin(indigo.PluginBase):
                     if  self.executeUpdateStatesDictActive =="":
                         break
                     if self.ML.decideMyLog(u"Special"): 
-                        self.ML.myLog( text =  u"addToStatesUpdateDict   #"+str(ii)+"# busy:"+ self.executeUpdateStatesDictActive.ljust(15)+" waiting:"+str(devId).ljust(12)+" key:"+str(key))
+                        self.ML.myLog( text =  u"addToStatesUpdateDict   #"+str(ii)+"# busy:"+ self.executeUpdateStatesDictActive.ljust(15)+" waiting:"+devId.ljust(12)+" key:"+str(key))
                     self.sleep(0.05)
                 self.executeUpdateStatesDictActive = devId+"-add"
 

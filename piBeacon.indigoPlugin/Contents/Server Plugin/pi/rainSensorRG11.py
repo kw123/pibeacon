@@ -27,6 +27,7 @@ def readParams():
     global ON, off
     global oldRaw, lastRead
     global switchToLowerSensitive, switchToHigherSensitive, bucketSize
+    global status
     try:
         restart = False
 
@@ -61,6 +62,7 @@ def readParams():
             if "gpioSWP"                   not in sss: continue
             if "sensorMode"                not in sss: continue
             
+            cyclePower  = sss["cyclePower"] != "0"
 
             if gpioIn != -1 and gpioIn != int(sss["gpioIn"]):
                 restart = True
@@ -82,9 +84,7 @@ def readParams():
                 gpioSW5 = int(sss["gpioSW5"])
                 GPIO.setup(gpioSW5, GPIO.OUT)
             
-            cyclePower                                  = sss["cyclePower"] != "0"
-            sensorMode                                  = sss["sensorMode"]
-            
+            print status
             switchToLowerSensitive["checkIfIsRaining"]  = int(sss["TimeSwitchSensitivityRainToHigh"])
             switchToLowerSensitive["highSensitive"]     = int(sss["TimeSwitchSensitivityHighToMed"])
             switchToLowerSensitive["medSensitive"]      = int(sss["TimeSwitchSensitivityMedToLow"])
@@ -97,14 +97,15 @@ def readParams():
                 gpioIn  = int(sss["gpioIn"])
                 GPIO.setup(gpioIn,  GPIO.IN, pull_up_down=GPIO.PUD_UP)
                 GPIO.add_event_detect(gpioIn, GPIO.FALLING,     callback=FALLING, bouncetime=200)  
-                if sensorMode != "checkIfIsRaining":  setModeTo("checkIfIsRaining")
+                if sss["sensorMode"] != "dynamic":  setModeTo("checkIfIsRaining")
 
             if sensorMode != sss["sensorMode"]:
-                if sensorMode !="dynamic":
-                    setModeTo(sensorMode)
-                    sendMSG(rainMsg[sensorMode])
+                if sss["sensorMode"] != "dynamic":
+                    sendShortStatus(rainMsg["checkIfIsRaining"])
                     lastModeSwitch= time.time()
-                setModeTo(sensorMode,force=True)
+                setModeTo(sss["sensorMode"],force=True)
+
+            sensorMode                                  = sss["sensorMode"]
 
 
 
@@ -148,21 +149,25 @@ def FALLING(gpio):
     if time.time() - startTimer < 0.1: return  
     startTimer = time.time()
     if time.time() - lastModeSwitch < 1: return 
-    U.toLog(1, "accepted  currentMode"+ status["currentMode"], doPrint=True)
+    U.toLog(1, "accepted  currentMode "+ status["currentMode"], doPrint=True)
+
+
+    newRainTime  = max(0.001, time.time() - lastEventStarted)
+    lastEventStarted = time.time()
+    
+    if sensorMode == "checkIfIsRaining" : 
+        sendShortStatus(rainMsg["highSensitive"])
+        U.writeRainStatus(status)
+        return 
 
 
     if status["currentMode"]  == "checkIfIsRaining": 
         if sensorMode == "dynamic":
             setModeTo("highSensitive", force=True)
-            sendMSG(rainMsg["highSensitive"])
-            lastEventStarted = time.time()
+            sendShortStatus(rainMsg["highSensitive"])
+            U.writeRainStatus(status)
             return 
 
-    lastEventStarted = time.time()
-    
-    if sensorMode == "checkIfIsRaining" : return 
-
-    newRainTime  = max(0.001, time.time() - lastEventStarted)
     
     bucket = bucketSize[status["currentMode"] ]
     accumBuckets(bucket)
@@ -172,24 +177,29 @@ def FALLING(gpio):
 
         if status["currentMode"]  == "highSensitive":
             if   newRainTime < switchToLowerSensitive["highSensitive"]: 
+                 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
                  if setModeTo("medSensitive"):
-                    sendMSG(rainMsg["medSensitive"])
+                    sendShortStatus(rainMsg["medSensitive"])
             elif newRainTime >  switchToHigherSensitive["highSensitive"]: 
+                 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
                  if setModeTo("checkIfIsRaining"):
-                    sendMSG(rainMsg["checkIfIsRaining"])
+                    sendShortStatus(rainMsg["checkIfIsRaining"])
 
         elif status["currentMode"]  == "medSensitive":
             if   newRainTime <  switchToLowerSensitive["medSensitive"]: 
+                 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
                  if setModeTo("lowSensitive"):
-                  sendMSG(rainMsg["lowSensitive"])
+                  sendShortStatus(rainMsg["lowSensitive"])
             elif newRainTime >  switchToHigherSensitive["medSensitive"]: 
+                 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
                  if setModeTo("highSensitive"):
-                    sendMSG(rainMsg["highSensitive"])
+                    sendShortStatus(rainMsg["highSensitive"])
 
         elif status["currentMode"]  == "lowSensitive":
             if   newRainTime >  switchToHigherSensitive["lowSensitive"]: 
+                 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
                  if setModeTo("medSensitive"):
-                    sendMSG(rainMsg["medSensitive"])
+                    sendShortStatus(rainMsg["medSensitive"])
             
             
         
@@ -251,27 +261,27 @@ def checkIfDownGradedNeeded():
     global sensorMode
     global status
     
-    if time.time()- lastDownGradeCheck < checkForDowngradeEvery: return 
-    if time.time() - lastModeSwitch < minTimeBetweenModeSwitch:  return 
+    if time.time() - lastDownGradeCheck < checkForDowngradeEvery:    return 
+    if time.time() - lastModeSwitch     < minTimeBetweenModeSwitch:  return 
     lastRainTime = time.time()- lastEventStarted 
-    if lastRainTime < 20:                                        return 
+    if lastRainTime < 5:                                             return 
 
-    if sensorMode =="dynamic": 
+    if sensorMode == "dynamic": 
         if   status["currentMode"] == "lowSensitive" and lastRainTime > switchToHigherSensitive["lowSensitive"]:
             if setModeTo("medSensitive"):
-                sendMSG(rainMsg["medSensitive"])
+                sendShortStatus(rainMsg["medSensitive"])
                 lastModeSwitch= time.time()
         elif status["currentMode"] == "medSensitive" and lastRainTime > switchToHigherSensitive["medSensitive"]:
              if setModeTo("highSensitive"):
-                sendMSG(rainMsg["highSensitive"])
+                sendShortStatus(rainMsg["highSensitive"])
                 lastModeSwitch= time.time()
         elif status["currentMode"] == "highSensitive" and lastRainTime > switchToHigherSensitive["highSensitive"]:
             if setModeTo("checkIfIsRaining"):
-                sendMSG(rainMsg["checkIfIsRaining"])
+                sendShortStatus(rainMsg["checkIfIsRaining"])
                 lastModeSwitch= time.time()
     else:
         if   lastRainTime > switchToHigherSensitive[sensorMode]:
-                sendMSG(rainMsg["checkIfIsRaining"])
+                sendShortStatus(rainMsg["checkIfIsRaining"])
                 lastModeSwitch= time.time()
         
     lastDownGradeCheck = time.time()
@@ -300,47 +310,63 @@ def resetMes():
     status["values"]["lastBucket"] = 0
     status["values"]["lastMes"]    = 0
 
+def resetValues():
+    status["values"]["buckets"]    = 0
+    status["values"]["startMes"]   = time.time()
+    status["values"]["lastBucket"] = 0
+    status["values"]["lastMes"]    = 0
+    status["values"]["bucketsTotal"] = 0
+    U.writeRainStatus(status)
+
 
             
-def checkIfMSGtoBeSend():
+def checkIfMSGtoBeSend(force =False):
     global lastCalcCheck, checkForMsgEvery
-    if time.time()- lastCalcCheck < checkForMsgEvery: return 
+    if time.time()- lastCalcCheck < checkForMsgEvery and not force: return 
     lastCalcCheck = time.time()
     
     rate, totalRain, measurentTime = calcRates()
     resetMes()
     data={"sensors":{sensor:{}}}
     for devId in sensors[sensor]: 
-        data["sensors"][sensor][devId] = {"rainRate": rate, "totalRain": totalRain, "measurentTime":measurentTime,"mode":status["currentMode"],"rainLevel":rainMsg[status["currentMode"]]}
+        if rate ==0:
+            rainLevel = rainMsg["checkIfIsRaining"]
+        else:
+            rainLevel = rainMsg[status["currentMode"]]
+        data["sensors"][sensor][devId] = {"rainRate": rate, "totalRain": totalRain, "measurentTime":measurentTime,"mode":sensorMode,"sensitivity":status["currentMode"],"rainLevel":rainLevel}
     U.sendURL(data,wait=False)
 
 
             
-def checkForHang():
-    global lastHangCheck
+def checkIfRelayON():
+    global lastRelayONCheck
     global gpioIn, gpioSWP, ON, off
     global lastEventStarted
-    hangTime = 10
-    if time.time()- lastHangCheck < 10: return 
-    if time.time()- lastEventStarted < hangTime: return 
+    maxONTime = 40
+    if time.time()- lastRelayONCheck < 10: return 
+    if time.time()- lastEventStarted < maxONTime: return 
     gpioStatus = GPIO.input(gpioIn)
     if gpioStatus == 0:
         GPIO.output(gpioSWP, ON)
         time.sleep(0.5)
         GPIO.output(gpioSWP, off)
         time.sleep(0.5)
-        U.toLog(-1, " resetting device seems to hang, signal relay is on for > "+str(hangTime)+"secs: "+str( time.time()- lastEventStarted) ,doPrint=True)
+        if status["currentMode"] == "checkIfIsRaining":
+            U.toLog(-1, "resetting device in \"check if raining mode\", signal relay is ON for > "+str(maxONTime)+"secs: %d"%( time.time()- lastEventStarted)+"  to enable to detect new rain" ,doPrint=True)
+        else:
+            U.toLog(-1, "hanging? resetting device, signal relay is on for > "+str(maxONTime)+"secs: "+str( time.time()- lastEventStarted)+"  current Status"+status["currentMode"] ,doPrint=True)
         lastEventStarted = time.time()
-    lastHangCheck = time.time()
+    lastRelayONCheck = time.time()
        
 
 
 
         
-def sendMSG(level):
+def sendShortStatus(level):
+    global sensorMode, status
     data={"sensors":{sensor:{}}}
     for devId in sensors[sensor]: 
-        data["sensors"][sensor][devId] = {"rainLevel":level }
+        data["sensors"][sensor][devId] = {"rainLevel":level,"mode":sensorMode,"sensitivity":status["currentMode"] }
     U.sendURL(data,wait=False)
     return
   
@@ -360,7 +386,7 @@ global lastDownGradeCheck, checkForDowngradeEvery, lastCalcCheck
 global lastCalcCheck, checkForMsgEvery
 global rainMsg
 global ON, off
-global lastHangCheck
+global lastRelayONCheck
 
 ###################### init #################
     
@@ -370,8 +396,8 @@ startTimer               = 0
 lastEventStarted         = 0 
 lastModeSwitch           = 0
 simpleCount              = 0
-switchToLowerSensitive   = {"checkIfIsRaining":0,  "highSensitive":1,     "medSensitive":1}  # time between signals;  switch from xx to next higher bucket capacity = lower sinsititvity 
-switchToHigherSensitive  = {"highSensitive":10,    "medSensitive":10,     "lowSensitive":10}   # time between signals;  switch from xx to next lower bucket capacity  if time between signals is > secs eg medSensitive to highSensitive
+switchToLowerSensitive   = {"checkIfIsRaining":0,        "highSensitive":1,     "medSensitive":1,      "lowSensitive":99999999}  # time between signals;  switch from xx to next higher bucket capacity = lower sinsititvity 
+switchToHigherSensitive  = {"checkIfIsRaining":99999999, "highSensitive":10,    "medSensitive":10,     "lowSensitive":10}   # time between signals;  switch from xx to next lower bucket capacity  if time between signals is > secs eg medSensitive to highSensitive
 bucketSize               = {"highSensitive":0.0001*25.4,  "medSensitive":0.001*25.4,   "lowSensitive":0.01*25.4} # in inches --> mm
 rainMsg                  = {"checkIfIsRaining":0,"highSensitive":1,  "medSensitive":2,   "lowSensitive":3}
 gpioIn                   = -1
@@ -389,8 +415,8 @@ lastRead                 = 0
 oldRaw                   = ""
 status                   = {"values":{"startMes":0, "buckets":0, "bucketsTotal":0, "nMes":0, "lastBucket":0},"currentMode":"checkIfIsRaining","lastMode":""}
 checkForDowngradeEvery   = 10
-checkForMsgEvery         = 60
-lastHangCheck            = 0
+checkForMsgEvery         = 55
+lastRelayONCheck         = 0
 
 
 myPID       = str(os.getpid())
@@ -403,13 +429,16 @@ loopCount         = 0
 
 U.toLog(-1, "starting "+G.program+" program",doPrint=True)
 
-
+print "1", status["currentMode"]
 ret = U.readRainStatus()
+print "2", status["currentMode"]
 if ret != {}: status = ret
 readParams()
+print "3", status["currentMode"]
 setModeTo(status["currentMode"], force = True)
 U.writeRainStatus(status)
-if status["currentMode"] == "checkIfIsRaining": sendMSG(rainMsg["checkIfIsRaining"])
+if status["currentMode"] == "checkIfIsRaining": sendShortStatus(rainMsg["checkIfIsRaining"])
+print "4", status["currentMode"]
 
 
 
@@ -447,11 +476,14 @@ while True:
         
         if loopCount %10 ==0:
     
-            if time.time()- lastRead > 10:
-                    readParams()
-                    lastRead = time.time()
+            if time.time()- lastRead > 5:
+                readParams()
+                lastRead = time.time()
+                if U.checkResetFile(G.program):
+                    resetValues()
+                    checkIfMSGtoBeSend(force=True)
 
-            checkForHang()
+            checkIfRelayON()
 
             checkIfDownGradedNeeded()
             checkIfMSGtoBeSend()
