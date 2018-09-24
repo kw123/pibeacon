@@ -29,24 +29,24 @@ set timeout $timeOUT
 send "\r"
 sleep .001
 expect "sftp" {  send  "cd /home/pi/pibeacon \r" }
-sleep .001 
+sleep .1 
 expect "sftp" {  send  "lcd '$piPath//interfaceFiles' \r" }
-sleep .001 
+sleep .1 
 expect "sftp" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
-sleep .001 
+sleep .1 
 expect "sftp" {  send  "lcd '$piPath//rejected' \r" }
-sleep .001 
+sleep .1 
 expect "sftp" {  send  "get /home/pi/pibeacon/temp/rejects 'rejects.$ipParms'\r" }
-sleep .001
+sleep .1
 expect "sftp" {  send  "rm /home/pi/pibeacon/temp/rejec* \r" }
-sleep .001
+sleep .1
 expect "sftp" {  send  "lcd '$piPath//all' \r" }
-sleep .001 
+sleep .1 
 expect "sftp" {  send  "put *  /home/pi/pibeacon/ \r" }
 send "\r"
-sleep .001
-expect "sftp" {  send  "put touchFile  /home/pi/pibeacon/temp/ \r" }
-sleep .001 
+sleep .2
+expect "sftp" {  send  "rm /home/pi/pibeacon/temp/touchFile \r" }
+sleep 1
 expect "sftp" {  send  "quit\r" }
 set timeout 0.1
 expect eof

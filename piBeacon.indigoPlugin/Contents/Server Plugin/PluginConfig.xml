@@ -412,6 +412,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         <List>
             <Option value="inch"  >inches </Option>
             <Option value="mm"    >mm</Option>
+            <Option value="cm"    >cm</Option>
         </List>
    </Field>
    <Field    id="rainDigits"   type="menu" defaultValue="1">
@@ -420,6 +421,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
             <Option value="0" >0 </Option>
             <Option value="1" >1</Option>
             <Option value="2" >2</Option>
+            <Option value="3" >3</Option>
         </List>
    </Field>
 

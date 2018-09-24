@@ -3741,6 +3741,133 @@ After some days of running in clean air, proposed setup is:
         </States>
     </Device>
 
+  
+    <Device type="custom" id="tmp006">
+      <Name>INPUT-Temp remote infrared-tmp006</Name>
+      <UiDisplayStateId>status</UiDisplayStateId>
+        <ConfigUI>
+            <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+            <Field id="infoLabel" type="label">
+                <Label>Setup tmp006 temp  sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+            </Field>
+
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+                <Label>select rPi-server to which the sensor is connect to:</Label> 
+            </Field>
+            <Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of device:</Label>
+                <List>
+                    <Option value="64"   >0x40 = 64 default addr0=0 addr1=0</Option>
+                    <Option value="65"   >0x41 = 65 default addr0=0 addr1=1</Option>
+                    <Option value="66"   >0x42 = 66 default addr0=0 addr1=SDA</Option>
+                    <Option value="67"   >0x43 = 67 default addr0=0 addr1=SLC</Option>
+                    <Option value="66"   >0x44 = 68 default addr0=1 addr1=0</Option>
+                    <Option value="67"   >0x45 = 69 default addr0=0 addr1=1</Option>
+                    <Option value="68"   >0x46 = 70 default addr0=0 addr1=SDA</Option>
+                    <Option value="69"   >0x47 = 71 default addr0=0 addr1=SLC</Option>
+                 </List>
+            </Field>
+            <Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+                <Label>use TCA9548A multiplexer for this sensor:</Label> 
+                <List>
+                    <Option value="-1"    >off </Option>
+                    <Option value="0"     >channel 0  </Option>
+                    <Option value="1"     >channel 1  </Option>
+                    <Option value="2"     >channel 2  </Option>
+                    <Option value="3"     >channel 3  </Option>
+                    <Option value="4"     >channel 4  </Option>
+                    <Option value="5"     >channel 5  </Option>
+                    <Option value="6"     >channel 6  </Option>
+                    <Option value="7"     >channel 7  </Option>
+                 </List>
+            </Field>
+
+            <Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+            <Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+                <List>
+                    <Option value="Temperature"  >Temperature</Option>
+                </List>
+            </Field>
+            <Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+            <Field id="displayEnable" type="menu"     defaultValue="0"> 
+                <Label>use local display to show values:</Label> 
+                <List>
+                    <Option value="1"  >yes</Option>
+                    <Option value="0"  >No</Option>
+                </List>
+            </Field>
+            <Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>   </Field>
+           <Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>   </Field>
+
+        </ConfigUI>
+        <States>
+                <State id="status">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>status</TriggerLabel>
+                    <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="Temperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>Temperature</TriggerLabel>
+                    <ControlPageLabel>Temperature</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="TemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+                </State>
+                 <State id="AmbientTemperature">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperature</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperature</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMaxToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMinToday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMaxYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+                </State>
+                <State id="AmbientTemperatureMinYesterday">
+                    <ValueType>Number</ValueType>
+                    <TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+                    <ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
+                </State>
+                <State id="lastSensorChange">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>lastSensorChange</TriggerLabel>
+                    <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+
+        </States>
+    </Device>
+
 
    
     <Device type="custom" id="pmairquality">
@@ -9044,32 +9171,44 @@ Default pins:
             <Field id="cyclePower"   type="menu" defaultValue="1" tooltip="when using a relay for 12 v power line to sensor, it can be used to cycle power when settings change" >
                 <Label>cycle power when switching settings:</Label>
                 <List>
-                    <Option value="0"   > do not cycle power</Option>
-                    <Option value="1"   > cycle power</Option>
+                    <Option value="0"   > do not cycle power, for static operation</Option>
+                    <Option value="1"   > cycle power, needed for dynamic mode</Option>
               </List>
             </Field>
 
         <Field id="infoLabeltime" type="label">               <Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
-            <Field id="TimeSwitchSensitivityRainToHigh"   type="menu" defaultValue="0">
-                <Label>no rain to high Sensitivity:</Label>
+            <Field id="TimeSwitchSensitivityRainToMayBeRaining"   type="menu" defaultValue="10">
+                <Label>no rain to may be rain:</Label>
                 <List>
-                    <Option value="0"   > 0  after first drop</Option>
+                    <Option value="0"   >no wait </Option>
+                    <Option value="2"   >3 clicks in 2 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs</Option>
+                    <Option value="10"  >3 clicks in 10 secs</Option>
+              </List>
+            </Field>
+            <Field id="TimeSwitchSensitivityMayBeRainingToHigh"   type="menu" defaultValue="10">
+                <Label>May be  rain to high Sensitivity:</Label>
+                <List>
+                    <Option value="0"   >no wait </Option>
+                    <Option value="2"   >3 clicks in 2 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs</Option>
+                    <Option value="10"  >3 clicks in 10 secs</Option>
               </List>
             </Field>
             <Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="2">
                 <Label>high to medium Sensitivity:</Label>
                 <List>
-                    <Option value="1"   >2 clicks in 1 secs</Option>
-                    <Option value="2"   >2 clicks in 2 secs</Option>
-                    <Option value="5"   >2 clicks in 5 secs</Option>
+                    <Option value="1"   >3 clicks in 1 secs</Option>
+                    <Option value="2"   >3 clicks in 2 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs</Option>
               </List>
             </Field>
             <Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="2">
                 <Label>medium to low Sensitivity:</Label>
                 <List>
-                    <Option value="1"   >2 clicks in 1 secs</Option>
-                    <Option value="2"   >2 clicks in 2 secs</Option>
-                    <Option value="5"   >2 clicks in 5 secs</Option>
+                    <Option value="1"   >3 clicks in 1 secs</Option>
+                    <Option value="2"   >3 clicks in 2 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs</Option>
               </List>
             </Field>
         <Field id="infoLabeltime2" type="label">               <Label>==Time w no event = click of relay to switch to higher sensitivity level</Label> </Field>
@@ -9081,6 +9220,8 @@ Default pins:
                 <List>
                     <Option value="10"   >no click in 10 secs only for testing</Option>
                     <Option value="100"  >no click in 100 secs</Option>
+                    <Option value="150"  >no click in 150 secs</Option>
+                    <Option value="200"  >no click in 200 secs</Option>
                     <Option value="300"  >no click in 300 secs</Option>
               </List>
             </Field>
@@ -9089,22 +9230,38 @@ Default pins:
                 <List>
                     <Option value="10"   >no click in 10 secs secs only for testing</Option>
                     <Option value="100"  >no click in 100 secs</Option>
+                    <Option value="150"  >no click in 150 secs</Option>
+                    <Option value="200"  >no click in 200 secs</Option>
                     <Option value="300"  >no click in 300 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityHighToRain"   type="menu" defaultValue="100">
+            <Field id="TimeSwitchSensitivityHighToAnyRain"   type="menu" defaultValue="100">
                 <Label>high to any rain:</Label>
                 <List>
                     <Option value="10"   >no click in 10 secs secs only for testing</Option>
                     <Option value="100"  >no click in 100 secs</Option>
+                    <Option value="150"  >no click in 150 secs</Option>
+                    <Option value="200"  >no click in 200 secs</Option>
                     <Option value="300"  >no click in 300 secs</Option>
               </List>
+            </Field>
+            <Field id="sendMSGEverySecs" type="menu"     defaultValue="90" hidden="no" > 
+             <Label>Send Msg to indigo every:</Label>
+                <List>
+                    <Option value="10"   >10  secs only for testing</Option>
+                    <Option value="60"   >60  secs</Option>
+                    <Option value="90"   >90  secs</Option>
+                    <Option value="120"  >120 secs</Option>
+                    <Option value="150"  >150 secs</Option>
+                    <Option value="180"  >180 secs</Option>
+                    <Option value="240"  >240 secs</Option>
+                </List>
             </Field>
              
         <Field id="infoLabelINDIGO" type="label">               <Label>==INDIGO setup:  --------------------------</Label> </Field>
 
-            <Field id="rainMsgMap"   type="textfield" defaultValue="no;drizzle;rain;heavy rain">
-                <Label>text to show for rain level 0;1;2;3:</Label>
+            <Field id="rainMsgMap"   type="textfield" defaultValue="no rain;may be raining;drizzle;rain;heavy rain">
+                <Label>text to show for rain level 0;1;2;3;4:</Label>
             </Field>
             
             <Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
@@ -9123,15 +9280,15 @@ Default pins:
                 <Label>State to display in the State Column:</Label>
              </Field>
 
+            <Field id="format"   type="textfield" defaultValue="xxx=%3.1f[mm]">
+                <Label>format string for status field for numbers</Label>
+            </Field>
+
             <Field id="lastDateCheck"       type="textfield"     defaultValue="0-0-0-0" hidden="yes"> </Field>
             <Field id="hourRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
-            <Field id="lasthourRainTotal"   type="textfield"     defaultValue="0" hidden="yes"> </Field>
             <Field id="dayRainTotal"        type="textfield"     defaultValue="0" hidden="yes"> </Field>
-            <Field id="lastdayRainTotal"    type="textfield"     defaultValue="0" hidden="yes"> </Field>
             <Field id="weekRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
-            <Field id="lastWeekRainTotal"   type="textfield"     defaultValue="0" hidden="yes"> </Field>
             <Field id="monthRainTotal"      type="textfield"     defaultValue="0" hidden="yes"> </Field>
-            <Field id="lastmonthRainTotal"  type="textfield"     defaultValue="0" hidden="yes"> </Field>
             <Field id="yearRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
 
         </ConfigUI>
@@ -9157,35 +9314,35 @@ Default pins:
                     <TriggerLabel>sensitivity</TriggerLabel>
                     <ControlPageLabel>sensitivity</ControlPageLabel>
                 </State>
-                <State id="measurentTime">
+                <State id="measurementTime">
                     <ValueType>String</ValueType>
-                    <TriggerLabel>measurentTime</TriggerLabel>
-                    <ControlPageLabel>measurentTime</ControlPageLabel>
+                    <TriggerLabel>measurementTime</TriggerLabel>
+                    <ControlPageLabel>measurementTime</ControlPageLabel>
                 </State>
                 <State id="rainRate">
                     <ValueType>Number</ValueType>
                     <TriggerLabel>rainRate</TriggerLabel>
                     <ControlPageLabel>rainRate</ControlPageLabel>
                 </State>
-                <State id="minrainRateToday">
+                <State id="rainRateMinToday">
                     <ValueType>Number</ValueType>
-                    <TriggerLabel>minrainRateToday</TriggerLabel>
-                    <ControlPageLabel>minrainRateToday</ControlPageLabel>
+                    <TriggerLabel>rainRateMinToday</TriggerLabel>
+                    <ControlPageLabel>rainRateMinToday</ControlPageLabel>
                 </State>
-                <State id="maxrainRateToday">
+                <State id="rainRateMaxToday">
                     <ValueType>Number</ValueType>
-                    <TriggerLabel>maxrainRateToday</TriggerLabel>
-                    <ControlPageLabel>maxrainRateToday</ControlPageLabel>
+                    <TriggerLabel>rainRateMaxToday</TriggerLabel>
+                    <ControlPageLabel>rainRateMaxToday</ControlPageLabel>
                 </State>
-                <State id="minrainRateYesterday">
+                <State id="rainRateMinYesterday">
                     <ValueType>Number</ValueType>
-                    <TriggerLabel>minrainRateYesterday</TriggerLabel>
-                    <ControlPageLabel>minrainRateYesterday</ControlPageLabel>
+                    <TriggerLabel>rainRateMinYesterday</TriggerLabel>
+                    <ControlPageLabel>rainRateMinYesterday</ControlPageLabel>
                 </State>
-                <State id="maxrainRateToday">
+                <State id="rainRateMaxYesterday">
                     <ValueType>Number</ValueType>
-                    <TriggerLabel>maxrainRateToday</TriggerLabel>
-                    <ControlPageLabel>maxrainRateToday</ControlPageLabel>
+                    <TriggerLabel>rainRateMaxYesterday</TriggerLabel>
+                    <ControlPageLabel>rainRateMaxYesterday</ControlPageLabel>
                 </State>
                 <State id="hourRain">
                     <ValueType>Number</ValueType>
@@ -9246,6 +9403,11 @@ Default pins:
                     <ValueType>String</ValueType>
                     <TriggerLabel>lastSensorChange</TriggerLabel>
                     <ControlPageLabel>lastSensorChange</ControlPageLabel>
+                </State>
+                <State id="resetDate">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>resetDate</TriggerLabel>
+                    <ControlPageLabel>resetDate</ControlPageLabel>
                 </State>
         </States>
     </Device>
