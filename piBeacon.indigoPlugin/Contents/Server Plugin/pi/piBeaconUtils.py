@@ -742,7 +742,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
             if (time.time() - G.tStart > 40):#dont send time if we have just started .. wait for ntp etc to get time 
                 tz = time.tzname[1]
                 if len(tz) < 2:  tz = time.tzname[0]
-                data["ts"]          = {"time":time.time(),"tz":tz}
+                data["ts"]          = {"time":round(time.time(),2),"tz":tz}
             
             if  sendAlive == "reboot":
                 name = "pi_IN_Alive"
@@ -830,7 +830,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
                             # redo time stamp, at it is delayed .. 
                             tz = time.tzname[1]
                             if len(tz) < 2:  tz = time.tzname[0]
-                            data["ts"]          = {"time":time.time(),"tz":tz}
+                            data["ts"]          = {"time":round(time.time(),2),"tz":tz}
 
                         if sendMSG:
                                     toLog(0,"msg: " + unicode(sendData)+"\n" )

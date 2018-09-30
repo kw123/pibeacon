@@ -284,6 +284,11 @@
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
+                </State>
 
                 <State id="groupMember">
                     <ValueType>String</ValueType>
@@ -749,6 +754,11 @@
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
+                </State>
                 <State id="online">
                     <ValueType>String</ValueType>
                     <TriggerLabel>online</TriggerLabel>
@@ -1084,6 +1094,11 @@ You can use this also to create a new iBeacon device
                 <TriggerLabel>displayStatus</TriggerLabel>
                 <ControlPageLabel>displayStatus</ControlPageLabel>
             </State>
+            <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
+                </State>
             <State id="status">
                 <ValueType>String</ValueType>
                 <TriggerLabel>status</TriggerLabel>
@@ -1484,6 +1499,11 @@ You can use this also to create a new iBeacon device
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
 
                 <State id="PosX">
@@ -9077,10 +9097,13 @@ For the MQ gas sensors you need to understand the required heating voltage.
       <UiDisplayStateId>status</UiDisplayStateId>
         <ConfigUI>
             <Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+            <Field id="lastUpdate"         type="textfield"     defaultValue="0" hidden="yes"> </Field>
             <Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
+            <Field id="showhelp"     type="checkbox"     defaultValue="true" hidden="no"><Label>Show Help:</Label> </Field>
 
-            <Field id="infoLabelINPUT" type="label">
+
+            <Field id="infoLabelINPUT" type="label" visibleBindingId="showhelp" visibleBindingValue="true">
                 <Label>MINIMAL setup:  Sensor output to a GPIO and ground-- polarity does not matter, 
    connect 12V - polarity does not matter, set mode to medium sensitivity.
    
@@ -9100,7 +9123,7 @@ General info:
        the relay clicks ~ twice per sec until count finished 
        ie number of buckets reported 
 
-Default pins:
+Default pins for dynamic mode:
     pin  2  +5V to relay board, to run the board 
     pin  8 GPIO14 : 12 V relay #4
     pin 10 GPIO15 : dip sw 5 relay #3
@@ -9117,7 +9140,14 @@ Default pins:
     relay NO # 1 —  sw 1  sensor
     connect middle of relay(1,2,3) out  1,2,3 to ground on sensor
     NO = normally open
-    NC = normally closed</Label> 
+    NC = normally closed
+Static mode ie fixed sensitivity does not require any relays to be setup.
+    any rain mode: switches to drizzel after 10 seconds, 
+                   to rain after 140 seconds and 
+                   stays at rain until ~ 140 seconds after last drop
+    High med low sensitive simply count buckets, 
+                   switch to no rain after xx secs set in parameter
+</Label> 
             </Field>
             
         <Field id="infoLabelRPI" type="label">                      <Label>==RPI setup:  -----------------------------</Label> </Field>
@@ -9130,7 +9160,7 @@ Default pins:
             <Field id="sensorMode"   type="menu" defaultValue="dynamic" tooltip="" >
                 <List>
                     <Option value="dynamic"          >dynamic switch of sensitivity rain-high-med-low </Option>
-                    <Option value="checkIfIsRaining" >any rain </Option>
+                    <Option value="checkIfIsRaining" >any rain - static-  states: no rain/drizzle/rain </Option>
                     <Option value="highSensitive"    >0.0001 inch per bucket - static sensitivity high </Option>
                     <Option value="medSensitive"     >0.001  inch per bucket - static sensitivity medium </Option>
                     <Option value="lowSensitive"     >0.01   inch per bucket - static sensitivity low </Option>
@@ -9176,69 +9206,70 @@ Default pins:
               </List>
             </Field>
 
-        <Field id="infoLabeltime" type="label">               <Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
-            <Field id="TimeSwitchSensitivityRainToMayBeRaining"   type="menu" defaultValue="10">
+        <Field id="infoLabeltime" type="label" visibleBindingId="sensorMode" visibleBindingValue="dynamic">               <Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
+            <Field id="TimeSwitchSensitivityRainToMayBeRaining"   type="menu" defaultValue="10" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>no rain to may be rain:</Label>
                 <List>
                     <Option value="0"   >no wait </Option>
-                    <Option value="2"   >3 clicks in 2 secs</Option>
-                    <Option value="5"   >3 clicks in 5 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs - only for testing</Option>
                     <Option value="10"  >3 clicks in 10 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityMayBeRainingToHigh"   type="menu" defaultValue="10">
+            <Field id="TimeSwitchSensitivityMayBeRainingToHigh"   type="menu" defaultValue="10" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>May be  rain to high Sensitivity:</Label>
                 <List>
                     <Option value="0"   >no wait </Option>
-                    <Option value="2"   >3 clicks in 2 secs</Option>
-                    <Option value="5"   >3 clicks in 5 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs - only for testing</Option>
                     <Option value="10"  >3 clicks in 10 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="2">
+            <Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="10" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>high to medium Sensitivity:</Label>
                 <List>
-                    <Option value="1"   >3 clicks in 1 secs</Option>
-                    <Option value="2"   >3 clicks in 2 secs</Option>
-                    <Option value="5"   >3 clicks in 5 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs - only for testing</Option>
+                    <Option value="10"  >3 clicks in 10 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="2">
+            <Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="10" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>medium to low Sensitivity:</Label>
                 <List>
-                    <Option value="1"   >3 clicks in 1 secs</Option>
-                    <Option value="2"   >3 clicks in 2 secs</Option>
-                    <Option value="5"   >3 clicks in 5 secs</Option>
+                    <Option value="5"   >3 clicks in 5 secs - only for testing</Option>
+                    <Option value="10"  >3 clicks in 10 secs</Option>
               </List>
             </Field>
-        <Field id="infoLabeltime2" type="label">               <Label>==Time w no event = click of relay to switch to higher sensitivity level</Label> </Field>
-            <Field id="infoLabeltime21" type="label" alignText="right" fontSize="small" >
+            <Field id="infoLabeltime2" type="label"  visibleBindingId="sensorMode" visibleBindingValue="dynamic">               
+                    <Label>==Time w no event = click of relay to switch to higher sensitivity level</Label> 
+            </Field>
+            <Field id="infoLabeltime21" type="label" alignText="right" fontSize="small" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
              <Label>must be &gt; time between messages, ie 60 secs</Label> </Field>
              
-            <Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="0" tooltip="">
+            <Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="0" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>low to medium Sensitivity:</Label>
                 <List>
-                    <Option value="10"   >no click in 10 secs only for testing</Option>
+                    <Option value="20"   >no click in 20 secs only for testing</Option>
+                    <Option value="60"   >no click in 60 secs</Option>
                     <Option value="100"  >no click in 100 secs</Option>
                     <Option value="150"  >no click in 150 secs</Option>
                     <Option value="200"  >no click in 200 secs</Option>
                     <Option value="300"  >no click in 300 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityMedToHigh"   type="menu" defaultValue="100">
+            <Field id="TimeSwitchSensitivityMedToHigh"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>medium to high Sensitivity:</Label>
                 <List>
-                    <Option value="10"   >no click in 10 secs secs only for testing</Option>
+                    <Option value="20"   >no click in 20 secs secs only for testing</Option>
+                    <Option value="60"   >no click in 60 secs</Option>
                     <Option value="100"  >no click in 100 secs</Option>
                     <Option value="150"  >no click in 150 secs</Option>
                     <Option value="200"  >no click in 200 secs</Option>
                     <Option value="300"  >no click in 300 secs</Option>
               </List>
             </Field>
-            <Field id="TimeSwitchSensitivityHighToAnyRain"   type="menu" defaultValue="100">
+            <Field id="TimeSwitchSensitivityHighToAnyRain"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
                 <Label>high to any rain:</Label>
                 <List>
-                    <Option value="10"   >no click in 10 secs secs only for testing</Option>
+                    <Option value="20"   >no click in 20 secs secs only for testing</Option>
+                    <Option value="60"   >no click in 60 secs</Option>
                     <Option value="100"  >no click in 100 secs</Option>
                     <Option value="150"  >no click in 150 secs</Option>
                     <Option value="200"  >no click in 200 secs</Option>
@@ -9255,13 +9286,17 @@ Default pins:
                     <Option value="150"  >150 secs</Option>
                     <Option value="180"  >180 secs</Option>
                     <Option value="240"  >240 secs</Option>
+                    <Option value="300"  >300 secs</Option>
                 </List>
             </Field>
              
         <Field id="infoLabelINDIGO" type="label">               <Label>==INDIGO setup:  --------------------------</Label> </Field>
 
             <Field id="rainMsgMap"   type="textfield" defaultValue="no rain;may be raining;drizzle;rain;heavy rain">
-                <Label>text to show for rain level 0;1;2;3;4:</Label>
+                <Label>text to show for rain LEVEL 0;1;2;3;4:</Label>
+            </Field>
+            <Field id="rainTextMap"   type="textfield" defaultValue="0:no rain;1:drizzle;2.5:rain;5:heavy rain;1000:hurricane">
+                <Label>rain RATE to text: map upperLimit:text;nextLimit:text; ... :</Label>
             </Field>
             
             <Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
@@ -9275,7 +9310,7 @@ Default pins:
                     <Option value="weekRain"          >week Rain</Option>
                     <Option value="monthRain"         >month Rain</Option>
                     <Option value="yearRain"          >year Rain</Option>
-                    <Option value="totalRain"         >total Rain</Option>
+                    <Option value="rainText"          >rain Rate text mapping </Option>
                 </List>
                 <Label>State to display in the State Column:</Label>
              </Field>
@@ -9299,10 +9334,15 @@ Default pins:
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
-                <State id="rainLevel">
+                <State id="rainText">
                     <ValueType>String</ValueType>
                     <TriggerLabel>rainLevel</TriggerLabel>
                     <ControlPageLabel>rainLevel</ControlPageLabel>
+                </State>
+                <State id="rainLevel">
+                    <ValueType>String</ValueType>
+                    <TriggerLabel>rainText</TriggerLabel>
+                    <ControlPageLabel>rainText</ControlPageLabel>
                 </State>
                 <State id="mode">
                     <ValueType>String</ValueType>
@@ -9896,6 +9936,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
+                </State>
                 <State id="INPUT">
                     <ValueType>String</ValueType>
                     <TriggerLabel>INPUT</TriggerLabel>
@@ -10039,6 +10084,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
                 <State id="INPUT_0">
                     <ValueType>String</ValueType>
@@ -10204,6 +10254,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
                 <State id="INPUT_00">
                     <ValueType>String</ValueType>
@@ -10408,6 +10463,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
                 <State id="INPUT_00">
                     <ValueType>String</ValueType>
@@ -10628,6 +10688,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
                 </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
+                </State>
                 <State id="INPUT_0">
                     <ValueType>String</ValueType>
                     <TriggerLabel>INPUT_0</TriggerLabel>
@@ -10747,6 +10812,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
                 <State id="INPUT_0">
                     <ValueType>String</ValueType>
@@ -10883,6 +10953,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
                 <State id="INPUT_0">
                     <ValueType>String</ValueType>
@@ -11051,6 +11126,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
                     <ValueType>String</ValueType>
                     <TriggerLabel>status</TriggerLabel>
                     <ControlPageLabel>status</ControlPageLabel>
+                </State>
+                <State id="onOffState">
+                    <ValueType>boolean</ValueType>
+                    <TriggerLabel>onOffState</TriggerLabel>
+                    <ControlPageLabel>onOffState</ControlPageLabel>
                 </State>
                 <State id="INPUT_00">
                     <ValueType>String</ValueType>

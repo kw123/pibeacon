@@ -142,9 +142,8 @@ class thisSensorClass:
                 print "---------------------------------------"
             return acumValues
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            print (sys.exc_traceback.tb_lineno, e)
-        print " bad read, ..  receivedCharacters", len(receivedCharacters),":",(":".join("{:02x}".format(ord(c)) for c in receivedCharacters))
+            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+        U.toLog(-1, " bad read, ..  receivedCharacters"+ str(len(receivedCharacters))+":"+str(":".join("{:02x}".format(ord(c)) for c in receivedCharacters)), doPrint=True)
         return "badSensor"
 
 
@@ -251,8 +250,8 @@ def readParams():
             pass
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        print sensors[sensor]
+        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+        U.toLog(-1,str(sensors[sensor]) )
         
 
 

@@ -24,7 +24,7 @@ import resource
 import versionCheck.versionCheck as VS
 import myLogPgms.myLogPgms 
 
-dataVersion = 32.17
+dataVersion = 32.19
 
 
 
@@ -8537,6 +8537,7 @@ class Plugin(indigo.PluginBase):
                     else:
                         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
                     
+                    if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",status=="up",dev=dev)
                     self.addToStatesUpdateDict(unicode(dev.id),u"status", status,dev=dev)
                     self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="BLEconnectCheckPeriod end")    
 
@@ -8593,12 +8594,14 @@ class Plugin(indigo.PluginBase):
                         self.addToStatesUpdateDict(unicode(dev.id),u"online", u"expired",dev=dev)
                         dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
                         if pi >= _GlobalConst_numberOfiBeaconRPI: 
+                            if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",False,dev=dev)
                             self.addToStatesUpdateDict(unicode(dev.id),u"status", u"expired",dev=dev)
                     continue
 
                 if time.time()- self.RPI[unicode(pi)][u"lastMessage"] > 240:
                     self.addToStatesUpdateDict(unicode(dev.id),u"online", u"expired",dev=dev)
                     if pi >= _GlobalConst_numberOfiBeaconRPI: 
+                        if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",False,dev=dev)
                         self.addToStatesUpdateDict(unicode(dev.id),u"status", u"expired",dev=dev)
                         dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
                     else:
@@ -8612,10 +8615,12 @@ class Plugin(indigo.PluginBase):
                 elif time.time()- self.RPI[unicode(pi)][u"lastMessage"] >120:
                     self.addToStatesUpdateDict(unicode(dev.id),u"online", u"down",dev=dev)
                     if pi >= _GlobalConst_numberOfiBeaconRPI: 
+                        if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",False,dev=dev)
                         self.addToStatesUpdateDict(unicode(dev.id),u"status", u"down")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
                     else:
                         if dev.states[u"status"] in [u"down","expired"]:
+                            if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",False,dev=dev)
                             dev.setErrorStateOnServer('IPconnection and BLE down')
                             dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
                         else:
@@ -8624,6 +8629,7 @@ class Plugin(indigo.PluginBase):
 
                 else:
                     self.addToStatesUpdateDict(unicode(dev.id),u"online", u"up",dev=dev)
+                    if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",True,dev=dev)
                     self.addToStatesUpdateDict(unicode(dev.id),u"status", u"up")
                     dev.setErrorStateOnServer(u"")
                     if pi >= _GlobalConst_numberOfiBeaconRPI: 
@@ -8732,6 +8738,7 @@ class Plugin(indigo.PluginBase):
                         if dev.states[u"groupMember"] !="": anyChange = True
                         #if dev.name ==u"Pi-20-Karl": self.ML.myLog( text =  u"status change in BeaconsCheckPeriod for "+ dev.name+"; beacon"+ beacon+"  from "+dev.states[u"status"]+" to "+ self.beacons[beacon][u"status"]+";  expirationTime="+unicode(expT)+"  time.time()-lastUp="+unicode(delta) )
                         self.addToStatesUpdateDict(unicode(dev.id),u"status", self.beacons[beacon][u"status"],dev=dev)
+                        if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",self.beacons[beacon][u"status"]=="up",dev=dev)
 
                         if self.beacons[beacon][u"status"] == u"up":
                             if u"closestRPI"     in dev.states: 
@@ -9582,6 +9589,7 @@ class Plugin(indigo.PluginBase):
 
 
             dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+            if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",dev.states[u"status"] == "up",dev=dev)
             if dev.states[u"status"] != "up" :
                 self.addToStatesUpdateDict(unicode(dev.id),u"status", u"up",dev=dev)
             if dev.states[u"online"] != "up":
@@ -9616,6 +9624,7 @@ class Plugin(indigo.PluginBase):
             if new==u"up":
                 #self.addToStatesUpdateDict(unicode(dev.id),u"lastMessage", now,dev=dev)
                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",dev.states[u"status"] == "up",dev=dev)
                 if u"status" in dev.states and dev.states[u"status"] != "up":
                     self.addToStatesUpdateDict(unicode(devID),u"status", u"up",dev=dev)
                 if u"online" in dev.states and dev.states[u"online"] != "up":
@@ -9677,6 +9686,7 @@ class Plugin(indigo.PluginBase):
             if not Found:
                 self.ML.myLog( text =  u"sensor pi " + unicode(pi) + "- devId: " + unicode(devId) +" not found, please configure the rPi:  "+ unicode(self.RPI[unicode(pi)]))
             if Found:
+                if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",dev.states[u"status"] == "up",dev=dev)
                 if dev.states[u"status"] != "up":
                         self.addToStatesUpdateDict(unicode(dev.id),u"status",u"up",dev=dev)
                         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -9791,6 +9801,7 @@ class Plugin(indigo.PluginBase):
             if self.getCurrentState(dev,devIds,"status", fromMETHOD="calcPostion5") != status:
                 #if dev.id == 354285958: self.ML.myLog( text =  u"status change in calcPostion for "+ dev.name+"  from "+self.getCurrentState(dev,devIds,"status")+" to "+ status+"  for  piTime=" +pitimeNearest  +";  expirationTime="+unicode(expirationTime)+"  time.time()-lastUp="+unicode(time.time()-lastUp) )
                 update=True
+                if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",status == "up",dev=dev)
                 self.addToStatesUpdateDict(unicode(dev.id),u"status", status,dev=dev)
                 if  (u"note" in dev.states and dev.states[u"note"].find(u"beacon") >-1) or dev.deviceTypeId ==u"BLEconnect":
                     if status ==u"up":
@@ -9935,6 +9946,7 @@ class Plugin(indigo.PluginBase):
                 if abs(dev.states[u"Pi_"+unicode(pi)+"_Distance"] - dist) > 0.5 and abs(dev.states[u"Pi_"+unicode(pi)+"_Distance"] - dist)/max(0.5,dist) > 0.05:
                     self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(pi) + "_Distance", dist,decimalPlaces=1,dev=dev)
                 #self.executeUpdateStatesDict()
+                if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",dev.states[u"status"] == "up",dev=dev)
                 update, deltaDistance = self.calcPostion(dev,expirationTime)
                 updateBLE = update or updateBLE
                 self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="BLEconnectupdate end")    
@@ -10375,10 +10387,15 @@ class Plugin(indigo.PluginBase):
     def updaterainSensorRG11(self, dev, data, whichKeysToDisplay):
         try:
             props = dev.pluginProps
+            if "lastUpdate" not in props or props["lastUpdate"]=="0":
+                props["lastUpdate"] = time.time()
+                
             updateDev = False
             ##indigo.server.log(unicode(data))
+            rainChanges = []
             if len(dev.states["resetDate"]) < 5:
-                self.addToStatesUpdateDict(unicode(dev.id), "resetDate", datetime.datetime.now().strftime(_defaultDateStampFormat),dev=dev)
+                rainChanges.append(["resetDate", datetime.datetime.now().strftime(_defaultDateStampFormat)])
+                #self.addToStatesUpdateDict(unicode(dev.id), "resetDate", datetime.datetime.now().strftime(_defaultDateStampFormat),dev=dev)
 
             for cc in ["totalRain", "rainRate", "measurementTime", "mode", "rainLevel", "sensitivity"]:
                 if cc in data:
@@ -10387,11 +10404,13 @@ class Plugin(indigo.PluginBase):
                         x = float(data[cc])  # is in mm 
                         if   self.rainUnits == "inch":     x /=25.4
                         elif self.rainUnits == "cm":       x /=10.
-                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits, dev=dev) 
+                        rainChanges.append([cc, x, self.rainDigits])
+                        #self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits, dev=dev) 
                         if whichKeysToDisplay == cc: 
                                 if "format" in props and len(props["format"])<2: form = cc+"= %."+str(self.rainDigits)+"f["+self.rainUnits+"]"
                                 else:                                            form = props["format"]
-                                self.addToStatesUpdateDict(unicode(dev.id),u"status", form%x,dev=dev) 
+                                rainChanges.append([u"status", form%x])
+                                #self.addToStatesUpdateDict(unicode(dev.id),u"status", form%x,dev=dev) 
                         for zz in ["hourRain","dayRain","weekRain","monthRain","yearRain"]:
                             #indigo.server.log(" testing: "+zz)
                             zzP= zz+"Total"
@@ -10402,46 +10421,85 @@ class Plugin(indigo.PluginBase):
                                     props[zzP] = x
                                     updateDev = True
                                     oldV = x
-                                self.addToStatesUpdateDict(unicode(dev.id),zz, x-oldV,  decimalPlaces = self.rainDigits, dev=dev) 
+                                rainChanges.append([zz, x-oldV, self.rainDigits])
+                                #self.addToStatesUpdateDict(unicode(dev.id),,  decimalPlaces = self.rainDigits, dev=dev) 
                                 if whichKeysToDisplay == zz: 
                                     if "format" in props and len(props["format"])<2: form = zz+"= %."+str(self.rainDigits+1)+"f["+self.rainUnits+"]"
                                     else:                                            form = props["format"]
-                                    self.addToStatesUpdateDict(unicode(dev.id),u"status", form%(x-oldV),dev=dev) 
+                                    rainChanges.append([u"status", form%(x-oldV)])
+                                    #self.addToStatesUpdateDict(unicode(dev.id),u"status", form%(x-oldV),dev=dev) 
 
 
-                    elif cc =="rainRate":
+                    elif cc == "rainRate":
                         x = float(data[cc])  # is in mm 
                         if   self.rainUnits == "inch":     x /=25.4
                         elif self.rainUnits == "cm":       x /=10.
-                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits+1, dev=dev) 
+                        rainChanges.append([cc, x, self.rainDigits+1])
+                        #self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = self.rainDigits+1, dev=dev) 
                         if whichKeysToDisplay == cc: 
                                 if "format" in props and len(props["format"])<2: form = cc+"= %."+str(self.rainDigits)+"f["+self.rainUnits+"]"
                                 else:                                            form = props["format"]
-                                self.addToStatesUpdateDict(unicode(dev.id),u"status", form%x,dev=dev)
+                                rainChanges.append([u"status", form%x])
+                                #self.addToStatesUpdateDict(unicode(dev.id),u"status", form%x,dev=dev)
                         self.fillMinMaxSensors(dev,"rainRate",x,self.rainDigits)
+                        if "rainTextMap" in props:
+                            rtm  = props["rainTextMap"].split(";")
+                            lowerLimit =[]
+                            rainText =[]
+                            for nn in range(len(rtm)):
+                                item = rtm[nn].split(":")
+                                if len(item) !=2: continue
+                                try: 
+                                    limit = float(item[0])
+                                    if x <= limit or nn+1 == len(rtm) :
+                                        rainChanges.append([u"rainText", item[1]])
+                                        if whichKeysToDisplay == "rainText": 
+                                            rainChanges.append([u"status", item[1]])
+                                        break
+                                except: pass
                                 
-                        
                     elif cc == "measurementTime":
                         x = data[cc]
-                        self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = 0, dev=dev) 
+                        rainChanges.append([cc, int(x)])
+                        #self.addToStatesUpdateDict(unicode(dev.id),cc, x,  decimalPlaces = 1, dev=dev) 
                         if whichKeysToDisplay == cc: 
                                 if "format" in props and len(props["format"])<2: form = cc+"= %d"+"f[secs]"
                                 else:                                            form = props["format"]
-                                self.addToStatesUpdateDict(unicode(dev.id),u"status", form%x,dev=dev) 
+                                rainChanges.append([u"status", form%x])
+                                #self.addToStatesUpdateDict(unicode(dev.id),u"status", form%x,dev=dev) 
+
                     elif cc == "rainLevel":
                         try: x = int(data[cc])
                         except: x = 0
                         labels = (props["rainMsgMap"]).split(";")
                         if x in [0,1,2,3,4]:
                             if len(labels) > x:
+                                rainChanges.append([cc, labels[x]])
                                 self.addToStatesUpdateDict(unicode(dev.id),cc, labels[x],  dev=dev) 
                                 if whichKeysToDisplay == cc: 
-                                    self.addToStatesUpdateDict(unicode(dev.id),u"status", labels[x],dev=dev) 
+                                    rainChanges.append([u"status", labels[x]])
+                                    #self.addToStatesUpdateDict(unicode(dev.id),u"status", labels[x],dev=dev) 
                     else:
                         x = data[cc]
+                        rainChanges.append([cc, x])
+                        ##indigo.server.log(cc+"  "+unicode(x))
                         self.addToStatesUpdateDict(unicode(dev.id),cc, x,                     dev=dev) 
                         if whichKeysToDisplay == cc: 
-                                self.addToStatesUpdateDict(unicode(dev.id),u"status", x,dev=dev) 
+                                rainChanges.append([u"status", x])
+                                #self.addToStatesUpdateDict(unicode(dev.id),u"status", x,dev=dev) 
+            if len(rainChanges)>0:
+                if time.time() - props["lastUpdate"] > 900:   # force update every 15 minutes
+                    ff = True
+                    props["lastUpdate"] = time.time()
+                    updateDev = True
+                else:
+                    ff = False
+                ##indigo.server.log(whichKeysToDisplay+"  "+unicode(rainChanges))
+                for xx in rainChanges:
+                    if len(xx) == 2:
+                        self.addToStatesUpdateDict(unicode(dev.id),xx[0],xx[1],dev=dev, force = ff) 
+                    elif len(xx) == 3:
+                        self.addToStatesUpdateDict(unicode(dev.id),xx[0],xx[1],decimalPlaces=xx[2],dev=dev, force = ff) 
             if updateDev: 
                 dev.replacePluginPropsOnServer(props)
 
@@ -10782,6 +10840,7 @@ class Plugin(indigo.PluginBase):
 
                         #self.ML.myLog( text =  dev.name+" adding to update")
                     if upState == inputState:
+                        if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",ss=="1",dev=dev)
                         if dev.states[u"status"] != ssUI + unit:
                             self.addToStatesUpdateDict(unicode(dev.id),u"status", ssUI + unit,dev=dev)
                             fs = self.getNumber(ss)
@@ -11876,6 +11935,7 @@ class Plugin(indigo.PluginBase):
                     return 
                     
                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",True,dev=dev)
                 self.addToStatesUpdateDict(unicode(dev.id),u"status", u"up",dev=dev)
                 self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + piNReceived)
                 self.addToStatesUpdateDict(unicode(dev.id),u"TxPowerSet", float(_GlobalConst_emptyrPiProps[u"beaconTxPower"]))
@@ -12026,6 +12086,7 @@ class Plugin(indigo.PluginBase):
                                 self.ML.myLog( text =  u"communication to indigo is interrupted")
                                 return 
                         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                        if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",True,dev=dev)
                         self.addToStatesUpdateDict(unicode(dev.id),u"status", u"up",dev=dev)
                         self.addToStatesUpdateDict(unicode(dev.id),u"UUID", uuid)
                         self.addToStatesUpdateDict(unicode(dev.id),u"note", u"beacon-other")
@@ -12089,6 +12150,7 @@ class Plugin(indigo.PluginBase):
                     if piStillUp ==-1:
                         updateSignal = True
                         if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)  # only for regluar ibeacons..
+                        if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",False,dev=dev)
                         newStates = self.addToStatesUpdateDict(unicode(dev.id),u"status", u"down",newStates=newStates,dev=dev)
                         self.beacons[mac][u"status"] = "down"
                         #newStates= self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen,newStates=newStates)
@@ -12162,6 +12224,7 @@ class Plugin(indigo.PluginBase):
                                 newStates = self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Time", dateString,newStates=newStates)
                                 if newStates[u"status"] != "up":  
                                     if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                                    if u"onOffState" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),u"onOffState",True,dev=dev)
                                     newStates=self.addToStatesUpdateDict(unicode(dev.id),u"status", u"up",newStates=newStates)
                                     self.beacons[mac][u"updateFING"] = 1
                                     updateFINGnow = True
@@ -13714,7 +13777,7 @@ class Plugin(indigo.PluginBase):
 ##############################################################################################
 
 ####-------------------------------------------------------------------------####
-    def addToStatesUpdateDict(self,devId,key,value,dev ="",newStates="",decimalPlaces=""):
+    def addToStatesUpdateDict(self,devId,key,value,dev ="",newStates="",decimalPlaces="", force=False):
         devId=str(devId)
         try:
             try:
@@ -13734,7 +13797,7 @@ class Plugin(indigo.PluginBase):
                     if value != self.updateStatesDict[devId]["keys"][key][0]:
                         self.updateStatesDict[devId]["keys"][key] = {}
                         if newStates !="": newStates[key] = {}
-                self.updateStatesDict[devId]["keys"][key] = [value,decimalPlaces]
+                self.updateStatesDict[devId]["keys"][key] = [value,decimalPlaces,force]
                 if newStates !="": newStates[key] = value
 
             except  Exception, e:
@@ -13838,6 +13901,9 @@ class Plugin(indigo.PluginBase):
                                         upd=True
                             else: 
                                 if unicode(value) != unicode(dev.states[key]):
+                                        upd=True
+                            if local[devId]["keys"][key][2]: 
+                                        ##indigo.server.log(dev.name+"  "+key+"  "+unicode(local[devId]["keys"][key])  )
                                         upd=True
                             if upd:
                                 nKeys +=1
