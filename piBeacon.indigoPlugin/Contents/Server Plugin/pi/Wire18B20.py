@@ -32,7 +32,7 @@ def get18B20(sensor, data):
     try:
         data[sensor]={}
         try:
-            devs=subprocess.Popen("cat  /sys/bus/w1/devices/w1_bus_master1/w1_master_slaves",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].split("\n")
+            devs=subprocess.Popen("cat /sys/bus/w1/devices/w1_bus_master1/w1_master_slaves",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].split("\n")
             #print " getting data devs= "+str( devs )+ "<< "
             ret = {}
             for line in devs:

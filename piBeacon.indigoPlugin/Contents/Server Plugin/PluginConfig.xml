@@ -53,7 +53,7 @@
         <Label>Parameters for iBeacons </Label>
    </Field>
    <Field    id="secToDown"   type="menu" defaultValue="80" tooltip="this is the default value, can be overwritten in each device edit">
-        <Label>Status goes from UP 2 DOWN 2 EXP if no signal in:</Label>
+        <Label>Status goes from UP 2 DOWN  if no signal in:</Label>
         <List>
             <Option value="30"  > 30 Seconds</Option>
             <Option value="45"  > 45 Seconds</Option>
@@ -67,6 +67,20 @@
             <Option value="110" >110 Seconds</Option>
             <Option value="120" >  2 Minutes </Option>
             <Option value="180" >  3 Minutes </Option>
+        </List>
+   </Field>
+   <Field    id="expTimeMultiplier"   type="menu" defaultValue="2" tooltip=" eg UP to down is 60 choosing 3 down to expired is 180 secs ">
+        <Label>Status goes from DOWN 2 EXP after x times UP 2 DOWN time:</Label>
+        <List>
+            <Option value="1.5" > 1.5</Option>
+            <Option value="2"   > 2</Option>
+            <Option value="2.5" > 2.5</Option>
+            <Option value="3"   > 3</Option>
+            <Option value="3.5" > 3.5</Option>
+            <Option value="4"   > 4</Option>
+            <Option value="5"   > 5</Option>
+            <Option value="7"   > 7</Option>
+            <Option value="10"  >10 </Option>
         </List>
    </Field>
    <Field    id="txPowerCutoffDefault"   type="menu" defaultValue="999"   tooltip="default cutoff for bluetooth strength used to ignore non ibeacon devices with VERY strong signal">
