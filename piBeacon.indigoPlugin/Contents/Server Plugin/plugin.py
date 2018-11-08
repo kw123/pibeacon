@@ -8223,7 +8223,7 @@ class Plugin(indigo.PluginBase):
 					self.cProfileVariableLoaded = 2
 				elif  self.cProfileVariableLoaded >1:
 					self.quitNow = " restart due to change  ON  requested for print cProfile timers"
-			elif cmd == "off":
+			elif cmd == "off" and self.cProfileVariableLoaded >0:
 					self.pr.disable()
 					self.quitNow = " restart due to  OFF  request for print cProfile timers "
 		if cmd == "print"  and self.cProfileVariableLoaded >0:
