@@ -690,14 +690,16 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
     <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (s) special debug (only for development):</Label>  </Field>
 
-    <Field    id="logFilePath"      type="menu"      defaultValue="no"      > <Label> send logs to ..:</Label>
+    <Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
         <List>
-            <Option value="no"       > no special unifi logfile, std indigo logfile</Option>
-            <Option value="user"     > ~/indigo/pibeacon/pibeacon.log                    </Option>
-            <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/pibeacon.log </Option>
+            <Option value="standard" > no special unifi logfile, std indigo logfile</Option>
+            <Option value="user"     > ~/indigo/pibeacon/plugin.log                    </Option>
+            <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/plugin.log </Option>
         </List>
     </Field>
-
-
+    <Field id="infoLabel227" type="label"> <Label>.                     for DETAILED time tracking set indigo variable "denableTimeTracking_piBeacon"</Label>  </Field>
+    <Field    id="do_cProfile" type="textfield"  defaultValue="on/off/print"  readonly="yes"     > 
+        <Label>... enable or stop or  print intermediate results use on/off/print:</Label>  
+    </Field>
 
 </PluginConfig>

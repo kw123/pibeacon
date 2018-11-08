@@ -270,14 +270,15 @@ def readParams(init):
 def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 	global BLEsensorMACs, sensor
 	try:
-		data[sensor][devId] ={}
+		data ={sensor:{}}
+		if mac not in BLEsensorMACs: return 
 		if time.time() - BLEsensorMACs[mac]["lastUpdate"]  < BLEsensorMACs[mac]["updateIndigoTiming"]: 
 			#print "rejecting ", time.time() - BLEsensorMACs[mac]["lastUpdate"] ,  BLEsensorMACs[mac]["updateIndigoTiming"]
 			return 
 		#print "accepting ", time.time() - BLEsensorMACs[mac]["lastUpdate"] ,  BLEsensorMACs[mac]["updateIndigoTiming"]
 		BLEsensorMACs[mac]["lastUpdate"] = time.time()
 		devId		= BLEsensorMACs[mac]["devId"]
-		data   = {sensor:{devId:{}}}
+		data		= {sensor:{devId:{}}}
 		if BLEsensorMACs[mac]["type"] =="myBLUEt":
 			RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
 			if RawData[2] != 0: tSign = 0x10000 # == 65536 == 2<<15
@@ -327,6 +328,7 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 
 	except	Exception, e:
 		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 		#print RawData				
 	""" from the sensor web site:
 		private void submitScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
@@ -471,7 +473,7 @@ try:
 						mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
 						if mac not in BLEsensorMACs: 
 							continue
-						
+							
 						pkLen				= len(pkt)
 						nBytesThisMSG		= ord(pkt[offS+6])
 
@@ -501,7 +503,6 @@ try:
 						#lastB = 
 						tx	 = "%i" % struct.unpack("b", pkt[ -2 ])
 						rx	 = "%i" % struct.unpack("b", pkt[ -1 ])
-						
 
 						doSensors(pkt,UUID,Maj,Min,mac,rx,tx)
 						time.sleep(1)

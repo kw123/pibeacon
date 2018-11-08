@@ -1722,7 +1722,13 @@ You can use this also to create a new iBeacon device
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="label0"               type="label" >
-			<Label>setup BLE sensors you need to supply the MAC number and the RPi which should read the sensor:</Label>
+			<Label>setup BLE sensors you need to supply the MAC number and the RPi 
+ which should read the sensor:
+ login to RPI and do   
+ sudo hciconfig hci0 down;sleep 1;sudo hciconfig hci0 up;sleep 1;sudo timeout -s INT 50s hcitool lescan
+ find a line like --F1:40:50:49:2A:42 24A2041F --  
+ F1:...:42 is the mac number of your BLE temp sensor;   
+ 24A22041F is used on the iphone myBlue-T app to ID the sensor</Label>
 			</Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -1731,16 +1737,14 @@ You can use this also to create a new iBeacon device
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
-
-			<Field id="mac" type="textfield"     defaultValue="" tooltip="use eg sudo hcitool lescan to find the MAC number.
-The myBLUE sensor in the app shows the MAC revers and only the front and back part of the MAC number sensor 224BD75C has the real mac number C5:7D:B7:58:B4:22" >
+			<Field id="mac" type="textfield"     defaultValue="" tooltip="" >
 			<Label>enter MAC number for this device: </Label>
 			</Field>
 
 			<Field id="type" type="menu"     defaultValue="myBLUEt"> 
 			<List>
 				<Option value="myBLUEt"          >myBLUEt</Option>
-				<Option value="blueRadio"        >blueRadio</Option>
+				<!-- ><Option value="blueRadio"        >blueRadio</Option> -->
 			</List>
 			<Label>type of sensor:</Label> 
 			</Field>
@@ -9502,7 +9506,8 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			</List>
 			</Field>
 
-		<Field id="infoLabeltime" type="label" visibleBindingId="sensorMode" visibleBindingValue="dynamic">			<Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
+<!-- 
+			<Field id="infoLabeltime" type="label" visibleBindingId="sensorMode" visibleBindingValue="dynamic">			<Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
 			<Field id="TimeSwitchSensitivityRainToMayBeRaining"   type="menu" defaultValue="0" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
 			<Label>no rain to may be rain:</Label>
 			<List>
@@ -9534,40 +9539,26 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			</Field>
 			<Field id="infoLabeltime21" type="label" alignText="right" fontSize="small" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
 			<Label>must be &gt; time between messages, eg 60 secs</Label> </Field>
-             
-			<Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="0" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
+
+			<Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
 			<Label>low to medium Sensitivity:</Label>
 			<List>
-				<Option value="20"   >no click in 20 secs only for testing</Option>
-				<Option value="60"   >no click in 60 secs</Option>
 				<Option value="100"  >no click in 100 secs</Option>
-				<Option value="150"  >no click in 150 secs</Option>
-				<Option value="200"  >no click in 200 secs</Option>
-				<Option value="300"  >no click in 300 secs</Option>
 			</List>
 			</Field>
 			<Field id="TimeSwitchSensitivityMedToHigh"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
 			<Label>medium to high Sensitivity:</Label>
 			<List>
-				<Option value="20"   >no click in 20 secs secs only for testing</Option>
-				<Option value="60"   >no click in 60 secs</Option>
 				<Option value="100"  >no click in 100 secs</Option>
-				<Option value="150"  >no click in 150 secs</Option>
-				<Option value="200"  >no click in 200 secs</Option>
-				<Option value="300"  >no click in 300 secs</Option>
 			</List>
 			</Field>
 			<Field id="TimeSwitchSensitivityHighToAnyRain"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
 			<Label>high to any rain:</Label>
 			<List>
-				<Option value="20"   >no click in 20 secs secs only for testing</Option>
-				<Option value="60"   >no click in 60 secs</Option>
 				<Option value="100"  >no click in 100 secs</Option>
-				<Option value="150"  >no click in 150 secs</Option>
-				<Option value="200"  >no click in 200 secs</Option>
-				<Option value="300"  >no click in 300 secs</Option>
 			</List>
 			</Field>
+-->      
 			<Field id="sendMSGEverySecs" type="menu"     defaultValue="90" hidden="no" > 
 			<Label>Send Msg to indigo every:</Label>
 			<List>
@@ -9581,13 +9572,16 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 				<Option value="300"  >300 secs</Option>
 			</List>
 			</Field>
+			<Field id="rainScaleFactor" type="textfield"     defaultValue="1" hidden="no" > 
+			<Label>Rain Scale Factor (multiply bucket size):</Label>
+			</Field>
              
 		<Field id="infoLabelINDIGO" type="label">			<Label>==INDIGO setup:  --------------------------</Label> </Field>
 
 			<Field id="rainMsgMap"   type="textfield" defaultValue="no rain;may be raining;drizzle;rain;heavy rain">
 			<Label>text to show for rain LEVEL 0;1;2;3;4:</Label>
 			</Field>
-			<Field id="rainTextMap"   type="textfield" defaultValue="0:no rain;1:drizzle;2.5:rain;5:heavy rain;1000:hurricane">
+			<Field id="rainTextMap"   type="textfield" defaultValue="0:no rain;1:drizzle;3:rain;10:heavy rain;1000:hurricane">
 			<Label>rain RATE to text: map upperLimit:text;nextLimit:text; ... :</Label>
 			</Field>
             
@@ -9598,7 +9592,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 				<Option value="rainLevel"         >Rain level</Option>
 				<Option value="rainRate"          >Rain Rate</Option>
 				<Option value="hourRain"          >hour Rain</Option>
-				<Option value="dayRain"         >today Rain</Option>
+				<Option value="dayRain"           >today Rain</Option>
 				<Option value="weekRain"          >week Rain</Option>
 				<Option value="monthRain"         >month Rain</Option>
 				<Option value="yearRain"          >year Rain</Option>
@@ -9633,6 +9627,11 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 				<ValueType>String</ValueType>
 				<TriggerLabel>rainLevel</TriggerLabel>
 				<ControlPageLabel>rainLevel</ControlPageLabel>
+			</State>
+			<State id="lastRain">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastRain</TriggerLabel>
+				<ControlPageLabel>lastRain</ControlPageLabel>
 			</State>
 			<State id="rainLevel">
 				<ValueType>String</ValueType>

@@ -26,7 +26,7 @@ def readParams():
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, cyclePower, sensorMode
 	global ON, off
 	global oldRaw, lastRead
-	global switchToLowerSensitive, switchToHigherSensitive, bucketSize, sendMSGEverySecs
+	global switchToLowerSensitive, switchToHigherSensitive, bucketSize,bucketSize0, sendMSGEverySecs
 	global status
 	try:
 		restart = False
@@ -83,14 +83,16 @@ def readParams():
 			if gpioSW5 != int(sss["gpioSW5"]):
 				gpioSW5 = int(sss["gpioSW5"])
 				if gpioSW5 >0: GPIO.setup(gpioSW5, GPIO.OUT)
-			switchToLowerSensitive["checkIfIsRaining"]	= int(sss["TimeSwitchSensitivityRainToMayBeRaining"])
-			switchToLowerSensitive["maybeRain"]			= int(sss["TimeSwitchSensitivityMayBeRainingToHigh"])
-			switchToLowerSensitive["highSensitive"]		= int(sss["TimeSwitchSensitivityHighToMed"])
-			switchToLowerSensitive["medSensitive"]		= int(sss["TimeSwitchSensitivityMedToLow"])
+			switchToLowerSensitive["checkIfIsRaining"]	= 10# int(sss["TimeSwitchSensitivityRainToMayBeRaining"])
+			switchToLowerSensitive["maybeRain"]			= 10# int(sss["TimeSwitchSensitivityMayBeRainingToHigh"])
+			switchToLowerSensitive["highSensitive"]		= 10# int(sss["TimeSwitchSensitivityHighToMed"])
+			switchToLowerSensitive["medSensitive"]		= 10# int(sss["TimeSwitchSensitivityMedToLow"])
 			
-			switchToHigherSensitive["lowSensitive"]		= int(sss["TimeSwitchSensitivityLowToMed"])
-			switchToHigherSensitive["medSensitive"]		= int(sss["TimeSwitchSensitivityMedToHigh"])
-			switchToHigherSensitive["highSensitive"]	= int(sss["TimeSwitchSensitivityHighToAnyRain"])
+			switchToHigherSensitive["lowSensitive"]		= 100# int(sss["TimeSwitchSensitivityLowToMed"])
+			switchToHigherSensitive["medSensitive"]		= 100# int(sss["TimeSwitchSensitivityMedToHigh"])
+			switchToHigherSensitive["highSensitive"]	= 100# int(sss["TimeSwitchSensitivityHighToAnyRain"])
+			try: rainScaleFactor						= float(sss["rainScaleFactor"])
+			except: rainScaleFactor						= 1.
 				
 			if gpioIn != int(sss["gpioIn"]):
 				gpioIn	= int(sss["gpioIn"])
@@ -109,6 +111,10 @@ def readParams():
 			time.sleep(0.4)
 			powerON(calledFrom="read")
 			cyclePower = cp
+
+			bucketSize={}
+			for kk in bucketSize0:
+				bucketSize[kk] = bucketSize0[kk]*rainScaleFactor
 
 			
 	except	Exception, e:
@@ -285,7 +291,7 @@ def setModeTo(newMode, calledFrom="", powerCycle=True, force = False):
 	#if time.time() - ProgramStart < 20: return 
 
 	U.toLog(0, "try to set new mode	 "+newMode+ " from "+status["currentMode"]+"  tt - nextModeSwitchNotBefore: "+str(time.time() - nextModeSwitchNotBefore) +" called from: "+calledFrom,doPrint=doPrint )
-	if (time.time() - nextModeSwitchNotBefore < minTimeBetweenModeSwitch) and not force: 
+	if (time.time() - nextModeSwitchNotBefore < 0) and not force: 
 		return False
 		
 	U.toLog(0, "setting mode to: "+newMode+ ";	 from currrentMode: "+status["currentMode"] ,doPrint=False)
@@ -346,6 +352,11 @@ def checkIfDownGradedNeeded(force = False):
 			if setModeTo("checkIfIsRaining", calledFrom="checkIfDownGradedNeeded3"):
 				sendShortStatus(rainMsg["checkIfIsRaining"])
 				nextModeSwitchNotBefore= time.time()+switchToHigherSensitive["highSensitive"]
+		elif status["currentMode"] == "maybeRain" and (lastRainTime > switchToHigherSensitive["maybeRain"] or force):
+			if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
+			if setModeTo("checkIfIsRaining", calledFrom="checkIfDownGradedNeeded3"):
+				sendShortStatus(rainMsg["checkIfIsRaining"])
+				nextModeSwitchNotBefore= time.time()+20
 	else:
 		st = getGPIO(gpioIn,calledFrom="downgrade")
 		#print datetime.datetime.now().strftime("%H:%M:%S: ") + "checking downgrade static ",status["currentMode"], lastRainTime, max(switchToHigherSensitive[status["currentMode"]],60), st, lastGPIOStatus
@@ -527,7 +538,7 @@ global oldParams
 global oldRaw,	lastRead
 global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, cyclePower, sensorMode
 global nextModeSwitchNotBefore, minTimeBetweenModeSwitch
-global switchToLowerSensitive, switchToHigherSensitive, bucketSize
+global switchToLowerSensitive, switchToHigherSensitive, bucketSize,bucketSize0, rainScaleFactor
 global lastClick,lastClick2, eventStartedList
 global lastDirection
 global values
@@ -546,7 +557,7 @@ global doPrint
 
 ###################### init #################
 	
-uPmm					 = 25.4
+uPmm					 = 25.
 minTimeBetweenModeSwitch = 5
 nextModeSwitchNotBefore	 = 0
 lastDirection			 = 99
@@ -555,10 +566,10 @@ lastClick2				 = 0
 nEvenstStarted			 = 6
 eventStartedList		 = [time.time()-(150) for ii in range(nEvenstStarted)]
 simpleCount				 = 0
-switchToLowerSensitive	 = {"checkIfIsRaining":0,		 "maybeRain":0,	  "highSensitive":3,			"medSensitive":3,			"lowSensitive":99999999 }  # time between signals;	switch from xx to next higher bucket capacity = lower sinsititvity 
+switchToLowerSensitive	 = {"checkIfIsRaining":0,		 "maybeRain":0,	  "highSensitive":10,			"medSensitive":10,			"lowSensitive":99999999 }  # time between signals;	switch from xx to next higher bucket capacity = lower sinsititvity 
 switchToHigherSensitive	 = {"checkIfIsRaining":99999999, "maybeRain":100, "highSensitive":100,			"medSensitive":100,			"lowSensitive":100		 }	# time between signals;	 switch from xx to next lower bucket capacity  if time between signals is > secs eg medSensitive to highSensitive
 rainMsg					 = {"checkIfIsRaining":0,		 "maybeRain":1,	  "highSensitive":2,			"medSensitive":3,			"lowSensitive":4		}
-bucketSize				 = {"checkIfIsRaining":0,		 "maybeRain":0,	  "highSensitive":0.0001*uPmm,	"medSensitive":0.001*uPmm,	"lowSensitive":0.01*uPmm}  # in inches --> mm
+bucketSize0				 = {"checkIfIsRaining":0,		 "maybeRain":0,	  "highSensitive":0.0001*uPmm,	"medSensitive":0.001*uPmm,	"lowSensitive":0.01*uPmm}  # in inches --> mm
 gpioIn					 = -1 
 gpioSW1					 = -1
 gpioSW2					 = -1
@@ -569,7 +580,7 @@ cyclePower				 = True
 ON						 = False # for relay outoput 
 off						 = True	 # for relay outoput 
 
-doPrint					 = False
+doPrint					 = True
 
 restart					 = False
 lastRead				 = 0
