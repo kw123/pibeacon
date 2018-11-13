@@ -80,6 +80,7 @@ def readNewParams(force=False):
 		global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active, getspiMCP3008Active, getpmairqualityActive
 		global activePGMdict, bluetoothONoff
 		global oldRaw,	lastRead
+		global minPinActiveTimeForShutdown, actualPinActiveTimeForShutdown
 
 		
 		BLEserialOLD= BLEserial
@@ -98,16 +99,17 @@ def readNewParams(force=False):
 		rPiRestartCommand =""
 			
 		U.getGlobalParams(inp)
-		if "debugRPI"				in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPICALL"])
-		if u"BLEserial"				in inp:	 BLEserial =			 (inp["BLEserial"])
-		if u"enableRebootCheck"		in inp:	 enableRebootCheck=		 (inp["enableRebootCheck"])
-		if u"enableiBeacons"		in inp:	 enableiBeacons=		 (inp["enableiBeacons"])
-		if u"cAddress"				in inp:	 cAddress=				  inp["cAddress"]
-		if u"rebootHour"			in inp:	 rebootHour=		  int(inp["rebootHour"])
-		if u"sensors"				in inp:	 sensors =				 (inp["sensors"])
-		if u"useRamDiskForLogfiles" in inp:	 useRamDiskForLogfiles =  inp["useRamDiskForLogfiles"]
-		if u"actions"				in inp:	 actions			   =  inp["actions"]
-		if u"useRTC"				in inp:	 U.setUpRTC(inp["useRTC"])
+		if "debugRPI"						in inp:	 G.debug=						int(inp["debugRPI"]["debugRPICALL"])
+		if u"BLEserial"						in inp:	 BLEserial =					   (inp["BLEserial"])
+		if u"enableRebootCheck"				in inp:	 enableRebootCheck=				   (inp["enableRebootCheck"])
+		if u"minPinActiveTimeForShutdown" 	in inp:	 minPinActiveTimeForShutdown= float(inp["minPinActiveTimeForShutdown"])
+		if u"enableiBeacons"				in inp:	 enableiBeacons=		 		   (inp["enableiBeacons"])
+		if u"cAddress"						in inp:	 cAddress=				  		    inp["cAddress"]
+		if u"rebootHour"					in inp:	 rebootHour=					    int(inp["rebootHour"])
+		if u"sensors"						in inp:	 sensors =				 		   (inp["sensors"])
+		if u"useRamDiskForLogfiles" 		in inp:	 useRamDiskForLogfiles =  		    inp["useRamDiskForLogfiles"]
+		if u"actions"						in inp:	 actions			   =  		    inp["actions"]
+		if u"useRTC"						in inp:	 U.setUpRTC(inp["useRTC"])
 		
 
 		if u"bluetoothONoff"			 in inp:
@@ -746,7 +748,7 @@ def checkIfNightReboot():
 
 
 def checkIfShutDownSwitch():
-	global shutDownPinInput, lastBootTest, shutDownPinOutput
+	global shutDownPinInput, lastBootTest, shutDownPinOutput, minPinActiveTimeForShutdown, actualPinActiveTimeForShutdown
 	
 	try:
 		ii=lastBootTest
@@ -760,19 +762,25 @@ def checkIfShutDownSwitch():
 				#print	"setting shutDownPin to GPIO: " + str(shutDownPinInput) 
 				U.toLog(-1, "setting shutDownPin to GPIO: " + str(shutDownPinInput) )
 				GPIO.setup(int(shutDownPinInput), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+			 	actualPinActiveTimeForShutdown = time.time()
 		except	Exception, e :
 			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 			
 	try:
 		for ii in range(3):
-			if GPIO.input(int(shutDownPinInput)) == 1: return
+			if GPIO.input(int(shutDownPinInput)) == 1:
+			 	actualPinActiveTimeForShutdown = time.time()
+				return
 			time.sleep(0.1)
+			if time.time() - actualPinActiveTimeForShutdown < minPinActiveTimeForShutdown: return 
 	except	Exception, e :
 			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 			return
 	U.sendRebootHTML("shutdownswitch", reboot=False)
 
 	U.doRebootThroughRUNpinReset()
+	
+	return 
 
 def checkLogfiles():
 		global useRamDiskForLogfiles
@@ -895,6 +903,9 @@ global getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active,getspiMCP3
 global actions, output, sensors, sensorList
 global activePGMdict, bluetoothONoff
 global oldRaw,	lastRead
+global minPinActiveTimeForShutdown, actualPinActiveTimeForShutdown
+minPinActiveTimeForShutdown = 9999999999999
+actualPinActiveTimeForShutdown = 0
 oldRaw					= ""
 lastRead				= 0
 bluetoothONoff			= "on"

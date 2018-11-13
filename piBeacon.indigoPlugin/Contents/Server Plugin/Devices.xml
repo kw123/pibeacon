@@ -199,6 +199,41 @@
 			<Label>...which pin to use as shutdown-INPUT pin:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
 			</Field>
+			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="10" tooltip="how long does this pin have to be low to trigger shutdown ">
+			<Label>...how long does the shutdown pin have to be active:</Label>
+			<List>
+				<Option value="0"   >immediate </Option>
+				<Option value="1"   >1 sec </Option>
+				<Option value="2"   >2 sec </Option>
+				<Option value="3"   >3 sec </Option>
+				<Option value="4"   >4 sec </Option>
+				<Option value="5"   >5 sec </Option>
+				<Option value="7"   >7 sec </Option>
+				<Option value="10"  >10 sec </Option>
+				<Option value="20"  >20 sec </Option>
+				<Option value="30"  >30 sec </Option>
+				<Option value="60"  >1 min </Option>
+				<Option value="120" >2 mins </Option>
+				<Option value="240" >4 mins </Option>
+				<Option value="600" >10 mins </Option>
+				<Option value="1200">20 mins </Option>
+				<Option value="3600">1 hour </Option>
+				<Option value="7200">2 hours </Option>
+				<Option value="10800">3 hours </Option>
+				<Option value="14400">4 hours </Option>
+				<Option value="18000">5 hours </Option>
+				<Option value="21600">6 hours </Option>
+				<Option value="28800">8 hours </Option>
+				<Option value="36000">10 hours </Option>
+				<Option value="43200">12 hours </Option>
+				<Option value="43200">14 hours </Option>
+				<Option value="57600">16 hours </Option>
+				<Option value="64800">18 hours </Option>
+				<Option value="72000">20 hours </Option>
+				<Option value="79200">22 hours </Option>
+				<Option value="86400">24 hours </Option>
+			</List>
+			</Field>
 
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
@@ -670,6 +705,42 @@
 			<Field id="shutDownPinInput"   type="menu" defaultValue="15" tooltip="set this pin to low will cause the rpi to shutdown= trigger sfotware shutdown command">
 			<Label>...which pin to use as shutdown-INPUT pin:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
+			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="10" tooltip="how long does this pin have to be low to trigger shutdown ">
+			<Label>...how long does the shutdown pin have to be active:</Label>
+			<List>
+				<Option value="0"   >immediate </Option>
+				<Option value="1"   >1 sec </Option>
+				<Option value="2"   >2 sec </Option>
+				<Option value="3"   >3 sec </Option>
+				<Option value="4"   >4 sec </Option>
+				<Option value="5"   >5 sec </Option>
+				<Option value="7"   >7 sec </Option>
+				<Option value="10"  >10 sec </Option>
+				<Option value="20"  >20 sec </Option>
+				<Option value="30"  >30 sec </Option>
+				<Option value="60"  >1 min </Option>
+				<Option value="120" >2 mins </Option>
+				<Option value="240" >4 mins </Option>
+				<Option value="600" >10 mins </Option>
+				<Option value="1200">20 mins </Option>
+				<Option value="3600">1 hour </Option>
+				<Option value="7200">2 hours </Option>
+				<Option value="10800">3 hours </Option>
+				<Option value="14400">4 hours </Option>
+				<Option value="18000">5 hours </Option>
+				<Option value="21600">6 hours </Option>
+				<Option value="28800">8 hours </Option>
+				<Option value="36000">10 hours </Option>
+				<Option value="43200">12 hours </Option>
+				<Option value="43200">14 hours </Option>
+				<Option value="57600">16 hours </Option>
+				<Option value="64800">18 hours </Option>
+				<Option value="72000">20 hours </Option>
+				<Option value="79200">22 hours </Option>
+				<Option value="86400">24 hours </Option>
+			</List>
 			</Field>
 
 
@@ -14407,8 +14478,9 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="clockLightSet"  type="menu" defaultValue="auto"  hidden = "no">
 				<List>
 				<Option value= "auto"      > auto</Option>
-				<Option value= "nightoff"  > night mode no marks</Option>
-				<Option value= "nightdim"  > night mode w tick marks</Option>
+				<Option value= "offoff"    > 2 LED HH, 1 LED MM SS</Option>
+				<Option value= "nightoff"  > 3 LED HH, 1 LED MM SS </Option>
+				<Option value= "nightdim"  > 3 LED HH, 1 LED MM SS w tick marks</Option>
 				<Option value= "daylow"    > low</Option>
 				<Option value= "daymedium" > medium</Option>
 				<Option value= "dayhigh"   > HIGH</Option>
@@ -14418,6 +14490,8 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 			<Field id="minLightNotOff"  type="menu" defaultValue="44"  hidden = "no">
 				<List>
+				<Option value= "36"  > 36</Option>
+				<Option value= "38"  > 38</Option>
 				<Option value= "40"  > 40</Option>
 				<Option value= "44"  > 44</Option>
 				<Option value= "48"  > 48</Option>

@@ -3291,7 +3291,7 @@ def getTCS34725(sensor, data):
 				colorTemp = sensorTCS[devId].calculateColorTemperature(rgb)
 				lux = sensorTCS[devId].calculateLux(rgb)
 				sensorTCS[devId].setInterrupt(True)
-				lux= int(lux)
+				lux= float(lux)
 				if lux>=0:
 					data[sensor][devId]={}
 					data[sensor][devId]["clear"]=rgb["c"]
@@ -4479,16 +4479,16 @@ def makeLightsensorFile(data):
 	for sensor in data:
 		for devId in data[sensor]:
 			if "ambient" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["ambient"]),"sensor":sensor})
+				out = json.dumps({"light":float(data[sensor][devId]["ambient"]),"sensor":sensor,"time":time.time()})
 				break
 			if "white" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["white"]),"sensor":sensor})
+				out = json.dumps({"light":float(data[sensor][devId]["white"]),"sensor":sensor,"time":time.time()})
 				break
 			if "visible" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["visible"]),"sensor":sensor})
+				out = json.dumps({"light":float(data[sensor][devId]["visible"]),"sensor":sensor,"time":time.time()})
 				break
 			if "lux" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["lux"]),"sensor":sensor})
+				out = json.dumps({"light":float(data[sensor][devId]["lux"]),"sensor":sensor,"time":time.time()})
 				break
 	if len(out) > 0:  
 		f=open(G.homeDir+"temp/lightSensor.dat","w")

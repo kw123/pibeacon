@@ -112,7 +112,7 @@ def readParams():
 			except:
 				pass
 
-
+			## print clockDict
 			break
 		if devTypeLEDs == "start":	   changed = 3	# = no data inout restart myself in some seconds
 		if changed ==2 : saveParameters()
@@ -125,7 +125,7 @@ def readParams():
 		return 3
 
 def startNEOPIXEL(setClock = ""):
-	global devTypeLEDs, speed, speedOfChange, clockLightSet,clockMode, clockLightSetOverWrite
+	global devTypeLEDs, speed, speedOfChange, clockLightSet,clockMode, clockLightSetOverWrite, LEDintensityFactor
 	global DEVID, clockDict, inp 
 
 
@@ -140,15 +140,18 @@ def startNEOPIXEL(setClock = ""):
 		if lightset =="auto":
 			lightset = clockLightSetOverWrite  ## put here input from light sensor 
 
-		if	 True							: multHMS = 1.	; multMark=1.
-		if	 lightset.lower() =="nightoff"	: multHMS = 0.12; multMark=0.0
-		elif lightset.lower() =="nightdim"	: multHMS = 0.20; multMark=0.0
-		elif lightset.lower() =="daylow"	: multHMS = 0.40; multMark=0.90
-		elif lightset.lower() =="daymedium" : multHMS = 0.60; multMark=0.95
-		elif lightset.lower() =="dayhigh"	: multHMS = 1.0 ; multMark=1.0
+		if	 True										: multHMS = 1.	; multMark=1.
+		if	 LEDintensityFactor.lower() =="offoff"		: multHMS = 0.12; multMark=0.0
+		elif LEDintensityFactor.lower() =="nightoff"	: multHMS = 0.15; multMark=0.0
+		elif LEDintensityFactor.lower() =="nightdim"	: multHMS = 0.20; multMark=0.0
+		elif LEDintensityFactor.lower() =="daylow"		: multHMS = 0.40; multMark=0.90
+		elif LEDintensityFactor.lower() =="daymedium"	: multHMS = 0.60; multMark=0.95
+		elif LEDintensityFactor.lower() =="dayhigh"		: multHMS = 1.0 ; multMark=1.0
 
 
-		if lightset.lower() =="nightoff"   :
+		if lightset.lower() =="offoff"   :
+			setNightOffPatterns()
+		elif lightset.lower() =="nightoff"   :
 			setNightPatterns()
 		else:
 			restorefromNightPatterns()
@@ -316,9 +319,9 @@ def calcRGBdimm(input,multHMS,minLight=False):
 			rgb = 0
 		else:	  
 			if minLight:
-				rgb = max(min(int(multHMS*(x-38) + 35),255),minLightNotOff)
+				rgb = max(min(int(multHMS*(x-36) + 33),255),minLightNotOff)
 			else:
-				rgb = min(int(multHMS*(x-38) + 35),255)
+				rgb = min(int(multHMS*(x-36) + 33),255)
 		RGB.append(rgb)
 	return RGB
 
@@ -329,7 +332,7 @@ def setNEOinput(out):
 		f.write(json.dumps(out)+"\n") 
 		f.close()
 		lastNeoParamsSet = time.time()
-		print " new neo paramers written", datetime.datetime.now()
+		#print " new neo paramers written", datetime.datetime.now()
 
 #################################
 def setupGPIOforTimeset():
@@ -707,7 +710,7 @@ def setLIGHT(upDown):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime, switchON
 	global DEVID, clockDict, inp
 	try:
-		lightOptions = ["nightoff", "nightdim","daylow","daymedium", "dayhigh","auto"]
+		lightOptions = ["offoff","nightoff", "nightdim","daylow","daymedium", "dayhigh","auto"]
 		ind =4
 		l0 =60 + 48 + 40 + 32 + 24 + 16 + 12
 		U.toLog(1,"setLIGHT "+	 upDown) 
@@ -715,7 +718,7 @@ def setLIGHT(upDown):
 			ind =  lightOptions.index(clockLightSet.lower())
 			if	upDown =="UP":
 				ind +=1
-				if ind > 5: ind = 5
+				if ind > 6: ind = 6
 			if	upDown =="DOWN":
 				ind -=1
 				if ind < 0: ind = 0
@@ -766,14 +769,16 @@ def getCurrentPatterns():
 	try:
 		if clockDict["ticks"]["MM"]["npix"] ==1:						minutesPix = 1
 		else:															minutesPix = -1
-		if clockDict["ticks"]["HH"]["ringNo"] ==[8,6, 4]:				hoursPix   = 3
+		if clockDict["ticks"]["HH"]["ringNo"] ==[8,1]:					hoursPix   = 1
+		elif clockDict["ticks"]["HH"]["ringNo"] ==[8,6,4]:				hoursPix   = 3
 		else:															hoursPix   = 4
 
-		if	 minutesPix ==	1 and hoursPix ==3: ticksMMHH = 0  # this is the fewest pixel mode 
-		elif minutesPix ==	1 and hoursPix ==4: ticksMMHH = 1
-		elif minutesPix == -1 and hoursPix ==3: ticksMMHH = 2
-		elif minutesPix == -1 and hoursPix ==4: ticksMMHH = 3
-		else:									ticksMMHH = 3
+		if	 minutesPix ==	1 and hoursPix ==1: ticksMMHH = 0  # this is the fewest pixel mode 
+		elif minutesPix ==	1 and hoursPix ==3: ticksMMHH = 1  
+		elif minutesPix ==	1 and hoursPix ==4: ticksMMHH = 2
+		elif minutesPix == -1 and hoursPix ==3: ticksMMHH = 3
+		elif minutesPix == -1 and hoursPix ==4: ticksMMHH = 4
+		else:									ticksMMHH = 4
 
 		if		 clockDict["marks"]["MM"]["marks"] == []:				marksONoff = 0 # = no marks
 		elif	 clockDict["marks"]["MM"]["marks"] == [0, 15, 30, 45]:	marksONoff = 1
@@ -792,9 +797,20 @@ def setNightPatterns():
 	global marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
 
-	if not nightMode:	 
+	if nightMode !=1:	 
 		marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST = marksONoff, hoursPix, minutesPix, ticksMMHH
-		nightMode = True
+		nightMode = 1
+		setPatternTo(ticks=1 ,marks=0, save=False, restart=False, ExtraLED=False)
+	return
+#################################
+def setNightOffPatterns():
+	global marksONoff, hoursPix, minutesPix, ticksMMHH
+	global marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
+	global nightMode
+
+	if nightMode !=2: 
+		marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST = marksONoff, hoursPix, minutesPix, ticksMMHH
+		nightMode = 2
 		setPatternTo(ticks=0 ,marks=0, save=False, restart=False, ExtraLED=False)
 	return
 
@@ -804,9 +820,9 @@ def	 restorefromNightPatterns():
 	global marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
 
-	if nightMode:
+	if nightMode >0:
 		setPatternTo(ticks=ticksMMHHLAST ,marks=marksONoffLAST, save=False, restart=False, ExtraLED=False)
-		nightMode = False
+		nightMode = 0
 	return
 
 
@@ -908,22 +924,19 @@ def checkLastButtonPressTiming(button):
 #################################
 def setLightfromSensor():
 	global clockLightSet,clockLightSetOverWrite, clockLightSensor, lightSensorValueLast
-	global lastTimeStampSensorFile, clockLightSetOverWriteOld
+	global lastTimeStampSensorFile, clockLightSetOverWriteOld,  LEDintensityFactor, LEDintensityFactorOld
 	try:
-		if clockLightSet.lower() != "auto": return
 		if clockLightSensor			  == 0: return
 
 		try:	ii = lastTimeStampSensorFile
 		except: 
 			lastTimeStampSensorFile	  = 0
-			clockLightSetOverWriteOld = 0
+			clockLightSetOverWriteOld = ""
+			LEDintensityFactorOld 	  = ""
 
 
 		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"): return
 		t = os.path.getmtime(G.homeDir+"temp/lightSensor.dat")
-		if lastTimeStampSensorFile == t: return 
-
-		lastTimeStampSensorFile = t
 	
 		lightSensorValue =""
 		maxRange = 10000.
@@ -933,40 +946,58 @@ def setLightfromSensor():
 			rr = json.loads(f.read())
 			lightSensorValueREAD = rr["light"]
 			sensor				 = rr["sensor"]
+			tt					 = rr["time"]
 			f.close()  
 			if sensor == "i2cTSL2561":
 				maxRange = 12000.
 			elif sensor == "i2cOPT3001":
 				maxRange =	2000.
 			elif sensor == "i2cVEML6030":
-				maxRange =	300.
+				maxRange =	700.
 			elif sensor == "i2cIS1145":
 				maxRange =	2000.
 			
+			#print "lastTimeStampSensorFile, tt", lastTimeStampSensorFile, tt
+			if lastTimeStampSensorFile == tt: return 
+
+			lastTimeStampSensorFile = tt
 		
 			
 		except:
 			U.toLog(-1, "error reading light sensor")
 			return
 
+		#print "lightSensorValueREAD, lightSensorValueLast", lightSensorValueREAD, lightSensorValueLast
 		##	check if 0 , must be 2 in a row.
 		if lightSensorValueREAD == 0 and lightSensorValueLast !=0: 
-				lightSensorValueLast = lightSensorValue
+				lightSensorValueLast = lightSensorValueREAD
 				return
 		lightSensorValueLast = lightSensorValueREAD
 
 
 		lightSensorValue = lightSensorValueREAD * clockLightSensor *100000./ maxRange
-		if	 lightSensorValue < 80:		   clockLightSetOverWrite ="nightoff"  
-		elif lightSensorValue < 400:	   clockLightSetOverWrite ="nightdim"  
-		elif lightSensorValue < 2700:	   clockLightSetOverWrite ="daylow"	   
-		elif lightSensorValue < 16000:	   clockLightSetOverWrite ="daymedium" 
-		else						:	   clockLightSetOverWrite ="dayhigh"   
-		if clockLightSetOverWriteOld !=	   clockLightSetOverWrite:
-			clockLightSetOverWriteOld =	   clockLightSetOverWrite
+		if	 lightSensorValue < 80:		   CLS ="offoff"  
+		elif lightSensorValue < 120:	   CLS ="nightoff"  
+		elif lightSensorValue < 400:	   CLS ="nightdim"  
+		elif lightSensorValue < 2700:	   CLS ="daylow"	   
+		elif lightSensorValue < 16000:	   CLS ="daymedium" 
+		else						:	   CLS ="dayhigh"   
+		
+		restartstartNEOPIXEL = True 
+		if LEDintensityFactorOld  != CLS:
+			LEDintensityFactorOld 	= LEDintensityFactor
+			LEDintensityFactor 		= CLS
+			restartstartNEOPIXEL = True 
+		if clockLightSet.lower() == "auto": 
+			if clockLightSetOverWriteOld !=	  CLS:
+				clockLightSetOverWriteOld 	= clockLightSetOverWrite
+				clockLightSetOverWrite 		= CLS
+				restartstartNEOPIXEL = True 
+				
+		if restartstartNEOPIXEL:
 			startNEOPIXEL()
 		U.toLog(1, "setting	 lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, sensor :"+str(lightSensorValueREAD)+"	 "+str(lightSensorValue)+"	"+str(clockLightSetOverWrite)+"	 "+str(maxRange)+"	"+str(sensor) )
-
+		#print lightSensorValueREAD, lightSensorValue, LEDintensityFactor, clockLightSetOverWrite
 	except	Exception, e:
 		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -1036,17 +1067,18 @@ global switchON, minLightNotOff
 global sensor, output, inpRaw, lastCl,clockMarks,maRGB
 global oldRaw,	lastRead, inp
 global gpiopinSET
-global clockLightSetOverWrite,useRTC, newDate, resetGPIO, lastButtonTime,clockLightSensor, DEVID
+global clockLightSetOverWrite,useRTC, newDate, resetGPIO, lastButtonTime, DEVID
 global timeZones, timeZone
 global lightSensorValueLast
 global doReadParameters
 global nightMode
 global networkIndicatorON
 global lastNeoParamsSet
+global clockLightSensor, clockLightSetOverWrite, clockLightSetOverWriteOld, LEDintensityFactorOld, LEDintensityFactor
 
 
 lastNeoParamsSet	= time.time()
-nightMode			= False
+nightMode			= 0
 
 doReadParameters	= True
 timeZone = ""
@@ -1115,6 +1147,9 @@ resetGPIO					= False
 lightSensorValueLast		= -1
 clockLightSensor			= 0
 clockLightSetOverWrite		= "dayhigh"
+clockLightSetOverWriteOld	= ""
+LEDintensityFactorOld		= ""
+LEDintensityFactor			= "dayhigh"
 lastButtonTime				= {"setA": 0,"setB":0,"setC":0,"UP":0,"DOWN":0}
 oldRaw						= ""
 lastRead					= 0

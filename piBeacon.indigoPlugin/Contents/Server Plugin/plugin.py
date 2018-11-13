@@ -563,7 +563,7 @@ class Plugin(indigo.PluginBase):
 	def getDebugLevels(self):
 		try:
 			self.debugLevel			= []
-			for d in ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","Special","debugPlotPositions"]:
+			for d in ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","Special","PlotPositions"]:
 				if self.pluginPrefs.get(u"debug"+d, False): self.debugLevel.append(d)
 			
 
@@ -7733,7 +7733,7 @@ class Plugin(indigo.PluginBase):
 			####-----------------	 ---------
 			
 		self.debugLevel			= []
-		for d in ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","Special","debugPlotPositions"]:
+		for d in ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","Special","PlotPositions"]:
 			if valuesDict[u"debug"+d]: self.debugLevel.append(d)
 
 		self.setLogfile(valuesDict[u"logFileActive2"])
@@ -12792,6 +12792,14 @@ class Plugin(indigo.PluginBase):
 						if u"shutDownPinInput" in props:
 							try:  out[u"shutDownPinInput"]	=  int(props[u"shutDownPinInput"])
 							except: pass
+						out[u"minPinActiveTimeForShutdown"]  = 99999999999
+						if u"minPinActiveTimeForShutdown" in props:
+							try:  out[u"minPinActiveTimeForShutdown"]	=  int(props[u"minPinActiveTimeForShutdown"])
+							except: pass
+						out[u"shutDownPinOutput"]  = -1
+						if u"shutDownPinOutput" in props:
+						   try:	 out[u"shutDownPinOutput"]	=  int(props[u"shutDownPinOutput"])
+						   except: pass
 
 						if u"display" in props:
 							try: out[u"display"]  =	 int(props[u"display"])
@@ -12817,10 +12825,6 @@ class Plugin(indigo.PluginBase):
 						if u"bluetoothONoff" in props:
 							out[u"bluetoothONoff"]	=  props[u"bluetoothONoff"]
 
-						out[u"shutDownPinOutput"]  = -1
-						if u"shutDownPinOutput" in props:
-						   try:	 out[u"shutDownPinOutput"]	=  int(props[u"shutDownPinOutput"])
-						   except: pass
 							
 						if u"rebootAtMidnight" in props and props[u"rebootAtMidnight"] ==u"0":
 							out[u"rebootHour"]			 = -1
