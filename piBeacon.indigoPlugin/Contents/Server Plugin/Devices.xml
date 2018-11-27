@@ -19,24 +19,24 @@
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
 			<Label>.... Transition from UP to Down to Expired after seconds:</Label>
-			<List>
-				<Option value="10" >10</Option>
-				<Option value="20" >20</Option>
-				<Option value="30" >30</Option>
-				<Option value="45" >45</Option>
-				<Option value="60" >60</Option>
-				<Option value="65" >65</Option>
-				<Option value="70" >70</Option>
-				<Option value="80" >80</Option>
-				<Option value="90" >90 (default)</Option>
-				<Option value="95" >95</Option>
-				<Option value="120" >2 minutes</Option>
-				<Option value="180" >3 minutes</Option>
-				<Option value="240" >4 minutes</Option>
-				<Option value="360" >5 minutes</Option>
-				<Option value="600" >10 minutes</Option>
-				<Option value="1200" >20 minutes</Option>
-			</List>
+				<List>
+					<Option value="10" >10</Option>
+					<Option value="20" >20</Option>
+					<Option value="30" >30</Option>
+					<Option value="45" >45</Option>
+					<Option value="60" >60</Option>
+					<Option value="65" >65</Option>
+					<Option value="70" >70</Option>
+					<Option value="80" >80</Option>
+					<Option value="90" >90 (default)</Option>
+					<Option value="95" >95</Option>
+					<Option value="120" >2 minutes</Option>
+					<Option value="180" >3 minutes</Option>
+					<Option value="240" >4 minutes</Option>
+					<Option value="360" >5 minutes</Option>
+					<Option value="600" >10 minutes</Option>
+					<Option value="1200" >20 minutes</Option>
+				</List>
 			</Field>
 
 
@@ -58,24 +58,24 @@
 
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300" tooltip="How often should we update the signal and distance states"> 
 			<Label>....      update indigo states every:</Label>
-			<List>
-				<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
-				<Option value="30"  >after  30 secs</Option>
-				<Option value="60"  >after   minute</Option>
-				<Option value="120" >after  2 minutes</Option>
-				<Option value="300" >after  5 minutes (default)</Option>
-				<Option value="600" >after 10 minutes</Option>
-				<Option value="1200">after 20 minutes</Option>
-			</List>
+				<List>
+					<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
+					<Option value="30"  >after  30 secs</Option>
+					<Option value="60"  >after   minute</Option>
+					<Option value="120" >after  2 minutes</Option>
+					<Option value="300" >after  5 minutes (default)</Option>
+					<Option value="600" >after 10 minutes</Option>
+					<Option value="1200">after 20 minutes</Option>
+				</List>
 			</Field>
 			<Field id="BLELabel" type="label" >  
 			<Label>BLEconnect ...</Label>	</Field>
 			<Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" ">
 			<Label> .... queries seq. or parallel on THIS rPi:</Label>
-			<List>
-				<Option value="sequential" > run BLEconnect in sequential in one program</Option>
-				<Option value="parallel"   > run BLEconnect in parallel </Option>
-			</List>
+				<List>
+					<Option value="sequential" > run BLEconnect in sequential in one program</Option>
+					<Option value="parallel"   > run BLEconnect in parallel </Option>
+				</List>
 			</Field>
 			<Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 			<Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>	</Field>
@@ -189,102 +189,154 @@
 			<Field id="label3"               type="label" > 
 			<Label>Hardware / reboot configs...</Label>
 			</Field>
-
-			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" tooltip="set this pin to low and connect to reset pin on rpi" >
-			<Label>...which pin to use as shutdown/reboot-OUTOUT pin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
+			<Field id="labelhw1"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
+			<Label>The plugin supports 2 options for hardware reset and UPS
+  -A. "shutdown hardwire reset"": Connect a GPIO out pin to RUN/REST pin on the board. 
+      Then the system can initiate a hardware reset by pulling the GPIO pin down
+      Eg when the RPI hangs and software reset does not work
+  -B. Support of a PI-HAT UPS board. 
+      This setup enables a soft shutdown as well as auto restart when power comes back
+      Tow GPIO pins are used: 
+      1. "shutdown-INPUT" sensing if +5V UPS input to the UPS board is ON.
+         - input to UPS not the +5V to the RPI-, when low: running on battery
+         +5VUPS goes through a resistor divider directly to the GPIO: High if +5 ON, low if off
+      2. a GPIO output "disable RESET" that goes to a transistor Basis- Emitter to ground, 
+         where the Collector disables the +5V raw trigger to restart the PRI, 
+         ie pulls it low under normal cuircumstance, 
+         hence RESET is only active when RPi is NOT running
+      The software monitors the shutdown-INPUT pin: 
+        if LOW, a counter starts: if &gt; "wait with shutdown" it initiates shutdown (soft then hard)
+        if HIGH it increases the internal counter for battery charge, up to "battery Capacity"
+        Parameter "how long to recharge": 
+           is the time it assumes the board needs to fully charge
+           the wait until reboot is shortened if battery is not fully charged
+      +5V UPS trigger: 
+          The Board will restart when +5V UPS comes back through a capacitor-resistor-transitor
+          collector connected to the RUN/REST pin. THAT transistor will then be disabled by #2
+          during normal run. This is enables the RPI to restart after regular shutdown
+          as it does not restart if its +5V is still on, ie battery  still working
+  A and B are independent of each other = can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinInput"   type="menu" defaultValue="15" tooltip="set this pin to low will cause the rpi to shutdown= trigger sfotware shutdown command">
-			<Label>...which pin to use as shutdown-INPUT pin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
-			</Field>
-			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="10" tooltip="how long does this pin have to be low to trigger shutdown ">
-			<Label>...how long does the shutdown pin have to be active:</Label>
-			<List>
-				<Option value="0"   >immediate </Option>
-				<Option value="1"   >1 sec </Option>
-				<Option value="2"   >2 sec </Option>
-				<Option value="3"   >3 sec </Option>
-				<Option value="4"   >4 sec </Option>
-				<Option value="5"   >5 sec </Option>
-				<Option value="7"   >7 sec </Option>
-				<Option value="10"  >10 sec </Option>
-				<Option value="20"  >20 sec </Option>
-				<Option value="30"  >30 sec </Option>
-				<Option value="60"  >1 min </Option>
-				<Option value="120" >2 mins </Option>
-				<Option value="240" >4 mins </Option>
-				<Option value="600" >10 mins </Option>
-				<Option value="1200">20 mins </Option>
-				<Option value="3600">1 hour </Option>
-				<Option value="7200">2 hours </Option>
-				<Option value="10800">3 hours </Option>
-				<Option value="14400">4 hours </Option>
-				<Option value="18000">5 hours </Option>
-				<Option value="21600">6 hours </Option>
-				<Option value="28800">8 hours </Option>
-				<Option value="36000">10 hours </Option>
-				<Option value="43200">12 hours </Option>
-				<Option value="43200">14 hours </Option>
-				<Option value="57600">16 hours </Option>
-				<Option value="64800">18 hours </Option>
-				<Option value="72000">20 hours </Option>
-				<Option value="79200">22 hours </Option>
-				<Option value="86400">24 hours </Option>
-			</List>
+			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
+			<Label>...which pin to use as shutdown hardwire reset:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
 			</Field>
 
+			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
+			<Label>...which pin to use as shutdown disable RESET:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
+			<Field id="shutdownInputPin"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+			<Label>...which pin to use as shutdown-INPUT:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
+
+			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
+			<Label>...wait with shutdown for xx when shutdown INPUT pin=0 (+5VUPS):</Label>
+				<List>
+					<Option value="0"   >immediate </Option>
+					<Option value="1"   >1 sec </Option>
+					<Option value="3"   >3 sec </Option>
+					<Option value="5"   >5 sec </Option>
+					<Option value="10"  >10 sec </Option>
+					<Option value="30"  >30 sec </Option>
+					<Option value="60"  >1 min </Option>
+					<Option value="120" >2 mins </Option>
+					<Option value="240" >4 mins </Option>
+					<Option value="600" >10 mins </Option>
+					<Option value="1800">30 mins </Option>
+					<Option value="3600">1 hour </Option>
+					<Option value="5400">1.5 hours </Option>
+					<Option value="7200">2 hours </Option>
+					<Option value="10800">3 hours </Option>
+					<Option value="14400">4 hours </Option>
+					<Option value="18000">5 hours </Option>
+					<Option value="21600">6 hours </Option>
+					<Option value="28800">7 hours </Option>
+					<Option value="28800">8 hours </Option>
+					<Option value="36000">10 hours </Option>
+					<Option value="43200">12 hours </Option>
+				</List>
+			</Field>
+
+			<Field id="chargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
+			<Label>...how long to recharge Li Battery to 90%:</Label>
+				<List>
+					<Option value="1800"   >30 min</Option>
+					<Option value="3600"   >60 min</Option>
+					<Option value="5400"   >90 min</Option>
+					<Option value="7200"   >120min</Option>
+				</List>
+			</Field>
+			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="=  ">
+			<Label>...battery Capacity:</Label>
+				<List>
+					<Option value="3600"   >1 hours</Option>
+					<Option value="7200"   >2 hours</Option>
+					<Option value="10800"  >3 hours</Option>
+					<Option value="14400"  >4 hours</Option>
+					<Option value="18000"  >5 hours</Option>
+					<Option value="21600"  >6 hours</Option>
+					<Option value="25200"  >7 hours</Option>
+					<Option value="28800"  >8 hours</Option>
+				</List>
+			</Field>
+			<Field id="labelhwr4"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> <Label></Label></Field>
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 			<Label>...overwrite default reboot at midnight:</Label>
-			<List>
-				<Option value="0" > no not reboot</Option>
-				<Option value="1" > use default for reboot option from config</Option>
-			</List>
+				<List>
+					<Option value="0" > no not reboot</Option>
+					<Option value="1" > use default for reboot option from config</Option>
+				</List>
 			</Field>
 
 			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sudo reboot" >
 			<Label>...overwrite default reboot command:</Label>
-			<List>
-				<Option value="sudo killall -9 python; sudo reboot" > use default reboot command 'reboot now'</Option>
-				<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >use 'sync;sleep 2;sudo reboot -f'  in case the default hangs</Option>
-			</List>
+				<List>
+					<Option value="sudo killall -9 python; sudo reboot" > use default reboot command 'reboot now'</Option>
+					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >use 'sync;sleep 2;sudo reboot -f'  in case the default hangs</Option>
+				</List>
 			</Field>
 
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
-			<List>
-				<Option value="1" > yes</Option>
-				<Option value="0" > no default</Option>
-			</List>
+				<List>
+					<Option value="1" > yes</Option>
+					<Option value="0" > no default</Option>
+				</List>
 			</Field>
 
 			<Field id="useRTC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
 			<Label>...use HW clock (RTC):</Label>
-			<List>
-				<Option value="ds1307" > DS1307</Option>
-				<Option value="ds3231" > DS3231</Option>
-				<Option value="0"      > no HW clock</Option>
-			</List>
+				<List>
+					<Option value="ds1307" > DS1307</Option>
+					<Option value="ds3231" > DS3231</Option>
+					<Option value="0"      > no HW clock</Option>
+				</List>
 			</Field>
 
 			<Field id="syncTimeWithMAC"   type="menu" defaultValue="" tooltip="use if you have no NTP service">
 			<Label>...sync time MAC to RPi:</Label>
-			<List>
-				<Option value="0" > do not sync</Option>
-				<Option value="1" > sync if  1 secs apart  .. only for testing</Option>
-				<Option value="2" > sync if  2 secs apart</Option>
-				<Option value="3" > sync if  3 secs apart</Option>
-				<Option value="4" > sync if  4 secs apart</Option>
-				<Option value="5" > sync if  5 secs apart</Option>
-				<Option value="7" > sync if  7 secs apart</Option>
-				<Option value="10"> sync if  10 secs apart</Option>
-				<Option value="20"> sync if  20 secs apart</Option>
-				<Option value="50"> sync if  50 secs apart</Option>
-			</List>
+				<List>
+					<Option value="0" > do not sync</Option>
+					<Option value="1" > sync if  1 secs apart  .. only for testing</Option>
+					<Option value="2" > sync if  2 secs apart</Option>
+					<Option value="3" > sync if  3 secs apart</Option>
+					<Option value="4" > sync if  4 secs apart</Option>
+					<Option value="5" > sync if  5 secs apart</Option>
+					<Option value="7" > sync if  7 secs apart</Option>
+					<Option value="10"> sync if  10 secs apart</Option>
+					<Option value="20"> sync if  20 secs apart</Option>
+					<Option value="50"> sync if  50 secs apart</Option>
+				</List>
 			</Field>
+
 			<Field id="sep-03" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
 			<Label>send broadcasts to other plugins for status up/x changes</Label>
@@ -603,220 +655,272 @@
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="label1"  type="label" >
-			<Label>parameters for rPi Sensors types only -- not used for ibeacons or BLE connect devices</Label>
+			<Label>Parameters for rPi Sensors types only -- not used for ibeacons or BLE connect devices</Label>
 			</Field>
 
 
 			<Field id="label2"               type="label" > 
-			<Label>For attached sensors - if not set in sensor device edit:</Label>
+			<Label>== For attached sensors - if not set in sensor device edit:</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
 			<Label>...read sensor every xx secs :</Label>
-			<List>
-				<Option value="1"  > 1 </Option>
-				<Option value="2"  > 2 </Option>
-				<Option value="3"  > 3 </Option>
-				<Option value="4"  > 4 </Option>
-				<Option value="5"  > 5 </Option>
-				<Option value="8"  > 8 </Option>
-				<Option value="10" > 10 </Option>
-				<Option value="15" > 15 </Option>
-				<Option value="20" > 20  (default)</Option>
-				<Option value="30" > 30 </Option>
-				<Option value="50" > 50 </Option>
-				<Option value="60" > 60 </Option>
-				<Option value="80" > 80 </Option>
-				<Option value="90" > 90 </Option>
-				<Option value="120" > 120  </Option>
-			</List>
+				<List>
+					<Option value="1"  > 1 </Option>
+					<Option value="2"  > 2 </Option>
+					<Option value="3"  > 3 </Option>
+					<Option value="4"  > 4 </Option>
+					<Option value="5"  > 5 </Option>
+					<Option value="8"  > 8 </Option>
+					<Option value="10" > 10 </Option>
+					<Option value="15" > 15 </Option>
+					<Option value="20" > 20  (default)</Option>
+					<Option value="30" > 30 </Option>
+					<Option value="50" > 50 </Option>
+					<Option value="60" > 60 </Option>
+					<Option value="80" > 80 </Option>
+					<Option value="90" > 90 </Option>
+					<Option value="120" > 120  </Option>
+				</List>
 			</Field>
 
 			<Field id="sendToIndigoSecs" type="menu"     defaultValue="80">
 			<Label>...send update to indigo every xx secs:</Label>
-			<List>
-				<Option value="1"  > 1 </Option>
-				<Option value="2"  > 2 </Option>
-				<Option value="3"  > 3 </Option>
-				<Option value="4"  > 4 </Option>
-				<Option value="5"  > 5 </Option>
-				<Option value="8"  > 8 </Option>
-				<Option value="10" > 10 </Option>
-				<Option value="15" > 15 </Option>
-				<Option value="20" > 20 </Option>
-				<Option value="30" > 30 </Option>
-				<Option value="50" > 50 </Option>
-				<Option value="60" > 60 </Option>
-				<Option value="80" > 80  (default)</Option>
-				<Option value="90" > 90 </Option>
-				<Option value="120" > 120  </Option>
-			</List>
+				<List>
+					<Option value="1"  > 1 </Option>
+					<Option value="2"  > 2 </Option>
+					<Option value="3"  > 3 </Option>
+					<Option value="4"  > 4 </Option>
+					<Option value="5"  > 5 </Option>
+					<Option value="8"  > 8 </Option>
+					<Option value="10" > 10 </Option>
+					<Option value="15" > 15 </Option>
+					<Option value="20" > 20 </Option>
+					<Option value="30" > 30 </Option>
+					<Option value="50" > 50 </Option>
+					<Option value="60" > 60 </Option>
+					<Option value="80" > 80  (default)</Option>
+					<Option value="90" > 90 </Option>
+					<Option value="120" > 120  </Option>
+				</List>
 			</Field>
 
 			<Field id="deltaChangedSensor" type="menu"     defaultValue="5">
 			<Label>...if delta > xx % send update to indigo:</Label>
-			<List>
-				<Option value="1"  > 1 </Option>
-				<Option value="2"  > 2 </Option>
-				<Option value="3"  > 3 </Option>
-				<Option value="4"  > 4 </Option>
-				<Option value="5"  > 5 (default)</Option>
-				<Option value="8"  > 8 </Option>
-				<Option value="10" > 10 </Option>
-				<Option value="15" > 15 </Option>
-				<Option value="20" > 20 </Option>
-				<Option value="30" > 30 </Option>
-				<Option value="50" > 50 </Option>
-				<Option value="90" > 90  </Option>
-				<Option value="120" > 120  </Option>
-			</List>
+				<List>
+					<Option value="1"  > 1 </Option>
+					<Option value="2"  > 2 </Option>
+					<Option value="3"  > 3 </Option>
+					<Option value="4"  > 4 </Option>
+					<Option value="5"  > 5 (default)</Option>
+					<Option value="8"  > 8 </Option>
+					<Option value="10" > 10 </Option>
+					<Option value="15" > 15 </Option>
+					<Option value="20" > 20 </Option>
+					<Option value="30" > 30 </Option>
+					<Option value="50" > 50 </Option>
+					<Option value="90" > 90  </Option>
+					<Option value="120" > 120  </Option>
+				</List>
 			</Field>
 			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
 			<Label>... add new ONEWIRE sensors as they get detected:</Label> 
-			<List>
-				<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
-				<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
-			</List>
+				<List>
+					<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
+					<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
+				</List>
 			</Field>
 
 			<Field id="enableMuxI2C" type="menu"     defaultValue="0"> 
 			<Label>...enable TCA9548A select i2c for multiplexing:</Label> 
-			<List>
-				<Option value="0"     >off </Option>
-				<Option value="112"   >0x70 = 112  </Option>
-				<Option value="113"   >0x71 = 113  </Option>
-				<Option value="114"   >0x72 = 114  </Option>
-				<Option value="115"   >0x73 = 115  </Option>
-				<Option value="116"   >0x74 = 116  </Option>
-				<Option value="117"   >0x75 = 117  </Option>
-				<Option value="118"   >0x76 = 118  </Option>
-				<Option value="119"   >0x77 = 119  </Option>
-			</List>
+				<List>
+					<Option value="0"     >off </Option>
+					<Option value="112"   >0x70 = 112  </Option>
+					<Option value="113"   >0x71 = 113  </Option>
+					<Option value="114"   >0x72 = 114  </Option>
+					<Option value="115"   >0x73 = 115  </Option>
+					<Option value="116"   >0x74 = 116  </Option>
+					<Option value="117"   >0x75 = 117  </Option>
+					<Option value="118"   >0x76 = 118  </Option>
+					<Option value="119"   >0x77 = 119  </Option>
+				</List>
 			</Field>
 
 			<Field id="label3"               type="label" > 
-			<Label>Hardware / reboot configs:</Label>
+			<Label>== Hardware / reboot configs:</Label>
 			</Field>
 
-			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" tooltip="set this pin to low and connect to reset pin on rpi" >
-			<Label>...which pin to use as shutdown/reboot-OUTOUT pin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
+			<Field id="labelhw1"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
+			<Label>The plugin supports 2 options for hardware reset and UPS
+  -A. "shutdown hardwire reset"": Connect a GPIO out pin to RUN/REST pin on the board. 
+      Then the system can initiate a hardware reset by pulling the GPIO pin down
+      Eg when the RPI hangs and software reset does not work
+  -B. Support of a PI-HAT UPS board. 
+      This setup enables a soft shutdown as well as auto restart when power comes back
+      Tow GPIO pins are used: 
+      1. "shutdown-INPUT" sensing if +5V UPS input to the UPS board is ON.
+         - input to UPS not the +5V to the RPI-, when low: running on battery
+         +5VUPS goes through a resistor divider directly to the GPIO: High if +5 ON, low if off
+      2. a GPIO output "disable RESET" that goes to a transistor Basis- Emitter to ground, 
+         where the Collector disables the +5V raw trigger to restart the PRI, 
+         ie pulls it low under normal cuircumstance, 
+         hence RESET is only active when RPi is NOT running
+      The software monitors the shutdown-INPUT pin: 
+        if LOW, a counter starts: if &gt; "wait with shutdown" it initiates shutdown (soft then hard)
+        if HIGH it increases the internal counter for battery charge, up to "battery Capacity"
+        Parameter "how long to recharge": 
+           is the time it assumes the board needs to fully charge
+           the wait until reboot is shortened if battery is not fully charged
+      +5V UPS trigger: 
+          The Board will restart when +5V UPS comes back through a capacitor-resistor-transitor
+          collector connected to the RUN/REST pin. THAT transistor will then be disabled by #2
+          during normal run. This is enables the RPI to restart after regular shutdown
+          as it does not restart if its +5V is still on, ie battery  still working
+  A and B are independent of each other = can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinInput"   type="menu" defaultValue="15" tooltip="set this pin to low will cause the rpi to shutdown= trigger sfotware shutdown command">
-			<Label>...which pin to use as shutdown-INPUT pin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
+			<Label>...which pin to use as shutdown hardwire reset:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
 			</Field>
 
-			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="10" tooltip="how long does this pin have to be low to trigger shutdown ">
-			<Label>...how long does the shutdown pin have to be active:</Label>
-			<List>
-				<Option value="0"   >immediate </Option>
-				<Option value="1"   >1 sec </Option>
-				<Option value="2"   >2 sec </Option>
-				<Option value="3"   >3 sec </Option>
-				<Option value="4"   >4 sec </Option>
-				<Option value="5"   >5 sec </Option>
-				<Option value="7"   >7 sec </Option>
-				<Option value="10"  >10 sec </Option>
-				<Option value="20"  >20 sec </Option>
-				<Option value="30"  >30 sec </Option>
-				<Option value="60"  >1 min </Option>
-				<Option value="120" >2 mins </Option>
-				<Option value="240" >4 mins </Option>
-				<Option value="600" >10 mins </Option>
-				<Option value="1200">20 mins </Option>
-				<Option value="3600">1 hour </Option>
-				<Option value="7200">2 hours </Option>
-				<Option value="10800">3 hours </Option>
-				<Option value="14400">4 hours </Option>
-				<Option value="18000">5 hours </Option>
-				<Option value="21600">6 hours </Option>
-				<Option value="28800">8 hours </Option>
-				<Option value="36000">10 hours </Option>
-				<Option value="43200">12 hours </Option>
-				<Option value="43200">14 hours </Option>
-				<Option value="57600">16 hours </Option>
-				<Option value="64800">18 hours </Option>
-				<Option value="72000">20 hours </Option>
-				<Option value="79200">22 hours </Option>
-				<Option value="86400">24 hours </Option>
-			</List>
+			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
+			<Label>...which pin to use as shutdown disable RESET:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
 			</Field>
+
+			<Field id="shutdownInputPin"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+			<Label>...which pin to use as shutdown-INPUT:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
+
+			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
+			<Label>...wait with shutdown for xx when shutdown INPUT pin=0 (+5VUPS):</Label>
+				<List>
+					<Option value="0"   >immediate </Option>
+					<Option value="1"   >1 sec </Option>
+					<Option value="3"   >3 sec </Option>
+					<Option value="5"   >5 sec </Option>
+					<Option value="10"  >10 sec </Option>
+					<Option value="30"  >30 sec </Option>
+					<Option value="60"  >1 min </Option>
+					<Option value="120" >2 mins </Option>
+					<Option value="240" >4 mins </Option>
+					<Option value="600" >10 mins </Option>
+					<Option value="1800">30 mins </Option>
+					<Option value="3600">1 hour </Option>
+					<Option value="5400">1.5 hours </Option>
+					<Option value="7200">2 hours </Option>
+					<Option value="10800">3 hours </Option>
+					<Option value="14400">4 hours </Option>
+					<Option value="18000">5 hours </Option>
+					<Option value="21600">6 hours </Option>
+					<Option value="28800">7 hours </Option>
+					<Option value="28800">8 hours </Option>
+					<Option value="36000">10 hours </Option>
+					<Option value="43200">12 hours </Option>
+				</List>
+			</Field>
+
+			<Field id="chargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
+			<Label>...how long to recharge Li Battery to 90%:</Label>
+				<List>
+					<Option value="1800"   >30 min</Option>
+					<Option value="3600"   >60 min</Option>
+					<Option value="5400"   >90 min</Option>
+					<Option value="7200"   >120min</Option>
+				</List>
+			</Field>
+			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="=  ">
+			<Label>...battery Capacity:</Label>
+				<List>
+					<Option value="3600"   >1 hours</Option>
+					<Option value="7200"   >2 hours</Option>
+					<Option value="10800"  >3 hours</Option>
+					<Option value="14400"  >4 hours</Option>
+					<Option value="18000"  >5 hours</Option>
+					<Option value="21600"  >6 hours</Option>
+					<Option value="25200"  >7 hours</Option>
+					<Option value="28800"  >8 hours</Option>
+				</List>
+			</Field>
+			<Field id="labelhwr4"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> <Label></Label></Field>
 
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 			<Label>...overwrite default reboot at midnight:</Label>
-			<List>
-				<Option value="0" > no not reboot</Option>
-				<Option value="1" > use default for reboot option from config</Option>
-			</List>
+				<List>
+					<Option value="0" > no not reboot</Option>
+					<Option value="1" > use default for reboot option from config</Option>
+				</List>
 			</Field>
 
 			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sleep 2;sudo reboot" >
 			<Label>...reboot command:</Label>
-			<List>
-				<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
-				<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
-			</List>
+				<List>
+					<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
+					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
+				</List>
 			</Field>
 
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
-			<List>
-				<Option value="1" > yes</Option>
-				<Option value="0" > no default</Option>
-			</List>
+				<List>
+					<Option value="1" > yes</Option>
+					<Option value="0" > no default</Option>
+				</List>
 			</Field>
 
 			<Field id="useRTC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
 			<Label>...use HW clock (RTC):</Label>
-			<List>
-				<Option value="ds1307" > DS1307</Option>
-				<Option value="ds3231" > DS3231</Option>
-				<Option value="0"      > no HW clock</Option>
-			</List>
+				<List>
+					<Option value="ds1307" > DS1307</Option>
+					<Option value="ds3231" > DS3231</Option>
+					<Option value="0"      > no HW clock</Option>
+				</List>
 			</Field>
 
 			<Field id="syncTimeWithMAC"   type="menu" defaultValue="" tooltip="use if you have no NTP service">
 			<Label>...sync time MAC to RPi:</Label>
-			<List>
-				<Option value="0" > do not sync</Option>
-				<Option value="1" > sync if  1 secs apart  .. only for testing</Option>
-				<Option value="2" > sync if  2 secs apart</Option>
-				<Option value="3" > sync if  3 secs apart</Option>
-				<Option value="4" > sync if  4 secs apart</Option>
-				<Option value="5" > sync if  5 secs apart</Option>
-				<Option value="7" > sync if  7 secs apart</Option>
-				<Option value="10"> sync if  10 secs apart</Option>
-				<Option value="20"> sync if  20 secs apart</Option>
-				<Option value="50"> sync if  50 secs apart</Option>
-			</List>
+				<List>
+					<Option value="0" > do not sync</Option>
+					<Option value="1" > sync if  1 secs apart  .. only for testing</Option>
+					<Option value="2" > sync if  2 secs apart</Option>
+					<Option value="3" > sync if  3 secs apart</Option>
+					<Option value="4" > sync if  4 secs apart</Option>
+					<Option value="5" > sync if  5 secs apart</Option>
+					<Option value="7" > sync if  7 secs apart</Option>
+					<Option value="10"> sync if  10 secs apart</Option>
+					<Option value="20"> sync if  20 secs apart</Option>
+					<Option value="50"> sync if  50 secs apart</Option>
+				</List>
 			</Field>
 
 
 			<Field id="bluetoothONoff"   type="menu" defaultValue="on" tooltip="eg to reduce load, used command: sudo rfkill (un)block bluetooth ">
 			<Label> ... enable / disable bluetooth drivers:</Label>
-			<List>
-				<Option value="on"  >keep bluetooth on</Option>
-				<Option value="off" >switch bluetooth off</Option>
+				<List>
+					<Option value="on"  >keep bluetooth on</Option>
+					<Option value="off" >switch bluetooth off</Option>
 			</List>
 			</Field>
 
 			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock">
 			<Label>enable RPI to run independently for some special apps:</Label>
-			<List>
-				<Option value="fullIndigo" > normal Indigo mode</Option>
-				<Option value="clock"      > enable no network neoPixel Clock</Option>
-			</List>
+				<List>
+					<Option value="fullIndigo" > normal Indigo mode</Option>
+					<Option value="clock"      > enable no network neoPixel Clock</Option>
+				</List>
 			</Field>
 			<Field id="sep-031" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
 			<Label>send broadcasts to other plugins for status up/x changes</Label>
-			<List>
-				<Option value="0" >NO </Option>
-				<Option value="1" >YES send BC, must be enabled in config  </Option>
-			</List>
+				<List>
+					<Option value="0" >NO </Option>
+					<Option value="1" >YES send BC, must be enabled in config  </Option>
+				</List>
 			</Field>
 
 
@@ -10128,8 +10232,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
   -Any unix command eg "ping 192.168.1.1"
   -Or  /usr/bin/curl --user userid:password -X PUT -d value="abc" http://ip#:servport/variables/xxx
   -Or "sudo reboot" or "sudo shutdown -h now"-
-  -Or "gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0" 
-           to switch GPIO 18 HIGH/low on/off </Label>
+  -Or GPIO 18 on/off: "gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0"
+  -Or GPIO 18 toggle: "gpio -g mode 18 out;if (gpio -g read 18 | grep 1 ); then  gpio -g write 18 0; else gpio -g write 18 1 ;</Label>
 			</Field>
 			<Field id="action1"         type="textfield"     defaultValue="" hidden="no" > <Label>action if BurstEvent:</Label></Field>
 			<Field id="action2"         type="textfield"     defaultValue="" hidden="no" > <Label>action if longEvent:</Label></Field>

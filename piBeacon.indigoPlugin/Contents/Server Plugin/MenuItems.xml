@@ -216,19 +216,6 @@ Then the rPi will start sending data to plugin
         </ConfigUI>
     </MenuItem>
 
-    <MenuItem id="setupWiFiInterface">
-        <Name>Create WiFi network/interfaces files for rPi</Name>
-        <ConfigUI>
-            <Field id="setupWiFi" type="menu" defaultValue="999"  tooltip="This will execute sudo python interface.py  on the rPi server to make new /etc/network/interfaces file active">
-                <Label>Configure Wifi network/interface file on rPi#:</Label>
-                <List class="self" filter="" method="filterPi" dynamicReload="false"/>
-            </Field>
-            <Field   id="buttonWiFi" type="button"	tooltip="">
-                <Label>click to</Label><Title>Configure</Title>
-                <CallbackMethod>buttonConfirmWiFiCALLBACK</CallbackMethod>
-            </Field>
-        </ConfigUI>
-    </MenuItem>
 
     <MenuItem id="changeIP">
         <Name>Change IP number of rPi</Name>
@@ -261,7 +248,7 @@ Then the rPi will start sending data to plugin
         <Name>Replace a  RPI (move MAC number)</Name>
         <ConfigUI>
 <Field   id="label0" type="label">
-<Label>Replace an old RPI with a new one. 
+<Label>Replace an old BLE RPI with a new one. 
 The BLE MAC number is moved from the new to existing indigo device, 
 The indigo id and name of the old device stay.
 The indigo device, from where the MAC number was taken(new), is deleted</Label>

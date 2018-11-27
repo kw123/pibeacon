@@ -28,7 +28,7 @@
   ],
   "ticks":[
     {   "DD": {"RGB": [65,0,50],"blink": [1,0],  "npix": 0, "ringNo": [3]},
-        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [8,1]},
+        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [6,4]},
         "MM": {"RGB": [0,0,255],"blink": [1,0],  "npix": 1, "ringNo": [0]},
         "SS": {"RGB": [0,255,0],"blink": [1,0],  "npix": 1, "ringNo": [0]}
     },

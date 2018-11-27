@@ -55,7 +55,7 @@ def readParams():
 		if "useRTC"					in inp:	 useRTC=			 (inp["useRTC"])
 		if "output"					in inp:	 output=			 (inp["output"])
 		if "minLightNotOff"			in inp:	 minLightNotOff=  int(inp["minLightNotOff"])
-
+		#### G.debug = 2 
 		if "neopixelClock" not in output:
 			U.toLog(-1, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
@@ -180,6 +180,12 @@ def startNEOPIXEL(setClock = ""):
 				clockDict["marks"][tt]["LEDstart"]= clockDict["LEDstart"][clockDict["marks"][tt]["ringNo"][0]]
 
 
+		string = ""
+		for tt in ["HH","MM","SS"]:
+			string+=  " "+tt+":" +unicode(clockDict["marks"][tt])
+		U.toLog(1, u"startNEOPIXEL..lightset: "+unicode(lightset)+string)
+##20181122-02:21:04 startNEOPIXEL..lightset: offoff;  clockDict[marks] {u'MM': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'SS': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'DD': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'HH': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}}
+
 		pos={}
 		for tt in ["HH","MM","SS","DD"]:
 			ticks = HHMMSSDDnofTicks[tt]
@@ -243,24 +249,25 @@ def startNEOPIXEL(setClock = ""):
 				pass
 
 		marks={}
-		for tt in ["HH","MM","SS","DD"]:
-			index=[[]]
-			if tt not in clockDict["marks"]			 : continue
-			if clockDict["marks"][tt] =={}			 : continue
-			if clockDict["marks"][tt]["marks"] == [] : continue
-			ticks = HHMMSSDDnofTicks[tt]
-			for	 nR in range(len(clockDict["marks"][tt]["ringNo"])):
-				ringNo		= clockDict["marks"][tt]["ringNo"][nR]
-				LEDstart	= clockDict["LEDstart"][ringNo]
-				LEDsinRING	= clockDict["rings"][ringNo]
-				mult = float(LEDsinRING) / ticks
-				for ll in clockDict["marks"][tt]["marks"]:
-					ii = int(ll*mult + LEDstart)
-					if ii < maxLED:
-						index[0].append(ii)
-			marks[tt] = {"RGB":[min(int(multMark*x),255) for x in clockDict["marks"][tt]["RGB"]],"index":index}
+		if (lightset.lower()).find("off") ==-1: 
+			for tt in ["HH","MM","SS","DD"]:
+				index=[[]]
+				if tt not in clockDict["marks"]			 : continue
+				if clockDict["marks"][tt] =={}			 : continue
+				if clockDict["marks"][tt]["marks"] == [] : continue
+				ticks = HHMMSSDDnofTicks[tt]
+				for	 nR in range(len(clockDict["marks"][tt]["ringNo"])):
+					ringNo		= clockDict["marks"][tt]["ringNo"][nR]
+					LEDstart	= clockDict["LEDstart"][ringNo]
+					LEDsinRING	= clockDict["rings"][ringNo]
+					mult = float(LEDsinRING) / ticks
+					for ll in clockDict["marks"][tt]["marks"]:
+						ii = int(ll*mult + LEDstart)
+						if ii < maxLED:
+							index[0].append(ii)
+				marks[tt] = {"RGB":[min(int(multMark*x),255) for x in clockDict["marks"][tt]["RGB"]],"index":index}
 
-		if marks == [[]]: 
+		if marks == {}: 
 			marks = ""
 		pos["marks"] = marks
 
@@ -549,10 +556,6 @@ def upPressed(gpio):
 	elif enableDD: 
 		currDD +=1
 		startNEOPIXELNewTime(currHH, currMM, currDD)
-	elif enableLight: 
-		setLIGHT("UP")
-	elif enableLight: 
-		setLIGHT("UP")
 	elif enableTZset: 
 		setTimeZone("UP")
 	elif enableLight: 
@@ -713,12 +716,12 @@ def setLIGHT(upDown):
 		lightOptions = ["offoff","nightoff", "nightdim","daylow","daymedium", "dayhigh","auto"]
 		ind =4
 		l0 =60 + 48 + 40 + 32 + 24 + 16 + 12
-		U.toLog(1,"setLIGHT "+	 upDown) 
+		U.toLog(1,"setLIGHT "+  upDown) 
 		try: 
 			ind =  lightOptions.index(clockLightSet.lower())
 			if	upDown =="UP":
 				ind +=1
-				if ind > 6: ind = 6
+				if ind > 6: ind = 0
 			if	upDown =="DOWN":
 				ind -=1
 				if ind < 0: ind = 0
@@ -726,7 +729,7 @@ def setLIGHT(upDown):
 				pass
 		except:
 			ind = 4
-		U.toLog(1, 'setLIGHT:	'+upDown+ '	 '+ str(ind))
+		U.toLog(1, 'setLIGHT:   '+upDown+ '    '+ str(ind))
 		clockLightSet = lightOptions[ind]
 		clockDict["extraLED"]										= {"ticks":[ii+l0 for ii in range(ind)] , "RGB":[100,100,100],"blink":[1,1]} # start on 8 ring 
 		clockDict["clockLightSet"]									= clockLightSet
@@ -996,8 +999,8 @@ def setLightfromSensor():
 				
 		if restartstartNEOPIXEL:
 			startNEOPIXEL()
-		U.toLog(1, "setting	 lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, sensor :"+str(lightSensorValueREAD)+"	 "+str(lightSensorValue)+"	"+str(clockLightSetOverWrite)+"	 "+str(maxRange)+"	"+str(sensor) )
-		#print lightSensorValueREAD, lightSensorValue, LEDintensityFactor, clockLightSetOverWrite
+		U.toLog(1, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
+##20181122-02:17:22 setting  lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, clockLightSet, LEDintensityFactor:6.0  50.0 daymedium  12000.0 offoff  offoff
 	except	Exception, e:
 		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -1022,14 +1025,14 @@ def resetEverything():
 	os.system('sudo cp '+G.homeDir+'wpa_supplicant.conf-DEFAULT-clock /etc/wpa_supplicant/wpa_supplicant.conf')
 	os.system('cp '+G.homeDir+'patterns-DEFAULT-clock  '+G.homeDir+'patterns')
 	time.sleep(2)
-	os.system("reboot now")
+	os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
 	return ## dummy
 
 #################################
 def shutdown():
 	print" we are shutting down now"
 	time.sleep(1.5)
-	os.system("shutdown now")
+	os.system("sudo killall -9 python;sleep 2; shutdown now")
 	return ## dummy
 
 
@@ -1055,7 +1058,8 @@ def readMarksFile():
 	
 #################################
 def restorePattern():
-	os.system(" cp "+G.homeDir+"patterns-DEFAULT-clock	" +G.homeDir+"patterns") 
+	os.system(" cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"patterns") 
+	os.system(" cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"temp/patterns") 
 	return 
 	
 #################################
@@ -1146,7 +1150,7 @@ newDate						= ""
 resetGPIO					= False
 lightSensorValueLast		= -1
 clockLightSensor			= 0
-clockLightSetOverWrite		= "dayhigh"
+clockLightSetOverWrite		= "daymedium"
 clockLightSetOverWriteOld	= ""
 LEDintensityFactorOld		= ""
 LEDintensityFactor			= "dayhigh"
@@ -1305,14 +1309,16 @@ while True:
 					U.prepAdhocWifi()
 				else:
 					U.resetWifi() 
-					os.system("reboot now")
+					time.sleep(1)
+					os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
 		else:
 		   lastWIFITest =-1
 
 		if wifiStarted > -1:
 			if (time.time() - wifiStarted >maxWifiAdHocTime*60 ): # reset wifi after maxWifiAdHocTime minutes
 				U.resetWifi() 
-				os.system("reboot now")
+				time.sleep(1)
+				os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
 			iTT= int(time.time())
 			if	iTT	 - wifiStartedLastTest > 60: # count down LEDs
 				l1 = maxWifiAdHocTime - (iTT - int(wifiStarted))/60

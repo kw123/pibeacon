@@ -275,7 +275,7 @@ def execCMDS(data):
 						if cmd =="disable" :
 							continue
 						cmdJ= json.dumps({"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM })
-						cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJ+"'	&"
+						cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJ+"' &"
 						U.toLog(1," cmd= "+cmdOut)
 						os.system(cmdOut)
 						continue
@@ -310,10 +310,9 @@ def execCMDS(data):
 	f=open(G.homeDir+"execcommands.current","w")
 	f.write(json.dumps(execcommands))
 	f.close()
-				   
+
 	return
-				 
-		   
+
 
 def readParams():
 	global execcommands, PWM
@@ -333,6 +332,7 @@ if __name__ == "__main__":
 
 	readParams()
 
+#### read exec command list for restart values, update if needed and write back 
 	execcommands={}
 	#print "execcommands" , sys.argv
 	if os.path.isfile(G.homeDir+"execcommands.current"):

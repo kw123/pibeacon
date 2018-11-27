@@ -75,12 +75,13 @@ def checkIfGpioIsInstalled():
 def readNewParams(force=False):
 		global enableRebootCheck,  restart,sensorList,rPiCommandPORT, firstRead
 		global sensorEnabled, enableiBeacons, beforeLoop, cAddress,rebootHour,rebooted,BLEserial,BLEserialOLD,sensors,enableShutDownSwitch, rebootWatchDogTime
-		global shutDownPinInput, shutDownPinOutput,sensorAlive,useRamDiskForLogfiles, displayActive
+		global shutdownInputPin,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, displayActive
 		global actions, output
 		global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active, getspiMCP3008Active, getpmairqualityActive
 		global activePGMdict, bluetoothONoff
 		global oldRaw,	lastRead
-		global minPinActiveTimeForShutdown, actualPinActiveTimeForShutdown
+		global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+		global chargeTimeForMaxCapacity, batteryCapacitySeconds
 
 		
 		BLEserialOLD= BLEserial
@@ -110,6 +111,8 @@ def readNewParams(force=False):
 		if u"useRamDiskForLogfiles" 		in inp:	 useRamDiskForLogfiles =  		    inp["useRamDiskForLogfiles"]
 		if u"actions"						in inp:	 actions			   =  		    inp["actions"]
 		if u"useRTC"						in inp:	 U.setUpRTC(inp["useRTC"])
+		if u"chargeTimeForMaxCapacity" 				in inp:	 chargeTimeForMaxCapacity= 			  float(inp["chargeTimeForMaxCapacity"])
+		if u"batteryCapacitySeconds" 				in inp:	 batteryCapacitySeconds= 			  float(inp["batteryCapacitySeconds"])
 		
 
 		if u"bluetoothONoff"			 in inp:
@@ -192,27 +195,30 @@ def readNewParams(force=False):
 				
 
 		### for shutdown pins changes  we need to restart this program
-		if u"shutDownPinOutput"	  in inp:  
-			xxx=				   inp["shutDownPinOutput"]
-			if shutDownPinOutput !=-1 and xxx != shutDownPinOutput: # is a change, not just switch on 
+
+		if u"shutDownPinVetoOutput"	  in inp:  
+			xxx=				   int(inp["shutDownPinVetoOutput"])
+			if shutDownPinVetoOutput !=-1 and xxx != shutDownPinVetoOutput: # is a change, not just switch on 
 				U.toLog(-1, "restart master for new shutdown input pin",doPrint=True)
 				os.system("/usr/bin/python "+G.homeDir+"master.py &" )
-			if shutDownPinOutput != xxx:
-				shutDownPinOutput=	   xxx
-				GPIO.setmode(GPIO.BCM)
-				if shutDownPinInput ==15 or shutDownPinInput==14:
+			if shutDownPinVetoOutput != xxx:
+				shutDownPinVetoOutput=	   xxx
+				if shutdownInputPin ==15 or shutdownInputPin==14:
 					os.system("systemctl disable hciuart")
 					time.sleep(1)
+				if shutDownPinVetoOutput !=-1:
+					GPIO.setup(shutDownPinVetoOutput, GPIO.OUT) # disable shutdown 
+					GPIO.output(shutDownPinVetoOutput, True)    # set to high while running 
 
-		if u"shutDownPinInput"	 in inp:  
-			xxx=				   inp["shutDownPinInput"]
-			if shutDownPinInput !=-1 and xxx != shutDownPinInput:  # is a change, not just switch on 
-				U.toLog(-1, "restart master for new shutdown output pin",doPrint=True)
+
+		if u"shutdownInputPin"	 in inp:  
+			xxx=				   int(inp["shutdownInputPin"])
+			if shutdownInputPin !=-1 and xxx != shutdownInputPin:  # is a change, not just switch on 
+				U.toLog(-1, "restart master for new shutdown input pin", doPrint=True)
 				os.system("/usr/bin/python "+G.homeDir+"master.py &" )
-			if shutDownPinInput != xxx:
-				shutDownPinInput=	  xxx
-				GPIO.setmode(GPIO.BCM)
-				if shutDownPinInput ==15 or shutDownPinInput==14:
+			if shutdownInputPin != xxx:
+				shutdownInputPin=	  xxx
+				if shutdownInputPin ==15 or shutdownInputPin==14:
 					os.system("systemctl disable hciuart")
 					time.sleep(1)
 
@@ -658,7 +664,7 @@ def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk 
 
 
 def rebootWatchDog():
-	global rebootWatchDogTime, shutDownPinOutput
+	global rebootWatchDogTime
 	try:
 
 		if rebootWatchDogTime <=0:
@@ -679,7 +685,6 @@ def rebootWatchDog():
 
 
 def checkIfRebootRequest():
-	global shutDownPinOutput
 	###print "into checkIfRebootRequest"
 	if	os.path.isfile(G.homeDir+"temp/rebootNeeded"):
 		f=open(G.homeDir+"temp/rebootNeeded") 
@@ -725,7 +730,7 @@ def checkIfRebootRequest():
 			
 
 def checkIfNightReboot():
-	global rebootHour,rebooted, shutDownPinOutput
+	global rebootHour,rebooted
 
 
 	#print "rebootHour", rebootHour, "rebooted", rebooted,	" hour=",datetime.datetime.now().hour, "true? ",datetime.datetime.now().hour == rebootHour
@@ -748,39 +753,91 @@ def checkIfNightReboot():
 
 
 def checkIfShutDownSwitch():
-	global shutDownPinInput, lastBootTest, shutDownPinOutput, minPinActiveTimeForShutdown, actualPinActiveTimeForShutdown
-	
+	global shutdownInputPin,  minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+	global chargeTimeForMaxCapacity, batteryCapacitySeconds
+	global  batteryStatus,lastWriteBatteryStatus
 	try:
-		ii=lastBootTest
-		#print "checkIfShutDownSwitch initialized "
+		ii = lastWriteBatteryStatus
 	except:
-		lastBootTest="initialized"
 		try:
-			#print "checkIfShutDownSwitch initializing	"
-			GPIO.setmode(GPIO.BCM)
-			if shutDownPinInput != -1:
-				#print	"setting shutDownPin to GPIO: " + str(shutDownPinInput) 
-				U.toLog(-1, "setting shutDownPin to GPIO: " + str(shutDownPinInput) )
-				GPIO.setup(int(shutDownPinInput), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
-			 	actualPinActiveTimeForShutdown = time.time()
-		except	Exception, e :
-			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-			
+			lastWriteBatteryStatus =0
+			print "checkIfShutDownSwitch initializing"
+			batteryStatus= readJson(G.homeDir+"batteryStatus")
+			delItem=[]
+			for item in batteryStatus:
+				if item not in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","chargeTimeForMaxCapacity","minPinActiveTimeForShutdown", "batteryTimeLeft"]:
+					delItem.append(item)
+			for item in delItem:
+				del batteryStatus[item]
+			for item in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","chargeTimeForMaxCapacity","minPinActiveTimeForShutdown", "batteryTimeLeft"]:
+				if item not in batteryStatus:
+					batteryStatus[item] =0
+	
+			if shutdownInputPin != -1:
+				#print	"setting shutDownPin to GPIO: " + str(shutdownInputPin) 
+				U.toLog(-1, "setting shutDownPin to GPIO: " + str(shutdownInputPin) )
+				GPIO.setup(int(shutdownInputPin), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+				inputPinVoltRawLastONTime = time.time()
+		except: pass
+		if batteryStatus =={}: 
+			batteryStatus ={"timeCharged":0, "testTime":time.time(),"percentCharged":0,"inputPinVoltRawLastONTime":0,"batteryTimeLeftEndOfCharge":0,"status":"","batteryCapacitySeconds":0,"chargeTimeForMaxCapacity":0,"minPinActiveTimeForShutdown":0,"batteryTimeLeft":0}
 	try:
-		for ii in range(3):
-			if GPIO.input(int(shutDownPinInput)) == 1:
-			 	actualPinActiveTimeForShutdown = time.time()
+		batteryStatus["chargeTimeForMaxCapacity"] 			= chargeTimeForMaxCapacity
+		batteryStatus["batteryCapacitySeconds"] 			= batteryCapacitySeconds
+		batteryStatus["minPinActiveTimeForShutdown"]		= minPinActiveTimeForShutdown
+		for ii in range(2):
+			if GPIO.input(int(shutdownInputPin)) == 1:
+				batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
+				batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],chargeTimeForMaxCapacity),5) # x hour charge time should get to 90+%
+				batteryStatus["inputPinVoltRawLastONTime"]			= round(time.time(),5)
+				batteryStatus["testTime"]							= round(time.time(),5)
+				batteryStatus["percentCharged"] 					= round(max( 0, batteryStatus["timeCharged"] /chargeTimeForMaxCapacity ),5)
+				batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(minPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
+				if batteryStatus["percentCharged"] ==1:				  batteryStatus["status"]	= "charged"
+				else:  												  batteryStatus["status"]	= "charging"
+				batteryStatus["batteryTimeLeft"]					= batteryStatus["batteryTimeLeftEndOfCharge"]
+				lastWriteBatteryStatus= writeJson(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
 				return
 			time.sleep(0.1)
-			if time.time() - actualPinActiveTimeForShutdown < minPinActiveTimeForShutdown: return 
+
+		batteryStatus["batteryTimeLeftEndOfCharge"]		= round(min(minPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
+		batteryStatus["timeCharged"] 					= round(batteryStatus["timeCharged"] * max( 0, 1. -  (time.time()-batteryStatus["testTime"])/max(1,batteryCapacitySeconds)  ),5)#discharging
+		batteryStatus["testTime"] 						= round(time.time(),5)
+		batteryStatus["batteryTimeLeft"] 				= round( (batteryStatus["inputPinVoltRawLastONTime"] + batteryStatus["batteryTimeLeftEndOfCharge"]) - time.time(),5)
+		if batteryStatus["batteryTimeLeft"] >0: 
+			batteryStatus["status"]						= "dis-charging"
+			lastWriteBatteryStatus= writeJson(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+			return 
+
+		batteryStatus["status"]							= "empty"
+		lastWriteBatteryStatus= writeJson(batteryStatus,G.homeDir+"batteryStatus", 0)
+
 	except	Exception, e :
+			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 			return
-	U.sendRebootHTML("shutdownswitch", reboot=False)
+	U.sendRebootHTML("battery empty", reboot=False)
 
-	U.doRebootThroughRUNpinReset()
-	
 	return 
+
+def writeJson(data,fileName,lastWriteBatteryStatus):
+	try:
+		if time.time() - lastWriteBatteryStatus < 20: return lastWriteBatteryStatus
+		f=open(fileName,"w")
+		f.write(json.dumps(data,sort_keys=True, indent=0))
+		f.close()
+	except: pass
+	return time.time()
+	
+def readJson(fileName):
+	try:
+		f=open(fileName,"r")
+		data= json.loads(f.read())
+		f.close()
+	except: 
+		data ={}
+	return data
+
 
 def checkLogfiles():
 		global useRamDiskForLogfiles
@@ -822,15 +879,15 @@ def checkRamDisk():
 
 
 def delayAndWatchDog():
-	global shutDownPinInput, rebootWatchDogTime,lastrebootWatchDogTime
+	global shutdownInputPin, rebootWatchDogTime,lastrebootWatchDogTime
 	try:
-		for xx in range(40): # thats 20 seconds
-			time.sleep(0.25)
+		for xx in range(20): # thats 20 seconds
+			time.sleep(1)
 
-			if shutDownPinInput !=-1 and  time.time() - G.tStart > 40:
+			if shutdownInputPin !=-1 and  time.time() - G.tStart > 20:
 				checkIfShutDownSwitch()
 
-			if xx%15 ==1 and False:
+			if xx%5 ==1 and False:
 				if	os.path.isfile("/run/nologin"):
 					os.system("rm /run/nologin &")
 
@@ -897,15 +954,20 @@ global rebootWatchDogTime, lastrebootWatchDogTime
 global sensorEnabled,  restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootHour,rebooted,BLEserial,BLEserialOLD
 global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
 
-global shutDownPinInput, shutDownPinOutput
+global shutdownInputPin, shutDownPinVetoOutput
 global displayActive, tea5767Active, neopixelActive, neopixelClockActive
 global getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active,getspiMCP3008Active, getpmairqualityActive
 global actions, output, sensors, sensorList
 global activePGMdict, bluetoothONoff
 global oldRaw,	lastRead
-global minPinActiveTimeForShutdown, actualPinActiveTimeForShutdown
+global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+global chargeTimeForMaxCapacity, batteryCapacitySeconds
+
+chargeTimeForMaxCapacity = 3600. # seconds
+batteryCapacitySeconds   = 5*3600 # 
+
 minPinActiveTimeForShutdown = 9999999999999
-actualPinActiveTimeForShutdown = 0
+inputPinVoltRawLastONTime = time.time()
 oldRaw					= ""
 lastRead				= 0
 bluetoothONoff			= "on"
@@ -940,14 +1002,17 @@ lastAlive				= []
 lastAliveultrasoundDistance =0
 loopCount				= 0
 iPhoneMACListOLD		= ""
-shutDownPinInput		= -1
-shutDownPinOutput		= -1
+shutdownInputPin		= -1
+shutDownPinVetoOutput	= -1
 BLEserial				= "serial"
 rebootWatchDogTime		= -1
 sensorAlive				= {}
 actions					= []
 firstRead				= True
 activePGMdict			= {}
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
 
 
 # remove precompiled py programs in case .py was updated

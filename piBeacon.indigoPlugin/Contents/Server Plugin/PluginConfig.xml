@@ -219,22 +219,16 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
    </Field>
 
    <Field id="infoLabelwifi" type="label">
-        <Label>the next info is used to create files on the RPI to help setup Wifi</Label>
+        <Label>WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~/piBeacon directory, they will NOT be activated. YOU can move/activate them with "sudo python interface.py" on the RPI</Label>
    </Field>
-   <Field    id="routerIP"   type="textfield" defaultValue="192.168.1.1">
-        <Label>router IP Number :</Label>
+   <Field id="wifiSSID"   type="textfield" defaultValue="" tooltip="" >
+        <Label>...  SSID of your router:</Label> 
    </Field>
-
-
-   <Field id="wifiSSID"   type="textfield" defaultValue="" tooltip="used to configure  wifi connection files on the PI, not activated, you can use it with sudo python interface.py on the RPI" >
-        <Label>wifi SSID of your router:</Label> 
+   <Field id="wifiPassword"   type="textfield" defaultValue=""  >
+        <Label>... WiFi password of your router:</Label> 
    </Field>
-
-   <Field id="wifiPassword"   type="textfield" defaultValue="" tooltip="used to configure  wifi connection files on the PI, not activated, you can use it with sudo python interface.py on the RPI" >
-        <Label>wifi password of your router:</Label> 
-   </Field>
-   <Field    id="key_mgmt"   type="menu" defaultValue="NONE" tooltip="used to configure  wifi connection file on the PI, not activated, you can use it with sudo python interface.py on the RPI">
-        <Label>WiFi Security :</Label>
+   <Field    id="key_mgmt"   type="menu" defaultValue="NONE" >
+        <Label>... Security :</Label>
         <List>
             <Option value="NONE"     >NONE </Option>
             <Option value="WPA-PSK"  >WPA-PSK </Option>
@@ -679,7 +673,8 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
     <Field    id="debugSensorData"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (4) sensor devices:</Label>  </Field>
     <Field    id="debugOutputDevice"  type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (5) output devices:</Label>  </Field>
     <Field    id="debugUpdateRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6) update RPI:</Label>  </Field>
-    <Field    id="debugOfflineRPI"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6a) show error messages if RPI is offline:</Label>  </Field>
+    <Field    id="debugSocketRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6a) sockect comm to RPI:</Label>  </Field>
+    <Field    id="debugOfflineRPI"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6b) show error messages if RPI is offline:</Label>  </Field>
     <Field    id="debugFing"          type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (7) update Fingscan:</Label>  </Field>
     <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8) send BC for status updates:</Label>  </Field>
     <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9) update BLE-connect:</Label>  </Field>
@@ -692,12 +687,12 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
     <Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
         <List>
-            <Option value="standard" > no special unifi logfile, std indigo logfile</Option>
+            <Option value="standard" > no special piBeacon logfile, std indigo logfile</Option>
             <Option value="user"     > ~/indigo/pibeacon/plugin.log                    </Option>
             <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/plugin.log </Option>
         </List>
     </Field>
-    <Field id="infoLabel227" type="label"> <Label>.                     for DETAILED time tracking set indigo variable "denableTimeTracking_piBeacon"</Label>  </Field>
+    <Field id="infoLabel227" type="label"> <Label>.                     for DETAILED time tracking set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>
     <Field    id="do_cProfile" type="textfield"  defaultValue="on/off/print"  readonly="yes"     > 
         <Label>... enable or stop or  print intermediate results use on/off/print:</Label>  
     </Field>
