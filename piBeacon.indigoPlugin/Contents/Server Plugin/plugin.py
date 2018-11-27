@@ -13435,11 +13435,11 @@ class Plugin(indigo.PluginBase):
 					ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 			else:
-				ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-				
+				ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			
 			if fileToSend.find(u"shutdown") >-1: 
 				return 0, ret
+
 			if len(ret[1]) > 0:
 				self.ML.myLog( text =  fileToSend+" Pi# "+unicode(pi) + unicode(ret).replace(u"\n\n", u"\n"))
 
