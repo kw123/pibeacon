@@ -56,6 +56,32 @@
 			<Field id="rssiOffsetlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 			<Label> correction to received rssi eg -10 would reduce rssi by 10; -300: use for up/down, not distance</Label>	</Field>
 
+			<Field id="cutOffForClosestBeacon" type="menu"     defaultValue="20" tooltip=""> 
+			<Label>.. CUT OFF distance for determining clostest iBeacon: if distance &gt;</Label>
+				<List>
+					<Option value="1"   >&gt; 1 m ignore</Option>
+					<Option value="2"   >&gt; 2 m ignore</Option>
+					<Option value="3"   >&gt; 3 m ignore</Option>
+					<Option value="4"   >&gt; 4 m ignore</Option>
+					<Option value="5"   >&gt; 5 m ignore</Option>
+					<Option value="7"   >&gt; 7 m ignore</Option>
+					<Option value="8"   >&gt; 8 m ignore</Option>
+					<Option value="9"   >&gt; 9 m ignore</Option>
+					<Option value="10"  >&gt; 10 m ignore</Option>
+					<Option value="12"  >&gt; 12 m ignore</Option>
+					<Option value="15"  >&gt; 15 m ignore</Option>
+					<Option value="20"  >&gt; 20 m ignore</Option>
+					<Option value="25"  >&gt; 25 m ignore</Option>
+					<Option value="30"  >&gt; 30 m ignore</Option>
+					<Option value="40"  >&gt; 40 m ignore</Option>
+					<Option value="50"  >&gt; 50 m ignore</Option>
+					<Option value="70"  >&gt; 70 m ignore</Option>
+					<Option value="100" >&gt; 100 m ignore</Option>
+					<Option value="300" >&gt; 300 m ignore</Option>
+				</List>
+			</Field>
+
+
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300" tooltip="How often should we update the signal and distance states"> 
 			<Label>....      update indigo states every:</Label>
 				<List>
@@ -83,7 +109,7 @@
 			<Field id="sep-031" type="separator"/>
  
 			<Field id="memberOfLabel" type="label" >  
-			<Label> Make this RPI memebr of group ...</Label>	</Field>
+			<Label> Make this RPI member of group ...</Label>	</Field>
 			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>...Family:</Label>  
 			</Field>
 			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>...Guests:</Label>
@@ -303,6 +329,54 @@
 				</List>
 			</Field>
 
+			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
+			<Label>...wait after boot before master (set in rc.local):</Label>
+				<List>
+					<Option value="0"  > do NOT wait</Option>
+					<Option value="5"  > wait for 5 secs, give eg wifi time to connect</Option>
+					<Option value="10" > wait for 10 secs, give eg wifi time to connect</Option>
+					<Option value="15" > wait for 10 secs, give eg wifi time to connect</Option>
+				</List>
+			</Field>
+
+
+			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
+			<Field id="labelGPIOfirst"               type="label"> 
+			<Label> If you like to set GPIOs (A / B)  directly after boot - before master.py starts:</Label></Field>
+			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
+				<Label>..set props for GPIO pin A after boot.. first thing:</Label>
+				<List>
+					<Option value="Olow"     >set OUTPUT initially to low </Option>
+					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
+					<Option value="Iup"      >set INPUT pull High</Option>
+					<Option value="Idown"    >set INPUT pull low</Option>
+					<Option value="Ifloat"   >set INPUT float</Option>
+					<Option value="off"      >off</Option>
+				</List>
+			</Field>
+			<Field id="GPIONumberAfterBoot1"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot1" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<Label>..select GPIO-pin A:</Label>
+			</Field>
+
+
+			<Field id="GPIOTypeAfterBoot2"   type="menu" defaultValue="off">
+				<Label>..set props for GPIO pin B after boot.. second thing:</Label>
+				<List>
+					<Option value="Olow"     >set OUTPUT initially to low </Option>
+					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
+					<Option value="Iup"      >set INPUT pull High</Option>
+					<Option value="Idown"    >set INPUT pull low</Option>
+					<Option value="Ifloat"   >set INPUT float</Option>
+					<Option value="off"      >off</Option>
+				</List>
+			</Field>
+			<Field id="GPIONumberAfterBoot2"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot2" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<Label>..select GPIO-pin B:</Label>
+			</Field>
+
+			<Field id="labelram"               type="label" > <Label></Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
@@ -394,6 +468,12 @@
 				<ValueType>String</ValueType>
 				<TriggerLabel>i2cActive</TriggerLabel>
 				<ControlPageLabel>i2cActive</ControlPageLabel>
+			</State>
+			
+			<State id="closestiBeacon">
+				<ValueType>string</ValueType>
+				<TriggerLabel>closestiBeacon</TriggerLabel>
+				<ControlPageLabel>closestiBeacon</ControlPageLabel>
 			</State>
 
 			<State id="PosX">
@@ -865,6 +945,53 @@
 			</Field>
 
 
+			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
+			<Label>...wait after boot before master (set in rc.local):</Label>
+				<List>
+					<Option value="0"  > do NOT wait</Option>
+					<Option value="5"  > wait for 5 secs</Option>
+					<Option value="10" > wait for 10 secs</Option>
+				</List>
+			</Field>
+
+			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
+			<Field id="labelGPIOfirst"               type="label"> 
+			<Label> If you like to set GPIOs (A / B)  directly after boot - before master.py starts:</Label></Field>
+			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
+				<Label>..set props for GPIO pin A after boot.. first thing:</Label>
+				<List>
+					<Option value="Olow"     >set OUTPUT initially to low </Option>
+					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
+					<Option value="Iup"      >set INPUT pull High</Option>
+					<Option value="Idown"    >set INPUT pull low</Option>
+					<Option value="Ifloat"   >set INPUT float</Option>
+					<Option value="off"      >off</Option>
+				</List>
+			</Field>
+			<Field id="GPIONumberAfterBoot1"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot1" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<Label>..select GPIO-pin A:</Label>
+			</Field>
+
+
+			<Field id="GPIOTypeAfterBoot2"   type="menu" defaultValue="off">
+				<Label>..set props for GPIO pin B after boot.. second thing:</Label>
+				<List>
+					<Option value="Olow"     >set OUTPUT initially to low </Option>
+					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
+					<Option value="Iup"      >set INPUT pull High</Option>
+					<Option value="Idown"    >set INPUT pull low</Option>
+					<Option value="Ifloat"   >set INPUT float</Option>
+					<Option value="off"      >off</Option>
+				</List>
+			</Field>
+			<Field id="GPIONumberAfterBoot2"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot2" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<Label>..select GPIO-pin B:</Label>
+			</Field>
+
+			<Field id="labelram"               type="label" > <Label></Label></Field>
+
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
 				<List>
@@ -1149,7 +1276,17 @@ use eg to track someone moving around - going from one room to the next" >
 			<Field id="IgnoreBeaconIfSignalLessThan" type="textfield"     defaultValue="-999"> 
 			<Label>.... ignore if signal less than   Minimum:</Label>
 			</Field>
-            
+
+
+
+			<Field id="IgnoreBeaconForClosestToRPI" type="menu"     defaultValue="0"> 
+			<Label>Ignore beacon for closest iBeacon to RPI:</Label>
+			<List>
+				<Option value="0"     >use iBeacon</Option>
+				<Option value="1"     >do NOT use iBeacon</Option>
+			</List>
+			</Field>
+
 			<Field id="label5"               type="label"  > 
 			<Label>How often should we update the signal and distance states:</Label>
 			</Field>
@@ -13416,6 +13553,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
+			<State id="actualGpioValue">
+				<ValueType>String</ValueType>
+				<TriggerLabel>actualGpioValue</TriggerLabel>
+				<ControlPageLabel>actualGpioValue</ControlPageLabel>
+			</State>
 			<State id="OUTPUT_00">
 				<ValueType>String</ValueType>
 				<TriggerLabel>OUTPUT_00</TriggerLabel>
@@ -13491,6 +13633,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="actualGpioValue">
+				<ValueType>String</ValueType>
+				<TriggerLabel>actualGpioValue</TriggerLabel>
+				<ControlPageLabel>actualGpioValue</ControlPageLabel>
 			</State>
 			<State id="OUTPUT_00">
 				<ValueType>String</ValueType>

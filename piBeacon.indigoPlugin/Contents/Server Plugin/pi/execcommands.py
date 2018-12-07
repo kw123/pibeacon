@@ -169,6 +169,12 @@ def execCMDS(data):
 				inverseGPIO = False
 
 
+			if "devId" in next:
+				devId = next["devId"]
+			else:
+				devId = 0
+
+
 
 
 			if	cmd == "newMessage":
@@ -217,7 +223,7 @@ def execCMDS(data):
 							if cmd =="disable" :
 								if str(int(i2cAddress)+1000) in execcommands:
 									del execcommands[str(int(i2cAddress)+1000)]
-							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values })
+							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId })
 							U.toLog(1,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setmcp4725.py '"+ cmdJ+"'  &"
 							U.toLog(1," cmd= "+cmdOut)
@@ -238,7 +244,7 @@ def execCMDS(data):
 							if cmd =="disable" :
 								del execcommands[str(int(i2cAddress)+1000)]
 								continue
-							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values })
+							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId})
 							U.toLog(1,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setPCF8591dac.py '"+ cmdJ+"'  &"
 							U.toLog(1," cmd= "+cmdOut)
@@ -274,7 +280,7 @@ def execCMDS(data):
 						#U.killOldPgm(-1,"'setGPIO.py "+pin+" '" )
 						if cmd =="disable" :
 							continue
-						cmdJ= json.dumps({"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM })
+						cmdJ= json.dumps({"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM, "devId":devId})
 						cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJ+"' &"
 						U.toLog(1," cmd= "+cmdOut)
 						os.system(cmdOut)
@@ -331,7 +337,7 @@ if __name__ == "__main__":
 	PWM = 100
 
 	readParams()
-
+	G.debug=3
 #### read exec command list for restart values, update if needed and write back 
 	execcommands={}
 	#print "execcommands" , sys.argv

@@ -637,7 +637,7 @@ def getSerialDEV():
 
 		if serials[0].find("serial0 -> ttyAMA0") ==-1 :
 			toLog(-1, "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0")
-			print		"pi2 .. wrong serial port setup	 can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
+			print     "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
 			time.sleep(10)
 			exit(1)
 
@@ -649,8 +649,8 @@ def getSerialDEV():
 		subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		if serials[0].find("serial0 -> ttyS0")==-1:
-			U.toLog(-1, "pi3 .. wrong serial port setup	 can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
-			print		"pi3 .. wrong serial port setup	 can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
+			toLog(-1, "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
+			print     "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
 			time.sleep(10)
 			exit(1)
 	return sP
@@ -791,7 +791,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
 						else:
 							cmd.append(" &")
 							subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-							os.system("echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend")
+							os.system("echo '"+G.program+": "+data0+"' > "+ G.homeDir+"temp/messageSend")
 
 			else:
 						
@@ -810,7 +810,7 @@ def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
 								response = soc.recv(512)
 
 								if response.find("ok") >-1:
-									os.system("echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend")
+									os.system("echo '"+G.program+":  "+data0+"' > "+ G.homeDir+"temp/messageSend")
 									sendMSG =True
 									break
 								else:# try again
@@ -1246,7 +1246,7 @@ def checkIfAliveNeedsToBeSend():
 		if time.time() - lastSend> 330:	 # do we have to send alive signal to plugin?
 			sendURL(sendAlive=True )
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 	return
 
 

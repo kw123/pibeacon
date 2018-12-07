@@ -263,9 +263,8 @@ def startSensor(devId):
 	U.toLog(-1,"==== Start "+G.program+" ===== ")
 	startTime =time.time()
  
-	sP = U.getSerialDEV()
-	 
 	try:
+		sP = U.getSerialDEV() 
 		thisSensor[devId]  = thisSensorClass(serialPort = sP)
 		
 	except	Exception, e:

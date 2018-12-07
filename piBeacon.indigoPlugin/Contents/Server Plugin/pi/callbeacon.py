@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import time
+
+#set GPIOs if requested BEFOR master.py runs just onece after boot 
+os.system("/usr/bin/python /home/pi/pibeacon/doGPIOatStartup.py & ")
+
+
 # make new directories if they do not exist 
 os.system("mkdir /home/pi/pibeacon/> /dev/null 2>&1 ")
 os.system("mkdir /home/pi/pibeacon/soundfiles> /dev/null 2>&1 ")
@@ -15,7 +21,7 @@ os.system("chmod +777 -R /home/pi/pibeacon/soundfiles> /dev/null 2>&1 ")
 os.system("chmod +777 -R /home/pi/pibeacon/fonts> /dev/null 2>&1 ")
 os.system("chmod +777 -R /home/pi/pibeacon/displayfiles> /dev/null 2>&1 ")
 os.system("chmod +777 -R /home/pi/pibeacon/fonts> /dev/null 2>&1 ")
-os.system("chown -R	 pi	 /home/pi/pibeacon/ ")
+os.system("chown -R  pi  /home/pi/pibeacon/ ")
 os.system("rm  /home/pi/pibeacon/restartCount > /dev/null 2>&1 ")
 
 os.system("rm  /home/pi/pibeacon/*.pyc> /dev/null 2>&1 ")

@@ -77,11 +77,12 @@ def readNewParams(force=False):
 		global sensorEnabled, enableiBeacons, beforeLoop, cAddress,rebootHour,rebooted,BLEserial,BLEserialOLD,sensors,enableShutDownSwitch, rebootWatchDogTime
 		global shutdownInputPin,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, displayActive
 		global actions, output
-		global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active, getspiMCP3008Active, getpmairqualityActive
+		global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active, getspiMCP3008Active, getpmairqualityActive, OUTPUTgpioActive
 		global activePGMdict, bluetoothONoff
 		global oldRaw,	lastRead
 		global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
 		global chargeTimeForMaxCapacity, batteryCapacitySeconds
+		global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 
 		
 		BLEserialOLD= BLEserial
@@ -111,10 +112,19 @@ def readNewParams(force=False):
 		if u"useRamDiskForLogfiles" 		in inp:	 useRamDiskForLogfiles =  		    inp["useRamDiskForLogfiles"]
 		if u"actions"						in inp:	 actions			   =  		    inp["actions"]
 		if u"useRTC"						in inp:	 U.setUpRTC(inp["useRTC"])
-		if u"chargeTimeForMaxCapacity" 				in inp:	 chargeTimeForMaxCapacity= 			  float(inp["chargeTimeForMaxCapacity"])
-		if u"batteryCapacitySeconds" 				in inp:	 batteryCapacitySeconds= 			  float(inp["batteryCapacitySeconds"])
-		
+		if u"chargeTimeForMaxCapacity" 		in inp:	 chargeTimeForMaxCapacity= 		float(inp["chargeTimeForMaxCapacity"])
+		if u"batteryCapacitySeconds" 		in inp:	 batteryCapacitySeconds= 		float(inp["batteryCapacitySeconds"])
 
+		if u"GPIONumberAfterBoot1" 			in inp:	 GPIONumberAfterBoot1= 			 	 (inp["GPIONumberAfterBoot1"])
+		if u"GPIONumberAfterBoot2" 			in inp:	 GPIONumberAfterBoot2= 			 	 (inp["GPIONumberAfterBoot2"])
+		if u"GPIOTypeAfterBoot1" 			in inp:	 GPIOTypeAfterBoot1= 			 	 (inp["GPIOTypeAfterBoot1"])
+		if u"GPIOTypeAfterBoot2" 			in inp:	 GPIOTypeAfterBoot2= 			 	 (inp["GPIOTypeAfterBoot2"])
+		doGPIOAfterBoot()
+
+
+		if u"sleepAfterBoot" 				in inp:	 
+			fixRcLocal(inp["sleepAfterBoot"])
+		
 		if u"bluetoothONoff"			 in inp:
 			if bluetoothONoff != inp["bluetoothONoff"]:
 				if inp["bluetoothONoff"].lower() =="on":
@@ -180,6 +190,17 @@ def readNewParams(force=False):
 			else:
 				tea5767Active = False
 				U.killOldPgm(-1, "setTEA5767.py")
+				
+			for out in output:
+				if out.find("OUTPUTgpio")> -1:
+					U.toLog(1, "setting OUTPUTgpio ON") 
+					if not OUTPUTgpioActive:
+						startProgam("OUTPUTgpio.py", params="", reason="restarting OUTPUTgpio..not running")
+					OUTPUTgpioActive =True
+					break
+				else:
+					OUTPUTgpioActive = False
+					U.killOldPgm(-1, "OUTPUTgpio.py")
 
 
 
@@ -945,6 +966,109 @@ def cycleWifi():
 			os.system("sudo /sbin/ifconfig wlan0 down; sudo /sbin/ifconfig wlan0 up")  # cycle wlan
 	return
 
+def doGPIOAfterBoot():
+	global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2, alreadyBooted
+
+
+	f=open(G.homeDir+"doGPIOatStartup.py","w")
+
+	f.write("#!/usr/bin/env python\n")
+	f.write("# -*- coding: utf-8 -*-\n")
+	f.write("#  called from callbeacon.py BEFORE master.py  to set GPIO in or output QUICKLY after boot \n")
+	f.write("import RPi.GPIO as GPIO\n")
+	f.write("GPIO.setwarnings(False)\n")
+	f.write("GPIO.setmode(GPIO.BCM)\n")
+	if GPIOTypeAfterBoot1 != "off": 
+		if GPIONumberAfterBoot1 != "-1" and GPIONumberAfterBoot1 != "":
+			if GPIOTypeAfterBoot1 =="Ohigh":
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot1)+", GPIO.OUT, initial=GPIO.HIGH)\n")
+			if GPIOTypeAfterBoot1 =="Olow":
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot1)+", GPIO.OUT, initial=GPIO.LOW)\n")
+			if GPIOTypeAfterBoot1.find("Iup") ==0:
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot1)+", GPIO.IN, pull_up_down = GPIO.PUD_UP)\n")
+			if GPIOTypeAfterBoot1.find("Idown") ==0:
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot1)+", GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n")
+			if GPIOTypeAfterBoot1.find("Ifloat") ==0:
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot1)+", GPIO.IN)\n")
+
+	if GPIOTypeAfterBoot2 != "off": 
+		if GPIONumberAfterBoot2 != "-1" and GPIONumberAfterBoot2 != "":
+			if GPIOTypeAfterBoot2 =="Ohigh":
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot2)+", GPIO.OUT, initial=GPIO.HIGH)\n")
+			if GPIOTypeAfterBoot2 =="Olow":
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot2)+", GPIO.OUT, initial=GPIO.LOW)\n")
+			if GPIOTypeAfterBoot2.find("Iup") ==0:
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot2)+", GPIO.IN, pull_up_down = GPIO.PUD_UP)\n")
+			if GPIOTypeAfterBoot2.find("Idown") ==0:
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot2)+", GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n")
+			if GPIOTypeAfterBoot2.find("Ifloat") ==0:
+				f.write("GPIO.setup("+str(GPIONumberAfterBoot2)+", GPIO.IN)\n")
+	f.write("\n")
+
+	f.close()
+	return
+	
+	
+def fixRcLocal(sleepTime):
+
+	if not os.path.isfile(G.homeDir+"/etc/rc.local"):
+		os.system("cp  /etc/rc.local /home/pi/pibeacon/rc.local")
+
+	f=open("/etc/rc.local","r")
+	rclocal = f.read().split("\n")
+	f.close()
+
+	out      = ""
+	writeOut = False
+	test     = ""
+	for line in rclocal:
+		if line.find("/home/pi/callbeacon.py")>-1:
+			test ="(python /home/pi/callbeacon.py &)"
+			if line == test:
+				break
+			else:
+				out+=test+"\n"
+				writeOut= True
+		else:
+			out+=line+"\n"
+
+	if writeOut:
+		U.toLog(-1, "writing new rc.local file with new line:\n "+test, doPrint=True)
+		f=open("/etc/rc.local","w")
+		f.write(out)
+		f.close()
+
+
+	f=open("/home/pi/pibeacon/callbeacon.py","r")
+	callbeacon = f.read().split("\n")
+	f.close()
+
+	out      = ""
+	writeOut = False
+	test     = ""
+	for line in callbeacon:
+		if line.find("/home/pi/pibeacon/master.py")>-1:
+			if sleepTime =="0":
+				test = 'os.system("cd /home/pi/pibeacon; /usr/bin/python /home/pi/pibeacon/master.py & ")'
+			else:
+				test = 'os.system("sleep '+sleepTime+'; cd /home/pi/pibeacon; python /home/pi/pibeacon/master.py &")'
+			if line == test:
+				break
+			else:
+				out+=test+"\n"
+				writeOut= True
+		else:
+			out+=line+"\n"
+
+	if writeOut:
+		U.toLog(-1, "writing new callbeacon.py file  with new line:\n "+test, doPrint=True)
+		f=open("/home/pi/pibeacon/callbeacon.py","w")
+		f.write(out)
+		f.close()
+		os.system("cp /home/pi/pibeacon/callbeacon.py /home/pi/callbeacon.py")
+	return
+
+
 
 #
 ####################  main #########################
@@ -955,13 +1079,20 @@ global sensorEnabled,  restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootH
 global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
 
 global shutdownInputPin, shutDownPinVetoOutput
-global displayActive, tea5767Active, neopixelActive, neopixelClockActive
+global displayActive, tea5767Active, neopixelActive, neopixelClockActive,OUTPUTgpioActive
 global getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active,getspiMCP3008Active, getpmairqualityActive
 global actions, output, sensors, sensorList
 global activePGMdict, bluetoothONoff
 global oldRaw,	lastRead
 global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
 global chargeTimeForMaxCapacity, batteryCapacitySeconds
+global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2, alreadyBooted
+
+GPIOTypeAfterBoot1		= "off"
+GPIOTypeAfterBoot2		= "off"
+GPIONumberAfterBoot1	= "-1"
+GPIONumberAfterBoot2	= "-1"
+alreadyBooted			= False
 
 chargeTimeForMaxCapacity = 3600. # seconds
 batteryCapacitySeconds   = 5*3600 # 
@@ -980,6 +1111,7 @@ getmyprogramActive		= 0
 getpmairqualityActive	= 0
 G.debug					= 5
 tea5767Active			= False
+OUTPUTgpioActive		= False
 displayActive			= False 
 neopixelActive			= False
 neopixelClockActive		= False
@@ -1014,7 +1146,6 @@ activePGMdict			= {}
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
 
-
 # remove precompiled py programs in case .py was updated
 os.system("rm "+G.homeDir+"*.pyc  > /dev/null 2>&1")
 
@@ -1023,8 +1154,10 @@ os.system("mkdir "+G.logDir+"> /dev/null 2>&1" )
 
 if	os.path.isdir(G.homeDir+"temp"):
 	os.system("rm  "+G.homeDir+"temp/* > /dev/null 2>&1")
+	alreadyBooted = True
 else:
 	os.system("mkdir  "+G.homeDir+"temp")
+	alreadyBooted = False
 os.system("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp")
 
 
@@ -1034,9 +1167,14 @@ if cleanupOldFiles():
 
 G.tStart	  = time.time()
 
+readNewParams()
+
+
 # kill old programs
 if "neopixelClock" in G.programFiles: neoClock = True
 else:								  neoClock = False
+
+
 
 
 for ff in G.programFiles:
@@ -1049,11 +1187,14 @@ for ff in G.programFiles:
 
 os.system("/usr/bin/python "+G.homeDir+"copyToTemp.py")
 
+
+time.sleep(1)
+
 U.whichWifi() 
 
 
 os.system("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py")
-readNewParams()
+
 
 U.clearNetwork()
 
@@ -1318,6 +1459,10 @@ while True:
 			
 		if tea5767Active: 
 			checkIfPGMisRunning("setTEA5767.py")
+			
+		if OUTPUTgpioActive: 
+			checkIfPGMisRunning("OUTPUTgpio.py")
+
 
 		for ss in G.theSpecialSensorList:
 			if	ss in sensors: 

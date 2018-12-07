@@ -2,8 +2,9 @@ set userID [lindex $argv 0 ]
 set password [lindex $argv 1 ] 
 set authKeyOrPassword [lindex $argv 2 ] 
 set ipNumber [lindex $argv 3 ] 
+set timeout [lindex $argv 4 ] 
 
-set timeout 5
+set timeout $timeout
 spawn ssh $userID@$ipNumber
 
 if {$authKeyOrPassword == "assword"} { 
@@ -18,10 +19,8 @@ if {$authKeyOrPassword == "assword"} {
         }
     }
 }
-
 sleep 1
-expect ":" { }
+expect "Last login:"
 send "cd /home/pi/pibeacon;sudo python master.py\r"
-
 set timeout 1
 expect eof

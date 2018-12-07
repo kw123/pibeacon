@@ -131,7 +131,8 @@ programFiles=[			"ultrasoundDistance",
 						"vl6180xDistance",
 						"checkSystemLOG",
 						"vl503l0xDistance",
-						"copyToTemp"]
+						"copyToTemp",
+						"OUTPUTgpio"]
 theSpecialSensorList =[ "ultrasoundDistance",
 						"vl503l0xDistance",
 						"vcnl4010Distance",

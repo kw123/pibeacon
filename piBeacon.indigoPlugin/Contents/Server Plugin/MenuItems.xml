@@ -52,7 +52,7 @@ Then the rPi will start sending data to plugin
             <Field    id="MSG"   type="textfield" defaultValue="" >
                 <Label> message from Plugin:</Label>
             </Field>
-                       <Field    id="beaconOrSensor"   type="textfield" defaultValue="iBeacon" readonly="Yes">
+            <Field    id="beaconOrSensor"   type="textfield" defaultValue="iBeacon" readonly="Yes">
                 <Label> rPiMode:</Label>
             </Field>
 
@@ -109,6 +109,10 @@ Then the rPi will start sending data to plugin
             <Field   id="buttonSendAndRestart" type="button"	tooltip="send config file to rPis and restart">
                 <Label>click to</Label><Title>send Config files and restart py-pgms</Title>
                 <CallbackMethod>buttonConfirmSendRestartPyCALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonRestartMaster" type="button"	tooltip="">
+                <Label>click to</Label><Title>Restart master.py through ssh</Title>
+                <CallbackMethod>buttonConfirmRestartMasterCALLBACK</CallbackMethod>
             </Field>
             <Field   id="buttonResetOutput" type="button"	tooltip="login to rPi and delete file execommands.current and reboot">
                 <Label>click to</Label><Title>reset GPIO output pins memory</Title>
@@ -185,7 +189,7 @@ Then the rPi will start sending data to plugin
                 <Label>command:</Label>
                 <List class="self" filter="" method="filterPi" dynamicReload="false"/>
             </Field>
-            <Field   id="buttonanycommand" type="button"	tooltip="enter any unix command send through socket connection">
+            <Field   id="buttonanycommand" type="button" tooltip="enter any unix command send through socket connection">
                 <Label>click to</Label><Title>send YOUR command</Title>
                 <CallbackMethod>buttonAnycommandCALLBACK</CallbackMethod>
             </Field>

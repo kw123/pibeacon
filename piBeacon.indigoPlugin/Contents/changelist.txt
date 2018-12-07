@@ -1,0 +1,41 @@
+
+Added features / changes in v7.97.252 @ 2018-12-06:  
+===================================================
+
+1. option to set sleep/wait time after boot (in RPI device edit), before master.py starts.   
+	This is useful for #2 and can be tuned to accommodate to let eg wifi connect before master.py is started  
+	rc.local calls /home/pi/callbeacon.py, it then waits xx secs before it calls /home/pi/pibeacon/master.py  
+
+2. option to set 2 GPIO  (input or output) to any value (in/out, low, high, floating .,..) BEFORE master.py immetiately after rc.local is finished (set in RPI device edit)  
+	this is useful to set a GPIO as fast as possible after boot before all networks, vars, etc are finished.. saves ~ 15 secs  
+	done in /home/pi/pibeacon/doGPIOatStartup.py called by /home/pi/callbeacon.py  ..called by rc.local after boot  
+	doGPIOatStartup is setup by master with the options set in RPI device edit  
+
+3. added state "actualGpioValue" to OUTPUT-GPIO on/off devices.  
+	This will set the actual value of the GPIO on the RPI, msg send from rpi to the plugin.   
+	It will be refreshed after GPIO is set from plugin and checked every 90 secs or if changed   
+	useful if your GPIUO is set by other means or after a reboot the GPIOs might not be set properly  
+
+4. added RPI device state "closest iBeacon". it will show eg b-xy-volvo-keys-turcoise@0.2 = name@distance.
+	you can set cutoff distance (ignore if distance > xx) in PRI device edit
+	you can set ignore THIS iBeacon for this feature in iBeacon device edit.
+	how to use it in an action (python code), trigger on any chage of dev/state
+		yyyy = indigo.devices["name of your rpi"].states
+		xxx = yyyy["closestiBeacon"]
+		if xxx.find("@")>-1:  
+			nameOfBeacon = xxx.split("@")[0]
+			distToRPI    = float(xxx.split("@")[1])
+			indigo.server.log(" closest beacon to RPi is "+nameOfBeacon+" at distance of "+str(distToRPI))
+			# do something with dist
+			if distToRPI < 3: 
+				indigo.server.log("beacon is very close" )
+		else:
+			indigo.server.log("no iBeacon is close" )
+   
+
+5. added option in menu to restart master.py in case it hangs ... 
+
+
+x. will deprecate devices OUTPUT-GPIO-4,8,12,16,.. should all be changed to device type OUTPUT-GPIO-1-on-off
+	it is to complicated to manage all the states and which one to use for status and is more in line with std Indigo philosophy 
+

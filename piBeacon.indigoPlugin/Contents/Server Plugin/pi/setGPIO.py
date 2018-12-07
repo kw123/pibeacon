@@ -24,8 +24,6 @@ devType = "OUTPUTgpio"
 
 
 
-#################################
-
 
 ####################### main start ###############
 PWM = 100
@@ -39,9 +37,14 @@ except:
 	exit()
 
 
+inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=0)
+U.getGlobalParams(inp)
+U.getIPNumber() 
+
 try:	G.debug= command["debug"]
 except: G.debug = 1
-U.toLog(0, "setGPIO	 command :" + unicode(sys.argv))
+G.debug = 3
+U.toLog(0, "setGPIO  command :" + unicode(sys.argv))
 try:	PWM= command["PWM"]
 except: pass
 
@@ -89,22 +92,34 @@ inverseGPIO = False
 if "inverseGPIO" in command:
 	inverseGPIO = command["inverseGPIO"]
 
+if "devId" in command:
+	devId = str(command["devId"])
+else: devId = "0"
 
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
+
 try:
 	if cmd == "up":
 		GPIO.setup(pin, GPIO.OUT)
-		if inverseGPIO: GPIO.output(pin, False)
-		else:			GPIO.output(pin, True)
+		if inverseGPIO: 
+			GPIO.output(pin, False)
+			U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+		else:
+			GPIO.output(pin, True)
+			U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+		
 
 	elif cmd == "down":
 		GPIO.setup(pin, GPIO.OUT)
-		GPIO.output(pin, False)
-		if inverseGPIO:	 GPIO.output(pin, True)
-		else:			 GPIO.output(pin, False )
+		if inverseGPIO:	 
+			GPIO.output(pin, True)
+			U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+		else: 
+			GPIO.output(pin, False )
+			U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 
 	elif cmd == "analogWrite":
 		if inverseGPIO:
@@ -114,7 +129,7 @@ try:
 		U.toLog(1, G.program +" analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
 		GPIO.setup(pin, GPIO.OUT)
 		p = GPIO.PWM(pin, PWM*100)	# 
-		p.start(int(value))	 # start the PWM with a	 the proper duty
+		p.start(int(value))	 # start the PWM with  the proper duty cycle
 		time.sleep(1000000000)	# we need to keep it alive otherwise it will stop  this is > 1000 days ~ 3 years
 
 
