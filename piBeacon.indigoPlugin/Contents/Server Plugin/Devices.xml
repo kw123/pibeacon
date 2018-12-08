@@ -1455,7 +1455,7 @@ You can use this also to create a new iBeacon device
 			</State>
 			<State id="Pi_0_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_0_Signal</TriggerLabel>
+			<TriggerLabel>Pi_0_Distance</TriggerLabel>
 			<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
 			</State>
 			<State id="Pi_0_Time">
@@ -1471,8 +1471,8 @@ You can use this also to create a new iBeacon device
 			</State>
 			<State id="Pi_1_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_0_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_1_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_1_Distance</ControlPageLabel>
 			</State>
 			<State id="Pi_1_Time">
 			<ValueType>String</ValueType>

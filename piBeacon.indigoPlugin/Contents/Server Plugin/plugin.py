@@ -12383,7 +12383,7 @@ class Plugin(indigo.PluginBase):
 								txx = float(txPower)
 								if minTxPower <	 991.: txx = minTxPower
 								distCalc = self.calcDist(  txx, (rssi+rssiOffset) )/ self.distanceUnits
-								if dev.deviceTypeId == "beacon"  and distCalc < 600 and not ("IgnoreBeaconForClosestToRPI" in props and props["IgnoreBeaconForClosestToRPI"] !="0"):
+								if dev.deviceTypeId == "beacon"  and distCalc < 300*self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props["IgnoreBeaconForClosestToRPI"] !="0"):
 									beaconUpdatedIds.append([fromPi,dev.id, distCalc])
 								newStates = self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Distance", distCalc,newStates=newStates ,decimalPlaces=1  )
 								newStates = self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Time", dateString,newStates=newStates)
@@ -12598,7 +12598,7 @@ class Plugin(indigo.PluginBase):
 			if power > 100: return 99999.
 			rssi = float(rssi)
 			if rssi > 100:	return 99999.
-			if rssi < -160: return 99999.
+			if rssi < -105: return 99999.
 
 			# sqrt( 10**(  (p-s)/10 )  )  (sqrt replace with **1/2	;  **1/10 ==> **1/20)
 			dist = round(min(99999., math.pow(10.0, max((power - rssi), -40.) / 20.)),1)

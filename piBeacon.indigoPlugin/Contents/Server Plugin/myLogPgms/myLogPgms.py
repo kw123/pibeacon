@@ -41,7 +41,7 @@ class MLX():
 			except	Exception, e:
 				if len(unicode(e)) > 5:
 					indigo.server.log(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		self.myLog( text="myLogSet setting parameters -- logFileActive= "+ unicode(self.logFileActive) + ";	 logFile= "+ unicode(self.logFile)	+ ";  debugLevel= "+ unicode(self.debugLevel) +"; maxFileSize= "+ unicode(self.maxFileSize), destination="standard")
+		self.myLog( text="myLogSet setting parameters -- logFileActive= "+ unicode(self.logFileActive) + "; logFile= "+ unicode(self.logFile)+ ";  debugLevel= "+ unicode(self.debugLevel) +"; maxFileSize= "+ unicode(self.maxFileSize), destination="standard")
 
 
 ####-----------------  check logfile sizes ---------
