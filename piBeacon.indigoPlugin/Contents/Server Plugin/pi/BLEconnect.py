@@ -218,31 +218,17 @@ eth0IP, wifi0IP, eth0Enabled, wifiEnabled = U.getIPCONFIG()
 time.sleep(1)
 
 
-HCIs = U.whichHCI()
-if len(HCIs) ==1:
-	useHCI = list(HCIs)[0]
-	myBLEmac= HCIs[useHCI]["BLEmac"]
-	devId = 0
-elif len(HCIs) ==2:
-	found= False
-	for hh in ["hci0","hci1"]:
-		if hh in HCIs and HCIs[hh]["bus"] =="USB": 
-				useHCI	= hh
-				myBLEmac= HCIs[hh]["BLEmac"]
-				devId	= HCIs[hh]["numb"]
-				found = True
-				break
 
-	if not found:
-		useHCI	= "hci0"
-		myBLEmac= HCIs[useHCI]["BLEmac"]
-		devId	= HCIs[useHCI]["numb"]
-else:
-	U.toLog(1, "BLEconnect:	 NO BLE STACK UP ")
+#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
+HCIs = U.whichHCI()
+useHCI,  myBLEmac, devId = U.selectHCI(G.BLEconnectUseHCINo,"UART")
+if devId <0:
+	U.toLog(1, "BLEconnect: NO BLE STACK UP ")
 	sys.exit(1)
 
 
-U.toLog(0, "BLEconnect:	 using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
+
+U.toLog(0, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEconnect	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]
 
 while True:

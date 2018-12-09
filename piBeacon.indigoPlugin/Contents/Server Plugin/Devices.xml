@@ -106,6 +106,31 @@
 			<Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 			<Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>	</Field>
 
+			<Field id="BLEHCILabel" type="label" > 
+				<Label>Use which BLE adoptor for which task:</Label>
+			</Field>
+
+			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
+			<Label> .... iBeacon:</Label>
+				<List>
+					<Option value="-1"   >let the RPi decide</Option>
+					<Option value="UART"  >use UART = internal</Option>
+					<Option value="USB"   >use USB = external for RPI3+</Option>
+				</List>
+			</Field>
+			<Field id="BLEconnectUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
+			<Label> .... BLEconnect:</Label>
+				<List>
+					<Option value="-1"    >let the RPi decide</Option>
+					<Option value="UART"  >use UART = internal</Option>
+					<Option value="USB"   >use USB = external</Option>
+				</List>
+			</Field>
+			<Field id="BLEHCILabel2" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+			<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
+(B) for RPI3plus and SSD image &gt; 2018-11  iBeacon does not work w build in BLE chip, needs USB BLE dongle. 
+The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
+
 			<Field id="sep-031" type="separator"/>
  
 			<Field id="memberOfLabel" type="label" >  
@@ -738,6 +763,21 @@
 			<Label>Parameters for rPi Sensors types only -- not used for ibeacons or BLE connect devices</Label>
 			</Field>
 
+
+			<Field id="BLEHCILabel" type="label"  alignWithControl="true" > 
+				<Label>Use which BLE adoptor for BLE SENSOR:</Label>
+			</Field>
+			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
+			<Label> .... BLE sensor:</Label>
+				<List>
+					<Option value="-1"    >let the RPi decide</Option>
+					<Option value="UART"  >use UART = internal</Option>
+					<Option value="USB"   >use USB = external for RPI3+ and RPI3 w wifi</Option>
+				</List>
+			</Field>
+			<Field id="BLEHCILabel2" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+			<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
+(B) for RPI3plus and SSD image &gt; 2018-11 BLEsensor does not work w build in BLE chip, needs USB BLE dongle.</Label>	</Field>
 
 			<Field id="label2"               type="label" > 
 			<Label>== For attached sensors - if not set in sensor device edit:</Label>

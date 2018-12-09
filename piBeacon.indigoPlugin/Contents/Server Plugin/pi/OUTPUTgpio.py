@@ -112,6 +112,8 @@ while True:
 		for out in output:
 			if out != "OUTPUTgpio-1-ONoff": continue
 			for devId in output[out]:
+				if output[out][devId] =="": continue
+				if "gpio" not in output[out][devId][0]: continue
 				gpio = output[out][devId][0]["gpio"]
 				data0[devId]={}
 				if subprocess.Popen("gpio -g read "+gpio,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip("\r") =="1" : 

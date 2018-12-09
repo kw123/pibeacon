@@ -72,6 +72,9 @@ enableMuxBus		= ""
 IndigoOrSocket		= "indigo"
 indigoInputPORT		= 0
 
+BeaconUseHCINo		="-1"
+BLEconnectUseHCINo	="-1"
+
 ACTIONS={"LS":"ls",
 		 "REBOOT":		   "sudo reboot",
 		 "SHUTDOWN":	   "sudo shutdown -h now",

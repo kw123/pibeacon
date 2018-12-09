@@ -40,8 +40,8 @@ def setupLibs(upgradeOpSys):
 		U.toLog(-1, "==== testing config files and updating if needed")
 
 
-		if U.uncommentOrAdd("(sleep 10; python /home/pi/callbeacon.py &)","/etc/rc.local",before="exit 0") >0:
-			U.toLog(-1, "need to reboot, added 'sleep 10; python /home/pi/callbeacon.py &'	to /home/pi/callbeacon.py")
+		if U.uncommentOrAdd("(python /home/pi/callbeacon.py &)","/etc/rc.local",before="exit 0") >0:
+			U.toLog(-1, "need to reboot, added 'python /home/pi/callbeacon.py &'	to /home/pi/callbeacon.py")
 			reBootNeeded=True
 
 		if U.uncommentOrAdd("dtoverlay=w1-gpio","/boot/config.txt") >0:
@@ -211,7 +211,7 @@ def setupLibs(upgradeOpSys):
 		U.toLog(-1,	  ret[0]+"\n"+ret[1])
 
 		time.sleep(1)
-		U.toLog(-1,	 "==== checking	 spi")
+		U.toLog(-1,	 "==== checking  spi")
 		if not os.path.isfile(G.homeDir0+"py-spidev-master/setup.py"):
 			cmd="cd "+G.homeDir0+" ;wget https://github.com/Gadgetoid/py-spidev/archive/master.zip; mkdir py-spidev-master"
 			ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()

@@ -118,23 +118,38 @@ def startBlueTooth(pi):
 		time.sleep(0.2)
 		ret = subprocess.Popen("hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
 		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
+		HCIs = U.whichHCI()
+		useHCI,  myBLEmac, devId = U.selectHCI(G.BeaconUseHCINo,"UART")
+		if devId <0 :
+			return 0,  0, -1,
+		print HCIs, useHCI,  myBLEmac, devId
+
+
+				
+		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]
+			
+
+		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
 		OGF					= " 0x08"
 		OCF					= " 0x0008"
 		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
 		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
 		maj					= " 00 09"
-		min					= " 00 "+"%02x"%(int(pi))
+		min					= " 00 "+"0%x"%(int(pi))
 		txP					= " C5 00"
-		cmd	 = "hcitool -i hci0 cmd" + OGF + OCF + iBeaconPrefix + uuid + maj + min + txP
+		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + maj + min + txP
 		print  "\n"+datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop  "+cmd
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
-		cmd	 = "hcitool -i hci0 cmd" + OGF + " 0x0006"		+ " 00 40"+ " 00 40" +	" 03"			 +	 " 00 00 00 00 00 00 00 00 07 00"
+		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
+		#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
+		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
+		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
 		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
 		print  datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	 "+cmd
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		####################################LE Set Advertise Enable
-		cmd	 = "hcitool -i hci0 cmd" + OGF + " 0x000a" + " 01"
+		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
 		print  datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	 "+cmd
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
@@ -146,25 +161,10 @@ def startBlueTooth(pi):
 		f = open(G.homeDir+"temp/restartNeeded","w")
 		f.write("bluetooth_startup.ERROR:"+unicode(e))
 		f.close()
-		subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
+		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, 5, 0
-
-	myBLEmac=""# the beacon mac number of the pi
-	lines = ret[0].split("\n")
-	hci0Found = False
-	for line in lines:
-		if line.find("hci0:")>-1:
-			hci0Found = True
-		if line.find("BD Address:")>-1 and hci0Found:
-			mm=line.strip().split(" ")
-			if len(mm)>2:
-				myBLEmac= mm[2]
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	MAC#: "+line.strip()
-				break
-		else:
-			print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	"+line.strip()
+		return 0, 0, -5
 
 	U.toLog(-1,"my BLE mac# is : "+ unicode(myBLEmac))
 	if myBLEmac !="":
@@ -172,19 +172,18 @@ def startBlueTooth(pi):
 		f.write(myBLEmac)
 		f.close()
 
-	dev_id=0
 	try:
-		sock = bluez.hci_open_dev(dev_id)
+		sock = bluez.hci_open_dev(devId)
 		U.toLog(-1, "ble thread started")
 	except	Exception, e:
 		U.toLog(-1,"error accessing bluetooth device..."+unicode(e),permanentLog=True)
 		f = open(G.homeDir+"temp/rebootNeeded","w")
 		f.write("bluetooth_startup.ERROR:"+unicode(e))
 		f.close()
-		subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
+		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, -1, 0
+		return 0,  0, -1
 		
 	try:
 		hci_le_set_scan_parameters(sock)
@@ -199,11 +198,12 @@ def startBlueTooth(pi):
 			f = open(G.homeDir+"temp/rebootNeeded","w")
 			f.write("bluetooth_startup.ERROR:Network_is_down...need_to_reboot")
 			f.close()
-		subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
+		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, 1, 0 
-	return sock, 0,myBLEmac
+		return 0,  0, -1
+	return soc,  myBLEmac, devId
+
 
 
 
@@ -410,8 +410,8 @@ if U.getIPNumber() > 0:
 
 
 ## start bluetooth
-sock, retCode, myBLEmac= startBlueTooth(G.myPiNumber)  
-if retCode !=0: 
+sock,  myBLEmac, retCode = startBlueTooth(G.myPiNumber)  
+if retCode <0: 
 	print " stopping "+ G.program+"	 due to bad BLE start "
 	sys.exit(1)
 

@@ -26,7 +26,7 @@ import myLogPgms.myLogPgms
 import cProfile
 import pstats
 
-dataVersion = 32.59
+dataVersion = 32.60
 
 
 
@@ -37,110 +37,113 @@ _GlobalConst_numberOfRPI		 = 20
 _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"lastUp": 0, u"note": u"beacon", u"expirationTime": 90,
 			   u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, u"signalDelta": 999, u"minSignalCutoff": -999,
 			   u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other", u"beaconTxPower": +999, u"fastDown": u"0",
-			   u"batteryLevel": u"",
-			   u"fastDownMinSignal":-999,
-			   u"showBeaconOnMap": u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
-			   u"receivedSignals":[[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0]]}
-_GlobalConst_typeOfBeacons = {u"xy":		u"07775dd0111b11e491910800200c9a66",
-				 u"tile":	   u"01",
-				 u"sanwo":	   u"fda50693a4e24fb1afcfc6eb07647825",
-				 u"radius":	   u"2f234454cf6d4a0fadf2f4911ba9ffa6",
-				 u"rPI":	   u"2f234454cf6d4a0fadf2f4911ba9ffa6-9",
-				 u"pebbleBee": u"1804180f1803190002020a0808ff0e0a",
-				 u"JINOU":	   u"e2c56db5dffb48d2b060d0f5a71096e0",
-				 u"Jaalee":	   u"ebefd08370a247c89837e7b5634df524",
-				 u"other":	u"",
-				 u"Other1": u"",
-				 u"Other2": u"",
-				 u"highTx": u"",
+			   u"batteryLevel": 		u"",
+			   u"fastDownMinSignal":	-999,
+			   u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
+			   u"receivedSignals":		[[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0]]}
+_GlobalConst_typeOfBeacons = {
+				u"xy":			u"07775dd0111b11e491910800200c9a66",
+				 u"tile":		u"01",
+				 u"sanwo":		u"fda50693a4e24fb1afcfc6eb07647825",
+				 u"radius":		u"2f234454cf6d4a0fadf2f4911ba9ffa6",
+				 u"rPI":		u"2f234454cf6d4a0fadf2f4911ba9ffa6-9",
+				 u"pebbleBee":	u"1804180f1803190002020a0808ff0e0a",
+				 u"JINOU":		u"e2c56db5dffb48d2b060d0f5a71096e0",
+				 u"Jaalee":		u"ebefd08370a247c89837e7b5634df524",
+				 u"other":		u"",
+				 u"Other1":		u"",
+				 u"Other2":		u"",
+				 u"highTx":		u"",
 				 }
-_GlobalConst_emptyBeaconProps = {u"note": u"beacon",
-					u"expirationTime": 90,
-					u"created": 0,
-					u"updateSignalValuesSeconds": 0,
-					u"signalDelta": 999,
-					u"minSignalCutoff": -999,
-					u"typeOfBeacon": u"other",
-					u"beaconTxPower": 999,
-					u"memberOfFamily": 0,
-					u"memberOfGuests": 0,
-					u"memberOfOther1": 0,
-					u"memberOfOther2": 0,
-					u"ignore": 0,
-					u"enableBroadCastEvents": "0",
-					u"fastDownMinSignal": -999,
-					u"showBeaconOnMap": u"0",u"showBeaconNickName": u"",u"showBeaconSymbolType": u",",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
-					u"fastDown": u"0"}
+_GlobalConst_emptyBeaconProps = {
+					u"note":						u"beacon",
+					u"expirationTime":				90,
+					u"created":						0,
+					u"updateSignalValuesSeconds":	0,
+					u"signalDelta":					999,
+					u"minSignalCutoff":				-999,
+					u"typeOfBeacon":				u"other",
+					u"beaconTxPower":				999,
+					u"memberOfFamily":				0,
+					u"memberOfGuests":				0,
+					u"memberOfOther1":				0,
+					u"memberOfOther2":				0,
+					u"ignore":						0,
+					u"enableBroadCastEvents":		"0",
+					u"fastDownMinSignal":			-999,
+					u"showBeaconOnMap": 			u"0",u"showBeaconNickName": u"",u"showBeaconSymbolType": u",",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
+					u"fastDown": 					u"0"}
 
-_GlobalConst_emptyrPiProps	  ={	 u"typeOfBeacon":			  u"rPI",
-						u"updateSignalValuesSeconds": 300,
-						u"beaconTxPower":			  999,
-						u"SupportsBatteryLevel":	  False,
-						u"sendToIndigoSecs":		  90,
-						u"sensorRefreshSecs":		  90,
-						u"deltaChangedSensor":		  5,
-						u"PosXYZ":					 u"0.,0.,0.",
-						u"BLEserial":				 u"sequential",
-						u"shutDownPinInput" :		 u"-1",
-						u"signalDelta" :			 u"999",
-						u"minSignalCutoff" :		 u"-999",
-						u"expirationTime" :			 u"90",
-						u"fastDown" :				 u"0",
-						u"enableBroadCastEvents":	 "0",
-						u"rssiOffset" :				 0,
-						u"shutDownPinOutput" :		 u"-1" }
+_GlobalConst_emptyrPiProps	  ={u"typeOfBeacon":		u"rPI",
+						u"updateSignalValuesSeconds":	300,
+						u"beaconTxPower":				999,
+						u"SupportsBatteryLevel":		False,
+						u"sendToIndigoSecs":			90,
+						u"sensorRefreshSecs":			90,
+						u"deltaChangedSensor":			5,
+						u"PosXYZ":						u"0.,0.,0.",
+						u"BLEserial":					u"sequential",
+						u"shutDownPinInput" :			u"-1",
+						u"signalDelta" :				u"999",
+						u"minSignalCutoff" :			u"-999",
+						u"expirationTime" :				u"90",
+						u"fastDown" :					u"0",
+						u"enableBroadCastEvents":		"0",
+						u"rssiOffset" :					0,
+						u"shutDownPinOutput" :			u"-1" }
 
 _GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC","INPUT_0","rainRate"]
 
 _GlobalConst_emptyRPI =	  {
-	u"rpiType": u"rPi",
-	u"enableRebootCheck": u"restartLoop",
-	u"enableiBeacons": u"1",
-	u"input": {},
-	u"ipNumberPi": u"",
-	u"ipNumberPiSendTo": u"",
-	u"output": {},
-	u"passwordPi": u"raspberry",
-	u"piDevId": 0,
-	u"piMAC": u"",
-	u"piNumberReceived": u"",
-	u"piOnOff": u"0",
-	u"authKeyOrPassword": u"assword",
-	u"piUpToDate": [],
-	u"sensorList": u"0,",
-	u"lastMessage":0,
-	u"sendToIndigoSecs":		 90,
-	u"sensorRefreshSecs":		  20,
-	u"deltaChangedSensor":		  5,
-	u"rssiOffset" :		   0,
-	u"emptyMessages":			 0,
-	u"deltaTime1": 100,
-	u"deltaTime2": 100,
-	u"userIdPi": u"pi"}
+	u"rpiType":					u"rPi",
+	u"enableRebootCheck":		u"restartLoop",
+	u"enableiBeacons":			u"1",
+	u"input":					{},
+	u"ipNumberPi":				u"",
+	u"ipNumberPiSendTo":		u"",
+	u"output":					{},
+	u"passwordPi":				u"raspberry",
+	u"piDevId":					0,
+	u"piMAC":					u"",
+	u"piNumberReceived":		u"",
+	u"piOnOff":					u"0",
+	u"authKeyOrPassword":		u"assword",
+	u"piUpToDate": 				[],
+	u"sensorList": 				u"0,",
+	u"lastMessage":				0,
+	u"sendToIndigoSecs":		90,
+	u"sensorRefreshSecs":		20,
+	u"deltaChangedSensor":		5,
+	u"rssiOffset" :				0,
+	u"emptyMessages":			0,
+	u"deltaTime1":				100,
+	u"deltaTime2": 				100,
+	u"userIdPi": 				u"pi"}
 
 
 _GlobalConst_emptyRPISENSOR =	{
-	u"rpiType": u"rPiSensor",
-	u"enableRebootCheck": u"restartLoop",
-	u"enableiBeacons": u"0",
-	u"input": {},
-	u"ipNumberPi": u"",
-	u"ipNumberPiSendTo": u"",
-	u"lastUpPi": 0,
-	u"output": {},
-	u"passwordPi": u"raspberry",
-	u"authKeyOrPassword": u"assword",
-	u"piDevId": 0,
-	u"piMAC": u"",
-	u"piNumberReceived": u"",
-	u"piOnOff": u"0",
-	u"piUpToDate": [],
-	u"sensorList": u"0,",
-	u"lastMessage":0,
-	u"sendToIndigoSecs":		 90,
-	u"sensorRefreshSecs":		  20,
-	u"deltaChangedSensor":		  5,
-	u"userIdPi": u"pi"}
+	u"rpiType":				u"rPiSensor",
+	u"enableRebootCheck":	u"restartLoop",
+	u"enableiBeacons":		u"0",
+	u"input":				{},
+	u"ipNumberPi":			u"",
+	u"ipNumberPiSendTo":	u"",
+	u"lastUpPi":			0,
+	u"output":				{},
+	u"passwordPi":			u"raspberry",
+	u"authKeyOrPassword": 	u"assword",
+	u"piDevId":				0,
+	u"piMAC":				u"",
+	u"piNumberReceived":	u"",
+	u"piOnOff":				u"0",
+	u"piUpToDate":			[],
+	u"sensorList":			u"0,",
+	u"lastMessage":			0,
+	u"sendToIndigoSecs":	90,
+	u"sensorRefreshSecs":	20,
+	u"deltaChangedSensor":	5,
+	u"emptyMessages":		0,
+	u"userIdPi": 			u"pi"}
 
 _GlobalConst_allGPIOlist = [
 	  [u"-1", u"do not use"]
@@ -197,6 +200,7 @@ _GlobalConst_beaconPlotSymbols		= [u"text", u"dot", u"smallCircle", u"largeCircl
 
 
 _GlobalConst_allowedCommands	   = [u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", u"startCalibration", u"rampUp", u"rampDown", u"rampUpDown"]	 # commands support for GPIO pins
+
 _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 						 u"apds9960",															  # dist gesture
 						 u"i2cTCS34725", u"i2cTSL2561", u"i2cVEML6070", u"i2cVEML6030", u"i2cVEML6040", u"i2cVEML7700",		# light 
@@ -253,19 +257,19 @@ class Plugin(indigo.PluginBase):
 		## = /Library/Application Support/Perceptive Automation/Indigo 6/Plugins/piBeacon.indigoPlugin/Contents/Server Plugin
 		#p = max(0, self.pathToPlugin.lower().find(u"/plugins/")) + 1
 		self.indigoPath			= indigo.server.getInstallFolderPath()
-		major, minor, release = map(int, indigo.server.version.split("."))
+		major, minor, release 	= map(int, indigo.server.version.split("."))
 		self.indigoVersion		= major
 		self.pluginVersion		= pluginVersion
 		self.pluginId			= pluginId
 		self.pluginName			= pluginId.split(".")[-1]
 		self.myPID				= os.getpid()
-		indigo.server.log(u"setting parameters for indigo version: >>"+unicode(self.indigoVersion)+u"<<; my PID="+str(self.myPID))	 
-		indigo.server.log(u"pluginId: "+unicode(self.pluginId))	  
-		self.pluginState				= "init"
+		self.pluginState		= "init"
 		self.pluginShortName 	= "piBeacon"
 		indigo.server.log(u"getInstallFolderPath "+self.indigoPath)
 		indigo.server.log(u"indigoRootPath "+self.indigoRootPath)
 		indigo.server.log(u"pathToPlugin "+self.pathToPlugin)
+		indigo.server.log(u"setting parameters for indigo version: >>"+unicode(self.indigoVersion)+u"<<; my PID="+str(self.myPID))	 
+		indigo.server.log(u"pluginId: "+unicode(self.pluginId))	  
 		self.ML = myLogPgms.myLogPgms.MLX()
 
 ####-------------------------------------------------------------------------####
@@ -295,17 +299,13 @@ class Plugin(indigo.PluginBase):
 
 			self.checkcProfile()
 
- 
 			self.ML.myLog( text = u" --V " + self.pluginVersion + u"     initializing  -- ", destination="standard")
-
 
 			self.setupBasicFiles()
 
 			self.startupFIXES0()
 
-
 			self.getFolderIdOfBeacons()
-
 
 			self.initCARS()
 
@@ -317,7 +317,6 @@ class Plugin(indigo.PluginBase):
 			self.startupFIXES1()
 
 			self.resetMinMaxSensors(init=True)
-
 
 			self.statusChanged = 0
 			self.setGroupStatus(init=True)		  
@@ -334,8 +333,6 @@ class Plugin(indigo.PluginBase):
 			self.sleep(2000)
 			exit(1)
 		return
-
-
 
 
 ####-------------------------------------------------------------------------####
@@ -2251,6 +2248,9 @@ class Plugin(indigo.PluginBase):
 						remove.append(beacon)
 						anyChange = True
 						#self.ML.myLog( text =	u"fixConfig anyChange: A") 
+					elif beacon =="00:00:00:00:00:00":
+						remove.append(beacon)
+						anyChange = True
 					elif beacon == "":
 						remove.append(beacon)
 						anyChange = True
@@ -2757,7 +2757,7 @@ class Plugin(indigo.PluginBase):
 
 		if u"address" in props: 
 				beacon = props[u"address"]
-				if beacon in self.beacons:
+				if beacon in self.beacons and beacon != "00:00:00:00:00:00":
 					if u"indigoId" in self.beacons[beacon] and	self.beacons[beacon][u"indigoId"] == dev.id:
 						self.ML.myLog( text = u"-setting beacon device in internal tables to 0:  " + dev.name+"  "+unicode(dev.id)+" enabled:"+ unicode(dev.enabled)+ "  pluginState:"+ self.pluginState)
 						self.beacons[beacon][u"indigoId"] = 0
@@ -2831,6 +2831,10 @@ class Plugin(indigo.PluginBase):
 					beacon = props[u"address"]
 				except: pass
 
+			if typeId in [u"rPI-Sensor",u"rPI"]:
+				for pi0 in range(_GlobalConst_numberOfRPI):
+					if unicode(devId) == unicode(self.RPI[unicode(pi0)][u"piDevId"]):
+						self.setONErPiV(pi0,"piUpToDate", [u"updateParamsFTP"])
 
 			if typeId == "car":
 				valuesDict = self.setupCARS(devId,valuesDict,mode="validate")
@@ -2938,7 +2942,7 @@ class Plugin(indigo.PluginBase):
 
 
 			if typeId == "rPI" or typeId == "beacon":
-				if beacon in self.beacons:
+				if beacon in self.beacons and beacon !="00:00:00:00:00:00":
 					self.beacons[beacon][u"expirationTime"] = float(valuesDict[u"expirationTime"])
 					self.beacons[beacon][u"updateSignalValuesSeconds"] = float(valuesDict[u"updateSignalValuesSeconds"])
 					self.beacons[beacon][u"beaconTxPower"] = int(valuesDict[u"beaconTxPower"])
@@ -3042,9 +3046,10 @@ class Plugin(indigo.PluginBase):
 					try:
 						xyz = xyz.split(u",")
 						if len(xyz) == 3:
-							self.beacons[beacon][u"PosX"] = int(float(xyz[0]) * self.distanceUnits)
-							self.beacons[beacon][u"PosY"] = int(float(xyz[1]) * self.distanceUnits)
-							self.beacons[beacon][u"PosZ"] = int(float(xyz[2]) * self.distanceUnits)
+							if beacon !="00:00:00:00:00:00" and beacon in self.beacons:
+								self.beacons[beacon][u"PosX"] = int(float(xyz[0]) * self.distanceUnits)
+								self.beacons[beacon][u"PosY"] = int(float(xyz[1]) * self.distanceUnits)
+								self.beacons[beacon][u"PosZ"] = int(float(xyz[2]) * self.distanceUnits)
 							dev = indigo.devices[devId]
 							self.addToStatesUpdateDict(unicode(dev.id),"PosX", float(xyz[0]),decimalPlaces=1)
 							self.addToStatesUpdateDict(unicode(dev.id),"PosY", float(xyz[1]),decimalPlaces=1)
@@ -3059,16 +3064,6 @@ class Plugin(indigo.PluginBase):
 				return (True, valuesDict)
 
 
-			elif typeId	 ==u"rPI-Sensor":
-						update = 0
-						pi = -1
-						for pi0 in range(_GlobalConst_numberOfRPI):
-							if devId == self.RPI[unicode(pi0)][u"piDevId"]:
-								pi = pi0
-								break
-						if pi >= 0:
-							self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						return (True, valuesDict)
 
 
 
@@ -4667,7 +4662,7 @@ class Plugin(indigo.PluginBase):
 				list.append([unicode(pi), unicode(pi) + "-" + self.RPI[unicode(pi)][u"ipNumberPi"] + "-" + self.RPI[unicode(pi)][u"piMAC"]])
 		for pi in range(_GlobalConst_numberOfiBeaconRPI,_GlobalConst_numberOfRPI):
 			if self.RPI[unicode(pi)][u"piOnOff"] == "0" or self.RPI[unicode(pi)][u"ipNumberPi"] == "":
-				list.append([unicode(pi), unicode(pi) + "-	  - Sensor Only"])
+				list.append([unicode(pi), unicode(pi) + "-  - Sensor Only"])
 			else:
 				list.append([unicode(pi), unicode(pi) + "-" + self.RPI[unicode(pi)][u"ipNumberPi"] + "- Sensor Only"])
 		return list
@@ -4743,7 +4738,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			listActive = []
 			for mac in self.beacons:
-				if len(mac) < 5: continue
+				if len(mac) < 5 or  mac== "00:00:00:00:00:00": continue
 				try:
 					name = indigo.devices[self.beacons[mac][u"indigoId"]].name
 				except:
@@ -7563,11 +7558,26 @@ class Plugin(indigo.PluginBase):
 			p01 = valuesDict[u"piOnOff"]
 			if p01 == u"0":
 				self.resetUpdateQueue(pi)
+				
+			elif p01 =="delete":
+				try: 	indigo.device.delete(int(self.RPI[unicode(pi)]["piDevId"]))
+				except: pass
+
+				if int(pi) >= _GlobalConst_numberOfiBeaconRPI:
+					self.RPI[unicode(pi)] = _GlobalConst_emptyRPISENSOR
+				else: 
+					self.RPI[unicode(pi)] = _GlobalConst_emptyRPI
+
+				self.writeJson(self.RPI, fName=self.userIndigoPluginDir + u"RPIconf", format=self.RPIFileSort)
+				self.RPI[unicode(pi)][u"piOnOff"] = "0" 
+				return valuesDict
+
+				
 			elif p01 != self.RPI[unicode(pi)][u"piOnOff"] and self.RPI[unicode(pi)][u"piOnOff"] == "0":
 				self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"], resetQueue=True)
 			self.RPI[unicode(pi)][u"piOnOff"] = p01
 
-
+			dateString	= datetime.datetime.now().strftime(_defaultDateStampFormat)
 
 		####### check ipnumber
 			ipn = valuesDict[u"ipNumberPi"]
@@ -7632,6 +7642,119 @@ class Plugin(indigo.PluginBase):
 			if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = u"valuesDict= "+unicode(valuesDict))
 			if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = u"RPI=        "+unicode(self.RPI[unicode(pi)]))
 
+			if pi < _GlobalConst_numberOfiBeaconRPI:
+						if self.RPI[unicode(pi)][u"piDevId"] == 0: # check if  existing device
+							found =False
+							for dev in indigo.devices.iter("props.isRPIDevice"):
+								try: 
+									if dev.address.split(u"-")[1] == unicode(pi):
+										props=dev.pluginProps
+										if props[u"ipNumber"] != ipn:
+											props[u"ipNumber"] = ipn
+											dev.replacePluginPropsOnServer(props)
+											self.updateNeeded += "fixConfig"
+											self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+
+										self.RPI[unicode(pi)][u"piDevId"] = dev.id
+										found = True
+										break
+								except:
+									pass
+							if not found:
+									indigo.device.create(
+										protocol		= indigo.kProtocol.Plugin,
+										address			= "00:00:00:00:00:00",
+										name			= "Pi_" + unicode(pi),
+										description		= "rPI-" + unicode(pi)+"-"+ipn,
+										pluginId		= self.pluginId,
+										deviceTypeId	= "rPI",
+										folder			= self.piFolderId,
+										props		= {
+											u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
+											u"updateSignalValuesSeconds": _GlobalConst_emptyrPiProps[u"updateSignalValuesSeconds"],
+											u"beaconTxPower":			  _GlobalConst_emptyrPiProps[u"beaconTxPower"],
+											u"SupportsBatteryLevel":	  _GlobalConst_emptyrPiProps[u"SupportsBatteryLevel"],
+											u"sendToIndigoSecs":		  _GlobalConst_emptyrPiProps[u"sendToIndigoSecs"],
+											u"shutDownPinInput":		  _GlobalConst_emptyrPiProps[u"shutDownPinInput"],
+											u"shutDownPinOutput" :		  _GlobalConst_emptyrPiProps[u"shutDownPinOutput"],
+											u"PosXYZ":					  _GlobalConst_emptyrPiProps[u"PosXYZ"],
+											u"signalDelta" :			  _GlobalConst_emptyrPiProps[u"signalDelta"],
+											u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
+											u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
+											u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
+											u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
+											u"isRPIDevice":				  True,
+											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
+											}
+										)
+
+									try:
+										dev = indigo.devices[u"Pi_" +unicode(pi)]
+									except	Exception, e:
+										if unicode(e).find(u"timeout waiting") > -1:
+											self.ML.myLog( text = u"buttonConfirmPiServerConfigCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+											self.ML.myLog( text = u"communication to indigo is interrupted")
+											return valuesDict
+										if unicode(e).find(u"not found in database") ==-1:
+											self.ML.myLog( text = u"buttonConfirmPiServerConfigCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+											return valuesDict
+										self.ML.myLog( text = u"buttonConfirmPiServerConfigCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+
+									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+									self.addToStatesUpdateDict(unicode(dev.id),u"status", u"expired")
+									self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi))
+									self.addToStatesUpdateDict(unicode(dev.id),u"created",dateString)
+									self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="updateBeaconStates new rpi")
+									self.RPI[unicode(pi)][u"piMAC"] = "00:00:00:00:00:00"
+									self.RPI[unicode(pi)][u"piDevId"] = dev.id
+
+						else:
+							try:
+								dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
+							except Exception, e: 
+								if unicode(e).find(u"not found in database") >-1:
+									dev = indigo.device.create(
+										protocol		= indigo.kProtocol.Plugin,
+										address			= "00:00:00:00:00:00",
+										name			= "Pi_" + unicode(pi),
+										description		= "rPI-" + unicode(pi)+"-"+ipn,
+										pluginId		= self.pluginId,
+										deviceTypeId	= "rPI",
+										folder			= self.piFolderId,
+										props		= {
+											u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
+											u"updateSignalValuesSeconds": _GlobalConst_emptyrPiProps[u"updateSignalValuesSeconds"],
+											u"beaconTxPower":			  _GlobalConst_emptyrPiProps[u"beaconTxPower"],
+											u"SupportsBatteryLevel":	  _GlobalConst_emptyrPiProps[u"SupportsBatteryLevel"],
+											u"sendToIndigoSecs":		  _GlobalConst_emptyrPiProps[u"sendToIndigoSecs"],
+											u"shutDownPinInput":		  _GlobalConst_emptyrPiProps[u"shutDownPinInput"],
+											u"shutDownPinOutput" :		  _GlobalConst_emptyrPiProps[u"shutDownPinOutput"],
+											u"PosXYZ":					  _GlobalConst_emptyrPiProps[u"PosXYZ"],
+											u"signalDelta" :			  _GlobalConst_emptyrPiProps[u"signalDelta"],
+											u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
+											u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
+											u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
+											u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
+											u"isRPIDevice":				  True,
+											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
+											}
+										)
+									self.RPI[unicode(pi)][u"piMAC"] = "00:00:00:00:00:00"
+									self.RPI[unicode(pi)][u"piDevId"] = dev.id
+						props= dev.pluginProps
+						self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi))
+						props[u"description"] = "rPI-"+unicode(pi)+"-"+ipn
+						dev.replacePluginPropsOnServer(props)
+			try:
+				dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
+				dev.enabled = (self.RPI[unicode(pi)][u"piOnOff"] == "1")
+				dev.replaceOnServer()
+				self.executeUpdateStatesDict(onlyDevID= str(dev.id), calledFrom="buttonConfirmPiServerConfigCALLBACK end")
+			except:
+				pass
+
+
+###### 
 			if pi >= _GlobalConst_numberOfiBeaconRPI:
 						if self.RPI[unicode(pi)][u"piDevId"] == 0: # check if  existing device
 							found =False
@@ -7696,7 +7819,7 @@ class Plugin(indigo.PluginBase):
 											   u"isRPISensorDevice" : True,
 											   u"ipNumber":ipn}
 										)
-									self.addToStatesUpdateDict(unicode(dev.id),"created",datetime.datetime.now().strftime(_defaultDateStampFormat))
+									self.addToStatesUpdateDict(unicode(dev.id),"created",dateString)
 									self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi)+"-"+ipn)
 									self.RPI[unicode(pi)][u"piDevId"] = dev.id
 									self.updateNeeded += "fixConfig"
@@ -8833,6 +8956,7 @@ class Plugin(indigo.PluginBase):
 		anyChange = False
 		try:
 			for beacon in self.beacons :
+				if beacon =="00:00:00:00:00:00": continue
 				dev =""
 				if self.selectBeaconsLogTimer !={}: 
 					for sMAC in self.selectBeaconsLogTimer:
@@ -9016,6 +9140,7 @@ class Plugin(indigo.PluginBase):
 			self.saveCARS(force=True)
 			try:
 				for beacon in self.beacons:	 # sync with indigo
+					if beacon =="00:00:00:00:00:00": continue
 					if self.beacons[beacon][u"indigoId"] != 0:	# sync with indigo
 						try :
 							dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
@@ -12914,6 +13039,14 @@ class Plugin(indigo.PluginBase):
 						if u"batteryCapacitySeconds" in props:
 						   try:	 out[u"batteryCapacitySeconds"]	=  int(props[u"batteryCapacitySeconds"])
 						   except: pass
+
+						if u"BeaconUseHCINo" in props:
+							out[u"BeaconUseHCINo"]  =		 (props[u"BeaconUseHCINo"])
+
+						if u"BLEconnectUseHCINo" in props:
+							out[u"BLEconnectUseHCINo"]  =	 (props[u"BLEconnectUseHCINo"])
+
+
 
 						if u"display" in props:
 							try: out[u"display"]  =	 int(props[u"display"])

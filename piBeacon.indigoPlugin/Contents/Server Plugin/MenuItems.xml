@@ -59,9 +59,10 @@ Then the rPi will start sending data to plugin
             <Field  enabledBindingId="enablePiEntries"   id="piOnOff"   type="menu" defaultValue="1">
                 <List>
                     <Option value="0"  >off </Option>
-                    <Option value="1"  >0n </Option>
+                    <Option value="1"  >On </Option>
+                    <Option value="delete"  >DELETE </Option>
                 </List>
-                <Label>Enable THIS rPi:</Label>
+                <Label>Enable THIS rPi/delete config:</Label>
             </Field>
             <Field  enabledBindingId="enablePiEntries"   id="userIdPi"   type="textfield" defaultValue="pi">
                 <Label>rPi user ID :</Label>

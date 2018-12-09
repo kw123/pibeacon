@@ -136,33 +136,10 @@ def startBlueTooth(pi):
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 		HCIs = U.whichHCI()
-		if len(HCIs) ==1:
-			useHCI = list(HCIs)[0]
-			myBLEmac= HCIs[useHCI]["BLEmac"]
-			devId = 0
-		elif len(HCIs) ==2:
-			found = False
-			found= False
-			for hh in ["hci0","hci1"]:
-				if hh in HCIs and HCIs[hh]["bus"] =="UART": 
-						useHCI	= hh
-						myBLEmac= HCIs[hh]["BLEmac"]
-						devId	= HCIs[hh]["numb"]
-						found = True
-						break
-
-
-			if not found:
-				useHCI	= "hci0"
-				myBLEmac= HCIs[useHCI]["BLEmac"]
-				devId	= HCIs[useHCI]["numb"]
-		else:
-			print "beaconLoop start BLE :",HCIs
-			return 0, -1, 0
-		print HCIs
-		#useHCI	 = "hci1"
-		#myBLEmac= HCIs[useHCI]["BLEmac"]
-		#devId	 = HCIs[useHCI]["numb"]
+		useHCI,  myBLEmac, devId = U.selectHCI(G.BeaconUseHCINo,"UART")
+		if myBLEmac ==-1:
+			return 0,  0, -1
+		print HCIs,useHCI,  myBLEmac, devId
 
 				
 		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]
@@ -203,7 +180,7 @@ def startBlueTooth(pi):
 		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, 5, 0
+		return 0, 0, -5
 
 	U.toLog(-1,"my BLE mac# is : "+ unicode(myBLEmac))
 	if myBLEmac !="":
@@ -222,7 +199,7 @@ def startBlueTooth(pi):
 		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, -1, 0
+		return 0,  0, -1
 		
 	try:
 		hci_le_set_scan_parameters(sock)
@@ -240,8 +217,8 @@ def startBlueTooth(pi):
 		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, 1, 0 
-	return sock, 0,myBLEmac
+		return 0, 0 , -1 
+	return sock, myBLEmac, 0
 
 
 
@@ -804,7 +781,7 @@ readbeacon_ExistingHistory()
 
 
 ## start bluetooth
-sock, retCode, myBLEmac= startBlueTooth(G.myPiNumber)  
+sock, myBLEmac, retCode= startBlueTooth(G.myPiNumber)  
 if retCode !=0: 
 	U.toLog(-1,"stopping "+G.program+" bad BLE start retCode= "+str(retCode),doPrint=True )
 	sys.exit(1)
@@ -872,7 +849,6 @@ try:
 		bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
 		sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
 		sock.settimeout(12)
-
 
 		sendAfter= sendAfterSeconds
 		iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 

@@ -246,6 +246,8 @@ def getGlobalParams(inp):
 		if "portOfServer"			in inp:	 G.portOfServer=				(inp["portOfServer"])
 		if "indigoInputPORT"		in inp:	 G.indigoInputPORT=			 int(inp["indigoInputPORT"])
 		if "IndigoOrSocket"			in inp:	 G.IndigoOrSocket=				(inp["IndigoOrSocket"])
+		if "BeaconUseHCINo"			in inp:	 G.BeaconUseHCINo=				(inp["BeaconUseHCINo"])
+		if "BLEconnectUseHCINo"		in inp:	 G.BLEconnectUseHCINo=			(inp["BLEconnectUseHCINo"])
 
 
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
@@ -686,8 +688,56 @@ def geti2c():
 		toLog(-1, u"geti2c in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 	return []
 
+
+
+
+#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
+def selectHCI(useDev, default):
+	if len(HCIs) ==1:
+		useHCI = list(HCIs)[0]
+		myBLEmac= HCIs[useHCI]["BLEmac"]
+		devId = 0
+		return useHCI,  myBLEmac, devId
+
+	elif len(HCIs) == 2:
+		if useDev =="USB":
+			for hh in ["hci0","hci1"]:
+				if HCIs[hh]["bus"] =="USB":
+					useHCI	= hh
+					myBLEmac= HCIs[hh]["BLEmac"]
+					devId	= HCIs[hh]["numb"]
+					return useHCI,  myBLEmac, devId
+
+		elif useDev =="UART":
+			for hh in ["hci0","hci1"]:
+				if HCIs[hh]["bus"] =="UART":
+					useHCI	= hh
+					myBLEmac= HCIs[hh]["BLEmac"]
+					devId	= HCIs[hh]["numb"]
+					return useHCI,  myBLEmac, devId
+
+		else:
+			for hh in ["hci0","hci1"]:
+				if HCIs[hh]["bus"] == default:
+					useHCI	= hh
+					myBLEmac= HCIs[hh]["BLEmac"]
+					devId	= HCIs[hh]["numb"]
+					return useHCI,  myBLEmac, devId
+
+		useHCI	= "hci0"
+		myBLEmac= HCIs[useHCI]["BLEmac"]
+		devId	= HCIs[useHCI]["numb"]
+		return useHCI,  myBLEmac, devId
+		
+	toLog(1, "BLEconnect: NO BLE STACK UP ")
+	return 0, -1, -1
+
 #################################
 def whichHCI():
+
+	#hci={"hci0":{"bus":"UART", "numb":0 ,"BLEmac":"xx:xx:xx:xx:xx:xx"}}
+	hci ={}
+		
 	ret	   = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()#################################	 BLE iBeaconScanner	 ----> end
 	# try again, sometimes does not return anything
 	if len(ret[0]) < 5:
@@ -696,7 +746,6 @@ def whichHCI():
 		print "U.whichHCI, hciconfig 2. try: ",ret
 		
 	lines = ret[0].split("\n")
-	hci={}
 	for ll in range(len(lines)):
 		if lines[ll].find("hci")>-1:
 			bus = lines[ll].split("Bus: ")[1]
@@ -706,6 +755,7 @@ def whichHCI():
 				mm=lines[ll+1].strip().split(" ")
 				if len(mm)>2:
 					hci[hciNo]["BLEmac"]=  mm[2]
+
 		#hci1:	Type: Primary  Bus: UART
 		#	BD Address: B8:27:EB:D4:E3:35  ACL MTU: 1021:8	SCO MTU: 64:1
 		#	UP RUNNING 

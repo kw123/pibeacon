@@ -1,3 +1,22 @@
+
+Added features / changes in v7.98.254 @ 2018-12-09:  
+===================================================
+
+1. added option in RPI device edit to select which BLE channel should be used for iBeacon / BLEconnect.
+	RPI3+ with SSD >=2018-11 does not work properly with the inetrnal chip, 
+	Must add an external USB dongle for iBeacon. BLE connect works fine w internal BLE chip.
+
+2. added option to DELETE RPI in initial setup of RPI.
+	this is usefull if you interchange RPi etc. 
+	
+3. A RPI device will be created when setting up a new RPi in initial setup.
+	the plugin does not wait for the first iBeacon message to creat the RPI.
+	The RPi will be initiated with MAC# 00:00:00:00:00:00. When the first iBEacon message arrives from the RPI that MAC number is overwritten 
+	This is needed in order to be able to set the BLE device that should be used for iBeacon.
+	When the proper device is not selected no iBeacon message are send from the RPI
+
+
+
 Added features / changes in v7.97.253 @ 2018-12-08:  
 ===================================================
 
