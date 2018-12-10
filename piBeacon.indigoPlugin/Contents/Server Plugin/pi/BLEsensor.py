@@ -119,7 +119,7 @@ def startBlueTooth(pi):
 		ret = subprocess.Popen("hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
 		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
 		HCIs = U.whichHCI()
-		useHCI,  myBLEmac, devId = U.selectHCI(G.BeaconUseHCINo,"UART")
+		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
 		if devId <0 :
 			return 0,  0, -1,
 		print HCIs, useHCI,  myBLEmac, devId
@@ -158,6 +158,7 @@ def startBlueTooth(pi):
 	except Exception, e: 
 		print "beaconloop exit at restart BLE stack error: ", e
 		U.toLog(-1,"beaconloop exit at restart BLE stack error:"+unicode(e),permanentLog=True)
+		time.sleep(10)
 		f = open(G.homeDir+"temp/restartNeeded","w")
 		f.write("bluetooth_startup.ERROR:"+unicode(e))
 		f.close()
@@ -202,7 +203,7 @@ def startBlueTooth(pi):
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		return 0,  0, -1
-	return soc,  myBLEmac, devId
+	return sock,  myBLEmac, devId
 
 
 
@@ -412,7 +413,7 @@ if U.getIPNumber() > 0:
 ## start bluetooth
 sock,  myBLEmac, retCode = startBlueTooth(G.myPiNumber)  
 if retCode <0: 
-	print " stopping "+ G.program+"	 due to bad BLE start "
+	print " stopping "+ G.program+"  due to bad BLE start "
 	sys.exit(1)
 
 	
@@ -524,4 +525,5 @@ except	Exception, e:
 	U.toLog(-1, "  exiting loop due to error\n")
 
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop end of "+G.program	 
-sys.exit(0)		   
+sys.exit(0)
+

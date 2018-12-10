@@ -558,13 +558,14 @@ def checkIfbeaconLoopIsRunning():
 
 
 		#print "checking beaconloop running 0"
-		if enableRebootCheck.find("restartLoop")>-1	 or enableRebootCheck.find("rebootLoop") >-1:
+		if enableRebootCheck.find("restartLoop")>-1  or enableRebootCheck.find("rebootLoop") >-1:
 			#print "checking beaconloop running 1"
 			if	not checkIfAliveFileOK("beaconloop"):
 				#print "checking beaconloop running 2"
 			
 				if	enableRebootCheck.find("rebootLoop") >-1:
 					U.sendURL(sendAlive="reboot")
+					time.sleep(20)
 					U.doReboot(10.," Seconds since change in alive file :"+ str(tt- lastAlive["beaconloop"]) +" -- rebooting ")
 
 				#print "checking beaconloop running 3"
@@ -641,7 +642,7 @@ def checkIfAliveFileOK(sensor,force=""):
 		sensorAlive[sensor] = lastUpdate
 	except	Exception, e:
 		U.toLog(-1, u"(3) in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
-	return alive	
+	return alive
 
 
 
@@ -740,7 +741,7 @@ def checkIfRebootRequest():
 					if count > 5: 
 						os.remove(G.homeDir+"restartCount")
 						U.toLog(-1, " rebooting due to repeated request:" + reason ,doPrint=True)
-						U.doReboot(2.," rebooting due to repeated request:" + reason)
+						U.doReboot(20," rebooting due to repeated request:" + reason)
 				except: pass
 				
 			f=open(G.homeDir+"restartCount","w") 
@@ -1244,7 +1245,7 @@ if G.networkType  in G.useNetwork and G.wifiType =="normal":
 
 
 
-os.system("sudo chown -R  pi:pi	 "+G.logDir)
+os.system("sudo chown -R  pi:pi "+G.logDir)
 
 
 
@@ -1415,7 +1416,7 @@ while True:
 		if loopCount%24 == 0: # every 2 minutes
 			ipx, changed = U.getIPNumberMaster(quiet=True)
 			if	G.ipAddress =="" and G.networkType !="clockMANUAL" :
-				U.doReboot(10.," reboot due to	no IP nummber")				   
+				U.doReboot(10.," reboot due to no IP nummber")				   
 				time.sleep(10)
 				os.system("reboot now")
 			if changed: 
@@ -1553,5 +1554,5 @@ while True:
 	except	Exception, e :
 		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
 		
-
+time.sleep(10)
 sys.exit(0)		   

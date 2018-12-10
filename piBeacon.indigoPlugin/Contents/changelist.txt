@@ -1,19 +1,28 @@
 
-Added features / changes in v7.98.254 @ 2018-12-09:  
+Added features / changes in v7.98.255 @ 2018-12-09:  
 ===================================================
 
 1. added option in RPI device edit to select which BLE channel should be used for iBeacon / BLEconnect.
-	RPI3+ with SSD >=2018-11 does not work properly with the inetrnal chip, 
+	RPI3+ with SSD >=2018-11 does not work properly with the internal chip, 
 	Must add an external USB dongle for iBeacon. BLE connect works fine w internal BLE chip.
 
-2. added option to DELETE RPI in initial setup of RPI.
-	this is usefull if you interchange RPi etc. 
+2. added option to DELETE RPI in "initial setup of RPI" in the plugin menu, besides "ON/off".
+	this is useful if you interchange RPi or want to get rid of any RPI config for a specific RPI. 
 	
-3. A RPI device will be created when setting up a new RPi in initial setup.
-	the plugin does not wait for the first iBeacon message to creat the RPI.
-	The RPi will be initiated with MAC# 00:00:00:00:00:00. When the first iBEacon message arrives from the RPI that MAC number is overwritten 
-	This is needed in order to be able to set the BLE device that should be used for iBeacon.
-	When the proper device is not selected no iBeacon message are send from the RPI
+3. A RPI device will now be created when setting up a new RPi in "initial setup of RPI".
+	the plugin does not wait for the first iBeacon message to create the RPI.
+	The RPi will be initiated with MAC# 00:00:00:00:00:00. When the first iBeacon message arrives from the RPI that MAC number is overwritten 
+	This is needed in order to be able to set the BLE device that should be used for iBeacon (for RPI3plus you need to set the BLE for iBeacon to USB)
+	When the proper BLE device is not selected no iBeacon message are send from the RPI
+
+4. added a log message when ftp to RPI is successfully finished (when Update RPI debug is on). Before only the start was put into the log file
+
+5. increased some timers on the RPI python files to make sure that if something goes wrong and its in "panic" mode  it is not constantly rebooting, but wait 30+ secs between reboots.
+	(I had that problem.)
+
+These changes should now enable the usage of "SSD stretch image 2018-11" ... BUT the RPI3plus will need an extra BLE dongle to work. 
+With "SSD stretch image 2018-04" RPI3plus works fine.
+
 
 
 

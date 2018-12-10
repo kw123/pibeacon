@@ -136,11 +136,11 @@ def startBlueTooth(pi):
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 		HCIs = U.whichHCI()
-		useHCI,  myBLEmac, devId = U.selectHCI(G.BeaconUseHCINo,"UART")
+		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BeaconUseHCINo,"UART")
 		if myBLEmac ==-1:
 			return 0,  0, -1
-		print HCIs,useHCI,  myBLEmac, devId
-
+		print "G.BeaconUseHCINo", G.BeaconUseHCINo, "useHCI",useHCI, "myBLEmac",myBLEmac,"devId", devId
+		print "HCIs",HCIs
 				
 		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]
 			
@@ -173,7 +173,8 @@ def startBlueTooth(pi):
 		U.toLog(-1,"BLE start returned :  "+unicode(ret))
 	except Exception, e: 
 		print "beaconloop exit at restart BLE stack error: ", e
-		U.toLog(-1,"beaconloop exit at restart BLE stack error:"+unicode(e),permanentLog=True)
+		U.toLog(-1,u"beaconloop in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		time.sleep(10)
 		f = open(G.homeDir+"temp/restartNeeded","w")
 		f.write("bluetooth_startup.ERROR:"+unicode(e))
 		f.close()
@@ -736,6 +737,8 @@ global acceptNewiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored,
 global myBLEmac, BLEsensorMACs
 global oldRaw,	lastRead
 global UUIDtoIphone, UUIDtoIphoneReverse
+BLEsensorMACs = {}
+
 acceptJunkBeacons	= False
 oldRaw					= ""
 lastRead				= 0
@@ -784,6 +787,7 @@ readbeacon_ExistingHistory()
 sock, myBLEmac, retCode= startBlueTooth(G.myPiNumber)  
 if retCode !=0: 
 	U.toLog(-1,"stopping "+G.program+" bad BLE start retCode= "+str(retCode),doPrint=True )
+	time.sleep(30)
 	sys.exit(1)
 
 	
@@ -1052,10 +1056,10 @@ try:
 			G.debug = 10
 			maxLoopCount = 20
 			restartCount +=1
-			U.toLog(-1,u" time w/out any message ..	 anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount),doPrint=True)
+			U.toLog(-1,u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount),doPrint=True)
 			if dt2 > 400 :
-				time.sleep(10)
-				U.restartMyself(param="", reason="bad BLE (2),	restart",doPrint=True)
+				time.sleep(20)
+				U.restartMyself(param="", reason="bad BLE (2),restart",doPrint=True)
 			if restartCount > 1:
 				U.toLog(-1, " restarting BLE stack due to no messages "+G.program)
 				G.debug = 0
@@ -1067,7 +1071,7 @@ try:
 except	Exception, e:
 	U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 	U.toLog(-1, "  exiting loop due to error\n restarting "+G.program)
-	time.sleep(10)
+	time.sleep(20)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop end of beaconloop.py "	 

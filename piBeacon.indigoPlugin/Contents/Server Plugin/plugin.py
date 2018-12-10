@@ -13643,12 +13643,14 @@ class Plugin(indigo.PluginBase):
 				ret = p.communicate()
 
 			if ret[0][-600:].find(u"sftp> ") > -1:
+				if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = u"UpdateRPI seems have been completed for pi# "+str(pi).rjust(2)+"  "+fileToSend)
 				return 0, ["ok",""]
 			else:
 				self.sleep(2)  # try it again after 2 seconds
 				p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				ret = p.communicate()
 				if ret[0][-600:].find(u"sftp> ") > -1:
+					if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = u"UpdateRPI seems have been completed for pi# "+str(pi)+"  "+fileToSend)
 					return 0, ["ok",""]
 				else:
 					self.ML.myLog( text = u"setup pi response (2) message \n" + ret[0])

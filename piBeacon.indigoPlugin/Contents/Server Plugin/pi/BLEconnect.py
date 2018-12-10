@@ -221,7 +221,7 @@ time.sleep(1)
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 HCIs = U.whichHCI()
-useHCI,  myBLEmac, devId = U.selectHCI(G.BLEconnectUseHCINo,"UART")
+useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
 if devId <0:
 	U.toLog(1, "BLEconnect: NO BLE STACK UP ")
 	sys.exit(1)

@@ -692,7 +692,7 @@ def geti2c():
 
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
-def selectHCI(useDev, default):
+def selectHCI(HCIs, useDev, default):
 	if len(HCIs) ==1:
 		useHCI = list(HCIs)[0]
 		myBLEmac= HCIs[useHCI]["BLEmac"]
