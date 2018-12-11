@@ -22,7 +22,7 @@ import traceback
 import Queue
 import resource
 import versionCheck.versionCheck as VS
-import myLogPgms.myLogPgms 
+import myLogPgms 
 import cProfile
 import pstats
 
@@ -270,7 +270,7 @@ class Plugin(indigo.PluginBase):
 		indigo.server.log(u"pathToPlugin "+self.pathToPlugin)
 		indigo.server.log(u"setting parameters for indigo version: >>"+unicode(self.indigoVersion)+u"<<; my PID="+str(self.myPID))	 
 		indigo.server.log(u"pluginId: "+unicode(self.pluginId))	  
-		self.ML = myLogPgms.myLogPgms.MLX()
+		self.ML = myLogPgms.MLX()
 
 ####-------------------------------------------------------------------------####
 	def __del__(self):
@@ -868,12 +868,12 @@ class Plugin(indigo.PluginBase):
 
 
 			############ plot beacon positions 
-			try:	self.beaconPositionsUpdateTime				   = float(self.pluginPrefs.get(u"beaconPositionsUpdateTime", -1))
-			except: self.beaconPositionsUpdateTime				   = -1.
-			try:	self.beaconPositionsdeltaDistanceMinForImage   = float(self.pluginPrefs.get(u"beaconPositionsdeltaDistanceMinForImage",	 1.))
-			except: self.beaconPositionsdeltaDistanceMinForImage   = 1.
+			try:	self.beaconPositionsUpdateTime					= float(self.pluginPrefs.get(u"beaconPositionsUpdateTime", -1))
+			except: self.beaconPositionsUpdateTime					= -1.
+			try:	self.beaconPositionsdeltaDistanceMinForImage	= float(self.pluginPrefs.get(u"beaconPositionsdeltaDistanceMinForImage",	 1.))
+			except: self.beaconPositionsdeltaDistanceMinForImage	= 1.
 
-			self.beaconPositionsData							   = {u"mac":{}}
+			self.beaconPositionsData								= {u"mac":{}}
 			self.beaconPositionsData[u"Xscale"]						= self.pluginPrefs.get(u"beaconPositionsimageXscale", u"20" )
 			self.beaconPositionsData[u"Yscale"]						= self.pluginPrefs.get(u"beaconPositionsimageYscale", u"30" )
 			self.beaconPositionsData[u"Zlevels"]					= self.pluginPrefs.get(u"beaconPositionsimageZlevels", u"0,5" )
@@ -944,14 +944,14 @@ class Plugin(indigo.PluginBase):
 						self.groupStatusList[group][u"members"][unicode(dev.id)] = True
 						if dev.states[u"status"]==u"up":
 							if self.groupStatusList[group][u"oneHome"] ==u"0":
-								triggerGroup[group][u"oneHome"] = True
-								self.groupStatusList[group][u"oneHome"]	  = u"1"
-							self.groupStatusList[group][u"nHome"]	  +=1
+								triggerGroup[group][u"oneHome"]			= True
+								self.groupStatusList[group][u"oneHome"]	= u"1"
+							self.groupStatusList[group][u"nHome"]		+=1
 						else:
 							if self.groupStatusList[group][u"oneAway"] ==u"0":
-								triggerGroup[group][u"oneAway"] = True
-							self.groupStatusList[group][u"oneAway"]	  = u"1"
-							self.groupStatusList[group][u"nAway"]	  +=1
+								triggerGroup[group][u"oneAway"]			= True
+							self.groupStatusList[group][u"oneAway"]		= u"1"
+							self.groupStatusList[group][u"nAway"]		+=1
  
  
 
@@ -1206,8 +1206,8 @@ class Plugin(indigo.PluginBase):
 						return
 					self.ML.myLog( text = u"devId "+carIds+" not defined in devices  removing from	 CARS:"+unicode(self.CARS))
 					delDD.append(carIds)
-				if u"homeSince" not in self.CARS[u"carId"][carIds]:	 self.CARS[u"carId"][carIds][u"homeSince"] = 0
-				if u"awaySince" not in self.CARS[u"carId"][carIds]:	 self.CARS[u"carId"][carIds][u"awaySince"] = 0
+				if u"homeSince"	not in self.CARS[u"carId"][carIds]:	 self.CARS[u"carId"][carIds][u"homeSince"] = 0
+				if u"awaySince"	not in self.CARS[u"carId"][carIds]:	 self.CARS[u"carId"][carIds][u"awaySince"] = 0
 				if u"beacons"	not in self.CARS[u"carId"][carIds]:	 self.CARS[u"carId"][carIds][u"beacons"]   = {}
 			for carIds in delDD:
 				del self.CARS[u"carId"][carIds]
@@ -1240,7 +1240,7 @@ class Plugin(indigo.PluginBase):
 			if beacon not in self.CARS[u"beacon"]: return
 			if len(beacon) < 10: return
 			indigoCarIds = unicode(self.CARS[u"beacon"][beacon][u"carId"])
-			if indigoCarIds not in	self.CARS[u"carId"]: # pointer to indigo ID
+			if indigoCarIds not in self.CARS[u"carId"]: # pointer to indigo ID
 				self.ML.myLog( text = beacon+u" beacon: not found in CARS[carId], removing from dict;  CARSdict: " + unicode(self.CARS))
 				del self.CARS[u"beacon"][beacon]
 				return
@@ -1256,16 +1256,16 @@ class Plugin(indigo.PluginBase):
 			except: whatForStatus = ""
 			if whatForStatus ==u"": whatForStatus="location" 
 
-			oldCarStatus	 = carDev.states[u"location"]
-			oldCarEngine	 = carDev.states[u"engine"]
-			oldCarMotion	 = carDev.states[u"motion"]
-			oldBeaconStatus	 = beaconDev.states[u"status"]
-			newBeaconStatus	 = beaconNewStates[u"status"]
-			beaconType		 = self.CARS[u"beacon"][beacon][u"beaconType"]
-			beaconBattery	 = 0
-			beaconUSB		 = 0
-			beaconKey		 = 2
-			nKeysFound		 = 0
+			oldCarStatus	= carDev.states[u"location"]
+			oldCarEngine	= carDev.states[u"engine"]
+			oldCarMotion	= carDev.states[u"motion"]
+			oldBeaconStatus	= beaconDev.states[u"status"]
+			newBeaconStatus	= beaconNewStates[u"status"]
+			beaconType		= self.CARS[u"beacon"][beacon][u"beaconType"]
+			beaconBattery	= 0
+			beaconUSB		= 0
+			beaconKey		= 2
+			nKeysFound		= 0
 			oldAwaySince = self.CARS[u"carId"][indigoCarIds][u"awaySince"] 
 			oldHomeSince = self.CARS[u"carId"][indigoCarIds][u"homeSince"] 
 			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+u"  "+beacon+u" updating "+beaconType+", oldBeaconStatus="+	oldBeaconStatus+", newBeaconStatus="+  newBeaconStatus+"  oldAwaySince:"+str(time.time()-oldAwaySince)+"  oldHomeSince:"+str(time.time()-oldHomeSince)+", oldCarStatus="+oldCarStatus+", oldCarEngine="+oldCarEngine+", oldCarMotion="+oldCarMotion)
@@ -1306,13 +1306,13 @@ class Plugin(indigo.PluginBase):
 
 			updateProps = False
 			if u"address" not in props: 
-				props[u"address"] ="away"
+				props[u"address"] = u"away"
 				updateProps=True
-			if (beaconBattery==2 or beaconUSB==2 or beaconKey==2) and props[u"address"] ==u"away":
-				props[u"address"] = "home"
+			if (beaconBattery==2 or beaconUSB==2 or beaconKey==2) and props[u"address"] == u"away":
+				props[u"address"] = u"home"
 				updateProps=True
-			elif not (beaconBattery==2 or beaconUSB==2 or beaconKey==2) and props[u"address"] ==u"home":
-				props[u"address"] = "away" 
+			elif not (beaconBattery==2 or beaconUSB==2 or beaconKey==2) and props[u"address"] == u"home":
+				props[u"address"] = u"away" 
 				updateProps=True
 
 			self.addToStatesUpdateDict(indigoCarIds,"motion",carDev.states[u"motion"])
@@ -1323,78 +1323,78 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(indigoCarIds,"engine", u"off")
 
 			if not (beaconBattery==2 or beaconUSB==2 or beaconKey==2):	# nothing on = gone , away ..
-				self.addToStatesUpdateDict(indigoCarIds,"location", u"away")
-				if oldCarStatus !="away": 
-					self.setIcon(carDev,props,"SensorOff-SensorOn",0)
+				self.addToStatesUpdateDict(indigoCarIds, u"location", u"away")
+				if oldCarStatus != u"away": 
+					self.setIcon(carDev,props, u"SensorOff-SensorOn",0)
 					self.CARS[u"carId"][indigoCarIds][u"awaySince"] = time.time()
 					self.addToStatesUpdateDict(indigoCarIds,"LastLeaveFromHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
-				self.addToStatesUpdateDict(indigoCarIds,"motion", u"left")
-				self.addToStatesUpdateDict(indigoCarIds,"engine", u"unknown")
+				self.addToStatesUpdateDict(indigoCarIds, u"motion", u"left")
+				self.addToStatesUpdateDict(indigoCarIds, u"engine", u"unknown")
 				self.checkCarsNeed[indigoCarIds]= 0
 
 			else:	  # something on, we are home.
-				if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"- setting to be home,   oldCarStatus:"+oldCarStatus)
-				self.addToStatesUpdateDict(indigoCarIds,"location", u"home")
-				if oldCarStatus !="home": 
+				if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName + u"- setting to be home,   oldCarStatus:"+oldCarStatus)
+				self.addToStatesUpdateDict(indigoCarIds, u"location", u"home")
+				if oldCarStatus != u"home": 
 					self.CARS[u"carId"][indigoCarIds][u"homeSince"] = time.time()
-					self.addToStatesUpdateDict(indigoCarIds,"LastArrivalAtHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
+					self.addToStatesUpdateDict(indigoCarIds, u"LastArrivalAtHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 
 
-			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+" update states (1)    : type: "+beaconType+"    bat="+str(beaconBattery)+"    USB="+str(beaconUSB)+"    Key="+str(beaconKey)+ "     car newawaySince="+unicode(int(time.time()-self.CARS[u"carId"][indigoCarIds][u"awaySince"]))+" newhomeSince="+unicode(int(time.time()-self.CARS[u"carId"][indigoCarIds][u"homeSince"])) )
+			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+ u" update states (1)    : type: "+beaconType+ u"    bat="+str(beaconBattery)+ u"    USB="+str(beaconUSB)+ u"    Key="+str(beaconKey)+  u"     car newawaySince="+unicode(int(time.time()-self.CARS[u"carId"][indigoCarIds][u"awaySince"]))+ u" newhomeSince="+unicode(int(time.time()-self.CARS[u"carId"][indigoCarIds][u"homeSince"])) )
 
-			if	oldCarStatus == "away":
+			if	oldCarStatus == u"away":
 
 				if beaconBattery==2 or beaconUSB==2 or beaconKey==2: 
-					self.setIcon(carDev,props,"SensorOff-SensorOn",1)
+					self.setIcon(carDev,props, u"SensorOff-SensorOn",1)
 					if time.time() - self.CARS[u"carId"][indigoCarIds][u"awaySince"]  > 120: # just arriving home, was away for some time
 						self.addToStatesUpdateDict(indigoCarIds,"motion", u"arriving")
-						self.checkCarsNeed[indigoCarIds]= 0
+						self.checkCarsNeed[indigoCarIds] = 0
 
 					else : # is this a fluke?
-						self.addToStatesUpdateDict(indigoCarIds,"motion", u"unknown")
+						self.addToStatesUpdateDict(indigoCarIds, u"motion", u"unknown")
 						self.checkCarsNeed[indigoCarIds]= time.time() + 20
 
-				elif indigoCarIds in self.updateStatesDict and "location" in self.updateStatesDict[indigoCarIds] and self.updateStatesDict[indigoCarIds]["location"]["value"] == "home":
-						self.ML.myLog( text = carName+"-"+indigoCarIds+u" beacon: "+beacon+" bad state , coming home, but no beacon is on")
+				elif indigoCarIds in self.updateStatesDict and u"location" in self.updateStatesDict[indigoCarIds] and self.updateStatesDict[indigoCarIds][u"location"][u"value"] == u"home":
+						self.ML.myLog( text = carName+"-"+indigoCarIds+u" beacon: "+beacon+ u" bad state , coming home, but no beacon is on")
 						self.checkCarsNeed[indigoCarIds]= time.time() + 20
 
-				if carDev.states[u"LastLeaveFromHome"] ==u"": self.addToStatesUpdateDict(indigoCarIds,"LastLeaveFromHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
+				if carDev.states[u"LastLeaveFromHome"] == u"": self.addToStatesUpdateDict(indigoCarIds, u"LastLeaveFromHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 
 
 			else:  ## home
 				if (beaconBattery==2 or beaconUSB==2 or beaconKey==2): 
 					if	beaconUSB==1 : # engine is off
-						if	 oldCarMotion == "arriving" and time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] > 10:	 
-								self.addToStatesUpdateDict(indigoCarIds,"motion", u"stop")
-						elif oldCarMotion == "leaving"	and time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] >200: 
-								self.addToStatesUpdateDict(indigoCarIds,"motion", u"stop")
-						elif oldCarMotion == "left"		and time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] < 60: 
-								self.addToStatesUpdateDict(indigoCarIds,"motion", u"arriving")
-						elif oldCarMotion == "": 
-								self.addToStatesUpdateDict(indigoCarIds,"motion", u"stop")
-						elif oldCarMotion == "unknown": 
-								self.addToStatesUpdateDict(indigoCarIds,"motion", u"stop")
-						elif oldCarMotion == "stop": 
+						if	 oldCarMotion == u"arriving" and time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] > 10:	 
+								self.addToStatesUpdateDict(indigoCarIds, u"motion", u"stop")
+						elif oldCarMotion == "leaving"	and time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] > 200: 
+								self.addToStatesUpdateDict(indigoCarIds, u"motion", u"stop")
+						elif oldCarMotion == u"left"		and time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] < 60: 
+								self.addToStatesUpdateDict(indigoCarIds, u"motion", u"arriving")
+						elif oldCarMotion == u"": 
+								self.addToStatesUpdateDict(indigoCarIds, u"motion", u"stop")
+						elif oldCarMotion == u"unknown": 
+								self.addToStatesUpdateDict(indigoCarIds, u"motion", u"stop")
+						elif oldCarMotion == u"stop": 
 								pass
 						else:
 								self.checkCarsNeed[indigoCarIds]= time.time() + 20
 
 					if	beaconUSB==2 : # engine is on
 						if time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] >600: 
-							self.addToStatesUpdateDict(indigoCarIds,"motion", u"leaving")
+							self.addToStatesUpdateDict(indigoCarIds, u"motion", u"leaving")
 						elif time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] >60 and oldCarMotion == "stop": 
-							self.addToStatesUpdateDict(indigoCarIds,"motion", u"leaving")
+							self.addToStatesUpdateDict(indigoCarIds, u"motion", u"leaving")
 						elif time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"] <30 and oldCarMotion in[u"unknown", u"leaving"]: 
-							self.addToStatesUpdateDict(indigoCarIds,"motion", u"arriving")
+							self.addToStatesUpdateDict(indigoCarIds, u"motion", u"arriving")
 						else:
 							self.checkCarsNeed[indigoCarIds]= time.time() + 20
 
 				else:
 					self.checkCarsNeed[indigoCarIds]= time.time() + 20
 
-				if carDev.states[u"LastArrivalAtHome"] ==u"": self.addToStatesUpdateDict(indigoCarIds,"LastArrivalAtHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
+				if carDev.states[u"LastArrivalAtHome"] ==u"": self.addToStatesUpdateDict(indigoCarIds, u"LastArrivalAtHome",datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 			if updateProps:
 					carDev.replacePluginPropsOnServer(props)
@@ -1406,18 +1406,18 @@ class Plugin(indigo.PluginBase):
 			if u"engine"   in whatForStatus: st +="/"+ self.updateStatesDict[indigoCarIds][u"engine"]["value"]
 			if u"motion"   in whatForStatus: st +="/"+ self.updateStatesDict[indigoCarIds][u"motion"]["value"]
 			st = st.strip(u"/").strip(u"/")
-			self.addToStatesUpdateDict(indigoCarIds,"status",st)
-			if self.updateStatesDict[indigoCarIds][u"location"]["value"] ==u"home":
+			self.addToStatesUpdateDict(indigoCarIds, u"status",st)
+			if self.updateStatesDict[indigoCarIds][u"location"]["value"] == u"home":
 				carDev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 			else:
 				carDev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
-			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+" update states (2)    : type: "+beaconType+ "     car newawaySince="+unicode(int(time.time() - self.CARS[u"carId"][indigoCarIds][u"awaySince"]))+" newhomeSince="+unicode(int(time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"])) )
+			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+ u" update states (2)    : type: "+beaconType+  u"     car newawaySince="+unicode(int(time.time() - self.CARS[u"carId"][indigoCarIds][u"awaySince"]))+ u" newhomeSince="+unicode(int(time.time() - self.CARS[u"carId"][indigoCarIds][u"homeSince"])) )
 			if indigoCarIds in self.checkCarsNeed: 
-				if self.ML.decideMyLog(u"CAR"):self.ML.myLog( text = carName+"-"+indigoCarIds+" update states (2)  checkCarsNeed time since last= "+str(int(time.time() - self.checkCarsNeed[indigoCarIds])))
-			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+" updateStatesList(2):"+unicode(self.updateStatesDict))
+				if self.ML.decideMyLog(u"CAR"):self.ML.myLog( text = carName+"-"+indigoCarIds+ u" update states (2)  checkCarsNeed time since last= "+str(int(time.time() - self.checkCarsNeed[indigoCarIds])))
+			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+ u" updateStatesList(2):"+unicode(self.updateStatesDict))
 		except	Exception, e:
-			self.ML.myLog( text = u"updateCARS in Line '%s: has error'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+			self.ML.myLog( text = u"updateCARS in Line '%s: has error'%s'" % (sys.exc_traceback.tb_lineno, e), destination= u"standard" )
 
 
 		return 
@@ -1440,21 +1440,21 @@ class Plugin(indigo.PluginBase):
 			self.ML.myLog( text = u"setupCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"communication to indigo is interrupted")
-			self.ML.myLog( text = u"devId "+carIds+" indigo lookup/save problem")
+			self.ML.myLog( text = u"devId "+carIds+ u" indigo lookup/save problem")
 			return 
 
 		try:
 			if mode in [u"init", u"validate"]:
-				if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = u"setupCARS updating states mode:"+ mode+";  updateStatesList:"+unicode(self.updateStatesDict))
+				if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = u"setupCARS updating states mode:"+ mode+ u";  updateStatesList:"+unicode(self.updateStatesDict))
 				if u"description" not in props: props[u"description"]=""
 				if props[u"description"] != text:
 					props[u"description"]= text
 					dev.replacePluginPropsOnServer(props)
-				self.executeUpdateStatesDict(onlyDevID=carIds,calledFrom="setupCARS ")
+				self.executeUpdateStatesDict(onlyDevID=carIds,calledFrom= u"setupCARS ")
 			if update: 
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 		except	Exception, e:
-			self.ML.myLog( text = u"setupCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+			self.ML.myLog( text = u"setupCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination= u"standard" )
 			return props
 		return	props
 
@@ -1463,7 +1463,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			##self.ML.myLog( text = carIds+" props"+unicode(propsCar))
 			beaconList=[]
-			text="Beacons:"
+			text = u"Beacons:"
 			update = False
 			for beaconType in propsCar:
 				if beaconType.find(u"beacon") ==-1: continue
@@ -1474,12 +1474,12 @@ class Plugin(indigo.PluginBase):
 				except: continue
 				beacon = beaconDev.address
 				beaconList.append(beacon)
-				self.CARS[u"beacon"][beacon]= {u"carId":carIds,"beaconType":beaconType}
+				self.CARS[u"beacon"][beacon]= {u"carId":carIds, u"beaconType":beaconType}
 				if beacon not in self.CARS[u"carId"][carIds][u"beacons"]:  self.CARS[u"carId"][carIds][u"beacons"][beacon]=beaconID
-				text+=beaconType.split(u"beacon")[1]+"="+beaconDev.name+";"
+				text+=beaconType.split(u"beacon")[1]+"="+beaconDev.name+ u";"
 				props = beaconDev.pluginProps
-				if props[u"fastDown"] ==  "0":
-					props[u"fastDown"] =  "15"
+				if props[u"fastDown"] ==   u"0":
+					props[u"fastDown"] =   u"15"
 					if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = u"updating fastdown for "+beaconDev.name +" to 0")
 					update=True
 					beaconDev.replacePluginPropsOnServer(props)
@@ -1495,7 +1495,7 @@ class Plugin(indigo.PluginBase):
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"communication to indigo is interrupted")
 				return 1/0
-			self.ML.myLog( text = u"devId "+carIds+" indigo lookup/save problem,  in props:"+unicode(props)+"    CARS:"+unicode(self.CARS))
+			self.ML.myLog( text = u"devId "+carIds+ u" indigo lookup/save problem,  in props:"+unicode(props)+ u"    CARS:"+unicode(self.CARS))
 		return update,text.strip(u";")
 
 ####------================----------- CARS ------================-----------END
@@ -1508,11 +1508,11 @@ class Plugin(indigo.PluginBase):
 	def actionControlSprinkler(self, action, dev):
 		props		= dev.pluginProps
 		#indigo.server.log("actionControlSprinkler: "+ unicode(props)+"\n\n"+ unicode(action))
-		pi			= str(props["piServerNumber"])
-		ipNumberPi	= self.RPI[pi]["ipNumberPi"]
-		devId		= int(self.RPI[pi]["piDevId"])
-		deviceDefs	= [{"gpio":-1,u"outType":1}]
-		dictForRPI	= {"cmd":"",u"OUTPUT":0,u"deviceDefs":json.dumps(deviceDefs),u"typeId":"OUTPUTgpio-1",u"outputDev":"Sprinkler","piServerNumber": pi,"ipNumberPi":ipNumberPi,"nPulses":0,u"devId":devId}
+		pi			= str(props[ u"piServerNumber"])
+		ipNumberPi	= self.RPI[pi][ u"ipNumberPi"]
+		devId		= int(self.RPI[pi][ u"piDevId"])
+		deviceDefs	= [{ u"gpio":-1,u"outType":1}]
+		dictForRPI	= { u"cmd":"",u"OUTPUT":0,u"deviceDefs":json.dumps(deviceDefs),u"typeId": u"OUTPUTgpio-1",u"outputDev": u"Sprinkler", u"piServerNumber": pi, u"ipNumberPi":ipNumberPi, u"nPulses":0,u"devId":devId}
 
 		### !!!	 zoneindex goes from 1 ... n !!!
 
@@ -1539,18 +1539,18 @@ class Plugin(indigo.PluginBase):
 				cmd.append("down")
 				inverseGPIO.append(True)
 			self.sendGPIOCommands( ipNumberPi, pi, cmd, GPIOpin, inverseGPIO)
-			if dev.pluginProps["PumpControlOn"]: # last valve is the control valve 
-				deviceDefs[0]["gpio"]	 = props["GPIOzone"+str(dev.zoneCount)]
-				dictForRPI["deviceDefs"] = json.dumps(deviceDefs)
-				dictForRPI["cmd"]		 = "pulseUp"
-				dictForRPI["pulseUp"]	 = dev.zoneMaxDurations[action.zoneIndex-1]*60
+			if dev.pluginProps[ u"PumpControlOn"]: # last valve is the control valve 
+				deviceDefs[0]["gpio"]	 = props[ u"GPIOzone"+str(dev.zoneCount)]
+				dictForRPI[ u"deviceDefs"] = json.dumps(deviceDefs)
+				dictForRPI[ u"cmd"]		 =  u"pulseUp"
+				dictForRPI[ u"pulseUp"]	 = dev.zoneMaxDurations[action.zoneIndex-1]*60
 				self.setPin(dictForRPI)
 
 			self.sleep(0.1)	   ## we need to wait until all gpios are of, other wise then next might be before one of the last off
-			deviceDefs[0]["gpio"]	 = props["GPIOzone"+str(action.zoneIndex)]
-			dictForRPI["deviceDefs"] = json.dumps(deviceDefs)
-			dictForRPI["cmd"]		 = "pulseUp"
-			dictForRPI["pulseUp"]	 = dev.zoneMaxDurations[action.zoneIndex-1]*60
+			deviceDefs[0][ u"gpio"]		= props["GPIOzone"+str(action.zoneIndex)]
+			dictForRPI[ u"deviceDefs"]	= json.dumps(deviceDefs)
+			dictForRPI[ u"cmd"]			=  u"pulseUp"
+			dictForRPI[ u"pulseUp"]		= dev.zoneMaxDurations[action.zoneIndex-1]*60
 			self.setPin(dictForRPI)
 
 			durations		 = dev.zoneScheduledDurations
@@ -3265,6 +3265,16 @@ class Plugin(indigo.PluginBase):
 						pinMappings += "(u" + unicode(n) + ":" + new[n][u"gpio"]+"," + new[n][u"outType"] +"," +  new[n][u"initialValue"]  +");"
 					else:
 						pinMappings += "(u" + unicode(n) + ":-);"
+					if "inverse" in dev.states:
+						if (dev.states["inverse"]) != (new[n][u"outType"]=="1"): 
+							dev.updateStateOnServer("inverse", new[n][u"outType"]=="1" )
+					elif "inverse_%2d"%n in dev.states:
+						if (dev.states["inverse_%2d"%n]) != (new[n][u"outType"]=="1"): dev.updateStateOnServer("inverse_%2d"%n, new[n][u"outType"]=="1" )
+					if "initial" in dev.states:
+						if dev.states["initial"] != new[n][u"initialValue"]: dev.updateStateOnServer("initial", new[n][u"initialValue"])
+					elif "initial%2d"%n in dev.states:
+						if dev.states["initial%2d"%n] != new[n][u"initialValue"]: dev.updateStateOnServer("initial%2d"%n, new[n][u"initialValue"] )
+					
 				valuesDict[u"description"] = pinMappings
 
 				if update == 1:
@@ -3483,11 +3493,11 @@ class Plugin(indigo.PluginBase):
 						if u"devType" in valuesDict:
 							devType = valuesDict[u"devType"]
 
-						if u"output" not in	  self.RPI[unicode(pi)]:  
+						if u"output" not in			self.RPI[unicode(pi)]:  
 							self.RPI[unicode(pi)][u"output"]={}
-						if typeId not in   self.RPI[unicode(pi)][u"output"]:  
+						if typeId not in			self.RPI[unicode(pi)][u"output"]:  
 							self.RPI[unicode(pi)][u"output"][typeId]={}
-						if unicode(devId) not in   self.RPI[unicode(pi)][u"output"][typeId]:  
+						if unicode(devId) not in	self.RPI[unicode(pi)][u"output"][typeId]:  
 							self.RPI[unicode(pi)][u"output"][typeId][unicode(devId)]={}
 
 						if u"i2cAddress" in valuesDict:
@@ -3991,19 +4001,19 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def confirmPiNumberBUTTONI(self, valuesDict=None, typeId="", devId="x"):
 		try:
-			piN = valuesDict[u"piServerNumber"]
-			nn = self.getTypeIDLength(typeId)
+			piN 	= valuesDict[u"piServerNumber"]
+			nChan 	= self.getTypeIDLength(typeId)
 			valuesDict[u"piDone"]	 = True
 			valuesDict[u"stateDone"] = True
 
 			self.stateNumberForInputGPIOX = ""
 			if valuesDict[u"deviceDefs"] == "":
-				valuesDict[u"deviceDefs"]=json.dumps([{} for i in range(nn)])
+				valuesDict[u"deviceDefs"]=json.dumps([{} for i in range(nChan)])
 
 			xxx= json.loads(valuesDict[u"deviceDefs"])
-			pinMappings = ""
-			nn = min(nn,len(xxx))
-			for n in range(nn):
+			pinMappings	= ""
+			nChan 		= min(nChan,len(xxx))
+			for n in range(nChan):
 				if u"gpio" in xxx[n]:
 					pinMappings += unicode(n) + ":" + xxx[n][u"gpio"] + "|"
 			valuesDict[u"pinMappings"] = pinMappings
@@ -4037,28 +4047,27 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def filterINPUTchannels(self, valuesDict=None, filter="", typeId="", devId="x"):
 		list = []
-		nn = self.getTypeIDLength(typeId)
-		for i in range(nn):
+		for i in range(self.getTypeIDLength(typeId)):
 			list.append((unicode(i), unicode(i)))
 		return list
 
 
 ####-------------------------------------------------------------------------####
 	def confirmStateBUTTONI(self, valuesDict=None, typeId="", devId="x"):
-		piN	 = valuesDict[u"piServerNumber"]
-		inS	 = valuesDict[u"INPUTstate"]
-		inSi = int(inS)
-		nn = self.getTypeIDLength(typeId)
+		piN	 	= valuesDict[u"piServerNumber"]
+		inS	 	= valuesDict[u"INPUTstate"]
+		inSi 	= int(inS)
+		nChan 	= self.getTypeIDLength(typeId)
 		if valuesDict[u"deviceDefs"]!="":
 			xxx=json.loads(valuesDict[u"deviceDefs"])
-			if len(xxx) < nn:
-				for ll in range(nn-len(xxx)):
+			if len(xxx) < nChan:
+				for ll in range(nChan-len(xxx)):
 					xxx.append({u"gpio":"", u"inpType":"", u"count": u"off"})
 			if	u"gpio" in xxx[inSi] and xxx[inSi][u"gpio"] !="":
 				valuesDict[u"gpio"]		 = xxx[inSi][u"gpio"]
 				if	u"inpType" in xxx[inSi]:
-					valuesDict[u"inpType"]	 = xxx[inSi][u"inpType"]
-				valuesDict[u"count"]	 = xxx[inSi][u"count"]
+					valuesDict[u"inpType"]	= xxx[inSi][u"inpType"]
+				valuesDict[u"count"]	 	= xxx[inSi][u"count"]
 
 		valuesDict[u"stateDone"] = True
 		return valuesDict
@@ -4151,8 +4160,8 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def confirmPiNumberBUTTONO(self, valuesDict=None, typeId="", devId="x"):
-			piN = valuesDict[u"piServerNumber"]
-			nn = self.getTypeIDLength(typeId)
+			piN 	= valuesDict[u"piServerNumber"]
+			nChan 	= self.getTypeIDLength(typeId)
 			try:
 				idevId = int(devId)
 				if idevId != 0:
@@ -4166,13 +4175,13 @@ class Plugin(indigo.PluginBase):
 			self.stateNumberForInputGPIOX = ""
 
 
-			if valuesDict[u"deviceDefs"] == "" or len(json.loads(valuesDict[u"deviceDefs"])) != nn:
-				valuesDict[u"deviceDefs"] = json.dumps([{} for i in range(nn)])
+			if valuesDict[u"deviceDefs"] == "" or len(json.loads(valuesDict[u"deviceDefs"])) != nChan:
+				valuesDict[u"deviceDefs"] = json.dumps([{} for i in range(nChan)])
 
-			xxx = json.loads(valuesDict[u"deviceDefs"])
-			pinMappings = ""
-			update= False
-			for n in range(nn):
+			xxx 		= json.loads(valuesDict[u"deviceDefs"])
+			pinMappings	= ""
+			update		= False
+			for n in range(nChan):
 				if u"gpio" in xxx[n]:
 					if u"initialValue" not in xxx[n]: 
 						xxx[n][u"initialValue"] ="-"
@@ -4182,31 +4191,23 @@ class Plugin(indigo.PluginBase):
 			if update:
 				valuesDict[u"deviceDefs"] = json.dumps(xxx)
 
+			inSi	= 0
+			if valuesDict[u"deviceDefs"] != "":
+				if u"gpio" in xxx[inSi] and xxx[inSi][u"gpio"] != "":
+					valuesDict[u"gpio"]			= xxx[inSi][u"gpio"]
+					valuesDict[u"outType"]		= xxx[inSi][u"outType"]
+					valuesDict[u"initialValue"] = xxx[inSi][u"initialValue"]
+
+			valuesDict[u"stateDone"] = True
+
 			return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def filterOUTPUTchannels(self, valuesDict=None, filter="", typeId="", devId="x"):
 			list = []
-			nn = self.getTypeIDLength(typeId)
-			for i in range(nn):
+			for i in range(self.getTypeIDLength(typeId)):
 				list.append((unicode(i), unicode(i)))
 			return list
-
-####-------------------------------------------------------------------------####
-	def confirmStateBUTTONO(self, valuesDict=None, typeId="", devId="x"):
-			piN = valuesDict[u"piServerNumber"]
-			inS = valuesDict[u"OUTPUTstate"]
-			inSi = int(inS)
-			nn = self.getTypeIDLength(typeId)
-			if valuesDict[u"deviceDefs"] != "":
-				xxx = json.loads(valuesDict[u"deviceDefs"])
-				if u"gpio" in xxx[inSi] and xxx[inSi][u"gpio"] != "":
-					valuesDict[u"gpio"]	   = xxx[inSi][u"gpio"]
-					valuesDict[u"outType"] = xxx[inSi][u"outType"]
-					valuesDict[u"initialValue"] = xxx[inSi][u"initialValue"]
-
-			valuesDict[u"stateDone"] = True
-			return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def filtergpioList(self, valuesDict=None, filter="", typeId="", devId="x"):
@@ -4290,7 +4291,7 @@ class Plugin(indigo.PluginBase):
 				for n in range(len(oldxxx)):
 					oldxxx[n][u"initialValue"] ="x"
 					   
-			inS = valuesDict[u"OUTPUTstate"]
+			inS = "0"
 			inSi = int(inS)
 			if valuesDict[u"gpio"] == "0":
 				xxx[inSi] = {}
@@ -4302,9 +4303,18 @@ class Plugin(indigo.PluginBase):
 				if u"gpio" in xxx[n]:
 					if xxx[n][u"gpio"] == "0":
 						del xxx[n]
-					if	len(oldxxx) < (n+1) or "initialValue" not in oldxxx[n] or (xxx[n][u"initialValue"] !=	 oldxxx[n][u"initialValue"]):
+					if	len(oldxxx) < (n+1) or "initialValue" not in oldxxx[n] or (xxx[n][u"initialValue"] != oldxxx[n][u"initialValue"]):
 						self.sendInitialValue = dev.id
-					pinMappings += unicode(n) + ":" + xxx[n][u"gpio"]+ "," + xxx[n][u"outType"]+ "," +	xxx[n][u"initialValue"]+"|"
+					pinMappings += unicode(n) + ":" + xxx[n][u"gpio"]+ "," + xxx[n][u"outType"]+ "," + xxx[n][u"initialValue"]+"|"
+					if "inverse" in dev.states:
+						if (dev.states["inverse"] =="yes") != (xxx[n][u"outType"]=="1"): dev.updateStateOnServer("inverse", xxx[n][u"outType"]=="1" )
+					elif "inverse_%2d"%n in dev.states:
+						if (dev.states["inverse_%2d"%n] =="yes") != (xxx[n][u"outType"]=="1"): dev.updateStateOnServer("inverse_%2d"%n, xxx[n][u"outType"]=="1" )
+					if "initial" in dev.states:
+						if dev.states["initial"] != xxx[n][u"initialValue"]: dev.updateStateOnServer("initial", xxx[n][u"initialValue"])
+					elif "initial%2d"%n in dev.states:
+						if dev.states["initial%2d"%n] != xxx[n][u"initialValue"]: dev.updateStateOnServer("initial%2d"%n, xxx[n][u"initialValue"] )
+					
 					#self.ML.myLog( text = "pinMappings: "+unicode(n)+ "  "+unicode(pinMappings))	 
 					for l in range(n, nChannels):
 						if l == n: continue
@@ -6861,7 +6871,7 @@ class Plugin(indigo.PluginBase):
 		okList = []
 		#self.ML.myLog( text =	u"self.outdeviceForOUTPUTgpio " + unicode(self.outdeviceForOUTPUTgpio))
 		if self.outdeviceForOUTPUTgpio ==u"": return []
-		try:	dev	  = indigo.devices[int(self.outdeviceForOUTPUTgpio)]
+		try:	dev = indigo.devices[int(self.outdeviceForOUTPUTgpio)]
 		except: return []
 		try:
 			props= dev.pluginProps
@@ -7223,9 +7233,9 @@ class Plugin(indigo.PluginBase):
 						b = int(float(analogValue))
 					if b != "" and "onOffState" in dev.states:
 						self.addToStatesUpdateDict(unicode(dev.id),"brightnessLevel", b)
-						if b == 100: 
+						if b >1: 
 							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", True)
-						if b == 0:	 
+						else:
 							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", False)
 				if typeId == "OUTPUTgpio-1-ONoff":
 					if cmd == "analogWrite": cmd ="up"
@@ -7238,9 +7248,9 @@ class Plugin(indigo.PluginBase):
 						analogValue =0
 						b = 0
 					if b != "" and "onOffState" in dev.states:
-						if b == 100: 
+						if b >1:
 							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", True)
-						if b == 0:	 
+						else:
 							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", False)
 
 
@@ -7261,6 +7271,7 @@ class Plugin(indigo.PluginBase):
 						out = cmd + "," + unicode(analogValue)
 					outN = int(output)
 					if "OUTPUT_%0.2d"%outN in dev.states: self.addToStatesUpdateDict(unicode(dev.id),"OUTPUT_%0.2d"%outN, out)
+					if "OUTPUT" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),"OUTPUT", out)
 				except	Exception, e:
 					self.ML.myLog( text = u"setPIN in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					outN = 0
@@ -7278,7 +7289,7 @@ class Plugin(indigo.PluginBase):
 					line +="\n	,\"rampTime\":\""+unicode(rampTime)+"\""
 					line +="\n	,\"analogValue\":\""+unicode(analogValue)+"\""
 					line +="\n	,\"GPIOpin\":\""+unicode(GPIOpin)+"\"})\n"
-					line+= "##=======	end	   =====\n"
+					line+= "##=======  end  =====\n"
 					if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = "\n"+line+"\n")
 				except:
 					if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = u"sending command to rPi at " + ip + "; port: " + unicode(self.rPiCommandPORT) + " pin: " +
@@ -10006,7 +10017,7 @@ class Plugin(indigo.PluginBase):
 			if new==u"reboot":
 				#self.addToStatesUpdateDict(unicode(dev.id),u"lastMessage", now)
 				if dev.states[u"online"] != "reboot":
-					self.ML.myLog( text = u" setting status of pi# "+unicode(pi)+"   to reboot for "+str(int(self.bootWaitTime))+" seconds or until new message arrives")
+					self.ML.myLog( text = u"setting status of pi# "+unicode(pi)+"   to reboot for "+str(int(self.bootWaitTime))+" seconds or until new message arrives")
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 					self.addToStatesUpdateDict(unicode(dev.id),u"online", u"reboot")
 					self.currentlyBooting=time.time()+self.bootWaitTime
@@ -10360,7 +10371,7 @@ class Plugin(indigo.PluginBase):
 					else:
 						whichKeysToDisplay = ""
 
-					if output=="OUTPUTgpio-1-ONoff":
+					if output.find("OUTPUTgpio-1") > -1:
 						if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = output+" received "+ uData)
 						self.OUTPUTgpio1(dev, props, data)
 						continue
@@ -10386,7 +10397,7 @@ class Plugin(indigo.PluginBase):
 				actualGpioValue = str(data["actualGpioValue"]).lower()
 
 				self.addToStatesUpdateDict(unicode(dev.id),u"actualGpioValue", data["actualGpioValue"])
-				if props["outType"] == 0: # not inverse
+				if props["outType"] == "0": # not inverse
 					if actualGpioValue =="high" :upState = "on"
 					else:               		 upState = "off"
 				else:

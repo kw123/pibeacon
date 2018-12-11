@@ -114,7 +114,7 @@ try:
 
 	elif cmd == "down":
 		GPIO.setup(pin, GPIO.OUT)
-		if inverseGPIO:	 
+		if inverseGPIO: 
 			GPIO.output(pin, True)
 			U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 		else: 
@@ -124,9 +124,13 @@ try:
 	elif cmd == "analogWrite":
 		if inverseGPIO:
 			value = PWM*(100-bits)	# duty cycle on xx hz
-		else:	 
-			value =	   PWM*bits	 # duty cycle on xxx hz 
+		else:
+			value =   PWM*bits	 # duty cycle on xxx hz 
 		U.toLog(1, G.program +" analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
+		if value >1.:
+			U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
+		else:
+			U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
 		GPIO.setup(pin, GPIO.OUT)
 		p = GPIO.PWM(pin, PWM*100)	# 
 		p.start(int(value))	 # start the PWM with  the proper duty cycle

@@ -1,3 +1,8 @@
+Added features / changes in v7.98.256 @ 2018-12-10:  
+===================================================
+
+1. clean up GPOIO output and inverse settings. the inverse as well as initial state are now shown in device states
+
 
 Added features / changes in v7.98.255 @ 2018-12-09:  
 ===================================================

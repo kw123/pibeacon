@@ -13549,36 +13549,26 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="OUTPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select the INPUT state for which to pick the GPIO" >
-			<Label>(1) select  state#:</Label>
-				<List class="self" filter="" method="filterOUTPUTchannels" dynamicReload="true"/>
-			</Field>
-			<Field  id="buttonState" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" >
-			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmStateBUTTONO</CallbackMethod>
-			</Field>
-
-			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
-
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
-			<Label>(2) select gpio# for this OUTPUT channel:</Label>
+			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Label>(2) select gpio#:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
 			</Field>
-			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 			<Label> OUTPUT type:</Label>
 			<List>
 				<Option value="0"        >set OUTPUT normal </Option>
 				<Option value="1"        >set OUTPUT invers </Option>
 			</List>
 			</Field>
-			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 			<Label> initial Value:</Label>
 			<List>
 				<Option value="down"      >set OUTPUT initially to low </Option>
 				<Option value="up"        >set OUTPUT initially to High </Option>
-				<Option value="-"         >do not set OUTPUT initially</Option>
+				<Option value="-"        >do not set OUTPUT initially</Option>
 			</List>
 			</Field>
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
 
@@ -13598,10 +13588,20 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>actualGpioValue</TriggerLabel>
 				<ControlPageLabel>actualGpioValue</ControlPageLabel>
 			</State>
-			<State id="OUTPUT_00">
+			<State id="OUTPUT">
 				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT_00</TriggerLabel>
-				<ControlPageLabel>OUTPUT_00</ControlPageLabel>
+				<TriggerLabel>OUTPUT</TriggerLabel>
+				<ControlPageLabel>OUTPUT</ControlPageLabel>
+			</State>
+			<State id="inverse">
+				<ValueType  boolType="YesNo" >Boolean</ValueType>
+				<TriggerLabel>inverse</TriggerLabel>
+				<ControlPageLabel>inverse</ControlPageLabel>
+			</State>
+			<State id="initial">
+				<ValueType>string</ValueType>
+				<TriggerLabel>initial</TriggerLabel>
+				<ControlPageLabel>initial</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -13630,28 +13630,20 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="OUTPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select the INPUT state for which to pick the GPIO" >
-			<Label>(1) select  state#:</Label>
-				<List class="self" filter="" method="filterOUTPUTchannels" dynamicReload="true"/>
-			</Field>
-			<Field  id="buttonState" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" >
-			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmStateBUTTONO</CallbackMethod>
-			</Field>
-
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
-			<Label>(2) select gpio# for this OUTPUT channel:</Label>
+			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Label>(2) select gpio#:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
 			</Field>
-			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 			<Label> OUTPUT type:</Label>
 			<List>
 				<Option value="0"        >set OUTPUT normal </Option>
 				<Option value="1"        >set OUTPUT invers </Option>
 			</List>
 			</Field>
-			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 			<Label> initial Value:</Label>
 			<List>
 				<Option value="down"      >set OUTPUT initially to low </Option>
@@ -13659,7 +13651,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="-"         >do not set OUTPUT initially</Option>
 			</List>
 			</Field>
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
 
@@ -13679,10 +13671,20 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>actualGpioValue</TriggerLabel>
 				<ControlPageLabel>actualGpioValue</ControlPageLabel>
 			</State>
-			<State id="OUTPUT_00">
+			<State id="OUTPUT">
 				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT_00</TriggerLabel>
-				<ControlPageLabel>OUTPUT_00</ControlPageLabel>
+				<TriggerLabel>OUTPUT</TriggerLabel>
+				<ControlPageLabel>OUTPUT</ControlPageLabel>
+			</State>
+			<State id="inverse">
+				<ValueType  boolType="YesNo" >Boolean</ValueType>
+				<TriggerLabel>inverse</TriggerLabel>
+				<ControlPageLabel>inverse</ControlPageLabel>
+			</State>
+			<State id="initial">
+				<ValueType>string</ValueType>
+				<TriggerLabel>initial</TriggerLabel>
+				<ControlPageLabel>initial</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -14367,22 +14369,22 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>Setup the zones on the RPI,     select the GPIO of the relay for the zones:</Label>
 			</Field>
 
-			<Field id="GPIOzone1"  type="menu" defaultValue="-1" >                            								<Label>gpio# for zone 1:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone2"  type="menu" defaultValue="-1" >                            								<Label>gpio# for zone 2:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone3"  type="menu" defaultValue="-1" >                            								<Label>gpio# for zone 3:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone4"  type="menu" defaultValue="-1" >                            								<Label>gpio# for zone 4:</Label> <List class="self"  method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone1"  type="menu" defaultValue="-1" >																					 <Label>gpio# for zone 1:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone2"  type="menu" defaultValue="-1" >																					 <Label>gpio# for zone 2:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone3"  type="menu" defaultValue="-1" >																					 <Label>gpio# for zone 3:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone4"  type="menu" defaultValue="-1" >																					 <Label>gpio# for zone 4:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
 			<Field id="GPIOzone5"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="5,6,7,8,9,10,11,12,13,14,15,16" > <Label>gpio# for zone 5:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone6"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="6,7,8,9,10,11,12,13,14,15,16" >	<Label>gpio# for zone 6:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone7"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="7,8,9,10,11,12,13,14,15,16" >	<Label>gpio# for zone 7:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone8"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="8,9,10,11,12,13,14,15,16" >		<Label>gpio# for zone 8:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone9"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="9,10,11,12,13,14,15,16" >		<Label>gpio# for zone 9:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone10" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="10,11,12,13,14,15,16" >			<Label>gpio# for zone 10:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone11" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="11,12,13,14,15,16" >			<Label>gpio# for zone 11:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone12" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="12,13,14,15,16" >			<Label>gpio# for zone 12:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone13" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="13,14,15,16" >				<Label>gpio# for zone 13:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone14" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="14,15,16" >					<Label>gpio# for zone 14:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone15" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="15,16" > 					<Label>gpio# for zone 15:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="GPIOzone16" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="16" >						<Label>gpio# for zone 16:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone6"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="6,7,8,9,10,11,12,13,14,15,16" >	 <Label>gpio# for zone 6:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone7"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="7,8,9,10,11,12,13,14,15,16" >	 <Label>gpio# for zone 7:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone8"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="8,9,10,11,12,13,14,15,16" >		 <Label>gpio# for zone 8:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone9"  type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="9,10,11,12,13,14,15,16" >		 <Label>gpio# for zone 9:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone10" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="10,11,12,13,14,15,16" >			 <Label>gpio# for zone 10:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone11" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="11,12,13,14,15,16" >				 <Label>gpio# for zone 11:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone12" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="12,13,14,15,16" >				 <Label>gpio# for zone 12:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone13" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="13,14,15,16" >					 <Label>gpio# for zone 13:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone14" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="14,15,16" >						 <Label>gpio# for zone 14:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone15" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="15,16" > 						 <Label>gpio# for zone 15:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOzone16" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="16" >							 <Label>gpio# for zone 16:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
 
 			<Field type="checkbox" id="OverrideScheduleActions" defaultValue="false" hidden ="yes">
 			<Label>Override schedule actions:</Label>
