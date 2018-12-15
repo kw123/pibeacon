@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # mar 2 2016
-# version 0.95
+# version 1.1
 ##
 ##	  --- utils 
 #
@@ -48,7 +48,7 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 
 #################################
 def restartMyself(param="", reason="",doPrint=True):
-	toLog(-1, u"  ---- restarting ---	"+param+"  "+ reason,doPrint=doPrint)
+	toLog(-1, u"  ---- restarting --- "+param+"  "+ reason,doPrint=doPrint)
 	time.sleep(2)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py "+ param+" &")
 
@@ -68,7 +68,7 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
 	if lvl < G.debug:
 		try:
 			if G.program =="":
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " toLog	 G.program not defined msg= "+ msg 
+				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " toLog  G.program not defined msg= "+ msg 
 				return 
 			if	not os.path.isdir(G.logDir):
 				print " logfile not ready"
@@ -157,9 +157,9 @@ def checkParametersFile(defaultParameters, force=False):
 		#print "checking parameters file"
 		if len(inpRaw) < 100 or force:
 			# restore old parameters"
-			os.system("cp " +G.homeDir+defaultParameters+"	" +G.homeDir+"parameters")
+			os.system("cp " +G.homeDir+defaultParameters+"  " +G.homeDir+"parameters")
 			os.system("touch " +G.homeDir+"temp\touchFile")
-			restartMyself(reason="bad parameter...	file.. restored" , doPrint=True)
+			restartMyself(reason="bad parameter... file.. restored" , doPrint=True)
 
 #################################
 def doRead(inFile=G.homeDir+"temp/parameters",lastTimeStamp=""):
@@ -322,9 +322,9 @@ def doRebootThroughRUNpinReset():
 def sendRebootHTML(reason,reboot=True):
 	sendURL(sendAlive="reboot",text=reason)
 	if reboot:
-	   doReboot(1.," reboot at " +str(datetime.datetime.now())+"  "	 +reason)
+	   doReboot(1.," reboot at " +str(datetime.datetime.now())+"  "    +reason)
 	else:
-	   doReboot(1.," shut down at " +str(datetime.datetime.now())+"	 " +reason,cmd="shutdown -h now ")
+	   doReboot(1.," shut down at " +str(datetime.datetime.now())+"   " +reason,cmd="shutdown -h now ")
 	
 	return
 
@@ -346,7 +346,7 @@ def setUpRTC(useRTCnew):
 		return
 	
 	if useRTCnew == "ds3231":
-		if findString("dtoverlay=i2c-rtc,ds3231",	"/boot/config.txt") == 2: # already there ?
+		if findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") == 2: # already there ?
 			G.useRTC = useRTCnew
 			return 
 		
@@ -361,7 +361,7 @@ def setUpRTC(useRTCnew):
 		if findString("dtoverlay=i2c-rtc,ds1307",	"/boot/config.txt") == 2: # already done ?
 			G.useRTC = useRTCnew
 			return 
-		uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local",	 before="(sleep ")
+		uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local", before="(sleep ")
 		removefromFile("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt")
 		uncommentOrAdd("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt", before="")
 
@@ -375,14 +375,14 @@ def setUpRTC(useRTCnew):
 		doReboot(30,"installing HW clock" ,cmd="")
 
 	else:
-		if (findString("dtoverlay=i2c-rtc,ds1307",	 "/boot/config.txt") != 2 and 
-			findString("dtoverlay=i2c-rtc,ds3231",	 "/boot/config.txt") != 2 ) : # already done ?
+		if (findString("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt") != 2 and 
+			findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") != 2 ) : # already done ?
 			G.useRTC = useRTCnew
 			return 
 
-		removefromFile("dtoverlay=i2c-rtc,ds3231",	"/boot/config.txt")
-		removefromFile("dtoverlay=i2c-rtc,ds1307",	"/boot/config.txt")
-		removefromFile('/sbin/hwclock -s|| echo "hwclock not working"',			 "/etc/rc.local" )
+		removefromFile("dtoverlay=i2c-rtc,ds3231","/boot/config.txt")
+		removefromFile("dtoverlay=i2c-rtc,ds1307","/boot/config.txt")
+		removefromFile('/sbin/hwclock -s|| echo "hwclock not working"', "/etc/rc.local" )
 		# in /lib/udev/hwclock-set REMOVE # infront of 
 		#if [ -e /run/systemd/system ] ; then
 		# exit 0
@@ -508,7 +508,7 @@ def getIPNumberMaster(quiet=False):
 		except:
 			ipAddressRead = ""
 
-		if not quiet: toLog(-1," IP find::::	wifiIP >>"+ wifi0IP+ "<<;	eth0IP: >>"+eth0IP+ "<<;   hostnameIP >>"+ unicode(ipHostname)+ "<<;   ipAddressRead >>"+ ipAddressRead+"<<",doPrint=True)
+		if not quiet: toLog(-1," IP find:::: wifiIP >>"+ wifi0IP+ "<<; eth0IP: >>"+eth0IP+ "<<;   hostnameIP >>"+ unicode(ipHostname)+ "<<;   ipAddressRead >>"+ ipAddressRead+"<<",doPrint=True)
 
 		if testDNS() >0:
 			   retcode=1
@@ -774,7 +774,7 @@ def whichHCI():
 
 
 #################################
-def sendURL(data={},sendAlive="",text="", wait=True,squeeze=True):
+def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True):
 	try:
 			if (G.networkType  not in G.useNetwork or G.wifiType !="normal") or	 (getNetwork() =="off" or getNetwork() =="clock") : 
 				G.lastAliveSend	 = time.time()
@@ -1253,13 +1253,42 @@ def checkIfrebootAction(action):
 
 
 def sendi2cToPlugin():
+	i2c			= ""
+	lastBoot	= ""
+	os			= ""
+	temp		= ""
+	rpiType		= ""
 	try:
-		i2c= geti2c()
-		ret = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
-		try:	temp = ret.split("=")[1].split("'")[0]
-		except: temp = 0
-		sendURL(data={"i2c":i2c,"temp":temp},sendAlive="alive")
-	except	Exception, e :
+		i2c		 = geti2c()
+		#																	remove trailing null chars;  \\ for escape  of \
+		rpiType	 = subprocess.Popen("cat /sys/firmware/devicetree/base/model | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+		rpiType	 = ''.join(i for i in rpiType if ord(i)<128).split("Raspberry ")
+		if len(rpiType) ==2: rpiType = rpiType[1]
+		else:				 rpiType = rpiType[0]
+
+		serN	 = subprocess.Popen("cat /sys/firmware/devicetree/base/serial-number | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+		serN	 = (''.join(i for i in serN if ord(i)<128)).lstrip("0")
+		rpiType +="; ser#"+serN
+		#  --> Raspberry Pi 3 Model B Plus Rev 1.3/ ser#00000000dcfb216c
+
+		osInfo	 = subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
+		for line in osInfo:
+			if line .find("VERSION=") == 0:
+				os = line.split("=")[1].strip('"')
+		os += ";"+ subprocess.Popen("uname -r" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
+		os += ";"+ subprocess.Popen("uname -v" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
+
+		tempInfo = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+		try:	temp = tempInfo.split("=")[1].split("'")[0]
+		except: temp = "0"
+
+		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
+
+		data ={"i2c_active":json.dumps(i2c).replace(" ","").replace("[","").replace("]",""),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot}
+		##print data
+		sendURL(data=data, sendAlive="alive", squeeze=False)
+
+	except Exception, e :
 		toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
 	return 
 

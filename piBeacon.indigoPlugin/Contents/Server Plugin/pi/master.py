@@ -1069,8 +1069,6 @@ def fixRcLocal(sleepTime):
 		os.system("cp /home/pi/pibeacon/callbeacon.py /home/pi/callbeacon.py")
 	return
 
-
-
 #
 ####################  main #########################
 
@@ -1345,7 +1343,7 @@ checkIfGpioIsInstalled()
 
 G.tStart	  = time.time()
 
-U.sendi2cToPlugin()		   
+U.sendi2cToPlugin()
 tAtLoopSTart =time.time()
 
 U.testNetwork()

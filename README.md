@@ -9,36 +9,41 @@ Devices supported:
    
 supported device types:    
 ===RPI server   
-rPI   
-rPI-Sensor   
-   
+rPI         for ibeacon, BLEconnect, BLEsensor and all input output devices
+rPI-Sensor  for                      BLEsensor and all input output devices
+
+
 ===iBeacon   
 beacon   
-   
+
+
 ===BLECONNECT for phones   
 BLEconnect   
-   
+
+
 ===BLE temp sensor    
 BLEsensor   tenmp sensor through BLE
-   
+
+
 ===Temp Pressure humidity, air quality ..
-Wire18B20   
-DHTxx   T,H
-DHT11   T,H
-TMP102   T
-MCP9808  T
-LM35A   T
-T5403   T
-MS5803 T
-BMPxx   T,P
-BMP280   T,H,P
-SHT21   T
-AM2320   T,H
-BMExx    T,H,PP
-bme680   T,H,P, VOC
+Wire18B20  T  
+DHTxx      T,H
+DHT11      T,H
+TMP102     T
+TMP006     T Infrared 
+MCP9808    T
+LM35A      T
+T5403      T
+MS5803     T
+BMPxx      T,P
+BMP280     T,H,P
+SHT21      T
+AM2320     T,H
+BMExx      T,H,PP
+bme680     T,H,P, VOC
 pmairquality   measures concentration of particles in the air
-sgp30   CO2
-ccs811 Co2, VOC
+sgp30      CO2
+ccs811     Co2, VOC
 MHZ-xxx serial and i2c  Infrared absoption CO2 measurement
 
    
@@ -108,18 +113,15 @@ mysensors
 myprogram   
    
 ===GPIO outpu   
-OUTPUTgpio-1-ONoff   
-OUTPUTgpio-1   
-OUTPUTgpio-4   
-OUTPUTgpio-10   
-OUTPUTgpio-26   
+OUTPUTgpio-1-ONoff    = relay 
+OUTPUTgpio-1          = dimmer
    
 ===Radio   
-setTEA5767   
+TEA5767   
    
 ===DAC   
-setMCP4725   
-setPCF8591dac   
+MCP4725   
+PCF8591dac   
    
 ===various display types   
 display   

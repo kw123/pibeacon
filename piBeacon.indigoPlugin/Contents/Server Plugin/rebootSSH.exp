@@ -22,9 +22,9 @@ if {$authKeyOrPassword == "assword"} {
 }
 
 sleep 1
-expect ":" { }
-sleep 0.1
-send "sudo sync;sudo killall python;sudo reboot now\r"
-expect "closed by remote host" {}
+expect ": ~" { }
+send "sudo killall python;sleep 0.5;sudo reboot -f\r"
+
+expect "Rebooting" {}
 set timeout 0.1
 expect eof

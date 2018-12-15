@@ -137,7 +137,7 @@ def startBlueTooth(pi):
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 		HCIs = U.whichHCI()
 		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BeaconUseHCINo,"UART")
-		if myBLEmac ==-1:
+		if myBLEmac ==  -1:
 			return 0,  0, -1
 		print "G.BeaconUseHCINo", G.BeaconUseHCINo, "useHCI",useHCI, "myBLEmac",myBLEmac,"devId", devId
 		print "HCIs",HCIs
@@ -181,7 +181,7 @@ def startBlueTooth(pi):
 		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, 0, -5
+		return 0, "", -5
 
 	U.toLog(-1,"my BLE mac# is : "+ unicode(myBLEmac))
 	if myBLEmac !="":
@@ -200,7 +200,7 @@ def startBlueTooth(pi):
 		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0,  0, -1
+		return 0,  "", -1
 		
 	try:
 		hci_le_set_scan_parameters(sock)
@@ -218,7 +218,7 @@ def startBlueTooth(pi):
 		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
 		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0, 0 , -1 
+		return 0, "", -1 
 	return sock, myBLEmac, 0
 
 
@@ -838,7 +838,7 @@ try:
 				time.sleep(1)
 				sys.exit(4)
 
-			sock, retCode, myBLEmac = startBlueTooth(G.myPiNumber)
+			sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)
 			U.toLog(-1,"stopping "+G.program+" bad BLE start retCode= "+str(retCode),doPrint=True )
 			if retCode != 0 : sys.exit(5)
 
@@ -1063,7 +1063,7 @@ try:
 			if restartCount > 1:
 				U.toLog(-1, " restarting BLE stack due to no messages "+G.program)
 				G.debug = 0
-				sock, retCode, myBLEmac = startBlueTooth(G.myPiNumber)
+				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)
 				maxLoopCount = 6000
 		else:
 			restartCount = 0

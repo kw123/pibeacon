@@ -13,9 +13,12 @@
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="label1"  type="label" >
+			<Label>Parameters for rPi devices</Label>
+			</Field>
 
-			<Field id="label1"               type="label" > 
-			<Label>iBeacon related:</Label>
+			<Field id="label14"               type="label" > 
+			<Label>== iBeacon related:...</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
 			<Label>.... Transition from UP to Down to Expired after seconds:</Label>
@@ -57,7 +60,7 @@
 			<Label> correction to received rssi eg -10 would reduce rssi by 10; -300: use for up/down, not distance</Label>	</Field>
 
 			<Field id="cutOffForClosestBeacon" type="menu"     defaultValue="20" tooltip=""> 
-			<Label>.. CUT OFF distance for determining clostest iBeacon: if distance &gt;</Label>
+			<Label>.. CUT OFF distance for determining closest iBeacon: if distance &gt;</Label>
 				<List>
 					<Option value="1"   >&gt; 1 m ignore</Option>
 					<Option value="2"   >&gt; 2 m ignore</Option>
@@ -95,7 +98,7 @@
 				</List>
 			</Field>
 			<Field id="BLELabel" type="label" >  
-			<Label>BLEconnect ...</Label>	</Field>
+			<Label>== BLEconnect:...</Label>	</Field>
 			<Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" ">
 			<Label> .... queries seq. or parallel on THIS rPi:</Label>
 				<List>
@@ -107,7 +110,7 @@
 			<Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>	</Field>
 
 			<Field id="BLEHCILabel" type="label" > 
-				<Label>Use which BLE adoptor for which task:</Label>
+				<Label>== Use which BLE adoptor for which task:...</Label>
 			</Field>
 
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
@@ -131,10 +134,9 @@
 (B) for RPI3plus and SSD image &gt; 2018-11  iBeacon does not work w build in BLE chip, needs USB BLE dongle. 
 The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
-			<Field id="sep-031" type="separator"/>
  
 			<Field id="memberOfLabel" type="label" >  
-			<Label> Make this RPI member of group ...</Label>	</Field>
+			<Label>== Make this RPI member of group:...</Label>	</Field>
 			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>...Family:</Label>  
 			</Field>
 			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>...Guests:</Label>
@@ -152,7 +154,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="label2"               type="label" > 
-			<Label>For attached sensors ...</Label>
+			<Label>== For attached sensors:...</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
 			<Label>...read sensor every xx secs :</Label>
@@ -238,7 +240,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="label3"               type="label" > 
-			<Label>Hardware / reboot configs...</Label>
+			<Label>== Hardware / reboot configs:...</Label>
 			</Field>
 			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
 			<Field id="labelhw1"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
@@ -336,7 +338,9 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 					<Option value="28800"  >8 hours</Option>
 				</List>
 			</Field>
-			<Field id="labelhwr4"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> <Label></Label></Field>
+
+			<Field id="labelhwr4"               type="label" > 
+			<Label>== General reboot options:...</Label></Field>
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 			<Label>...overwrite default reboot at midnight:</Label>
@@ -346,30 +350,30 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sudo reboot" >
-			<Label>...overwrite default reboot command:</Label>
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sleep 2;sudo reboot" >
+			<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall -9 python; sudo reboot" > use default reboot command 'reboot now'</Option>
-					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >use 'sync;sleep 2;sudo reboot -f'  in case the default hangs</Option>
+					<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
+					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
 				</List>
 			</Field>
+
 
 			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
-			<Label>...wait after boot before master (set in rc.local):</Label>
+			<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
 				<List>
 					<Option value="0"  > do NOT wait</Option>
-					<Option value="5"  > wait for 5 secs, give eg wifi time to connect</Option>
-					<Option value="10" > wait for 10 secs, give eg wifi time to connect</Option>
-					<Option value="15" > wait for 10 secs, give eg wifi time to connect</Option>
+					<Option value="5"  > wait for 5 secs</Option>
+					<Option value="10" > wait for 10 secs</Option>
+					<Option value="15" > wait for 15 secs</Option>
 				</List>
 			</Field>
-
 
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
 			<Field id="labelGPIOfirst"               type="label"> 
-			<Label> If you like to set GPIOs (A / B)  directly after boot - before master.py starts:</Label></Field>
+			<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label></Field>
 			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
-				<Label>..set props for GPIO pin A after boot.. first thing:</Label>
+				<Label>..set props for GPIO pin A after boot.. first action:</Label>
 				<List>
 					<Option value="Olow"     >set OUTPUT initially to low </Option>
 					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
@@ -386,7 +390,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="GPIOTypeAfterBoot2"   type="menu" defaultValue="off">
-				<Label>..set props for GPIO pin B after boot.. second thing:</Label>
+				<Label>..set props for GPIO pin B after boot.. second action:</Label>
 				<List>
 					<Option value="Olow"     >set OUTPUT initially to low </Option>
 					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
@@ -401,7 +405,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<Label>..select GPIO-pin B:</Label>
 			</Field>
 
-			<Field id="labelram"               type="label" > <Label></Label></Field>
+			<Field id="labelram"               type="label" > <Label>== Special parameters ...</Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
@@ -436,9 +440,9 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 
-			<Field id="sep-03" type="separator"/>
+			<Field id="labelemptybroadcasts" type="label" > <Label></Label></Field>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>send broadcasts to other plugins for status up/x changes</Label>
+			<Label>...send broadcasts to other plugins for status up/x changes:...</Label>
 			<List>
 				<Option value="0" >NO </Option>
 				<Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -489,16 +493,40 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<ControlPageLabel>online</ControlPageLabel>
 			</State>
 
-			<State id="i2cActive">
+			<State id="i2c_active">
 				<ValueType>String</ValueType>
-				<TriggerLabel>i2cActive</TriggerLabel>
-				<ControlPageLabel>i2cActive</ControlPageLabel>
+				<TriggerLabel>i2c_active</TriggerLabel>
+				<ControlPageLabel>i2c_active</ControlPageLabel>
 			</State>
 			
+			<State id="rpi_type">
+				<ValueType>String</ValueType>
+				<TriggerLabel>rpi_type</TriggerLabel>
+				<ControlPageLabel>rpi_type</ControlPageLabel>
+			</State>
+
+			<State id="op_sys">
+				<ValueType>String</ValueType>
+				<TriggerLabel>op_sys</TriggerLabel>
+				<ControlPageLabel>op_sys</ControlPageLabel>
+			</State>
+
+			<State id="last_boot">
+				<ValueType>String</ValueType>
+				<TriggerLabel>last_boot</TriggerLabel>
+				<ControlPageLabel>last_boot</ControlPageLabel>
+			</State>
+
 			<State id="closestiBeacon">
 				<ValueType>string</ValueType>
 				<TriggerLabel>closestiBeacon</TriggerLabel>
 				<ControlPageLabel>closestiBeacon</ControlPageLabel>
+			</State>
+
+			<State id="closestRPI">
+			<ValueType>number</ValueType>
+			<TriggerLabel>closestRPI</TriggerLabel>
+			<ControlPageLabel>closestRPI</ControlPageLabel>
 			</State>
 
 			<State id="PosX">
@@ -764,8 +792,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 
-			<Field id="BLEHCILabel" type="label"  alignWithControl="true" > 
-				<Label>Use which BLE adoptor for BLE SENSOR:</Label>
+			<Field id="BLEHCILabel" type="label"   > 
+				<Label>== Use which BLE adoptor for BLE SENSOR (if used):</Label>
 			</Field>
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
 			<Label> .... BLE sensor:</Label>
@@ -780,7 +808,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 (B) for RPI3plus and SSD image &gt; 2018-11 BLEsensor does not work w build in BLE chip, needs USB BLE dongle.</Label>	</Field>
 
 			<Field id="label2"               type="label" > 
-			<Label>== For attached sensors - if not set in sensor device edit:</Label>
+			<Label>== For attached sensors - if not set in sensor device edit:...</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
 			<Label>...read sensor every xx secs :</Label>
@@ -866,7 +894,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="label3"               type="label" > 
-			<Label>== Hardware / reboot configs:</Label>
+			<Label>== Hardware / reboot configs:...</Label>
 			</Field>
 
 			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
@@ -965,8 +993,9 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 					<Option value="28800"  >8 hours</Option>
 				</List>
 			</Field>
-			<Field id="labelhwr4"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> <Label></Label></Field>
 
+
+			<Field id="labelhwr4"               type="label" > <Label>== General reboot options .....</Label></Field>
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 			<Label>...overwrite default reboot at midnight:</Label>
@@ -986,19 +1015,20 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
-			<Label>...wait after boot before master (set in rc.local):</Label>
+			<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
 				<List>
 					<Option value="0"  > do NOT wait</Option>
 					<Option value="5"  > wait for 5 secs</Option>
 					<Option value="10" > wait for 10 secs</Option>
+					<Option value="15" > wait for 15 secs</Option>
 				</List>
 			</Field>
 
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
 			<Field id="labelGPIOfirst"               type="label"> 
-			<Label> If you like to set GPIOs (A / B)  directly after boot - before master.py starts:</Label></Field>
+			<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label></Field>
 			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
-				<Label>..set props for GPIO pin A after boot.. first thing:</Label>
+				<Label>..set props for GPIO pin A after boot.. first action:</Label>
 				<List>
 					<Option value="Olow"     >set OUTPUT initially to low </Option>
 					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
@@ -1015,7 +1045,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="GPIOTypeAfterBoot2"   type="menu" defaultValue="off">
-				<Label>..set props for GPIO pin B after boot.. second thing:</Label>
+				<Label>..set props for GPIO pin B after boot.. second action:</Label>
 				<List>
 					<Option value="Olow"     >set OUTPUT initially to low </Option>
 					<Option value="Ohigh"    >set OUTPUT initially to High </Option>
@@ -1030,7 +1060,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<Label>..select GPIO-pin B:</Label>
 			</Field>
 
-			<Field id="labelram"               type="label" > <Label></Label></Field>
+			<Field id="labelram"               type="label" > <Label>=== Special parameters</Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
@@ -1074,19 +1104,20 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</List>
 			</Field>
 
-			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock">
-			<Label>enable RPI to run independently for some special apps:</Label>
-				<List>
-					<Option value="fullIndigo" > normal Indigo mode</Option>
-					<Option value="clock"      > enable no network neoPixel Clock</Option>
-				</List>
-			</Field>
-			<Field id="sep-031" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>send broadcasts to other plugins for status up/x changes</Label>
+			<Label>...send broadcasts to other plugins for status up/x changes</Label>
 				<List>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
+				</List>
+			</Field>
+
+			<Field id="sep-031" type="separator"/>
+			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock">
+			<Label>== Enable RPI to run independently from Indigo for some special apps:</Label>
+				<List>
+					<Option value="fullIndigo" > normal Indigo mode</Option>
+					<Option value="clock"      > enable no-network neoPixel Clock</Option>
 				</List>
 			</Field>
 
@@ -1110,10 +1141,28 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<ControlPageLabel>online</ControlPageLabel>
 			</State>
 
-			<State id="i2cActive">
+			<State id="i2c_active">
 				<ValueType>String</ValueType>
-				<TriggerLabel>i2cActive</TriggerLabel>
-				<ControlPageLabel>i2cActive</ControlPageLabel>
+				<TriggerLabel>i2c_active</TriggerLabel>
+				<ControlPageLabel>i2c_active</ControlPageLabel>
+			</State>
+			
+			<State id="rpi_type">
+				<ValueType>String</ValueType>
+				<TriggerLabel>rpi_type</TriggerLabel>
+				<ControlPageLabel>rpi_type</ControlPageLabel>
+			</State>
+
+			<State id="op_sys">
+				<ValueType>String</ValueType>
+				<TriggerLabel>op_sys</TriggerLabel>
+				<ControlPageLabel>op_sys</ControlPageLabel>
+			</State>
+
+			<State id="last_boot">
+				<ValueType>String</ValueType>
+				<TriggerLabel>last_boot</TriggerLabel>
+				<ControlPageLabel>last_boot</ControlPageLabel>
 			</State>
 
 
@@ -1168,7 +1217,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="isBeaconDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="label1"               type="label" > 
-			<Label>Transition from UP to Down to Expired:</Label>
+			<Label>==         iBeacon parameters:         ==
+</Label>
+			</Field>
+			<Field id="label14"               type="label" > 
+			<Label>== Transition from UP to Down to Expired:</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
 			<Label>....      After seconds:</Label>
@@ -1192,7 +1245,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</List>
 			</Field>
 			<Field id="label11"               type="label" > 
-			<Label>Fast UP to down mode:</Label>
+			<Label>== Fast UP to down mode:</Label>
 			</Field>
 			<Field id="fastDown" type="menu"     defaultValue="0" tooltip="if in a iBeacon does not send a signal within xx seconds  it is set to down (set signal to -999) ; all RPI must send down" > 
 			<Label>... send msg to indigo if xx Seconds no signal</Label>
@@ -1234,7 +1287,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
             
 			<Field id="label22"               type="label" > 
-			<Label>Send msg to indigo ... </Label>
+			<Label>== Send msg to indigo ... </Label>
 			</Field>
 			<Field id="signalDelta"   type="menu" defaultValue="20" tooltip="rPI will send a message to indigo if the signal strength changes by more than xx dBm, 
 use eg to track someone moving around - going from one room to the next" >
@@ -1286,7 +1339,7 @@ use eg to track someone moving around - going from one room to the next" >
 			</Field>
 
 			<Field id="label3"               type="label"  > 
-			<Label>Set type of beacon for future use:</Label>
+			<Label>== Set type of beacon (for future use):</Label>
 			</Field>
 			<Field id="typeOfBeacon" type="menu"     defaultValue="other"> 
 			<Label>....       Beacon Type</Label>
@@ -1305,13 +1358,14 @@ use eg to track someone moving around - going from one room to the next" >
 			</List>
 			</Field>
 			<Field id="label4"               type="label"  > 
-			<Label>Set txPower, use a number to overwrite received value or set to 999 to ignore</Label>
+			<Label>== Set txPower, use a number to overwrite received value or set to 999 to ignore</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999"> 
 			<Label>.... -dBm=</Label>
 			</Field>
 			<Field id="label41"               type="label"  > 
-			<Label>Use min signal if you want to only detect iBeacons that are in the same room as the RPI, might lead to false negatives .. try a range -80..-90  </Label>
+			<Label>== Use min signal if you want to only detect iBeacons that are in the same room as the RPI, 
+          might lead to false negatives .. try a range -80..-90  </Label>
 			</Field>
 			<Field id="IgnoreBeaconIfSignalLessThan" type="textfield"     defaultValue="-999"> 
 			<Label>.... ignore if signal less than   Minimum:</Label>
@@ -1320,15 +1374,15 @@ use eg to track someone moving around - going from one room to the next" >
 
 
 			<Field id="IgnoreBeaconForClosestToRPI" type="menu"     defaultValue="0"> 
-			<Label>Ignore beacon for closest iBeacon to RPI:</Label>
+			<Label>.. Ignore THIS beacon for closest iBeacon to RPI:</Label>
 			<List>
-				<Option value="0"     >use iBeacon</Option>
-				<Option value="1"     >do NOT use iBeacon</Option>
+				<Option value="0"     >use it </Option>
+				<Option value="1"     >do NOT use THIS iBeacon</Option>
 			</List>
 			</Field>
 
 			<Field id="label5"               type="label"  > 
-			<Label>How often should we update the signal and distance states:</Label>
+			<Label>== How often should we update the signal and distance states:</Label>
 			</Field>
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300"> 
 			<Label>....      min Interval:</Label>
@@ -1350,7 +1404,7 @@ use eg to track someone moving around - going from one room to the next" >
 
 			<Field id="simpleSeparator53" type="separator"/>
 			<Field id="label53"               type="label"  > 
-			<Label>Show beacon position on map, 
+			<Label>== Show beacon position on map, 
                 first setup the general parameters in config, then enable this beacon.</Label>
 			</Field>
 			<Field id="showBeaconOnMap" type="menu"     defaultValue="0"> 
@@ -1406,7 +1460,7 @@ use eg to track someone moving around - going from one room to the next" >
 
 			<Field id="sep-03" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>send broadcasts to other plugins for status up/x changes</Label>
+			<Label>== Send broadcasts to other plugins for status up/x changes</Label>
 			<List>
 				<Option value="0" >NO </Option>
 				<Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -1418,27 +1472,21 @@ use eg to track someone moving around - going from one room to the next" >
 			<Label>EXPERTS ONLY!! </Label>
 			</Field>
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
-			<Label>Ignore state of this beacon:</Label>
+			<Label>... Ignore state of this beacon:</Label>
 			<List>
 				<Option value="0" >keep or make active = normal</Option>
 				<Option value="1" >set to short term ignore</Option>
 				<Option value="2" >set to long term ignore (= delete = junk)</Option>
 			</List>
 			</Field>
-			<Field id="label61"               type="label"  > 
-			<Label>Overwrite a current MAC number, 
-        Must not be equal to an existing ACTIVE device.
-        Use this to eg replace an iBeacon with a new one. 
-        Write MAC address of new beacon here
-        This will then ONLY replace the MAC number 
-        and keep history of THIS device
-        It will set the old MAC# to IGNORE
-        ----------------------------------
-You can use this also to create a new iBeacon device
-        But do NOT use an existing MAC number</Label>
-			</Field>
 			<Field id="newMACNumber" type="textfield"     defaultValue=""> 
-			<Label>overwrite the current MAC number with:</Label>
+			<Label>... overwrite the current MAC number with:</Label>
+			</Field>
+
+			<Field id="label61"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
+			<Label>Must not be equal to an existing ACTIVE device. Use this to eg replace an iBeacon with a new one. Write MAC address of new beacon here. This will then ONLY replace the MAC number and keep history of THIS device. It will set the old MAC# to IGNORE
+
+You can use this also to create a new iBeacon device   But do NOT use an existing MAC number</Label>
 			</Field>
 		</ConfigUI>
       
@@ -1673,11 +1721,6 @@ You can use this also to create a new iBeacon device
 			<ValueType>number</ValueType>
 			<TriggerLabel>closestRPI</TriggerLabel>
 			<ControlPageLabel>closestRPI</ControlPageLabel>
-			</State>
-			<State id="closestRPIText">
-			<ValueType>String</ValueType>
-			<TriggerLabel>closestRPIText</TriggerLabel>
-			<ControlPageLabel>closestRPIText</ControlPageLabel>
 			</State>
 			<State id="lastStatusChange">
 			<ValueType>String</ValueType>

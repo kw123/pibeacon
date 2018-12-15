@@ -26,7 +26,7 @@ import myLogPgms
 import cProfile
 import pstats
 
-dataVersion = 32.60
+dataVersion = 33.60
 
 
 
@@ -325,7 +325,7 @@ class Plugin(indigo.PluginBase):
 
 			self.ML.myLog( text = u" ..   def startup(self): setting variables, debug ..   finished ")
 	   
-		except	Exception, e:
+		except Exception, e:
 			self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
 			self.errorLog(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.errorLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -350,7 +350,7 @@ class Plugin(indigo.PluginBase):
 				self.sleep(2000)
 				exit(1)
 
-		except	Exception, e:
+		except Exception, e:
 			self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
 			self.errorLog(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.errorLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -455,7 +455,7 @@ class Plugin(indigo.PluginBase):
 					if upd:
 						dev.replacePluginPropsOnServer(props)
 
-			except	Exception, e:
+			except Exception, e:
 				self.ML.myLog( text = u"startupFIXES in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			try:
 				os.remove(self.userIndigoPluginDir + "config")
@@ -463,7 +463,7 @@ class Plugin(indigo.PluginBase):
 				pass
 
 
-		except	Exception, e:
+		except Exception, e:
 			self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
 			self.errorLog(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.errorLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -513,7 +513,7 @@ class Plugin(indigo.PluginBase):
 			if not os.path.exists(self.cameraImagesDir):
 				os.mkdir(self.cameraImagesDir)
 
-		except	Exception, e:
+		except Exception, e:
 			self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
 			self.errorLog(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.errorLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -549,9 +549,9 @@ class Plugin(indigo.PluginBase):
 							else:
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
-				except	Exception, e:
+				except Exception, e:
 						self.ML.myLog( text ="startupFIXES0 "+ dev.name+"  "+u"startupFIXES0 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = dev.name+"  "+u"startupFIXES0 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -571,7 +571,7 @@ class Plugin(indigo.PluginBase):
 			self.debugRPILevel[u"debugRPIOUTPUT"]			 = int(self.pluginPrefs.get(u"debugRPIOUTPUT", 0))
 			self.debugRPILevel[u"debugRPIBLE"]				 = int(self.pluginPrefs.get(u"debugRPIBLE", 0))
 			self.debugRPILevel[u"debugRPImystuff"]			 = int(self.pluginPrefs.get(u"debugRPImystuff", 0))
-		except	Exception, e:
+		except Exception, e:
 			self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
 			self.errorLog(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.errorLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -890,7 +890,7 @@ class Plugin(indigo.PluginBase):
 			self.beaconPositionsData[u"ShowExpiredBeacons"]			= self.pluginPrefs.get(u"beaconShowExpiredBeacons", u"0" )
 			self.beaconPositionsLastCheck							= time.time() - 20
 
-		except	Exception, e:
+		except Exception, e:
 			self.errorLog(u"--------------------------------------------------------------------------------------------------------------")
 			self.errorLog(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.errorLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -1019,7 +1019,7 @@ class Plugin(indigo.PluginBase):
 						if triggerGroup[group][tType]:
 							self.triggerEvent(group+"-"+tType)
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"setGroupStatus in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -1150,7 +1150,7 @@ class Plugin(indigo.PluginBase):
 			if u"nstates" not in self.dataStats[u"updates"]:
 				self.resetDataStats()
 				return
-		except	Exception, e:
+		except Exception, e:
 			self.resetDataStats() 
 			self.ML.myLog( text = u"readTcpipSocketStats in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		if u"data" not in self.dataStats:
@@ -1184,7 +1184,7 @@ class Plugin(indigo.PluginBase):
 				f = open(self.userIndigoPluginDir + "CARS", u"r")
 				self.CARS = json.loads(f.read())
 				f.close()
-			except	Exception, e:
+			except Exception, e:
 				self.CARS={u"carId":{},"beacon":{}}
 
 		for carIds in self.CARS[u"carId"]:
@@ -1212,7 +1212,7 @@ class Plugin(indigo.PluginBase):
 			for carIds in delDD:
 				del self.CARS[u"carId"][carIds]
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"cleanupDeepCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -1229,7 +1229,7 @@ class Plugin(indigo.PluginBase):
 					self.updateCARS(beacon,beaconDev,beaconDev.states, force=True)
 					break
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"updateAllCARbeacons in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = u"updateAllCARbeacons beacon		 " +beacon)
 			self.ML.myLog( text = u"updateAllCARbeacons indigoCarIds " +indigoCarIds)
@@ -1416,7 +1416,7 @@ class Plugin(indigo.PluginBase):
 			if indigoCarIds in self.checkCarsNeed: 
 				if self.ML.decideMyLog(u"CAR"):self.ML.myLog( text = carName+"-"+indigoCarIds+ u" update states (2)  checkCarsNeed time since last= "+str(int(time.time() - self.checkCarsNeed[indigoCarIds])))
 			if self.ML.decideMyLog(u"CAR"): self.ML.myLog( text = carName+"-"+indigoCarIds+ u" updateStatesList(2):"+unicode(self.updateStatesDict))
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"updateCARS in Line '%s: has error'%s'" % (sys.exc_traceback.tb_lineno, e), destination= u"standard" )
 
 
@@ -1436,7 +1436,7 @@ class Plugin(indigo.PluginBase):
 			dev = indigo.devices[carIdi]
 			update,text = self.setupBeaconsForCARS(props,carIds)
 	 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"setupCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -1453,7 +1453,7 @@ class Plugin(indigo.PluginBase):
 				self.executeUpdateStatesDict(onlyDevID=carIds,calledFrom= u"setupCARS ")
 			if update: 
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"setupCARS in Line '%s:'%s'" % (sys.exc_traceback.tb_lineno, e), destination= u"standard" )
 			return props
 		return	props
@@ -1576,7 +1576,7 @@ class Plugin(indigo.PluginBase):
 				else : # single zone manual, check if overwrite max duration
 					if "sprinklerActiveZoneSetManualDuration" in indigo.variables:
 						try:	dur = max(0,float(indigo.variables["sprinklerActiveZoneSetManualDuration"].value ) )
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"actionControlSprinkler for variable sprinklerActiveZoneSetManualDuration in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+" using max value instead", destination="standard" )
 							dur = 0
 					if dur == 0:  # no overwrite, use max duration
@@ -1756,7 +1756,7 @@ class Plugin(indigo.PluginBase):
 
 
 				self.executeUpdateStatesDict(onlyDevID=str(dev.id))
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"sprinklerStats in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####------================------- sprinkler ------================-----------END
@@ -1837,34 +1837,34 @@ class Plugin(indigo.PluginBase):
 					self.resetUpdateQueue(pi)
 
 
-			self.beacons		   = self.getParamsFromFile(self.userIndigoPluginDir+ "beacons")
+			self.beacons = self.getParamsFromFile(self.userIndigoPluginDir+ "beacons")
 
 			for beacon in self.beacons:
 				for nn in _GlobalConst_emptyBeacon:
 					if nn not in self.beacons[beacon]:
 						self.beacons[beacon][nn]=copy.deepcopy(_GlobalConst_emptyBeacon[nn])
 
+				if self.beacons[beacon][u"indigoId"] == 0: continue
+				dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
+				chList=[]
+				if "closestRPI" in dev.states: # must be RPI ..
+					if dev.states[u"closestRPI"] == "": 
+						chList.append({u"key":"closestRPI", u"value":-1})
+					self.execUpdateStatesList(dev,chList)
+
 				for pi in range(_GlobalConst_numberOfiBeaconRPI):
-					if self.beacons[beacon][u"indigoId"] ==0: continue
 					try:
-						chList=[]
-						dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
-						if dev.states[u"closestRPI"]	 == "": 
-							chlist.append({u"key":"closestRPI", u"value":-1})
-						if dev.states[u"closestRPIText"] != "Pi_"+str(dev.states[u"closestRPI"]): 
-							chlist.append({u"key":"closestRPIText", u"value":"Pi_"+str(dev.states[u"closestRPI"])})
 						lastUp= float(time.mktime(time.strptime(dev.states[u"Pi_"+unicode(pi)+"_Time"],_defaultDateStampFormat)))
 						if self.beacons[beacon][u"receivedSignals"][pi][1] > lastUp: continue # time entry
 						self.beacons[beacon][u"receivedSignals"][pi][0]= float(dev.states[u"Pi_"+str(pi)+"_Signal"])
 						self.beacons[beacon][u"receivedSignals"][pi][1]= lastUp
-						self.execUpdateStatesList(dev,chList)
 					except:
 						pass
 
 
-			self.beaconsUUIDtoName	 = self.getParamsFromFile(self.userIndigoPluginDir+"beaconsUUIDtoName",	  oldName= self.userIndigoPluginDir+"UUIDtoName")
-			self.beaconsUUIDtoIphone = self.getParamsFromFile(self.userIndigoPluginDir+"beaconsUUIDtoIphone",	  oldName= self.userIndigoPluginDir+"UUIDtoIphone")
-			self.beaconsIgnoreUUID	 = self.getParamsFromFile(self.userIndigoPluginDir+"beaconsIgnoreUUID",	  oldName= self.userIndigoPluginDir+"beaconsIgnoreFamily")
+			self.beaconsUUIDtoName	 = self.getParamsFromFile(self.userIndigoPluginDir+"beaconsUUIDtoName",		oldName= self.userIndigoPluginDir+"UUIDtoName")
+			self.beaconsUUIDtoIphone = self.getParamsFromFile(self.userIndigoPluginDir+"beaconsUUIDtoIphone",	oldName= self.userIndigoPluginDir+"UUIDtoIphone")
+			self.beaconsIgnoreUUID	 = self.getParamsFromFile(self.userIndigoPluginDir+"beaconsIgnoreUUID",		oldName= self.userIndigoPluginDir+"beaconsIgnoreFamily")
 			self.rejectedByPi		 = self.getParamsFromFile(self.userIndigoPluginDir+"rejected/rejectedByPi.json")
 			self.version			 = self.getParamsFromFile(self.userIndigoPluginDir+"dataVersion", default=0)
 
@@ -1873,10 +1873,10 @@ class Plugin(indigo.PluginBase):
 
 			self.startUpdateRPIqueues("start")
 
-			self.ML.myLog( text = u" ..	 config read from files")
-			self.fixConfig(checkOnly = ["all","rpi","beacon","CARS","sensors","output","force"],fromPGM="readconfig") 
+			self.ML.myLog( text = u" .. config read from files")
+			self.fixConfig(checkOnly = ["all","rpi","beacon","CARS","sensors","output","force"], fromPGM="readconfig") 
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"readConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			exit(1)
 
@@ -1891,7 +1891,7 @@ class Plugin(indigo.PluginBase):
 					f.close()
 					if oldName !="" and os.path.isfile(oldName):
 						os.system("rm "+oldName)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"getParamsFromFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					out ={}
 			else:
@@ -1902,7 +1902,7 @@ class Plugin(indigo.PluginBase):
 					out	 = json.loads(f.read())
 					f.close()
 					os.system("rm "+oldName)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"getParamsFromFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					out = default
 			return out
@@ -1915,7 +1915,7 @@ class Plugin(indigo.PluginBase):
 				f.write(json.dumps(self.beaconPositionsData))
 				f.close()
 				if self.ML.decideMyLog(u"PlotPositions"): self.ML.myLog( text = u"savebeaconPositionsFile "+ unicode(self.beaconPositionsData[u"mac"])[0:100] )
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"savebeaconPositionsFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -1950,21 +1950,21 @@ class Plugin(indigo.PluginBase):
 						elif "showBeaconOnMap"	in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols:
 							if beacon not in self.beaconPositionsData[u"mac"]:
 								changed = True
-							try:	distanceToRPI = float(dev.states[unicode(dev.states[u"closestRPIText"])+"_Distance"])
+							try:	distanceToRPI = float(dev.states["Pi_"+unicode(dev.states[u"closestRPI"])+"_Distance"])
 							except: distanceToRPI = 0.5
 							# State "Pi_8_Signal" of "b-radius-3"
 							if dev.states["status"] == u"expired": useSymbol = "square45"
 							else:								   useSymbol = props[u"showBeaconOnMap"]
 							self.beaconPositionsData[u"mac"][beacon]={u"name":dev.name,
-								u"position":			 [float(dev.states[u"PosX"]),float(dev.states[u"PosY"]),float(dev.states[u"PosZ"])],
-								u"nickName":			 props[u"showBeaconNickName"],
-								u"symbolType":			 useSymbol,
-								u"symbolColor":			 props[u"showBeaconSymbolColor"],
-								u"symbolAlpha":			 props[u"showBeaconSymbolAlpha"] ,
-								u"distanceToRPI":		 distanceToRPI ,
-								u"textColor":			 props[u"showBeaconTextColor"] ,
-								u"status":				 dev.states[u"status"]					}
-					except	Exception, e:
+								u"position":			[float(dev.states[u"PosX"]),float(dev.states[u"PosY"]),float(dev.states[u"PosZ"])],
+								u"nickName":			props[u"showBeaconNickName"],
+								u"symbolType":			useSymbol,
+								u"symbolColor":			props[u"showBeaconSymbolColor"],
+								u"symbolAlpha":			props[u"showBeaconSymbolAlpha"] ,
+								u"distanceToRPI":		distanceToRPI ,
+								u"textColor":			props[u"showBeaconTextColor"] ,
+								u"status":				dev.states[u"status"]					}
+					except Exception, e:
 							self.ML.myLog( text = u"makeNewBeaconPositionPlots in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 			if self.beaconPositionsData[u"ShowRPIs"] in	 _GlobalConst_beaconPlotSymbols:
@@ -2007,7 +2007,7 @@ class Plugin(indigo.PluginBase):
 						self.ML.myLog( text = u"makeNewBeaconPositionPlots cmd:  "+ cmd)
 					os.system(cmd)
 
-		except	Exception, e:
+		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"makeNewBeaconPositionPlots in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -2052,9 +2052,9 @@ class Plugin(indigo.PluginBase):
 						deltaDist = math.sqrt(deltaDist)
 						self.piToPiDistance[ii][jj][3] = deltaDist
 						self.piToPiDistance[jj][ii][3] = deltaDist
-					except	Exception, e:
+					except Exception, e:
 						self.ML.myLog( text = u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
-			except	Exception, e:
+			except Exception, e:
 				self.ML.myLog( text = u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return True
 
@@ -2074,7 +2074,7 @@ class Plugin(indigo.PluginBase):
 			Pjj = props[u"PosXYZ"].split(u",")
 			return [float(Pjj[0]),float(Pjj[1]),float(Pjj[2])]
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"calcPitoPidist in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+" fixing props, you might need to edit RPI#"+unicode(jj))
 			props[u"PosXYZ"] ="0,0,0"
 			dev.replacePluginPropsOnServer(props)
@@ -2150,7 +2150,7 @@ class Plugin(indigo.PluginBase):
 								dev= indigo.devices[piDevId]
 								anyChange = True
 
-					except	Exception, e:
+					except Exception, e:
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -2165,7 +2165,7 @@ class Plugin(indigo.PluginBase):
 							self.RPI[unicode(pi)][u"piOnOff"] = "0"
 							anyChange = True
 							continue
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		#self.ML.myLog( text =	u"fixConfig time elapsed point A  "+str(time.time()- self.lastFixConfig) +"     anyChange: "+ str(anyChange))
 
@@ -2235,7 +2235,7 @@ class Plugin(indigo.PluginBase):
 				for dev in delDEV:
 					self.ML.myLog( text = u"fixConfig dev :" + dev.name + " has no addressfield")
 					# indigo.device.delete(dev)
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		#self.ML.myLog( text =	u"fixConfig time elapsed point B  "+str(time.time()- self.lastFixConfig)+"     anyChange: "+ str(anyChange) )
 
@@ -2331,7 +2331,7 @@ class Plugin(indigo.PluginBase):
 								#	 self.beacons[beacon][u"batteryLevel"] = props[u"batteryLevel"]
 								#else:
 								#	 self.beacons[beacon][u"batteryLevel"] = "100"
-							except	Exception, e:
+							except Exception, e:
 								anyChange = True
 								self.ML.myLog( text = u"fixConfig anyChange: G") 
 								if unicode(e).find(u"timeout waiting") > -1:
@@ -2345,7 +2345,7 @@ class Plugin(indigo.PluginBase):
 									self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 									try:
 										self.ML.myLog( text = u"device:" +dev.name+"  "+unicode(dev.states)+"\n  beacon:" +unicode(self.beacons[beacon]) )
-									except	Exception, e:
+									except Exception, e:
 										self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 									return 
 
@@ -2356,7 +2356,7 @@ class Plugin(indigo.PluginBase):
 					self.ML.myLog( text = u"fixConfig:  deleting beacon:"+beacon+" " +unicode(self.beacons[beacon]))
 					del self.beacons[beacon]
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		#self.ML.myLog( text = u"fixConfig time elapsed point C  "+str(time.time()- self.lastFixConfig) +"     anyChange: "+ str(anyChange))
 
@@ -2376,7 +2376,7 @@ class Plugin(indigo.PluginBase):
 										self.RPI[unicode(pi)][u"piDevId"] = devId
 										anyChange = True
 										#self.ML.myLog( text =	u"fixConfig anychange: D-1")
-								except	Exception, e:
+								except Exception, e:
 									if unicode(e).find(u"timeout waiting") > -1:
 										self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 										self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -2398,7 +2398,7 @@ class Plugin(indigo.PluginBase):
 							del self.beaconsUUIDtoIphone[beacon]
 							anyChange = True
 							#self.ML.myLog( text =	u"fixConfig anychange: D-3  beacon,  "+ str(beacon) )
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fixConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		#self.ML.myLog( text =	u"fixConfig time elapsed point D  "+str(time.time()- self.lastFixConfig) +"     anyChange: "+ str(anyChange))
 
@@ -2442,7 +2442,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					self.sensorMessages[devIds][item] = default
 				return 0
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"checkSensorMessages in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 1
 
@@ -2455,7 +2455,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.writeJson(self.sensorMessages,fName=self.userIndigoPluginDir + u"sensorMessages")
 			return
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"saveSensorMessages in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -2474,7 +2474,7 @@ class Plugin(indigo.PluginBase):
 				f.close()
 			return out
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"writeJson "+fname+" in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return ""
 
@@ -2654,7 +2654,7 @@ class Plugin(indigo.PluginBase):
 				self.beacons[beacon][u"batteryLevel"] = ""
 			self.beacons[beacon][u"updateSignalValuesSeconds"] = float(props[u"updateSignalValuesSeconds"])
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fixDevProps in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 		return 0
@@ -2748,7 +2748,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"deviceStartComm in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####-------------------------------------------------------------------------####
@@ -2762,6 +2762,7 @@ class Plugin(indigo.PluginBase):
 						self.ML.myLog( text = u"-setting beacon device in internal tables to 0:  " + dev.name+"  "+unicode(dev.id)+" enabled:"+ unicode(dev.enabled)+ "  pluginState:"+ self.pluginState)
 						self.beacons[beacon][u"indigoId"] = 0
 						self.beacons[beacon][u"ignore"]	  = 1
+						self.writeJson(self.beacons, fName=self.userIndigoPluginDir + "beacons", format=self.beaconsFileSort)
 						#self.ML.myLog( text =	u"re-starting device:  " + dev.name+"  "+unicode(dev.id)+" enabled:"+ unicode(dev.enabled)+ "  pluginState:"+ self.pluginState)
 						#self.ML.myLog( text =	unicode(dev))
 		self.deviceStopComm(dev)
@@ -2781,7 +2782,7 @@ class Plugin(indigo.PluginBase):
 
 				self.statusChanged=2
  
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"deviceStopComm in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -2806,7 +2807,7 @@ class Plugin(indigo.PluginBase):
 					if u"address" in item:
 							theDictList[nn][u"newMACNumber"] = copy.deepcopy(theDictList[nn][u"address"])
 							return theDictList[nn]
-			except	Exception, e:
+			except Exception, e:
 				self.ML.myLog( text = u"getDeviceConfigUiValues in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 		return super(Plugin, self).getDeviceConfigUiValues(pluginProps, typeId, devId)
@@ -3054,7 +3055,7 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(unicode(dev.id),"PosX", float(xyz[0]),decimalPlaces=1)
 							self.addToStatesUpdateDict(unicode(dev.id),"PosY", float(xyz[1]),decimalPlaces=1)
 							self.addToStatesUpdateDict(unicode(dev.id),"PosZ", float(xyz[2]),decimalPlaces=1)
-					except	Exception, e:
+					except Exception, e:
 						self.ML.myLog( text = u"validateDeviceConfigUi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( text = u"bad input for xyz-coordinates: " + valuesDict[u"PosXYZ"])
 						self.beacons[beacon][u"PosX"] = 0.
@@ -3463,7 +3464,7 @@ class Plugin(indigo.PluginBase):
 						self.ML.myLog( text = u"entering neopixel dimmer 3")
 
 
-					except	Exception, e:
+					except Exception, e:
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"validateDeviceConfigUi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -3546,7 +3547,7 @@ class Plugin(indigo.PluginBase):
 				return (False,valuesDict,errorDict)
 
 
-		except	Exception, e:
+		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"validateDeviceConfigUi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -3592,7 +3593,7 @@ class Plugin(indigo.PluginBase):
 					if u"extraPage1Color"	in valuesDict: del valuesDict[u"extraPage1Color"]
 					valuesDict[u"scrollxy"]		= "0"
 					valuesDict[u"showDateTime"] = "0"
-		except	Exception, e:
+		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"fixDisplayProps in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return valuesDict
@@ -3763,7 +3764,7 @@ class Plugin(indigo.PluginBase):
 								if v not in self.RPI[pi][item]:
 									self.RPI[pi][item].append(v)
 			return
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"setONErPiV in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -4017,7 +4018,7 @@ class Plugin(indigo.PluginBase):
 				if u"gpio" in xxx[n]:
 					pinMappings += unicode(n) + ":" + xxx[n][u"gpio"] + "|"
 			valuesDict[u"pinMappings"] = pinMappings
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"confirmPiNumberBUTTONI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -4417,7 +4418,7 @@ class Plugin(indigo.PluginBase):
 				if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = Text + unicode(pi)+"  action string:"+ unicode(action)	 )
 				self.rPiRestartCommand[pi] = level	## which part need to restart on rpi
 				self.setONErPiV(pi,"piUpToDate", action, resetQueue=True)
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"execButtonConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return valuesDict
 
@@ -4576,7 +4577,7 @@ class Plugin(indigo.PluginBase):
 
 			self.ML.myLog( text = u"set time of RPI# "+pi+"  finished, new delta time =%6.1f"%dt+"[secs]")
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"doActionSetTime in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 		return
@@ -4606,7 +4607,7 @@ class Plugin(indigo.PluginBase):
 
 			return dt, retC
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"testDeltaTime in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -4724,14 +4725,14 @@ class Plugin(indigo.PluginBase):
 			if typeId in self.RPI[unicode(pi)][u"output"] and unicode(devId) in self.RPI[unicode(pi)][u"output"][typeId]:
 				try:
 					default = (unicode(pi), u"Pi-" + unicode(pi) + "-" + self.RPI[unicode(pi)][u"ipNumberPi"] + ";  Name =" + indigo.devices[devIDpi].name)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"filterPiOUT in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u" devid " + unicode(devIDpi))
 				continue
 			else:
 				try:
 					list.append((unicode(pi), u"Pi-" + unicode(pi) + "-" + self.RPI[unicode(pi)][u"ipNumberPi"] + ";  Name =" + indigo.devices[devIDpi].name))
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"filterPiOUT in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u" devid " + unicode(devIDpi))
 
@@ -4756,7 +4757,7 @@ class Plugin(indigo.PluginBase):
 				if self.beacons[mac][u"ignore"] <= 0 and self.beacons[mac][u"indigoId"] != 0:
 					listActive.append([mac, name + "- active, used"])
 			listActive = sorted(listActive, key=lambda tup: tup[1])
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"filterActiveBEACONs in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			listActive = []
 		return listActive
@@ -4812,7 +4813,7 @@ class Plugin(indigo.PluginBase):
 			if len(mac) < 5: continue
 			try:
 				name = indigo.devices[self.beacons[mac][u"indigoId"]].name
-			except	Exception, e:
+			except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.ML.myLog( text = u"filterMACs in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -4954,7 +4955,7 @@ class Plugin(indigo.PluginBase):
 			self.constantUUIDmajMIN = valuesDict[u"constantUUIDmajMIN"]
 			try: self.lenOfUUID		= int(valuesDict[u"lenOfUUID"])
 			except: self.lenOfUUID	=  32
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonconfirmPreselectCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			return valuesDict
 
@@ -4971,7 +4972,7 @@ class Plugin(indigo.PluginBase):
 				if beacon in self.beaconsUUIDtoIphone:
 					valuesDict[u"nameForIphone"] = self.beaconsUUIDtoIphone[beacon][3]
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonconfirmUUIDiphoneNameCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 		return valuesDict
@@ -4993,7 +4994,7 @@ class Plugin(indigo.PluginBase):
 						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"], resetQueue=True)
 				valuesDict[u"nameForIphone"] = self.beaconsUUIDtoIphone[beacon][3]
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonConfirmSelectIphoneUUIDtoMACCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			return valuesDict
 
@@ -5015,7 +5016,7 @@ class Plugin(indigo.PluginBase):
 					for pi in range(_GlobalConst_numberOfiBeaconRPI):
 						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"], resetQueue=True)
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonConfirmDeleteUUIDtoMACCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			return valuesDict
 
@@ -5054,7 +5055,7 @@ class Plugin(indigo.PluginBase):
 				if name == self.beaconsUUIDtoName[uuid]:
 					return uuid
 			return ""
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"mapNametoUUID in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return uuid
 
@@ -5070,7 +5071,7 @@ class Plugin(indigo.PluginBase):
 			if u[0] in self.beaconsUUIDtoName:
 					return 0, self.beaconsUUIDtoName[u[0]] + "-" + u[1] + "-" + u[2]
 			return 1, uuid
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"mapUUIDtoName in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 1, uuid
 
@@ -5084,7 +5085,7 @@ class Plugin(indigo.PluginBase):
 			if mac not in self.beaconsUUIDtoIphone:	   return  1, uuid
 			if self.beaconsUUIDtoIphone[mac][3] == "":		return	1, uuid
 			return 0, self.beaconsUUIDtoIphone[mac][3]+ "-" + u[1] + "-" + u[2]
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"mapMACtoiPhoneUUID in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 1,uuid
 
@@ -5099,7 +5100,7 @@ class Plugin(indigo.PluginBase):
 				self.ML.myLog( text = u"newBeaconsLogTimer set to: " +valuesDict[u"newBeaconsLogTimer"] +" minutes")
 			else:
 				self.newBeaconsLogTimer = 0
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonConfirmnewBeaconsLogTimerCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.newBeaconsLogTimer = 0
 		return valuesDict
@@ -5111,7 +5112,7 @@ class Plugin(indigo.PluginBase):
 			id	= self.beacons[valuesDict[u"selectBEACON"]][u"indigoId"]
 			len = int(valuesDict[u"selectBEACONlen"])
 			dev = indigo.devices[int(id)]
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonConfirmSelectBeaconCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			return valuesDict
 		self.ML.myLog( text = "log messages for	 beacon:"+dev.name +" mac:"+valuesDict[u"selectBEACON"][:len])
@@ -5178,7 +5179,7 @@ class Plugin(indigo.PluginBase):
 			self.ML.myLog( text = "=== replaced MAC number "+oldMAC+"  of device "+oldName +" with "+ newMAC+" --	and deleted device "+newName+"    ===" )
 			valuesDict[u"msg"] = "replaced, moved MAC number"
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonExecuteReplaceBeaconCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return valuesDict
 
@@ -5226,7 +5227,7 @@ class Plugin(indigo.PluginBase):
 			self.ML.myLog( text = "=== replaced MAC number "+oldMAC+"  of device "+oldName +" with "+ newMAC+" --	and deleted device "+newName+"    ===" )
 			valuesDict[u"msg"] = "replaced, moved MAC number"
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonExecuteReplaceRPICALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return valuesDict
 
@@ -5323,7 +5324,7 @@ class Plugin(indigo.PluginBase):
 				)
 			self.beacons[mac][u"indigoId"] = dev.id
 
-		except	Exception, e:
+		except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.ML.myLog( text = u"createNewiBeaconDeviceFromBeacons in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -5406,7 +5407,7 @@ class Plugin(indigo.PluginBase):
 				try:
 					dd= indigo.devices[self.beacons[beacon][u"indigoId"]]
 					continue
-				except	Exception, e:
+				except Exception, e:
 					if unicode(e).find(u"timeout waiting") >-1: continue
 					self.ML.myLog( text = u"buttonConfirmMACDeleteOLDHISTORYCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -5483,7 +5484,7 @@ class Plugin(indigo.PluginBase):
 				note12 = dev.description[:12]
 				if note12 == "": continue
 				list1.append([note12, name + "    UUID: " + note12])
-			except	Exception, e:
+			except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.ML.myLog( text = u"filterMACfamilies in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -5774,7 +5775,7 @@ class Plugin(indigo.PluginBase):
 				  json.dumps({u"outputDev":vd[u"outputDev"],"device": typeId})+" error")
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom="setTEA5767CALLBACKmenu")
 			vd[u"msg"] = " ok"
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"setTEA5767CALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -5797,7 +5798,7 @@ class Plugin(indigo.PluginBase):
 			## show new ones on screen 
 			vd = self.setdisplayPropsWindowCALLBACKbutton(valuesDict=vd)
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"confirmduplicateBUTTONmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return vd
 
@@ -5864,7 +5865,7 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except	Exception, e:
+				except Exception, e:
 					if len(unicode(e)) > 5 :
 						self.ML.myLog( text = u"setdisplayCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u"error in json conversion for "+unicode(cmds))
@@ -6090,7 +6091,7 @@ class Plugin(indigo.PluginBase):
 				if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = "\n"+line+"\n")
 				vd[u"msg"] = " ok"
 
-			except	Exception, e:
+			except Exception, e:
 				if len(unicode(e)) > 5 :
 					self.ML.myLog( text = u"setdisplayCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					vd[u"msg"] = "error"
@@ -6099,7 +6100,7 @@ class Plugin(indigo.PluginBase):
 				u"command": cmds}])
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom="setdisplayCALLBACKmenu")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"setdisplayCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"error display check "+unicode(vd))
@@ -6117,7 +6118,7 @@ class Plugin(indigo.PluginBase):
 						ret	 =	self.addBrackets(ret,cType=lenItem)
 					else:
 						ret = int(ret)
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"setdisplayCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return ret
@@ -6161,7 +6162,7 @@ class Plugin(indigo.PluginBase):
 				self.ML.myLog( text = "addBrackets error in input: pos= "+unicode(pos) +  "; wrong number of coordinates, should be: %d" %(nItems) )
 
 			return pp
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"addBrackets in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = "addBrackets error in input: cType:"+unicode(cType)+";  default= "+unicode(default)+";  pos= "+  unicode(pos) )	 
 		return default
@@ -6208,7 +6209,7 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except	Exception, e:
+				except Exception, e:
 					if len(unicode(e)) > 5 :
 						self.ML.myLog( text = u"setneopixelCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u"error in json conversion for "+unicode(cmds))
@@ -6400,7 +6401,7 @@ class Plugin(indigo.PluginBase):
 				line+="]'\n	 })\n"
 				line+= "##=======	end	   =====\n"
 				if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = "\n"+line+"\n")
-			except	Exception, e:
+			except Exception, e:
 				if len(unicode(e)) > 5 :
 					self.ML.myLog( text = u"setneopixelCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = "use this as a ppython script command:\n"+"plug = indigo.server.getPlugin(\"com.karlwachs.piBeacon\")\nplug.executeAction(\"Neopixel\" , props ="+
@@ -6418,7 +6419,7 @@ class Plugin(indigo.PluginBase):
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom="setneopixelCALLBACKmenu")
 			vd[u"msg"] = " ok"
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"setneopixelCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"error display check "+unicode(vd))
@@ -6446,7 +6447,7 @@ class Plugin(indigo.PluginBase):
 					self.ML.myLog( text = " error in input: "+item+" ii="+unicode(ii)+" nn="+unicode(nn)+ " cmds="+	 unicode(cmds) + " xxx="+  unicode(xxx))
 					vd[u"msg"] = "error in parameter"
 				return cmds,vd, False
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"makeACompleteList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"item " +unicode(item)+unicode(ii)+"  , vd "+unicode(vd))
@@ -6461,7 +6462,7 @@ class Plugin(indigo.PluginBase):
 			out= (json.dumps([{u"command":"file","fileName":fileName,"fileContents":fileContents,"fileMode":fileMode,"touchFile":touchFile}]))
 			if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =	u"sending file to  "+ip+";  "+ out )
 			self.sendtoRPI(ip, pi, out, calledFrom="sendFileToRPIviaSocket")
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"sendFileToRPIviaSocket in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -6509,7 +6510,7 @@ class Plugin(indigo.PluginBase):
 					# Connect to server and send data
 					sock.connect((ip, int(self.rPiCommandPORT)))
 					sock.sendall(theString + "\n")
-			except	Exception, e:
+			except Exception, e:
 					if len(unicode(e)) > 5 :
 						if	time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
 							self.ML.myLog( text = u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
@@ -6522,7 +6523,7 @@ class Plugin(indigo.PluginBase):
 						return -1
 			finally:
 					sock.close()
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				if	time.time() > self.currentlyBooting: # NO MSG IF RPIS ARE BOOTING
 					self.ML.myLog( text = u"error in socket-send to rPi:"+str(ip)+"  "+ theString+";  calledFrom:"+calledFrom)
@@ -6544,7 +6545,7 @@ class Plugin(indigo.PluginBase):
 			valuesDict[u"typeId"]		 = "playSound"
 			valuesDict[u"cmd"]			 = "playSound"
 			self.setPin(valuesDict)
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"playSoundFileCALLBACKmenu in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			return valuesDict
 		return valuesDict
@@ -6651,10 +6652,10 @@ class Plugin(indigo.PluginBase):
 							xxx= propsNEO[u"devType"].split(u"x")
 							ymax = int(xxx[0])
 							xmax = int(xxx[1])
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"actionControlDimmerRelay in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							return
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"actionControlDimmerRelay in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					return
 
@@ -6734,7 +6735,7 @@ class Plugin(indigo.PluginBase):
 				if u"speedOfChange" in props0 and props0[u"speedOfChange"] !="":
 					try:
 						valuesDict[u"speedOfChange0"]		  = int(props0[u"speedOfChange"])
-					except	Exception, e:
+					except Exception, e:
 						self.ML.myLog( text = u"actionControlDimmerRelay in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = "props0 "+unicode(props0) )
 
@@ -6826,7 +6827,7 @@ class Plugin(indigo.PluginBase):
 
 			self.setPinCALLBACKmenu(valuesDict, typeId)
 			return
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"actionControlDimmerRelay in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -6887,7 +6888,7 @@ class Plugin(indigo.PluginBase):
 					okList.append((ll[0],"OUTPUT_"+unicode(ii)+" "+ll[1]))
 					break
 			#self.ML.myLog( text = unicode(okList))
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"filterOUTPUTchannelsACTION in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return okList
 
@@ -6981,10 +6982,10 @@ class Plugin(indigo.PluginBase):
 					startAtDateTime	   = startAtDateTimeIN.replace(u"-","").replace(u":","").replace(u" ","").replace(u"/","").replace(u".","").replace(u",","")
 					startAtDateTime	   = startAtDateTime.ljust(14,"0")
 					return	 max(0, time.mktime( datetime.datetime.strptime(startAtDateTime,_defaultDateStampFormat+".%f").timetuple() ) -time.time() )
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"setDelay in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					return 0
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"isetDelay n Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 0
 
@@ -7166,7 +7167,7 @@ class Plugin(indigo.PluginBase):
 					out = cmd + "," + unicode(analogValue)
 					out = cmd + "," + unicode(rampTime)
 					self.addToStatesUpdateDict(unicode(dev.id),"OUTPUT", out)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"setPIN in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					outN = 0
 				try:
@@ -7272,7 +7273,7 @@ class Plugin(indigo.PluginBase):
 					outN = int(output)
 					if "OUTPUT_%0.2d"%outN in dev.states: self.addToStatesUpdateDict(unicode(dev.id),"OUTPUT_%0.2d"%outN, out)
 					if "OUTPUT" in dev.states: self.addToStatesUpdateDict(unicode(dev.id),"OUTPUT", out)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"setPIN in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					outN = 0
 				try:
@@ -7303,7 +7304,7 @@ class Plugin(indigo.PluginBase):
 
 			self.ML.myLog( text = u"setPIN:   no condition met, returning")
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"setPin in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####-------------------------------------------------------------------------####
@@ -7353,7 +7354,7 @@ class Plugin(indigo.PluginBase):
 				if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =	u"sending parameters file via socket: "+unicode(v)+" \n"+fileContents)
 				self.sendFileToRPIviaSocket(ip,piS,"/home/pi/pibeacon/parameters",fileContents,fileMode="w")
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"sendConfigviaSocketCALLBACKaction in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -7385,7 +7386,7 @@ class Plugin(indigo.PluginBase):
 			if len(fileContents) >0:
 				self.sendFileToRPIviaSocket(ip, piS, "/home/pi/pibeacon/temp/extraPageForDisplay.inp",json.dumps(fileContents),fileMode="w",touchFile=False)
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"sendExtraPagesToRpiViaSocketCALLBACKaction in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -7701,7 +7702,7 @@ class Plugin(indigo.PluginBase):
 
 									try:
 										dev = indigo.devices[u"Pi_" +unicode(pi)]
-									except	Exception, e:
+									except Exception, e:
 										if unicode(e).find(u"timeout waiting") > -1:
 											self.ML.myLog( text = u"buttonConfirmPiServerConfigCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 											self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -7853,7 +7854,7 @@ class Plugin(indigo.PluginBase):
 
 			self.fixConfig(checkOnly = ["all","rpi"],fromPGM="buttonConfirmPiServerConfigCALLBACK")
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"buttonConfirmPiServerConfigCALLBACK in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 		return valuesDict
@@ -8296,7 +8297,7 @@ class Plugin(indigo.PluginBase):
 					pri  = ""
 				self.timeTrackWaitTime = 20
 				return cmd, pri
-		except	Exception, e:
+		except Exception, e:
 			pass
 
 		self.timeTrackWaitTime = 60
@@ -8467,7 +8468,7 @@ class Plugin(indigo.PluginBase):
 				states.append(self.beacons[beacon][u"status"])
 				try:
 					name = indigo.devices[self.beacons[beacon][u"indigoId"]].name
-				except	Exception, e:
+				except Exception, e:
 					if unicode(e).find(u"timeout waiting") > -1:
 						self.ML.myLog( text = u"updateFING in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -8493,7 +8494,7 @@ class Plugin(indigo.PluginBase):
 							self.ML.myLog( text = u"fingscan plugin not reachable")
 							self.fingscanTryAgain = True
 						self.sleep(1)
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"updateFING in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -8518,11 +8519,11 @@ class Plugin(indigo.PluginBase):
 				try:
 					if self.ML.decideMyLog(u"BC"): self.ML.myLog( text=u"updating BC with " + unicode(msg),mType=u"BroadCast" )
 					indigo.server.broadcastToSubscribers(u"deviceStatusChanged", json.dumps(msg))
-				except	Exception, e:
+				except Exception, e:
 					if len(unicode(e)) > 5:
 						indigo.server.log( u"updating sendBroadCastNOW has error in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+u" finscan update failed")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5:
 				indigo.server.log( u"updating sendBroadCastNOW has error in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			else:
@@ -8543,7 +8544,7 @@ class Plugin(indigo.PluginBase):
 				list+=unicode(pi)+":"+unicode(self.RPI[unicode(pi)][u"piUpToDate"])+"; "
 				if not ok: self.RPI[unicode(pi)][u"piUpToDate"]=[]
 			if self.ML.decideMyLog(u"OfflineRPI"): self.ML.myLog( text = u"printpiUpToDate list .. pi#:[actionLeft];.. ([]=ok): "+ list	 ) 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"printpiUpToDate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
@@ -8625,7 +8626,7 @@ class Plugin(indigo.PluginBase):
 
 			self.freezeAddRemove	= False
 			self.initStatesOnServer = False
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"periodCheck in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -8641,7 +8642,7 @@ class Plugin(indigo.PluginBase):
 				if action[u"action"] == "setTime":
 					self.doActionSetTime(action[u"value"])
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"performActionList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		self.actionList =[]
@@ -8668,7 +8669,7 @@ class Plugin(indigo.PluginBase):
 							self.ML.myLog( text = u"ok if replacing RPI")
 				self.newADDRESS={}
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"replaceAddress in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -8691,7 +8692,7 @@ class Plugin(indigo.PluginBase):
 					if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text = "sendInitialValuesToOutput init pin: sending to pi# "+piServerNumber+ "; pin: "+props[u"gpio"]+"  "+cmd + ";  deviceDefs: "+props[u"deviceDefs"])
 					self.sendGPIOCommand(ip, int(piServerNumber), dev.deviceTypeId, cmd, GPIOpin=gpio, restoreAfterBoot="1", inverseGPIO =inverseGPIO )
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"sendInitialValuesToOutput in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		self.sendInitialValue = ""
@@ -8775,17 +8776,14 @@ class Plugin(indigo.PluginBase):
 									if u"rebootCommand" in props0 and  props0[u"rebootCommand"].find(u"sudo reboot -f") >-1:
 										reboot = props0[u"rebootCommand"]
 								except: pass
-								if reboot !="":
-									self.sshToRPI(pi,fileToSend="rebootFSSH.exp")
-								else:
-									self.sshToRPI(pi,fileToSend="rebootSSH.exp")
+								self.sshToRPI(pi,fileToSend="rebootSSH.exp")
 
 					if self.findTaskPi(u"piUpToDate","resetOutputSSH"):
 						for pi in range(_GlobalConst_numberOfRPI) :
 							if u"resetOutputSSH" in self.RPI[unicode(pi)][u"piUpToDate"]  and not  "updateParamsFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
 								self.sshToRPI(pi,fileToSend="resetOutputSSH.exp")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"checkForUpdates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return anyChange
@@ -9050,7 +9048,6 @@ class Plugin(indigo.PluginBase):
 								closest =  self.findClosestRPI(beacon,dev)
 								if closest != dev.states[u"closestRPI"]:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", closest)
-									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", u"Pi_"+str(closest))
 							if self.beacons[beacon][u"note"].find(u"beacon")>-1: 
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn) # not for RPI's
 
@@ -9058,7 +9055,6 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[beacon][u"note"].find(u"beacon")>-1:
 								if u"closestRPI" in dev.states:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
-									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", u"Pi_-1")
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							#else: this is handled in RPI update
 							#	 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
@@ -9068,7 +9064,6 @@ class Plugin(indigo.PluginBase):
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 								if u"closestRPI" in dev.states:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
-									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", u"Pi_-1")
 							#else: this is handled in RPI update
 							#	 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
@@ -9077,7 +9072,7 @@ class Plugin(indigo.PluginBase):
 
 						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols:self.beaconPositionsUpdated =3
 
-					except	Exception, e:
+					except Exception, e:
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"BeaconsCheckPeriod in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = u"BeaconsCheckPeriod communication to indigo is interrupted")
@@ -9089,9 +9084,10 @@ class Plugin(indigo.PluginBase):
 						if devId > 0 :
 							try:
 								dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
-								if self.beacons[beacon][u"ignore"]	 ==-1: # was specail, devcie exists now, set back to normal 
-									self.beacons[beacon][u"ignore"]	  = 0
-							except	Exception, e:
+								if self.beacons[beacon][u"ignore"]	 ==-1: # was special, device exists now, set back to normal 
+									self.ML.myLog( text = u"BeaconsCheckPeriod minute resetting ignore from -1 to 0 for beacon: "+beacon+ " beaconDict: " + unicode(self.beacons[beacon]))
+									self.beacons[beacon][u"ignore"] = 0
+							except Exception, e:
 								if unicode(e).find(u"timeout waiting") > -1:
 									self.ML.myLog( text = u"BeaconsCheckPeriod in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 									self.ML.myLog( text = u"BeaconsCheckPeriod communication to indigo is interrupted")
@@ -9124,14 +9120,14 @@ class Plugin(indigo.PluginBase):
 								self.updateCARS(beacon,dev,self.beacons[beacon])
 
 
-					except	Exception, e:
+					except Exception, e:
 						if len(unicode(e)) > 5 :
 							self.ML.myLog( text = u"BeaconsCheckPeriod in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 				if dev !="":
 					self.executeUpdateStatesDict(onlyDevID =str(dev.id),calledFrom="BeaconsCheckPeriod end")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"BeaconsCheckPeriod in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return anyChange
@@ -9169,7 +9165,7 @@ class Plugin(indigo.PluginBase):
 									self.beacons[beacon][u"ignore"] = 1
 									self.newIgnoreMAC += 1
 									indigo.device.delete(dev)
-						except	Exception, e:
+						except Exception, e:
 							if len(unicode(e)) > 5 :
 								self.ML.myLog( text = u"checkHour in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							if unicode(e).find(u"timeout waiting") >-1:
@@ -9178,17 +9174,22 @@ class Plugin(indigo.PluginBase):
 							if unicode(e).find(u"not found in database") >-1:
 								self.ML.myLog( text = "indigoId lookup error, setting to ignore beaconDict: "+ unicode(self.beacons[beacon])  )
 								self.beacons[beacon][u"indigoId"] = 0
-								self.beacons[beacon][u"ignore"] = 1
-								self.beacons[beacon][u"status"] = u"ignored"
+								self.beacons[beacon][u"ignore"]   = 1
+								self.beacons[beacon][u"status"]   = u"ignored"
 							else:
 								return
+
 					else :
 						self.beacons[beacon][u"status"] = u"ignored"
 						if self.beacons[beacon][u"ignore"] == 0:
 							self.ML.myLog( text = u"setting beacon: " +beacon + u" to ignore was set to indigo-id=0 before")
-							self.beacons[beacon][u"ignore"] = 1
-							self.newIgnoreMAC += 1
-			except	Exception, e:
+							self.ML.myLog( text = unicode(self.beacons[beacon]))
+							self.beacons[beacon][u"ignore"]	 = 1
+							self.newIgnoreMAC 				+= 1
+							self.writeJson(self.beacons, fName=self.userIndigoPluginDir + "beacons", format=self.beaconsFileSort)
+
+
+			except Exception, e:
 				if len(unicode(e)) > 5 :
 					self.ML.myLog( text = u"checkHour in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -9201,10 +9202,10 @@ class Plugin(indigo.PluginBase):
 					for pi in range(0, _GlobalConst_numberOfRPI) :
 						self.sendFilesToPiFTP(pi, fileToSend=u"updateParamsFTP.exp")
 					self.updateRejectLists()
-			except	Exception, e:
+			except Exception, e:
 				if len(unicode(e)) > 5 :
 					self.ML.myLog( text = u"checkHour in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"checkHour in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -9222,7 +9223,7 @@ class Plugin(indigo.PluginBase):
 					self.RPI[unicode(pi)][u"piMAC"]				 != "" and
 					self.RPI[unicode(pi)][u"ipNumberPiSendTo"]	 != "" ):
 						self.ML.myLog( text = u"pi# " + unicode(pi) + " is configured but not enabled, mistake? This is checked once a day;  to turn it off set userId or password of unused rPi to empty ")
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"checkPiEnabled in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####-------------------------------------------------------------------------####
@@ -9258,7 +9259,7 @@ class Plugin(indigo.PluginBase):
 				if self.mkSensorList(pi): anyChange =True
 			#indigo.server.log("syncSensors BT: "+ str(anyChange)+"  "+ str(time.time() - ss))
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"syncSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return anyChange
 
@@ -9296,7 +9297,7 @@ class Plugin(indigo.PluginBase):
 				self.ML.myLog( text = u"fixing 2  " + name + "   " + unicode(devId) + u" pi " + unicode(pi) + u" sensor" + sensor)
 				self.RPI[unicode(pi)][io][sensor][unicode(devId)] = ""
 				anyChange = True
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"checkDevToPi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return anyChange
 
@@ -9314,7 +9315,7 @@ class Plugin(indigo.PluginBase):
 							try:
 								devID = int(devIDrpi)
 								dev = indigo.devices[devID]
-							except	Exception, e:
+							except Exception, e:
 								if unicode(e).find(u"timeout waiting") > -1:
 									self.ML.myLog( text = u"checkSensortoPi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 									self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -9356,7 +9357,7 @@ class Plugin(indigo.PluginBase):
 							else:
 								pass
 
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"checkSensortoPi in Line '%s' :'%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							if unicode(e).find(u"not found in database") ==-1:
 								return TRue
@@ -9374,7 +9375,7 @@ class Plugin(indigo.PluginBase):
 				anyChange = True
 				del self.RPI[unicode(pi)][io][sensor]
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"checkSensortoPi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return anyChange
 
@@ -9417,7 +9418,7 @@ class Plugin(indigo.PluginBase):
 									self.addToStatesUpdateDict(unicode(dev.id),ttx+u"MaxToday",		dev.states[ttx], decimalPlaces = decimalPlaces)
 									self.addToStatesUpdateDict(unicode(dev.id),ttx+u"MinToday",		dev.states[ttx], decimalPlaces = decimalPlaces)
 							self.executeUpdateStatesDict(onlyDevID =str(dev.id),calledFrom="resetMinMaxSensors")
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"resetMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####----------------------reset sensor min max at midnight -----------------------------------####
@@ -9431,7 +9432,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MaxToday",	 val, decimalPlaces=decimalPlaces)
 				if val < float(dev.states[stateName+u"MinToday"]):
 					self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MinToday",	 val, decimalPlaces=decimalPlaces)
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fillMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####----------------------reset rain sensor every hour/day/week/month/year -----------------------------------####
@@ -9470,7 +9471,7 @@ class Plugin(indigo.PluginBase):
 				props["lastDateCheck"] = dd.strftime("%Y-%m-%d-%H")
 				dev.replacePluginPropsOnServer(props)
 				self.executeUpdateStatesDict(onlyDevID =str(dev.id),calledFrom="rollOverRainSensors")
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"resetMinMaxSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -9504,7 +9505,7 @@ class Plugin(indigo.PluginBase):
 								sensorList+= "*"+props[u"gain"]
 							sensorList+=","
 
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"mkSensorList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					if unicode(e).find(u"timeout waiting") > -1:
 						self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -9517,7 +9518,7 @@ class Plugin(indigo.PluginBase):
 				anyChange = True
 			self.RPI[unicode(pi)][u"sensorList"] = sensorList
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"mkSensorList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return anyChange
 
@@ -9538,7 +9539,7 @@ class Plugin(indigo.PluginBase):
 			if newVar.name.find(u"pi_IN_") != 0:   return
 			self.addToDataQueue(newVar.name,json.loads(newVar.value),newVar.value )
 			return
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"variableUpdated in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = newVar.value)
 
@@ -9611,7 +9612,7 @@ class Plugin(indigo.PluginBase):
 			self.executeUpdateStatesDict(calledFrom="addToDataQueue")
 
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"addToDataQueue in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = varNameIN+     + varUnicode[0:30])
 
@@ -9630,7 +9631,7 @@ class Plugin(indigo.PluginBase):
 				time.sleep(0.05)
 			self.queueList = "update"  
 			beaconUpdatedIds += self.execUpdate(item[0],item[1],item[2],item[3])
-			#indigo.server.log(str(item[1])+"  "+ str(beaconUpdatedIds)+" "+ item[3])
+			#### indigo.server.log(str(item[1])+"  "+ str(beaconUpdatedIds)+" "+ item[3])
 		self.messagesQueue.task_done()
 		self.queueActive  = False
 		self.queueList = ""	 
@@ -9692,7 +9693,7 @@ class Plugin(indigo.PluginBase):
 							self.setONErPiV(pi,"piUpToDate",[u"updateParamsFTP","rebootSSH"])
 							self.RPI[unicode(pi)][u"emptyMessages"] = 0
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"execUpdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = varUnicode)
 
@@ -9703,12 +9704,14 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def findClosestiBeaconToRPI(self, pi, beaconUpdatedIds=[], BeaconOrBLE=""):
 		try:
-			if len(beaconUpdatedIds) ==0: return
-			
+			if BeaconOrBLE !="beacon": 						return
+			if len(beaconUpdatedIds) ==0: 					return
+			if int(pi) >= _GlobalConst_numberOfiBeaconRPI: 	return 
 			pi = unicode(pi)
-			if BeaconOrBLE !="beacon": return
 			
 			rpiDev = indigo.devices[self.RPI[pi]["piDevId"]]
+			if "closestiBeacon" not in rpiDev.states:		return 
+
 			rpiProps = rpiDev.pluginProps
 			cutOffForClosestBeacon = 300
 			if "cutOffForClosestBeacon" in rpiProps:
@@ -9734,35 +9737,39 @@ class Plugin(indigo.PluginBase):
 				if "isRPISensorDevice"	in props:															continue
 				if "IgnoreBeaconForClosestToRPI" in props and props["IgnoreBeaconForClosestToRPI"] !="0":	continue
 
+
+
 				try: 
 					if dist  < closestDist:
 						closestDist = dist
 						closestName = dev.name
-				except	Exception, e:
-					self.ML.myLog( text = u"execUpdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+				except Exception, e:
+					self.ML.myLog( text = u"findClosestiBeaconToRPI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					
 			if closestDist < cutOffForClosestBeacon:
-				cN = closestName+"@"+str(closestDist)
-				if rpiDev.states["closestiBeacon"] !=cN:
-					self.addToStatesUpdateDict(unicode(rpiDev.id),u"closestiBeacon", cN)
+					cN = closestName+"@"+str(closestDist)
+					if rpiDev.states["closestiBeacon"] !=cN:
+						self.addToStatesUpdateDict(unicode(rpiDev.id),u"closestiBeacon", cN)
 			else:
 				if rpiDev.states["closestiBeacon"] !="None":
-					 self.addToStatesUpdateDict(unicode(rpiDev.id),"closestiBeacon","None")
+					self.addToStatesUpdateDict(unicode(rpiDev.id),"closestiBeacon","None")
 					
 					 
-		except	Exception, e:
-			self.ML.myLog( text = u"execUpdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+		except Exception, e:
+			self.ML.myLog( text = u"findClosestiBeaconToRPI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
 ####-------------------------------------------------------------------------####
 	def checkincomingMACNo(self, data, pi,timeStampOfReceive):
 
+		piMAC = ""
+		piN   = -1
 		try:
 
 			if u"mac" in data:
-				piMAC = data[u"mac"]
-			else:
-				piMAC =""
+				piMAC = str(data[u"mac"])
+			if piMAC == "0" or piMAC == "": 
+				return False, "", ""
 
 
 			piN = int(data[u"pi"])
@@ -9782,7 +9789,7 @@ class Plugin(indigo.PluginBase):
 				return True, piMAC, piN 
 
 			if piMAC !="":
-				beacon=	 self.RPI[unicode(pi)][u"piMAC"]
+				beacon = self.RPI[unicode(pi)][u"piMAC"]
 				if piMAC != beacon:
 					if self.ML.decideMyLog(u"Logic"): self.ML.myLog( text = u"MAC# from RPI message is new "+piMAC+u" trying with new BLE-MAC number, old MAC#="+beacon+"--  pi#"+unicode(pi))
 					beacon = piMAC
@@ -9806,7 +9813,7 @@ class Plugin(indigo.PluginBase):
 									self.beacons[piMAC][u"indigoId"] = indigoId
 									self.RPI[unicode(pi)][u"piMAC"] = beacon
 									if self.ML.decideMyLog(u"Logic"): self.ML.myLog( text = u"MAC# from RPI  was updated")
-								except	Exception, e:
+								except Exception, e:
 									self.ML.myLog( text = u"execUpdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 									if self.ML.decideMyLog(u"Logic"): self.ML.myLog( text = u"MAC# from RPI...	 indigoId:"+str(indigoId)+u" does not exist, ignoring")
 
@@ -9815,8 +9822,8 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[beacon][u"ignore"] > 0: self.beacons[beacon][u"ignore"] = 0
 							self.beacons[beacon][u"lastUp"] = time.time()
 
-		except	Exception, e:
-			self.ML.myLog( text = u"execUpdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
+		except Exception, e:
+			self.ML.myLog( text = u"execUpdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+" pi: "+ unicode(pi)+" piMAC: "+ unicode(piMAC)+" data: "+ unicode(data), destination="standard" )
 			return False, "", ""
 
 		return True, piMAC, piN 
@@ -9883,7 +9890,7 @@ class Plugin(indigo.PluginBase):
 			if (abs(time.time()-float(ts)) < 2. and tz == tzMAC)  or self.timeErrorCount[int(pi)] > 1000:
 				self.timeErrorCount[int(pi)] = 0
 
-		except	Exception, e:
+		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"communication to indigo is interrupted")
 			self.ML.myLog( text = u"compareRpiTime in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -9900,7 +9907,7 @@ class Plugin(indigo.PluginBase):
 						self.ML.myLog( text = u"no errors")
 					else:
 						self.ML.myLog( text = u"errors:\n"+BLEreport[rep][1].strip(u"\n"),mType = rep)
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"printBLEreport in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -9950,7 +9957,7 @@ class Plugin(indigo.PluginBase):
 
 			try:
 				dev = indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
-			except	Exception, e:
+			except Exception, e:
 
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.ML.myLog( text = u"updateAlive in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -9964,27 +9971,26 @@ class Plugin(indigo.PluginBase):
 			self.compareRpiTime(varJson,unicode(pi),dev, timeStampOfReceive)
 			self.setRPIonline(pi)
 
-			if u"i2c" in varJson:
-				i2c =unicode(varJson[u"i2c"]).strip(u"[").strip(u"]")
-				if dev.states[u"i2cActive"] != i2c:
-					self.addToStatesUpdateDict(unicode(dev.id),u"i2cActive", i2c)
-			if u"temp" in varJson:
-					x, UI, decimalPlaces  = self.convTemp(varJson[u"temp"])
-					self.setStatusCol( dev, u"Temperature", x,"", "", "","", decimalPlaces = decimalPlaces)
- 
+
+			self.updateStateIf(dev, varJson, u"i2c_active")
+			self.updateStateIf(dev, varJson, u"rpi_type")
+			self.updateStateIf(dev, varJson, u"op_sys")
+			self.updateStateIf(dev, varJson, u"last_boot")
 
 
 			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 			if dev.states[u"status"] != "up" :
 				self.addToStatesUpdateDict(unicode(dev.id),u"status", u"up")
+
 			if dev.states[u"online"] != "up":
 				self.addToStatesUpdateDict(unicode(dev.id),u"online", u"up")
+
 			if pi < _GlobalConst_numberOfiBeaconRPI:
 				self.beacons[self.RPI[unicode(pi)][u"piMAC"]][u"lastUp"] = time.time()
 
 			self.executeUpdateStatesDict(onlyDevID =str(dev.id), calledFrom="addToDataQueue pi_IN_Alive")
 
-		except	Exception, e:
+		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"updateAlive in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -9995,6 +10001,13 @@ class Plugin(indigo.PluginBase):
 
 		return
 
+	def updateStateIf(self, dev, varJson, statename ):
+
+		if statename in varJson:
+			###self.ML.myLog( text = u"updateStateIf : "+statename+"  "+ unicode(varJson[statename]))
+			if dev.states[statename] != varJson[statename]:
+				self.addToStatesUpdateDict(unicode(dev.id),statename, varJson[statename] )
+		return
 
 ####-------------------------------------------------------------------------####
 	def setRPIonline(self,pi,new="up"):
@@ -10034,7 +10047,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except	Exception, e:
+		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"setRPIonline in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -10062,7 +10075,7 @@ class Plugin(indigo.PluginBase):
 			try:
 				dev= indigo.devices[devId]
 				Found =True
-			except	Exception, e:
+			except Exception, e:
 			   
 				self.ML.myLog( text = u"checkSensorPiSetup in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if unicode(e).find(u"timeout waiting") > -1:
@@ -10079,7 +10092,7 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(unicode(dev.id),u"online",u"up")
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"checkSensorPiSetup in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.ML.myLog( text = unicode(data))
@@ -10096,7 +10109,7 @@ class Plugin(indigo.PluginBase):
 			else:  
 				return dev.states[state] 
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"getCurrentState in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = u"  .. called from= "+ fromMETHOD+"	state= "+ state)
 			self.ML.myLog( text = u"  .. updateStatesList= " + unicode(self.updateStatesDict)	)
@@ -10126,7 +10139,7 @@ class Plugin(indigo.PluginBase):
 					if len(unicode(lastUpS)) > 5:
 						lastUp	=  datetime.datetime.strptime(lastUpS, _defaultDateStampFormat)
 						lastUp	=  time.mktime(lastUp.timetuple())
-			except	Exception, e:
+			except Exception, e:
 				self.ML.myLog( text = u"calcPostion in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				lastUp	= 99999999999999
 
@@ -10150,7 +10163,7 @@ class Plugin(indigo.PluginBase):
 				try:
 					dist = self.getCurrentState(dev,devIds,"Pi_" + unicode(pi1) + "_Distance", fromMETHOD="calcPostion4")
 					dist = float(dist)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"calcPostion in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) +" "+ unicode(sys.exc_traceback))
 					dist = 99999.
 
@@ -10215,7 +10228,7 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(devIds,pos[ii], newPos[ii],decimalPlaces=1)
 						deltaDistance +=dd
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"calcPostion in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return update, deltaDistance
 
@@ -10313,7 +10326,7 @@ class Plugin(indigo.PluginBase):
 				update, deltaDistance = self.calcPostion(dev,expirationTime)
 				updateBLE = update or updateBLE
 				self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="BLEconnectupdate end")	 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"BLEconnectupdate in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if unicode(e).find(u"timeout waiting") > -1:
@@ -10341,7 +10354,7 @@ class Plugin(indigo.PluginBase):
 						if devId == 0: continue
 						dev= indigo.devices[devId]
 						props= dev.pluginProps
-					except	Exception, e:
+					except Exception, e:
 
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"updateOutput in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -10382,7 +10395,7 @@ class Plugin(indigo.PluginBase):
 						if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"pi# "+unicode(pi) + "  " + unicode(devIds)+"  "+unicode(self.updateStatesDict))
 						self.executeUpdateStatesDict(onlyDevID=devIds,calledFrom="updateOutput end")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"updateOutput in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if unicode(e).find(u"timeout waiting") > -1:
@@ -10407,7 +10420,7 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(unicode(dev.id),u"status", upState)
 				self.addToStatesUpdateDict(unicode(dev.id),"onOffState", upState=="on")
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"OUTPUTgpio1 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = unicode(data))
 		return
@@ -10442,7 +10455,7 @@ class Plugin(indigo.PluginBase):
 						if devId == 0: continue
 						dev= indigo.devices[devId]
 						props= dev.pluginProps
-					except	Exception, e:
+					except Exception, e:
 
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -10681,7 +10694,7 @@ class Plugin(indigo.PluginBase):
 							newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
 							x, UI  = int(float(data[u"VOC"])),  u"VOC %d[ppb]"%(float(data[u"VOC"]))
 							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = unicode(props))
 
@@ -10720,7 +10733,7 @@ class Plugin(indigo.PluginBase):
 									 self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- sensitivity ") 
 								elif data[u"lightning"].find("Disturber") == 0: 
 									 self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- Disturber event ") 
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = unicode(props) +"\n"+ unicode(data))
 						continue
@@ -10735,7 +10748,7 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(unicode(dev.id),"calibration", data[u"calibration"]) 
 							self.addToStatesUpdateDict(unicode(dev.id),"raw", float(data[u"raw"]),	decimalPlaces = 1) 
 							self.addToStatesUpdateDict(unicode(dev.id),"CO2offset", float(data[u"CO2offset"]),	decimalPlaces = 1) 
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = unicode(props))
 						continue
@@ -10789,7 +10802,7 @@ class Plugin(indigo.PluginBase):
 										imageParams	  = json.dumps( {"logLevel":props["imageFilelogLevel"],"compress":props["imageFileCompress"],"fileName":self.cameraImagesDir+props["imageFileName"],"numberOfDots":props["imageFileNumberOfDots"],"dynamic":props["imageFileDynamic"],"colorBar":props["imageFileColorBar"]} )
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "  
 										os.system(cmd)
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = unicode(props))
 							self.ML.myLog( text = unicode(len(data[u"rawData"]))+"     "+data[u"rawData"])
@@ -10830,7 +10843,7 @@ class Plugin(indigo.PluginBase):
 						self.executeUpdateStatesDict(onlyDevID=devIds,calledFrom="updateSensors end")
 			self.saveSensorMessages(devId="")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"pi# "+unicode(pi) + "  " + unicode(sensors))
@@ -10938,7 +10951,7 @@ class Plugin(indigo.PluginBase):
 			if updateDev: 
 				dev.replacePluginPropsOnServer(props)
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = unicode(data))
 		return
@@ -10971,7 +10984,7 @@ class Plugin(indigo.PluginBase):
 						elif airQuality == "Moderate":	 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 						else:							 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"updateSensors in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = unicode(data))
 		return
@@ -11005,7 +11018,7 @@ class Plugin(indigo.PluginBase):
 					pu = (u"%9d" % p + u' Pa').strip()
 				pu = pu.strip()
 				newStatus = self.setStatusCol(dev, u"Pressure", p, pu, whichKeysToDisplay, u"",newStatus, decimalPlaces = decimalPlaces)
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"setPressureDisplay in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return newStatus
@@ -11058,7 +11071,7 @@ class Plugin(indigo.PluginBase):
 							break
 
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :##
 				self.ML.myLog( text = u"setStatusCol in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return newStatus
@@ -11139,11 +11152,11 @@ class Plugin(indigo.PluginBase):
 									self.executeUpdateStatesDict(onlyDevID=str(dev1.id),calledFrom="updateOneWire")
 									self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 									self.saveConfig()
-							except	Exception, e:
+							except Exception, e:
 								self.ML.myLog( text = u"updateOneWire in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 								continue
 
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"updateOneWire in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
  #28-0316b5db4bff
 
@@ -11157,7 +11170,7 @@ class Plugin(indigo.PluginBase):
 			self.addToStatesUpdateDict(unicode(dev.id),"rssi"	,data[u"rssi"])
 			self.addToStatesUpdateDict(unicode(dev.id),"UUID"	,data[u"UUID"])
 			self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev.states[u"status"], decimalPlaces = decimalPlaces )
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"updateBLEsensor in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -11192,7 +11205,7 @@ class Plugin(indigo.PluginBase):
 					else: 
 						self.addToStatesUpdateDict(str(dev.id),"lastContinuousEventSecsStop",(u"%.1f"%time.time()))
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"updatePULSE in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 
@@ -11215,7 +11228,7 @@ class Plugin(indigo.PluginBase):
 				for ii in range(iii,41):
 					ch = "Channel-"+"%02d"%ii
 					self.addToStatesUpdateDict(devId,ch,"")
-			except	Exception, e:
+			except Exception, e:
 				if len(unicode(e)) > 5 :
 					self.ML.myLog( text = u"updateTEA5767 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 
@@ -11287,7 +11300,7 @@ class Plugin(indigo.PluginBase):
 								if dev.states[u"status"] != ssUI + unit:
 									self.addToStatesUpdateDict(unicode(dev.id),u"status", ssUI+unit)
 
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateINPUT in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -11301,10 +11314,10 @@ class Plugin(indigo.PluginBase):
 				icon = default.split(u"-")[UPdown]
 			try:
 				dev.updateStateImageOnServer(getattr(indigo.kStateImageSel, icon, None)) 
-			except	Exception, e: 
+			except Exception, e: 
 				if UPdown ==0:					 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:							 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"setIcon in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			return
 
@@ -11364,7 +11377,7 @@ class Plugin(indigo.PluginBase):
 
 			self.updateRGB(dev, data, props[u"displayS"])
 
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateapds9960 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -11392,7 +11405,7 @@ class Plugin(indigo.PluginBase):
 							ss, ssUI, unit = self.addmultOffsetUnit(data[input], dev.pluginProps)
 							self.setStatusCol( dev, input, ss, ssUI+unit, whichKeysToDisplay, "","" )
 				self.setIcon(dev,props,"SensorOff-SensorOn",1)
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateina3221 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 ####-------------------------------------------------------------------------####
@@ -11536,7 +11549,7 @@ class Plugin(indigo.PluginBase):
 
 						self.setStatusCol( dev0, u"value", ss, ssUI+unit, whichKeysToDisplay, "","" )
 						self.setStatusCol( dev0, u"adc", ADC, unicode(ADC), whichKeysToDisplay,"","" )
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateADC121 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -11601,7 +11614,7 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(unicode(dev.id),u"status",UI)
 					self.addToStatesUpdateDict(unicode(dev.id),stateName ,x, decimalPlaces= decimalPlaces)
 
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateGYROS in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -11705,7 +11718,7 @@ class Plugin(indigo.PluginBase):
 				else:
 						self.setIcon(dev,props,"SensorOff-SensorOn",0)
 
-		except	Exception, e:
+		except Exception, e:
 			if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateDistance in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -11850,7 +11863,7 @@ class Plugin(indigo.PluginBase):
 				ui = props[u"format"] % ui
 			else:
 				ui = unicode(ui)
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"addmultOffsetUnit in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			ui=data
@@ -11890,7 +11903,7 @@ class Plugin(indigo.PluginBase):
 				dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOff)
 
 				   
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				if self.ML.decideMyLog(u"SensorData"): self.ML.myLog( text = u"updateLight in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -11926,7 +11939,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"updateRGB in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -11951,7 +11964,7 @@ class Plugin(indigo.PluginBase):
 				self.setStatusCol(dev, color, float(data[color]), "color "+unicode(data[color])+unit, upState, u"",u"",decimalPlaces=dispType )
 				return 1
 			return 0
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"updateRGB2 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 0
@@ -12071,10 +12084,10 @@ class Plugin(indigo.PluginBase):
 					if piMACSend.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
 						self.ML.myLog( text = u"sel.beacon logging: RPI msg	:"+piMACSend+"; "+(" ").ljust(36)	 + " pi#="+str(fromPi)		)
 			if self.RPI[unicode(fromPi)][u"piMAC"] != piMACSend:
-				if self.RPI[unicode(fromPi)][u"piMAC"] ==u"":
+				if self.RPI[unicode(fromPi)][u"piMAC"] == u"":
 					self.RPI[unicode(fromPi)][u"piMAC"] = piMACSend
+
 				else:
-			   
 					try:
 						existingIndigoId = int(self.RPI[unicode(fromPi)][u"piDevId"])
 						existingPiDev	 = indigo.devices[existingIndigoId]
@@ -12098,7 +12111,7 @@ class Plugin(indigo.PluginBase):
 									self.ML.myLog( text = u" replacing old beacon")
 								else:
 									self.ML.myLog( text = u" adding new ")
-									self.beacons[piMACSend]					 = copy.deepcopy(_GlobalConst_emptyBeacon) 
+									self.beacons[piMACSend]					  = copy.deepcopy(_GlobalConst_emptyBeacon) 
 									self.beacons[piMACSend][u"ignore"]		  = 0
 									self.beacons[piMACSend][u"indigoId"]	  = existingIndigoId
 									self.beacons[piMACSend][u"note"]		  = "Pi-"+str(fromPi)
@@ -12122,10 +12135,10 @@ class Plugin(indigo.PluginBase):
 								if self.beacons[piMACSend][u"typeOfBeacon"].lower() !="rpi": 
 									pass # let the normal process replace the beacon with the RPI
 								else:
-									self.RPI[unicode(fromPi)][u"piMAC"]	 = piMACSend
+									self.RPI[unicode(fromPi)][u"piMAC"] = piMACSend
 									self.ML.myLog( text = u"might have failed to replace RPI pi#="+str(fromPi)+"; piMACSend="+piMACSend+", you have to do it manually; beacon with type = rpi already exist ")
 
-					except	Exception, e:
+					except Exception, e:
 							self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = u"failed to replace RPI pi#="+str(fromPi)+";  piMACSend="+piMACSend+", you have to do it manually")
 
@@ -12138,7 +12151,7 @@ class Plugin(indigo.PluginBase):
 				indigoId = self.beacons[piMACSend][u"indigoId"]
 				try:
 					dev = indigo.devices[indigoId]
-				except	Exception, e:
+				except Exception, e:
 
 					if unicode(e).find(u"timeout waiting") > -1:
 						self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -12166,7 +12179,7 @@ class Plugin(indigo.PluginBase):
 						self.ML.myLog( errorType = u"smallErr", text =u"deleting beacon: " + dev.name + " replacing simple beacon with rPi model(1)")
 						del self.beacons[piMACSend]
 
-				except	Exception, e:
+				except Exception, e:
 					if len(unicode(e)) > 5 :
 						self.ML.myLog( errorType = u"smallErr", text =u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( errorType = u"smallErr", text =u"beacons[piMACSend] " + unicode(fromPi) + "    " + piMACSend + "  " + unicode(indigoId) + "  " + unicode(self.beacons[piMACSend]))
@@ -12231,7 +12244,7 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					dev = indigo.devices[u"Pi_" + piMACSend]
-				except	Exception, e:
+				except Exception, e:
 					if unicode(e).find(u"timeout waiting") > -1:
 						self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -12321,7 +12334,7 @@ class Plugin(indigo.PluginBase):
 					try:
 						dev = indigo.devices[indigoId]
 						name = dev.name
-					except	Exception, e:
+					except Exception, e:
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) )
 							self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -12381,7 +12394,7 @@ class Plugin(indigo.PluginBase):
 							)
 						try:
 							dev = indigo.devices[u"beacon_" + mac]
-						except	Exception, e:
+						except Exception, e:
 
 							if unicode(e).find(u"timeout waiting") > -1:
 								self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -12400,7 +12413,6 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Signal", int(rssi+rssiOffset))
 						self.addToStatesUpdateDict(unicode(dev.id),u"TxPowerReceived",float(txPower))
 						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI",fromPi)
-						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText","Pi_"+str(fromPi))
 						if pkLen !=0: self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen)
 						if batteryLevel !="":
 							pass
@@ -12419,7 +12431,7 @@ class Plugin(indigo.PluginBase):
 							else:
 								self.ML.myLog( text = u"new beacon logging: created:"+unicode(dateString.split(u" ")[1])+" "+mac+" "+ name.ljust(20)+" "+ uuid.ljust(44)+ "  pi#="+str(fromPi)+ " rssi="+str(rssi)+ "  txPower="+str(txPower))
 
-				except	Exception, e:
+				except Exception, e:
 					if len(unicode(e)) > 5 :
 						self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						if unicode(e).find(u"timeout waiting") > -1:
@@ -12458,7 +12470,6 @@ class Plugin(indigo.PluginBase):
 						updateFINGnow = True
 						self.beacons[mac][u"lastUp"] = -time.time()
 						newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI", -1,newStates=newStates)
-						newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPIText", u"Pi_-1",newStates=newStates)
 						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
 					newStates= self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Signal", -999,newStates=newStates)
 
@@ -12481,7 +12492,7 @@ class Plugin(indigo.PluginBase):
 						else:
 							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) and ( rssi !=-999 and self.beacons[mac][u"receivedSignals"][fromPi][0] !=-999)
 
-					except	Exception, e:
+					except Exception, e:
 
 						self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						logTRUEfromSignal = False
@@ -12495,7 +12506,7 @@ class Plugin(indigo.PluginBase):
 					if ( self.beacons[mac][u"lastUp"]> -1) :
 						self.beacons[mac][u"receivedSignals"][fromPi] =[rssi,time.time()]
 						self.beacons[mac][u"lastUp"] = time.time()
-						if dev.deviceTypeId == "beacon" : 
+						if dev.deviceTypeId in ["beacon","rPI"] : 
 							closestRPI = self.findClosestRPI(mac,dev)
 						if	( time.time()- self.beacons[mac][u"updateWindow"] > self.beacons[mac][ "updateSignalValuesSeconds"] or
 							  time.time()- self.beacons[mac][u"receivedSignals"][fromPi][1] > 100. ):  # ==0 or xx seconds updates for 75 seconds, this RPI msg older than 100 secs then xx secs no update for next time
@@ -12533,7 +12544,6 @@ class Plugin(indigo.PluginBase):
 
 						if dev.deviceTypeId == "beacon" : 
 							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI", closestRPI,newStates=newStates)
-							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPIText", u"Pi_"+str(closestRPI),newStates=newStates)
 
 					self.beacons[mac][u"indigoId"] = dev.id
 					if pkLen !=0: newStates= self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen,newStates=newStates)
@@ -12600,7 +12610,7 @@ class Plugin(indigo.PluginBase):
 							#self.ML.myLog( text = u"beaconPositionsUpdated; calcPostion:"+name+" pi#="+str(fromPi)	  +"   deltaDistance:"+ unicode(deltaDistance)	  +"   update:"+ unicode(update)  )
 							self.beaconPositionsUpdated =6
 
-					except	Exception, e:
+					except Exception, e:
 						if len(unicode(e)) > 5 :
 							self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -12613,7 +12623,7 @@ class Plugin(indigo.PluginBase):
 							if self.newBeaconsLogTimer < time.time():
 								self.ML.myLog( text = u"new.beacon logging: resetting  newBeaconsLogTimer to OFF")
 								self.newBeaconsLogTimer =0
-						except	Exception, e:
+						except Exception, e:
 							self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 				if self.selectBeaconsLogTimer !={}: 
@@ -12656,7 +12666,7 @@ class Plugin(indigo.PluginBase):
 							dev = indigo.devices[self.beacons[piMACSend][u"indigoId"]]
 							dev.updateStateOnServer(unicode(dev.id),u"note", "PI-" + unicode(fromPi))
 
-						except	Exception, e:
+						except Exception, e:
 							if unicode(e).find(u"timeout waiting") > -1:
 								self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 								self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -12675,7 +12685,7 @@ class Plugin(indigo.PluginBase):
 			if updateFINGnow: 
 				self.updateFING(u"event")
 
-		except	Exception, e:
+		except Exception, e:
 
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
@@ -12722,7 +12732,7 @@ class Plugin(indigo.PluginBase):
 			# dont switch if: <	 4 dBm diff and	 not defined then keep current 
 			if (newMAXSignal - currMAXSignal) < 4 and  currClosestRPI !=-1: # 
 				newClosestRPI = currClosestRPI
-		except	Exception, e: 
+		except Exception, e: 
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"findClosestRPI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return newClosestRPI
@@ -12787,7 +12797,7 @@ class Plugin(indigo.PluginBase):
 			if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =	u"sendGPIOCommand: " + cmds)
 			self.sendtoRPI(ip, pi ,cmds, calledFrom="sendGPIOCommand")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"sendGPIOCommand in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -12807,7 +12817,7 @@ class Plugin(indigo.PluginBase):
 			if self.ML.decideMyLog(u"OutputDevice"): self.ML.myLog( text =	u"sendGPIOCommand-s-: " + cmds)
 			self.sendtoRPI(ip, pi ,cmds, calledFrom="sendGPIOCommand")
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"sendGPIOCommands in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
@@ -12834,7 +12844,7 @@ class Plugin(indigo.PluginBase):
 				self.makeSupplicantFile(piS)
 
 			   
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"setupFilesForPi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -12899,7 +12909,7 @@ class Plugin(indigo.PluginBase):
 			f = open(self.userIndigoPluginDir + "all/touchFile", u"w")
 			f.write(unicode(time.time()))
 			f.close()
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"makeBeacons_parameterFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -12921,7 +12931,7 @@ class Plugin(indigo.PluginBase):
 			f.write(u"iface wlan0 inet manual\n")
 			f.write(u"   wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf\n")
 			f.close()
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"makeInterfacesFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -12940,7 +12950,7 @@ class Plugin(indigo.PluginBase):
 				f.write('   key_mgmt="' + self.key_mgmt + '"\n')
 			f.write(u"}\n")
 			f.close()
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"makeSupplicantFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -12990,7 +13000,7 @@ class Plugin(indigo.PluginBase):
 							piDev = indigo.devices[piID]
 							props = piDev.pluginProps
 							piDeviceExist=True
-					except	Exception, e:
+					except Exception, e:
 						if unicode(e).find(u"timeout waiting") > -1:
 							self.ML.myLog( text = u"makeParametersFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 							self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -13099,7 +13109,7 @@ class Plugin(indigo.PluginBase):
 						out = self.updateSensProps(out, props, u"rebootCommand")
 						out = self.updateSensProps(out, props, u"BLEserial", elseSet="sequential")
 
-				except	Exception, e:
+				except Exception, e:
 						self.ML.myLog( text = u"makeParametersFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						return ""
 
@@ -13126,7 +13136,7 @@ class Plugin(indigo.PluginBase):
 							try:
 								devId = int(devIdS)
 								dev = indigo.devices[devId]
-							except	Exception, e:
+							except Exception, e:
 								if unicode(e).find(u"timeout waiting") > -1:
 									self.ML.myLog( text = u"makeParametersFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 									self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -13298,7 +13308,7 @@ class Plugin(indigo.PluginBase):
 						if sens != {}:
 							out[u"sensors"][sensor] = sens
 							###if self.ML.decideMyLog(u"OfflineRPI"): self.ML.myLog( text = piS + "  sensor " + unicode(out[u"sensors"][sensor]) )
-					except	Exception, e:
+					except Exception, e:
 						self.ML.myLog( text = u"makeParametersFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( text = unicode(sens))
 
@@ -13444,7 +13454,7 @@ class Plugin(indigo.PluginBase):
 
 				out = self.writeJson(out, fName = self.userIndigoPluginDir + u"interfaceFiles/parameters." + piS , format=self.parametersFileSort )
  
-		except	Exception, e:
+		except Exception, e:
 				self.ML.myLog( text = u"makeParametersFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		if retFile: return out
 		return
@@ -13608,7 +13618,7 @@ class Plugin(indigo.PluginBase):
 					for next in addBack:
 						self.rpiUpdateQueueList[piUIN].put(next)
 				self.resetRpiQueue[piUIN] =False
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"rpiUpdateThread in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		self.ML.myLog( text = u"rpiUpdateThread stopping  rpiUpdateState= >>"+self.rpiUpdateState+"<<")
 		self.rpiUpdateState[piUIN] ="stopped"
@@ -13668,7 +13678,7 @@ class Plugin(indigo.PluginBase):
 					self.ML.myLog( text = u"setup pi response (2) error   \n" + ret[1])
 					return 1, ["offline",""]
 			return 0, ret
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"sendFilesToPiFTP in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 1, ret
 
@@ -13687,7 +13697,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					return 0, ret
 
-			if fileToSend in [u"shutdownSSH.exp",u"rebootSSH.exp",u"rebootFSSH.exp",u"resetOutputSSH.exp",u"shutdownSSH.exp"]:
+			if fileToSend in [u"shutdownSSH.exp",u"rebootSSH.exp",u"resetOutputSSH.exp",u"shutdownSSH.exp"]:
 				batch =" &"
 			else: 
 				batch =" "
@@ -13727,7 +13737,7 @@ class Plugin(indigo.PluginBase):
 				return 0, ret
 			return 0, ret
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"sshToRPI in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 1, ret
 
@@ -13765,7 +13775,7 @@ class Plugin(indigo.PluginBase):
 							if line.find(self.RPI[unicode(pi)][u"ipNumberPiSendTo"]) >-1:continue
 							f.write(line+u"\n")
 						f.close()
-					except	Exception, e:
+					except Exception, e:
 						self.ML.myLog( text = u" fix did not work: error  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 					return ["",""], False
@@ -13780,7 +13790,7 @@ class Plugin(indigo.PluginBase):
 						p = subprocess.Popen(fixcode, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 						ret = p.communicate()
  
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"fixHostsFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return ret, True
 
@@ -13795,7 +13805,7 @@ class Plugin(indigo.PluginBase):
 		return
 		try:
 			self.setupFilesForPi()
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"configureWifi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return
 
@@ -13817,7 +13827,7 @@ class Plugin(indigo.PluginBase):
 
 			if int(ret) ==0:  return 0
 			return 1
-		except	Exception, e:
+		except Exception, e:
 		   self.ML.myLog( text = u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 		#indigo.server.log(  ipN+"-3  "+ str(ret) +"  "+ str(time.time() - ss)  )
@@ -13875,7 +13885,7 @@ class Plugin(indigo.PluginBase):
 			if self.RPI[unicode(pi)][u"piDevId"] == 0:	 continue
 			try:
 				dev = indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
-			except	Exception, e:
+			except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.ML.myLog( text = u"printConfig in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -14017,7 +14027,7 @@ class Plugin(indigo.PluginBase):
 				if self.beacons[beacon][u"indigoId"] == 0: continue
 				try:
 					name = indigo.devices[self.beacons[beacon][u"indigoId"]].name
-				except	Exception, e:
+				except Exception, e:
 					if unicode(e).find(u"timeout waiting") > -1:
 						self.ML.myLog( text = u"printGroups in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -14123,7 +14133,7 @@ class Plugin(indigo.PluginBase):
 			if self.beacons[beacon][u"status"] != status: continue
 			try:
 				name = indigo.devices[self.beacons[beacon][u"indigoId"]].name
-			except	Exception, e:
+			except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.ML.myLog( text = u"printBeaconInfoLine in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -14153,7 +14163,7 @@ class Plugin(indigo.PluginBase):
 				try:
 					name = indigo.devices[self.beacons[beacon][u"indigoId"]].name
 					continue
-				except	Exception, e:
+				except Exception, e:
 					if unicode(e).find(u"timeout waiting") > -1:
 						self.ML.myLog( text = u"printBeaconInfoLine in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 						self.ML.myLog( text = u"communication to indigo is interrupted")
@@ -14298,12 +14308,12 @@ class Plugin(indigo.PluginBase):
 				self.updateStatesDict[devId][key] = {"value":value,"decimalPlaces":decimalPlaces,"force":force,"uiValue":uiValue}
 				if newStates !="": newStates[key] = value
 
-			except	Exception, e:
+			except Exception, e:
 				if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
 				self.ML.myLog( text = u"addToStatesUpdateDict in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) )
 
 			#self.updateStatesDict = local	  
-		except	Exception, e:
+		except Exception, e:
 			if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
 			self.ML.myLog( text = u"addToStatesUpdateDict in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) )
 		self.executeUpdateStatesDictActive = ""
@@ -14456,7 +14466,7 @@ class Plugin(indigo.PluginBase):
 				if trigStatus !="":
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+u"With_Status_Change",trigStatus)
-					except	Exception, e:
+					except Exception, e:
 							self.ML.myLog( text = u"status changed: "+ unicode(devnamechangedStat))
 							self.ML.myLog( text = u"warning, ignoring state update(0): executeUpdateStatesList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) + u" trying again")
 							time.sleep(0.5)
@@ -14467,7 +14477,7 @@ class Plugin(indigo.PluginBase):
 				if trigRPIchanged !="":
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+u"With_ClosestRPI_Change",trigRPIchanged)
-					except	Exception, e:
+					except Exception, e:
 							self.ML.myLog( text = u"RPI   changed: "+ unicode(devnamechangedRPI))
 							self.ML.myLog( text = u"warning, ignoring state update(0): executeUpdateStatesList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) + u" trying again")
 							time.sleep(0.5)
@@ -14479,7 +14489,7 @@ class Plugin(indigo.PluginBase):
 			#for devId in changedOnly:
 			#	 dev =indigo.devices[int(devId)]
 			#	 self.ML.myLog( text = "%14.3f"%time.time()+"  : "+ unicode(changedOnly[devId]),mType=dev.name.ljust(25)) 
-		except	Exception, e:
+		except Exception, e:
 				if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return 
 				self.ML.myLog( text = u"executeUpdateStatesDict warning, ignoring state update: in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) )
 		self.executeUpdateStatesDictActive = ""
@@ -14502,7 +14512,7 @@ class Plugin(indigo.PluginBase):
 					dev.updateStateOnServer(uu[u"key"],uu[u"value"])
 
 
-		except	Exception, e:
+		except Exception, e:
 			self.ML.myLog( text = u"execUpdateStatesList in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			self.ML.myLog( text = u"chList: "+ unicode(chList))
 
@@ -14529,7 +14539,7 @@ class Plugin(indigo.PluginBase):
 				if enableEval and oneFound and (textIn.find(u"+")>-1 or	 textIn.find(u"-")>-1 or textIn.find(u"/")>-1 or textIn.find(u"*")>-1):
 					textIn = unicode(eval(textIn))
 			except: pass
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"convertVariableOrDeviceStateToText in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return textIn
@@ -14568,7 +14578,7 @@ class Plugin(indigo.PluginBase):
 				return textOut, True
 			except:
 				return textIn, False
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"convertVariableToText0 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return textIn, False
@@ -14614,7 +14624,7 @@ class Plugin(indigo.PluginBase):
 				return textOut, True
 			except:
 				return textIn, False
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"convertDeviceStateToText0 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return textIn, False
@@ -14679,7 +14689,7 @@ class Plugin(indigo.PluginBase):
 					#self.ML.myLog( text = "msg:" +	 msg )
 
 
-		except	Exception, e:
+		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.ML.myLog( text = u"handlesockReporting in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return 
@@ -14704,7 +14714,7 @@ class Plugin(indigo.PluginBase):
 					if self.ML.decideMyLog(u"Socket"): self.ML.myLog( text = u"TCPIPsocket:: setting timout = 5 " )
 					socketServer.socket.setsockopt(socket.SOL_SOCKET, socket.timeout, 5 )
 
-				except	Exception, e:
+				except Exception, e:
 					if self.ML.decideMyLog(u"Socket"): self.ML.myLog( text = u"TCPIPsocket:: %s	  try#: %i	time elapsed: %4.1f secs" % (e, ii,	 (time.time()-tcpStart) ) )
 				try:
 					ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -14714,7 +14724,7 @@ class Plugin(indigo.PluginBase):
 						TCPserverHandle.daemon =True # don't hang on exit
 						TCPserverHandle.start()
 						break
-				except	Exception, e:
+				except Exception, e:
 					if unicode(e).find("serve_forever") ==-1:
 						self.ML.myLog( text = u"startTcpipListening in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 					self.killHangingProcess(ret)
@@ -14730,7 +14740,7 @@ class Plugin(indigo.PluginBase):
 				#### does not work socketServer.settimeout(5)
 
 
-			except	Exception, e:
+			except Exception, e:
 				self.ML.myLog( text = u"handlesockReporting in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				self.quitNow=u" tcpip stack did not load, restart"
 			return	socketServer, stackReady
@@ -14745,7 +14755,7 @@ class Plugin(indigo.PluginBase):
 					killcmd = "/bin/kill -9 "+str(pidTokill)
 					if self.ML.decideMyLog(u"Socket"): self.ML.myLog( text = u"trying to kill hanging process with: "+killcmd)
 					os.system(killcmd)
-				except	Exception, e:
+				except Exception, e:
 					self.ML.myLog( text = u"handlesockReporting in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 
 
@@ -14791,7 +14801,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,u"unknown",u"errBuffOvfl" )
 						self.request.close()
 						return 
-			except	Exception, e:
+			except Exception, e:
 				e= unicode(e)
 				self.request.settimeout(1) 
 				self.request.send(u"error")
@@ -14845,7 +14855,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 							indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"tooLong" )
 							return
 
-			except	Exception, e:
+			except Exception, e:
 				if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.ML.myLog( text = u"ThreadedTCPRequestHandler in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 				if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.ML.myLog( text = u"TCPIP socket, len:"+ unicode(len0)+u" data: "+ data0[0:50] +u"  ..  "+data0[-10:]) 
 				if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"unknown" )
@@ -14855,7 +14865,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
 			try: 
 				dataJ = json.loads(dataS[2])  # dataJ = json object for data
-			except	Exception, e:
+			except Exception, e:
 				if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.ML.myLog( text = u"TCPIP socket  json error; len of data:"+str(len0)+"  "+ unicode(threading.currentThread())+u"    time used:"+str(time.time()-tStart) ) 
 				if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.ML.myLog( text = data0[0:50]+u"  ..  "+data0[-10:] ) 
 				try: self.request.send(u"error-Json-"+str(lenData) )
@@ -14881,7 +14891,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
 
 
-		except	Exception, e:
+		except Exception, e:
 			if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.ML.myLog( text = u"ThreadedTCPRequestHandler in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 			if indigo.activePlugin.ML.decideMyLog(u"Socket"): indigo.activePlugin.ML.myLog( text = u"TCPIP socket "+ data0[0:50] ) 
 			indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"unknown" )

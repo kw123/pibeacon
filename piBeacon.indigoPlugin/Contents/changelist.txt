@@ -1,3 +1,24 @@
+Added features / changes in v7.98.258 @ 2018-12-14:  
+===================================================
+
+1. bug fix for RPI beaconloop.py program - only a problem when BLE program was not working properly ie in restart: 
+	return argument was mixed up, was introduced in 7.98.255 
+
+2. added check for MAC mac number returned from RPI in plugin- in case of empty messages ... 
+
+3. added RPI devices states: last_boot, rpi_type, op_sys to give you a quick view of the state and config of your RPIs.
+	Useful if you have many RPi
+
+4. Improved devices edit menus for RPi and iBeacon sensors
+
+5. fixed reboot ssh command, was not always working 
+
+
+===================================================
+
+1. added clostedRPI state to RRPI devices. Was only in iBeacons devices
+
+
 Added features / changes in v7.98.256 @ 2018-12-10:  
 ===================================================
 
