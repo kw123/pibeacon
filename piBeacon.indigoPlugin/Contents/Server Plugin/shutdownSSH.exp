@@ -21,9 +21,10 @@ if {$authKeyOrPassword == "assword"} {
     }
 }
 
+
+expect "Last login:" { }
 sleep 1
-expect ":" { }
-send "sudo sync;sudo killall python;sudo reboot now\r"
+send "sudo sync;sudo killall python;sudo shutdown now\r"
 
 set timeout 1
 expect "closed by remote host" {}

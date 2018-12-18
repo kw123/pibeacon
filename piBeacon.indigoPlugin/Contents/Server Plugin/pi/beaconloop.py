@@ -822,14 +822,14 @@ try:
 			eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 					
 			
-		beaconsNew ={}
+		beaconsNew = {}
 		
 		U.toLog(3,"beacons info: "+unicode(beacon_ExistingHistory))
 		timeAtLoopStart = tt
 
-		U.echoLastAlive(sensor)
+		U.echoLastAlive(G.program)
 
-		reason=1
+		reason = 1
 
 		if checkIfBLErestart():
 			bleRestartCounter +=1
@@ -856,11 +856,11 @@ try:
 
 		sendAfter= sendAfterSeconds
 		iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
-		while iiWhile>0:
-			iiWhile-=1
+		while iiWhile > 0:
+			iiWhile -= 1
 			tt=time.time()
 			quick = U.checkNowFile(sensor)				  
-			if tt - paramCheck >2:
+			if tt - paramCheck > 2:
 				newParametersFile = readParams(False)
 				paramCheck=time.time()
 				if newParametersFile: 
@@ -884,7 +884,7 @@ try:
 			pkLen = len(pkt)
 			if pkLen > 20: 
 				num_reports = struct.unpack("B", pkt[4])[0]
-				num_reports =1
+				num_reports = 1
 				try:
 					offS = 7
 					for i in range(0, num_reports):
@@ -907,13 +907,13 @@ try:
 								#print "reject nBytesThisMSG" 
 								continue # this is not supported ..
 						
-						msgStart			= offS+7
+						msgStart			= offS + 7
 						AD1Len				= ord(pkt[msgStart])
-						AD1Start			= msgStart+1
+						AD1Start			= msgStart + 1
 						if nBytesThisMSG > 17:
 							if AD1Start+AD1Len >= pkLen: continue
 							AD2Len			= ord(pkt[AD1Start+AD1Len])
-							AD2Start		= AD1Start+AD1Len +1
+							AD2Start		= AD1Start+AD1Len + 1
 						else:
 							AD2Len			= AD1Len
 							AD2Start		= AD1Start
@@ -921,29 +921,29 @@ try:
 						
 						uuidStart		= AD2Start ##  (-Maj-Min-batteryLength-TX-RSSI)
 						uuidLen			= msgStart+nBytesThisMSG-uuidStart-2-2-1-offsetU
-						if uuidStart > pkLen-2 or  uuidStart < 12:
-							uuidLen			 = min(nBytesThisMSG-5,16)
-							uuidStart		 = AD1Start+2
+						if uuidStart > pkLen - 2 or  uuidStart < 12:
+							uuidLen			 = min(nBytesThisMSG - 5, 16)
+							uuidStart		 = AD1Start + 2
 
 						if uuidStart >= pkLen or uuidStart+uuidLen > pkLen : continue
 						UUID = returnstringpacket(pkt[uuidStart : uuidStart+uuidLen])
 						
 
 						if not acceptJunkBeacons:
-							if UUID =="" or UUID.find("0000000000") >-1: 
+							if UUID =="" or UUID.find("0000000000") > -1: 
 								#print "reject UUID" 
 								continue # this is not supported ..
 
 
-						if len(UUID)>32:
-							UUID=UUID[len(UUID)-32:]  # drop AD2 stuff only use the real UUID 
-						Maj	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen	: uuidStart+uuidLen+2])
-						Min	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen+2: uuidStart+uuidLen+4])
+						if len(UUID) > 32:
+							UUID=UUID[len(UUID) -32:]  # drop AD2 stuff only use the real UUID 
+						Maj	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen	  : uuidStart+uuidLen + 2])
+						Min	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen + 2: uuidStart+uuidLen + 4])
 						 
 						tx	 = "%i" % struct.unpack("b", pkt[ -2 ])
 						rx	 = "%i" % struct.unpack("b", pkt[ -1 ])
 						if not acceptJunkBeacons:
-							if tx ==0 and rx==0: 
+							if tx == 0 and rx == 0: 
 								#print "reject rxtx" 
 								continue # this is not supported ..
 								
@@ -957,6 +957,7 @@ try:
 							
 						sensorData=0
 						
+						lastMSGwithData2 = int(time.time())
 						
 						if mac in BLEsensorMACs: 
 							doSensors(pkt,UUID,Maj,Min,mac,rx,tx)
@@ -978,9 +979,8 @@ try:
 						
 
 						offS+=nBytesThisMSG
-						U.toLog(2,"allBeaconMSGs: "+unicode( beaconMSG) )
+						U.toLog(2, "allBeaconMSGs: "+unicode( beaconMSG) )
 
-						lastMSGwithData2 = int(time.time())
 
 						try: 
 							beaconMAC	= mac
@@ -990,12 +990,12 @@ try:
 							bLevel		= bl
 							pkLen		= nBytesThisMSG
 						except	Exception, e:
-							U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 							print "bad data >> ", beaconMSG,"  <<beaconMSG"
 							continue# skip if bad data
  
 						### if in fast down lost and signal < xx ignore this signal= count as not there 
-						if beaconMAC in fastDown : sendAfter = min(45.,sendAfterSeconds)
+						if beaconMAC in fastDown : sendAfter = min(45., sendAfterSeconds)
 						if checkIfFastDownMinSignal(beaconMAC,rssi,fastDown): continue
 
 						iphoneUUID, beaconMAC = checkIfIphone(uuid,beaconMAC)
@@ -1010,7 +1010,7 @@ try:
 							#reason = 3
 							
 						else:  # increment averages and counters
-							if beaconsNew[beaconMAC]["rssi"] ==-999:
+							if beaconsNew[beaconMAC]["rssi"] == -999:
 								beaconsNew[beaconMAC]["rssi"]	 = rssi # signal
 								beaconsNew[beaconMAC]["count"]	 = 1  # count for calculating averages
 								beaconsNew[beaconMAC]["txPower"] = txPower # transmit power
@@ -1025,7 +1025,7 @@ try:
 						####if beaconMAC =="0C:F3:EE:00:66:15": print  beaconsNew
 
 				except	Exception, e:
-					U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 					print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 					print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop "+"bad data, skipping"
 					try:
@@ -1052,11 +1052,11 @@ try:
 
 		dt1 = int(time.time() - lastMSGwithData1)
 		dt2 = int(time.time() - lastMSGwithData2)
-		if dt1 > 50 or dt2> 50:
+		if dt1 > 90 or dt2 > 90:
 			G.debug = 10
 			maxLoopCount = 20
 			restartCount +=1
-			U.toLog(-1,u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount),doPrint=True)
+			U.toLog(-1, u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount),doPrint=True)
 			if dt2 > 400 :
 				time.sleep(20)
 				U.restartMyself(param="", reason="bad BLE (2),restart",doPrint=True)
@@ -1069,7 +1069,7 @@ try:
 			restartCount = 0
 
 except	Exception, e:
-	U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+	U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 	U.toLog(-1, "  exiting loop due to error\n restarting "+G.program)
 	time.sleep(20)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py &")

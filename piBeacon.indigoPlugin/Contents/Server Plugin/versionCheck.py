@@ -4,8 +4,8 @@ import requests
 import sys
 def versionCheck(pluginId,pluginVersion,indigo,theHourToCheckversion,theMinuteToCheckversion, printToLog="no"):
     global lastDayversionCheck
-    dd =  datetime.datetime.now()
 
+    dd =  datetime.datetime.now()
     if dd.hour   != theHourToCheckversion :         return "" 
     if dd.minute <  theMinuteToCheckversion :       return ""
     if dd.minute >  theMinuteToCheckversion+10 :    return ""

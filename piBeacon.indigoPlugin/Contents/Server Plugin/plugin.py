@@ -21,14 +21,18 @@ import SocketServer
 import traceback
 import Queue
 import resource
-import versionCheck.versionCheck as VS
+import versionCheck as VS
 import myLogPgms 
 import cProfile
 import pstats
 
-dataVersion = 33.60
+dataVersion = 33.72
 
+"""
 
+=========
+ 
+"""
 
 
 ## Static parameters, not changed in pgm
@@ -256,7 +260,7 @@ class Plugin(indigo.PluginBase):
 		self.pathToPlugin = os.getcwd() + "/"
 		## = /Library/Application Support/Perceptive Automation/Indigo 6/Plugins/piBeacon.indigoPlugin/Contents/Server Plugin
 		#p = max(0, self.pathToPlugin.lower().find(u"/plugins/")) + 1
-		self.indigoPath			= indigo.server.getInstallFolderPath()
+		self.indigoPath			= indigo.server.getInstallFolderPath()+"/"
 		major, minor, release 	= map(int, indigo.server.version.split("."))
 		self.indigoVersion		= major
 		self.pluginVersion		= pluginVersion
@@ -269,7 +273,7 @@ class Plugin(indigo.PluginBase):
 		indigo.server.log(u"indigoRootPath "+self.indigoRootPath)
 		indigo.server.log(u"pathToPlugin "+self.pathToPlugin)
 		indigo.server.log(u"setting parameters for indigo version: >>"+unicode(self.indigoVersion)+u"<<; my PID="+str(self.myPID))	 
-		indigo.server.log(u"pluginId: "+unicode(self.pluginId))	  
+		indigo.server.log(unicode(self.pluginId))	  
 		self.ML = myLogPgms.MLX()
 
 ####-------------------------------------------------------------------------####
@@ -3677,6 +3681,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmchangeLogfile(self, valuesDict=None, typeId="", devId=0):
+		self.ML.myLog( text = u"  staring to modify "+self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py')
 		if not os.path.isfile(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py'): return valuesDict
 		f = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py', u"r")
 		g = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py-1', u"w")
@@ -8156,7 +8161,7 @@ class Plugin(indigo.PluginBase):
 	def setLogfile(self,lgFile):
 		self.logFileActive =lgFile
 		if   self.logFileActive =="standard":	self.logFile = ""
-		elif self.logFileActive =="indigo":		self.logFile = self.indigoPath.split("Plugins/")[0]+"Logs/"+self.pluginId+"/plugin.log"
+		elif self.logFileActive =="indigo":		self.logFile = self.indigoPath+"Logs/"+self.pluginId+"/plugin.log"
 		else:									self.logFile = self.userIndigoPluginDir +"plugin.log"
 		self.ML.myLogSet(debugLevel = self.debugLevel ,logFileActive=self.logFileActive, logFile = self.logFile, pluginSelf=self)
 
@@ -8401,6 +8406,8 @@ class Plugin(indigo.PluginBase):
 
 		self.initConcurrentThread()
 
+		VS.versionCheck(self.pluginId,self.pluginVersion,indigo,13,25,printToLog="log")
+				
 		if self.logFileActive !="standard":
 			indigo.server.log(u" ..  initalized")
 			self.ML.myLog( text = u" ..  initalized, starting loop" )
@@ -8552,7 +8559,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def findAnyTaskPi(self, item):
 		for pi in range(_GlobalConst_numberOfRPI):
-		   if self.RPI[unicode(pi)][item] !=[]: return True
+		   if self.RPI[unicode(pi)][item] !=[]: 
+			return True
 		return False
 
 ####-------------------------------------------------------------------------####
@@ -8713,7 +8721,7 @@ class Plugin(indigo.PluginBase):
 
 			if self.updateNeeded.find(u"enable") > -1 or self.updateNeeded.find(u"disable") > -1: 
 				self.syncSensors()
-				self.setupFilesForPi()
+				self.setupFilesForPi(calledFrom="enable")
 				try:
 					pi = self.updateNeeded.split(u"-")[1]
 					self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
@@ -8723,8 +8731,13 @@ class Plugin(indigo.PluginBase):
 				self.updateNeeded ="" 
 	 
 			if self.updateNeeded.find(u"fixConfig") > -1 or self.findAnyTaskPi(u"piUpToDate"):
+				self.ML.myLog( text = u"checkForUpdates updateNeeded "+ str(self.updateNeeded)+"  findAnyTaskPi: "+ unicode(self.findAnyTaskPi(u"piUpToDate")) )
+				for pi in range(_GlobalConst_numberOfRPI):
+					self.ML.myLog( text = str(pi) + u"checkForUpdates piUpToDate "+ str(self.RPI[unicode(pi)]["piUpToDate"]) )
+					
+
 				self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="checkForUpdates") # checkForUpdates  # ok only if changes requested
-				self.setupFilesForPi()
+				self.setupFilesForPi(calledFrom="fixConfig")
 				self.updateNeeded = ""
 
 
@@ -8762,7 +8775,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-					if self.findTaskPi(u"piUpToDate","shutdown"):
+					if self.findTaskPi(u"piUpToDate","shutdownSSH"):
 						for pi in range(_GlobalConst_numberOfRPI) :
 							if u"shutdownSSH" in self.RPI[unicode(pi)][u"piUpToDate"]:
 								self.sshToRPI(pi,fileToSend="shutdownSSH.exp")
@@ -8770,12 +8783,6 @@ class Plugin(indigo.PluginBase):
 					if self.findTaskPi(u"piUpToDate","rebootSSH"):
 						for pi in range(_GlobalConst_numberOfRPI) :
 							if u"rebootSSH" in self.RPI[unicode(pi)][u"piUpToDate"] and not  "updateParamsFTP" in self.RPI[unicode(pi)][u"piUpToDate"]:
-								reboot=""
-								try: 
-									props0 = indigo.devices[self.RPI[unicode(pi)][u"piDevId"]].pluginProps
-									if u"rebootCommand" in props0 and  props0[u"rebootCommand"].find(u"sudo reboot -f") >-1:
-										reboot = props0[u"rebootCommand"]
-								except: pass
 								self.sshToRPI(pi,fileToSend="rebootSSH.exp")
 
 					if self.findTaskPi(u"piUpToDate","resetOutputSSH"):
@@ -9976,7 +9983,7 @@ class Plugin(indigo.PluginBase):
 			self.updateStateIf(dev, varJson, u"rpi_type")
 			self.updateStateIf(dev, varJson, u"op_sys")
 			self.updateStateIf(dev, varJson, u"last_boot")
-
+			self.updateStateIf(dev, varJson, u"last_masterStart")
 
 			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 			if dev.states[u"status"] != "up" :
@@ -10001,12 +10008,13 @@ class Plugin(indigo.PluginBase):
 
 		return
 
-	def updateStateIf(self, dev, varJson, statename ):
 
-		if statename in varJson:
+	def updateStateIf(self, dev, varJson, stateName ):
+
+		if stateName in varJson:
 			###self.ML.myLog( text = u"updateStateIf : "+statename+"  "+ unicode(varJson[statename]))
-			if dev.states[statename] != varJson[statename]:
-				self.addToStatesUpdateDict(unicode(dev.id),statename, varJson[statename] )
+			if stateName in dev.states and dev.states[stateName] != varJson[stateName]:
+				self.addToStatesUpdateDict(unicode(dev.id),stateName, varJson[stateName] )
 		return
 
 ####-------------------------------------------------------------------------####
@@ -12828,11 +12836,11 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setupFilesForPi(self):
+	def setupFilesForPi(self, calledFrom=""):
 		try:
 			if time.time() - self.lastsetupFilesForPi < 5: return 
 			self.lastsetupFilesForPi = time.time()
-			if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = u"updating pi server files")
+			if self.ML.decideMyLog(u"UpdateRPI"): self.ML.myLog( text = u"updating pi server files called from"+calledFrom)
 
 			self.makeBeacons_parameterFile()
 
@@ -13804,7 +13812,7 @@ class Plugin(indigo.PluginBase):
 	def configureWifi(self, pi):
 		return
 		try:
-			self.setupFilesForPi()
+			self.setupFilesForPi(calledFrom="configureWifi")
 		except Exception, e:
 			self.ML.myLog( text = u"configureWifi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return

@@ -12,6 +12,7 @@ import	time, datetime, json
 sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import socket
+import urllib
 
 ##
 #  do 
@@ -774,7 +775,7 @@ def whichHCI():
 
 
 #################################
-def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True):
+def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False):
 	try:
 			if (G.networkType  not in G.useNetwork or G.wifiType !="normal") or	 (getNetwork() =="off" or getNetwork() =="clock") : 
 				G.lastAliveSend	 = time.time()
@@ -805,13 +806,13 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True):
 				
 			else:
 				name = "pi_IN_"+str(G.myPiNumber)
- 
 
 			if G.IndigoOrSocket =="indigo":
 						var = "/variables/"+name
-						data0 = json.dumps(data)
-						if squeeze: 
-							data0 = data0.replace(" ","")
+						data0 = json.dumps(data, separators=(',',':'))
+						if squeeze: data0 = data0.replace(" ","")
+						if escape:  data0 = urllib.quote(data0)
+						###print data0
 						cmd=[]
 						cmd.append("/usr/bin/curl")
 						if G.userIdOfServer =="" or G.authentication =="none":
@@ -841,15 +842,14 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True):
 						else:
 							cmd.append(" &")
 							subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-							os.system("echo '"+G.program+": "+data0+"' > "+ G.homeDir+"temp/messageSend")
+							os.system("echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend")
 
 			else:
 						
 						sendMSG = False
 						for ii in range(3): # try max 3 times.
-							data0 = json.dumps(data)
-							if squeeze: 
-								data0 = data0.replace(" ","")
+							data0 = json.dumps(data, separators=(',',':'))
+							if squeeze: data0 = data0.replace(" ","")
 							sendData= str(len(data0))+"x-6-a"+name+"x-6-a"+data0
 							try:
 								soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -1262,31 +1262,34 @@ def sendi2cToPlugin():
 		i2c		 = geti2c()
 		#																	remove trailing null chars;  \\ for escape  of \
 		rpiType	 = subprocess.Popen("cat /sys/firmware/devicetree/base/model | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
-		rpiType	 = ''.join(i for i in rpiType if ord(i)<128).split("Raspberry ")
+		###print "rpiType1>>"+rpiType+"<<"
+		rpiType	 = ''.join(i for i in rpiType if ord(i)>1).split("Raspberry ")
 		if len(rpiType) ==2: rpiType = rpiType[1]
 		else:				 rpiType = rpiType[0]
-
+		##print "rpiType2>>"+rpiType+"<<"
 		serN	 = subprocess.Popen("cat /sys/firmware/devicetree/base/serial-number | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
-		serN	 = (''.join(i for i in serN if ord(i)<128)).lstrip("0")
+		serN	 = (''.join(i for i in serN if ord(i)>1)).lstrip("0")
+		###print "serN>>"+serN+"<<"
 		rpiType +="; ser#"+serN
 		#  --> Raspberry Pi 3 Model B Plus Rev 1.3/ ser#00000000dcfb216c
 
 		osInfo	 = subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
 		for line in osInfo:
 			if line .find("VERSION=") == 0:
-				os = line.split("=")[1].strip('"')
-		os += ";"+ subprocess.Popen("uname -r" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
-		os += ";"+ subprocess.Popen("uname -v" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
+				os = line.split("=")[1].strip('"').strip(' ')
+		os += "; "+ subprocess.Popen("uname -r" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
+		os += "; "+ subprocess.Popen("uname -v" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
 
 		tempInfo = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		try:	temp = tempInfo.split("=")[1].split("'")[0]
 		except: temp = "0"
 
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
+		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
 
-		data ={"i2c_active":json.dumps(i2c).replace(" ","").replace("[","").replace("]",""),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot}
+		data ={"i2c_active":json.dumps(i2c).replace(" ","").replace("[","").replace("]",""),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
 		##print data
-		sendURL(data=data, sendAlive="alive", squeeze=False)
+		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
 
 	except Exception, e :
 		toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)

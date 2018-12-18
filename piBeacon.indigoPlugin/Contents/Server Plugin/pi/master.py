@@ -1173,7 +1173,7 @@ readNewParams()
 if "neopixelClock" in G.programFiles: neoClock = True
 else:								  neoClock = False
 
-
+G.last_masterStart = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 for ff in G.programFiles:
@@ -1412,6 +1412,7 @@ while True:
 
 			#check if IP number has changed, or if we should switch off IP for wifi if eth0 is present 
 		if loopCount%24 == 0: # every 2 minutes
+			oldIP = G.ipAddress
 			ipx, changed = U.getIPNumberMaster(quiet=True)
 			if	G.ipAddress =="" and G.networkType !="clockMANUAL" :
 				U.doReboot(10.," reboot due to no IP nummber")				   
@@ -1421,6 +1422,9 @@ while True:
 				U.restartMyself(reason="changed ip number, ie wifi was switched off with eth0 present")
 			if ipx ==0 and G.ipAddress !="":
 				U.setNetwork("on")
+			if oldIP != G.ipAddress:
+				U.restartMyself(reason="changed ip number")
+
 
 
 		if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType !="clockMANUAL" and (G.networkStatus).find("indigo") >-1: 

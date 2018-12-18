@@ -74,6 +74,7 @@ indigoInputPORT		= 0
 
 BeaconUseHCINo		="-1"
 BLEconnectUseHCINo	="-1"
+last_masterStart	=""
 
 ACTIONS={"LS":"ls",
 		 "REBOOT":		   "sudo reboot",

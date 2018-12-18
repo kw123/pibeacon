@@ -21,8 +21,7 @@ if {$authKeyOrPassword == "assword"} {
     }
 }
 
-sleep 1
-expect ": ~" { }
+expect "Last login:" { }
 send "sudo killall python;sleep 0.5;sudo reboot -f\r"
 
 expect "Rebooting" {}

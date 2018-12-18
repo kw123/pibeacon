@@ -425,6 +425,7 @@ U.echoLastAlive(G.program)
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+G.program+" starting loop" 
 G.tStart= time.time()
 
+errCount = 0
 try:
 	while True:
 		tt = time.time()
@@ -459,7 +460,16 @@ try:
 			## get new data
 #			 allBeaconMSGs = parse_events(sock, collectMsgs,offsetUUID,batteryLevelPosition,maxParseSec ) # get the data:  get up to #collectMsgs at one time
 			allBeaconMSGs=[]
-			pkt = sock.recv(255)
+			try:	
+				pkt = sock.recv(255)
+				errCount = 0
+			except	Exception, e:
+				U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+				errCount += 1
+				if errCount > 3:
+					break
+				pkt =[]
+
 			doP = False
 			if len(pkt) > 15: 
 				num_reports = struct.unpack("B", pkt[4])[0]
@@ -514,7 +524,7 @@ try:
 				except	Exception, e:
 					U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 					print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-					print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop "+"bad data"
+					print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEsensor "+"bad data"
 					continue# skip if bad data
 
 		sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
@@ -524,6 +534,6 @@ except	Exception, e:
 	U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
 	U.toLog(-1, "  exiting loop due to error\n")
 
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop end of "+G.program	 
+print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEcsensor end of "+G.program	 
 sys.exit(0)
 

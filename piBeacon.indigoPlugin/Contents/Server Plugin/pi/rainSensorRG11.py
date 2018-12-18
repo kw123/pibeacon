@@ -527,7 +527,8 @@ def getGPIO(pin,calledFrom=""):
 		lastGPIOStatus = newGPIOStatus
 		st =  GPIO.input(pin) == ON
 		newGPIOStatus = st
-		if doPrint and (calledFrom !="loop" or (calledFrom =="loop" and newGPIOStatus !=lastGPIOStatus) ): print datetime.datetime.now().strftime("%M:%S.%f: ") +" getGPIO === calledFrom:"+calledFrom.ljust(15)+ ";  new / previous",newGPIOStatus,lastGPIOStatus
+		if doPrint and (calledFrom !="loop" or (calledFrom =="loop" and newGPIOStatus !=lastGPIOStatus) ):
+			print datetime.datetime.now().strftime("%M:%S.%f: ") +" getGPIO === calledFrom:"+calledFrom.ljust(15)+ ";  new / previous",newGPIOStatus,lastGPIOStatus
 		return st
 	return 0
 
@@ -580,7 +581,7 @@ cyclePower				 = True
 ON						 = False # for relay outoput 
 off						 = True	 # for relay outoput 
 
-doPrint					 = True
+doPrint					 = False
 
 restart					 = False
 lastRead				 = 0

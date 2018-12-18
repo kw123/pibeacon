@@ -19,8 +19,8 @@ if {$authKeyOrPassword == "assword"} {
     }
 }
 
-send "\r"
-expect ":" { } 
+expect "Last login:" { }
+sleep 1
 send "mkdir /home/pi/pibeacon \r"
 send  "rm /home/pi/pibeacon/soundfiles/*\r"
 send  "mkdir /home/pi/pibeacon \r" 

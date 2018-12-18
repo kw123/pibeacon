@@ -51,7 +51,7 @@
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999" tooltip=" use a number to overwrite received value or set to 999"> 
 			<Label>.... set txPower,-dBm=</Label>			</Field>
 			<Field id="beaconTxPowerlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label> used to overwrite the received TX power if less than, for 999 no overwrite</Label>	</Field>
+			<Label> used to overwrite the received TX power if less than; 999 = no overwrite</Label>	</Field>
 
 			<Field id="rssiOffset" type="textfield"     defaultValue="0" tooltip=" correction to received rssi eg -10 would reduce rssi by 10"> 
 			<Label>.... rssi offset; measured + dBm=</Label>
@@ -345,7 +345,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 			<Label>...overwrite default reboot at midnight:</Label>
 				<List>
-					<Option value="0" > no not reboot</Option>
+					<Option value="0" > do not reboot</Option>
 					<Option value="1" > use default for reboot option from config</Option>
 				</List>
 			</Field>
@@ -366,7 +366,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 					<Option value="5"  > wait for 5 secs</Option>
 					<Option value="10" > wait for 10 secs</Option>
 					<Option value="15" > wait for 15 secs</Option>
+					<Option value="20" > wait for 20 secs</Option>
+					<Option value="30" > wait for 30 secs</Option>
 				</List>
+			</Field>
+			<Field id="sleepAfterBootLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
+				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
 			</Field>
 
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
@@ -424,7 +429,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 
-			<Field id="syncTimeWithMAC"   type="menu" defaultValue="" tooltip="use if you have no NTP service">
+			<Field id="syncTimeWithMAC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
 			<Label>...sync time MAC to RPi:</Label>
 				<List>
 					<Option value="0" > do not sync</Option>
@@ -515,6 +520,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<ValueType>String</ValueType>
 				<TriggerLabel>last_boot</TriggerLabel>
 				<ControlPageLabel>last_boot</ControlPageLabel>
+			</State>
+
+			<State id="last_masterStart">
+				<ValueType>String</ValueType>
+				<TriggerLabel>last_masterStart</TriggerLabel>
+				<ControlPageLabel>last_masterStart</ControlPageLabel>
 			</State>
 
 			<State id="closestiBeacon">
@@ -1000,7 +1011,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 			<Label>...overwrite default reboot at midnight:</Label>
 				<List>
-					<Option value="0" > no not reboot</Option>
+					<Option value="0" > do not reboot</Option>
 					<Option value="1" > use default for reboot option from config</Option>
 				</List>
 			</Field>
@@ -1021,7 +1032,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 					<Option value="5"  > wait for 5 secs</Option>
 					<Option value="10" > wait for 10 secs</Option>
 					<Option value="15" > wait for 15 secs</Option>
+					<Option value="20" > wait for 20 secs</Option>
+					<Option value="30" > wait for 30 secs</Option>
 				</List>
+			</Field>
+			<Field id="sleepAfterBootLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
+				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
 			</Field>
 
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
@@ -1163,6 +1179,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<ValueType>String</ValueType>
 				<TriggerLabel>last_boot</TriggerLabel>
 				<ControlPageLabel>last_boot</ControlPageLabel>
+			</State>
+
+			<State id="last_masterStart">
+				<ValueType>String</ValueType>
+				<TriggerLabel>last_masterStart</TriggerLabel>
+				<ControlPageLabel>last_masterStart</ControlPageLabel>
 			</State>
 
 
@@ -1358,7 +1380,7 @@ use eg to track someone moving around - going from one room to the next" >
 			</List>
 			</Field>
 			<Field id="label4"               type="label"  > 
-			<Label>== Set txPower, use a number to overwrite received value or set to 999 to ignore</Label>
+			<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999"> 
 			<Label>.... -dBm=</Label>

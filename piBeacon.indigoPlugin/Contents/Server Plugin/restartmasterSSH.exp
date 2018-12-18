@@ -19,8 +19,8 @@ if {$authKeyOrPassword == "assword"} {
         }
     }
 }
-sleep 1
 expect "Last login:"
+sleep 3
 send "cd /home/pi/pibeacon;sudo python master.py\r"
 set timeout 1
 expect eof

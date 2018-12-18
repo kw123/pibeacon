@@ -242,7 +242,7 @@ while True:
 			eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 			lastRead=tt
 
-		if restartBLEifNoConnect and (tt - lastSignal > (9999+ 120*restartCount)) :
+		if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
 			U.toLog(-1, "requested a restart of BLE stack due to no signal for "+str(int(tt-lastSignal))+" seconds")
 			os.system("echo xx > "+G.homeDir+"temp/BLErestart") # signal that we need to restart BLE
 			lastSignal = time.time() +30
