@@ -26,7 +26,7 @@ import myLogPgms
 import cProfile
 import pstats
 
-dataVersion = 33.72
+dataVersion = 34.72
 
 """
 
@@ -157,9 +157,9 @@ _GlobalConst_allGPIOlist = [
 	, [u"17", u"GPIO17 = pin  # 11 -- DHT"]
 	, [u"27", u"GPIO27 = pin  # 13"]
 	, [u"22", u"GPIO22 = pin  # 15"]
-	, [u"10", u"GPIO10 = pin  # 19 -- SPS"]
-	, [u"9",  u"GPIO09 = pin  # 21 -- SPS"]
-	, [u"11", u"GPIO11 = pin  # 23 -- SPS"]
+	, [u"10", u"GPIO10 = pin  # 19 -- SPS MOSI"]
+	, [u"9",  u"GPIO09 = pin  # 21 -- SPS MISO"]
+	, [u"11", u"GPIO11 = pin  # 23 -- SPS SCLK"]
 	, [u"5",  u"GPIO05 = pin  # 29"]
 	, [u"6",  u"GPIO06 = pin  # 31"]
 	, [u"13", u"GPIO13 = pin  # 33"]
@@ -171,8 +171,8 @@ _GlobalConst_allGPIOlist = [
 	, [u"23", u"GPIO23 = pin  # 16"]
 	, [u"24", u"GPIO24 = pin  # 18"]
 	, [u"25", u"GPIO25 = pin  # 22"]
-	, [u"8",  u"GPIO08 = pin  # 24 -- SPS"]
-	, [u"7",  u"GPIO07 = pin  # 26 -- SPS"]
+	, [u"8",  u"GPIO08 = pin  # 24 -- SPS CE0"]
+	, [u"7",  u"GPIO07 = pin  # 26 -- SPS CE1"]
 	, [u"12", u"GPIO12 = pin  # 32"]
 	, [u"16", u"GPIO16 = pin  # 36"]
 	, [u"20", u"GPIO20 = pin  # 38"]
@@ -216,6 +216,8 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"i2cBMExx",															 # temp / press/ hum /
 						 u"bme680",																   # temp / press/ hum / gas
 						 u"tmp006",																   # temp rmote infrared
+						 u"tmp007",																   # temp rmote infrared
+						 u"max31865",																# platinum temp resistor 
 						 u"pmairquality",
 						 u"amg88xx",																# infrared camera
 						 u"ccs811",																   # co2 voc 
@@ -675,7 +677,10 @@ class Plugin(indigo.PluginBase):
 			except:
 				self.expTimeMultiplier= 2. 
 
-
+			try:
+				self.setClostestRPItextToBlank= self.pluginPrefs.get(u"setClostestRPItextToBlank","1") !="1"
+			except:
+				self.setClostestRPItextToBlank= False
 
 			try:
 				self.enableRebootRPIifNoMessages  = int(self.pluginPrefs.get(u"enableRebootRPIifNoMessages", 999999999))
@@ -1854,6 +1859,7 @@ class Plugin(indigo.PluginBase):
 				if "closestRPI" in dev.states: # must be RPI ..
 					if dev.states[u"closestRPI"] == "": 
 						chList.append({u"key":"closestRPI", u"value":-1})
+						if self.setClostestRPItextToBlank: chList.append({u"key":"closestRPItext", u"value":""})
 					self.execUpdateStatesList(dev,chList)
 
 				for pi in range(_GlobalConst_numberOfiBeaconRPI):
@@ -2673,7 +2679,8 @@ class Plugin(indigo.PluginBase):
 			if self.pluginState == "init":
 
 				doSensorValueAnalog =["Wire18B20","DHTxx","DHT11","i2cTMP102","i2cMCP9808","i2cLM35A","i2cT5403",
-				"i2cMS5803","i2cBMPxx","tmp006","i2cSHT21""i2cAM2320","i2cBMExx","bme680","si7021",
+				"i2cMS5803","i2cBMPxx","tmp006","tmp007","i2cSHT21""i2cAM2320","i2cBMExx","bme680","si7021",
+				"max31865",
 				"pmairquality",
 				"BLEsensor","sgp30",
 				"mhz-I2C","mhz-SERIAL",
@@ -3787,8 +3794,9 @@ class Plugin(indigo.PluginBase):
 				vv = v.split(".exp")[0]
 				if vv in self.RPI[pi][item]:
 					self.RPI[pi][item].remove(vv)
-		return
 
+
+		return
 
 
 ####-------------------------------------------------------------------------####
@@ -7927,6 +7935,7 @@ class Plugin(indigo.PluginBase):
 		try: self.lightningNumerOfSensors		= int(valuesDict[u"lightningNumerOfSensors"])
 		except: self.lightningNumerOfSensors	= 1
 
+		self.setClostestRPItextToBlank = valuesDict[u"setClostestRPItextToBlank"] !="1"
 
 
 		self.pressureUnits					= valuesDict[u"pressureUnits"]	# 1 for Pascal
@@ -9055,6 +9064,7 @@ class Plugin(indigo.PluginBase):
 								closest =  self.findClosestRPI(beacon,dev)
 								if closest != dev.states[u"closestRPI"]:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", closest)
+									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext",self.getRPIdevName(closest))
 							if self.beacons[beacon][u"note"].find(u"beacon")>-1: 
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn) # not for RPI's
 
@@ -9062,6 +9072,7 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[beacon][u"note"].find(u"beacon")>-1:
 								if u"closestRPI" in dev.states:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
+									if self.setClostestRPItextToBlank:self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext", "")
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							#else: this is handled in RPI update
 							#	 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
@@ -9071,6 +9082,7 @@ class Plugin(indigo.PluginBase):
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 								if u"closestRPI" in dev.states:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
+									if self.setClostestRPItextToBlank: self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext", "")
 							#else: this is handled in RPI update
 							#	 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
@@ -12421,6 +12433,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Signal", int(rssi+rssiOffset))
 						self.addToStatesUpdateDict(unicode(dev.id),u"TxPowerReceived",float(txPower))
 						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI",fromPi)
+						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext",self.getRPIdevName(fromPi) )
+
 						if pkLen !=0: self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen)
 						if batteryLevel !="":
 							pass
@@ -12478,6 +12492,7 @@ class Plugin(indigo.PluginBase):
 						updateFINGnow = True
 						self.beacons[mac][u"lastUp"] = -time.time()
 						newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI", -1,newStates=newStates)
+						if self.setClostestRPItextToBlank: newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPItext", "",newStates=newStates)
 						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
 					newStates= self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Signal", -999,newStates=newStates)
 
@@ -12551,7 +12566,8 @@ class Plugin(indigo.PluginBase):
 									if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =5
 
 						if dev.deviceTypeId == "beacon" : 
-							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI", closestRPI,newStates=newStates)
+							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI",     closestRPI,newStates=newStates)
+							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPItext", self.getRPIdevName(closestRPI),newStates=newStates)
 
 					self.beacons[mac][u"indigoId"] = dev.id
 					if pkLen !=0: newStates= self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen,newStates=newStates)
@@ -12703,6 +12719,14 @@ class Plugin(indigo.PluginBase):
 				self.ML.myLog( text = u"updateBeaconStates in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), destination="standard" )
 		return beaconUpdatedIds
 
+
+
+	def getRPIdevName(self, closestRPI):
+		closestRPItext =""
+		if closestRPI >-1:
+			try: closestRPItext = indigo.devices[int(self.RPI[unicode(closestRPI)]["piDevId"])].name
+			except: pass
+		return closestRPItext
 
 
 ####-------------------------------------------------------------------------####
@@ -13178,6 +13202,17 @@ class Plugin(indigo.PluginBase):
 							#sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityLowToMed")
 							#sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityMedToHigh")
 							#sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"TimeSwitchSensitivityHighToAnyRain")
+
+							# max38615 PTD sensor 
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"GPIOcsPin")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"GPIOmisoPin")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"GPIOmosiPin")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"GPIOclkPin")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nWires")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"referenceResistor")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"resistorAt0C")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"hertz50_60")
+
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"rainScaleFactor")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioIn")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"gpioSW1")

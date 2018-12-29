@@ -540,6 +540,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<ControlPageLabel>closestRPI</ControlPageLabel>
 			</State>
 
+			<State id="closestRPItext">
+			<ValueType>string</ValueType>
+			<TriggerLabel>closestRPItext</TriggerLabel>
+			<ControlPageLabel>closestRPItext</ControlPageLabel>
+			</State>
+
 			<State id="PosX">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>PosX</TriggerLabel>
@@ -1744,6 +1750,13 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<TriggerLabel>closestRPI</TriggerLabel>
 			<ControlPageLabel>closestRPI</ControlPageLabel>
 			</State>
+
+			<State id="closestRPItext">
+			<ValueType>String</ValueType>
+			<TriggerLabel>closestRPItext</TriggerLabel>
+			<ControlPageLabel>closestRPItext</ControlPageLabel>
+			</State>
+
 			<State id="lastStatusChange">
 			<ValueType>String</ValueType>
 			<TriggerLabel>lastStatusChange</TriggerLabel>
@@ -4346,6 +4359,21 @@ After some days of running in clean air, proposed setup is:
 				<Option value="Temperature"  >Temperature</Option>
 			</List>
 			</Field>
+			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 
+			<Label>delta temp(%) to trigger update:</Label>
+			<List>
+				<Option value="1"    > 1  </Option>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="7"    > 7</Option>
+				<Option value="10"   > 10	</Option>
+				<Option value="15"   > 15	</Option>
+				<Option value="20"   > 20	</Option>
+				<Option value="25"   > 25	</Option>
+				<Option value="30"   > 30	</Option>
+			</List>
+			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
@@ -4416,6 +4444,307 @@ After some days of running in clean air, proposed setup is:
 				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+  
+	<Device type="sensor" id="tmp007">
+	<Name>INPUT-Temp remote infrared-tmp007</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup tmp007 temp  sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+			<Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of device:</Label>
+			<List>
+				<Option value="64"   >0x40 = 64 default addr0=0 addr1=0</Option>
+				<Option value="65"   >0x41 = 65 default addr0=0 addr1=1</Option>
+				<Option value="66"   >0x42 = 66 default addr0=0 addr1=SDA</Option>
+				<Option value="67"   >0x43 = 67 default addr0=0 addr1=SLC</Option>
+				<Option value="66"   >0x44 = 68 default addr0=1 addr1=0</Option>
+				<Option value="67"   >0x45 = 69 default addr0=0 addr1=1</Option>
+				<Option value="68"   >0x46 = 70 default addr0=0 addr1=SDA</Option>
+				<Option value="69"   >0x47 = 71 default addr0=0 addr1=SLC</Option>
+			</List>
+			</Field>
+			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+			<Label>use TCA9548A multiplexer for this sensor:</Label> 
+			<List>
+				<Option value="-1"    >off </Option>
+				<Option value="0"     >channel 0  </Option>
+				<Option value="1"     >channel 1  </Option>
+				<Option value="2"     >channel 2  </Option>
+				<Option value="3"     >channel 3  </Option>
+				<Option value="4"     >channel 4  </Option>
+				<Option value="5"     >channel 5  </Option>
+				<Option value="6"     >channel 6  </Option>
+				<Option value="7"     >channel 7  </Option>
+			</List>
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  >Temperature</Option>
+			</List>
+			</Field>
+			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 
+			<Label>delta temp(%) to trigger update:</Label>
+			<List>
+				<Option value="1"    > 1  </Option>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="7"    > 7</Option>
+				<Option value="10"   > 10	</Option>
+				<Option value="15"   > 15	</Option>
+				<Option value="20"   > 20	</Option>
+				<Option value="25"   > 25	</Option>
+				<Option value="30"   > 30	</Option>
+			</List>
+			</Field>
+
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+			<Field id="displayEnable" type="menu"     defaultValue="0"> 
+			<Label>use local display to show values:</Label> 
+			<List>
+				<Option value="1"  >yes</Option>
+				<Option value="0"  >No</Option>
+			</List>
+			</Field>
+			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
+			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+ 
+	<Device type="sensor" id="max31865">
+	<Name>INPUT-Temp max31865 -Platinum resistor</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup max31865 -PT  temp  sensor on individual rPis.. connect 3.3, GND, SPS pins</Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+				<List>
+					<Option value="Temperature"  >Temperature</Option>
+				</List>
+			</Field>
+
+			<Field id="GPIOcsPin"   type="menu" defaultValue="8" ><List class="self" filter="" method="filtergpioList" />
+				<Label>select GPIO- csPin:</Label>
+			</Field>
+
+			<Field id="GPIOmisoPin"   type="menu" defaultValue="9" ><List class="self" filter="" method="filtergpioList" />
+				<Label>select GPIO- misoPin:</Label>
+			</Field>
+
+			<Field id="GPIOmosiPin"   type="menu" defaultValue="10" ><List class="self" filter="" method="filtergpioList" />
+				<Label>select GPIO- mosiPin:</Label>
+			</Field>
+
+			<Field id="GPIOclkPin"   type="menu" defaultValue="11" ><List class="self" filter="" method="filtergpioList" />
+				<Label>select GPIO- clkPin:</Label>
+			</Field>
+
+
+			<Field id="nWires"   type="menu" defaultValue="3" >
+				<Label>select number of wires to sensor:</Label>
+				<List>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 4</Option>
+				</List>
+			</Field>
+
+			<Field id="hertz50_60"   type="menu" defaultValue="60" >
+				<Label>light freq 50 or 60 Hz for compensation:</Label>
+				<List>
+					<Option value="50"    > 50</Option>
+					<Option value="60"    > 60</Option>
+				</List>
+			</Field>
+
+			<Field id="referenceResistor"   type="menu" defaultValue="4300" >
+				<Label>Reference Resistor:</Label>
+				<List>
+					<Option value="430"  > 430 Ohm</Option>
+					<Option value="4300" > 4300 Ohm</Option>
+				</List>
+			</Field>
+
+			<Field id="resistorAt0C"   type="menu" defaultValue="1000" >
+				<Label>resistorAt0C:</Label>
+				<List>
+					<Option value="100"  > 100 Ohm</Option>
+					<Option value="1000" > 1000 Ohm</Option>
+				</List>
+			</Field>
+
+
+
+
+			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 
+			<Label>delta temp(%) to trigger update:</Label>
+				<List>
+					<Option value="1"    > 1  </Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10	</Option>
+					<Option value="15"   > 15	</Option>
+					<Option value="20"   > 20	</Option>
+					<Option value="25"   > 25	</Option>
+					<Option value="30"   > 30	</Option>
+				</List>
+			</Field>
+
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+			<Field id="displayEnable" type="menu"     defaultValue="0"> 
+				<Label>use local display to show values:</Label> 
+				<List>
+					<Option value="1"  >yes</Option>
+					<Option value="0"  >No</Option>
+				</List>
+			</Field>
+			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
+			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+		<State id="lastSensorChange">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastSensorChange</TriggerLabel>
 				<ControlPageLabel>lastSensorChange</ControlPageLabel>

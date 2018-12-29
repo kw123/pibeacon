@@ -1,4 +1,18 @@
-Added features / changes in v7.98.260 @ 2018-12-18:  
+Added features / changes in v7.99.260 @ 2018-12-28:  
+===================================================
+
+1. added support for sensors:
+	- adafruit max31865 platinum 100/1000 temp sensor
+	- adafruit  tmp007 remote temperature sensor,  successor to temp006
+
+
+1. added back dev state closestRPItext for iBeacons:
+	this dev state now shows the NAME of the closest RPI, not just PI_x
+	also added option in config to set closestRPItext to blank when iBeacon leaves or keep the last RPI name
+
+
+
+Added features / changes in v7.98.258 @ 2018-12-14:  
 ===================================================
 
 1. bug fix for RPI beaconloop.py program - only a problem when BLE program was not working properly ie in restart: 
@@ -6,18 +20,12 @@ Added features / changes in v7.98.260 @ 2018-12-18:
 
 2. added check for MAC mac number returned from RPI in plugin- in case of empty messages ... 
 
-3. added RPI devices states: last_boot, last_masterStart, rpi_type, op_sys to give you a quick view of the state and config of your RPIs.
-	Useful if you have many RPi to give you a quick overview of system configs etc.
+3. added RPI devices states: last_boot, rpi_type, op_sys to give you a quick view of the state and config of your RPIs.
+	Useful if you have many RPi
 
 4. Improved devices edit menus for RPi and iBeacon sensors
 
 5. fixed reboot ssh command, was not always working 
-
-6. added decoding of eg ";"  characters when send data from RPI to plugin through http to indigo variables
-
-7. changed tag for expect ssh to "Last Login" from ":~". It is much less depended on op-sys, naming of rpi etc.
-
-
 
 
 ===================================================

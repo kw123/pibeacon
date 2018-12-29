@@ -11,7 +11,7 @@ import math
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "tmp006"
+G.program = "tmp007"
 G.debug = 0
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
@@ -37,41 +37,34 @@ G.debug = 0
 
 # Coefficient values, found from this whitepaper:
 # http://www.ti.com/lit/ug/sbou107/sbou107.pdf
-TMP006_B0	= -0.0000294
-TMP006_B1	= -0.00000057
-TMP006_B2	= 0.00000000463
-TMP006_C2	= 13.4
-TMP006_TREF = 298.15
-TMP006_A2	= -0.00001678
-TMP006_A1	= 0.00175
-TMP006_S0	= 6.4  # * 10^-14
+# registers
 
 # Default device I2C address.
-TMP006_I2CADDR		= 0x40
+_TMP007_I2CADDR = 0x40
 
 # Register addresses.
-TMP006_CONFIG		= 0x02
-TMP006_MANID		= 0xFE
-TMP006_DEVID		= 0xFF
-TMP006_VOBJ			= 0x0
-TMP006_TAMB			= 0x01
+_TMP007_CONFIG = 0x02
+_TMP007_DEVID = 0x1F
+_TMP007_VOBJ = 0x0
+_TMP007_TAMB = 0x01
+_TMP007_TOBJ = 0x03
 
 # Config register values.
-TMP006_CFG_RESET	= 0x8000
-TMP006_CFG_MODEON	= 0x7000
-CFG_1SAMPLE			= 0x0000
-CFG_2SAMPLE			= 0x0200
-CFG_4SAMPLE			= 0x0400
-CFG_8SAMPLE			= 0x0600
-CFG_16SAMPLE		= 0x0800
-TMP006_CFG_DRDYEN	= 0x0100
-TMP006_CFG_DRDY		= 0x0080
+_TMP007_CFG_RESET = 0x8000
+_TMP007_CFG_MODEON = 0x7000
+CFG_1SAMPLE = 0x0000
+CFG_2SAMPLE = 0x0200
+CFG_4SAMPLE = 0x0400
+CFG_8SAMPLE = 0x0600
+CFG_16SAMPLE = 0x0800
+_TMP007_CFG_DRDYEN = 0x0100
+_TMP007_CFG_DRDY = 0x0080
 
 
 # ===========================================================================
-# TMP006 Class
+# TMP007 Class
 # ===========================================================================
-class TMP006:
+class TMP007:
 
 	 # Constructor
 	def __init__(self, i2cAddress=""):
@@ -84,107 +77,47 @@ class TMP006:
 				
 		self.bus = smbus.SMBus(1)
 
-	def begin(self, samplerate=CFG_16SAMPLE):
-		"""Start taking temperature measurements.  Samplerate can be one of
-		TMP006_CFG_1SAMPLE, TMP006_CFG_2SAMPLE, TMP006_CFG_4SAMPLE,
-		TMP006_CFG_8SAMPLE, or TMP006_CFG_16SAMPLE.	 The default is 16 samples
-		for the highest resolution.	 Returns True if the device is intialized,
-		False otherwise.
-		"""
-		if samplerate not in (CFG_1SAMPLE, CFG_2SAMPLE, CFG_4SAMPLE, CFG_8SAMPLE, CFG_16SAMPLE):
-			raise ValueError('Unexpected samplerate value! Must be one of: CFG_1SAMPLE, CFG_2SAMPLE, CFG_4SAMPLE, CFG_8SAMPLE, or CFG_16SAMPLE')
-		U.toLog(-1,'Using samplerate value: {0:04X}'.format(samplerate))
-		# Set configuration register to turn on chip, enable data ready output,
-		# and start sampling at the specified rate.
-		config = TMP006_CFG_MODEON | TMP006_CFG_DRDYEN | samplerate
-		# Flip byte order of config value because write16 uses little endian but we
-		# need big endian here.	 This is an ugly hack for now, better to add support
-		# in write16 for explicit endians.
+		self.BUFFER = bytearray(4)
+
+		time.sleep(0.5)
+		return 
+
+
+	def begin(self):
+		# load_calibration()
+		config = _TMP007_CFG_MODEON | _TMP007_CFG_DRDYEN | CFG_8SAMPLE
 		config = ((config & 0xFF) << 8) | (config >> 8)
-		self.write16(TMP006_CONFIG, config)
-		# Check manufacturer and device ID match expected values.
-		mid = self.readU16BE(TMP006_MANID)
-		did = self.readU16BE(TMP006_DEVID)
-		U.toLog(-1,'Read manufacturer ID: {0:04X}'.format(mid))
-		U.toLog(-1,'Read device ID: {0:04X}'.format(did))
-		return mid == 0x5449 and did == 0x0067
+		self.bus.write_word_data(self.address, _TMP007_CONFIG, config)
 
 
-	def sleep(self):
-		"""Put TMP006 into low power sleep mode.  No measurement data will be
-		updated while in sleep mode.
-		"""
-		control = self.readU16BE(TMP006_CONFIG)
-		control &= ~(TMP006_CFG_MODEON)
-		self.write16(TMP006_CONFIG, control)
-		U.toLog(0,'TMP006 entered sleep mode.')
+	# read Obj Temp in C
+	def readObjTempC(self):
+		raw = self.readU16BE(_TMP007_TOBJ) >>2
+		if raw > 16384: raw = 16384-raw
+		return raw *0.03125
 
-	def wake(self):
-		"""Wake up TMP006 from low power sleep mode."""
-		control = self.readU16BE(TMP006_CONFIG)
-		control |= TMP006_CFG_MODEON
-		self.write16(TMP006_CONFIG, control)
-		U.toLog(0,'TMP006 woke from sleep mode.')
-
-	def readRawVoltage(self):
-		"""Read raw voltage from TMP006 sensor.	 Meant to be used in the
-		calculation of temperature values.
-		"""
-		raw = self.readS16BE(TMP006_VOBJ)
-		U.toLog(0,'Raw voltage: 0x{0:04X} ({1:0.4F} uV)'.format(raw & 0xFFFF,
-			raw * 156.25 / 1000.0))
+	# read voltage
+	def readVoltage(self):
+		raw = self.readU16BE(_TMP007_VOBJ);
+		if raw > 32767:
+			raw = (raw & 0x7fff) - 32768
 		return raw
 
-	def readRawDieTemperature(self):
-		"""Read raw die temperature from TMP006 sensor.	 Meant to be used in the
+	def raw_sensor_temperature(self):
+		"""Read raw die temperature from TMP007 sensor.  Meant to be used in the
 		calculation of temperature values.
 		"""
-		return  self.readS16BE(TMP006_TAMB) >>2
+		raw = self.readU16BE(_TMP007_TAMB)
+		return raw >> 2
 
-	def readDieTempC(self):
-		"""Read sensor die temperature and return its value in degrees celsius."""
-		try:
-			Tdie = self.readRawDieTemperature()
-			return Tdie * 0.03125
-		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		return ""
-		
+
 	def getdata(self):
-		try:
-			tA = self.readDieTempC()
-			tO = self.readObjTempC()
-			return tA, tO
-		except:
-			return "",""
-			
-			
-	def readObjTempC(self):
-		try:
-			"""Read sensor object temperature (i.e. temperature of item in front of
-			the sensor) and return its value in degrees celsius."""
-			# Read raw values and scale them to required units.
-			Tdie = self.readRawDieTemperature()
-			Vobj = self.readRawVoltage()
-			Vobj *= 156.25		   # 156.25 nV per bit
-			U.toLog(0,'Vobj = {0:0.4} nV'.format(Vobj))
-			Vobj /= 1000000000.0   # Convert nV to volts
-			Tdie *= 0.03125		   # Convert to celsius
-			Tdie += 273.14		   # Convert to kelvin
-			# Compute object temperature following equations from:
-			# http://www.ti.com/lit/ug/sbou107/sbou107.pdf
-			Tdie_ref = Tdie - TMP006_TREF
-			S = 1.0 + TMP006_A1*Tdie_ref + TMP006_A2*math.pow(Tdie_ref, 2.0)
-			S *= TMP006_S0
-			S /= 10000000.0
-			S /= 10000000.0
-			Vos = TMP006_B0 + TMP006_B1*Tdie_ref + TMP006_B2*math.pow(Tdie_ref, 2.0)
-			fVobj = (Vobj - Vos) + TMP006_C2*math.pow((Vobj - Vos), 2.0)
-			Tobj = math.sqrt(math.sqrt(math.pow(Tdie, 4.0) + (fVobj/S)))
-			return Tobj - 273.15
-		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-			return ""
+		dieTempC = (self.readU16BE(_TMP007_TAMB) >>2 )* 0.03125
+		objTempC = self.readObjTempC()
+		sensorVolts = self.readVoltage()
+		###print "dieTempC",dieTempC, "objTempC",objTempC, "sensorVolts",sensorVolts
+		return objTempC, dieTempC
+
 
 
 	def write8(self, reg, value):
@@ -196,15 +129,11 @@ class TMP006:
 		except IOError, err:
 			return self.errMsg()
 
-	def write16(self, reg, value):
-		"Writes a 16-bit value to the specified register/address pair"
-		try:
-			self.bus.write_word_data(self.address, reg, value)
-			if self.debug:
-				print ("I2C: Wrote 0x%02X to register pair 0x%02X,0x%02X" %
-				 (value, reg, reg+1))
-		except IOError, err:
-			return self.errMsg()
+	def writeu16(self, reg, value):
+		out = (value >> 8) & 0xFF
+		out+= value & 0xFF
+		self.bus.write_word_data(self.address, reg, value)
+		return 
 
 	def writeRaw8(self, value):
 		"Writes an 8-bit value on the bus"
@@ -345,7 +274,7 @@ class TMP006:
 def readParams():
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 	global rawOld
-	global deltaX, tmp006sensor, minSendDelta
+	global deltaX, tmp007sensor, minSendDelta
 	global oldRaw, lastRead
 	try:
 
@@ -405,21 +334,21 @@ def readParams():
 				minSendDelta = 5.
 
 				
-			if devId not in tmp006sensor:
+			if devId not in tmp007sensor:
 				U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
-				tmp006sensor[devId] = TMP006(i2cAddress=i2cAdd)
-				tmp006sensor[devId].begin()
+				tmp007sensor[devId] = TMP007(i2cAddress=i2cAdd)
+				tmp007sensor[devId].begin()
 				U.muxTCA9548Areset()
 				U.toLog(-1," started ")
 				
 		deldevID={}		   
-		for devId in tmp006sensor:
+		for devId in tmp007sensor:
 			if devId not in sensors[sensor]:
 				deldevID[devId]=1
 		for dd in  deldevID:
-			del tmp006sensor[dd]
-		if len(tmp006sensor) ==0: 
+			del tmp007sensor[dd]
+		if len(tmp007sensor) ==0: 
 			####exit()
 			pass
 
@@ -430,16 +359,18 @@ def readParams():
 
 #################################
 def getValues(devId):
-	global sensor, sensors,	 tmp006sensor, badSensor
+	global sensor, sensors,	 tmp007sensor, badSensor
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+	temp = "" 
+	ambTemp = "" 
 	try:
-		temp,ambTemp	 = tmp006sensor[devId].getdata()
+		temp,ambTemp	 = tmp007sensor[devId].getdata()
 		if temp =="" or ambTemp =="" :
 			badSensor+=1
 			U.muxTCA9548Areset()
 			return "badSensor"
-		data = {"temp":round(temp,2),"AmbientTemperature":round(ambTemp,2)}
+		data = {"temp":round(temp,1),"AmbientTemperature":round(ambTemp,1)}
 		badSensor = 0
 		U.muxTCA9548Areset()
 		return data
@@ -462,7 +393,7 @@ def getValues(devId):
 ############################################
 global rawOld
 global sensor, sensors, badSensor
-global deltaX, tmp006sensor, minSendDelta
+global deltaX, tmp007sensor, minSendDelta
 global oldRaw, lastRead
 
 oldRaw						=""
@@ -482,7 +413,7 @@ badSensor					= 0
 sensorActive				= False
 loopSleep					= 1
 rawOld						= ""
-tmp006sensor				={}
+tmp007sensor				={}
 deltaX						= {}
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running

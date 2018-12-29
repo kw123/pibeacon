@@ -135,6 +135,14 @@
         </List>
    </Field>
 
+   <Field    id="setClostestRPItextToBlank"   type="menu" defaultValue="1" tooltip="">
+        <Label>set clostestRPItext to blank when iBeacon down:</Label>
+        <List>
+            <Option value="1" >keep last RPi device name</Option>
+            <Option value="0" >set to blank </Option>
+        </List>
+   </Field>
+
        <Field    id="acceptJunkBeacons"   type="menu" defaultValue="0" tooltip=" eg tx=rx=0, uuid =empty or 00000000, ">
         <Label>Accept "junk" Beacons:</Label>
         <List>
