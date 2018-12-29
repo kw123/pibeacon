@@ -1,4 +1,4 @@
-Added features / changes in v7.99.260 @ 2018-12-28:  
+Added features / changes in v7.99.261 @ 2018-12-29:  
 ===================================================
 
 1. added support for sensors:
@@ -6,7 +6,7 @@ Added features / changes in v7.99.260 @ 2018-12-28:
 	- adafruit  tmp007 remote temperature sensor,  successor to temp006
 
 
-1. added back dev state closestRPItext for iBeacons:
+2. added back dev state closestRPItext for iBeacons:
 	this dev state now shows the NAME of the closest RPI, not just PI_x
 	also added option in config to set closestRPItext to blank when iBeacon leaves or keep the last RPI name
 
