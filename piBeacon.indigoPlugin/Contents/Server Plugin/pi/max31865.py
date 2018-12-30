@@ -7,7 +7,13 @@
 import sys, os, time, json, datetime,subprocess,copy
 import math
 import RPi.GPIO as GPIO
-import numpy
+try:
+	import numpy
+	_numpy =True
+	import warnings	
+	warnings.filterwarnings('ignore')
+except:
+	_numpy = False
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -58,6 +64,9 @@ class max31865(object):
 		self.referenceResistor = referenceResistor
 		self.resistorAt0C = resistorAt0C
 		self.hertz50_60 = hertz50_60
+		self.ratio	= self.resistorAt0C/self.referenceResistor
+		self.ratio4	= 0.25
+		self.comp	= math.sqrt(1 + ( self.ratio4 / self.ratio -1.) )
 		
 		
 	def setupGPIO(self):
@@ -189,72 +198,71 @@ class max31865(object):
 			GPIO.output(self.clkPin, GPIO.LOW)
 		return byte	
 	
-	def calcPT100Temp(self, RTD_ADC_Code):
-		if RTD_ADC_Code ==0: return ""
-		R_REF	= self.referenceResistor # Reference Resistor
-		Res0	= self.resistorAt0C  # Resistance at 0 degC for 400ohm R_Ref
-		ratio	= self.resistorAt0C/self.referenceResistor
-		ratio4	= 0.25
-		comp	= ( ratio4 / ratio -1.)*.50 + 1.
+	def calcPT100Temp(self, RTD_ADC):
+		if RTD_ADC ==0: return ""
 		a = .00390830
 		b = -.000000577500
 		# c = -4.18301e-12 # for -200 <= T <= 0 (degC)
 		c = -0.00000000000418301
 		# c = 0 # for 0 <= T <= 850 (degC)
 		#print "RTD ADC Code: %d" % RTD_ADC_Code
-		Res_RTD = (RTD_ADC_Code) * (self.referenceResistor / 32768.0) # PTxx Resistance
+		Res_RTD = (RTD_ADC) * (self.referenceResistor / 32768.0) # PTxx Resistance
 		#
 		# Callendar-Van Dusen equation
-		# Res_RTD = Res0 * (1 + a*T + b*T**2 + c*(T-100)*T**3)
-		# Res_RTD = Res0 + a*Res0*T + b*Res0*T**2 # c = 0
-		# (c*Res0)T**4 - (c*Res0)*100*T**3  
-		# + (b*Res0)*T**2 + (a*Res0)*T + (Res0 - Res_RTD) = 0
+		# Res_RTD = self.resistorAt0C * (1 + a*T + b*T**2 + c*(T-100)*T**3)
+		# Res_RTD = self.resistorAt0C + a*self.resistorAt0C*T + b*self.resistorAt0C*T**2 # c = 0
+		# (c*self.resistorAt0C)T**4 - (c*self.resistorAt0C)*100*T**3  
+		# + (b*self.resistorAt0C)*T**2 + (a*self.resistorAt0C)*T + (self.resistorAt0C - Res_RTD) = 0
 		#
 		# quadratic formula:
 		# for 0 <= T <= 850 (degC)
 
-		temp_C_line =    (RTD_ADC_Code/32.0)     			   - 256.0  + 18.2
-		temp_CL 	=    (RTD_ADC_Code/(128.*ratio4))*comp     - 1024.0*ratio4/comp                                                      
+		
+		temp_CL 	=    (RTD_ADC/(128.*self.ratio4))*self.comp     - 1024.0*self.ratio4/self.comp                                                      
 
-		temp_C = -(a*Res0) + math.sqrt(a*a*Res0*Res0 - 4*(b*Res0)*(Res0 - Res_RTD))
-		temp_C = temp_C / (2*(b*Res0))
-		# removing numpy.roots will greatly speed things up
-		temp_C_numpy = 0
-#		temp_C_numpy = numpy.roots([c*Res0, -c*Res0*100, b*Res0, a*Res0, (Res0 - Res_RTD)])
-#		temp_C_numpy = temp_C_numpy[-1]
-		temp=0	
-		if False and (temp_C < 0): #use straight line approximation if less than 0
-			# Can also use python lib numpy to solve cubic
-			# Should never get here in this application
-			## adafruit for 100 ohm  is off for R = 1000 by ~ 22 C
-			rpoly = Res_RTD/(Res0/100.)
-			temp = -242.02
-			if Res0 !=100.:
-				temp -= 24.
-			temp += 2.2228 * rpoly
-			rpoly *= Res_RTD/(Res0/100.)  # square
-			temp += 2.5859e-3 * rpoly
-			rpoly *= Res_RTD/Res0  # ^3
-			temp -= 4.8260e-6 * rpoly
-			rpoly *= Res_RTD/(Res0/100.)  # ^4
-			temp -= 2.8183e-8 * rpoly
-			rpoly *= Res_RTD/(Res0/100.)  # ^5
-			temp += 1.5243e-10 * rpoly
-		#print "==PT Resistance:                     %f ohms" % Res_RTD 
-		#print "RTD ADC Code:                        %d" % RTD_ADC_Code
-		#print "R_REF                                %d "% R_REF
-		#print "Res0                                 %d "% Res0
-		#print " comp                                %.3f "%comp
-		#print " ratio                               %.3f "%ratio
-		#print "Straight Line Approx. Temp:simple    %f degC " % temp_C_line
-		#print "Straight Line Approx. Temp:          %f degC " % temp_CL
-		#print "Callendar-Van Dusen Temp (degC > 0): %f degC " % temp_C
-		#print "Solving Full C-V-D using numpy:      %f" %  temp_C_numpy
-		#print "adafruit , 0C (degC > 0):            %f degC " % temp
+		temp_C = (  -(a*self.resistorAt0C) + math.sqrt(a*self.resistorAt0C* a*self.resistorAt0C - 4*(b*self.resistorAt0C)*(self.resistorAt0C - Res_RTD))  ) / (2*(b*self.resistorAt0C))
+
+		temp_C_numpy = -1000
+		temp   = temp_C
+		if temp_C < 0 :
+			temp = temp_CL
+			if _numpy:	
+				try:
+					# removing numpy.roots will greatly speed things up
+					temp_numpy = numpy.roots([c*self.resistorAt0C, -c*self.resistorAt0C*100, b*self.resistorAt0C, a*self.resistorAt0C, (self.resistorAt0C - Res_RTD)])
+					#print temp_numpy
+					delta= 99999
+					ii=0
+					for xx in temp_numpy:
+						#print ii, xx
+						ii+=1
+						if xx.imag ==0:
+							newDelta = abs((xx.real - temp))
+							if newDelta < delta:
+								temp_C_numpy = xx.real
+								delta = newDelta
+					#print ii, temp, temp_C_numpy, delta
+					if delta < 10: temp = temp_C_numpy
+				except	Exception, e:
+					print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+		if False:
+			temp_C_line =    (RTD_ADC/32.0)     			   - 256.0  + 18.2
+			print "==PT Resistance:                     %f ohms" % Res_RTD 
+			print "RTD ADC Code:                        %d" % RTD_ADC
+			print "R_REF                                %d "% self.referenceResistor 
+			print "self.resistorAt0C                    %d "% self.resistorAt0C
+			print " comp                                %.3f "%self.comp
+			print " ratio                               %.3f "%self.ratio
+			print "Straight Line Approx. Temp:simple    %f degC " % temp_C_line
+			print "Straight Line Approx. Temp:          %f degC " % temp_CL
+			print "Callendar-Van Dusen Temp (degC > 0): %f degC " % temp_C
+			print "Solving Full C-V-D using numpy:      %f" %  temp_C_numpy
+			print ""	
+		
 		if temp_C < 0:
-			temp_c = min(0,temp_CL)
+			temp = min(0,temp)
 
-		return temp_C
+		return temp
 
 class FaultError(Exception):
 	pass

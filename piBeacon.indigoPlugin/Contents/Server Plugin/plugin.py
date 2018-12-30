@@ -26,7 +26,7 @@ import myLogPgms
 import cProfile
 import pstats
 
-dataVersion = 34.72
+dataVersion = 34.73
 
 """
 
@@ -1859,7 +1859,7 @@ class Plugin(indigo.PluginBase):
 				if "closestRPI" in dev.states: # must be RPI ..
 					if dev.states[u"closestRPI"] == "": 
 						chList.append({u"key":"closestRPI", u"value":-1})
-						if self.setClostestRPItextToBlank: chList.append({u"key":"closestRPItext", u"value":""})
+						if self.setClostestRPItextToBlank: chList.append({u"key":"closestRPIText", u"value":""})
 					self.execUpdateStatesList(dev,chList)
 
 				for pi in range(_GlobalConst_numberOfiBeaconRPI):
@@ -9064,7 +9064,7 @@ class Plugin(indigo.PluginBase):
 								closest =  self.findClosestRPI(beacon,dev)
 								if closest != dev.states[u"closestRPI"]:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", closest)
-									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext",self.getRPIdevName(closest))
+									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText",self.getRPIdevName(closest))
 							if self.beacons[beacon][u"note"].find(u"beacon")>-1: 
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn) # not for RPI's
 
@@ -9072,7 +9072,7 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[beacon][u"note"].find(u"beacon")>-1:
 								if u"closestRPI" in dev.states:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
-									if self.setClostestRPItextToBlank:self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext", "")
+									if self.setClostestRPItextToBlank:self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", "")
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							#else: this is handled in RPI update
 							#	 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
@@ -9082,7 +9082,7 @@ class Plugin(indigo.PluginBase):
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 								if u"closestRPI" in dev.states:
 									self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
-									if self.setClostestRPItextToBlank: self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext", "")
+									if self.setClostestRPItextToBlank: self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", "")
 							#else: this is handled in RPI update
 							#	 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
@@ -12433,7 +12433,7 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Signal", int(rssi+rssiOffset))
 						self.addToStatesUpdateDict(unicode(dev.id),u"TxPowerReceived",float(txPower))
 						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI",fromPi)
-						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPItext",self.getRPIdevName(fromPi) )
+						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText",self.getRPIdevName(fromPi) )
 
 						if pkLen !=0: self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen)
 						if batteryLevel !="":
@@ -12492,7 +12492,7 @@ class Plugin(indigo.PluginBase):
 						updateFINGnow = True
 						self.beacons[mac][u"lastUp"] = -time.time()
 						newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI", -1,newStates=newStates)
-						if self.setClostestRPItextToBlank: newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPItext", "",newStates=newStates)
+						if self.setClostestRPItextToBlank: newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPIText", "",newStates=newStates)
 						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
 					newStates= self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Signal", -999,newStates=newStates)
 
@@ -12567,7 +12567,7 @@ class Plugin(indigo.PluginBase):
 
 						if dev.deviceTypeId == "beacon" : 
 							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPI",     closestRPI,newStates=newStates)
-							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPItext", self.getRPIdevName(closestRPI),newStates=newStates)
+							newStates = self.addToStatesUpdateDict(unicode(dev.id),"closestRPIText", self.getRPIdevName(closestRPI),newStates=newStates)
 
 					self.beacons[mac][u"indigoId"] = dev.id
 					if pkLen !=0: newStates= self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen,newStates=newStates)
@@ -12722,11 +12722,11 @@ class Plugin(indigo.PluginBase):
 
 
 	def getRPIdevName(self, closestRPI):
-		closestRPItext =""
+		closestRPIText =""
 		if closestRPI >-1:
-			try: closestRPItext = indigo.devices[int(self.RPI[unicode(closestRPI)]["piDevId"])].name
+			try: closestRPIText = indigo.devices[int(self.RPI[unicode(closestRPI)]["piDevId"])].name
 			except: pass
-		return closestRPItext
+		return closestRPIText
 
 
 ####-------------------------------------------------------------------------####

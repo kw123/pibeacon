@@ -540,10 +540,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<ControlPageLabel>closestRPI</ControlPageLabel>
 			</State>
 
-			<State id="closestRPItext">
+			<State id="closestRPIText">
 			<ValueType>string</ValueType>
-			<TriggerLabel>closestRPItext</TriggerLabel>
-			<ControlPageLabel>closestRPItext</ControlPageLabel>
+			<TriggerLabel>closestRPIText</TriggerLabel>
+			<ControlPageLabel>closestRPIText</ControlPageLabel>
 			</State>
 
 			<State id="PosX">
@@ -1751,10 +1751,10 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<ControlPageLabel>closestRPI</ControlPageLabel>
 			</State>
 
-			<State id="closestRPItext">
+			<State id="closestRPIText">
 			<ValueType>String</ValueType>
-			<TriggerLabel>closestRPItext</TriggerLabel>
-			<ControlPageLabel>closestRPItext</ControlPageLabel>
+			<TriggerLabel>closestRPIText</TriggerLabel>
+			<ControlPageLabel>closestRPIText</ControlPageLabel>
 			</State>
 
 			<State id="lastStatusChange">
@@ -4631,22 +4631,18 @@ After some days of running in clean air, proposed setup is:
 				</List>
 			</Field>
 
-			<Field id="GPIOcsPin"   type="menu" defaultValue="8" ><List class="self" filter="" method="filtergpioList" />
-				<Label>select GPIO- csPin:</Label>
-			</Field>
-
-			<Field id="GPIOmisoPin"   type="menu" defaultValue="9" ><List class="self" filter="" method="filtergpioList" />
-				<Label>select GPIO- misoPin:</Label>
-			</Field>
-
 			<Field id="GPIOmosiPin"   type="menu" defaultValue="10" ><List class="self" filter="" method="filtergpioList" />
 				<Label>select GPIO- mosiPin:</Label>
 			</Field>
-
+			<Field id="GPIOmisoPin"   type="menu" defaultValue="9" ><List class="self" filter="" method="filtergpioList" />
+				<Label>select GPIO- misoPin:</Label>
+			</Field>
 			<Field id="GPIOclkPin"   type="menu" defaultValue="11" ><List class="self" filter="" method="filtergpioList" />
 				<Label>select GPIO- clkPin:</Label>
 			</Field>
-
+			<Field id="GPIOcsPin"   type="menu" defaultValue="8" ><List class="self" filter="" method="filtergpioList" />
+				<Label>select GPIO- csPin:</Label>
+			</Field>
 
 			<Field id="nWires"   type="menu" defaultValue="3" >
 				<Label>select number of wires to sensor:</Label>
@@ -4680,8 +4676,6 @@ After some days of running in clean air, proposed setup is:
 					<Option value="1000" > 1000 Ohm</Option>
 				</List>
 			</Field>
-
-
 
 
 			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 

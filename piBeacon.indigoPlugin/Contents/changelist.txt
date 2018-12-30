@@ -1,4 +1,10 @@
-Added features / changes in v7.99.261 @ 2018-12-29:  
+Added features / changes in v7.99.262 @ 2018-12-28:  
+===================================================
+
+1. renamed  dev state closestRPItext to closestRPIText to make it constant with previous name
+
+
+Added features / changes in v7.99.261 @ 2018-12-28:  
 ===================================================
 
 1. added support for sensors:
