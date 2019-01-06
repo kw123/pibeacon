@@ -113,7 +113,7 @@ class max31865(object):
 
 		# read all registers
 		out = self.readRegisters(0,8)
-
+		## print self.referenceResistor, out
 		conf_reg = out[0]
 		#print "config register byte: %x" % conf_reg
 
@@ -199,7 +199,7 @@ class max31865(object):
 		return byte	
 	
 	def calcPT100Temp(self, RTD_ADC):
-		if RTD_ADC ==0: return ""
+		if RTD_ADC == 0: return ""
 		a = .00390830
 		b = -.000000577500
 		# c = -4.18301e-12 # for -200 <= T <= 0 (degC)
@@ -207,7 +207,7 @@ class max31865(object):
 		# c = 0 # for 0 <= T <= 850 (degC)
 		#print "RTD ADC Code: %d" % RTD_ADC_Code
 		Res_RTD = (RTD_ADC) * (self.referenceResistor / 32768.0) # PTxx Resistance
-		#
+		#print self.referenceResistor, RTD_ADC, Res_RTD
 		# Callendar-Van Dusen equation
 		# Res_RTD = self.resistorAt0C * (1 + a*T + b*T**2 + c*(T-100)*T**3)
 		# Res_RTD = self.resistorAt0C + a*self.resistorAt0C*T + b*self.resistorAt0C*T**2 # c = 0
@@ -365,9 +365,9 @@ def readParams():
 
 				
 			if devId not in max31865sensor:
-				U.toLog(-1,"==== Start "+G.program)
+				U.toLog(-1,"==== Start "+G.program +";   devID: "+ str(devId)+";    R-at 0C: %d"%(resistorAt0C))
 				max31865sensor[devId] = max31865(GPIOcsPin,GPIOmisoPin,GPIOmosiPin,GPIOclkPin,nWires,referenceResistor,resistorAt0C,hertz50_60)
-				U.toLog(-1," started ")
+				U.toLog(-1," started "+ str(devId))
 
 				
 		deldevID={}		   
@@ -392,6 +392,7 @@ def getValues(devId):
 	temp = "" 
 	try:
 		temp	 = max31865sensor[devId].readTemp()
+		## print str(devId), temp
 		if temp ==""  or not temp:
 			badSensor+=1
 			return "badSensor"
@@ -467,13 +468,14 @@ while True:
 	try:
 		tt	 = time.time()
 		data = {"sensors": {}}
+		sendNOW = False
 		if sensor in sensors:
+			data["sensors"] = {sensor:{}}
 			for devId in sensors[sensor]:
 				if devId not in lastValue: lastValue[devId] =-500.
 				values = getValues(devId)
 				if values == "": continue
-				data["sensors"] = {sensor:{}}
-				data["sensors"][sensor] = {devId:{}}
+				data["sensors"][sensor][devId] = {}
 				if values =="badSensor":
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["current"]="badSensor"
@@ -497,9 +499,9 @@ while True:
 					 (	tt - abs(G.sendToIndigoSecs) > G.lastAliveSend	) or  
 					 ( quick										   )   ) and  \
 				   ( ( tt - G.lastAliveSend > minSendDelta			   )   ):
-						#print data
-						U.sendURL(data)
+						sendNOW = True
 						lastValue[devId]  = current
+			if sendNOW: U.sendURL(data)
 
 		loopCount +=1
 

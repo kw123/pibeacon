@@ -1,4 +1,18 @@
-Added features / changes in v7.99.262 @ 2018-12-28:  
+Added features / changes in v7.99.263 @ 2019-01-06:  
+===================================================
+
+1. added support for wlan1 in addition to wlan0. in case you have 2 wifi adapters. BUT ONLY one can be active
+
+2. moved all pibeacon files from ~/indigo/pibeacon to  /Library/Application Support/Perceptive Automation/Indigo 7.2/Preferences/Plugins/com.karlwachs.piBeacon/
+
+3. all detailed logging now goes to /Library/Application Support/Perceptive Automation/Indigo 7.2/Logs/com.karlwachs.piBeacon/plugin.log. all error messages still go to teh standard indigo logfile
+
+4. fixed bug line 4649 in buttonAnycommandCALLBACK bad operand... . only occures when sending custom command to rpi and logging was switched on
+
+5. suppressed some RPi updating messages
+
+A
+Added features / changes in v7.99.262 @2018-12-28 :  
 ===================================================
 
 1. renamed  dev state closestRPItext to closestRPIText to make it constant with previous name

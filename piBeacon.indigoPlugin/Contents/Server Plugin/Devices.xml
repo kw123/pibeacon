@@ -1245,8 +1245,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="isBeaconDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="label1"               type="label" > 
-			<Label>==         iBeacon parameters:         ==
-</Label>
+			<Label>==         iBeacon parameters:         ==</Label>
 			</Field>
 			<Field id="label14"               type="label" > 
 			<Label>== Transition from UP to Down to Expired:</Label>
@@ -11730,7 +11729,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
   -Any unix command eg "ping 192.168.1.1"
   -Or   /usr/bin/curl  --user userid:password -X PUT -d value="abc" http://192.168.1.x:portOFserver/variables/xxx
   -Or  "sudo reboot" or "sudo shutdown -h now"-
-  -Or  "gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0" 
+  -Or  "gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0"  to set gpio 18 on/off
+  -Or  "if (gpio -g read 18 | grep 1 ); then  gpio -g write 18 0; else gpio -g write 18 1 ; fi" to toggle gio 18
            to switch GPIO 18 HIGH/low</Label>
 			</Field>
 			<Field id="actionUP"           type="textfield"     defaultValue="" hidden="no" visibleBindingId="piDone"    visibleBindingValue="true"> <Label>action for UP  :</Label></Field>

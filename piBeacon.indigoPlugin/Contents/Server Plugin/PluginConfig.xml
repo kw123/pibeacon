@@ -696,7 +696,6 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
     <Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
         <List>
             <Option value="standard" > no special piBeacon logfile, std indigo logfile</Option>
-            <Option value="user"     > ~/indigo/pibeacon/plugin.log                    </Option>
             <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/plugin.log </Option>
         </List>
     </Field>

@@ -139,7 +139,7 @@ def startBlueTooth(pi):
 		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BeaconUseHCINo,"UART")
 		if myBLEmac ==  -1:
 			return 0,  0, -1
-		print "G.BeaconUseHCINo", G.BeaconUseHCINo, "useHCI",useHCI, "myBLEmac",myBLEmac,"devId", devId
+		print "Beacon Use HCINo ", G.BeaconUseHCINo, "; useHCI ",useHCI, "; myBLEmac ",myBLEmac,"; devId ", devId
 		print "HCIs",HCIs
 				
 		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]

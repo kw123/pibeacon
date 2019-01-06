@@ -429,10 +429,12 @@ def getIPCONFIG():
 	try:
 		retIfconfig = subprocess.Popen("/sbin/ifconfig " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 		if retIfconfig.find("wlan0   ") > -1 : G.wifiEnabled= True
-		if retIfconfig.find("eth0   ") > -1 : G.eth0Enabled= True
+		if retIfconfig.find("wlan1   ") > -1 : G.wifiEnabled= True
+		if retIfconfig.find("eth0   ")  > -1 : G.eth0Enabled= True
 
 		if retIfconfig.find("wlan0:") > -1 : G.wifiEnabled= True
-		if retIfconfig.find("eth0:") > -1 :	 G.eth0Enabled= True
+		if retIfconfig.find("wlan1:") > -1 : G.wifiEnabled= True
+		if retIfconfig.find("eth0:")  > -1 : G.eth0Enabled= True
 
 
 		ifConfigSections = retIfconfig.split("\n\n")
@@ -449,7 +451,8 @@ def getIPCONFIG():
 						eth0IP = eth0IP[1].split(" ")[0]
 
 
-			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") > -1:
+			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") or \
+			   ifConfigSections[ii].find("wlan1  ") > -1 or ifConfigSections[ii].find("wlan1:") > -1:
 				if	ifConfigSections[ii].find("inet addr:") >-1:
 					wifiIP= ifConfigSections[ii].split("inet addr:")
 					if len(wifiIP) > 1:
@@ -555,6 +558,10 @@ def setWLANoffIFeth0ON(wifi0IP,eth0IP):
 			cmd="ifconfig wlan0 down "
 			os.system(cmd) 
 			cmd="iwconfig wlan0 txpower off"
+			os.system(cmd) 
+			cmd="ifconfig wlan1 down "
+			os.system(cmd) 
+			cmd="iwconfig wlan1 txpower off"
 			os.system(cmd) 
 			return "",eth0IP, True
 	return wifi0IP,eth0IP, False
@@ -839,10 +846,12 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 								toLog(-1,"curl err:"+ ret[1])
 							else:
 								os.system("echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend")
+								#print "echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend"
 						else:
 							cmd.append(" &")
 							subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 							os.system("echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend")
+							#print "echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend"
 
 			else:
 						
@@ -884,6 +893,7 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 
 						if sendMSG:
 									toLog(0,"msg: " + unicode(sendData)+"\n" )
+									#print "echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend"
 						else:
 									toLog(0,"msg not send "+sendData)
 						try:	soc.shutdown(socket.SHUT_RDWR)

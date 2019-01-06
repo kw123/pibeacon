@@ -33,7 +33,9 @@ def toLog(text):
 ####### main pgm / loop ############
 global logfileName, logLevel, printON
 
-printON=False
+printON = False
+
+
 
 indigoDir       = sys.argv[0].split("makeBeaconPositionPlots")[0]
 piPositionsDir  = sys.argv[1]
@@ -45,8 +47,10 @@ f.close()
 ### logfile setup
 logLevel = plotData["logLevel"]
 logfileName=plotData["logFile"]
+
+if printON:  print logLevel, logfileName
 try:  
-    if os.path.getsize(logfileName.encode('utf8')) > 2000000:   # delet logfile if > 20 MB
+    if os.path.getsize(logfileName.encode('utf8')) > 2000000:   # delete logfile if > 20 MB
         os.remove((logfileName).encode('utf8'))
 except: pass
 
