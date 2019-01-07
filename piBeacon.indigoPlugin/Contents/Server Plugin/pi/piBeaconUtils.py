@@ -451,7 +451,7 @@ def getIPCONFIG():
 						eth0IP = eth0IP[1].split(" ")[0]
 
 
-			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") or \
+			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") >-1 or \
 			   ifConfigSections[ii].find("wlan1  ") > -1 or ifConfigSections[ii].find("wlan1:") > -1:
 				if	ifConfigSections[ii].find("inet addr:") >-1:
 					wifiIP= ifConfigSections[ii].split("inet addr:")
@@ -555,14 +555,16 @@ def setWLANoffIFeth0ON(wifi0IP,eth0IP):
 	if eth0IP.find(testIP) > -1:
 		if wifi0IP.find(testIP) > -1:
 			toLog(-1,u"switching wifi off as ethernet is connected",doPrint=True)
-			cmd="ifconfig wlan0 down "
+			cmd="sudo ifconfig wlan0 down "
 			os.system(cmd) 
-			cmd="iwconfig wlan0 txpower off"
+			cmd="sudo ifconfig wlan1 down "
 			os.system(cmd) 
-			cmd="ifconfig wlan1 down "
-			os.system(cmd) 
-			cmd="iwconfig wlan1 txpower off"
-			os.system(cmd) 
+
+			# does not work anymore under new opsys 
+			#cmd="sudo iwconfig wlan0 txpower off"
+			#os.system(cmd) 
+			#cmd="sudo iwconfig wlan1 txpower off"
+			#os.system(cmd) 
 			return "",eth0IP, True
 	return wifi0IP,eth0IP, False
 		
