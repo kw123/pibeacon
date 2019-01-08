@@ -6539,7 +6539,7 @@ class Plugin(indigo.PluginBase):
 			except Exception, e:
 					if len(unicode(e)) > 5 :
 						if	time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
-							sself.indiLOG.log(40, u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
+							self.indiLOG.log(40, u"error in socket-send to rPi:"+str(ip)+"  "+ theString)
 							try:	self.indiLOG.log(40, u"line:%s;  err:%s" % (sys.exc_traceback.tb_lineno, e))
 							except: pass
 							self.checkIPSendSocketOk[ip][u"count"] += 1 
@@ -9924,7 +9924,7 @@ class Plugin(indigo.PluginBase):
 
 		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
-				sself.indiLOG.log(40,u"communication to indigo is interrupted")
+				self.indiLOG.log(40,u"communication to indigo is interrupted")
 			self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		return
 

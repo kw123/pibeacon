@@ -1,3 +1,9 @@
+Added features / changes in v7.99.266 @ 2019-01-08:  
+===================================================
+
+1. fixed:  sself.log.. should be  self.log... -- typo in 2 places. Only happens when error occurs and error is logged 
+
+
 Added features / changes in v7.99.265 @ 2019-01-07:  
 ===================================================
 
