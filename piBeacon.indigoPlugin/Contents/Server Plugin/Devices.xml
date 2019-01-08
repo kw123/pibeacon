@@ -15150,11 +15150,11 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>transition between LEDs:</Label>
 			</Field>
             
-			<Field id="GPIOsetA"  type="menu" defaultValue="20" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set A(Hours):</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
-			<Field id="GPIOsetB"  type="menu" defaultValue="21" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set B(Minutes):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
-			<Field id="GPIOsetC"  type="menu" defaultValue="16" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set C(Lights):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
-			<Field id="GPIOup"    type="menu" defaultValue="26" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for UP:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
-			<Field id="GPIOdown"  type="menu" defaultValue="19" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for DOWN:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>  </Field>
+			<Field id="GPIOsetA"  type="menu" defaultValue="20" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set A(Hours):</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOsetB"  type="menu" defaultValue="21" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set B(Minutes):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOsetC"  type="menu" defaultValue="16" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for set C(Lights):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOup"    type="menu" defaultValue="26" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for UP:</Label>			    <List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="GPIOdown"  type="menu" defaultValue="19" visibleBindingId="expertMode" visibleBindingValue="true" > <Label>GPIO pin for DOWN:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
 
 			<Field id="clockLightSet"  type="menu" defaultValue="auto"  hidden = "no">
 				<List>
@@ -15507,6 +15507,124 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 		</States>
 
 	</Device>
+
+
+
+	<Device type="custom" id="sunDial">
+	<Name>OUTPUT-sunDial-Clock</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>            
+			<Field id="infoLabelINPUT" type="label">
+			<Label>Setup sun dial clock  </Label>
+			</Field>
+
+            
+			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Label>msg from plugin</Label>
+			</Field>
+            
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
+			<Label>select rPi-server to which the device is connect to:</Label> 
+			</Field>
+            
+            
+
+			<Field id="timeZone"   type="menu" defaultValue="6-/US/Central" tooltip="this timezone will also be active for the whole PI" >
+			<Label>select the timezone for this clock:</Label>
+					<List class="self" filter="" method="filterTimezones" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="speed"  type="menu" defaultValue="1">
+				<List>
+				<Option value= "1"   > normal</Option>
+				<Option value= "60"  > test = run fast</Option>
+				</List>
+			<Label>Run Mode:</Label>
+			</Field>
+ 
+			<Field id="intensityMult"  type="menu" defaultValue="100" >
+				<List>
+				<Option value= "100"       >100% bright</Option>
+				<Option value= "90"        > 90% </Option>
+				<Option value= "80"        > 80% </Option>
+				<Option value= "70"        > 70% </Option>
+				<Option value= "60"        > 60% </Option>
+				<Option value= "50"        > 50% </Option>
+				<Option value= "40"        > 40% </Option>
+				<Option value= "30"        > 30% </Option>
+				<Option value= "20"        > 20% </Option>
+				<Option value= "10"        > 10% dim</Option>
+				</List>
+			<Label>dimm light (multiplied with RGB values):</Label>
+			</Field>
+
+
+			<Field id="intensityMax"  type="menu" defaultValue="100" >
+				<List>
+				<Option value= "100"       >100% bright</Option>
+				<Option value= "90"        > 90% </Option>
+				<Option value= "80"        > 80% </Option>
+				<Option value= "70"        > 70% </Option>
+				<Option value= "60"        > 60% </Option>
+				<Option value= "50"        > 50% </Option>
+				<Option value= "40"        > 40% </Option>
+				<Option value= "30"        > 30% </Option>
+				<Option value= "20"        > 20% </Option>
+				<Option value= "10"        > 10% dim</Option>
+				</List>
+			<Label>Max limit intensity:</Label>
+			</Field>
+
+			<Field id="intensityMin"  type="menu" defaultValue="0" >
+				<List>
+				<Option value= "100"       >100% bright</Option>
+				<Option value= "90"        > 90% </Option>
+				<Option value= "80"        > 80% </Option>
+				<Option value= "70"        > 70% </Option>
+				<Option value= "60"        > 60% </Option>
+				<Option value= "50"        > 50% </Option>
+				<Option value= "40"        > 40% </Option>
+				<Option value= "30"        > 30% </Option>
+				<Option value= "20"        > 20% </Option>
+				<Option value= "10"        > 10% </Option>
+				<Option value= "0"         > 0</Option>
+				</List>
+			<Label>Min limit intensity:</Label>
+			</Field>
+
+
+			<Field id="clockLightSensor"  type="textfield" defaultValue="1" >
+			<Label>Use attached light sensor to dim, norm factor, 0=off, 1= std:</Label>
+			</Field>
+           
+			<Field id="pin_Coil1"  		type="menu" defaultValue="21" > <Label>GPIO pin for coil1-#21:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_Coil2"  		type="menu" defaultValue="20" > <Label>GPIO pin for coil2-#20:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_Coil3"  		type="menu" defaultValue="16" > <Label>GPIO pin for coil3-#16:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_Coil4"  		type="menu" defaultValue="12" > <Label>GPIO pin for coil4-#12:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_LeftMove"	type="menu" defaultValue="18" > <Label>GPIO pin for LeftMove-#18:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_RightMove"	type="menu" defaultValue="23" > <Label>GPIO pin for RightMove-#23:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_IntensityUp"	type="menu" defaultValue="24" > <Label>GPIO pin for IntensityUp-#24:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_IntensityDn"	type="menu" defaultValue="25" > <Label>GPIO pin for IntensityDown-#25:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_LeftLimit"	type="menu" defaultValue="27" > <Label>GPIO pin for LeftLimit-#27:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_RightLimit"	type="menu" defaultValue="22" > <Label>GPIO pin for RightLimit-#22:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_rgbLED_R"	type="menu" defaultValue="13" > <Label>GPIO pin for rgbLED_R-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_rgbLED_G"	type="menu" defaultValue="26" > <Label>GPIO pin for rgbLED_G-#26:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+			<Field id="pin_rgbLED_B"	type="menu" defaultValue="19" > <Label>GPIO pin for rgbLED_B-#19:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+		</ConfigUI>
+        
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+		</States>
+
+	</Device>
+
 
 
 	<Device type="custom" id="car">
