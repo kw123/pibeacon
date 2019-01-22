@@ -1,4 +1,4 @@
-Added features / changes in v7.100.267 @ 2019-01-21:  
+Added features / changes in v7.100.268 @ 2019-01-21:  
 ===================================================
 
 1. fixed:  BLE connect up/down/up when iphone is off.
