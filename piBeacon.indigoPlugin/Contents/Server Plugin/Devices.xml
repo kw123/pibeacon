@@ -339,6 +339,13 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 
+			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
+			<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
+
+
 			<Field id="labelhwr4"               type="label" > 
 			<Label>== General reboot options:...</Label></Field>
 
@@ -458,6 +465,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="label6"               type="label"  > 
 			<Label>EXPERTS ONLY!!---------------- </Label>
 			</Field>
+
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
 			<Label>... Ignore state of this beacon:</Label>
 			<List>
@@ -1010,6 +1018,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 					<Option value="28800"  >8 hours</Option>
 				</List>
 			</Field>
+
+			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
+			<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
 
 
 			<Field id="labelhwr4"               type="label" > <Label>== General reboot options .....</Label></Field>
@@ -2138,6 +2152,18 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ControlPageLabel>lastStatusChange</ControlPageLabel>
 			</State>
 
+			<State id="closestRPI">
+			<ValueType>number</ValueType>
+			<TriggerLabel>closestRPI</TriggerLabel>
+			<ControlPageLabel>closestRPI</ControlPageLabel>
+			</State>
+
+			<State id="closestRPIText">
+			<ValueType>String</ValueType>
+			<TriggerLabel>closestRPIText</TriggerLabel>
+			<ControlPageLabel>closestRPIText</ControlPageLabel>
+			</State>
+
 		</States>
 	</Device>
 
@@ -2360,8 +2386,8 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	</Device>
 
 
-	<Device type="sensor" id="DHTxx">
-	<Name>INPUT-Temp+Hum-DHT22</Name>
+	<Device type="sensor" id="DHT">
+	<Name>INPUT-Temp+Hum-DHT</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -2374,7 +2400,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup DHT22 temp  humidity sensor on individual rPis.. connect 3.3, GND,signal and 4.7K resistor</Label>
+			<Label>Setup DHT xx temp  humidity sensor on individual rPis.. connect 3.3, GND,signal and 4.7K resistor</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -2385,6 +2411,15 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="gpioPin"   type="menu" defaultValue="17" >
 			<Label>which GPIO-pin is the DHT connected to:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			</Field>
+
+
+			<Field id="dhtType"   type="menu" defaultValue="17" >
+			<Label>type = 22 or 11:</Label>
+			<List>
+				<Option value="22"  >22</Option>
+				<Option value="11"  >11</Option>
+			</List>
 			</Field>
 
 
@@ -2475,122 +2510,6 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	</States>
 	</Device>
     
-
-	<Device type="sensor" id="DHT11">
-	<Name>INPUT-Temp+Hum-DHT11</Name>
-	<UiDisplayStateId>status</UiDisplayStateId>
-		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
-
-
-			<Field id="infoLabelDHT11" type="label">
-			<Label>Setup DHT11 temp humidity sensor on individual rPis .. connect 3.3, GND,signal and 4.7K resistor</Label>
-			</Field>
-
-			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-			<Label>select rPi-server to which the sensor is connect to:</Label> 
-			</Field>
-
-			<Field id="gpioPin"   type="menu" defaultValue="17" >
-			<Label>which GPIO-pin is the DHT connected to:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
-			</Field>
-
-
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-
-			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
-				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
-			</List>
-			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
-			<Field id="displayEnable" type="menu"     defaultValue="0" hidden="YES"> 
-			<Label>use local display to show values:</Label> 
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >No</Option>
-			</List>
-			</Field>
-			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
-			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">	</Field>
-
-		</ConfigUI>
-	<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="Temperature">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
-			</State>
-			<State id="TemperatureMaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
-			</State>
-			<State id="TemperatureMinToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>TemperatureMinToday</TriggerLabel>
-				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
-			</State>
-			<State id="TemperatureMaxYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="TemperatureMinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
-				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
-			</State>
-
-			<State id="Humidity">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
-			</State>
-			<State id="HumidityMaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>HumidityMaxToday</TriggerLabel>
-				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
-			</State>
-			<State id="HumidityMinToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>HumidityMinToday</TriggerLabel>
-				<ControlPageLabel>HumidityMinToday</ControlPageLabel>
-			</State>
-			<State id="HumidityMaxYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
-				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="HumidityMinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
-				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-	</States>
-	</Device>
     
 	<Device type="sensor" id="i2cTMP102">
 	<Name>INPUT-Temp-i2cTMP102</Name>
@@ -5089,7 +5008,7 @@ It measures CO2 VOC
    
 
    
-	<Device type="sensor" id="mhz-I2C">
+	<Device type="sensor" id="mhzI2C">
 	<Name>INPUT-CO2-MH-Zxx-i2c</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
@@ -5266,7 +5185,7 @@ It measures CO2 and temp using infraed light absorption
    
 
    
-	<Device type="sensor" id="mhz-SERIAL">
+	<Device type="sensor" id="mhzSERIAL">
 	<Name>INPUT-CO2-MH-Zxx-serial</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
@@ -15529,8 +15448,28 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>select rPi-server to which the device is connect to:</Label> 
 			</Field>
             
-            
-
+  
+			<Field id="motorType"  type="menu" defaultValue="bipolar-200-2">
+				<List>
+					<Option value= "unipolar-4096" > 5 unipolar coils          4096 steps (ULN2003 chip or alike)</Option>
+					<Option value= "bipolar-200-1" > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-200-2" > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "DRV8834-1"     > 2 bipolar coils bridge 1  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-2"     > 2 bipolar coils bridge 2  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-4"     > 2 bipolar coils bridge 4  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-8"     > 2 bipolar coils bridge 8  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-16"    > 2 bipolar coils bridge 16 *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-32"    > 2 bipolar coils bridge 32 *200 steps (DRV8834 chip)</Option>
+					<Option value= "A4988-1"       > 2 bipolar coils bridge 1  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-2"       > 2 bipolar coils bridge 2  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-4"       > 2 bipolar coils bridge 4  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-8"       > 2 bipolar coils bridge 8  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-16"      > 2 bipolar coils bridge 16 *200 steps (A4988 chip)</Option>
+				</List>
+			<Label>Motor and driver chip type:</Label>
+			</Field>
+ 
+ 
 			<Field id="timeZone"   type="menu" defaultValue="6-/US/Central" tooltip="this timezone will also be active for the whole PI" >
 			<Label>select the timezone for this clock:</Label>
 					<List class="self" filter="" method="filterTimezones" dynamicReload="false"/>
@@ -15539,10 +15478,19 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 			<Field id="speed"  type="menu" defaultValue="1">
 				<List>
-				<Option value= "1"   > normal</Option>
-				<Option value= "60"  > test = run fast</Option>
+					<Option value= "1"   > normal</Option>
+					<Option value= "60"  > test = run fast</Option>
+					<Option value= "600" > test = run very fast</Option>
 				</List>
 			<Label>Run Mode:</Label>
+			</Field>
+
+			<Field id="amPM1224"  type="menu" defaultValue="1">
+				<List>
+				<Option value= "12"  >am/pm</Option>
+				<Option value= "24"  >24 hour</Option>
+				</List>
+			<Label>Time mode:</Label>
 			</Field>
  
 			<Field id="intensityMult"  type="menu" defaultValue="100" >
@@ -15599,20 +15547,120 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="clockLightSensor"  type="textfield" defaultValue="1" >
 			<Label>Use attached light sensor to dim, norm factor, 0=off, 1= std:</Label>
 			</Field>
+
            
-			<Field id="pin_Coil1"  		type="menu" defaultValue="21" > <Label>GPIO pin for coil1-#21:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_Coil2"  		type="menu" defaultValue="20" > <Label>GPIO pin for coil2-#20:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_Coil3"  		type="menu" defaultValue="16" > <Label>GPIO pin for coil3-#16:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_Coil4"  		type="menu" defaultValue="12" > <Label>GPIO pin for coil4-#12:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_LeftMove"	type="menu" defaultValue="18" > <Label>GPIO pin for LeftMove-#18:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_RightMove"	type="menu" defaultValue="23" > <Label>GPIO pin for RightMove-#23:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_IntensityUp"	type="menu" defaultValue="24" > <Label>GPIO pin for IntensityUp-#24:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_IntensityDn"	type="menu" defaultValue="25" > <Label>GPIO pin for IntensityDown-#25:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_LeftLimit"	type="menu" defaultValue="27" > <Label>GPIO pin for LeftLimit-#27:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_RightLimit"	type="menu" defaultValue="22" > <Label>GPIO pin for RightLimit-#22:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_rgbLED_R"	type="menu" defaultValue="13" > <Label>GPIO pin for rgbLED_R-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_rgbLED_G"	type="menu" defaultValue="26" > <Label>GPIO pin for rgbLED_G-#26:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
-			<Field id="pin_rgbLED_B"	type="menu" defaultValue="19" > <Label>GPIO pin for rgbLED_B-#19:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>  </Field>
+          
+			<Field id="pin_Coil1"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil1-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Coil2"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil2-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Coil3"  		type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil3-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Coil4"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil4-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+
+			<Field id="pin_Enable"  	type="menu" defaultValue="5"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Enable-#5:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Sleep"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Sleep-#6:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Step"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Step-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dir"			type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Direction-#19:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32"> 											<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 																	<Label>GPIO pin for Reset-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+			<Field id="pin_rgbLED_G"	type="menu" defaultValue="16" > 																		<Label>GPIO pin for rgbLED_G-#13:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_rgbLED_R"	type="menu" defaultValue="20" >																			<Label>GPIO pin for rgbLED_R-#19:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_rgbLED_B"	type="menu" defaultValue="21" >																			<Label>GPIO pin for rgbLED_B-#26:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+			<Field id="pin_sensor0"		type="menu" defaultValue="27" >																			<Label>GPIO pin for boundary sensor-#27:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor12"	type="menu" defaultValue="22" >																			<Label>GPIO pin for 12 oClock sensor-#22:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+			<Field id="pin_Up"			type="menu" defaultValue="18" >																			<Label>GPIO pin for Up-#18:</Label>					<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dn"			type="menu" defaultValue="23" >																			<Label>GPIO pin for Down-#23:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+			<Field id="pin_intensity"	type="menu" defaultValue="24" >																			<Label>GPIO pin for Intensity Switch-#24:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_restart"		type="menu" defaultValue="25" > 																		<Label>GPIO pin for Restart Switch-#25:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+			<Field id="pin_webAdhoc"	type="menu" defaultValue="10" >																			<Label>GPIO pin for adhoc Web Switch:-#10</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_amPM1224"	type="menu" defaultValue="11" >																			<Label>GPIO pin for 12/24 Switch-11:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+		</ConfigUI>
+        
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+		</States>
+
+	</Device>
+
+
+	<Device type="custom" id="setStepperMotor">
+	<Name>OUTPUT-stepper-motor</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>            
+			<Field id="help" type="checkbox"   defaultValue="true"> <Label>Show help text:</Label>  </Field>
+			<Field id="infoLabelINPUT" type="label" visibleBindingId="help" visibleBindingValue="true">
+			<Label>Setup stepper motor parameters: 
+You can chose between 5 pole unipolar and 2 coils bipolar stepper motors.
+These motors must be driven by chips:
+ULN2003 is a simple set of darlington transitors, current up to 250mA
+   It is used for the 5 pole unipolar motor
+L9110 or L298N can be used to drive bipolar 2 coil motors in full and half step modes
+A4988 (8V-35V) and DRV8834(2.5V-8V) are more sophisticated. 
+   They are almost 100% pin compatible
+   Can drive bipolar 2 coil motors in 1,1/2,1/4,1/8,1/16 (and 1/32) step size
+      you need to configure the pins on the chips to set the step size
+  Can configure enable / sleep / reset and fault pins 
+      They are currently only used to switch the motor ON at start,
+      but you could also simply hardwire the pins at the chip directly
+You are able to use multiple motors on the same RPI (tested w 2) 
+   limited by the number of GPIOs available and CPU power depending on driver type
+Use an indigo ACTION  "Send commands to stepper motor .." to drive the motor
+   #of steps, direction, delays ... can be send in single or multiple sets
+You can use up to 3 GPIO input pins to control the range of the motor
+   If one of thes GPIO goes High/low the motor will stop. 
+   This can be enabled / configured in each action separately. 
+   Here you define the GPIO pin numbers and refer to them in the 
+      actions as GPIO#0 / 1 / 2</Label>
+			</Field>
+
+            
+			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Label>msg from plugin</Label>
+			</Field>
+            
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
+			<Label>select rPi-server to which the device is connect to:</Label> 
+			</Field>
+  
+			<Field id="motorType"  type="menu" defaultValue="bipolar-200-2">
+				<List>
+					<Option value= "unipolar-4096" > 5 unipolar coils          4096 steps - ULN2003 chip or alike</Option>
+					<Option value= "bipolar-200-1" > 2 bipolar coils bridge 1  *200 steps - L9110/L298N chip or alike</Option>
+					<Option value= "bipolar-200-2" > 2 bipolar coils bridge 2  *200 steps - L9110/L298N chip or alike</Option>
+					<Option value= "DRV8834-1"     > 2 bipolar coils bridge - DRV8834 set steps sice on chip jumpers</Option>
+					<Option value= "A4988-1"       > 2 bipolar coils bridge - A4988  set steps sice on chip jumpers</Option>
+				</List>
+			<Label>Motor type:</Label>
+			</Field>
+ 
+           
+			<Field id="pin_Coil1"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil1-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Coil2"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil2-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Coil3"  		type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil3-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Coil4"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil4-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+
+			<Field id="pin_Enable"  	type="menu" defaultValue="5"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Enable-#5:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Sleep"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Sleep-#6:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Step"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Step-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dir"			type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Direction-#19:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32"> 											<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 																<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+
+
+			<Field id="pin_sensor0"		type="menu" defaultValue="27" >				<Label>GPIO pin to check if movement should be stopped#0:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor1"		type="menu" defaultValue="22" >				<Label>GPIO pin to check if movement should be stopped#1:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor2"		type="menu" defaultValue="23" >				<Label>GPIO pin to check if movement should be stopped#2:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 		</ConfigUI>
         
 		<States>
@@ -15726,6 +15774,13 @@ States:
 	<Device type="custom" id="OUTPUTgpio-4">	<Name>OUTPUT-GPIO-max-4-PINs - deprecated</Name>	</Device>
 	<Device type="custom" id="OUTPUTgpio-10">	<Name>OUTPUT-GPIO-max-10-PINs- deprecated</Name>	</Device>
 	<Device type="custom" id="OUTPUTgpio-26">	<Name>OUTPUT-GPIO-max-26-PINs- deprecated</Name>	</Device>
+
+	<Device type="sensor" id="DHT11">        	<Name>INPUT-Temp+Hum-DHT11- deprecated</Name>		</Device>
+	<Device type="sensor" id="DHTxx">        	<Name>INPUT-Temp+Hum-DHTxx- deprecated</Name>		</Device>
+	<Device type="sensor" id="mhz-I2C">			<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
+	<Device type="sensor" id="mhz-SERIAL">		<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
+	<Device type="sensor" id="mhz_I2C">			<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
+	<Device type="sensor" id="mhz_SERIAL">		<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
 
     
 </Devices>

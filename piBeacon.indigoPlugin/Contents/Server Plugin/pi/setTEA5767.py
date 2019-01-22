@@ -190,7 +190,7 @@ class tea5767:
         self.bus.write_byte(self.add, 0x00)
         time.sleep(1)
 
-    def write(self,freq, mute=0,mono=0,highCut=1,noiseCancel=1,bandLimit=0,DTCon=1,PLLREF=0,XTAL=1,HLSI=1, scan=0,searchLevel=1):
+    def writeToDevice(self,freq, mute=0,mono=0,highCut=1,noiseCancel=1,bandLimit=0,DTCon=1,PLLREF=0,XTAL=1,HLSI=1, scan=0,searchLevel=1):
         U.toLog(-1,  "FM Radio Module frequency: " + str(freq)+
          "  mute: "        + str(mute)    +
          "  mono: "        + str(mono)+
@@ -370,7 +370,7 @@ U.echoLastAlive(G.program)
 radio = tea5767(i2cAddress = i2cAddress)
 if restart: radio.init()
 
-radio.write(frequency, mute=mute,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
+radio.writeToDevice(frequency, mute=mute,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
 oldfrequency   = frequency
 oldmute        = mute
 oldmono        = mono
@@ -396,10 +396,10 @@ while (True):
     
         if (newCommand or frequency!=oldfrequency or mute!=oldmute or mono!=oldmono or highCut!=oldhighCut or noiseCancel!=oldnoiseCancel or bandLimit!=oldbandLimit or DTCon!=oldDTCon or PLLREF!=oldPLLREF or XTAL!=oldXTAL or oldHLSI != HLSI):
             if frequency!=oldfrequency:
-                radio.write(oldfrequency, mute=1,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
-                radio.write(frequency,    mute=1,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
+                radio.writeToDevice(oldfrequency, mute=1,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
+                radio.writeToDevice(frequency,    mute=1,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
                 time.sleep(0.3)
-            radio.write(frequency, mute=mute,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
+            radio.writeToDevice(frequency, mute=mute,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
             if fastScan !=1: 
                 oldfrequency   = frequency
             oldmute        = mute
@@ -423,7 +423,7 @@ while (True):
             maxFreq   = 90.1
             endFreq   = 107.0
             for iii in range(200):
-                res = radio.write(f, mute=1,bandLimit=bandLimit,scan=1,searchLevel=3)
+                res = radio.writeToDevice(f, mute=1,bandLimit=bandLimit,scan=1,searchLevel=3)
                 if res!={}:
                     if res["Signal"] > 9:
                         f  = res["freq"] +0.1
@@ -439,7 +439,7 @@ while (True):
                 if f > endFreq: break
                 time.sleep(0.1)
             frequency = oldfrequency 
-            radio.write(frequency, mute=mute,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
+            radio.writeToDevice(frequency, mute=mute,mono=mono,highCut=highCut,noiseCancel=noiseCancel,bandLimit=bandLimit,DTCon=DTCon,PLLREF=PLLREF,XTAL=XTAL,HLSI=HLSI)
             oldmute        = mute
             oldmono        = mono
             oldhighCut     = highCut

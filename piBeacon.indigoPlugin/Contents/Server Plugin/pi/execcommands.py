@@ -110,6 +110,17 @@ def execCMDS(data):
 				
 			device=next["device"]
 			
+			if device.lower()=="setsteppermotor":
+				cmdOut = json.dumps(next)
+				if cmdOut != "":
+					try:
+						f=open(G.homeDir+"temp/setStepperMotor.inp","w")
+						f.write(cmdOut+"\n")
+						f.close()
+					except	Exception, e:
+						U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				continue
+			
 			if device.lower()=="output-display":
 				cmdOut = json.dumps(next)
 				if cmdOut != "":

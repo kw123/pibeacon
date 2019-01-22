@@ -1212,7 +1212,7 @@
             <Field   id="head" type="label"><Label>You can use %%v:VariName%% or %%v:VariID%%  or 
      %%v:DeviceName:stateName%%  or %%v:DeviceID:stateName%% for any part of text input
 You can use different options for differnt displays eg  regular pixel displays do not offer LED fonts
-There is a major looop that gets executed xx times (1-inifnity)
+There is a major loop that gets executed xx times (1-inifnity)
    The screen can be reset to any color before each major loop
    You can set overall intensity (reduced from 100%)
 Then there are elements in each loop that can be shown 
@@ -1313,7 +1313,7 @@ The action menu offers 70 elements, you can use python script for more elements-
                      <Option value= "7" >7</Option>
                      <Option value= "8" >8</Option>
                      <Option value= "9" >9</Option>
-                     <Option value= "10" >"10</Option>
+                     <Option value= "10" >10</Option>
                      <Option value= "12" >12</Option>
                      <Option value= "15" >15</Option>
                      <Option value= "20" >20</Option>
@@ -1500,7 +1500,7 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Field id ="seplelem00"  type="separator"/>
             <Field id ="typexYAYx0"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT  WindowStart + 0:  ............ select output type:</Label> 
+                <Label>SET  WindowStart + 0:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx0"  type="textfield" default="" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1573,7 +1573,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
              <Field id ="typexYAYx1"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 1:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 1:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx1"  type="textfield" default="" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1648,7 +1648,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx2"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 2:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 2:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx2"  type="textfield" default="" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1721,7 +1721,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx3"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 3:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 3:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx3"  type="textfield" default="" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1794,7 +1794,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx4"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 4:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 4:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx4"  type="textfield" default="" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1866,7 +1866,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx5"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 5:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 5:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx5"  type="textfield" default="" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1940,7 +1940,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx6"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 6:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 6:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx6"  type="textfield" default="" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2014,7 +2014,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx7"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 7:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 7:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx7"  type="textfield" default="" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2088,7 +2088,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx8"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 8:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 8:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx8"  type="textfield" default="" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2162,7 +2162,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
             <Field id ="typexYAYx9"  type="menu" defaultValue="">
                 <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-                <Label>ELEMENT WindowStart + 9:  ............ select output type:</Label> 
+                <Label>SET WindowStart + 9:  ............ select output type:</Label> 
             </Field>
             
             <Field id="textxYAYx9"  type="textfield" default="" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2248,7 +2248,7 @@ The action menu offers 70 elements, you can use python script for more elements-
                      <Option value= "0"           >not active </Option>
                      <Option value= "digitalClock" >Digital Clock</Option>
                      </List>
-                <Label>ELEMENT 98:  .......................................digital Clock:</Label> 
+                <Label>SET 98:  .......................................digital Clock:</Label> 
             </Field>
 
             <Field id="delayStart98"  type="textfield" default="0" visibleBindingId="type98"  visibleBindingValue="digitalClock">
@@ -2322,7 +2322,7 @@ The action menu offers 70 elements, you can use python script for more elements-
                      <Option value= "0"           >not active </Option>
                      <Option value= "analogClock" >Analog Clock</Option>
                      </List>
-                <Label>ELEMENT 99:  .............................analog/digital Clock:</Label> 
+                <Label>SET 99:  .............................analog/digital Clock:</Label> 
             </Field>
 
             <Field id="delayStart99"  type="textfield" default="0" visibleBindingId="type99"  visibleBindingValue="analogClock">
@@ -2478,6 +2478,485 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Field id="infoLabelsensors2" type="label">
 <Label>AnyText%%v:variableNameOrNumber%%AnyText or
 AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
+        </ConfigUI>
+       </Action>
+
+   
+    <Action id="StepperMotor">
+        <Name>Send commands to stepper motor attached to RPI </Name>
+         <CallbackMethod>setStepperMotorCALLBACKaction</CallbackMethod>
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="indigo.devices" filter="self.setStepperMotor" />
+                <Label>select Motor device:</Label> 
+            </Field>
+
+            <Field id="msg"  type="textfield" default="" readonly="yes"  >
+                <Label>MSG:</Label>
+            </Field>
+            <Field   id="head" type="label"><Label>You can use %%v:VariName%% or %%v:VariID%%  or 
+     %%v:DeviceName:stateName%%  or %%v:DeviceID:stateName%% for any part of text input
+You can use different options for text input fields
+There is a major loop that gets executed xx times (1-inifnity)
+Then there are actions in each set (steps/sleep) 
+     -in sequence (immediate) after 0-xx secs of delay
+     -or after all elements have been defined (use wait until all .. and immediate for the last element)
+     </Label> </Field>
+            
+            <Field   id="OneTime" type="label"><Label>One time function executed before elements.... </Label> </Field>
+
+             <Field id="repeat"  type="menu" default="9999999" >
+                <List>
+                     <Option value= "1" >1</Option>
+                     <Option value= "2" >2</Option>
+                     <Option value= "3" >3</Option>
+                     <Option value= "4" >4</Option>
+                     <Option value= "5" >5</Option>
+                     <Option value= "6" >8</Option>
+                     <Option value= "7" >7</Option>
+                     <Option value= "8" >8</Option>
+                     <Option value= "9" >9</Option>
+                     <Option value= "10" >10</Option>
+                     <Option value= "12" >12</Option>
+                     <Option value= "15" >15</Option>
+                     <Option value= "20" >20</Option>
+                     <Option value= "25" >25</Option>
+                     <Option value= "30" >30</Option>
+                     <Option value= "50" >50</Option>
+                     <Option value= "60" >60</Option>
+                     <Option value= "80" >80</Option>
+                     <Option value= "100" >100</Option>
+                     <Option value= "200" >200</Option>
+                     <Option value= "500" >500</Option>
+                     <Option value= "9999999" >infinit</Option>
+                </List>
+                <Label>do sequence below x times:</Label>
+            </Field>
+            <Field id="waitForLast"  type="menu" default="0" >
+                <List>
+                    <Option value= "1"    >wait for last set to finish, then execute this one</Option>
+                    <Option value= "0"    >do not wait, stop last set executing and start this one</Option>
+                </List>
+                <Label>wait for last set of command to finish</Label>
+            </Field>
+           <Field id="startAtDateTime"  type="textfield" default="0" >
+                <Label>Start: delay by secs or set Date YYY-mm-dd HH:MM:SS when to start:</Label>
+            </Field>
+
+ 
+           <Field id ="seplelem00"  type="separator"/>
+
+
+
+            <Field id="cmd-0"		type="menu"  defaultValue="steps">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -0:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-0"   type="textfield" default="0"   visibleBindingId="cmd-0"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-0"		type="textfield" default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-0"		type="textfield" default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... Delay in 0.1 mSec between steps:</Label>	</Field>
+            <Field id="dir-0"		type="menu"      default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... Direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-1"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-0"	type="menu" default="0ff" visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-0"	type="menu" default="0ff" visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-0"	type="menu" default="0ff" visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-1"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -1:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-1"   type="textfield" default="0"   visibleBindingId="cmd-1"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-1"		type="textfield" default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-1"		type="textfield" default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-1"		type="menu"      default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-1"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-1"	type="menu" default="0ff" visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-1"	type="menu" default="0ff" visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-1"	type="menu" default="0ff" visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-2"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -2:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-2"   type="textfield" default="0"   visibleBindingId="cmd-2"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-2"		type="textfield" default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-2"		type="textfield" default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-2"		type="menu"      default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-1"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-2"	type="menu" default="0ff" visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-2"	type="menu" default="0ff" visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-2"	type="menu" default="0ff" visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-3"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -3:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-3"   type="textfield" default="0"   visibleBindingId="cmd-3"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-3"		type="textfield" default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-3"		type="textfield" default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-3"		type="menu"      default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-1"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-3"	type="menu" default="0ff" visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-3"	type="menu" default="0ff" visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-3"	type="menu" default="0ff" visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-4"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -5:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-4"   type="textfield" default="0"   visibleBindingId="cmd-4"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-4"		type="textfield" default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-4"		type="textfield" default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-4"		type="menu"      default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-1"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-4"	type="menu" default="0ff" visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-4"	type="menu" default="0ff" visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-4"	type="menu" default="0ff" visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+            <Field id="cmd-5"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -5:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-5"   type="textfield" default="0"   visibleBindingId="cmd-5"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-5"		type="textfield" default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-5"		type="textfield" default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-5"		type="menu"      default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-1"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-5"	type="menu" default="0ff" visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-5"	type="menu" default="0ff" visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-5"	type="menu" default="0ff" visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-6"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -6:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-6"   type="textfield" default="0"   visibleBindingId="cmd-6"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-6"		type="textfield" default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-6"		type="textfield" default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-6"		type="menu"      default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-6"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-6"	type="menu" default="0ff" visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-6"	type="menu" default="0ff" visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-6"	type="menu" default="0ff" visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-7"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -7:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-7"   type="textfield" default="0"   visibleBindingId="cmd-7"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-7"		type="textfield" default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-7"		type="textfield" default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-7"		type="menu"      default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-7"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-7"	type="menu" default="0ff" visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-7"	type="menu" default="0ff" visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-7"	type="menu" default="0ff" visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-8"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -8:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-8"   type="textfield" default="0"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-8"		type="textfield" default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-8"		type="textfield" default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-8"		type="menu"      default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-8"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-8"	type="menu" default="0ff" visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-8"	type="menu" default="0ff" visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-8"	type="menu" default="0ff" visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
+            <Field id="cmd-9"		type="menu"  defaultValue="off">	
+                <List>
+                    <Option value= "off"    > off</Option>
+                    <Option value= "steps"  > steps</Option>
+                    <Option value= "sleep"  > sleep</Option>
+                </List>
+				<Label>SET -9:  enable ...:</Label>
+			</Field>
+            <Field id="delayBf-9"   type="textfield" default="0"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="steps-9"		type="textfield" default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
+            <Field id="delay-9"		type="textfield" default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="dir-9"		type="menu"      default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
+                <List>
+                    <Option value= "1"    > forward</Option>
+                    <Option value= "-9"   > backwards</Option>
+                </List>
+			</Field>
+            <Field id="GPIO.0-9"	type="menu" default="0ff" visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... use GPIO#0 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.1-9"	type="menu" default="0ff" visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... use GPIO#1 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+            <Field id="GPIO.2-9"	type="menu" default="0ff" visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... use GPIO#2 to stop THIS move</Label>
+                <List>
+                    <Option value= "off"  >off</Option>
+                    <Option value= "1"    > stop if input is HIGH</Option>
+                    <Option value= "0"    > stop if input is low</Option>
+                </List>
+            </Field>
+
+
+
         </ConfigUI>
        </Action>
 

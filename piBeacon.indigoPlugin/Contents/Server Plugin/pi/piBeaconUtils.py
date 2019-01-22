@@ -163,17 +163,22 @@ def checkParametersFile(defaultParameters, force=False):
 			restartMyself(reason="bad parameter... file.. restored" , doPrint=True)
 
 #################################
-def doRead(inFile=G.homeDir+"temp/parameters",lastTimeStamp=""):
+def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=False):
 	t=0
 	try:
 		if not os.path.isfile(inFile):
 			if lastTimeStamp != "": 
 				return "","error",t
 			return "","error"
+
+		if testTimeOnly:  return t
 				
 		t = os.path.getmtime(inFile)
 		if lastTimeStamp != "": 
-			if lastTimeStamp == t: return "","",t
+			if lastTimeStamp == t: 
+				if testTimeOnly: return t
+				else: 			 return "","",t
+		if testTimeOnly:  return t
 		
 		f=open(inFile,"r")
 		inRaw =f.read().strip('"')
@@ -451,7 +456,7 @@ def getIPCONFIG():
 						eth0IP = eth0IP[1].split(" ")[0]
 
 
-			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") >-1 or \
+			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") > -1 or \
 			   ifConfigSections[ii].find("wlan1  ") > -1 or ifConfigSections[ii].find("wlan1:") > -1:
 				if	ifConfigSections[ii].find("inet addr:") >-1:
 					wifiIP= ifConfigSections[ii].split("inet addr:")

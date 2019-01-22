@@ -126,6 +126,7 @@
             <Option value="-50"  >signal GT -50 dBm </Option>
             <Option value="-55"  >signal GT -55 dBm </Option>
             <Option value="-60"  >signal GT -60 dBm </Option>
+            <Option value="-65"  >signal GT -65 dBm </Option>
             <Option value="-70"  >signal GT -70 dBm </Option>
             <Option value="-75"  >signal GT -75 dBm </Option>
             <Option value="-80"  >signal GT -80 dBm </Option>

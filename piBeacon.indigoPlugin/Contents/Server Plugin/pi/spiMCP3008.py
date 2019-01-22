@@ -190,10 +190,6 @@ def checkSPSstatus():
 #################################
 #################################
 #################################
-#################################
-#################################
-#################################
-#################################
              
 global sensorList, sensors,spi0,spi1,badSensors
 global enableTXpinsAsGpio,enableSPIpinsAsGpio
@@ -268,11 +264,9 @@ while True:
         sValues={"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"lux":[[],[],[]]}      
         displayInfo={}
         
-        if "i2cMLX90614"        in sensors: data  = getMLX90614("i2cMLX90614",  data)
         if regularCycle:
             if "spiMCP3008"     in sensors: data = getMCP3008("spiMCP3008",  data)
             if "spiMCP3008-1"   in sensors: data = getMCP3008("spiMCP3008-1",data)
-            if "myprogram"      in sensors: data = getMyprogram("myprogram", data)
 
         loopCount +=1
         

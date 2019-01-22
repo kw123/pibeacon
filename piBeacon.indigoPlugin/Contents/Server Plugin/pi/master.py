@@ -44,12 +44,6 @@ def cleanupOldFiles():
 	os.system("rm	 "+G.homeDir+"rennameMeTo_myoutput.py >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"renameMyTo_mysensors.py >/dev/null 2>&1")
 	restart=False
-	for ff in G.parameterFileList:
-		if "beacon_" in ff and "parameters" not in ff:
-			rmFile= ff.split("_")[1]
-			if os.path.isfile(G.homeDir+rmFile):
-				restart = True
-				os.system("rm	 "+G.homeDir+rmFile+" >/dev/null 2>&1")
 	return restart
 
 
@@ -77,12 +71,13 @@ def readNewParams(force=False):
 		global sensorEnabled, enableiBeacons, beforeLoop, cAddress,rebootHour,rebooted,BLEserial,BLEserialOLD,sensors,enableShutDownSwitch, rebootWatchDogTime
 		global shutdownInputPin,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, displayActive
 		global actions, output
-		global lastAlive, neopixelActive, neopixelClockActive, tea5767Active, getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active, getspiMCP3008Active, getpmairqualityActive, OUTPUTgpioActive
+		global lastAlive
 		global activePGMdict, bluetoothONoff
 		global oldRaw,	lastRead
 		global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
 		global chargeTimeForMaxCapacity, batteryCapacitySeconds
 		global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
+		global activePGM
 
 		
 		BLEserialOLD= BLEserial
@@ -149,58 +144,38 @@ def readNewParams(force=False):
 		neopixelClockActive = False
 		if "output"				in inp:	 
 			output=				  (inp["output"])
-			
-			if "display" in output:
-				for devid in output["display"]:
-					ddd = output["display"][devid][0]
-					#print ddd
-					if "i2cAddress" not in ddd: continue
-					if "devType"	not in ddd: continue
-					displayActive =True
-					break
-					
-			if "neopixel" in output:
-				for devid in output["neopixel"]:
-					ddd = output["neopixel"][devid][0]
-					#print ddd
-					if "signalPin"	not in ddd: continue
-					if "devType"	not in ddd: continue
-					if not neopixelActive:
-						neopixelActive =True
-						checkIfNeopixelIsRunning(pgm= "neopixel")
-					U.toLog(1, "setting neopixel = true") 
-					break
-					
-			if "neopixelClock" in output:
-				for devid in output["neopixelClock"]:
-					ddd = output["neopixelClock"][devid][0]
-					#print ddd
-					if "signalPin"	not in ddd: continue
-					if "devType"	not in ddd: continue
-					if not neopixelClockActive:
-						neopixelClockActive =True
-						checkIfNeopixelIsRunning(pgm= "neopixelClock")
-					U.toLog(1, "setting neopixelClock = true") 
-					break
-			if "setTEA5767" in output:
-					U.toLog(1, "setting setTEA5767 ON") 
-					if not tea5767Active:
-						startProgam("setTEA5767.py", params="", reason="restarting setTEA5767..not running")
-					tea5767Active =True
-			else:
-				tea5767Active = False
-				U.killOldPgm(-1, "setTEA5767.py")
-				
-			for out in output:
-				if out.find("OUTPUTgpio")> -1:
-					U.toLog(1, "setting OUTPUTgpio ON") 
-					if not OUTPUTgpioActive:
-						startProgam("OUTPUTgpio.py", params="", reason="restarting OUTPUTgpio..not running")
-					OUTPUTgpioActive =True
-					break
+
+			for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","sunDial","setStepperMotor"]:
+				if pp in output:
+						U.toLog(1, "setting "+pp+" ON") 
+						if pp not in activePGM:
+							if pp =="display":
+								checkIfDisplayIsRunning()
+							elif pp =="neopixel":
+								checkIfNeopixelIsRunning(pgm= "neopixel")
+							elif pp =="neopixelClock":
+								checkIfNeopixelIsRunning(pgm= "neopixelClock")
+							else:
+								startProgam(pp+".py", params="", reason="restarting "+pp+"..not running")
+						activePGM[pp] =True
 				else:
-					OUTPUTgpioActive = False
-					U.killOldPgm(-1, "OUTPUTgpio.py")
+					try: del activePGM[pp] 
+					except: pass
+					U.killOldPgm(-1, pp+".py")
+
+
+		xx= {"spiMCP3008":"spiMCP3008","i2c":"simplei2csensors"}
+		for pp in xx:
+			pgm = xx[pp]
+			if sensorList.find(pp) >-1:
+					U.toLog(1, "setting "+pgm+" ON") 
+					if pgm not in activePGM:
+						startProgam(pgm+".py", params="", reason="restarting "+pgm+"..not running")
+					activePGM[pgm] =True
+			else:
+				try: del activePGM[pp] 
+				except: pass
+				U.killOldPgm(-1, pgm+".py")
 
 
 
@@ -284,55 +259,6 @@ def readNewParams(force=False):
 		setACTIVEorKILL("INPUTgpio","INPUTgpio.py","")
 		setACTIVEorKILL("INPUTtouch","INPUTtouch.py","INPUTtouch")
 		setACTIVEorKILL("INPUTtouch16","INPUTtouch16.py","INPUTtouch16")
-
-			
-		if	unicode(sensorList).find("Wire18B20")>-1 :
-			if getWire18B20Active !=1:
-				startProgam("Wire18B20.py", params="", reason=" at startup ")
-			getWire18B20Active	= 1
-		else: 
-			if getWire18B20Active !=-1:
-				U.killOldPgm(-1,"Wire18B20.py")
-			getWire18B20Active	= -1
-			
-		if	unicode(sensorList).find("spiMCP3008")>-1 :
-			if getWire18B20Active !=1:
-				startProgam("spiMCP3008.py", params="", reason=" at startup ")
-			getspiMCP3008Active	 = 1
-		else: 
-			if getspiMCP3008Active !=-1:
-				U.killOldPgm(-1,"spiMCP3008.py")
-			getspiMCP3008Active	 = -1
-			
-		if	unicode(sensorList).find("DHT")>-1 :
-			if getDHTActive !=1:
-				startProgam("DHT.py", params="", reason=" at startup ")
-			getDHTActive  = 1
-		else: 
-			if getDHTActive !=-1:
-				U.killOldPgm(-1,"DHT.py")
-			getDHTActive  = -1
-
-			
-		if	unicode(sensorList).find("pmairquality")>-1 :
-			if getDHTActive !=1:
-				startProgam("pmairquality.py", params="", reason=" at startup ")
-			getpmairqualityActive  = 1
-		else: 
-			if getpmairqualityActive !=-1:
-				U.killOldPgm(-1,"pmairquality.py")
-			getpmairqualityActive  = -1
-
-
-			
-		if unicode(sensorList).find("i2c")>-1 :
-			if geti2cActive !=1:
-				startProgam("simplei2csensors.py", params="", reason=" at startup ")
-			geti2cActive  = 1
-		else: 
-			if geti2cActive !=-1:
-				U.killOldPgm(-1,"simplei2csensors.py")
-			geti2cActive  = -1
 			
 
 		setACTIVEorKILL("myprogram","myprogram.py","")
@@ -342,9 +268,9 @@ def readNewParams(force=False):
 		#print " sensors:", sensors
 		U.toLog(0, "sensors		  : " +	 sensorList)
 
-		for ss in G.theSpecialSensorList:
+		for ss in G.specialSensorList:
 			if	ss in sensors: 
-				checkifActive(ss,		  ss+".py",			True)
+				checkifActive(ss, ss+".py", True)
 		
 		if	(rPiRestartCommand.find("rPiCommandPORT") >-1) and G.wifiType =="normal" and G.networkType !="clockMANUAL" and rPiCommandPORT >0:
 				startProgam("receiveGPIOcommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
@@ -1078,15 +1004,15 @@ global sensorEnabled,  restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootH
 global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
 
 global shutdownInputPin, shutDownPinVetoOutput
-global displayActive, tea5767Active, neopixelActive, neopixelClockActive,OUTPUTgpioActive
-global getSensorsActive, geti2cActive,getDHTActive,getWire18B20Active,getspiMCP3008Active, getpmairqualityActive
 global actions, output, sensors, sensorList
 global activePGMdict, bluetoothONoff
 global oldRaw,	lastRead
 global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
 global chargeTimeForMaxCapacity, batteryCapacitySeconds
 global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2, alreadyBooted
+global activePGM
 
+activePGM				= {}
 GPIOTypeAfterBoot1		= "off"
 GPIOTypeAfterBoot2		= "off"
 GPIONumberAfterBoot1	= "-1"
@@ -1169,18 +1095,20 @@ G.tStart	  = time.time()
 readNewParams()
 
 
-# kill old programs
-if "neopixelClock" in G.programFiles: neoClock = True
-else:								  neoClock = False
 
 G.last_masterStart = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 for ff in G.programFiles:
-	if ff =="neopixel" and neoClock: continue # do not kill neopixel if in clock mode. neopixelClock does that , less interruption.
 	if ff == G.program:
 		U.killOldPgm(myPID,G.program+".py")
 	else:
+		U.killOldPgm(-1, ff+".py")
+
+for ff in G.specialOutputList:
+		U.killOldPgm(-1, ff+".py")
+
+for ff in G.specialSensorList:
 		U.killOldPgm(-1, ff+".py")
 
 
@@ -1426,57 +1354,37 @@ while True:
 				U.restartMyself(reason="changed ip number")
 
 
+##########   check if pgms are running
 
 		if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType !="clockMANUAL" and (G.networkStatus).find("indigo") >-1: 
 			checkIfPGMisRunning("receiveGPIOcommands.py",checkAliveFile="", parameters=str(rPiCommandPORT))
 
 		if "BLEconnect" in sensors:
 			startBLEconnect()
-			
 		if enableiBeacons == "0" and "BLEsensor" in sensors:
 			startBLEsensor()
 
-		if displayActive: 
-			checkIfDisplayIsRunning()
-
-		if neopixelActive: 
-			checkIfNeopixelIsRunning(pgm= "neopixel")
-
-		if neopixelClockActive: 
-			checkIfNeopixelIsRunning(pgm= "neopixelClock")
-
-		if getspiMCP3008Active ==1:
-			checkIfPGMisRunning("spiMCP3008.py" )
-
-		if getWire18B20Active ==1:
-			checkIfPGMisRunning("Wire18B20.py" )
+		for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","spiMCP3008","simplei2csensors","sunDial","setStepperMotor"]:
+				U.toLog(1, "setting "+pp+" ON") 
+				if pp in activePGM:
+					if   pp =="display":
+						checkIfDisplayIsRunning()
+					elif pp =="neopixel":
+						checkIfNeopixelIsRunning(pgm= "neopixel")
+					elif pp =="neopixelClock":
+						checkIfNeopixelIsRunning(pgm= "neopixelClock")
+					else:
+						checkIfPGMisRunning(pp+".py")
 			
-		if geti2cActive ==1:
-			checkIfPGMisRunning("simplei2csensors.py" )
-			
-		if getDHTActive ==1:
-			checkIfPGMisRunning("DHT.py" )
-			
-		if getpmairqualityActive ==1:
-			checkIfPGMisRunning("pmairquality.py" )
-			
-		if tea5767Active: 
-			checkIfPGMisRunning("setTEA5767.py")
-			
-		if OUTPUTgpioActive: 
-			checkIfPGMisRunning("OUTPUTgpio.py")
 
-
-		for ss in G.theSpecialSensorList:
-			if	ss in sensors: 
+		for ss in G.specialSensorList:
+			if	(ss in sensors or ss in activePGM )and not (ss in activePGMdict): 
 				checkIfPGMisRunning(ss+".py",checkAliveFile=ss)
 							   
 		for ss in activePGMdict:
 			checkIfPGMisRunning(activePGMdict[ss][0],checkAliveFile=activePGMdict[ss][1] )
 
 		checkIfPGMisRunning("copyToTemp.py")
-		
-		checkSystemLOG()
 		
 		if enableiBeacons != "0":
 			checkIfbeaconLoopIsRunning()
@@ -1486,6 +1394,10 @@ while True:
 		if rebootHour >-1:
 			checkIfNightReboot()
 			if datetime.datetime.now().hour > rebootHour: rebooted = False
+
+
+		checkSystemLOG()
+
 
 		U.checkIfAliveNeedsToBeSend()
 		

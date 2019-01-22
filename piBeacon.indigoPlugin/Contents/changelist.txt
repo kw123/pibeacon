@@ -1,3 +1,27 @@
+Added features / changes in v7.100.267 @ 2019-01-21:  
+===================================================
+
+1. fixed:  BLE connect up/down/up when iphone is off.
+
+2. fixed:  some logging inconsistencies, typos... 
+
+3. added support for various STEPPER MOTORS
+You can chose between 5 pole unipolar and 2 coils bipolar stepper motors.  
+These motors must be driven by chips:    
+ULN2003 is a simple set of darlington transitors, current up to 250mA. It is used for the 5 pole unipolar motor   
+L9110 low power and L298N high power: can be used to drive bipolar 2 coil motors in full and half step modes  
+A4988 (8V-35V) and DRV8834(2.5V-8V) are more sophisticated.   
+-They are almost 100% pin compatible
+-Can drive bipolar 2 coil motors in 1,1/2,1/4,1/8,1/16 (and 1/32) step size you need to configure the pins on the chips to set the step size
+-Can configure enable / sleep / reset and fault pins. They are currently only used to switch the motor ON at start,
+      but you could also simply hardwire the pins at the chip directly. You should be able to use multiple motors on the same RPI, just limited by the number of GPIOs available
+Use an indigo ACTION  "Send commands to stepper motor .." to drive the motor; #of steps, direction, delays ... can be send in single or multiple sets
+You can use up to 3 GPIO input pins to control the range of the motor:  
+   If one of thes GPIO goes High/low the motor will stop. This can be enabled / configured in each action separately. 
+   In device edit you define the GPIO pin numbers and refer to them in actions as GPIO#0 / 1 / 2
+
+
+
 Added features / changes in v7.99.266 @ 2019-01-08:  
 ===================================================
 
