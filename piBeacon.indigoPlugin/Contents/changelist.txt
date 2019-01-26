@@ -1,7 +1,7 @@
-Added features / changes in v7.100.268 @ 2019-01-21:  
+Added features / changes in v7.100.269 @ 2019-01-25:  
 ===================================================
 
-1. added time windows < 3 secs where UP down can not change up/down/up/down
+1. added time windows < 3 secs where status can not change up/down/up/down
 
 2. added more options for stepper motor  
  - stepper motor ON time after move
