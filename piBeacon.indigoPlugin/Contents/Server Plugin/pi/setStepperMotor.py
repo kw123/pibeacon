@@ -94,10 +94,10 @@ def readParams():
 
 		
 			gpiopinSET[devId] ={}
-			if "pin_Coil1"			in theDict: gpiopinSET[devId]["pin_Coil1"]			=	int(theDict["pin_Coil1"])
-			if "pin_Coil2"			in theDict: gpiopinSET[devId]["pin_Coil2"]			=	int(theDict["pin_Coil2"])
-			if "pin_Coil3"			in theDict: gpiopinSET[devId]["pin_Coil3"]			=	int(theDict["pin_Coil3"])
-			if "pin_Coil4"			in theDict: gpiopinSET[devId]["pin_Coil4"]			=	int(theDict["pin_Coil4"])
+			if "pin_CoilA1"			in theDict: gpiopinSET[devId]["pin_CoilA1"]			=	int(theDict["pin_CoilA1"])
+			if "pin_CoilA2"			in theDict: gpiopinSET[devId]["pin_CoilA2"]			=	int(theDict["pin_CoilA2"])
+			if "pin_CoilB1"			in theDict: gpiopinSET[devId]["pin_CoilB1"]			=	int(theDict["pin_CoilB1"])
+			if "pin_CoilB2"			in theDict: gpiopinSET[devId]["pin_CoilB2"]			=	int(theDict["pin_CoilB2"])
 
 			if "pin_Step"			in theDict: gpiopinSET[devId]["pin_Step"]			=	int(theDict["pin_Step"])
 			if "pin_Dir"			in theDict: gpiopinSET[devId]["pin_Dir"]			=	int(theDict["pin_Dir"])
@@ -111,10 +111,10 @@ def readParams():
 			if "pin_sensor2"		in theDict: gpiopinSET[devId]["pin_sensor2"]		=	int(theDict["pin_sensor2"])
 
 			if motorType[devId] == "unipolar-4096":
-				defineGPIOout(gpiopinSET[devId]["pin_Coil1"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil2"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil3"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil4"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilA1"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilA2"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilB1"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilB2"])
 				SeqCoils[devId] = []
 				SeqCoils[devId].append([0, 0, 0, 0]) # off
 				SeqCoils[devId].append([1, 0, 0, 1])
@@ -125,14 +125,15 @@ def readParams():
 				SeqCoils[devId].append([0, 0, 1, 0])
 				SeqCoils[devId].append([0, 0, 1, 1])
 				SeqCoils[devId].append([0, 0, 0, 1])
-				minDelay[devId] = 0.0001
+				minStayON[devId] = 0.0001
+				isSleep[devId]   = False
 				nStepsInSequence[devId] = len(SeqCoils[devId]) -1
 
-			elif motorType[devId] == "bipolar-200-2":
-				defineGPIOout(gpiopinSET[devId]["pin_Coil1"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil2"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil3"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil4"])
+			elif motorType[devId] == "bipolar-2":
+				defineGPIOout(gpiopinSET[devId]["pin_CoilA1"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilA2"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilB1"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilB2"])
 				SeqCoils[devId] = []
 				SeqCoils[devId].append([0, 0, 0, 0])  # off
 				SeqCoils[devId].append([0, 1, 1, 0])
@@ -143,21 +144,23 @@ def readParams():
 				SeqCoils[devId].append([1, 0, 0, 0])
 				SeqCoils[devId].append([1, 0, 1, 0])
 				SeqCoils[devId].append([0, 0, 1, 0])
-				minDelay[devId] = 0.0002
+				minStayON[devId] = 0.0002
+				isSleep[devId]   = False
 				nStepsInSequence[devId] = len(SeqCoils[devId]) -1
 
-			elif motorType[devId] == "bipolar-200-1":
-				defineGPIOout(gpiopinSET[devId]["pin_Coil1"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil2"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil3"])
-				defineGPIOout(gpiopinSET[devId]["pin_Coil4"])
+			elif motorType[devId] == "bipolar-1":
+				defineGPIOout(gpiopinSET[devId]["pin_CoilA1"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilA2"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilB1"])
+				defineGPIOout(gpiopinSET[devId]["pin_CoilB2"])
 				SeqCoils[devId] = []
 				SeqCoils[devId].append([0, 0, 0, 0])  # off
 				SeqCoils[devId].append([0, 1, 1, 0])
 				SeqCoils[devId].append([0, 1, 0, 1])
 				SeqCoils[devId].append([1, 0, 0, 1])
 				SeqCoils[devId].append([1, 0, 1, 0])
-				minDelay[devId] = 0.0002
+				minStayON[devId] = 0.0002
+				isSleep[devId]   = False
 				nStepsInSequence[devId] = len(SeqCoils[devId]) -1
 
 			elif motorType[devId].find("DRV8834") >-1:
@@ -166,7 +169,7 @@ def readParams():
 				defineGPIOout(gpiopinSET[devId]["pin_Sleep"])
 				defineGPIOout(gpiopinSET[devId]["pin_Enable"])
 				defineGPIOin(gpiopinSET[devId]["pin_Fault"])
-				minDelay[devId] = 0.00001
+				minStayON[devId] = 0.00001
 				isSleep[devId]   = False
 				isDisabled[devId] = False
 				isReset[devId]   = False
@@ -176,13 +179,13 @@ def readParams():
 				defineGPIOout(gpiopinSET[devId]["pin_Sleep"])
 				defineGPIOout(gpiopinSET[devId]["pin_Enable"])
 				defineGPIOout(gpiopinSET[devId]["pin_Reset"])
-				minDelay[devId] = 0.00001
+				minStayON[devId] = 0.00001
 				isSleep[devId]   = False
 				isDisabled[devId] = False
 				isReset[devId]   = False
 
 			else:
-				print " stopping  motorType not defined"+ motorType
+				print " stopping  motorType not defined",  motorType
 				exit()
 
 			defineGPIOin(gpiopinSET[devId]["pin_sensor0"])
@@ -258,10 +261,10 @@ def makeStep(devId,seq):
 	global gpiopinSET
 	global SeqCoils
 	#print "makeStep", seq, SeqCoils[seq]
-	setGPIOValue(gpiopinSET[devId]["pin_Coil1"], SeqCoils[devId][seq][0])
-	setGPIOValue(gpiopinSET[devId]["pin_Coil2"], SeqCoils[devId][seq][1])
-	setGPIOValue(gpiopinSET[devId]["pin_Coil3"], SeqCoils[devId][seq][2])
-	setGPIOValue(gpiopinSET[devId]["pin_Coil4"], SeqCoils[devId][seq][3])
+	setGPIOValue(gpiopinSET[devId]["pin_CoilA1"], SeqCoils[devId][seq][0])
+	setGPIOValue(gpiopinSET[devId]["pin_CoilA2"], SeqCoils[devId][seq][1])
+	setGPIOValue(gpiopinSET[devId]["pin_CoilB1"], SeqCoils[devId][seq][2])
+	setGPIOValue(gpiopinSET[devId]["pin_CoilB2"], SeqCoils[devId][seq][3])
 
 
 def makeStepDRV8834(devId,dir):
@@ -352,6 +355,25 @@ def setMotorOFF(devId):
 	return
 
 # ------------------	------------------ 
+def setMotorON(devId):
+	global motorType, isDisabled, isSleep, isReset
+
+	if devId in motorType:		
+		if motorType[devId].find("DRV8834") >-1:
+			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
+			setGPIOValue(gpiopinSET[devId]["pin_Enable"], 0)
+		elif motorType[devId].find("A4988") >-1:
+			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
+			setGPIOValue(gpiopinSET[devId]["pin_Enable"], 0)
+			setGPIOValue(gpiopinSET[devId]["pin_Reset"], 1)
+		else:
+			pass
+		isReset[devId]    = False
+		isSleep[devId]    = False
+		isDisabled[devId] = False
+	return
+
+# ------------------	------------------ 
 def setMotorSleep(devId):
 	global motorType, isDisabled, isSleep
 	if devId in motorType:		
@@ -365,6 +387,19 @@ def setMotorSleep(devId):
 	return
 
  
+# ------------------	------------------ 
+def setMotorWake(devId):
+	global motorType, isDisabled, isSleep
+	if devId in motorType:		
+		if motorType[devId].find("DRV8834") >-1:
+			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
+		elif motorType[devId].find("A4988") >-1:
+			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
+		else:
+			pass
+		isSleep[devId]= False
+	return
+
 # ------------------	------------------ 
 def doMove(devId): #steps, delay, direction, stopForGPIO):
  	global actionQueue
@@ -391,12 +426,12 @@ def move(devId, actions): #steps, delay, direction, stopForGPIO):
 	global gpiopinSET
 	global SeqCoils
 	global nStepsInSequence
-	global minDelay
+	global minStayON
 	global motorType
 	global imputFileName
 	global stopMoveNOW
 
-	#print "move actions: ", actions, minDelay
+	#print "move actions: ", actions, minStayON
 
 	stopMoveNOW[devId] = False
 
@@ -404,62 +439,83 @@ def move(devId, actions): #steps, delay, direction, stopForGPIO):
 	for cc in actions:
 		#print "cc", cc
 
+		if stopMoveNOW[devId]: 
+			#print "move stopped: =============="
+			return -iSteps
+
 		
-		if cc["delayBf"] > 0: time.sleep(cc["delayBf"])
+		if cc["waitBefore"] > 0: time.sleep(cc["waitBefore"])
 
-		if "sleep" in cc: 
+		if "sleepMotor" in cc: 
 			setMotorSleep(devId)
-			continue
-			
-		steps 		= cc["steps"]
-		delay 		= max(minDelay[devId], cc["delay"])
-		nDelay  	= min(delay, 1.)
-		dir   		= cc["dir"]
-		stopForGPIO = cc["stopForGPIO"]
+
+		if "wakeMotor" in cc: 
+			setMotorWake(devId)
+
+		if "onMotor" in cc: 
+			setMotorON(devId)
+
+		if "offMotor" in cc: 
+			setMotorOFF(devId)
+
+		if "wait" in cc: 
+			time.sleep(cc["wait"])
+		
+		if "steps" in cc and cc["steps"] >0 :
+
+			steps 		= cc["steps"]
+			stayOn 		= max(minStayON[devId], cc["stayOn"])
+			nStayOn  	= min(stayOn, 1.)
+			dir   		= cc["dir"]
+			stopForGPIO = cc["stopForGPIO"]
 
 
-		if devId not in lastStep: lastStep[devId]= +1
-		lStep = lastStep[devId]
+			if devId not in lastStep: lastStep[devId]= +1
+			lStep = lastStep[devId]
 
-		#print "steps", devId, steps,  dir, delay, nDelay, lastStep
-		steps = int(steps)
-		iSteps= 0
-		for i in range(steps):
-			for iGPIO in range(3):
-				if iGPIO in stopForGPIO:
-					if stopForGPIO[iGPIO] >-1:
-						stop 	 = getPinValue(devId,"pin_sensor"+str(iGPIO))
-						if stop == stopForGPIO[iGPIO]:
-							print "stop for GPIO", stop
-							#return -iSteps
-				iSteps += 1
-			if motorType[devId].find("DRV8834") >-1:
-				makeStepDRV8834(devId,dir)
-			elif motorType[devId].find("A4988") >-1:
-				makeStepA4988(devId,dir)
-			else:
-				lStep += dir
-				if lStep > nStepsInSequence[devId]: lStep = 1
-				if lStep < 1: 						lStep = nStepsInSequence[devId]
-				makeStep(devId,lStep)
-				lastStep[devId] = lStep
+			#print "steps", devId, steps,  dir, delay, nStayOn, lastStep
+			steps = int(steps)
+			iSteps= 0
+			for i in range(steps):
+				for iGPIO in range(3):
+					if iGPIO in stopForGPIO:
+						if stopForGPIO[iGPIO] >-1:
+							stop 	 = getPinValue(devId,"pin_sensor"+str(iGPIO))
+							if stop == stopForGPIO[iGPIO]:
+								print "stop for GPIO", stop
+								#return -iSteps
+					iSteps += 1
+				if motorType[devId].find("DRV8834") >-1:
+					makeStepDRV8834(devId,dir)
+				elif motorType[devId].find("A4988") >-1:
+					makeStepA4988(devId,dir)
+				else:
+					lStep += dir
+					if lStep > nStepsInSequence[devId]: lStep = 1
+					if lStep < 1: 						lStep = nStepsInSequence[devId]
+					makeStep(devId,lStep)
+					lastStep[devId] = lStep
 
-			#check if new command (>) and do the delay properly,  
-			startDelay = time.time()
-			if delay > nDelay:
-				while True:
+				#check if new command (>) and do the delay properly,  
+				startON = time.time()
+				if stayOn > nStayOn:
+					while True:
+						if stopMoveNOW[devId]: 
+							#print "move stopped: =============="
+							return -iSteps
+						if time.time() - startON > stayOn: break
+						time.sleep(0.05)
+				else:
 					if stopMoveNOW[devId]: 
 						#print "move stopped: =============="
 						return -iSteps
-					if time.time() - startDelay > delay: break
-					time.sleep(0.05)
-			else:
-				if stopMoveNOW[devId]: 
-					#print "move stopped: =============="
-					return -iSteps
-				time.sleep(delay)
+					time.sleep(stayOn)
 
-		#if delay < 100 or delay > 0.5: setOFF()
+		if stopMoveNOW[devId]: 
+			#print "move stopped: =============="
+			return -iSteps
+
+		if cc["waitAfter"] > 0: time.sleep(cc["waitAfter"])
 
 	return iSteps
 
@@ -483,70 +539,93 @@ def checkForNewImput():
 	global imputFileName
 	global stopMoveNOW
 
-	actions		= []
-	devId		= ""
-	stopForGPIO	= [-1,-1,-1]
 
-	inpNew, inpRaw = U.doRead(imputFileName)
-	if inpNew == "": return 
-	#print inpNew
-	try:	
-		if "dev.id"		in inpNew:  devId   = str(inpNew["dev.id"])
-		else:						return 
+	if not os.path.isfile(imputFileName): return 
 
-		if "repeat"		in inpNew:  repeat  = int(inpNew["repeat"])
-		else:						repeat = 0
+	f = open(imputFileName,"r")
+	xxx = f.read()  
+	f.close()
+	os.remove(imputFileName)
+	items=xxx.split("\n")
 
-		if "waitForLast" in inpNew:	stopMoveNOW[devId] = inpNew["waitForLast"] == "0"
-		else:						stopMoveNOW[devId] = False
+	for item in items:
+		actions		= []
+		if len(item) < 10: continue
+		try:
+			inpNew = json.loads(item)
+		except:
+			print " can not load ", item
+			continue
 
-		if "command" in inpNew:
-			inp = inpNew["command"]
-			newCommand = True
-			restart = False
-			#print "command", inp
-			for cc in inp:
-				#print cc
-				if cc != {}: actions.append({"steps":0,"delay":0,"delayBf":0,"dir":0,"stopForGPIO":[-1,-1,-1]})
-				if u"steps"		in cc:  
-					actions[-1]["steps"] 			= int(cc["steps"])
-				if u"delay"		in cc:  
-					actions[-1]["delay"]   			= float(cc["delay"])/10000.
-				if u"delayBf"		in cc:  
-					actions[-1]["delayBf"]   		= float(cc["delayBf"])
-				if u"dir"		in cc:  
-					actions[-1]["dir"]   			= int(cc["dir"])
-				if u"GPIO0"	in cc:  
-					actions[-1]["stopForGPIO"][0]	= int(cc["GPIO0"])
-				if u"GPIO1"	in cc:  
-					actions[-1]["stopForGPIO"][1]	= int(cc["GPIO1"])
-				if u"GPIO2"	in cc:  
-					actions[-1]["stopForGPIO"][2]	= int(cc["GPIO2"])
-				if u"sleep"	in cc:  
-					actions[-1]["sleep"] = True
+		#print inpNew
+		try:
+			if "dev.id"		in inpNew:  devId   = str(inpNew["dev.id"])
+			else:						return 
 
-		if u"restart"				in inpNew:  
-			restart   = (inpNew["restart"] =="1")
+			if "repeat"		in inpNew:  repeat  = int(inpNew["repeat"])
+			else:						repeat = 0
+
+			if "waitForLast" in inpNew:	stopMoveNOW[devId] = inpNew["waitForLast"] == "0"
+			else:						stopMoveNOW[devId] = False
+
+			if "command" in inpNew:
+				inp = inpNew["command"]
+				newCommand = True
+				restart = False
+				#print "command", inp
+				for cc in inp:
+					#print cc
+					if cc != {}: actions.append({"steps":0, "stayOn":0, "waitBefore":0, "waitAfter":0, "wait":0, "dir":0, "stopForGPIO":[-1,-1,-1]})
+					if u"steps"		in cc:  
+						actions[-1]["steps"] 			= int(cc["steps"])
+					if u"stayOn"		in cc:  
+						actions[-1]["stayOn"]   		= float(cc["stayOn"])/10000.
+					if u"waitBefore"		in cc:  
+						actions[-1]["waitBefore"]   	= float(cc["waitBefore"])
+					if u"waitAfter"		in cc:  
+						actions[-1]["waitAfter"]   		= float(cc["waitAfter"])
+					if u"dir"		in cc:  
+						actions[-1]["dir"]   			= int(cc["dir"])
+					if u"GPIO0"	in cc:  
+						actions[-1]["stopForGPIO"][0]	= int(cc["GPIO0"])
+					if u"GPIO1"	in cc:  
+						actions[-1]["stopForGPIO"][1]	= int(cc["GPIO1"])
+					if u"GPIO2"	in cc:  
+						actions[-1]["stopForGPIO"][2]	= int(cc["GPIO2"])
+
+					if u"sleepMotor"	in cc:  
+						actions[-1]["sleepMotor"] = True
+
+					if u"wakeMotor"	in cc:  
+						actions[-1]["wakeMotor"] = True
+
+					if u"offMotor"	in cc:  
+						actions[-1]["offMotor"] = True
+
+					if u"onMotor"	in cc:  
+						actions[-1]["onMotor"] = True
+
+					if u"wait"	in cc:  
+						actions[-1]["wait"] = float(cc["wait"])
+
+			if u"restart"				in inpNew:  
+				restart   = (inpNew["restart"] =="1")
  
-		os.remove(imputFileName)
+			if restart:
+				time.sleep(0.1)
+				U.restartmyself()
+				os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
-		if restart:
-			time.sleep(0.1)
-			U.restartmyself()
-			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
+			if stopMoveNOW[devId]: 
+				print" clear queue bf " ,actionQueue[devId].qsize() 
+				actionQueue[devId].queue.clear()
+				print" clear queue af",actionQueue[devId].qsize() 
+			actionQueue[devId].put((repeat,actions)) 
+			print "adding new commands",devId, stopMoveNOW[devId], repeat,actionQueue[devId].qsize() , actions
 
-		if stopMoveNOW[devId]: 
-			#print" clear queue bf " ,actionQueue[devId].qsize() 
-			actionQueue[devId].queue.clear()
-			#print" clear queue af",actionQueue[devId].qsize() 
-		actionQueue[devId].put((repeat,actions)) 
-		#print "adding new commands",devId, repeat, actions, stopMoveNOW[devId]
-
-		return 
-	
-	except  Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+		except Exception, e:
+			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 	return 
    
 
@@ -562,7 +641,7 @@ global doReadParameters
 global lastStep, colPWM
 global gpiopinSET, SeqCoils
 global printON
-global minDelay
+global minStayON
 global lastDirection
 global isDisabled, isSleep, isReset
 global isFault
@@ -596,7 +675,7 @@ isSleep				= {}
 isReset				= {}
 lastDirection		= {}
 motorType			= {}
-minDelay			= {} 
+minStayON			= {} 
 lastStep			= {}
 gpiopinSET			= {}
 SeqCoils			= {}
@@ -658,7 +737,7 @@ G.lastAliveSend	 = time.time() -1000
 print "motorType", motorType
 print "nStepsInSequence, SeqCoils", nStepsInSequence, SeqCoils
 print "gpiopinSET",gpiopinSET
-print "minDelay", minDelay
+print "minStayON", minStayON
 
 
 printON 	= True

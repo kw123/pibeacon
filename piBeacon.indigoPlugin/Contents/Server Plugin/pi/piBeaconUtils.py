@@ -163,7 +163,7 @@ def checkParametersFile(defaultParameters, force=False):
 			restartMyself(reason="bad parameter... file.. restored" , doPrint=True)
 
 #################################
-def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=False):
+def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=False, deleteAfterRead = False):
 	t=0
 	try:
 		if not os.path.isfile(inFile):
@@ -182,7 +182,10 @@ def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=Fa
 		
 		f=open(inFile,"r")
 		inRaw =f.read().strip('"')
+		f.close()
 		inp =json.loads(inRaw)
+		if deleteAfterRead: os.remove(inFile)
+
 	except	Exception, e :
 			toLog(1, u"doRead in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 			try:
@@ -192,14 +195,18 @@ def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=Fa
 					return "","error"
 				time.sleep(0.1)
 				f=open(inFile,"r")
-				inRaw =f.read()
+				inRaw = f.read()
+				f.close()
+				if deleteAfterRead: os.remove(inFile)
 				inp =json.loads(inRaw).strip('"')
 			except	Exception, e :
 				if inFile == G.homeDir+"temp/parameters":
 					toLog(1, u"doRead in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-				try:	f.close()
+				try:	
+					f.close()
 				except: 
 					pass
+				if deleteAfterRead: os.remove(inFile)
 				if lastTimeStamp != "":
 					return "","error", t
 				return "","error"

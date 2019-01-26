@@ -28,10 +28,6 @@ import logging
 
 dataVersion = 35.79
 
-"""
-
- 
-"""
 
 
 ## Static parameters, not changed in pgm
@@ -43,7 +39,7 @@ _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"la
 			   u"batteryLevel": 		u"",
 			   u"fastDownMinSignal":	-999,
 			   u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
-			   u"receivedSignals":		[[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0],[-999,0]]}
+			   u"receivedSignals":		[{"rssi":-999, "lastSignal": 0, "distance":99999} for kk in range(10)]} #  for 10 RPI
 _GlobalConst_typeOfBeacons = {
 				u"xy":			u"07775dd0111b11e491910800200c9a66",
 				 u"tile":		u"01",
@@ -1868,10 +1864,21 @@ class Plugin(indigo.PluginBase):
 
 				for pi in range(_GlobalConst_numberOfiBeaconRPI):
 					try:
+						try:    d =  float(dev.states["Pi_"+str(pi)+"_Distance"])
+						except: d = 99999.
+						if len(self.beacons[beacon][u"receivedSignals"][pi]) == 2:
+							s = self.beacons[beacon][u"receivedSignals"][pi][0]
+							t = self.beacons[beacon][u"receivedSignals"][pi][1]
+							self.beacons[beacon][u"receivedSignals"][pi] = {"rssi":s, "lastSignal":t, "distance":d}
+						elif type(self.beacons[beacon][u"receivedSignals"][pi]) != type({}):
+							s = self.beacons[beacon][u"receivedSignals"][pi][0]
+							t = self.beacons[beacon][u"receivedSignals"][pi][1]
+							self.beacons[beacon][u"receivedSignals"][pi] = {"rssi":s, "lastSignal":t, "distance":d}
+
 						lastUp= float(time.mktime(time.strptime(dev.states[u"Pi_"+unicode(pi)+"_Time"],_defaultDateStampFormat)))
-						if self.beacons[beacon][u"receivedSignals"][pi][1] > lastUp: continue # time entry
-						self.beacons[beacon][u"receivedSignals"][pi][0]= float(dev.states[u"Pi_"+str(pi)+"_Signal"])
-						self.beacons[beacon][u"receivedSignals"][pi][1]= lastUp
+						if self.beacons[beacon][u"receivedSignals"][pi]["lastSignal"] > lastUp: continue # time entry
+						self.beacons[beacon][u"receivedSignals"][pi]["rssi"] = float(dev.states[u"Pi_"+str(pi)+"_Signal"])
+						self.beacons[beacon][u"receivedSignals"][pi]["lastSignal"] = lastUp
 					except:
 						pass
 
@@ -6516,29 +6523,75 @@ class Plugin(indigo.PluginBase):
 								if u"steps-"+iiS in vd:		
 									try:  cmds[nn][u"steps"] 		= int(vd["steps-"+iiS])
 									except: cmds[nn][u"steps"] 		= 0
-								if u"delayBf-"+iiS in vd:	
-									try: cmds[nn][u"delayBf"]		= float(vd["delayBf-"+iiS])
-									except: cmds[nn][u"delayBf"]	= 0
-								if u"delay-"+iiS in vd:	
-									try: cmds[nn][u"delay"]			= int(vd["delay-"+iiS])
-									except: cmds[nn][u"delay"] 		= 1
+
+								if u"waitBefore-"+iiS in vd:	
+									try: cmds[nn][u"waitBefore"]		= float(vd["waitBefore-"+iiS])
+									except: cmds[nn][u"waitBefore"]	= 0
+
+								if u"waitAfter-"+iiS in vd:	
+									try: cmds[nn][u"waitAfter"]		= float(vd["waitAfter-"+iiS])
+									except: cmds[nn][u"waitAfter"]	= 0
+
+								if u"stayOn-"+iiS in vd:	
+									try: cmds[nn][u"stayOn"]		= int(vd["stayOn-"+iiS])
+									except: cmds[nn][u"stayOn"] 		= 1
+
 								if u"dir-"+iiS in vd:	
 									try: cmds[nn][u"dir"]			= int(vd["dir-"+iiS])
 									except: cmds[nn][u"dir"] 		= 1
+
 								if u"GPIO.0-"+iiS in vd:
 									try: cmds[nn][u"GPIO.0"]		= int(vd["GPIO.0-"+iiS])
 									except: pass
+
 								if u"GPIO.1-"+iiS in vd:
 									try: cmds[nn][u"GPIO.1"]		= int(vd["GPIO.1-"+iiS])
 									except: pass
+
 								if u"GPIO.2-"+iiS in vd:
 									try: cmds[nn][u"GPIO.2"]		= int(vd["GPIO.2-"+iiS])
 									except: pass
-							elif vd["cmd-"+iiS] == "sleep":
-								cmds[nn][u"sleep"] 					= "1"
-								if u"delayBf-"+iiS in vd:	
-									try: cmds[nn][u"delayBf"]		= float(vd["delayBf-"+iiS])
-									except: cmds[nn][u"delayBf"] 	= 0
+
+							elif vd["cmd-"+iiS] == "sleepMotor":
+								cmds[nn][u"sleepMotor"] 			= 1
+								if u"waitBefore-"+iiS in vd:	
+									try: cmds[nn][u"waitBefore"]		= float(vd["waitBefore-"+iiS])
+									except: cmds[nn][u"waitBefore"] 	= 0
+								if u"waitAfter-"+iiS in vd:	
+									try: cmds[nn][u"waitAfter"]		= float(vd["waitAfter-"+iiS])
+									except: cmds[nn][u"waitAfter"] 	= 0
+
+
+							elif vd["cmd-"+iiS] == "wakeMotor":
+								cmds[nn][u"wakeMotor"] 			= 1
+								if u"waitBefore-"+iiS in vd:	
+									try: cmds[nn][u"waitBefore"]		= float(vd["waitBefore-"+iiS])
+									except: cmds[nn][u"waitBefore"] 	= 0
+								if u"waitAfter-"+iiS in vd:	
+									try: cmds[nn][u"waitAfter"]		= float(vd["waitAfter-"+iiS])
+									except: cmds[nn][u"waitAfter"] 	= 0
+
+							elif vd["cmd-"+iiS] == "offMotor":
+								cmds[nn][u"offMotor"] 				= 1
+								if u"waitBefore-"+iiS in vd:	
+									try: cmds[nn][u"waitBefore"]		= float(vd["waitBefore-"+iiS])
+									except: cmds[nn][u"waitBefore"] 	= 0
+								if u"waitAfter-"+iiS in vd:	
+									try: cmds[nn][u"waitAfter"]		= float(vd["waitAfter-"+iiS])
+									except: cmds[nn][u"waitAfter"] 	= 0
+
+							elif vd["cmd-"+iiS] == "onMotor":
+								cmds[nn][u"onMotor"] 				= 1
+								if u"waitBefore-"+iiS in vd:	
+									try: cmds[nn][u"waitBefore"]		= float(vd["waitBefore-"+iiS])
+									except: cmds[nn][u"waitBefore"] 	= 0
+								if u"waitAfter-"+iiS in vd:	
+									try: cmds[nn][u"waitAfter"]		= float(vd["waitAfter-"+iiS])
+									except: cmds[nn][u"waitAfter"] 	= 0
+
+
+							elif vd["cmd-"+iiS] == "wait":
+								cmds[nn][u"wait"] 					= int(vd["wait-"+iiS])
 								
 							if cmds[nn] == {}: del cmds[-1]
 
@@ -6569,7 +6622,7 @@ class Plugin(indigo.PluginBase):
 				line +="\n    ,\"command\":'['+\n     '"
 
 				### this will create list of dicts, one per command, remove blank items, sort  ,.. 
-				doList =["steps", "sleep", "delay", "delayBf", "dir", "GPIO.0", "GPIO.1", "GPIO.2"] # sorted by this
+				doList =["steps", "sleepMotor",  "offMotor", "wait", "stayON", "waitBefore", "waitAfter", "dir", "GPIO.0", "GPIO.1", "GPIO.2"] # sorted by this
 				for cc in range(len(cmds)):
 					delItem=[]
 					if len(cmds[cc]) > 0:
@@ -7164,7 +7217,7 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog(u"OutputDevice"): self.myLog( text = "startAtDateTimeIN: doing datetime")
 					startAtDateTime	   = startAtDateTimeIN.replace(u"-","").replace(u":","").replace(u" ","").replace(u"/","").replace(u".","").replace(u",","")
 					startAtDateTime	   = startAtDateTime.ljust(14,"0")
-					return	 max(0, time.mktime( datetime.datetime.strptime(startAtDateTime,_defaultDateStampFormat+".%f").timetuple() ) -time.time() )
+					return	 max(0, self.getTimetimeFromDateString(startAtDateTime, frmt= u"%Y%m%d%H%M%S") - time.time() )
 				except Exception, e:
 					self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 					return 0
@@ -9012,37 +9065,40 @@ class Plugin(indigo.PluginBase):
 			for dev in indigo.devices.iter("props.isBLEconnectDevice"):
 				if self.queueListBLE == "update": self.sleep(0.1)
 
+				lastStatusChangeDT = 99999
 				props = dev.pluginProps
 				try:
-					expirationTime = float(props[u"expirationTime"]) + 0.2
+					expirationTime = float(props[u"expirationTime"]) + 0.1
 				except:
 					continue
 				status = "expired"
 				lastUp = dev.states[u"lastUp"]
-				if len(lastUp) < 10: continue
-				lastUp1 = datetime.datetime.strptime(lastUp, _defaultDateStampFormat)
-				dt = time.time()- time.mktime(lastUp1.timetuple())
+				dt = time.time() - self.getTimetimeFromDateString(lastUp)
 				if dt <= 1 * expirationTime:
 					status = "up"
 				elif dt <= self.expTimeMultiplier * expirationTime:
 					status = "down"
 
 				if dev.states[u"status"] != status or self.initStatesOnServer or force:
-					if self.decideMyLog(u"BLE") and dev.name.find("BLE-C") >-1: self.indiLOG.log(10, u"BLEconnectCheckPeriod :"+dev.name+";  new status:"+ status+"; old status:"+ dev.states[u"status"]+"   dt="+ unicode(dt) +"; lastUp="+unicode(lastUp)+"; expirationTime="+unicode(expirationTime))
-					if status == "up":
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					elif status == "down":
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-					else:
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+					if "lastStatusChange" in dev.states: 
+						lastStatusChangeDT   =  time.time() - self.getTimetimeFromDateString(dev.states[u"lastStatusChange"]) 
+					if lastStatusChangeDT > 3: 
+						#if self.decideMyLog(u"BLE") and dev.name.find("BLE-C") >-1: self.indiLOG.log(10, u"BLEconnectCheckPeriod :"+dev.name+";  new status:"+ status+"; old status:"+ dev.states[u"status"]+"   dt="+ unicode(dt) +"; lastUp="+unicode(lastUp)+"; expirationTime="+unicode(expirationTime))
+						if status == "up":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						elif status == "down":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+						else:
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
-					if status !="up":
-						self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
-						if self.setClostestRPItextToBlank: self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", "")
+						if status !="up":
+							self.addToStatesUpdateDict(unicode(dev.id),u"closestRPI", -1)
+							if self.setClostestRPItextToBlank: self.addToStatesUpdateDict(unicode(dev.id),u"closestRPIText", "")
+						#if dev.name.find("BLE-") >-1: 	self.indiLOG.log(10,"setting status   BLEconnectCheckPeriod status:  "+str(status)+"; dt="+ str(dt))
 
 
-					self.addToStatesUpdateDict(unicode(dev.id),u"status", status)
-					self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="BLEconnectCheckPeriod end")	  
+						self.addToStatesUpdateDict(unicode(dev.id),u"status", status)
+						self.executeUpdateStatesDict(onlyDevID=str(dev.id),calledFrom="BLEconnectCheckPeriod end")	  
 
 
 		except Exception, e:
@@ -9301,9 +9357,8 @@ class Plugin(indigo.PluginBase):
 								for pi in range(_GlobalConst_numberOfiBeaconRPI):
 									if	dev.states[u"Pi_" + unicode(pi) + u"_Distance"] == 99999.: continue
 									if dev.states[u"Pi_" + unicode(pi) + u"_Time"] != "":
-										piTime = dev.states[u"Pi_" + unicode(pi) + u"_Time"]
-										piTime = datetime.datetime.strptime(piTime, _defaultDateStampFormat)
-										if time.time()- time.mktime(piTime.timetuple()) > max(330., self.beacons[beacon][u"updateSignalValuesSeconds"]):
+										piTime = self.getTimetimeFromDateString(dev.states[u"Pi_" + unicode(pi) + u"_Time"]) 
+										if time.time()- piTime> max(330., self.beacons[beacon][u"updateSignalValuesSeconds"]):
 											if	dev.states[u"Pi_" + unicode(pi) + u"_Distance"] != 99999.:
 												self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(pi) + u"_Distance", 99999.,decimalPlaces=1)
 									else :
@@ -10317,6 +10372,17 @@ class Plugin(indigo.PluginBase):
 				except: self.indiLOG.log(40,u"  .. device does not exist, just deleted? .. IndigoId="+ devIds)
 				return ""
 
+
+####-------------------------------------------------------------------------####
+	def getTimetimeFromDateString(self, dateString, fmrt=_defaultDateStampFormat): 
+		if len(dateString) > 8:
+			try:
+				return  time.mktime(  datetime.datetime.strptime(dateString, fmrt).timetuple()  )
+			except:
+				return 0		
+		else:
+			return 0
+
 ####-------------------------------------------------------------------------####
 	def calcPostion(self, dev, expirationTime): ## add Signal time dist status
 		try:
@@ -10331,12 +10397,11 @@ class Plugin(indigo.PluginBase):
 			lastUpS			= ""
 			update			= False
 			#if devID ==78067927: self.myLog( text = "dist  "+ dev.name)
+			lastStatusChangeDT = 99999
 			try:
 				if u"lastUp" in dev.states: 
-					lastUpS = self.getCurrentState(dev,devIds,"lastUp", fromMETHOD="calcPostion1")
-					if len(unicode(lastUpS)) > 5:
-						lastUp	=  datetime.datetime.strptime(lastUpS, _defaultDateStampFormat)
-						lastUp	=  time.mktime(lastUp.timetuple())
+					lastUp =  self.getTimetimeFromDateString(self.getCurrentState(dev,devIds,"lastUp", fromMETHOD="calcPostion1"))
+
 			except Exception, e:
 				self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 				lastUp	= 0
@@ -10358,11 +10423,8 @@ class Plugin(indigo.PluginBase):
 				if piTimeS > pitimeNearest:
 					pitimeNearest = piTimeS
 
-				try:
-					piTime = datetime.datetime.strptime(piTimeS, _defaultDateStampFormat)
-				except:
-					piTime = datetime.datetime.now()
-				piT2 = time.mktime(piTime.timetuple())
+				piT2 = self.getTimetimeFromDateString(piTimeS) 
+				if piT2 < 10: piT2 = time.time()
 				try:
 					dist = self.getCurrentState(dev,devIds,"Pi_" + unicode(pi1) + "_Distance", fromMETHOD="calcPostion4")
 					dist = float(dist)
@@ -10375,33 +10437,43 @@ class Plugin(indigo.PluginBase):
 					piTimeUse = lastUp
 
 				if signal ==-999:
-					if	 (time.time()- piTimeUse <   					 expirationTime) :	    status =  "up"
+					if	 (time.time()- piTimeUse <   					 expirationTime) :	    
+						status =  "up"
+						#if dev.name.find("BLE-") >-1:	self.indiLOG.log(10,"setting status up  calcPostion sig  = -999  "  )
 					elif (time.time()- piTimeUse < self.expTimeMultiplier*expirationTime)	and status != "up": 
-						if dev.name.find("BLE-C")>-1: 
-							status = "down"
+						status = "down"
+						#if dev.name.find("BLE-") >-1:	self.indiLOG.log(10,"setting status up  calcPostion sig  = -999  "  )
 				else:
 					if dist >= 99990. and txPower < -20:							 continue
 					if dist == "" or (dist >= 99990. and signal > -50):				 continue # fake signals with bad TXpower 
 					if dist > 50./max(self.distanceUnits,0.3) and signal > -50:		 continue # fake signals with bad TXpower 
-					if time.time()- piTimeUse  < expirationTime:  status = "up"
+					if time.time()- piTimeUse  < expirationTime:  
+						status = "up"
+						#if dev.name.find("BLE-") >-1:	self.indiLOG.log(10,"setting status up  calcPostion sig= "+str(signal)+";   piTimeUse= "+ str(time.time()-piTimeUse) +" pi#"+ str(pi1))
 					elif (time.time()- piTimeUse < self.expTimeMultiplier*expirationTime)	and status != "up": 
-						if dev.name.find("BLE-C")>-1: 
-							status = "down"
+						status = "down"
+						#if dev.name.find("BLE-") >-1:	self.indiLOG.log(10,"setting status down  calcPostion sig= "+str(signal)+";   piTimeUse= "+ str(time.time()-piTimeUse))
 
 					if time.time()- piTimeUse  < max(90.,expirationTime):								   # last signal not in expiration range anymore , use at least 90 secs.. for cars exp is 15 secs and it forgets the last signals too quickly
 						distanceToRpi.append([dist , pi1])
 
 			currStatus =  self.getCurrentState(dev,devIds,"status", fromMETHOD="calcPostion5") 
-			if currStatus!= status:
-				update=True
-				self.addToStatesUpdateDict(unicode(dev.id),u"status", status)
-				if	(u"note" in dev.states and dev.states[u"note"].find(u"beacon") >-1) or dev.deviceTypeId ==u"BLEconnect":
-					if status ==u"up":
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					elif status ==u"down":
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-					elif status ==u"expired":
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+			if currStatus!= status :
+				if "lastStatusChange" in dev.states: 
+					try: lastStatusChangeDT  =  time.time() - float(time.mktime(time.strptime(dev.states[u"lastStatusChange"],_defaultDateStampFormat)))
+					except Exception, e:
+							if len(unicode(e)) > 5 :
+								self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				if lastStatusChangeDT > 3. :
+					update=True
+					self.addToStatesUpdateDict(unicode(dev.id),u"status", status)
+					if	(u"note" in dev.states and dev.states[u"note"].find(u"beacon") >-1) or dev.deviceTypeId ==u"BLEconnect":
+						if status ==u"up":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						elif status ==u"down":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+						elif status ==u"expired":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
 			distanceToRpi = sorted(distanceToRpi)
 			PijjPosition	= []
@@ -10537,7 +10609,7 @@ class Plugin(indigo.PluginBase):
 				updateBLE = update or updateBLE
 
 				if rssi > -160: 
-					newClosestRPI = self.findClosestRPIForBLEConnect(dev,pi,rssi)
+					newClosestRPI = self.findClosestRPIForBLEConnect(dev,pi,dist)
 					if newClosestRPI != dev.states["closestRPI"]:
 						#indigo.server.log(dev.name+", newClosestRPI: "+str(newClosestRPI)) 
 						if newClosestRPI == -1:
@@ -10942,9 +11014,7 @@ class Plugin(indigo.PluginBase):
 									#indigo.server.log("  checking devL for "+ dev.name )
 									for devL in indigo.devices.iter("props.isLightningDevice"):
 										if devL.id == dev.id: continue
-										lastLightning = devL.states["lastLightning"]
-										try:	deltaTime = (datetime.datetime.now() - datetime.datetime.strptime(lastLightning, "%Y-%m-%d %H:%M:%S")).total_seconds()
-										except: continue
+										deltaTime = time.time() - self.getTimetimeFromDateString( devL.states["lastLightning"])
 										if deltaTime < self.lightningTimeWindow : 
 											nDevs += 1
 										#indigo.server.log(" deltaTime: "+ str(deltaTime))
@@ -12679,11 +12749,11 @@ class Plugin(indigo.PluginBase):
 						#if mac ==u"0C:F3:EE:00:66:15" and pix ==0:
 						#	 if self.decideMyLog(u"CAR"): self.myLog( text = "pi0 test 0C:F3:EE:00:66:15 "+str(time.time() - time.mktime(time.strptime(newStates[u"Pi_"+unicode(pix)+"_Time"],_defaultDateStampFormat)))+"  sig="+str(newStates[u"Pi_"+unicode(pix)+"_Signal"]))
 						if len(dev.states[u"Pi_"+unicode(pix)+"_Time"]) < 18: continue 
-						if self.beacons[mac][u"receivedSignals"][pix][1] < 10 or (time.time()- self.beacons[mac][u"receivedSignals"][pix][1]) > 25.: continue # states only get updated > updateSignalValuesSeconds, cant expect better numbers
+						if self.beacons[mac][u"receivedSignals"][pix]["lastSignal"] < 10 or (time.time()- self.beacons[mac][u"receivedSignals"][pix]["lastSignal"]) > 25.: continue # states only get updated > updateSignalValuesSeconds, cant expect better numbers
 						if dev.states[u"Pi_"+unicode(pix)+"_Signal"] > -500: 
 							piStillUp = pix
 							ssss = dev.states[u"Pi_"+unicode(pix)+"_Signal"]
-							tttt = time.time()- self.beacons[mac][u"receivedSignals"][pix][1]
+							tttt = time.time()- self.beacons[mac][u"receivedSignals"][pix]["lastSignal"]
 							break
 					if self.decideMyLog(u"CAR"): self.myLog( text = "testing fastdown from pi:"+str(fromPi)+ "  for:"+mac+";  piStillUp? "+str(piStillUp)+", new sig=-999; oldsig"+ str(dev.states[u"Pi_"+unicode(fromPi)+"_Signal"])+"  status:"+ dev.states[u"status"]+ "  lastSig="+str(ssss)+"  lastT="+str(int(tttt)))
 
@@ -12714,11 +12784,11 @@ class Plugin(indigo.PluginBase):
 				logTRUEfromSignal = False	   
 				if self.trackSignalStrengthIfGeaterThan[0] <99.:
 					try:
-						deltaSignalLOG = (rssi + rssiOffset - float(self.beacons[mac][u"receivedSignals"][fromPi][0]))
+						deltaSignalLOG = (rssi + rssiOffset - float(self.beacons[mac][u"receivedSignals"][fromPi]["rssi"]))
 						if self.trackSignalStrengthIfGeaterThan[1] == "i":
-							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) or	(rssi ==-999. and float(self.beacons[mac][u"receivedSignals"][fromPi][0]) !=-999)
+							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) or	(rssi ==-999. and float(self.beacons[mac][u"receivedSignals"][fromPi]["rssi"]) !=-999)
 						else:
-							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) and ( rssi !=-999 and self.beacons[mac][u"receivedSignals"][fromPi][0] !=-999)
+							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) and ( rssi !=-999 and self.beacons[mac][u"receivedSignals"][fromPi]["rssi"] !=-999)
 
 					except Exception, e:
 
@@ -12730,14 +12800,17 @@ class Plugin(indigo.PluginBase):
 					try:	oldRPI = int(dev.states[u"closestRPI"])
 					except: oldRPI =-1
 
+				try:     distCalc = float(dev.states[u"Pi_" + unicode(fromPi) + "_Distance"])
+				except:  distCalc = 99999
 				if rssi != -999. :
 					if ( self.beacons[mac][u"lastUp"]> -1) :
-						self.beacons[mac][u"receivedSignals"][fromPi] =[rssi,time.time()]
+						self.beacons[mac][u"receivedSignals"][fromPi]["rssi"]  = rssi
+						self.beacons[mac][u"receivedSignals"][fromPi]["lastSignal"]  = time.time()
 						self.beacons[mac][u"lastUp"] = time.time()
 						if dev.deviceTypeId in ["beacon","rPI"] : 
 							closestRPI = self.findClosestRPI(mac,dev)
 						if	( time.time()- self.beacons[mac][u"updateWindow"] > self.beacons[mac][ "updateSignalValuesSeconds"] or
-							  time.time()- self.beacons[mac][u"receivedSignals"][fromPi][1] > 100. ):  # ==0 or xx seconds updates for 75 seconds, this RPI msg older than 100 secs then xx secs no update for next time
+							  time.time()- self.beacons[mac][u"receivedSignals"][fromPi]["lastSignal"] > 100. ):  # ==0 or xx seconds updates for 75 seconds, this RPI msg older than 100 secs then xx secs no update for next time
 							self.beacons[mac][u"updateWindow"] = time.time()
 
 						if (dev.deviceTypeId == "beacon" and closestRPI != oldRPI) and self.trackSignalChangeOfRPI:
@@ -12746,7 +12819,7 @@ class Plugin(indigo.PluginBase):
 						if (self.beacons[mac][u"status"] != "up" or					 # was down now up
 							time.time()- self.beacons[mac][u"updateWindow"] < 70 or			 # update for 70 seconds then break 
 							newStates[u"Pi_" + unicode(fromPi) + "_Signal"] == -999 or	# was down now up
-							abs(newStates[u"Pi_" + unicode(fromPi) + "_Signal"] - self.beacons[mac][u"receivedSignals"][fromPi][0]) >20 or # signal change large
+							abs(newStates[u"Pi_" + unicode(fromPi) + "_Signal"] - self.beacons[mac][u"receivedSignals"][fromPi]["rssi"]) >20 or # signal change large
 							(dev.deviceTypeId == "beacon" and closestRPI != newStates[u"closestRPI"])):				   # clostest RPi has changed
 								try:
 									minTxPower = float(self.beacons[mac][u"beaconTxPower"])
@@ -12760,6 +12833,7 @@ class Plugin(indigo.PluginBase):
 								distCalc = self.calcDist(  txx, (rssi+rssiOffset) )/ self.distanceUnits
 								if dev.deviceTypeId == "beacon"  and distCalc < 300*self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props["IgnoreBeaconForClosestToRPI"] !="0"):
 									beaconUpdatedIds.append([fromPi,dev.id, distCalc])
+									self.beacons[mac][u"receivedSignals"][fromPi]["lastSignal"] = distCalc
 								newStates = self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Distance", distCalc,newStates=newStates ,decimalPlaces=1  )
 								newStates = self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Time", dateString,newStates=newStates)
 								if newStates[u"status"] != "up":  
@@ -12777,8 +12851,8 @@ class Plugin(indigo.PluginBase):
 					self.beacons[mac][u"indigoId"] = dev.id
 					if pkLen !=0: newStates= self.addToStatesUpdateDict(unicode(dev.id),u"pkLen",pkLen,newStates=newStates)
 
-				if rssi != -999. or self.beacons[mac][u"receivedSignals"][fromPi][0] != rssi+rssiOffset:
-					self.beacons[mac][u"receivedSignals"][fromPi] =[rssi+rssiOffset,time.time()]
+				if rssi != -999. or self.beacons[mac][u"receivedSignals"][fromPi]["rssi"] != rssi+rssiOffset:
+					self.beacons[mac][u"receivedSignals"][fromPi] = {"rssi":rssi+rssiOffset, "lastSignal":time.time(), "distance":distCalc}
 
 				if mac in self.CARS[u"beacon"]:
 					if dev.states[u"status"] != newStates[u"status"] and time.time()- self.startTime > 30:
@@ -12845,8 +12919,7 @@ class Plugin(indigo.PluginBase):
 
 				if self.newBeaconsLogTimer >0:
 						try:
-							created = datetime.datetime.strptime(dev.states[u"created"], _defaultDateStampFormat)
-							created = time.mktime(created.timetuple()) 
+							created = self.getTimetimeFromDateString(dev.states[u"created"]) 
 							if created + self.newBeaconsLogTimer > 2*time.time():
 								self.myLog( text = u"new.beacon logging: newMSG	 -2- :"+mac+";  "+name.ljust(36)+ " pi#="+str(fromPi) +";  #Msgs="+str(lCount).ljust(2)	  +";  pkLen="+str(pkLen).ljust(3)                  + "  rssi="+str(rssi).rjust(6)      +"                      txPow="+str(txPower).rjust(6)+" cr="+dev.states[u"created"]+" uuid="+ uuid.ljust(44))
 							if self.newBeaconsLogTimer < time.time():
@@ -12944,32 +13017,38 @@ class Plugin(indigo.PluginBase):
 			if u"closestRPI"	  not in deviBeacon.states: return -4
 		except:
 															return -5
-		newMAXSignal   = -9999.
-		currMAXSignal  = -9999.
+		newMinDist   = 99999.
+		currMinDist  = 99999.
 		newClosestRPI  = -1
 		currClosestRPI = -1
 
+			
 		try:
 			currClosestRPI	= int(deviBeacon.states[u"closestRPI"])
-			if currClosestRPI !=-1	and (time.time()- self.beacons[mac][u"receivedSignals"][currClosestRPI][1])	 <70.:
-				currMAXSignal	= self.beacons[mac][u"receivedSignals"][currClosestRPI][0]
-		except: 
-			currClosestRPI =-1; currMAXSignal = -9999.
+			if currClosestRPI !=-1	and (time.time() - self.beacons[mac][u"receivedSignals"][currClosestRPI]["lastSignal"])	 <70.: # [u"receivedSignals"] =[rssi, timestamp,dist]
+				currMinDist	= self.beacons[mac][u"receivedSignals"][currClosestRPI]["distance"]
+		except Exception, e: 
+			if len(unicode(e)) > 5 :
+				self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			currClosestRPI =-1; currMinDist = -9999.
+
 
 		try:
 			for pix in range(_GlobalConst_numberOfiBeaconRPI):
 				if self.RPI[unicode(pix)][u"piOnOff"] != "0": 
 					try: # if empty field skip
-						if time.time()- self.beacons[mac][u"receivedSignals"][pix][1]  <70.:  # signal recent enough
-							if self.beacons[mac][u"receivedSignals"][pix][0] > -300: 
-								if self.beacons[mac][u"receivedSignals"][pix][0] > newMAXSignal:
-									newMAXSignal   = self.beacons[mac][u"receivedSignals"][pix][0]
+						if time.time()- self.beacons[mac][u"receivedSignals"][pix]["lastSignal"]  <70.:  # signal recent enough
+							if self.beacons[mac][u"receivedSignals"][pix]["rssi"] > -300: 
+								if self.beacons[mac][u"receivedSignals"][pix]["distance"] < newMinDist:
+									newMinDist   = self.beacons[mac][u"receivedSignals"][pix]["distance"]
 									newClosestRPI  = pix
 					except:
 						pass
 			# dont switch if: <	 4 dBm diff and	 not defined then keep current 
-			if (newMAXSignal - currMAXSignal) < 4 and  currClosestRPI !=-1: # 
+
+			if abs(newMinDist - currMinDist)  < 2 and  currClosestRPI !=-1: # 
 				newClosestRPI = currClosestRPI
+
 		except Exception, e: 
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -12977,28 +13056,27 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 		####calc distance from received signal and transmitted power assuming Signal ~ Power/r**2---------
-	def findClosestRPIForBLEConnect(self,devBLE, pi, rssi):
+	def findClosestRPIForBLEConnect(self,devBLE, pi, dist):
 		if u"closestRPI" not in devBLE.states: return -4
 
-		newMAXSignal   = -9999.
-		currMAXSignal  = -9999.
+		newMinDist     = 99999.
+		currMinDist    = 99999.
 		newClosestRPI  = -1
 		currClosestRPI = -1
 
 		try:
 			currClosestRPI	= int(devBLE.states[u"closestRPI"])
 			if currClosestRPI != -1:
-				try:    deltaSec = (datetime.datetime.now() - datetime.datetime.strptime(devBLE.states[u"Pi_"+str(currClosestRPI)+"_Time"], "%Y-%m-%d %H:%M:%S")).total_seconds()
-				except: deltaSec = 9999999
+				deltaSec = time.time() - self.getTimetimeFromDateString(devBLE.states[u"Pi_"+str(currClosestRPI)+"_Time"])
 				##indigo.server.log(devBLE.name+" "+devBLE.states[u"Pi_"+str(currClosestRPI)+"_Time"]+" "+str(deltaSec))
 				if deltaSec < 120.:
-					currMAXSignal	= devBLE.states["Pi_"+str(currClosestRPI)+"_Signal"]
+					currMinDist	= devBLE.states["Pi_"+str(currClosestRPI)+"_Distance"]
 			
 		except:
 			currClosestRPI =-1
-			currMAXSignal = -9999.
+			currMinDist = 9999.
 
-		newMAXSignal  = rssi
+		newMinDist  = dist
 		newClosestRPI = pi
 
 		activePis = self.getActiveBLERPI(devBLE)
@@ -13009,18 +13087,17 @@ class Plugin(indigo.PluginBase):
 				if pix not in activePis: 						continue
 				if self.RPI[unicode(pix)][u"piOnOff"] == "0": 	continue
 				try: # if empty field skip
-					try:    deltaSec = (datetime.datetime.now() - datetime.datetime.strptime(devBLE.states[u"Pi_"+str(pix)+"_Time"], "%Y-%m-%d %H:%M:%S")).total_seconds()
-					except: deltaSec = 999999
+					deltaSec = time.time() - self.getTimetimeFromDateString(devBLE.states[u"Pi_"+str(pix)+"_Time"])
 					#indigo.server.log(devBLE.name+" "+devBLE.states[u"Pi_"+str(pix)+"_Time"]+" "+str(deltaSec))
 					if time.time()- deltaSec  < 120.:  # signal recent enough
-						if float(devBLE.states["Pi_"+str(pix)+"_Signal"]) >  newMAXSignal:
-								newMAXSignal   =  float(devBLE.states["Pi_"+str(pix)+"_Signal"])
+						if float(devBLE.states["Pi_"+str(pix)+"_Distance"]) <  newMinDist:
+								newMinDist   =  float(devBLE.states["Pi_"+str(pix)+"_Distance"])
 								newClosestRPI  = pix
 				except Exception, e: 
 					if len(unicode(e)) > 5 :
 						self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) )
 			# dont switch if: <	 4 dBm diff and	 not defined then keep current 
-			if (newMAXSignal - currMAXSignal) < 4 and  currClosestRPI !=-1: # 
+			if (newMinDist - currMinDist) < 4 and  currClosestRPI !=-1: # 
 				newClosestRPI = currClosestRPI
 		except Exception, e: 
 			if len(unicode(e)) > 5 :
@@ -13622,7 +13699,6 @@ class Plugin(indigo.PluginBase):
 						devIdoutS = unicode(devOut.id)
 						i2cAddress =""
 						spiAddress =""
-						devType	   =""
 						if typeId not in out[u"output"]: out[u"output"][typeId]={}
 						out[u"output"][typeId][devIdoutS] = [{}]
 
@@ -13689,7 +13765,6 @@ class Plugin(indigo.PluginBase):
 								if self.decideMyLog(u"OutputDevice"): self.myLog( text =	u" neoPixelClock: "+json.dumps(theDict))
 
 						if typeId.find(u"sunDial") >-1:
-								if self.decideMyLog(u"OutputDevice"): self.myLog( text =	u" sunDial: "+unicode(propsOut) )
 								theDict={}
 								theDict[u"timeZone"] 			= propsOut[u"timeZone"]
 								theDict[u"speed"]				= propsOut[u"speed"]
@@ -13701,10 +13776,10 @@ class Plugin(indigo.PluginBase):
 								if "motorType" in propsOut:
 									theDict[u"motorType"]			= propsOut[u"motorType"]
 									if propsOut["motorType"].find("unipolar") > -1 or propsOut["motorType"].find("bipolar") > -1:
-										theDict[u"pin_Coil1"]			= propsOut[u"pin_Coil1"]
-										theDict[u"pin_Coil2"]			= propsOut[u"pin_Coil2"]
-										theDict[u"pin_Coil3"]			= propsOut[u"pin_Coil3"]
-										theDict[u"pin_Coil4"]			= propsOut[u"pin_Coil4"]
+										theDict[u"pin_CoilA1"]			= propsOut[u"pin_CoilA1"]
+										theDict[u"pin_CoilA2"]			= propsOut[u"pin_CoilA2"]
+										theDict[u"pin_CoilB1"]			= propsOut[u"pin_CoilB1"]
+										theDict[u"pin_CoilB2"]			= propsOut[u"pin_CoilB2"]
 									elif propsOut["motorType"].find("DRV8834") > -1:
 										theDict[u"pin_Step"]			= propsOut[u"pin_Step"]
 										theDict[u"pin_Dir"]				= propsOut[u"pin_Dir"]
@@ -13718,6 +13793,7 @@ class Plugin(indigo.PluginBase):
 										theDict[u"pin_Enable"]			= propsOut[u"pin_Enable"]
 										theDict[u"pin_Reset"]			= propsOut[u"pin_Reset"]
 
+								theDict[u"pin_beep"]			= propsOut[u"pin_beep"]
 								theDict[u"pin_Up"]				= propsOut[u"pin_Up"]
 								theDict[u"pin_Dn"]				= propsOut[u"pin_Dn"]
 								theDict[u"pin_intensity"]		= propsOut[u"pin_intensity"]
@@ -13729,18 +13805,19 @@ class Plugin(indigo.PluginBase):
 								theDict[u"pin_rgbLED_B"]		= propsOut[u"pin_rgbLED_B"]
 								theDict[u"pin_amPM1224"]		= propsOut[u"pin_amPM1224"]
 								theDict[u"pin_restart"]			= propsOut[u"pin_restart"]
+								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
+								if self.decideMyLog(u"OutputDevice"): self.myLog( text =	u" sunDial: "+json.dumps(theDict))
 
 						if typeId.find(u"setStepperMotor") >-1:
-								if self.decideMyLog(u"OutputDevice"): self.myLog( text =	u" setStepperMotor: "+unicode(propsOut) )
 								theDict={}
 
 								if "motorType" in propsOut:
 									theDict[u"motorType"]				= propsOut[u"motorType"]
 									if propsOut["motorType"].find("unipolar") > -1 or propsOut["motorType"].find("bipolar") > -1:
-										theDict[u"pin_Coil1"]			= propsOut[u"pin_Coil1"]
-										theDict[u"pin_Coil2"]			= propsOut[u"pin_Coil2"]
-										theDict[u"pin_Coil3"]			= propsOut[u"pin_Coil3"]
-										theDict[u"pin_Coil4"]			= propsOut[u"pin_Coil4"]
+										theDict[u"pin_CoilA1"]			= propsOut[u"pin_CoilA1"]
+										theDict[u"pin_CoilA2"]			= propsOut[u"pin_CoilA2"]
+										theDict[u"pin_CoilB1"]			= propsOut[u"pin_CoilB1"]
+										theDict[u"pin_CoilB2"]			= propsOut[u"pin_CoilB2"]
 									elif propsOut["motorType"].find("DRV8834") > -1:
 										theDict[u"pin_Step"]			= propsOut[u"pin_Step"]
 										theDict[u"pin_Dir"]				= propsOut[u"pin_Dir"]
@@ -13761,7 +13838,6 @@ class Plugin(indigo.PluginBase):
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
 								if self.decideMyLog(u"OutputDevice"): self.myLog( text =	u" neoPixelClock: "+json.dumps(theDict))
 
-						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"clockLightSensor")
 						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"clockLightSensor")
 						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"clockLightSet")
 						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"minLightNotOff")
@@ -15170,7 +15246,6 @@ class Plugin(indigo.PluginBase):
 					f.write(u"==================================================================================\n")
 					f.close()
 					return
-
 				if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
 				if mType == u"":
 					f.write((ts+u" " +u" ".ljust(25)  +u"-" + text + u"\n").encode("utf8"))

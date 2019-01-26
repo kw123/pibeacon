@@ -6,8 +6,9 @@
 ##
 ###
 import RPi.GPIO as GPIO
-import	sys, os, time, json, datetime,subprocess,copy
-import math
+import sys, os, time, json, datetime,subprocess,copy
+import threading
+import Queue
 
 
 sys.path.append(os.getcwd())
@@ -20,18 +21,21 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 
-# ===========================================================================
-# read params
-# ===========================================================================
 
-#################################		 
+# ########################################
+# #########    read params           #####
+# ########################################
+
+# ------------------    ------------------ 
 def readParams():
-	global sensor, output, inpRaw, inp, DEVID,useRTC
+	global sensor, output, inpRaw, inp, useRTC
 	global speed, amPM1224, motorType
 	global lastCl, timeZone, currTZ
 	global oldRaw, lastRead
 	global doReadParameters
 	global gpiopinSET
+	global clockDictLast
+	global colPWM, beepPWM
 
 	try:
 
@@ -69,8 +73,9 @@ def readParams():
 
 		clock = output[G.program]
 		for devId in  clock:
-			DEVID = devId
-			clockDict= clock[devId][0]
+			clockDict		= clock[devId][0]
+			if clockDictLast == clockDict: continue
+			clockDictLast 	= clockDict
 			print clockDict
 			if "timeZone"			 in clockDict:	
 				if timeZone !=			   (clockDict["timeZone"]):
@@ -91,10 +96,10 @@ def readParams():
  			if "amPM1224"		 	in clockDict:  gpiopinSET["amPM1224"]	 		=	int(clockDict["amPM1224"])
  			if "motorType"		 	in clockDict:  motorType				 		=	    (clockDict["motorType"])
 
-			if "pin_Coil1"			in clockDict: gpiopinSET["pin_Coil1"]			=	int(clockDict["pin_Coil1"])
-			if "pin_Coil2"			in clockDict: gpiopinSET["pin_Coil2"]			=	int(clockDict["pin_Coil2"])
-			if "pin_Coil3"			in clockDict: gpiopinSET["pin_Coil3"]			=	int(clockDict["pin_Coil3"])
-			if "pin_Coil4"			in clockDict: gpiopinSET["pin_Coil4"]			=	int(clockDict["pin_Coil4"])
+			if "pin_CoilA1"			in clockDict: gpiopinSET["pin_CoilA1"]			=	int(clockDict["pin_CoilA1"])
+			if "pin_CoilA2"			in clockDict: gpiopinSET["pin_CoilA2"]			=	int(clockDict["pin_CoilA2"])
+			if "pin_CoilB1"			in clockDict: gpiopinSET["pin_CoilB1"]			=	int(clockDict["pin_CoilB1"])
+			if "pin_CoilB2"			in clockDict: gpiopinSET["pin_CoilB2"]			=	int(clockDict["pin_CoilB2"])
 
 			if "pin_Step"			in clockDict: gpiopinSET["pin_Step"]			=	int(clockDict["pin_Step"])
 			if "pin_Dir"			in clockDict: gpiopinSET["pin_Dir"]				=	int(clockDict["pin_Dir"])
@@ -114,15 +119,16 @@ def readParams():
 			if "pin_rgbLED_G"		in clockDict: gpiopinSET["pin_rgbLED"][1]		=	int(clockDict["pin_rgbLED_G"])
 			if "pin_rgbLED_B"		in clockDict: gpiopinSET["pin_rgbLED"][2]		=	int(clockDict["pin_rgbLED_B"])
 			if "pin_amPM1224"		in clockDict: gpiopinSET["pin_amPM1224"]		=	int(clockDict["pin_amPM1224"])
+			if "pin_beep"			in clockDict: gpiopinSET["pin_beep"]			=	int(clockDict["pin_beep"])
 
 
 
 
 			if motorType.find("unipolar") >-1 or motorType.find("bipolar") >-1:
-				defineGPIOout(gpiopinSET["pin_Coil1"])
-				defineGPIOout(gpiopinSET["pin_Coil2"])
-				defineGPIOout(gpiopinSET["pin_Coil3"])
-				defineGPIOout(gpiopinSET["pin_Coil4"])
+				defineGPIOout(gpiopinSET["pin_CoilA1"])
+				defineGPIOout(gpiopinSET["pin_CoilA2"])
+				defineGPIOout(gpiopinSET["pin_CoilB1"])
+				defineGPIOout(gpiopinSET["pin_CoilB2"])
 			elif motorType.find("DRV8834") >-1 :
 				defineGPIOout(gpiopinSET["pin_Step"])
 				defineGPIOout(gpiopinSET["pin_Dir"])
@@ -141,6 +147,8 @@ def readParams():
 			defineGPIOout(gpiopinSET["pin_rgbLED"][1])
 			defineGPIOout(gpiopinSET["pin_rgbLED"][2])
 
+			defineGPIOout(gpiopinSET["pin_beep"])
+
 
 			defineGPIOin("pin_Up")
 			defineGPIOin("pin_Dn")
@@ -151,6 +159,17 @@ def readParams():
 			defineGPIOin("pin_amPM1224")
 			defineGPIOin("pin_webAdhoc")
 
+
+			colPWM = {}
+			for pin in gpiopinSET["pin_rgbLED"]:
+				colPWM[pin] = GPIO.PWM(pin, 100)
+
+			try: beepPWM = GPIO.PWM(gpiopinSET["pin_beep"], 100)
+			except: beepPWM=""
+
+			defineMotorType()
+
+
 			## print clockDict
 			break
 		return changed
@@ -160,6 +179,180 @@ def readParams():
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
 		return 3
+
+# ########################################
+# #########    basic setup funtions  #####
+# ########################################
+# ------------------    ------------------ 
+def setupTimeZones():
+	global timeZone, timeZones, currTZ
+	timeZone = ""
+	timeZones =[]
+	for ii in range(-12,13):
+		if ii<0:
+			timeZones.append("/Etc/GMT+" +str(abs(ii)))
+		else:
+			timeZones.append("/Etc/GMT-"+str(ii))
+		
+	timeZones[12+12] = "Pacific/Auckland"
+	timeZones[11+12] = "Pacific/Pohnpei"
+	timeZones[10+12] = "Australia/Melbourne"
+	timeZones[9+12]	 = "Asia/Tokyo"
+	timeZones[8+12]	 = "Asia/Shanghai"
+	timeZones[7+12]	 = "Asia/Saigon"
+	timeZones[6+12]	 = "Asia/Dacca"
+	timeZones[5+12]	 = "Asia/Karachi"
+	timeZones[4+12]	 = "Asia/Dubai"
+	timeZones[3+12]	 = "/Europe/Moscow"
+	timeZones[2+12]	 = "/Europe/Helsinki"
+	timeZones[1+12]	 = "/Europe/Berlin"
+	timeZones[0+12]	 = "/Europe/London"
+	timeZones[-1+12] = "Atlantic/Cape_Verde"
+	timeZones[-2+12] = "Atlantic/South_Georgia"
+	timeZones[-3+12] = "America/Buenos_Aires"
+	timeZones[-4+12] = "America/Puerto_Rico"
+	timeZones[-5+12] = "/US/Eastern"
+	timeZones[-6+12] = "/US/Central"
+	timeZones[-7+12] = "/US/Mountain"
+	timeZones[-8+12] = "/US/Pacific"
+	timeZones[-9+12] = "/US/Alaska"
+	timeZones[-10+12] = "Pacific/Honolulu"
+	timeZones[-11+12] = "US/Samoa"
+	#print "timeZones:", timeZones
+
+	#delta to UTC:
+	JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
+	JanDelta = int(subprocess.Popen("date -d '1 Jan' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
+	NowDelta = int(subprocess.Popen("date  +%z "		   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
+
+	currTZ = JanDelta
+	return 
+
+
+# ------------------    ------------------ 
+def defineMotorType():
+	global SeqCoils, minStayOn, motorType, stepsIn360, maxStepsUsed, nStepsInSequence
+	SeqCoils = []
+	print "motorType", motorType
+
+	try:
+		mtSplit    		= motorType.split("-")
+		mult       		= int(mtSplit[2])
+		stepsIn360 		= int(mtSplit[1])*mult
+		maxStepsUsed	= stepsIn360 -1
+	except:
+		print " stopping  motorType wrong", motorType, mtSplit
+		exit()
+
+	if mtSplit[0] == "bipolar":
+		minStayOn = 0.001
+		if motorType.find("-1") >-1:
+			SeqCoils.append([0, 0, 0, 0])  # off
+			SeqCoils.append([0, 1, 1, 0])
+			SeqCoils.append([0, 1, 0, 1])
+			SeqCoils.append([1, 0, 0, 1])
+			SeqCoils.append([1, 0, 1, 0])
+		elif motorType.find("-2") >-1:
+			SeqCoils.append([0, 0, 0, 0])  # off
+			SeqCoils.append([0, 1, 1, 0])
+			SeqCoils.append([0, 1, 0, 0])
+			SeqCoils.append([0, 1, 0, 1])
+			SeqCoils.append([0, 0, 0, 1])
+			SeqCoils.append([1, 0, 0, 1])
+			SeqCoils.append([1, 0, 0, 0])
+			SeqCoils.append([1, 0, 1, 0])
+			SeqCoils.append([0, 0, 1, 0])
+
+	elif mtSplit[0] == "unipolar":
+		SeqCoils.append([0, 0, 0, 0]) # off
+		SeqCoils.append([1, 0, 0, 1])
+		SeqCoils.append([1, 0, 0, 0])
+		SeqCoils.append([1, 1, 0, 0])
+		SeqCoils.append([0, 1, 0, 0])
+		SeqCoils.append([0, 1, 1, 0])
+		SeqCoils.append([0, 0, 1, 0])
+		SeqCoils.append([0, 0, 1, 1])
+		SeqCoils.append([0, 0, 0, 1])
+		minStayOn = 0.001
+		maxStepsUsed	= stepsIn360 -10
+
+	elif mtSplit[0] =="DRV8834" or mtSplit[0] == "A4988":
+		minStayOn = 0.001
+
+	else:
+		print " stopping  motorType not defined"
+		exit()
+
+	nStepsInSequence= len(SeqCoils) -1
+	print nStepsInSequence, SeqCoils
+	return 
+
+# ------------------    ------------------ 
+def setgpiopinSET():
+	global gpiopinSET
+	### GPIO pins ########
+	gpiopinSET						= {}
+	gpiopinSET["pin_CoilA1"]      	= -1 # blue
+	gpiopinSET["pin_CoilA2"]      	= -1 # pink
+	gpiopinSET["pin_CoilB1"]      	= -1 # yellow
+	gpiopinSET["pin_CoilB2"]      	= -1 # orange
+
+	gpiopinSET["pin_Fault"]      	= -1 # orange
+	gpiopinSET["pin_Dir"]      		= -1 # orange
+	gpiopinSET["pin_Step"]      	= -1 # orange
+	gpiopinSET["pin_Sleep"]      	= -1 # orange
+	gpiopinSET["pin_Enable"]    	= -1 # orange
+	gpiopinSET["pin_Reset"] 		= -1
+
+
+	gpiopinSET["pin_rgbLED"]	 	= [-1,-1,-1] # r g b pins
+
+	gpiopinSET["pin_Up"]   			= -1
+	gpiopinSET["pin_Dn"]  			= -1
+
+	gpiopinSET["pin_intensity"]		= -1
+	gpiopinSET["pin_restart"]		= -1
+
+	gpiopinSET["pin_sensor0"]  		= -1
+	gpiopinSET["pin_sensor12"] 		= -1
+
+	gpiopinSET["pin_amPM1224"]   	= -1
+	gpiopinSET["pin_webAdhoc"]  	= -1
+	gpiopinSET["pin_beep"]  		= -1
+
+	return 
+
+
+# ########################################
+# #########    masic GPIO funtions  ######
+# ########################################
+
+# ------------------    ------------------ 
+def defineGPIOin(pin):
+	try:    GPIO.setup(int(gpiopinSET[pin]),	GPIO.IN, pull_up_down=GPIO.PUD_UP)
+	except: pass
+	return
+
+# ------------------    ------------------ 
+def defineGPIOout(pin):
+	try:    GPIO.setup( int(pin),	GPIO.OUT)
+	except: pass
+	return
+	
+# ------------------    ------------------ 
+def setGPIOValue(pin,val):
+	#print "setting GPIO# %d,to %d"%( pin,val)
+	GPIO.output(int(pin),int(val))
+	return
+
+
+# ------------------    ------------------ 
+def getPinValue(pinName):
+	global gpiopinSET
+	if pinName not in gpiopinSET: return -1
+	if gpiopinSET[pinName] < 1:   return -1
+	ret =  GPIO.input(gpiopinSET[pinName])
+	return (ret-1)*-1
 
 
 
@@ -172,10 +365,10 @@ def makeStep(seq):
 	global gpiopinSET
 	global SeqCoils
 	#print "makeStep", seq, SeqCoils[seq]
-	setGPIOValue(gpiopinSET["pin_Coil1"], SeqCoils[seq][0])
-	setGPIOValue(gpiopinSET["pin_Coil2"], SeqCoils[seq][1])
-	setGPIOValue(gpiopinSET["pin_Coil3"], SeqCoils[seq][2])
-	setGPIOValue(gpiopinSET["pin_Coil4"], SeqCoils[seq][3])
+	setGPIOValue(gpiopinSET["pin_CoilA1"], SeqCoils[seq][0])
+	setGPIOValue(gpiopinSET["pin_CoilA2"], SeqCoils[seq][1])
+	setGPIOValue(gpiopinSET["pin_CoilB1"], SeqCoils[seq][2])
+	setGPIOValue(gpiopinSET["pin_CoilB2"], SeqCoils[seq][3])
 
 
 def makeStepDRV8834(dir):
@@ -185,15 +378,9 @@ def makeStepDRV8834(dir):
 	global isSleep
 
 
-	if isDisabled: 
-		setGPIOValue(gpiopinSET["pin_Enable"], 0)
+	if isDisabled or isSleep: 
+		setMotorON()
 		time.sleep(0.01)
-		isDisabled= False
-
-	if  isSleep: 
-		setGPIOValue(gpiopinSET["pin_Sleep"], 1)
-		time.sleep(0.01)
-		isSleep= False
 
 	if dir != lastDirection: 
 		setGPIOValue(gpiopinSET["pin_Dir"], dir==1)
@@ -207,36 +394,49 @@ def makeStepDRV8834(dir):
 
 
 # ------------------    ------------------ 
+def setMotorON():
+	global motorType, isDisabled, isSleep
+	if motorType.find("DRV8834") >-1 or motorType.find("A4988") >-1 :
+		setGPIOValue(gpiopinSET["pin_Sleep"], 1)
+		setGPIOValue(gpiopinSET["pin_Enable"], 0)
+	else:
+		pass
+	isSleep 	= False
+	isDisabled  = False
+
 def setMotorOFF():
 	global motorType, isDisabled, isSleep
-	if motorType.find("DRV8834") >-1:
+	if motorType.find("DRV8834") >-1 or motorType.find("A4988") >-1 :
 		setGPIOValue(gpiopinSET["pin_Sleep"], 0)
 		setGPIOValue(gpiopinSET["pin_Enable"], 1)
 	else:
 		makeStep(0)
+	isSleep 	= True
+	isDisabled  = True
 
 def setMotorSleep():
 	global motorType, isDisabled, isSleep
-	if motorType.find("DRV8834") >-1:
+	if motorType.find("DRV8834") >-1 or motorType.find("A4988") >-1 :
 		setGPIOValue(gpiopinSET["pin_Sleep"], 0)
 	else:
 		makeStep(0)
+	isSleep = True
 
  
 # ------------------    ------------------ 
-def move(delay, steps, direction, force = 0):
+def move(stayOn, steps, direction, force = 0):
 	global lastStep
 	global gpiopinSET
 	global SeqCoils
 	global nStepsInSequence
 	global whereIs12
-	global minDelay
+	global minStayOn
 	global motorType
 
 
-	delay = max(minDelay,delay)
+	stayOn = max(minStayOn,stayOn)
 	lStep = lastStep
-	#print "steps", steps,  direction, delay, lastStep
+	#print "steps", steps,  direction, stayOn, lastStep
 	steps = int(steps)
 	iSteps= 0
 	if iSteps > 0 and speed == 1: makeStep(ii)
@@ -267,8 +467,8 @@ def move(delay, steps, direction, force = 0):
 			makeStep(lStep)
 
 	 	lastStep = lStep
-		time.sleep(delay)
-	#if speed < 100 or delay > 0.5: setOFF()
+		time.sleep(stayOn)
+	#if speed < 100 or stayOn > 0.5: setOFF()
 	return iSteps
 
 # ------------------    ------------------ 
@@ -295,12 +495,14 @@ def testIfMove( waitBetweenSteps, nextStep ):
 		if printON: print "secSinMidnit 2 ", "%.2f"%secSinMidnit, "H",hour, "M",minute, "S",second, "dt %.5f"%(time.time()-t0), "nstep",nextStep, "totSteps",totalSteps
 
 		if nextStep != 0: 
-			if speed > 10 or nextStep >5: delay =0.001
-			else:		                  delay =0.01
+			if speed > 10 or nextStep >5: stayOn =0.001
+			else:		                  stayOn =0.01
 			if lasttotalSteps < 10: force = 10 
 			else:					force = 0
 			#print "dir, nextStep", dir, nextStep
-			move(delay, int( abs(nextStep) ), dir, force = force)
+			move(stayOn, int( abs(nextStep) ), dir, force = force)
+			if speed == 1 and nextStep ==1:
+				setMotorSleep()
 			setColor()
 
 		#saveTime(secSinMidnit)
@@ -343,9 +545,9 @@ def findLeftRight():
 
 	time.sleep(0.3)
 
-	delay = 0.001
+	stayOn = 0.001
 	if stepsIn360 < 1000:
-		delay =0.005
+		stayOn =0.001
 
 	maxSteps = int(max(stepsIn360*1.001,stepsIn360+2))
 
@@ -354,12 +556,12 @@ def findLeftRight():
 	# check if we start at 0 left or right
 	if getPinValue("pin_sensor0") ==1:
 		trySteps = int(stepsIn360 / 50)
-		steps = move(delay, trySteps , -1, force=trySteps)
+		steps = move(stayOn, trySteps , -1, force=trySteps)
 		time.sleep(0.1)
 		if steps != trySteps:
 			print "NOT ok tried %d  -1 steps, we were right of 0 "%trySteps
 			time.sleep(0.1)
-			steps = move(delay, trySteps*2 , 1, force=trySteps*2)
+			steps = move(stayOn, trySteps*2 , 1, force=trySteps*2)
 			if steps == trySteps*2:
 				print "ok tried %dsteps right"%(trySteps*2)
 			else:
@@ -367,31 +569,31 @@ def findLeftRight():
 			time.sleep(0.1)
 		else:
 			print "ok tried %d  1 , we were left of 0 , move a little further away"%(trySteps*3)
-			steps = move(delay, trySteps*3, -1, force=0)
+			steps = move(stayOn, trySteps*3, -1, force=0)
 			
 
 	# must pass 12 , if not rewind
-	rightLimit = move(delay, maxSteps , 1, force=20)
+	rightLimit = move(stayOn, maxSteps , 1, force=20)
 	if whereIs12[1] ==-1:
 		print "not passed 12 at right turn"
 		time.sleep(0.1)
-		xx = move(delay, maxSteps , -1, force=50)
+		xx = move(stayOn, maxSteps , -1, force=50)
 		if whereIs12[-1] == -1:
 			print "not passed 12 at left,  turn do 10% left"
-			xx = move(delay, int(maxSteps*0.1), -1, force=10)
+			xx = move(stayOn, int(maxSteps*0.1), -1, force=10)
 		#now do full circle twice
 		time.sleep(0.1)
-		rightLimit  = move(delay, maxSteps ,  1, force=10)
+		rightLimit  = move(stayOn, maxSteps ,  1, force=10)
 	else:
 		print "LR passed 12 at right turn "
 		
 
 	time.sleep(0.1)
-	leftLimit  = move(delay, maxSteps , -1, force=20)
+	leftLimit  = move(stayOn, maxSteps , -1, force=20)
 	time.sleep(0.1)
-	rightLimit2 = move(delay, maxSteps ,  1, force=10)
+	rightLimit2 = move(stayOn, maxSteps ,  1, force=10)
 	time.sleep(0.1)
-	leftLimit2 = move(delay, maxSteps  , -1, force=20)
+	leftLimit2 = move(stayOn, maxSteps  , -1, force=20)
 	time.sleep(0.2)
 	
 	print "whereIs12", whereIs12
@@ -407,7 +609,7 @@ def findLeftRight():
 
 	maxStepsUsed  = max(1,int((leftLimit+leftLimit2)*0.5))
 
-	if not amPM1224:	waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
+	if amPM1224 =="24":	waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
 	else: 				waitBetweenSteps 	= secondsTotalInHalfDay / maxStepsUsed 
 
 
@@ -415,25 +617,95 @@ def findLeftRight():
 
 
 
+
+# ########################################
+# #########     beeps & blinks  ##########
+# ########################################
+
+def addToBeepBlinkQueue(text =[], color=[1,1,1], sound=1, stop = False, end=False, restore = True):
+	global beepBlinkThread, stopBlinkBeep
+
+
+	if stop: 
+		stopBlinkBeep =True
+		time.sleep(1)
+		print" clear queue bf " ,beepBlinkThread["queue"].qsize() 
+		beepBlinkThread["queue"].queue.clear()
+		print" clear queue af",beepBlinkThread["queue"].qsize() 
+		stopBlinkBeep =True
+		return 
+
+	if end: 
+		stopBlinkBeep =True
+		time.sleep(1)
+		print" clear queue bf " ,beepBlinkThread["queue"].qsize() 
+		beepBlinkThread["queue"].queue.clear()
+		print" clear queue af",beepBlinkThread["queue"].qsize() 
+		beepBlinkThread["thread"].join()
+		return 
+
+	add ={}
+	if beepBlinkThread["beep"]    : add["beep"]  = sound
+	if beepBlinkThread["color"]   : add["color"] = color
+	add["text"]    = text
+	add["restore"] = restore
+	stopBlinkBeep  = False
+	beepBlinkThread["queue"].put(add) 
+
+
+def beepBlinkQueue():
+	global beepBlinkThread, stopBlinkBeep
+
+	while True:
+		while not beepBlinkThread["queue"].empty():
+			#print" checking queue size", actionQueue[devId].qsize() 
+			action = beepBlinkThread["queue"].get()
+			doBlinkBeep(action) 
+			if beepBlinkThread["end"]:
+				sys.exit()
+			if stopBlinkBeep: break
+		if LastHourColorSetToRemember !=[]:
+			setColor( blink=0, color = LastHourColorSetToRemember, force = True)
+		if beepBlinkThread["end"]:
+			sys.exit()
+		time.sleep(1)
+	sys.exit()
+
+
+
 # ########################################
 # #########     LED  funtions ############
 # ########################################
 
+def doBlinkBeep(action):
+	global stopBlinkBeep
+	stopBlinkBeep = False
+	if "text" not in action: return 
+	blinkLetters(action["text"], [1,1,1], action["beep"])
+
 # ------------------    ------------------ 
-def setColor( blink=0, force = False):
-	global colPWM, LastHourColorSet, secSinMidnit
+def setColor( blink=0, color = [1.,1.,1.], beep=-1, force = False):
+	global colPWM, LastHourColorSet, secSinMidnit, LastHourColorSetToRemember
 	global gpiopinSET
 
 	lastC = LastHourColorSet
 
+	if stopBlinkBeep: return 
 	if blink !=0 : 
 		for p in range(len(gpiopinSET["pin_rgbLED"])):
 			pin = gpiopinSET["pin_rgbLED"][p]
 			if  blink ==1: 
-				colPWM[pin].start( getIntensity(100) )	
-			elif blink ==-1: 
+				if color[p] >= 0:
+					colPWM[pin].start( int(getIntensity(100)*color[p]))	
+			elif blink == -1: 
 				colPWM[pin].start( getIntensity(0) )	
+		if beepPWM !="":
+			if  blink == 1: 
+				if beep >= 0 : beepPWM.start( int(beep *100) )	
+			else:			   beepPWM.start( 0 )	
+
 		LastHourColorSet = -1
+
 
 	else:
 		if abs(secSinMidnit-lastC) >10 or force:
@@ -441,8 +713,9 @@ def setColor( blink=0, force = False):
 			for p in range(len(gpiopinSET["pin_rgbLED"])):
 				pin = gpiopinSET["pin_rgbLED"][p]
 				#print "int", p, getIntensity(cm[p]) 
-				colPWM[pin].start( getIntensity(cm[p]) )	
+				colPWM[pin].start( getIntensity(cm[p])*color[p] )	
 				LastHourColorSet = secSinMidnit
+				LastHourColorSetToRemember = color
 
 # ------------------    ------------------ 
 def getIntensity(intens):
@@ -453,43 +726,42 @@ def getIntensity(intens):
 
 
 # ------------------    ------------------ 
-def testIfBlink( sleep, waitBetweenSteps ):
-	global speed, blinkHour
-	global hour, minute, second
+def testIfBlink( ):
+	global speed, blinkHour, hour
 	if speed ==1:
 		if  second%60 < 20 and blinkHour != hour:
 			blinkHour = hour
-			blink(0.4,0.3,1)
-			setColor()
-			sleep = max (0.01, waitBetweenSteps/5*speed-3 )
-	time.sleep(min(0.5, sleep ))
+			addToBeepBlinkQueue(text =["o","n"], color=[1,1,1], sound=1, stop = False, end=False, restore = True)
 	return 
 
 
 
-def blinkLetters(letters):
+def blinkLetters(letters, color, beep):
 	global morseCode
 	global longBlink, shortBlink, breakBlink
+	global stopBlinkBeep
 	for l in letters:
 		if l in morseCode:
 			for sig in morseCode[l]:
-				if sig ==1:	blink(longBlink, breakBlink, 1)
-				else:   	blink(shortBlink, breakBlink, 1)
+				if sig ==1:	blink(longBlink,  breakBlink, 1, color, beep)
+				else:   	blink(shortBlink, breakBlink, 1, color, beep)
 			time.sleep(breakBlink)
 	return
 
-def blink(on, off, n):
+def blink(on, off, n, color, beep):
+	global stopBlinkBeep
 	for i in range(n):
-		setColor(blink= 1)
+		if stopBlinkBeep: return 
+		setColor(blink= 1, color=color, beep=beep)
 		time.sleep(on)	
-		setColor(blink=-1)
+		if stopBlinkBeep: return 
+		setColor(blink=-1, color=color, beep=beep)
 		time.sleep(off)	
 	return 
 
 
 def timeToColor(tt):
-	m = 60*60
-	times = [   0, 			4*m,		8*m,		11*m,			13*m,			16*m,		20*m,		24*m]
+	times = [   0, 		   4*60*60,	   8*60*60,		11*60*60,	  13*60*60,		 16*60*60,	20*60*60,	 24*60*60]
 	rgb   = [ [20,20,20], [20,20,20], [80,30,30], [100,100,100], [100,100,100], [50,50,50], [80,30,30], [20,20,20] ]
 	rgbout= rgb[0]
 	for ii in range(1,len(times)):
@@ -504,8 +776,6 @@ def timeToColor(tt):
 # ########################################
 # #########   time   funtions ############
 # ########################################
-
-
 # ------------------    ------------------ 
 def getTime():
 	global speed, amPM1224
@@ -518,25 +788,52 @@ def getTime():
 	hour   = int( secSinMidnit/(60*60) )
 	minute = int( (secSinMidnit - hour*60*60) /60 )
 	second = int( secSinMidnit - hour*60*60 - minute*60)
-	if amPM1224: 
+	if amPM1224 == "12": 
 		hour12 = hour%12
 		secSinMidnit2 = secSinMidnit%secondsTotalInHalfDay
+	elif amPM1224 == "24": 
+		hour12 = hour
+		secSinMidnit2  =secSinMidnit
 	else: 
 		hour12 = hour
 		secSinMidnit2  =secSinMidnit
 	return 
+
+# ------------------    ------------------ 
+def getamPM():
+	val = getPinValue("pin_amPM1224")
+	if val == 1:
+		return "12"
+	elif val == 0:
+		return "24"
+	return "error"
+
+# ------------------    ------------------ 
+def testForAmPM():
+	global amPM1224
+	val = getamPM()
+	if   val == "12":
+		#print "pin_amPM1224 on"
+		if amPM1224 =="24":
+			getTime()
+			findLeftRight()
+		amPM1224 = "12"
+	elif val == "24":
+		if amPM1224 =="12":
+			getTime()
+			findLeftRight()
+		amPM1224 = "24"
 
 
 
 # ########################################
 # #########    IO    funtions ############
 # ########################################
-
 # ------------------    ------------------ 
 def getManualParams( sleep ):
 
 	#sleep = testleftRightON(sleep)
-	testIfRestart()
+	#testIfRestart()
 
 	sleep = testIfIntensityOn(sleep)
 
@@ -590,22 +887,6 @@ def testForFault():
 	elif val == 1:
 			return False
 
-# ------------------    ------------------ 
-def testForAmPM():
-	global amPM1224
-	val  = getPinValue("pin_amPM1224")
-	if   val == 1:
-			#print "pin_amPM1224 on"
-			if not amPM1224:
-				getTime()
-				findLeftRight()
-			amPM1224 = True
-	elif val == 0:
-			if amPM1224:
-				getTime()
-				findLeftRight()
-			amPM1224 = False
-
 
 # ------------------    ------------------ 
 def testleftRightON(sleep):
@@ -616,21 +897,22 @@ def testleftRightON(sleep):
 	down			= getPinValue("pin_Dn")
 	nPress = time.time()
 
+	stayOn = 0.001
 	if  leftRightON:
 		while getPinValue("pin_Up") ==1:
 				#print "move L"
-				move (delay,int(nSteps),-1, force=1000)
+				move (stayOn,int(nSteps),-1, force=1000)
 				if time.time() - nPress >2:
 					nSteps = min(stepsIn360/10, nSteps*1.5)
-					delay = 0.001
+					stayOn = 0.001
 				sleep = min(0.0001, sleep)
 
 		while getPinValue("pin_Dn") ==1:
 				#print "move R"
-				move (delay,int(nSteps),1, force=1000)
+				move (stayOn,int(nSteps),1, force=1000)
 				if time.time() - nPress >2:
 					nSteps = min(stepsIn360/10, nSteps*1.5)
-					delay = 0.001
+					stayOn = 0.001
 				sleep = min(0.0001, sleep)
 	return sleep
 
@@ -662,43 +944,22 @@ def testIfIntensityOn(sleep):
 
 
 
-
-def defineGPIOin(pin):
-		try:    GPIO.setup(int(gpiopinSET[pin]),	GPIO.IN, pull_up_down=GPIO.PUD_UP)
-		except: pass
-
-def defineGPIOout(pin):
-		try:    GPIO.setup( int(pin),	GPIO.OUT)
-		except: pass
-	
-def setGPIOValue(pin,val):
-	#print "setting GPIO# %d,to %d"%( pin,val)
-	GPIO.output(int(pin),int(val))
-
-
-
-def getPinValue(pinName):
-	global gpiopinSET
-	if pinName not in gpiopinSET: return -1
-	if gpiopinSET[pinName] < 1:   return -1
-	ret =  GPIO.input(gpiopinSET[pinName])
-	return (ret-1)*-1
-
-
 # ########################################
 # #########    web   funtions ############
 # ########################################
 
+# ------------------    ------------------ 
 def startAdhocWeb():
 	return
 
+# ------------------    ------------------ 
 def stopAdhocWeb():
 	return
 
 
-#################################
-#################################
-#################################
+ #######################################
+# #########       main        ##########
+# ######################################
 
 global clockDict, clockLightSet, useRTC
 global sensor, output, inpRaw
@@ -706,7 +967,7 @@ global oldRaw,	lastRead, inp
 global timeZones, timeZone
 global doReadParameters
 global networkIndicatorON
-global lastStep, colPWM,  LastHourColorSet
+global lastStep, colPWM,  LastHourColorSet, beepPWM
 global intensity
 global maxStepsUsed, startSteps, stepsIn360, nStepsInSequence
 global speed, amPM1224, motorType, adhocWeb
@@ -722,277 +983,115 @@ global rewindDone
 global longBlink, shortBlink, breakBlink
 global morseCode
 global whereIs12
-global minDelay
+global minStayOn
 global lastDirection
 global isDisabled, isSleep
 global isFault
 global RestartLastOff 
-
+global clockDictLast
+global beepBlinkThread, stopBlinkBeep
 
 
 morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 		"F":[0,0,1,0], 	"G":[1,1,0],	"H":[0,0,0,0], 	"I":[0,0],
 			"J":[0,1,1,1], 	"K":[1,0,1], 	"L":[0,1,0,0], 	"M":[1,1], 		"N":[1,0], 		"O":[1,1,1], 	"P":[0,1,1,0],	"Q":[1,1,0,1], 	"R":[0,1,0],
 			"S":[0,0,0], 	"T":[1], 		"U":[0,0,1], 	"V":[0,0,0,1], 	"W":[0,1,1], "X":[1,0,0,1], 	"Y":[1,0,1,1], 	"Z":[1,1,0,0],
-			"0":[1,1,1,1,1], "1":[0,1,1,1,1], "2":[0,0,1,1,1], "3":[0,0,0,1,1], "4":[0,0,0,0,1], "5":[0,0,0,0,0], "6":[1,0,0,0,0], "7":[1,1,0,0,0], "8":[1,1,1,0,0], "9":[1,1,1,1,0] }
+			"0":[1,1,1,1,1], "1":[0,1,1,1,1], "2":[0,0,1,1,1], "3":[0,0,0,1,1], "4":[0,0,0,0,1], "5":[0,0,0,0,0], "6":[1,0,0,0,0], "7":[1,1,0,0,0], "8":[1,1,1,0,0], "9":[1,1,1,1,0],
+			"s":[0], # one short
+			"l":[1], # one long
+			"b":[0,0,0,1]}  # beethoven ddd DAAA
 
-longBlink			  = 0.6
-shortBlink			  = 0.2
-breakBlink			  = 0.8
+longBlink			  	= 0.6
+shortBlink			  	= 0.2
+breakBlink			  	= 0.5
 
-isFault				  = False
+isFault				  	= False
 
-isDisabled			  = True
-isSleep				  = True
-lastDirection		  = 0
-webAdhocLastOff		  = time.time() + 100
-webAdhoc			  = False
+isDisabled			  	= True
+isSleep				  	= True
+lastDirection		  	= 0
+webAdhocLastOff		  	= time.time() + 100
+webAdhoc			  	= False
 # constants 
-adhocWebLast		  = 0
-motorType			  = "xx"
-stepsIn360            = 64*64
-maxStepsUsed          = 4000
-startSteps			  = 0
-secondsTotalInDay     = 60.*60.*24.
-secondsTotalInHalfDay = 60.*60.*12
-intensity             = {}
-intensity["Mult"]     = 100.
-intensity["Max"]      = 100.
-intensity["Min"]      = 10.
-amPM1224				  = False
-speed				  = 1
-RestartLastOff 		  = time.time()+100
+adhocWebLast		  	= 0
+motorType			  	= "xx"
+startSteps			  	= 0
+secondsTotalInDay     	= 60.*60.*24.
+secondsTotalInHalfDay 	= 60.*60.*12
+intensity             	= {}
+intensity["Mult"]     	= 100.
+intensity["Max"]      	= 100.
+intensity["Min"]      	= 10.
+amPM1224			  	= "24"
+speed				  	= 1
+RestartLastOff 		  	= time.time()+100
 
-lastStep              = 0
-LastHourColorSet      = -1
+lastStep              	= 0
+LastHourColorSet      	= -1
+nightMode				= 0
+doReadParameters		= True
+dd						= datetime.datetime.now()
+oldRaw					= ""
+lastRead				= 0
+inpRaw					= ""
+inp						= ""
+debug					= 5
+loopCount				= 0
+sensor					= G.program
+lastGPIOreset	 		= 0
+G.lastAliveSend	 		= time.time() -1000
+loopC			 		= 0
+lastShutDownTest 		= -1
+lastRESETTest	 		= -1
+printON 				= True
+totalSteps 				= 0
+t0						= time.time()
+blinkHour				= -1
+rewindDone 				= True
+nextStep 				= 1
+whereIs12 				= {-1:-1, 1:-1, "average":-1, "active":False}
+clockDictLast			= {}
+LastHourColorSetToRemember =[]
 
-### GPIO pins ########
-gpiopinSET						= {}
-gpiopinSET["pin_Coil1"]      	= -1 # blue
-gpiopinSET["pin_Coil2"]      	= -1 # pink
-gpiopinSET["pin_Coil3"]      	= -1 # yellow
-gpiopinSET["pin_Coil4"]      	= -1 # orange
+myPID		= str(os.getpid())
+U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
-gpiopinSET["pin_Fault"]      	= -1 # orange
-gpiopinSET["pin_Dir"]      		= -1 # orange
-gpiopinSET["pin_Step"]      	= -1 # orange
-gpiopinSET["pin_Sleep"]      	= -1 # orange
-gpiopinSET["pin_Enable"]      	= -1 # orange
-gpiopinSET["pin_Reset"] 		= -1
+setgpiopinSET()
 
-
-gpiopinSET["pin_rgbLED"]	 	= [-1,-1,-1] # r g b pins
-
-gpiopinSET["pin_Up"]   			= -1
-gpiopinSET["pin_Dn"]  			= -1
-
-gpiopinSET["pin_intensity"]		= -1
-gpiopinSET["pin_restart"]		= -1
-
-gpiopinSET["pin_sensor0"]  		= -1
-gpiopinSET["pin_sensor12"] 		= -1
-
-gpiopinSET["pin_amPM1224"]   	= -1
-gpiopinSET["pin_webAdhoc"]  	= -1
-
-
-
-
-
-
-
-
-
-
-
-
-
-lastNeoParamsSet	= time.time()
-nightMode			= 0
-
-doReadParameters	= True
-timeZone = ""
-timeZones =[]
-for ii in range(-12,13):
-	if ii<0:
-		timeZones.append("/Etc/GMT+" +str(abs(ii)))
-	else:
-		timeZones.append("/Etc/GMT-"+str(ii))
-		
-timeZones[12+12] = "Pacific/Auckland"
-timeZones[11+12] = "Pacific/Pohnpei"
-timeZones[10+12] = "Australia/Melbourne"
-timeZones[9+12]	 = "Asia/Tokyo"
-timeZones[8+12]	 = "Asia/Shanghai"
-timeZones[7+12]	 = "Asia/Saigon"
-timeZones[6+12]	 = "Asia/Dacca"
-timeZones[5+12]	 = "Asia/Karachi"
-timeZones[4+12]	 = "Asia/Dubai"
-timeZones[3+12]	 = "/Europe/Moscow"
-timeZones[2+12]	 = "/Europe/Helsinki"
-timeZones[1+12]	 = "/Europe/Berlin"
-timeZones[0+12]	 = "/Europe/London"
-timeZones[-1+12] = "Atlantic/Cape_Verde"
-timeZones[-2+12] = "Atlantic/South_Georgia"
-timeZones[-3+12] = "America/Buenos_Aires"
-timeZones[-4+12] = "America/Puerto_Rico"
-timeZones[-5+12] = "/US/Eastern"
-timeZones[-6+12] = "/US/Central"
-timeZones[-7+12] = "/US/Mountain"
-timeZones[-8+12] = "/US/Pacific"
-timeZones[-9+12] = "/US/Alaska"
-timeZones[-10+12] = "Pacific/Honolulu"
-timeZones[-11+12] = "US/Samoa"
-#print "timeZones:", timeZones
-
-#delta to UTC:
-JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
-JanDelta = int(subprocess.Popen("date -d '1 Jan' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
-NowDelta = int(subprocess.Popen("date  +%z "		   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
-
-currTZ = JanDelta
-
+setupTimeZones()
 #print "current tz:", currTZ,JulDelta,JanDelta,NowDelta, timeZones[currTZ+12], timeZones
-
-
-dd							= datetime.datetime.now()
-oldRaw						= ""
-lastRead					= 0
-inpRaw						= ""
-inp							= ""
-debug						= 5
-loopCount					= 0
-sensor						= G.program
-
 
 if readParams() ==3:
 		U.toLog(-1," parameters not defined", doPrint=True)
 		U.checkParametersFile("parameters-DEFAULT-sunDial", force = True)
 		time.sleep(20)
 		U.restartMyself(param=" bad parameters read", reason="",doPrint=True)
-	
 
-SeqCoils = []
-print "motorType", motorType
-if motorType	== "biPolar-200-1"::
-	stepsIn360        = 200
-	maxStepsUsed      = 199
-	SeqCoils.append([0, 0, 0, 0])  # off
-	SeqCoils.append([0, 1, 1, 0])
-	SeqCoils.append([0, 1, 0, 1])
-	SeqCoils.append([1, 0, 0, 1])
-	SeqCoils.append([1, 0, 1, 0])
-	minDelay = 0.003
-elif motorType	== "biPolar-200-2"::
-	stepsIn360        = 400
-	maxStepsUsed      = 399
-	SeqCoils.append([0, 0, 0, 0])  # off
-	SeqCoils.append([0, 1, 1, 0])
-	SeqCoils.append([0, 1, 0, 0])
-	SeqCoils.append([0, 1, 0, 1])
-	SeqCoils.append([0, 0, 0, 1])
-	SeqCoils.append([1, 0, 0, 1])
-	SeqCoils.append([1, 0, 0, 0])
-	SeqCoils.append([1, 0, 1, 0])
-	SeqCoils.append([0, 0, 1, 0])
-	minDelay = 0.003
-
-elif motorType	== "unipolar-4096":
-	stepsIn360        = 64*64
-	maxStepsUsed      = 4000
-	SeqCoils.append([0, 0, 0, 0]) # off
-	SeqCoils.append([1, 0, 0, 1])
-	SeqCoils.append([1, 0, 0, 0])
-	SeqCoils.append([1, 1, 0, 0])
-	SeqCoils.append([0, 1, 0, 0])
-	SeqCoils.append([0, 1, 1, 0])
-	SeqCoils.append([0, 0, 1, 0])
-	SeqCoils.append([0, 0, 1, 1])
- 	SeqCoils.append([0, 0, 0, 1])
-	minDelay = 0.001
-
-elif motorType.find("DRV8834") >-1:
-		minDelay = 0.001
-		try: ii = int(motorType.split("-")[-1])
-		except:
-			print " stopping  motorType wrong", motorType
-			exit()
-		stepsIn360        = 200 * ii
-		maxStepsUsed      = stepsIn360 - ii
-elif motorType.find("A4988") >-1:
-		minDelay = 0.001
-		try: ii = int(motorType.split("-")[-1])
-		except:
-			print " stopping  motorType wrong", motorType
-			exit()
-		stepsIn360        = 200 * ii
-		maxStepsUsed      = stepsIn360 - ii
-
-else:
-	print " stopping  motorType not defined"
-	exit()
-
-nStepsInSequence= len(SeqCoils) -1
-
-
-whereIs12 = {-1:-1, 1:-1, "average":-1, "active":False}
-
-print nStepsInSequence, SeqCoils
-
-myPID		= str(os.getpid())
-U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
+setMotorOFF()
 
 U.echoLastAlive(G.program)
-
-lastGPIOreset	 = 0
-G.lastAliveSend	 = time.time() -1000
-loopC			 = 0
-lastShutDownTest = -1
-lastRESETTest	 = -1
-
-colPWM ={}
-for pin in gpiopinSET["pin_rgbLED"]:
-	colPWM[pin] = GPIO.PWM(pin, 100)
-
-
-
-ampm = getPinValue("pin_amPM1224")
-if ampm == 1:
-	amPM1224 = False
-elif ampm == 0:
-	amPM1224 = True
-
 
 
 print "gpiopinSET",gpiopinSET
 
 try:    speed = int(sys.argv[1])
 except: pass
-try:    amPM1224 = (sys.argv[2]) == "12"
-except: pass
+
+stopBlinkBeep	= False
+beepBlinkThread = {"color":True, "beep":True,"stop":False, "end":False, "queue": Queue.Queue(), "thread": threading.Thread(name=u'beepBlinkQueue', target=beepBlinkQueue, args=())}	
+beepBlinkThread["thread"].start()
 
 
-printON 	= True
-totalSteps 	= 0
-t0			= time.time()
-blinkHour	= -1
-rewindDone 	= True
-nextStep 	= 1
 
-setMotorOFF()
+amPM1224 = getamPM()
 
-
-if GPIO.input(gpiopinSET["pin_amPM1224"]) == 0:
-	amPM1224 = True
-else:
-	amPM1224 = False
-
-# reset motor to off
-
+### here it starts 
 getTime()
 
-setColor( force=True)
+setColor(force=True)
 
+addToBeepBlinkQueue(text=["b","b","b","b","b","b"])
 #blinkLetters(["S","T","A","R","T"])
+#beepLetters(["S","T","A","R","T"])
 #time.sleep(3)
 #blinkLetters(["S","O","S"])
 
@@ -1012,9 +1111,13 @@ while True:
 	nextStep = testIfMove( waitBetweenSteps, nextStep )
 	testIfRewind( nextStep )
 	sleep = getManualParams( sleepDefault )
-	testIfBlink( sleep, waitBetweenSteps )
+	testIfBlink()
+	time.sleep(sleep)
 
 	
+stopBlinkBeep	= True
+time.sleep(1)
+beepBlinkThread["thread"].join
 
 
 		

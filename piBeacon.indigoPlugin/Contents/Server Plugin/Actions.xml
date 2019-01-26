@@ -2497,7 +2497,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
             <Field   id="head" type="label"><Label>You can use %%v:VariName%% or %%v:VariID%%  or 
      %%v:DeviceName:stateName%%  or %%v:DeviceID:stateName%% for any part of text input
 You can use different options for text input fields
-There is a major loop that gets executed xx times (1-inifnity)
+There is a loop that gets executed xx times (1-inifnity)
 Then there are actions in each set (steps/sleep) 
      -in sequence (immediate) after 0-xx secs of delay
      -or after all elements have been defined (use wait until all .. and immediate for the last element)
@@ -2550,16 +2550,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-0"		type="menu"  defaultValue="steps">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
                 </List>
 				<Label>SET -0:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-0"   type="textfield" default="0"   visibleBindingId="cmd-0"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
-            <Field id="steps-0"		type="textfield" default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-0"		type="textfield" default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... Delay in 0.1 mSec between steps:</Label>	</Field>
-            <Field id="dir-0"		type="menu"      default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">	<Label>.... Direction of steps:</Label>				
+            <Field id="wait-0" 		type="textfield" default="0"   visibleBindingId="cmd-0"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-0"	type="textfield" default="0"   visibleBindingId="cmd-0"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-0"	type="textfield" default="0"   visibleBindingId="cmd-0"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-0"		type="textfield" default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
+            <Field id="stayOn-0"	type="textfield" default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">		<Label>.... Delay in 0.1 mSec between steps:</Label>	</Field>
+            <Field id="dir-0"		type="menu"      default="1"   visibleBindingId="cmd-0"  visibleBindingValue="steps">		<Label>.... Direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
                     <Option value= "-1"   > backwards</Option>
@@ -2591,15 +2597,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-1"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -1:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-1"   type="textfield" default="0"   visibleBindingId="cmd-1"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-1"  	type="textfield" default="0"   visibleBindingId="cmd-1"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-1" type="textfield" default="0"   visibleBindingId="cmd-1"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-1"	type="textfield" default="0"   visibleBindingId="cmd-1"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-1"		type="textfield" default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-1"		type="textfield" default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-1"		type="textfield" default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-1"	type="textfield" default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-1"		type="menu"      default="1"   visibleBindingId="cmd-1"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2632,15 +2645,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-2"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -2:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-2"   type="textfield" default="0"   visibleBindingId="cmd-2"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-2" 		type="textfield" default="0"   visibleBindingId="cmd-2"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-2" type="textfield" default="0"   visibleBindingId="cmd-2"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-2"	type="textfield" default="0"   visibleBindingId="cmd-2"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-2"		type="textfield" default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-2"		type="textfield" default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-2"		type="textfield" default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-2"	type="textfield" default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-2"		type="menu"      default="1"   visibleBindingId="cmd-2"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2673,15 +2693,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-3"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -3:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-3"   type="textfield" default="0"   visibleBindingId="cmd-3"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-3"   	type="textfield" default="0"   visibleBindingId="cmd-3"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-3" type="textfield" default="0"   visibleBindingId="cmd-3"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-3"	type="textfield" default="0"   visibleBindingId="cmd-3"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-3"		type="textfield" default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-3"		type="textfield" default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-3"		type="textfield" default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-3"	type="textfield" default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-3"		type="menu"      default="1"   visibleBindingId="cmd-3"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2714,15 +2741,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-4"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
-				<Label>SET -5:  enable ...:</Label>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
+				<Label>SET -4:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-4"   type="textfield" default="0"   visibleBindingId="cmd-4"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-4" 		type="textfield" default="0"   visibleBindingId="cmd-4"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-4" type="textfield" default="0"   visibleBindingId="cmd-4"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-4"	type="textfield" default="0"   visibleBindingId="cmd-4"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-4"		type="textfield" default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-4"		type="textfield" default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-4"		type="textfield" default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-4"	type="textfield" default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-4"		type="menu"      default="1"   visibleBindingId="cmd-4"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2754,15 +2788,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-5"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -5:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-5"   type="textfield" default="0"   visibleBindingId="cmd-5"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-5"   	type="textfield" default="0"   visibleBindingId="cmd-5"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-5" type="textfield" default="0"   visibleBindingId="cmd-5"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-5"	type="textfield" default="0"   visibleBindingId="cmd-5"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-5"		type="textfield" default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-5"		type="textfield" default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-5"		type="textfield" default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-5"	type="textfield" default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-5"		type="menu"      default="1"   visibleBindingId="cmd-5"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2795,15 +2836,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-6"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -6:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-6"   type="textfield" default="0"   visibleBindingId="cmd-6"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-6"  	type="textfield" default="0"   visibleBindingId="cmd-6"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-6" type="textfield" default="0"   visibleBindingId="cmd-6"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-6"	type="textfield" default="0"   visibleBindingId="cmd-6"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-6"		type="textfield" default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-6"		type="textfield" default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-6"		type="textfield" default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-6"	type="textfield" default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-6"		type="menu"      default="1"   visibleBindingId="cmd-6"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2836,15 +2884,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-7"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -7:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-7"   type="textfield" default="0"   visibleBindingId="cmd-7"  visibleBindingValue="steps,sleep">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-7"   	type="textfield" default="0"   visibleBindingId="cmd-7"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-7" type="textfield" default="0"   visibleBindingId="cmd-7"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-7"	type="textfield" default="0"   visibleBindingId="cmd-7"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-7"		type="textfield" default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-7"		type="textfield" default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-7"		type="textfield" default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-7"	type="textfield" default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-7"		type="menu"      default="1"   visibleBindingId="cmd-7"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2877,15 +2932,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-8"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -8:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-8"   type="textfield" default="0"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-8"   	type="textfield" default="0"   visibleBindingId="cmd-8"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-8" type="textfield" default="0"   visibleBindingId="cmd-8"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-8"	type="textfield" default="0"   visibleBindingId="cmd-8"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-8"		type="textfield" default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-8"		type="textfield" default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-8"		type="textfield" default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-8"	type="textfield" default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-8"		type="menu"      default="1"   visibleBindingId="cmd-8"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>
@@ -2918,15 +2980,22 @@ Then there are actions in each set (steps/sleep)
 
             <Field id="cmd-9"		type="menu"  defaultValue="off">	
                 <List>
-                    <Option value= "off"    > off</Option>
-                    <Option value= "steps"  > steps</Option>
-                    <Option value= "sleep"  > sleep</Option>
-                </List>
+                    <Option value= "off"    	> off</Option>
+                    <Option value= "steps"  	> steps</Option>
+                    <Option value= "sleepMotor" > sleep Motor, hibernate</Option>
+                    <Option value= "wakepMotor" > wake Motor</Option>
+                    <Option value= "offMotor"   > power off Motor</Option>
+                    <Option value= "onMotor"    > power ON Motor</Option>
+                    <Option value= "wait"  		> wait </Option>
+                 </List>
 				<Label>SET -9:  enable ...:</Label>
 			</Field>
-            <Field id="delayBf-9"   type="textfield" default="0"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... delay before this set [sec]:</Label>				</Field>
+            <Field id="wait-9"   	type="textfield" default="0"   visibleBindingId="cmd-9"  visibleBindingValue="wait">		<Label>.... wait for xx sec:</Label>				</Field>
+            <Field id="waitBefore-9" type="textfield" default="0"   visibleBindingId="cmd-9"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait before this set [sec]:</Label>				</Field>
+            <Field id="waitAfter-9"	type="textfield" default="0"   visibleBindingId="cmd-9"  visibleBindingValue="steps,sleepMotor">	<Label>.... wait after this set [sec]:</Label>				</Field>
+            <Field id="steps-9"		type="textfield" default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">		<Label>.... Number of steps:</Label>				</Field>
             <Field id="steps-9"		type="textfield" default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... Number of steps:</Label>				</Field>
-            <Field id="delay-9"		type="textfield" default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... Delay in 0.1mSec between steps:</Label>	</Field>
+            <Field id="stayOn-9"	type="textfield" default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... Power Stay On in 0.1mSec before next step:</Label>	</Field>
             <Field id="dir-9"		type="menu"      default="1"   visibleBindingId="cmd-9"  visibleBindingValue="steps">	<Label>.... direction of steps:</Label>				
                 <List>
                     <Option value= "1"    > forward</Option>

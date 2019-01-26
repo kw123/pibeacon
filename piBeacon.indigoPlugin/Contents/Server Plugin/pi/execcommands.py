@@ -114,7 +114,7 @@ def execCMDS(data):
 				cmdOut = json.dumps(next)
 				if cmdOut != "":
 					try:
-						f=open(G.homeDir+"temp/setStepperMotor.inp","w")
+						f=open(G.homeDir+"temp/setStepperMotor.inp","a")
 						f.write(cmdOut+"\n")
 						f.close()
 					except	Exception, e:

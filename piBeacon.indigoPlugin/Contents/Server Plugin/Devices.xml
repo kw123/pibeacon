@@ -15454,6 +15454,8 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 					<Option value= "unipolar-4096" > 5 unipolar coils          4096 steps (ULN2003 chip or alike)</Option>
 					<Option value= "bipolar-200-1" > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike)</Option>
 					<Option value= "bipolar-200-2" > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-400-1" > 2 bipolar coils bridge 1  *400 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-400-2" > 2 bipolar coils bridge 2  *400 steps (L9110/L298N chip or alike)</Option>
 					<Option value= "DRV8834-1"     > 2 bipolar coils bridge 1  *200 steps (DRV8834 chip)</Option>
 					<Option value= "DRV8834-2"     > 2 bipolar coils bridge 2  *200 steps (DRV8834 chip)</Option>
 					<Option value= "DRV8834-4"     > 2 bipolar coils bridge 4  *200 steps (DRV8834 chip)</Option>
@@ -15550,10 +15552,10 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
            
           
-			<Field id="pin_Coil1"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil1-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Coil2"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil2-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Coil3"  		type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil3-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Coil4"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil4-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilB2"  	type="menu" defaultValue="6" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 		<Label>GPIO pin for coilB2-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilB1"  	type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 	<Label>GPIO pin for coilB1-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilA2"  	type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 	<Label>GPIO pin for coilA2-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilA1"  	type="menu" defaultValue="26"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 	<Label>GPIO pin for coilA1-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
 
 			<Field id="pin_Enable"  	type="menu" defaultValue="5"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Enable-#5:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
@@ -15563,6 +15565,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32"> 											<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 																	<Label>GPIO pin for Reset-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
+			<Field id="pin_beep"		type="menu" defaultValue="12" >																			<Label>GPIO pin for beep device-#12:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_rgbLED_G"	type="menu" defaultValue="16" > 																		<Label>GPIO pin for rgbLED_G-#13:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_rgbLED_R"	type="menu" defaultValue="20" >																			<Label>GPIO pin for rgbLED_R-#19:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_rgbLED_B"	type="menu" defaultValue="21" >																			<Label>GPIO pin for rgbLED_B-#26:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
@@ -15634,28 +15637,26 @@ You can use up to 3 GPIO input pins to control the range of the motor
   
 			<Field id="motorType"  type="menu" defaultValue="bipolar-200-2">
 				<List>
-					<Option value= "unipolar-4096" > 5 unipolar coils          4096 steps - ULN2003 chip or alike</Option>
-					<Option value= "bipolar-200-1" > 2 bipolar coils bridge 1  *200 steps - L9110/L298N chip or alike</Option>
-					<Option value= "bipolar-200-2" > 2 bipolar coils bridge 2  *200 steps - L9110/L298N chip or alike</Option>
-					<Option value= "DRV8834-1"     > 2 bipolar coils bridge - DRV8834 set steps sice on chip jumpers</Option>
-					<Option value= "A4988-1"       > 2 bipolar coils bridge - A4988  set steps sice on chip jumpers</Option>
+					<Option value= "unipolar-1"> 5 unipolar coils          4096 steps - ULN2003 chip or alike</Option>
+					<Option value= "bipolar-1" > 2 bipolar coils bridge 1 *x steps - L9110/L298N chip or alike</Option>
+					<Option value= "bipolar-2" > 2 bipolar coils bridge 2 *x steps - L9110/L298N chip or alike</Option>
+					<Option value= "DRV8834-1" > 2 bipolar coils bridge - DRV8834 set steps sice on chip jumpers</Option>
+					<Option value= "A4988-1"   > 2 bipolar coils bridge - A4988  set steps sice on chip jumpers</Option>
 				</List>
 			<Label>Motor type:</Label>
 			</Field>
  
-           
-			<Field id="pin_Coil1"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil1-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Coil2"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil2-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Coil3"  		type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil3-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Coil4"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2"> 	<Label>GPIO pin for coil4-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-
-			<Field id="pin_Enable"  	type="menu" defaultValue="5"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Enable-#5:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Sleep"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Sleep-#6:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Step"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Step-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Dir"			type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Direction-#19:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32"> 											<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 																<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+ 			<Field id="pin_CoilB2"  	type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-1,bipolar-1,bipolar-2"> 	<Label>GPIO pin for coilB2-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilB1"  	type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-1,bipolar-1,bipolar-2"> 	<Label>GPIO pin for coilB1-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilA2"  	type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-1,bipolar-1,bipolar-2"> 	<Label>GPIO pin for coilA2-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilA1"  	type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-1,bipolar-1,bipolar-2"> 	<Label>GPIO pin for coilA1-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+          
+			<Field id="pin_Enable"  	type="menu" defaultValue="5"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Enable-#5:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Sleep"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Sleep-#6:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Step"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Step-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dir"			type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Direction-#19:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1"> 				<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
 
 			<Field id="pin_sensor0"		type="menu" defaultValue="27" >				<Label>GPIO pin to check if movement should be stopped#0:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
