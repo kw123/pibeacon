@@ -211,14 +211,14 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
    </Field>
    
-   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, if blank use no security" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
+   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, if blank use no security" >
         <Label>userid for indigo webserver:</Label> 
    </Field>
    
-   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
+   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver" >
         <Label>password for indigo webserver:</Label> 
    </Field>
-   <Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo">
+   <Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
         <List>
             <Option value="digest" >use DIGEST  </Option>
             <Option value="basic"  >use BASIC </Option>
@@ -696,7 +696,6 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
     <Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
         <List>
-            <Option value="standard" > no special piBeacon logfile, std indigo logfile</Option>
             <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/plugin.log </Option>
         </List>
     </Field>

@@ -89,11 +89,11 @@ def readParams():
 					timeZone =				   (clockDict["timeZone"])
 					tznew  = int(timeZone.split(" ")[0])
 					if tznew != currTZ:
-						U.toLog(-1, u"changing timezone from "+str(currTZ)+"  "+timeZones[currTZ+12]+" to "+str(tznew)+"  "+timeZones[tznew+12])
-						os.system("sudo cp /usr/share/zoneinfo/"+timeZones[tznew+12]+" /etc/localtime")
+						U.toLog(-1, u"changing timezone from "+str(currTZ)+"  "+G.timeZones[currTZ+12]+" to "+str(tznew)+"  "+G.timeZones[tznew+12])
+						os.system("sudo cp /usr/share/zoneinfo/"+G.timeZones[tznew+12]+" /etc/localtime")
 						currTZ = tznew
 
-			clockDict["timeZone"] = str(currTZ)+" "+ timeZones[currTZ+12]
+			clockDict["timeZone"] = str(currTZ)+" "+ G.timeZones[currTZ+12]
 				
 			if "speedOfChange"	 in clockDict: speedOfChange   =  clockDict["speedOfChange"]
 			if "speed"			 in clockDict: speed		   =  clockDict["speed"]
@@ -642,7 +642,7 @@ def startWithNewDate(newDate,set):
 def setTimeZone(upDown):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime, switchON
 	global inp,	 DEVID, clockDict
-	global timeZones,timeZone
+	global G.timeZones,timeZone
 
 	l0=60 + 48 + 40 + 32 +1
 	ind = currTZ
@@ -653,25 +653,29 @@ def setTimeZone(upDown):
 		ind -=1
 	if ind > 12:  ind = 12
 	if ind <-12:  ind = -12
-	tz= timeZones[ind+12]
+	tz= G.timeZones[ind+12]
 	currTZ =  ind
 	U.toLog(0, 'set tz:	  '+upDown+ '  new tz: '+ str(ind)+"  "+tz)
 	clockDict["extraLED"]										= {"ticks":[ii+l0 for ii in range(ind+12)], "RGB":[100,100,100],"blink":[1,0]} # start on 8 ring 
 	clockDict["clockLightSet"]									= clockLightSet
 	inp["output"]["neopixelClock"][DEVID][0]["clockLightSet"]	= clockDict["clockLightSet"] 
 	inp["output"]["neopixelClock"][DEVID][0]["extraLED"]		= clockDict["extraLED"]
-	writeTZ(tz)
+	makeTZ(tz)
 	#print "timeZone", inp["output"]["neopixelClock"][DEVID][0]["timeZone"] 
 	startNEOPIXEL()
 	return
 #################################
-def writeTZ(tz):
+def make(tz):
 	global inp, clockDict, DEVID, currTZ
 	clockDict["timeZone"] = str(currTZ)+" "+tz
 	inp["output"]["neopixelClock"][DEVID][0]["timeZone"] = str(currTZ)+" "+tz
 	#print "sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime"
+	G.writeTZ(  cTZ="tz" )
+
+def writeTZ(tz ):
 	os.system("sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime")
-	
+
+
 #################################
 def setExtraLEDoff():
 	global DEVID, clockDict, inp
@@ -1072,7 +1076,7 @@ global sensor, output, inpRaw, lastCl,clockMarks,maRGB
 global oldRaw,	lastRead, inp
 global gpiopinSET
 global clockLightSetOverWrite,useRTC, newDate, resetGPIO, lastButtonTime, DEVID
-global timeZones, timeZone
+global G.timeZones, timeZone
 global lightSensorValueLast
 global doReadParameters
 global nightMode
@@ -1085,39 +1089,6 @@ lastNeoParamsSet	= time.time()
 nightMode			= 0
 
 doReadParameters	= True
-timeZone = ""
-timeZones =[]
-for ii in range(-12,13):
-	if ii<0:
-		timeZones.append("/Etc/GMT+" +str(abs(ii)))
-	else:
-		timeZones.append("/Etc/GMT-"+str(ii))
-		
-timeZones[12+12] = "Pacific/Auckland"
-timeZones[11+12] = "Pacific/Pohnpei"
-timeZones[10+12] = "Australia/Melbourne"
-timeZones[9+12]	 = "Asia/Tokyo"
-timeZones[8+12]	 = "Asia/Shanghai"
-timeZones[7+12]	 = "Asia/Saigon"
-timeZones[6+12]	 = "Asia/Dacca"
-timeZones[5+12]	 = "Asia/Karachi"
-timeZones[4+12]	 = "Asia/Dubai"
-timeZones[3+12]	 = "/Europe/Moscow"
-timeZones[2+12]	 = "/Europe/Helsinki"
-timeZones[1+12]	 = "/Europe/Berlin"
-timeZones[0+12]	 = "/Europe/London"
-timeZones[-1+12] = "Atlantic/Cape_Verde"
-timeZones[-2+12] = "Atlantic/South_Georgia"
-timeZones[-3+12] = "America/Buenos_Aires"
-timeZones[-4+12] = "America/Puerto_Rico"
-timeZones[-5+12] = "/US/Eastern"
-timeZones[-6+12] = "/US/Central"
-timeZones[-7+12] = "/US/Mountain"
-timeZones[-8+12] = "/US/Pacific"
-timeZones[-9+12] = "/US/Alaska"
-timeZones[-10+12] = "Pacific/Honolulu"
-timeZones[-11+12] = "US/Samoa"
-#print "timeZones:", timeZones
 
 #delta to UTC:
 JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
@@ -1126,7 +1097,7 @@ NowDelta = int(subprocess.Popen("date  +%z "		   ,shell=True,stdout=subprocess.P
 
 currTZ = JanDelta
 
-#print "current tz:", currTZ,JulDelta,JanDelta,NowDelta, timeZones[currTZ+12], timeZones
+#print "current tz:", currTZ,JulDelta,JanDelta,NowDelta, G.timeZones[currTZ+12], G.timeZones
 
 
 minLightNotOff				= 45

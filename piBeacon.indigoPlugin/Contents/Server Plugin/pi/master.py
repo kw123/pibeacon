@@ -78,6 +78,7 @@ def readNewParams(force=False):
 		global chargeTimeForMaxCapacity, batteryCapacitySeconds
 		global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 		global activePGM
+		global configured
 
 		
 		BLEserialOLD= BLEserial
@@ -114,6 +115,8 @@ def readNewParams(force=False):
 		if u"GPIONumberAfterBoot2" 			in inp:	 GPIONumberAfterBoot2= 			 	 (inp["GPIONumberAfterBoot2"])
 		if u"GPIOTypeAfterBoot1" 			in inp:	 GPIOTypeAfterBoot1= 			 	 (inp["GPIOTypeAfterBoot1"])
 		if u"GPIOTypeAfterBoot2" 			in inp:	 GPIOTypeAfterBoot2= 			 	 (inp["GPIOTypeAfterBoot2"])
+		if u"configured" 					in inp:	 configured= 					 	 (inp["configured"])
+		
 		doGPIOAfterBoot()
 
 
@@ -259,7 +262,9 @@ def readNewParams(force=False):
 		setACTIVEorKILL("INPUTgpio","INPUTgpio.py","")
 		setACTIVEorKILL("INPUTtouch","INPUTtouch.py","INPUTtouch")
 		setACTIVEorKILL("INPUTtouch16","INPUTtouch16.py","INPUTtouch16")
-			
+		setACTIVEorKILL("INPUTRotatarySwitch","INPUTRotatarySwitch.py","INPUTRotatarySwitch")
+		setACTIVEorKILL("INPUTRotataryPulseSwitch","INPUTRotataryPulseSwitch.py","INPUTRotataryPulseSwitch")
+	
 
 		setACTIVEorKILL("myprogram","myprogram.py","")
 		setACTIVEorKILL("mysensors","mysensors.py","")
@@ -292,10 +297,12 @@ def setACTIVEorKILL(tag,pgm,check,force=0):
 		theList=""
 		for sensor in sensors:
 			theList+=sensor.split("-")[0]+","
+		#print theList
 		if	(tag in theList and tag not in activePGMdict) or force==1:
 			activePGMdict[tag]=[pgm,check]
 			startProgam(pgm, params="", reason=" at startup ")
-			checkifActive(tag,	pgm, True)
+			checkifActive(tag, pgm, True)
+			print "started:" , pgm
 		elif ( tag not in theList and tag in  activePGMdict) or force==-1:
 			U.killOldPgm(-1,pgm)
 			U.toLog(-1,"stopping sensor as no "+tag+" enabled",doPrint=True)
@@ -1011,6 +1018,7 @@ global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
 global chargeTimeForMaxCapacity, batteryCapacitySeconds
 global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2, alreadyBooted
 global activePGM
+global configured
 
 activePGM				= {}
 GPIOTypeAfterBoot1		= "off"
@@ -1067,6 +1075,7 @@ sensorAlive				= {}
 actions					= []
 firstRead				= True
 activePGMdict			= {}
+configured				= ""
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -1157,17 +1166,18 @@ if G.wifiType !="normal":
 #	 os.system('startx &')
 
 
-if G.networkType  in G.useNetwork and G.wifiType =="normal":
-	for ii in range(100):
-		if G.userIdOfServer	 == "xxstartxx":
-			U.toLog (-1, " master not configured yet, lets wait for new config files")
-			if ii > 100:
-				startProgam("master.py", params="", reason="..not configured yet")
-				exit(0)
-			time.sleep(30)
-			readNewParams()
-		else:
-			break
+if configured == "": 
+	if G.networkType  in G.useNetwork and G.wifiType =="normal":
+		for ii in range(100):
+			if G.userIdOfServer	 == "xxstartxx":
+				U.toLog (-1, " master not configured yet, lets wait for new config files",doPrint=True)
+				if ii > 98:
+					startProgam("master.py", params="", reason="..not configured yet")
+					exit(0)
+				time.sleep(30)
+				readNewParams()
+			else:
+				break
 
 
 
@@ -1177,7 +1187,7 @@ os.system("sudo chown -R  pi:pi "+G.logDir)
 
 if G.networkType  in G.useNetwork and G.wifiType =="normal":
 	for ii in range(100):
-		if ii > 100:
+		if ii > 98:
 			U.toLog(-1, " master no connection to indigo server at ip:>>"+ G.ipOfServer+"<<",doPrint=True)
 			time.sleep(20)
 			startProgam("master.py", params="", reason=".. failed to connect to indigo server")

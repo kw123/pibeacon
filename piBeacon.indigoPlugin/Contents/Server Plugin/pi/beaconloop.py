@@ -763,6 +763,7 @@ lastIgnoreReset		=0
 myBLEmac			= ""
 sensor				= G.program	 
 sendFullUUID		= False
+badMacs				= ["00:00:00:00:00:00"]
 
 myPID			= str(os.getpid())
 #kill old G.programs
@@ -895,6 +896,7 @@ try:
 						mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
 						lastMSGwithData1 = int(time.time())
 						
+						if mac in badMacs: continue
 						if mac in batteryLevelPosition: blOffset= batteryLevelPosition[mac] 
 						else:							blOffset= 0
 						if mac in offsetUUID:

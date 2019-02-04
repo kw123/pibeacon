@@ -541,7 +541,7 @@ def findLeftRight():
 	global printON
 	global waitBetweenSteps, secondsTotalInDay, maxStepsUsed 
 	global amPM1224
-	global whereIs12
+	global whereIs12,  whereIsTurnF, whereIsTurnB
 
 	time.sleep(0.3)
 
@@ -596,7 +596,7 @@ def findLeftRight():
 	leftLimit2 = move(stayOn, maxSteps  , -1, force=20)
 	time.sleep(0.2)
 	
-	print "whereIs12", whereIs12
+	print "whereIs12", whereIs12, "whereIsTurnF", whereIsTurnF, "whereIsTurnB", whereIsTurnB
 
 	
 	if printON: print "rightLimit",rightLimit,rightLimit2, "leftLimit",leftLimit,leftLimit2, " out of ",stepsIn360
@@ -955,6 +955,24 @@ def startAdhocWeb():
 # ------------------    ------------------ 
 def stopAdhocWeb():
 	return
+def updateStatus(status):
+	global amPM1224, intensity, whereIs12, whereIsTurnF, whereIsTurnB, totalSteps, stepsIn360
+	WebStatusFile	=  G.homeDir+"/temp/sunDial.status"
+	statusData		= []
+	statusData.append( "time........... = "+ datetime.datetime.now().strftime(u"%H:%M") )
+	statusData.append( "opStatus....... = "+ status )
+	statusData.append( "12/24 mode..... = "+ amPM1224 )
+	statusData.append( "intensity...... = "+ "scale:%d"%intensity["Mult"] + ", Min:%d"%intensity["Min"] + ", Max:%d"%intensity["Max"]  )
+	statusData.append( "Steps in 360... = "+ "%d"%stepsIn360 )
+	statusData.append( "maxStepsUsed... = "+ "%d"%maxStepsUsed+" from 0 to 24/12" )
+	statusData.append( "Step Now....... = "+ "%d"%totalSteps )
+	statusData.append( "12 sensor @.... = "+ "%d"%whereIs12["average"]+" step " )
+	statusData.append( "TurnSensorF @.. = "+ "%d"%whereIsTurnF["average"]+" step " )
+	statusData.append( "TurnSensorB @.. = "+ "%d"%whereIsTurnF["average"]+" step " )
+	cc = timeToColor(secSinMidnit)
+	statusData.append( "currentColor... = "+ "R:%d"%cc[0] + ", G:%d"%cc[1] + ", B:%d"%cc[2] + " / 255" )
+
+	U.updateWebStatus(WebStatusFile, json.dumps(statusData) )
 
 
  #######################################
@@ -982,7 +1000,7 @@ global webAdhocLastOff, webAdhoc
 global rewindDone
 global longBlink, shortBlink, breakBlink
 global morseCode
-global whereIs12
+global whereIs12, whereIsTurnF, whereIsTurnB
 global minStayOn
 global lastDirection
 global isDisabled, isSleep
@@ -1049,6 +1067,8 @@ blinkHour				= -1
 rewindDone 				= True
 nextStep 				= 1
 whereIs12 				= {-1:-1, 1:-1, "average":-1, "active":False}
+whereIsTurnF 			= {-1:-1, 1:-1, "average":-1, "active":False}
+whereIsTurnB 			= {-1:-1, 1:-1, "average":-1, "active":False}
 clockDictLast			= {}
 LastHourColorSetToRemember =[]
 
@@ -1104,6 +1124,10 @@ print "clock starting;   waitBetweenSteps", waitBetweenSteps, "speed", speed, "t
 print "intensity", intensity
 
 nextStep = 1
+U.startAdhocWebserver()
+U.webserverForStatus()
+updateStatus(status="starting")
+
 
 while True:
 			
@@ -1113,6 +1137,8 @@ while True:
 	sleep = getManualParams( sleepDefault )
 	testIfBlink()
 	time.sleep(sleep)
+	U.checkAdhocWebserverOutput()
+	updateStatus(status="normal")
 
 	
 stopBlinkBeep	= True

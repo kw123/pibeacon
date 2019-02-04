@@ -274,17 +274,17 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
 			<Label>...which pin to use as shutdown hardwire reset:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
 			<Label>...which pin to use as shutdown disable RESET:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="shutdownInputPin"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
 			<Label>...which pin to use as shutdown-INPUT:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
@@ -341,7 +341,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
 			<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
@@ -396,7 +396,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="GPIONumberAfterBoot1"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot1" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 				<Label>..select GPIO-pin A:</Label>
 			</Field>
 
@@ -413,7 +413,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="GPIONumberAfterBoot2"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot2" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 				<Label>..select GPIO-pin B:</Label>
 			</Field>
 
@@ -791,6 +791,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
 			</State>
+			<State id="vendorName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>vendorName</TriggerLabel>
+				<ControlPageLabel>vendorName</ControlPageLabel>
+			</State>
 
 
 		</States>
@@ -954,17 +959,17 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
 			<Label>...which pin to use as shutdown hardwire reset:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
 			<Label>...which pin to use as shutdown disable RESET:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="shutdownInputPin"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
 			<Label>...which pin to use as shutdown-INPUT:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
@@ -1021,7 +1026,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
 			<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
@@ -1075,7 +1080,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="GPIONumberAfterBoot1"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot1" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 				<Label>..select GPIO-pin A:</Label>
 			</Field>
 
@@ -1092,7 +1097,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="GPIONumberAfterBoot2"   type="menu" defaultValue="-1"  visibleBindingId="GPIOTypeAfterBoot2" visibleBindingValue="Olow,Ohigh,Iup,Idown,Ifloat" >
-				<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 				<Label>..select GPIO-pin B:</Label>
 			</Field>
 
@@ -1776,6 +1781,12 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<ControlPageLabel>lastStatusChange</ControlPageLabel>
 			</State>
 
+			<State id="vendorName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>vendorName</TriggerLabel>
+				<ControlPageLabel>vendorName</ControlPageLabel>
+			</State>
+
 	</States>
 	</Device>
 
@@ -2410,7 +2421,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 			<Field id="gpioPin"   type="menu" defaultValue="17" >
 			<Label>which GPIO-pin is the DHT connected to:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
@@ -4705,7 +4716,7 @@ After some days of running in clean air, proposed setup is:
 			</Field>
 			<Field id="resetPin"   type="menu" defaultValue="23" tooltip="set this pin to low will cause the sensor to reset to shutdown">
 			<Label>Which pin to use as reset pin only if Reset pin is connected:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no"> 
 			<Label>read sensor every xx secs :</Label>
@@ -5215,7 +5226,7 @@ the MH-Z16 has a range of 400-5000
 			<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
 			<Field id="calibrationPin" type="menu"     defaultValue="18"> <Label>which GPIO is used to start calibration:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="2" hidden="no"> 
 			<Label>read sensor every xx secs :</Label>
@@ -10808,10 +10819,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="simpleSeparator22" type="separator"/>
 			<Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SCLPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SDOPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field  id="buttonPiNumber" type="button"    >
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -10968,10 +10979,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="simpleSeparator20" type="separator"/>
 			<Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SCLPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SDOPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field  id="buttonPiNumber" type="button"    >
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -11140,10 +11151,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="simpleSeparator20" type="separator"/>
 			<Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SCLPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SDOPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field  id="buttonPiNumber" type="button"    >
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -11352,10 +11363,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="simpleSeparator20" type="separator"/>
 			<Field id="SCLPin"  type="menu"                  defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SCLPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="SDOPin"  type="menu"                  defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SDOPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field  id="buttonPiNumber" type="button"    >
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
@@ -11584,7 +11595,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 			<Label>(2) select gpio# for this INPUT channel/state:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -11731,7 +11742,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 			<Label>(2) select gpio# for this INPUT channel/state:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -11873,7 +11884,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 			<Label>(2) select gpio# for this INPUT channel/state:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -12049,7 +12060,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 			<Label>(2) select gpio# for this INPUT channel/state:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -12257,6 +12268,189 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
+	<Device type="sensor" id="INPUTRotatarySwitch">
+	<Name>INPUT-Rotatary-switch-encoded</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState"        type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue"    type="checkbox" defaultValue="true"  hidden ="true"></Field>
+			<Field id="SupportsStatusRequest"  type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange"     type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+
+
+			<Field id="infoLabelINPUT" type="label">
+			<Label>Setup rotator encoded switch on individual rPis
+    eg  for 4 GPIO input channels deilver values from 0...15, 
+    You need to specify which GPIOs are used
+    and set encoding type:  bin, bin inverse, grey, grey inverse</Label>
+			</Field>
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiI" dynamicReload="false"/>
+			<Label>select rPi-server to which the INPUT is connect to:</Label>
+			</Field>
+
+			<Field id="codeType" type="menu"                defaultValue="bin" > <Label>Select encoding:</Label>
+				<List>
+					<Option value="bin"        >simple binary         (pin Values = 1,2,4,8.. if low) </Option>
+					<Option value="binInverse" >simple binary inverse (pin Values = 1,2,4,8.. if high))</Option>
+					<Option value="grey"       >grey encoded          (low  = active)</Option>
+					<Option value="greyInverse">grey encoded  inverse (high = active)</Option>
+				</List>
+			</Field>
+
+			<Field id="nInputs" type="menu"                defaultValue="value" > <Label>show many input channels:</Label>
+				<List>
+					<Option value="2"  >2</Option>
+					<Option value="3"  >3</Option>
+					<Option value="4"  >4</Option>
+					<Option value="5"  >5</Option>
+					<Option value="6"  >6</Option>
+					<Option value="7"  >7</Option>
+					<Option value="8"  >8</Option>
+				</List>
+			</Field>
+
+			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8"> <Label>GPIO #0 (1):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8"> <Label>GPIO #1 (2):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8">   <Label>GPIO #2 (4):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8">     <Label>GPIO #3 (8):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8">       <Label>GPIO #4 (16):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8">         <Label>GPIO #5 (32):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8">           <Label>GPIO #6 (64):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8">             <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+
+			<Field id="simpleSeparator22" type="separator"/>
+			<Field id="displayState" type="textfield"       defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"                defaultValue="INPUT" > <Label>state to show in Status column:</Label>
+				<List>
+					<Option value="INPUT"    >GRey decoded integer INPUT</Option>
+				</List>
+			</Field>
+			<Field id="unit"   type="textfield"             defaultValue=" Position"   >	<Label>unit:</Label></Field>
+			<Field id="offset" type="textfield"             defaultValue="0"      >	<Label>add offset:</Label></Field>
+			<Field id="mult"   type="textfield"             defaultValue="1"      >	<Label>multiply number by :</Label></Field>
+			<Field id="format" type="textfield"             defaultValue=""       >	<Label>format number (eg %3.1f):</Label></Field>
+			<Field id="infodispl" type="textfield"          defaultValue="(v+off)*mult UNIT"  readonly="YES">		<Label> display = </Label>  </Field>
+			<Field id="sep-031" type="separator"/>
+			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+			<Label>send broadcasts to other plugins for status up/x changes</Label>
+			<List>
+				<Option value="0" >NO </Option>
+				<Option value="1" >YES send BC, must be enabled in config  </Option>
+			</List>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="INPUT">
+				<ValueType>String</ValueType>
+				<TriggerLabel>INPUT</TriggerLabel>
+				<ControlPageLabel>INPUT</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
+	<Device type="sensor" id="INPUTRotataryPulseSwitch">
+	<Name>INPUT-Rotatary-switch-Grey-Pulses</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState"        type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue"    type="checkbox" defaultValue="true"  hidden ="true"></Field>
+			<Field id="SupportsStatusRequest"  type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange"     type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+
+
+			<Field id="infoLabelINPUT" type="label">
+			<Label>Setup rotator grey pulse encoded switch on individual rPis
+    You need to specify which 2 GPIOs are used If the direction is wrong, flip GPIO A with B</Label>
+			</Field>
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiI" dynamicReload="false"/>
+			<Label>select rPi-server to which the INPUT is connect to:</Label>
+			</Field>
+
+			<Field id="INPUT_0" type="menu" defaultValue="-1" > <Label>GPIO# A:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_1" type="menu" defaultValue="-1" > <Label>GPIO# B:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+
+
+			<Field id="bounceTime" type="menu"      defaultValue="0" > <Label>bounce Time window:</Label>
+				<List>
+					<Option value="0"   >do not software debounce, try this first</Option>
+					<Option value="1"   >  1 mSec</Option>
+					<Option value="2"   >  2 mSec</Option>
+					<Option value="3"   >  3 mSec</Option>
+					<Option value="5"   >  5 mSec</Option>
+					<Option value="7"   >  7 mSec</Option>
+					<Option value="10"  > 10 mSec</Option>
+					<Option value="20"  > 20 mSec</Option>
+					<Option value="30"  > 30 mSec</Option>
+					<Option value="40"  > 40 mSec</Option>
+					<Option value="50"  > 50 mSec</Option>
+					<Option value="60"  > 60 mSec</Option>
+					<Option value="70"  > 70 mSec</Option>
+					<Option value="80"  > 80 mSec</Option>
+					<Option value="90"  > 90 mSec</Option>
+					<Option value="100" >100 mSec</Option>
+					<Option value="150" >150 mSec</Option>
+					<Option value="200" >200 mSec</Option>
+					<Option value="300" >300 mSec</Option>
+				</List>
+			</Field>
+
+
+
+			<Field id="simpleSeparator22" type="separator"/>
+			<Field id="displayState" type="textfield"       defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"                defaultValue="INPUT" > <Label>state to show in Status column:</Label>
+				<List>
+					<Option value="INPUT"    >number of clicks</Option>
+				</List>
+			</Field>
+			<Field id="unit"   type="textfield"             defaultValue="[Counts]"   >	<Label>unit:</Label></Field>
+			<Field id="offset" type="textfield"             defaultValue="0"      >	<Label>add offset:</Label></Field>
+			<Field id="mult"   type="textfield"             defaultValue="1"      >	<Label>multiply number by :</Label></Field>
+			<Field id="format" type="textfield"             defaultValue=""       >	<Label>format number (eg %3.1f):</Label></Field>
+			<Field id="infodispl" type="textfield"          defaultValue="(v+off)*mult UNIT"  readonly="YES">		<Label> display = </Label>  </Field>
+			<Field id="sep-031" type="separator"/>
+			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
+			<Label>send broadcasts to other plugins for status up/x changes</Label>
+			<List>
+				<Option value="0" >NO </Option>
+				<Option value="1" >YES send BC, must be enabled in config  </Option>
+			</List>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="INPUT">
+				<ValueType>String</ValueType>
+				<TriggerLabel>INPUT</TriggerLabel>
+				<ControlPageLabel>INPUT</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
+
+
+
 	<Device type="sensor" id="ultrasoundDistance">
 	<Name>INPUT-distance-ultrasound </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -12273,7 +12467,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup ultrasound distance sensor on individual rPis</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -12282,13 +12476,13 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="gpioTrigger"   type="menu" defaultValue="20" >
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			<Label>which GPIO-pin is the TRIGGER connected to:</Label>
 			</Field>
             
 			<Field id="gpioEcho"   type="menu" defaultValue="21" >
 			<Label>which GPIO-pin is the  ECHO connected to:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20" hidden="no"> 
@@ -12458,7 +12652,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -12640,7 +12834,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -12865,7 +13059,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13074,7 +13268,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="infoLabelAPDS9960r" type="label">
 			<Label>Setup proximity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13083,7 +13277,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="interruptGPIO"   type="menu" defaultValue="21" tooltip="must not be a onewire, i2c.. pin ">
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			<Label>which GPIO-pin is the INTERRUP line connected to:</Label>
 			</Field>
 			<Field id="i2cAddress" type="menu"     defaultValue="57"> <Label>i2c address of device:</Label>
@@ -13348,7 +13542,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
         and board-Si to V+; EN_V to GND
         if no other i2c device a 10Kohm SLC to V+ is required</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13357,7 +13551,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="interruptGPIO"   type="menu" defaultValue="21" tooltip="must not be a onewire, i2c.. pin ">
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			<Label>which GPIO-pin is the INTERRUP line connected to:</Label>
 			</Field>
 			<Field id="i2cAddress" type="menu"     defaultValue="3"> <Label>i2c address of device:</Label>
@@ -13858,7 +14052,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
 			<Label>(2) select gpio#:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 			<Label> OUTPUT type:</Label>
@@ -13941,7 +14135,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
 			<Label>(2) select gpio#:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="true"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 			<Label> OUTPUT type:</Label>
@@ -14436,7 +14630,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup display device on individual rPis</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
             
@@ -14628,7 +14822,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup sprinkler device</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
             
@@ -14770,7 +14964,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup display device on individual rPis</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
             
@@ -14905,7 +15099,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup individual LEDs as one dimmer on neopixel devices</Label>
 			</Field>
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
 			<Field type="checkbox" id="SupportsColor" defaultValue="true" hidden="YES">
@@ -14988,7 +15182,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>default: pin# 2(+5V), 12(GPIO18 = signal), 6(Gnd). You need to use a level shifter for the signal </Label>
 			</Field>
             
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
             
@@ -15439,7 +15633,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			</Field>
 
             
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
             
@@ -15626,7 +15820,7 @@ You can use up to 3 GPIO input pins to control the range of the motor
 			</Field>
 
             
-			<Field id="msg" type="textfield" readonly="yes"  defaultValue="ok">
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
 			<Label>msg from plugin</Label>
 			</Field>
             

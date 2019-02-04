@@ -1,3 +1,21 @@
+Added features / changes in v7.101.270 @ 2019-02-04:  
+===================================================
+
+1. added lookup of mac to vendor name for ibeacons, added state "vendorName"
+
+2. some smaller debugs
+
+3. added check if userid / password not set: will write message and wait before doing anything  
+
+4. converted to std logging
+
+5. added sensor type: 
+	INPUT-Rotatary-switch-Grey-Pulses : supports turn switches that send grey encoded pulse left and right direction
+	INPUT-Rotatary-switch-encoded: supports turn switches that have static codes at n Pins that deliver 4.8.16... states from binary pins values
+
+6. did a lot of testing and added little fixes when creating / deleting RPIs
+
+
 Added features / changes in v7.100.269 @ 2019-01-25:  
 ===================================================
 

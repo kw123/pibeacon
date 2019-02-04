@@ -489,21 +489,151 @@ def whichWifi():
 
 #################################
 def prepAdhocWifi():
-	killOldPgm(-1,"neopixel.py",param1="",param2="")
 	print "prepAdhoc Wifi: starting wifi servers as clock  no password "
 	os.system('cp /etc/network/interfaces  '+G.homeDir+'interfaces-old')
-	os.system('cp '+G.homeDir+'interfaces-WIFI-clock /etc/network/interfaces')
-	time.sleep(0.2)
-	os.system('sudo reboot now')
+	os.system('cp '+G.homeDir+'interfaces-interfaces-adhoc /etc/network/interfaces')
+	cmd="sudo ifconfig wlan0 down"
+	os.system(cmd) 
+	cmd="sudo ifconfig wlan1 down "
+	os.system(cmd) 
+	time.sleep(0.5)
+	cmd="sudo ifconfig wlan0 up "
+	os.system(cmd) 
+	cmd="sudo ifconfig wlan1 up "
+	os.system(cmd) 
+	startAdhocWebserver()
+	return
+
+
+#################################
+def startAdhocWebserver():
+	outFile	= G.homeDir+"temp/webparameters.dat"
+	print "startAdhocWebserver Wifi: starting wifi servers as with name = clock  and no password "
+	if os.path.isfile(outFile):
+		os.system('rm '+outFile)
+	os.system("sudo /usr/bin/python "+G.homeDir+"webserverAdhocForWifiSetup.py 8001 " +outFile+" &")
 	return
 
 #################################
-def resetWifi():
+def stopAdhocWebserver():
+	killOldPgm(-1,"/webserverAdhocForWifiSetup.py")
+	return
+
+#################################
+def checkAdhocWebserverOutput():
+	outFile	= G.homeDir+"temp/webparameters.dat"
+	if not  os.path.isfile(outFile): return 
+	try:	
+		f = open(outFile)
+		data = json.loads(f.read())
+		f.close()
+	except: data ={}
+	print "updating wifi parameters with: " , data
+	if data =={}: return
+	if "SSID" not in data: return 
+	if "passCode" not in data: return 
+	if "timezone" not in data: return 
+	stopAdhocWebserver()
+	makeNewSupplicantFile(data)
+
+	try:
+		print "updating TZ with:" , (data["timezone"])
+		writeTZ(iTZ= int(data["timezone"]))
+	except	Exception, e :
+		toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+
+	resetWifi()
+	os.system('rm '+G.homeDir+"temp/webparameters.dat")
+	return
+
+###############################
+def writeTZ( iTZ = 0, cTZ="" ):
+	try: 
+		if cTZ =="": 
+			try:    newTZ = G.timeZones[int(iTZ)+12]
+			except	Exception, e :
+				toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+				return 
+
+		else: newTZ = cTZ
+		oldTZ = subprocess.Popen('date +"%Z"' ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r")
+		toLog(-1,"changing timezone from:"+newTZ+";   to:"+ newTZ+";", doPrint=True)
+		if oldTZ != newTZ:
+			toLog(-1,"changing timezone from:"+oldTZ+";   to:"+ newTZ+";", doPrint=True)
+			if os.path.isfile("/usr/share/zoneinfo/"+newTZ):
+				os.system('sudo rm /etc/localtime; sudo  cp /usr/share/zoneinfo/'+newTZ+' /etc/localtime')#  not needed...   ; sudo echo "TZ='+newTZ+'" >> /etc/timezone  ; sudo dpkg-reconfigure -f noninteractive tzdata' )
+			else:
+				toLog(-1," error bad timezone:"+newTZ, doPrint=True)
+	except	Exception, e :
+		toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+	return
+
+
+#################################
+def webserverForStatus():
+	print "start webserverWhenOnline to allow status check and parameters settings"
+	os.system("/usr/bin/python "+G.homeDir+"webserverWhenOnline.py 80 "+G.homeDir+"temp/sunDial.status &")
+	return
+
+#################################
+def updateWebStatus(file, data):
+	#print "updating webserverWhenOnline with status"
+	f=open(file,"w")
+	f.write(data)
+	f.close()
+	return
+
+#################################
+def stopNormalWebserver():
+	killOldPgm(-1,"/webserverWhenOnline.py")
+	return
+
+
+
+#################################
+def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
 	print " resetting wifi to default for next re-boot"
-	os.system('cp '+G.homeDir+'interfaces-DEFAULT-clock /etc/network/interfaces')
+	if os.path.isfile(G.homeDir+defaultFile): 
+		os.system("cp "+G.homeDir+defaultFile+" /etc/network/interfaces")
+	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
+	if	ret.find("wlan0") >-1:
+		cmd="sudo ifconfig wlan0 down"
+		os.system(cmd) 
+	if	ret.find("wlan1") >-1:
+		cmd="sudo ifconfig wlan1 down"
+		os.system(cmd) 
+	time.sleep(0.2)
+	f= open("/etc/wpa_supplicant/wpa_supplicant.conf")
+	ret = f.read()
+	f.close()
+	if	ret.find("wlan0") >-1:
+		cmd="sudo ifconfig wlan0 up "
+		os.system(cmd) 
+	if	ret.find("wlan1") >-1:
+		cmd="sudo ifconfig wlan1 up "
+		os.system(cmd) 
 	return	
 
+#################################
+def makeNewSupplicantFile(data):
+	print "making new supplicant file with", data
+	f= open(G.homeDir+"wpa_supplicant.conf-DEFAULT","r")
+	ret = f.read()
+	f.close()
+	lines= ret.split("\n")
+	print lines
+	f=open(G.homeDir+"wpa_supplicant.conf-new","w")
+	for line in lines:
+		if line.find("ssid=") >-1:
+			f.write('    ssid='+data["SSID"]+'\n')
+		elif line.find("psk=") >-1:
+			f.write('    psk='+data["passCode"]+'\n')
+		else:
+			f.write(line+"\n")
+	f.close()
+	return	
 
+#
 
 ################################
 def getIPNumberMaster(quiet=False):
@@ -556,6 +686,7 @@ def getIPNumberMaster(quiet=False):
 	toLog(-1,u"U.getIPNumberMaster bad IP number ...  ipHostname >>"+unicode(ipHostname)+"<<  old from file ipAddressRead>>"+ ipAddressRead+"<< not in sync with ifconfig output: wifi0IP>>"+ wifi0IP+"<<;	eth0IP>>"+eth0IP,doPrint=True  )
 	return 2, changed
 
+#################################
 def setWLANoffIFeth0ON(wifi0IP,eth0IP):
 	if wifi0IP == "": return wifi0IP,eth0IP,False
 	if eth0IP  == "": return wifi0IP,eth0IP,False
@@ -581,6 +712,9 @@ def setWLANoffIFeth0ON(wifi0IP,eth0IP):
 	return wifi0IP,eth0IP, False
 		
 
+		
+
+#################################
 def writeIPtoFile(ip,reason=""):
 	G.ipAddress = ip
 	f=open(G.homeDir+"ipAddress","w")

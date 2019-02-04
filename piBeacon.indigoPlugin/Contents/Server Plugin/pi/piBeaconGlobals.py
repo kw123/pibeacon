@@ -84,6 +84,8 @@ ACTIONS={"LS":"ls",
 programFiles=[			"beaconloop",
 						"master",
 						"INPUTgpio",
+						"INPUTRotatarySwitch",
+						"INPUTRotataryPulseSwitch",
 						"INPUTtouch12",
 						"INPUTtouch16",
 						"installLibs",
@@ -149,3 +151,34 @@ parameterFileList  =[	"patterns",
 						"beacon_parameters",
 						"parameters"]
 
+timeZones =[]
+for ii in range(-12,13):
+	if ii<0:
+		timeZones.append("/Etc/GMT+" +str(abs(ii)))
+	else:
+		timeZones.append("/Etc/GMT-"+str(ii))
+		
+timeZones[12+12] = "Pacific/Auckland"
+timeZones[11+12] = "Pacific/Pohnpei"
+timeZones[10+12] = "Australia/Melbourne"
+timeZones[9+12]	 = "Asia/Tokyo"
+timeZones[8+12]	 = "Asia/Shanghai"
+timeZones[7+12]	 = "Asia/Saigon"
+timeZones[6+12]	 = "Asia/Dacca"
+timeZones[5+12]	 = "Asia/Karachi"
+timeZones[4+12]	 = "Asia/Dubai"
+timeZones[3+12]	 = "/Europe/Moscow"
+timeZones[2+12]	 = "/Europe/Helsinki"
+timeZones[1+12]	 = "/Europe/Berlin"
+timeZones[0+12]	 = "/Europe/London"
+timeZones[-1+12] = "Atlantic/Cape_Verde"
+timeZones[-2+12] = "Atlantic/South_Georgia"
+timeZones[-3+12] = "America/Buenos_Aires"
+timeZones[-4+12] = "America/Puerto_Rico"
+timeZones[-5+12] = "/US/Eastern"
+timeZones[-6+12] = "/US/Central"
+timeZones[-7+12] = "/US/Mountain"
+timeZones[-8+12] = "/US/Pacific"
+timeZones[-9+12] = "/US/Alaska"
+timeZones[-10+12] = "Pacific/Honolulu"
+timeZones[-11+12] = "US/Samoa"

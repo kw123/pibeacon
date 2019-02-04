@@ -749,8 +749,12 @@ lastRead = time.time()
 
 wait = 0.5
 
+U.startAdhocWebserver()
+
+
 while True:
 			
+	U.checkAdhocWebserverOutput()
 
 	checkForNewImput()
 	time.sleep(wait)

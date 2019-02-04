@@ -80,7 +80,7 @@ Then the rPi will start sending data to plugin
                   </List>
            <Label>normal login, or authkey - no password entry:</Label>
             </Field>
-            <Field   enabledBindingId="enablePiEntries"  id="enableRebootCheck"   type="menu" defaultValue="restartLoop,-">
+            <Field   enabledBindingId="enablePiEntries"  id="enableRebootCheck"   type="menu" defaultValue="restartLoop">
                 <Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
                  <List>
                     <Option value="doNothing"            >do nothing (not recommended)</Option>
