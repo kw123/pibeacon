@@ -815,6 +815,7 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
                     <Option value= "INPUTtouch12"        >INPUT - capacitor-12</Option>
                     <Option value= "INPUTtouch16"        >INPUT - capacitor-16</Option>
                     <Option value= "simplei2csensors"    >sensor values for regular i2c sensors </Option>
+                    <Option value= "INPUTRotataryPulseSwitch"> INPUT Rotatary Pulse Switch</Option>
                     <Option value= "DHT"                 >sensor values for DHT sensors </Option>
                     <Option value= "Wire18B20"           >sensor values for onewire  sensors </Option>
                     <Option value= "spiMCP3008"          >sensor values for spiMCP3008  sensors </Option>

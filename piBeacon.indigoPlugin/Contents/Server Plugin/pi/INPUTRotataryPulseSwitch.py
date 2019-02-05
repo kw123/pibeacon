@@ -25,6 +25,7 @@ G.program = "INPUTRotataryPulseSwitch"
 def readParams():
 		global sensors
 		global oldRaw, lastRead, INPUTS
+		global counts
 
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -54,8 +55,11 @@ def readParams():
 				new = False
 				sens = sensors[sensor][devId]
 				if devId not in INPUTS: 
-					INPUTS[devId]  = {"pinALastValue":9999999, "lastChangeTime":0, "count":0, "pinBLastValue":9999999, "bounceTime":0.002, "pinA":21, "pinB":20}
+					INPUTS[devId]  = {"pinALastValue":9999999, "lastChangeTime":0, "pinBLastValue":9999999, "bounceTime":0.002, "pinA":21, "pinB":20}
 					INPUTS[devId]["LockRotary"] = threading.Lock()		# create lock for rotary switch
+
+				if devId not in counts:
+					counts[devId] = 0
 
 				if INPUTS[devId]["bounceTime"] !=  int(sens["bounceTime"]):
 					new = True
@@ -98,6 +102,7 @@ def setupSensors():
 	   
 def gpioEvent(pin):
  	global INPUTS, pinsToDevid, newData
+	global counts
 	value = 0
 	#print "into event", pin
 	try:
@@ -114,16 +119,16 @@ def gpioEvent(pin):
 				return 
 
 			if IP["pinALastValue"] and IP["pinBLastValue"]:
-				try: INPUTS[devId]["LockRotary"].acquire()	
+				try: IP["LockRotary"].acquire()	
 				except:
 					time.sleep(0.01)
-					try: INPUTS[devId]["LockRotary"].acquire()	
+					try: IP["LockRotary"].acquire()	
 					except: return 
 				if pin == pinB:
-					IP["count"] +=1
+					counts[devIDUsed] +=1
 				else:
-					IP["count"] -=1
-				INPUTS[devId]["LockRotary"].release()	
+					counts[devIDUsed] -=1
+				IP["LockRotary"].release()	
 				newData = True
 
 			if stateA !=  IP["pinALastValue"] or stateB !=  IP["pinBLastValue"]:
@@ -134,6 +139,26 @@ def gpioEvent(pin):
 			IP["pinBLastValue"] = stateB
 	except	Exception, e:
 			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+	return 
+
+
+
+
+def saveCounts():
+	global counts
+	f= open(G.homeDir+G.program+".counts", "w")
+	f.write(json.dumps(counts))	
+	f.close()
+
+def readCounts():
+	global counts
+	if os.path.isfile(G.homeDir+G.program+".counts"):
+		f= open(G.homeDir+G.program+".counts", "r")
+		try:    counts = json.loads(f.read())	
+		except: counts ={}
+		f.close()
+	else:
+		counts= {}
 	return 
 
 
@@ -154,12 +179,20 @@ def startGPIO(devId):
 		
 		pinsToDevid[INPUTS[devId]["pinA"]] = devId
 		pinsToDevid[INPUTS[devId]["pinB"]] = devId
+		print "pinsToDevid", pinsToDevid
 
 		return
 	except	Exception, e:
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 		U.toLog(-1,"start "+ G.program+ "  "+ unicode(sensors), doPrint=True)
 	return
+
+#################################
+def checkReset():
+	if not os.path.isfile(G.homeDir+"temp/"+ G.program+".reset"): return False
+	try:    os.remove(G.homeDir+"temp/" + G.program+".reset")
+	except: pass
+	return True
 
 
 
@@ -169,6 +202,8 @@ global sensors
 global oldRaw, lastRead
 global INPUTS
 global newData
+global counts
+
 oldRaw				= ""
 lastRead			= 0
 INPUTS				= {}
@@ -193,6 +228,7 @@ U.toLog(-1, "starting "+G.program+" program",doPrint=True)
 
 LockRotary = threading.Lock()		# create lock for rotary switch
 
+readCounts()
 
 readParams()
 
@@ -234,12 +270,14 @@ while True:
 		if sensor not in sensors: break
 		for devId in  sensors[sensor]:
 			if devId not in lastData: lastData[devId]={"INPUT":0}
-			data0[devId] = {"INPUT":INPUTS[devId]["count"]}
+			data0[devId] = {"INPUT":counts[devId]}
 
 		if	data0 != lastData or tt - lastMsg > 100:
+			saveCounts()
 			lastMsg=tt
 			lastData=copy.copy(data0)
 			data["sensors"][sensor] = data0
+			#print data, counts
 			U.sendURL(data)
 		quick = U.checkNowFile(G.program)
 		if loopCount%50==0:
@@ -253,6 +291,12 @@ while True:
 		for iii in range(100):
 			time.sleep(shortWait/100.)
 			if newData: break
+
+		if checkReset():
+			for devId in counts:
+				counts[devId]=0
+				saveCounts()
+
 		newData = False
 	except	Exception, e:
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)

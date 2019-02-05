@@ -1,3 +1,11 @@
+Added features / changes in v7.101.271 @ 2019-02-04:  
+===================================================
+
+1. added  save / reset for INPUT rotary increments devices
+	at each start old values are read and saved to SSD when they changed.
+	indigo menu option can send  reset command to the RPi to rotary switch counters 
+
+
 Added features / changes in v7.101.270 @ 2019-02-04:  
 ===================================================
 

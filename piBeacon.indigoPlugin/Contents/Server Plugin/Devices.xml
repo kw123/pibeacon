@@ -12269,7 +12269,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 	<Device type="sensor" id="INPUTRotatarySwitch">
-	<Name>INPUT-Rotatary-switch-encoded</Name>
+	<Name>INPUT-Rotatary-switch-Absolute-Encoded</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12311,17 +12311,21 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 					<Option value="6"  >6</Option>
 					<Option value="7"  >7</Option>
 					<Option value="8"  >8</Option>
+					<Option value="9"  >9</Option>
+					<Option value="10" >10</Option>
 				</List>
 			</Field>
 
-			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8"> <Label>GPIO #0 (1):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8"> <Label>GPIO #1 (2):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8">   <Label>GPIO #2 (4):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8">     <Label>GPIO #3 (8):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8">       <Label>GPIO #4 (16):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8">         <Label>GPIO #5 (32):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8">           <Label>GPIO #6 (64):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8">             <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9,10"> <Label>GPIO #0 (1):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9,10"> <Label>GPIO #1 (2):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8,9,10">   <Label>GPIO #2 (4):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8,9,10">     <Label>GPIO #3 (8):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8,9,10">       <Label>GPIO #4 (16):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8,9,10">         <Label>GPIO #5 (32):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8,9,10">           <Label>GPIO #6 (64):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8,9,10">             <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_8" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="9,10">               <Label>GPIO #8 (256):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_9" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="10">                 <Label>GPIO #9 (512):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 
 			<Field id="simpleSeparator22" type="separator"/>
 			<Field id="displayState" type="textfield"       defaultValue="status" hidden="YES"> </Field>
@@ -12360,7 +12364,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 	<Device type="sensor" id="INPUTRotataryPulseSwitch">
-	<Name>INPUT-Rotatary-switch-Grey-Pulses</Name>
+	<Name>INPUT-Rotatary-switch-Pulse-Incremental</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
