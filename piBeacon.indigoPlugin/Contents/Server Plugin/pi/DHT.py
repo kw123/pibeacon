@@ -34,7 +34,7 @@ def getDATAdht(DHTpin,Type):
 				startDHT={}
 				sensorDHT={}
 			startDHT[str(DHTpin)]  = 1
-			if Type.lower() == "dht11":		
+			if Type.lower() == "11":		
 				sensorDHT[str(DHTpin)] = Adafruit_DHT.DHT11
 			else:	  
 				sensorDHT[str(DHTpin)] = Adafruit_DHT.DHT22
@@ -63,9 +63,10 @@ def getDHT(sensor,data):
 		if sensor in sensors :
 			data[sensor]={}
 			for devId in sensors[sensor]:
-				t,h =getDATAdht(sensors[sensor][devId]["gpioPin"],sensor)
+				t,h =getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
 				if t!="":
-					try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+					try:	
+						t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
 					except: pass
 					data[sensor][devId] = {"temp":str(t).strip(" ")}
 					if h!= "":
@@ -218,12 +219,9 @@ while True:
 	try:
 		tt = time.time()
 		data={}
-		
+
 		if regularCycle:
-			if "DHTxx"			in sensors: data = getDHT("DHTxx",			 data)
-			if "DHT11"			in sensors: data = getDHT("DHT11",			 data)
-
-
+			data = getDHT("DHT",data)
 
 		loopCount +=1
 		
@@ -248,7 +246,7 @@ while True:
 							changed= 5
 							break
 						try:
-							#print dd, lastData[sens][dd], data[sens][dd]
+							print dd, lastData[sens][dd], data[sens][dd]
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed= xxx

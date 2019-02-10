@@ -1,3 +1,46 @@
+Added features / changes in v7.103.272 @ 2019-02-10:  
+===================================================
+
+1. finalized rotaty encoded switch devices
+	A absolute position
+		read encoded n pin rotaty switch, send integer value to indogo every 90 secs or if changed
+		grey code = only 1 bit changes pre step
+		    eg http://www.grayhill.com/assets/1/7/mech_encoder_26.pdf
+		regular binary; normal binary code 
+		   like also: https://www.amazon.com/gp/product/B071F4QM6L/ref=ppx_yo_dt_b_asin_title_o06__o00_s00?ie=UTF8&th=1
+		Bourns table encoded: 
+			special bourns devices that comes with an 8 bit 0-127 value encoding
+			    https://www.bourns.com/pdfs/ace.pdf
+			    pins 1,2,G,,3,4   8,7,G,6,5 
+				0-127 positions
+
+		Bourns serial evice that is read like SPI, but just very simple code
+			    CLK, CS, DO= read data. it is 10 bits + some status bits
+			    pins: Di,CLK, GND, DO, V+, CS
+			    https://www.bourns.com/pdfs/EMS22A.pdf
+				0-1023 positions
+
+
+	B continuous increment / decrement 
+		"2-bit quadrature code" using 2 GPIO pins and GND and V+
+		2 gpios are read. they go 1 0 1 0 .. most have 0=ON and 1 = off
+		B: 011001100110
+		A: 001100110011
+		and opposit direction:
+		B: 001100110011
+		A: 011001100110 
+		one full step is 4 bits
+
+2. BUG fix for DHT temp sensor
+	screw up in one of the last versions when I switch from 2 different DHT to one type
+
+3. Made version check future proof
+
+4. changed logging for errors or init of dataStats file
+
+
+
+
 Added features / changes in v7.101.271 @ 2019-02-04:  
 ===================================================
 

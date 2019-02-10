@@ -43,6 +43,9 @@ def cleanupOldFiles():
 	os.system("rm	 "+G.homeDir+"getsensorvalues.py	  >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"rennameMeTo_myoutput.py >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"renameMyTo_mysensors.py >/dev/null 2>&1")
+	os.system("rm	 "+G.homeDir+"INPUTRotata*            >/dev/null 2>&1")
+	os.system("rm	 "+G.homeDir+"INPUTRotateSwitchGrey.py >/dev/null 2>&1")
+
 	restart=False
 	return restart
 
@@ -262,8 +265,8 @@ def readNewParams(force=False):
 		setACTIVEorKILL("INPUTgpio","INPUTgpio.py","")
 		setACTIVEorKILL("INPUTtouch","INPUTtouch.py","INPUTtouch")
 		setACTIVEorKILL("INPUTtouch16","INPUTtouch16.py","INPUTtouch16")
-		setACTIVEorKILL("INPUTRotatarySwitch","INPUTRotatarySwitch.py","INPUTRotatarySwitch")
-		setACTIVEorKILL("INPUTRotataryPulseSwitch","INPUTRotataryPulseSwitch.py","INPUTRotataryPulseSwitch")
+		setACTIVEorKILL("INPUTRotarySwitchAbsolute","INPUTRotarySwitchAbsolute.py","INPUTRotarySwitchAbsolute")
+		setACTIVEorKILL("INPUTRotarySwitchIncremental","INPUTRotarySwitchIncremental.py","INPUTRotarySwitchIncremental")
 	
 
 		setACTIVEorKILL("myprogram","myprogram.py","")

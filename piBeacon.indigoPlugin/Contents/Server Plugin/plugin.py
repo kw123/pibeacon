@@ -27,7 +27,7 @@ import pstats
 import logging
 import MAC2Vendor
 
-dataVersion = 36.90
+dataVersion = 38.91
 
 
 
@@ -235,7 +235,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"INPUTtouch-1", u"INPUTtouch-4", u"INPUTtouch-8", u"INPUTtouch-12", u"INPUTtouch-16",		 # capacitor inputs
 						 u"INPUTtouch12-1", u"INPUTtouch12-4", u"INPUTtouch12-8", u"INPUTtouch12-12",	   # capacitor inputs
 						 u"INPUTtouch16-1", u"INPUTtouch16-4", u"INPUTtouch16-8", u"INPUTtouch16-16",	   # capacitor inputs
-						 u"INPUTRotatarySwitch","INPUTRotataryPulseSwitch",
+						 u"INPUTRotarySwitchAbsolute","INPUTRotarySwitchIncremental",
 						 u"i2cADS1x15", u"i2cADS1x15-1", u"spiMCP3008", u"spiMCP3008-1","i2cADC121",
 						 u"i2cPCF8591", u"i2cPCF8591-1",											   # adc
 						 u"INPUTpulse",
@@ -260,7 +260,6 @@ class Plugin(indigo.PluginBase):
 
 		self.pluginShortName 			= "piBeacon"
 
-
 		self.quitNow					= ""
 		self.getInstallFolderPath		= indigo.server.getInstallFolderPath()+"/"
 		self.indigoPath					= indigo.server.getInstallFolderPath()+"/"
@@ -268,7 +267,10 @@ class Plugin(indigo.PluginBase):
 		self.pathToPlugin 				= self.completePath(os.getcwd())
 
 		major, minor, release 			= map(int, indigo.server.version.split("."))
-		self.indigoVersion				= major
+		self.indigoVersion 				= float(major)+float(minor)/10.
+		if self.indigoVersion < 7.3:
+			import versionCheck as VS
+
 		self.pluginVersion				= pluginVersion
 		self.pluginId					= pluginId
 		self.pluginName					= pluginId.split(".")[-1]
@@ -307,12 +309,13 @@ class Plugin(indigo.PluginBase):
 		self.indigo_log_handler.setLevel(logging.ERROR)
 		indigo.server.log("initializing	 ... ")
 
-		indigo.server.log(u"path To files:      =================")
-		indigo.server.log(u"indigo              "+self.indigoRootPath)
-		indigo.server.log(u"installFolder       "+self.indigoPath)
-		indigo.server.log(u"plugin.py           "+self.pathToPlugin)
-		indigo.server.log(u"Plugin params       "+self.indigoPreferencesPluginDir)
+		indigo.server.log(  u"path To files:        =================")
+		indigo.server.log(  u"indigo                "+self.indigoRootPath)
+		indigo.server.log(  u"installFolder         "+self.indigoPath)
+		indigo.server.log(  u"plugin.py             "+self.pathToPlugin)
+		indigo.server.log(  u"Plugin params         "+self.indigoPreferencesPluginDir)
 
+		indigo.server.log(  u"(testing logger; see >"+self.PluginLogFile +"<   for detailed logging")
 		self.indiLOG.log( 0, "logger  enabled for   0")
 		self.indiLOG.log( 5, "logger  enabled for   THREADDEBUG")
 		self.indiLOG.log(10, "logger  enabled for   DEBUG")
@@ -320,9 +323,10 @@ class Plugin(indigo.PluginBase):
 		self.indiLOG.log(30, "logger  enabled for   WARNING")
 		self.indiLOG.log(40, "logger  enabled for   ERROR")
 		self.indiLOG.log(50, "logger  enabled for   CRITICAL")
-		indigo.server.log(u"check               "+self.PluginLogFile +"  <<<<    for detailed logging")
-		indigo.server.log(u"Plugin short Name   "+self.pluginShortName)
-		indigo.server.log(u"my PID              "+str(self.myPID))	 
+		indigo.server.log(  u"end testing logger .... )")
+		indigo.server.log(  u"Plugin short Name     "+self.pluginShortName)
+		indigo.server.log(  u"my PID                "+str(self.myPID))	 
+		indigo.server.log(  u"set params 4 indigo V "+str(self.indigoVersion))	 
 
 ####-------------------------------------------------------------------------####
 	def __del__(self):
@@ -1190,9 +1194,18 @@ class Plugin(indigo.PluginBase):
 	def readTcpipSocketStats(self):
 		self.dataStats ={}
 		try:
-			f = open(self.indigoPreferencesPluginDir + "dataStats", u"r")
+			if os.path.isfile(self.indigoPreferencesPluginDir + "dataStats"):
+				f = open(self.indigoPreferencesPluginDir + "dataStats", u"r")
+			else:
+				self.resetDataStats() 
+				return
+		except:
+			self.resetDataStats() 
+			return
+		try:			
 			self.dataStats = json.loads(f.read())
-			f.close()
+			try: f.close()
+			except: pass
 			if u"updates" not in self.dataStats:
 				self.resetDataStats()
 				return
@@ -1207,8 +1220,8 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def resetDataStats(self):
-			self.dataStats={u"startTime": time.time(),"data":{},"updates":{u"devs":0,"states":0,"startTime": time.time(),"nstates":[0 for ii in range(11)]}}
-
+		self.dataStats={u"startTime": time.time(),"data":{},"updates":{u"devs":0,"states":0,"startTime": time.time(),"nstates":[0 for ii in range(11)]}}
+		self.saveTcpipSocketStats()
 
 ####-------------------------------------------------------------------------####
 	def saveTcpipSocketStats(self):
@@ -8720,7 +8733,8 @@ class Plugin(indigo.PluginBase):
 
 		self.initConcurrentThread()
 
-		VS.versionCheck(self.pluginId,self.pluginVersion,indigo,13,25,printToLog="log")
+		if self.indigoVersion < 7.3:
+			VS.versionCheck(self.pluginId,self.pluginVersion,indigo,13,25,printToLog="log")
 				
 		if self.logFileActive !="standard":
 			indigo.server.log(u" ..  initalized")
@@ -8734,7 +8748,8 @@ class Plugin(indigo.PluginBase):
 			while self.quitNow == "":
 				self.countLoop += 1
 				self.sleep(9.)
-				VS.versionCheck(self.pluginId,self.pluginVersion,indigo,13,25,printToLog="log")
+				if self.indigoVersion < 7.3:
+					VS.versionCheck(self.pluginId,self.pluginVersion,indigo,13,25,printToLog="log")
 
 				if self.countLoop > 2: 
 					anyChange= self.periodCheck()
@@ -10984,11 +10999,11 @@ class Plugin(indigo.PluginBase):
 						self.updateINPUT(dev, data, u"INPUT_0",	 1, sensor)
 						continue
 
-					elif sensor == u"INPUTRotatarySwitch":
+					elif sensor == u"INPUTRotarySwitchAbsolute":
 						self.updateINPUT(dev, data, whichKeysToDisplay, 1, sensor)
 						continue
 
-					elif sensor == u"INPUTRotataryPulseSwitch":
+					elif sensor == u"INPUTRotarySwitchIncremental":
 						self.updateINPUT(dev, data, whichKeysToDisplay, 1, sensor)
 						continue
 
@@ -13629,11 +13644,27 @@ class Plugin(indigo.PluginBase):
 
 							for jj in range(27):
 								if u"INPUT_"+str(jj) in props:
-									sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUT_"+str(jj))
+									try:    iiii = int(props[u"INPUT_"+str(jj)])
+									except: iiii = -1
+									if iiii > 0:
+										sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUT_"+str(jj))
+
+							for jj in range(27):
+								if u"OUTPUT_"+str(jj) in props:
+									try:    iiii = int(props[u"OUTPUT_"+str(jj)])
+									except: iiii = -1
+									if iiii > 0:
+										sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"OUTPUT_"+str(jj))
+
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"codeType")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nInputs")
 
-							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"bounceTime")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"incrementIfGT4Signals")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"inverse")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"ignorePinValue")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"distinctTransition")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"resetTimeCheck")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"useWhichGPIO")
 
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"GPIOcsPin")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"GPIOmisoPin")

@@ -197,8 +197,7 @@ if __name__ == "__main__":
 	except	Exception, e:
 		####  trying to kill the process thats blocking the port# 
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		print "getting	socket does not work, trying to reset "+ str(PORT) +"  "+ unicode(e)  
-		U.toLog(-1, "getting  socket does not work, trying to reset "+ str(PORT) )
+		U.toLog(-1, "getting  socket does not work, trying to reset "+ str(PORT),doPrint=True )
 		ret = subprocess.Popen("sudo ss -apn | grep :"+str(PORT),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines= ret.split("\n")
 		for line in lines:

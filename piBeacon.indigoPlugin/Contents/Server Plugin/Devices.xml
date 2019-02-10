@@ -12268,8 +12268,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="INPUTRotatarySwitch">
-	<Name>INPUT-Rotatary-switch-Absolute-Encoded</Name>
+	<Device type="sensor" id="INPUTRotarySwitchAbsolute">
+	<Name>INPUT-Rotatary-switch-Absolute</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12281,12 +12281,12 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="AllowOnStateChange"     type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 
-
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup rotator encoded switch on individual rPis
-    eg  for 4 GPIO input channels deilver values from 0...15, 
+    eg  for 4 GPIO input channels deliver values from 0...15, etc
+    for BURNS type devices: 8 input or 1 input and 2 ouput (SERIAL) 
     You need to specify which GPIOs are used
-    and set encoding type:  bin, bin inverse, grey, grey inverse</Label>
+    and set encoding type:  bin, bin inverse, grey, grey inverse... </Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiI" dynamicReload="false"/>
@@ -12295,15 +12295,18 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="codeType" type="menu"                defaultValue="bin" > <Label>Select encoding:</Label>
 				<List>
-					<Option value="bin"        >simple binary         (pin Values = 1,2,4,8.. if low) </Option>
-					<Option value="binInverse" >simple binary inverse (pin Values = 1,2,4,8.. if high))</Option>
-					<Option value="grey"       >grey encoded          (low  = active)</Option>
-					<Option value="greyInverse">grey encoded  inverse (high = active)</Option>
+					<Option value="bin"        			>simple binary         (pin Values = 1,2,4,8.. if low) </Option>
+					<Option value="binInverse" 			>simple binary inverse (pin Values = 1,2,4,8.. if HIGH))</Option>
+					<Option value="grey"       			>grey encoded          (low  = active)</Option>
+					<Option value="greyInverse"			>grey encoded  inverse (HIGH = active)</Option>
+					<Option value="bourns8BitInverse"  	>Bourns EAW-ACE128  8 bit c-table 0-127  (HIGH = active - 8 input pins)</Option>
+					<Option value="serialBourns10"  	    >Bourns EMS22A     10 bit serial  0-1023 (GPIO-in: 1=DO, GPIO-out 1=CS, 2=CLK) </Option>
 				</List>
 			</Field>
 
-			<Field id="nInputs" type="menu"                defaultValue="value" > <Label>show many input channels:</Label>
+			<Field id="nInputs" type="menu"                defaultValue="4" > <Label>how many input channels:</Label>
 				<List>
+					<Option value="1"  >1 (FOR SERIAL BURNS)</Option>
 					<Option value="2"  >2</Option>
 					<Option value="3"  >3</Option>
 					<Option value="4"  >4</Option>
@@ -12312,26 +12315,31 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 					<Option value="7"  >7</Option>
 					<Option value="8"  >8</Option>
 					<Option value="9"  >9</Option>
-					<Option value="10" >10</Option>
 				</List>
 			</Field>
 
-			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9,10"> <Label>GPIO #0 (1):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9,10"> <Label>GPIO #1 (2):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8,9,10">   <Label>GPIO #2 (4):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8,9,10">     <Label>GPIO #3 (8):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8,9,10">       <Label>GPIO #4 (16):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8,9,10">         <Label>GPIO #5 (32):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8,9,10">           <Label>GPIO #6 (64):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8,9,10">             <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_8" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="9,10">               <Label>GPIO #8 (256):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_9" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="10">                 <Label>GPIO #9 (512):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="1,2,3,4,5,6,7,8,9"> <Label>GPIO #0 (1):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9">   <Label>GPIO #1 (2):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8,9">     <Label>GPIO #2 (4):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8,9">       <Label>GPIO #3 (8):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8,9">         <Label>GPIO #4 (16):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8,9">           <Label>GPIO #5 (32):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8,9">             <Label>GPIO #6 (64):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8,9">               <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_8" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="9">                 <Label>GPIO #8 (256):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+
+			<Field id="OUTPUT_0" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialBourns10"> <Label>GPIO CS:</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="OUTPUT_1" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialBourns10"> <Label>GPIO CLK:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 
 			<Field id="simpleSeparator22" type="separator"/>
+			<Field id="infoLabel22" type="label">
+				<Label>==display parameters</Label>
+			</Field>
+				
 			<Field id="displayState" type="textfield"       defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"                defaultValue="INPUT" > <Label>state to show in Status column:</Label>
 				<List>
-					<Option value="INPUT"    >GRey decoded integer INPUT</Option>
+					<Option value="INPUT"    >decoded value</Option>
 				</List>
 			</Field>
 			<Field id="unit"   type="textfield"             defaultValue=" Position"   >	<Label>unit:</Label></Field>
@@ -12339,7 +12347,12 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="mult"   type="textfield"             defaultValue="1"      >	<Label>multiply number by :</Label></Field>
 			<Field id="format" type="textfield"             defaultValue=""       >	<Label>format number (eg %3.1f):</Label></Field>
 			<Field id="infodispl" type="textfield"          defaultValue="(v+off)*mult UNIT"  readonly="YES">		<Label> display = </Label>  </Field>
-			<Field id="sep-031" type="separator"/>
+
+			<Field id="simpleSeparator23" type="separator"/>
+			<Field id="infoLabel23" type="label">
+				<Label>==broadcast setup</Label>
+			</Field>
+
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
 			<Label>send broadcasts to other plugins for status up/x changes</Label>
 			<List>
@@ -12363,8 +12376,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="INPUTRotataryPulseSwitch">
-	<Name>INPUT-Rotatary-switch-Pulse-Incremental</Name>
+	<Device type="sensor" id="INPUTRotarySwitchIncremental">
+	<Name>INPUT-Rotatary-switch-Incremental</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12378,8 +12391,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 			<Field id="infoLabelINPUT" type="label">
-			<Label>Setup rotator grey pulse encoded switch on individual rPis
-    You need to specify which 2 GPIOs are used If the direction is wrong, flip GPIO A with B</Label>
+			<Label>Setup incremental rotator pulse encoded (AB or BA) switch on individual rPis
+    You need to specify which 2 GPIOs are used -- If the direction is wrong, flip GPIO A with B
+    these devices send AB AB AB .. or  BA BA BA signals depending on direction</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiI" dynamicReload="false"/>
@@ -12389,34 +12403,73 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="INPUT_0" type="menu" defaultValue="-1" > <Label>GPIO# A:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 			<Field id="INPUT_1" type="menu" defaultValue="-1" > <Label>GPIO# B:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 
-
-			<Field id="bounceTime" type="menu"      defaultValue="0" > <Label>bounce Time window:</Label>
+			<Field id="inverse" type="menu"      defaultValue="0" > <Label>inverse HIGH low readings of GPIOs:</Label>
 				<List>
-					<Option value="0"   >do not software debounce, try this first</Option>
-					<Option value="1"   >  1 mSec</Option>
-					<Option value="2"   >  2 mSec</Option>
-					<Option value="3"   >  3 mSec</Option>
-					<Option value="5"   >  5 mSec</Option>
-					<Option value="7"   >  7 mSec</Option>
-					<Option value="10"  > 10 mSec</Option>
-					<Option value="20"  > 20 mSec</Option>
-					<Option value="30"  > 30 mSec</Option>
-					<Option value="40"  > 40 mSec</Option>
-					<Option value="50"  > 50 mSec</Option>
-					<Option value="60"  > 60 mSec</Option>
-					<Option value="70"  > 70 mSec</Option>
-					<Option value="80"  > 80 mSec</Option>
-					<Option value="90"  > 90 mSec</Option>
-					<Option value="100" >100 mSec</Option>
-					<Option value="150" >150 mSec</Option>
-					<Option value="200" >200 mSec</Option>
-					<Option value="300" >300 mSec</Option>
+					<Option value="0"   >not inverse, GPIO low/closed is ACTIVE (most switches)</Option>
+					<Option value="1"   >inverse, GPIO HIGH/open is active</Option>
+				</List>
+			</Field>
+
+			<Field id="simpleSeparator12" type="separator"/>
+			<Field id="infoLabel2" type="label">
+			<Label>==Tuning parameters to avoid bouncing and missed transitions</Label>
+			</Field>
+
+			<Field id="useWhichGPIO" type="menu"      defaultValue="pig-threads" tooltip="- must be same for all switches on the same RPI" > 
+				<Label>use which method to get GPIO signals:</Label>
+				<List>
+					<Option value="rpi-threads"       >rpi.gpio w thread and event queue up to 100 Hz</Option>
+					<Option value="rpi-simpleEvents"  >rpi.gpio  events directly anlyzed up to 20 Hz</Option>
+					<Option value="pig-threads"       >pigpio w threads and event queue fastest method  up to 200Hz = 5mSecs></Option>
+				</List>
+			</Field>
+
+			<Field id="resetTimeCheck" type="menu"      defaultValue="0.01" tooltip="need proper sequence to increment counter, if ANY: increases bounces, but can catch missing signals if too fast" > 
+				<Label>reset sequence detetction and incrementevent  if no full event after xx secs:</Label>
+				<List>
+					<Option value="1"      > 1 sec</Option>
+					<Option value="0.1"    > 0.1 sec</Option>
+					<Option value="0.03"   > 30 msec</Option>
+					<Option value="0.01"   > 10 msec</Option>
+					<Option value="0.003"  >  3 msec</Option>
+					<Option value="0.001"  >  1 msec</Option>
+					<Option value="0.0003" >  0.3 m secs</Option>
+					<Option value="0.0001" >  0.1 m secs</Option>
+				</List>
+			</Field>
+
+			<Field id="distinctTransition" type="menu"      defaultValue="0" tooltip="need proper sequence to increment counter, if ANY: increases bounces, but can catch missing signals if too fast" > 
+				<Label>require both pins to follow exact sequence:</Label>
+				<List>
+					<Option value="0"   >use any transition</Option>
+					<Option value="1"   >require exact transition</Option>
 				</List>
 			</Field>
 
 
+			<Field id="ignorePinValue" type="menu"       defaultValue="0" tooltip="in GOPIO event trigger get current value or asume opposit of last value, us oposite if signals are missing, too fast" > 
+				<Label>GPIO event handling function:</Label>
+				<List>
+					<Option value="0"   >read new value and use that, default</Option>
+					<Option value="1"   >ignore pin value, use event if PIN low -- not used w threads</Option>
+					<Option value="2"   >ignore pin value, use event PINV = not old value -- not used w threads</Option>
+					<Option value="3"   >if new value == old value generate missing event and new event</Option>
+				</List>
+			</Field>
+
+			<Field id="incrementIfGT4Signals" type="menu"       defaultValue="0" tooltip=" if signals come tooo fast this can help to recover missing signals" >
+				<Label>Increment step if &gt; 4 signals (must have missed one):</Label>
+				<List>
+					<Option value="0"   >wait for regular events</Option>
+					<Option value="1"   >increase counter after 4 signals</Option>
+				</List>
+			</Field>
 
 			<Field id="simpleSeparator22" type="separator"/>
+			<Field id="infoLabel22" type="label">
+				<Label>==display parameters</Label>
+			</Field>
+				
 			<Field id="displayState" type="textfield"       defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"                defaultValue="INPUT" > <Label>state to show in Status column:</Label>
 				<List>
@@ -12428,13 +12481,18 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="mult"   type="textfield"             defaultValue="1"      >	<Label>multiply number by :</Label></Field>
 			<Field id="format" type="textfield"             defaultValue=""       >	<Label>format number (eg %3.1f):</Label></Field>
 			<Field id="infodispl" type="textfield"          defaultValue="(v+off)*mult UNIT"  readonly="YES">		<Label> display = </Label>  </Field>
-			<Field id="sep-031" type="separator"/>
+
+			<Field id="simpleSeparator23" type="separator"/>
+			<Field id="infoLabel23" type="label">
+				<Label>==broadcast setup</Label>
+			</Field>
+
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>send broadcasts to other plugins for status up/x changes</Label>
-			<List>
-				<Option value="0" >NO </Option>
-				<Option value="1" >YES send BC, must be enabled in config  </Option>
-			</List>
+				<Label>send broadcasts to other plugins for status up/x changes</Label>
+				<List>
+					<Option value="0" >NO </Option>
+					<Option value="1" >YES send BC, must be enabled in config  </Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
