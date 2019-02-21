@@ -27,7 +27,7 @@ import pstats
 import logging
 import MAC2Vendor
 
-dataVersion = 38.91
+dataVersion = 38.92
 
 
 
@@ -1983,22 +1983,26 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def savebeaconPositionsFile(self):
-		self.setImageParameters()
-		try:
-				f = open(self.indigoPreferencesPluginDir + "plotPositions/positions.json", u"w")
-				f.write(json.dumps(self.beaconPositionsData))
-				f.close()
-				if self.decideMyLog(u"PlotPositions"): self.indiLOG.log(10, u"savebeaconPositionsFile "+ unicode(self.beaconPositionsData[u"mac"])[0:100] )
+		try:	
+			self.setImageParameters()
+			f = open(self.indigoPreferencesPluginDir + "plotPositions/positions.json", u"w")
+			f.write(json.dumps(self.beaconPositionsData))
+			f.close()
+			if self.decideMyLog(u"PlotPositions"): self.indiLOG.log(10, u"savebeaconPositionsFile "+ unicode(self.beaconPositionsData[u"mac"])[0:100] )
 		except Exception, e:
 			self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		return
 
 ####-------------------------------------------------------------------------####
 	def setImageParameters(self):
-		self.beaconPositionsData[u"piDir"]			= self.indigoPreferencesPluginDir+"plotPositions"
-		self.beaconPositionsData[u"logLevel"]		= "debugPlotPositions" in self.debugLevel
-		self.beaconPositionsData[u"logFile"]		= self.indigoPreferencesPluginDir+"plotPositions/plotPositions.log"
-		self.beaconPositionsData[u"distanceUnits"]	= self.distanceUnits
+		try:	
+			self.beaconPositionsData[u"piDir"]			= self.indigoPreferencesPluginDir+"plotPositions"
+			self.beaconPositionsData[u"logLevel"]		= "PlotPositions" in self.debugLevel
+			self.beaconPositionsData[u"logFile"]		= self.PluginLogFile
+			self.beaconPositionsData[u"distanceUnits"]	= self.distanceUnits
+		except Exception, e:
+			self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		return
 
 ####-------------------------------------------------------------------------####
 	def makeNewBeaconPositionPlots(self):
@@ -2201,15 +2205,15 @@ class Plugin(indigo.PluginBase):
 
 							if u"sendToIndigoSecs" not in props :
 								upd=True
-								props[u"sendToIndigoSecs"] = copy.deepcopy(_GlobalConst_emptyRPI[u"sensorRefreshSecs"])
+								props[u"sendToIndigoSecs"] = copy.copy(_GlobalConst_emptyRPI[u"sensorRefreshSecs"])
 
 							if u"sensorRefreshSecs" not in props :
 								upd=True
-								props[u"sensorRefreshSecs"] = copy.deepcopy(_GlobalConst_emptyRPI[u"sensorRefreshSecs"])
+								props[u"sensorRefreshSecs"] = copy.copy(_GlobalConst_emptyRPI[u"sensorRefreshSecs"])
 
 							if u"rssiOffset" not in props :
 								upd=True
-								props[u"rssiOffset"] = copy.deepcopy(_GlobalConst_emptyRPI[u"rssiOffset"])
+								props[u"rssiOffset"] = copy.copy(_GlobalConst_emptyRPI[u"rssiOffset"])
 
 							if dev.enabled:
 								if self.RPI[unicode(pi)][u"piOnOff"] != "1":
@@ -13657,6 +13661,7 @@ class Plugin(indigo.PluginBase):
 										sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"OUTPUT_"+str(jj))
 
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"codeType")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nBits")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nInputs")
 
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"incrementIfGT4Signals")
@@ -13929,17 +13934,26 @@ class Plugin(indigo.PluginBase):
 										theDict[u"pin_Reset"]			= propsOut[u"pin_Reset"]
 
 								theDict[u"pin_beep"]			= propsOut[u"pin_beep"]
-								theDict[u"pin_Up"]				= propsOut[u"pin_Up"]
-								theDict[u"pin_Dn"]				= propsOut[u"pin_Dn"]
-								theDict[u"pin_intensity"]		= propsOut[u"pin_intensity"]
-								theDict[u"pin_leftRight"]		= propsOut[u"pin_leftRight"]
 								theDict[u"pin_sensor0"]			= propsOut[u"pin_sensor0"]
-								theDict[u"pin_sensor12"]		= propsOut[u"pin_sensor12"]
+								theDict[u"pin_sensor1"]			= propsOut[u"pin_sensor1"]
+								theDict[u"pin_sensor2"]			= propsOut[u"pin_sensor2"]
+								theDict[u"pin_sensor3"]			= propsOut[u"pin_sensor3"]
+
 								theDict[u"pin_rgbLED_R"]		= propsOut[u"pin_rgbLED_R"]
 								theDict[u"pin_rgbLED_G"]		= propsOut[u"pin_rgbLED_G"]
 								theDict[u"pin_rgbLED_B"]		= propsOut[u"pin_rgbLED_B"]
+
+
+								theDict[u"pin_Up"]				= propsOut[u"pin_Up"]
+								theDict[u"pin_Dn"]				= propsOut[u"pin_Dn"]
+								theDict[u"pin_intensity"]		= propsOut[u"pin_intensity"]
 								theDict[u"pin_amPM1224"]		= propsOut[u"pin_amPM1224"]
-								theDict[u"pin_restart"]			= propsOut[u"pin_restart"]
+								theDict[u"pin_leftRight"]		= propsOut[u"pin_leftRight"]
+								theDict[u"pin_system"]			= propsOut[u"pin_system"]
+								theDict[u"pin_webAdhoc"]		= propsOut[u"pin_webAdhoc"]
+								theDict[u"pin_display"]			= propsOut[u"pin_display"]
+
+		
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
 								if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10,	u" sunDial: "+json.dumps(theDict))
 
@@ -13957,18 +13971,11 @@ class Plugin(indigo.PluginBase):
 										theDict[u"pin_Step"]			= propsOut[u"pin_Step"]
 										theDict[u"pin_Dir"]				= propsOut[u"pin_Dir"]
 										theDict[u"pin_Sleep"]			= propsOut[u"pin_Sleep"]
-										theDict[u"pin_Enable"]			= propsOut[u"pin_Enable"]
-										theDict[u"pin_Fault"]			= propsOut[u"pin_Fault"]
 									elif propsOut["motorType"].find("A4988") > -1:
 										theDict[u"pin_Step"]			= propsOut[u"pin_Step"]
 										theDict[u"pin_Dir"]				= propsOut[u"pin_Dir"]
 										theDict[u"pin_Sleep"]			= propsOut[u"pin_Sleep"]
-										theDict[u"pin_Enable"]			= propsOut[u"pin_Enable"]
-										theDict[u"pin_Reset"]			= propsOut[u"pin_Reset"]
 
-								theDict[u"pin_sensor0"]			= propsOut[u"pin_sensor0"]
-								theDict[u"pin_sensor1"]			= propsOut[u"pin_sensor1"]
-								theDict[u"pin_sensor2"]			= propsOut[u"pin_sensor2"]
 
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
 								if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10,	u" neoPixelClock: "+json.dumps(theDict))

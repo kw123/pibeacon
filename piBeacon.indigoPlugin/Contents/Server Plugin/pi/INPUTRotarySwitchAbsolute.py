@@ -6,12 +6,16 @@
 ##
 ## read encoded n pin rotaty switch, send integer value to indogo every 90 secs or if changed
 #### grey code = only 1 bit changes pre step
+####    eg http://www.grayhill.com/assets/1/7/mech_encoder_26.pdf
 #### regular binary; normal binary code 
+###  like also: https://www.amazon.com/gp/product/B071F4QM6L/ref=ppx_yo_dt_b_asin_title_o06__o00_s00?ie=UTF8&th=1
 #### bourns table encoded: 
 ####    special bourns devices that comes with an 8 bit 0-127 value encoding
 ####    https://www.bourns.com/pdfs/ace.pdf
+####    pins 1,2,G,,3,4   8,7,G,6,5 
 #### serial bourns device that is read like SPI, but just very simple code
-####    CLK, CS, DO= read data. it is 10 bits + some status bits 
+####    CLK, CS, DO= read data. it is 10 bits + some status bits
+####    pins: Di,CLK, GND, DO, V+, CS
 ####    https://www.bourns.com/pdfs/EMS22A.pdf
 #
 
@@ -31,7 +35,7 @@ G.program = "INPUTRotarySwitchAbsolute"
 #################################
 def readParams():
 		global sensors
-		global oldRaw, lastRead, nInputs, INPUTS
+		global oldRaw, lastRead, nInputs, INPUTS, nBits
 
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -59,10 +63,13 @@ def readParams():
 				for devId in sensors[sensor]:
 					new = False
 					sens = sensors[sensor][devId]
+
 					nInputs[devId] = int(sens["nInputs"])
 					if devId not in INPUTS: 
-						INPUTS[devId]  = {"lastValue":-1,"codeType":"bin","pinI":[]}
-					INPUTS[devId]["codeType"]= sens["codeType"]
+						INPUTS[devId]  = {"lastValue":-1,"codeType":"bin","pinI":[],"nBits":0}
+
+					INPUTS[devId]["codeType"] = sens["codeType"]
+
 					for nn in range(nInputs[devId]):
 						if len(INPUTS[devId]["pinI"]) < nn+1:
 							INPUTS[devId]["pinI"].append(-1)
@@ -71,6 +78,11 @@ def readParams():
 							new = True
 							INPUTS[devId]["lastValue"] = -1
 						INPUTS[devId]["pinI"][nn] = int(sens["INPUT_"+str(nn)])
+
+					if "nBits" in sens: 
+						try:    INPUTS[devId]["nBits"]= int(sens["nBits"])
+						except: pass
+
 					## oupt GPIOs
 					for nn in range(27):
 						if "OUTPUT_"+str(nn) in sens:
@@ -118,7 +130,7 @@ def getINPUTgpio(devId):
 	value = 0
 	try:
 
-		if INPUTS[devId]["codeType"].find("serialBourns") >-1:
+		if INPUTS[devId]["codeType"].find("serialEncoded") >-1:
 			data, status = getSerialInfo(devId)
 			if status[1] == 0 and status[2] ==0: 
 				value = data
@@ -152,11 +164,12 @@ def getSerialInfo(devId):
 	time.sleep(0.000001)# wait 1 Micro sec
 
 	# get data bits
+	nBits = INPUTS[devId]["nBits"]
 	GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW) # clock bits start
-	for bit in range(10):
+	for bit in range(nBits):
 		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.HIGH) # clock bit HIGH
 		if GPIO.input(INPUTS[devId]["pinI"][0]): # read data bit
-			data += 1 << (9-bit) 
+			data += 1 << ( nBits -1 -bit) 
 		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW)# clock bit off
 
 	for bit in range(6):
@@ -259,7 +272,6 @@ for i in range(100):
 
 
 readParams()
-print INPUTS
 
 
 shortWait			= 0.3	 

@@ -1270,10 +1270,10 @@ def readParams():
 					return		
 
 		
-def checkRGBcolor(inV,defColor,intensity,intensityDevice,type="RGB"):
+def checkRGBcolor(inV,defColor,intensity,intensityDevice,RGBtype="RGB"):
 	try:
 		inValue=str(inV)
-		if type == "RGB":
+		if RGBtype == "RGB":
 			if inValue.count(",") == 2:
 				value= str(inValue).strip("[").strip("]").strip("(").strip(")").replace(" ","").split(",")
 				value[0]=int(float(value[0])*intensity*intensityDevice)
@@ -1483,7 +1483,7 @@ def getFill(devType,fill,intensity,intensityDevice):
 		elif  devType.lower() in ["st7735"]: 
 			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice)
 		elif  devType.lower() in ["sh1106","ssd1306"]: 
-			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice,type="1")
+			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice, RGBtype="1")
 		return fill
 
 def onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
@@ -1619,7 +1619,7 @@ while True:
 				if devType.lower() in ["sh1106","ssd1306"]:
 					imData= Image.new('1',	 (xmax*maxPagesX, ymax*maxPagesY))
 					draw =ImageDraw.Draw(imData)
-					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,0,1.,1.))
+					draw.rectangle( (0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=checkRGBcolor(resetInitial,0,1.,1., RGBtype=1) )
 					outputDev.display(imData)
 
 				elif devType.lower() in ["ssd1351"]:

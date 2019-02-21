@@ -1,3 +1,16 @@
+Added features / changes in v7.103.273 @ 2019-02-20  
+===================================================
+
+
+1. fixed plot beacons
+	wrong test for xposition, was tested against Ymax not Xmax
+
+2. moved plot beacon position to regular plugin.log file 
+
+3. absolute position rotary switches with Serial input now support 6...12 bits resolution
+
+
+
 Added features / changes in v7.103.272 @ 2019-02-10:  
 ===================================================
 

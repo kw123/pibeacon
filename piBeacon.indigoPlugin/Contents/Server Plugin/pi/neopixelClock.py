@@ -642,7 +642,7 @@ def startWithNewDate(newDate,set):
 def setTimeZone(upDown):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime, switchON
 	global inp,	 DEVID, clockDict
-	global G.timeZones,timeZone
+	global timeZone
 
 	l0=60 + 48 + 40 + 32 +1
 	ind = currTZ
@@ -1076,7 +1076,7 @@ global sensor, output, inpRaw, lastCl,clockMarks,maRGB
 global oldRaw,	lastRead, inp
 global gpiopinSET
 global clockLightSetOverWrite,useRTC, newDate, resetGPIO, lastButtonTime, DEVID
-global G.timeZones, timeZone
+global timeZone
 global lightSensorValueLast
 global doReadParameters
 global nightMode
@@ -1089,6 +1089,7 @@ lastNeoParamsSet	= time.time()
 nightMode			= 0
 
 doReadParameters	= True
+timeZone			= ""
 
 #delta to UTC:
 JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100

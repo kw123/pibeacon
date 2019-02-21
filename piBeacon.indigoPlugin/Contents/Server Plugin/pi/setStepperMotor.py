@@ -44,8 +44,6 @@ def readParams():
 	global stopThread
 	global stopMoveNOW
 	global isSleep
-	global isDisabled
-	global isReset
 
 
 	try:
@@ -102,9 +100,6 @@ def readParams():
 			if "pin_Step"			in theDict: gpiopinSET[devId]["pin_Step"]			=	int(theDict["pin_Step"])
 			if "pin_Dir"			in theDict: gpiopinSET[devId]["pin_Dir"]			=	int(theDict["pin_Dir"])
 			if "pin_Sleep"			in theDict: gpiopinSET[devId]["pin_Sleep"]			=	int(theDict["pin_Sleep"])
-			if "pin_Enable"			in theDict: gpiopinSET[devId]["pin_Enable"]			=	int(theDict["pin_Enable"])
-			if "pin_Fault"			in theDict: gpiopinSET[devId]["pin_Fault"]			=	int(theDict["pin_Fault"])
-			if "pin_Reset"			in theDict: gpiopinSET[devId]["pin_Reset"]			=	int(theDict["pin_Reset"])
 
 			if "pin_sensor0"		in theDict: gpiopinSET[devId]["pin_sensor0"]		=	int(theDict["pin_sensor0"])
 			if "pin_sensor1"		in theDict: gpiopinSET[devId]["pin_sensor1"]		=	int(theDict["pin_sensor1"])
@@ -167,22 +162,14 @@ def readParams():
 				defineGPIOout(gpiopinSET[devId]["pin_Step"])
 				defineGPIOout(gpiopinSET[devId]["pin_Dir"])
 				defineGPIOout(gpiopinSET[devId]["pin_Sleep"])
-				defineGPIOout(gpiopinSET[devId]["pin_Enable"])
-				defineGPIOin(gpiopinSET[devId]["pin_Fault"])
 				minStayON[devId] = 0.00001
 				isSleep[devId]   = False
-				isDisabled[devId] = False
-				isReset[devId]   = False
 			elif motorType[devId].find("A4988") >-1:
 				defineGPIOout(gpiopinSET[devId]["pin_Step"])
 				defineGPIOout(gpiopinSET[devId]["pin_Dir"])
 				defineGPIOout(gpiopinSET[devId]["pin_Sleep"])
-				defineGPIOout(gpiopinSET[devId]["pin_Enable"])
-				defineGPIOout(gpiopinSET[devId]["pin_Reset"])
 				minStayON[devId] = 0.00001
 				isSleep[devId]   = False
-				isDisabled[devId] = False
-				isReset[devId]   = False
 
 			else:
 				print " stopping  motorType not defined",  motorType
@@ -270,14 +257,8 @@ def makeStep(devId,seq):
 def makeStepDRV8834(devId,dir):
 	global gpiopinSET
 	global lastDirection
-	global isDisabled
 	global isSleep
 
-	#print "makeStep", devId,dir
-	if devId in isDisabled and  isDisabled[devId]: 
-		setGPIOValue(gpiopinSET[devId]["pin_Enable"], 0)
-		time.sleep(0.01)
-	isDisabled[devId]= False
 
 	if  devId in isSleep and isSleep[devId]: 
 		setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
@@ -297,25 +278,12 @@ def makeStepDRV8834(devId,dir):
 def makeStepA4988(devId,dir):
 	global gpiopinSET
 	global lastDirection
-	global isDisabled
 	global isSleep
-	global isReset
-
-	#print "makeStep", devId,dir
-	if devId in isDisabled and  isDisabled[devId]: 
-		setGPIOValue(gpiopinSET[devId]["pin_Enable"], 0)
-		time.sleep(0.01)
-	isDisabled[devId]= False
 
 	if  devId in isSleep and isSleep[devId]: 
 		setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
 		time.sleep(0.01)
 	isSleep[devId]= False
-
-	if  devId in isReset and isReset[devId]: 
-		setGPIOValue(gpiopinSET[devId]["pin_Reset"], 1)
-		time.sleep(0.01)
-	isReset[devId]= False
 
 	if devId not in lastDirection or  dir != lastDirection[devId]: 
 		setGPIOValue(gpiopinSET[devId]["pin_Dir"], dir==1)
@@ -337,45 +305,35 @@ def setMotorOFFall():
 
 # ------------------	------------------ 
 def setMotorOFF(devId):
-	global motorType, isDisabled, isSleep, isReset
+	global motorType, isSleep
 
 	if devId in motorType:		
 		if motorType[devId].find("DRV8834") >-1:
 			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 0)
-			setGPIOValue(gpiopinSET[devId]["pin_Enable"], 1)
 		elif motorType[devId].find("A4988") >-1:
 			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 0)
-			setGPIOValue(gpiopinSET[devId]["pin_Enable"], 1)
-			setGPIOValue(gpiopinSET[devId]["pin_Reset"], 0)
 		else:
 			makeStep(devId,0)
-		isReset[devId]    = True
 		isSleep[devId]    = True
-		isDisabled[devId] = True
 	return
 
 # ------------------	------------------ 
 def setMotorON(devId):
-	global motorType, isDisabled, isSleep, isReset
+	global motorType, isSleep
 
 	if devId in motorType:		
 		if motorType[devId].find("DRV8834") >-1:
 			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
-			setGPIOValue(gpiopinSET[devId]["pin_Enable"], 0)
 		elif motorType[devId].find("A4988") >-1:
 			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
-			setGPIOValue(gpiopinSET[devId]["pin_Enable"], 0)
-			setGPIOValue(gpiopinSET[devId]["pin_Reset"], 1)
 		else:
 			pass
-		isReset[devId]    = False
 		isSleep[devId]    = False
-		isDisabled[devId] = False
 	return
 
 # ------------------	------------------ 
 def setMotorSleep(devId):
-	global motorType, isDisabled, isSleep
+	global motorType, isSleep
 	if devId in motorType:		
 		if motorType[devId].find("DRV8834") >-1:
 			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 0)
@@ -389,7 +347,7 @@ def setMotorSleep(devId):
  
 # ------------------	------------------ 
 def setMotorWake(devId):
-	global motorType, isDisabled, isSleep
+	global motorType, isSleep
 	if devId in motorType:		
 		if motorType[devId].find("DRV8834") >-1:
 			setGPIOValue(gpiopinSET[devId]["pin_Sleep"], 1)
@@ -521,18 +479,6 @@ def move(devId, actions): #steps, delay, direction, stopForGPIO):
 
 
 # ------------------	------------------ 
-def testForFault(devId):
-	global gpiopinSET
-	if motorType[devId].find("DRV8834") == -1: return False
-
-	val  = getPinValue(devId,"pin_Fault")
-	if   val == 0:
-			print "fault indicator ON"
-			return True
-	elif val == 1:
-			return False
-
-#
 def checkForNewImput():
 	global actionQueue
 	global restart
@@ -643,8 +589,7 @@ global gpiopinSET, SeqCoils
 global printON
 global minStayON
 global lastDirection
-global isDisabled, isSleep, isReset
-global isFault
+global isSleep
 global lastDict
 global imputFileName
 global restart
@@ -668,12 +613,9 @@ sensor				= G.program
 
 restart				=  False
 
-isFault				= {}
-lastDict 			= {}
-isDisabled			= {}
+iastDict 			= {}
 isSleep				= {}
-isReset				= {}
-lastDirection		= {}
+iastDirection		= {}
 motorType			= {}
 minStayON			= {} 
 lastStep			= {}

@@ -277,12 +277,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
+			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
 			<Label>...which pin to use as shutdown disable RESET:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutdownInputPin"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+			<Field id="shutdownInputPin"   type="menu" defaultValue="11" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
 			<Label>...which pin to use as shutdown-INPUT:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
@@ -12300,13 +12300,24 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 					<Option value="grey"       			>grey encoded          (low  = active)</Option>
 					<Option value="greyInverse"			>grey encoded  inverse (HIGH = active)</Option>
 					<Option value="bourns8BitInverse"  	>Bourns EAW-ACE128  8 bit c-table 0-127  (HIGH = active - 8 input pins)</Option>
-					<Option value="serialBourns10"  	    >Bourns EMS22A     10 bit serial  0-1023 (GPIO-in: 1=DO, GPIO-out 1=CS, 2=CLK) </Option>
+					<Option value="serialEncoded"       >Serial Encoded  eg Bourns EMS22A  xx bit serial  0-xx**2 (GPIO-in: 1=DO, GPIO-out 1=CS, 2=CLK) </Option>
+				</List>
+			</Field>
+			<Field id="nBits" type="menu"                defaultValue="8" visibleBindingId="codeType" visibleBindingValue="serialEncoded"> > <Label>how many bits:</Label>
+				<List>
+					<Option value="6"  >6</Option>
+					<Option value="7"  >7</Option>
+					<Option value="8"  >8</Option>
+					<Option value="9"  >9</Option>
+					<Option value="10" >10</Option>
+					<Option value="11" >11</Option>
+					<Option value="12" >12</Option>
 				</List>
 			</Field>
 
-			<Field id="nInputs" type="menu"                defaultValue="4" > <Label>how many input channels:</Label>
+			<Field id="nInputs" type="menu"                defaultValue="1" > <Label>how many input channels / GPIOs (1 for Serial):</Label>
 				<List>
-					<Option value="1"  >1 (FOR SERIAL BURNS)</Option>
+					<Option value="1"  >1 </Option>
 					<Option value="2"  >2</Option>
 					<Option value="3"  >3</Option>
 					<Option value="4"  >4</Option>
@@ -12328,8 +12339,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8,9">               <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 			<Field id="INPUT_8" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="9">                 <Label>GPIO #8 (256):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 
-			<Field id="OUTPUT_0" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialBourns10"> <Label>GPIO CS:</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="OUTPUT_1" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialBourns10"> <Label>GPIO CLK:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="OUTPUT_0" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialEncoded"> <Label>GPIO CS:</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="OUTPUT_1" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialEncoded"> <Label>GPIO CLK:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 
 			<Field id="simpleSeparator22" type="separator"/>
 			<Field id="infoLabel22" type="label">
@@ -12517,9 +12528,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	<Name>INPUT-distance-ultrasound </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -12528,9 +12539,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup ultrasound distance sensor on individual rPis</Label>
-			</Field>
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -12700,8 +12708,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	<Name>INPUT-distance-TOF-vl503l0x</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
@@ -12713,9 +12721,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
-			</Field>
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -12883,8 +12888,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	<Name>INPUT-distance-TOF+Lux-vcnl4010</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
@@ -12895,9 +12900,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
-			</Field>
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -13108,8 +13110,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	<Name>INPUT-distance-TOF+Lux-vl6180</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
@@ -13120,9 +13122,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
-			</Field>
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -13318,21 +13317,19 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 
 
 			<Field id="infoLabelAPDS9960r" type="label">
 			<Label>Setup proximity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
 			</Field>
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
-			</Field>
+
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the sensor is connect to:</Label>
@@ -13342,6 +13339,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			<Label>which GPIO-pin is the INTERRUP line connected to:</Label>
 			</Field>
+
 			<Field id="i2cAddress" type="menu"     defaultValue="57"> <Label>i2c address of device:</Label>
 			<List>
 				<Option value="57"   >0x39 = 57 </Option>
@@ -13372,6 +13370,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="180" > 3   minutes</Option>
 			</List>
 			</Field>
+
 			<Field id="deltaColor" type="menu"     defaultValue="10" hidden="no" > 
 			<Label>delta Color values to trigger update:</Label>
 			<List>
@@ -13404,6 +13403,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="20"  > 20  secs</Option>
 			</List>
 			</Field>
+
 			<Field id="deltaProximity" type="menu"     defaultValue="10" hidden="no" > 
 			<Label>delta distance value to trigger update(values 0..255):</Label>
 			<List>
@@ -13603,9 +13603,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
         connect 3.3, GND, SLA,SLC and int pin to gpio 
         and board-Si to V+; EN_V to GND
         if no other i2c device a 10Kohm SLC to V+ is required</Label>
-			</Field>
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -14688,7 +14685,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup display device on individual rPis</Label>
 			</Field>
@@ -14879,7 +14875,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 	<Name>OUTPUT-Sprinkler</Name>
 
 		<ConfigUI>            
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="isSprinklerDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup sprinkler device</Label>
@@ -15244,9 +15239,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>default: pin# 2(+5V), 12(GPIO18 = signal), 6(Gnd). You need to use a level shifter for the signal </Label>
 			</Field>
             
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
-			</Field>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
             
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
@@ -15695,9 +15688,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			</Field>
 
             
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
-			</Field>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
             
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
@@ -15705,24 +15696,28 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			</Field>
             
   
-			<Field id="motorType"  type="menu" defaultValue="bipolar-200-2">
+			<Field id="motorType"  type="menu" defaultValue="bipolar-400-2-PIG">
 				<List>
-					<Option value= "unipolar-4096" > 5 unipolar coils          4096 steps (ULN2003 chip or alike)</Option>
-					<Option value= "bipolar-200-1" > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-200-2" > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-400-1" > 2 bipolar coils bridge 1  *400 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-400-2" > 2 bipolar coils bridge 2  *400 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "DRV8834-1"     > 2 bipolar coils bridge 1  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-2"     > 2 bipolar coils bridge 2  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-4"     > 2 bipolar coils bridge 4  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-8"     > 2 bipolar coils bridge 8  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-16"    > 2 bipolar coils bridge 16 *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-32"    > 2 bipolar coils bridge 32 *200 steps (DRV8834 chip)</Option>
-					<Option value= "A4988-1"       > 2 bipolar coils bridge 1  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-2"       > 2 bipolar coils bridge 2  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-4"       > 2 bipolar coils bridge 4  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-8"       > 2 bipolar coils bridge 8  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-16"      > 2 bipolar coils bridge 16 *200 steps (A4988 chip)</Option>
+					<Option value= "unipolar-4096-1-GPIO" > 5 unipolar coils          4096 steps (ULN2003 chip or alike)</Option>
+					<Option value= "bipolar-200-1-GPIO" > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-200-1-PIG"  > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike) us PIGPIO</Option>
+					<Option value= "bipolar-200-2-GPIO" > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-200-2-PIG"  > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike) us PIGPIO</Option>
+					<Option value= "bipolar-400-1-GPIO" > 2 bipolar coils bridge 1  *400 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-400-1-PIG"  > 2 bipolar coils bridge 1  *400 steps (L9110/L298N chip or alike) us PIGPIO</Option>
+					<Option value= "bipolar-400-2-GPIO" > 2 bipolar coils bridge 2  *400 steps (L9110/L298N chip or alike)</Option>
+					<Option value= "bipolar-400-2-PIG"  > 2 bipolar coils bridge 2  *400 steps (L9110/L298N chip or alike) us PIGPIO</Option>
+					<Option value= "DRV8834-200-1-GPIO"     > 2 bipolar coils bridge 1  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-200-2-GPIO"     > 2 bipolar coils bridge 2  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-200-4-GPIO"     > 2 bipolar coils bridge 4  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-200-8-GPIO"     > 2 bipolar coils bridge 8  *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-200-16-GPIO"    > 2 bipolar coils bridge 16 *200 steps (DRV8834 chip)</Option>
+					<Option value= "DRV8834-200-32-GPIO"    > 2 bipolar coils bridge 32 *200 steps (DRV8834 chip)</Option>
+					<Option value= "A4988-200-1-GPIO"       > 2 bipolar coils bridge 1  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-200-2-GPIO"       > 2 bipolar coils bridge 2  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-200-4-GPIO"       > 2 bipolar coils bridge 4  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-200-8-GPIO"       > 2 bipolar coils bridge 8  *200 steps (A4988 chip)</Option>
+					<Option value= "A4988-200-16-GPIO"      > 2 bipolar coils bridge 16 *200 steps (A4988 chip)</Option>
 				</List>
 			<Label>Motor and driver chip type:</Label>
 			</Field>
@@ -15784,7 +15779,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>Max limit intensity:</Label>
 			</Field>
 
-			<Field id="intensityMin"  type="menu" defaultValue="0" >
+			<Field id="intensityMin"  type="menu" defaultValue="0.6" >
 				<List>
 				<Option value= "100"       >100% bright</Option>
 				<Option value= "90"        > 90% </Option>
@@ -15796,6 +15791,11 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "30"        > 30% </Option>
 				<Option value= "20"        > 20% </Option>
 				<Option value= "10"        > 10% </Option>
+				<Option value= "5"         > 5% </Option>
+				<Option value= "2"         > 2% </Option>
+				<Option value= "1"         > 1% </Option>
+				<Option value= "0.8"       > 0.8% </Option>
+				<Option value= "0.6"       > 0.6% (min light)</Option>
 				<Option value= "0"         > 0</Option>
 				</List>
 			<Label>Min limit intensity:</Label>
@@ -15808,35 +15808,36 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
            
           
-			<Field id="pin_CoilB2"  	type="menu" defaultValue="6" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 		<Label>GPIO pin for coilB2-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_CoilB1"  	type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 	<Label>GPIO pin for coilB1-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_CoilA2"  	type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 	<Label>GPIO pin for coilA2-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_CoilA1"  	type="menu" defaultValue="26"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096,bipolar-200-1,bipolar-200-2,bipolar-400-1,bipolar-400-2"> 	<Label>GPIO pin for coilA1-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilB2"  	type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 		<Label>GPIO pin for coilB2-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilB1"  	type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 	<Label>GPIO pin for coilB1-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilA2"  	type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 	<Label>GPIO pin for coilA2-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_CoilA1"  	type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 	<Label>GPIO pin for coilA1-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
 
-			<Field id="pin_Enable"  	type="menu" defaultValue="5"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Enable-#5:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Sleep"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Sleep-#6:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Step"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Step-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Dir"			type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32,,A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 	<Label>GPIO pin for Direction-#19:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,DRV8834-2,DRV8834-4,DRV8834-8,DRV8834-16,DRV8834-32"> 											<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1,A4988-2,A4988-4,A4988-8,A4988-16"> 																	<Label>GPIO pin for Reset-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Sleep"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-200-1-GPIO,DRV8834-200-2-GPIO,DRV8834-200-4-GPIO,DRV8834-200-8-GPIO,DRV8834-200-16-GPIO,DRV8834-200-32-GPIO,A4988-200-1-GPIO,A4988-200-2-GPIO,A4988-200-4-GPIO,A4988-200-8-GPIO,A4988-200-16-GPIO"> 	<Label>GPIO pin for Sleep-#13:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Step"  		type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-200-1-GPIO,DRV8834-200-2-GPIO,DRV8834-200-4-GPIO,DRV8834-200-8-GPIO,DRV8834-200-16-GPIO,DRV8834-200-32-GPIO,A4988-200-1-GPIO,A4988-200-2-GPIO,A4988-200-4-GPIO,A4988-200-8-GPIO,A4988-200-16-GPIO"> 	<Label>GPIO pin for Step-#19:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dir"			type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-200-1-GPIO,DRV8834-200-2-GPIO,DRV8834-200-4-GPIO,DRV8834-200-8-GPIO,DRV8834-200-16-GPIO,DRV8834-200-32-GPIO,A4988-200-1-GPIO,A4988-200-2-GPIO,A4988-200-4-GPIO,A4988-200-8-GPIO,A4988-200-16-GPIO"> 	<Label>GPIO pin for Direction-#26:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
 			<Field id="pin_beep"		type="menu" defaultValue="12" >																			<Label>GPIO pin for beep device-#12:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_rgbLED_G"	type="menu" defaultValue="16" > 																		<Label>GPIO pin for rgbLED_G-#13:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_rgbLED_R"	type="menu" defaultValue="20" >																			<Label>GPIO pin for rgbLED_R-#19:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_rgbLED_B"	type="menu" defaultValue="21" >																			<Label>GPIO pin for rgbLED_B-#26:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
-			<Field id="pin_sensor0"		type="menu" defaultValue="27" >																			<Label>GPIO pin for boundary sensor-#27:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor12"	type="menu" defaultValue="22" >																			<Label>GPIO pin for 12 oClock sensor-#22:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor0"		type="menu" defaultValue="10" >																			<Label>GPIO pin for 0 boundary sensor-#9:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor1"		type="menu" defaultValue="9" >																			<Label>GPIO pin for 12oClock sensor-#10:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor2"		type="menu" defaultValue="11" >																			<Label>GPIO pin for wire alarm sensor#11:</Label>	    <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor3"		type="menu" defaultValue="5" >																			<Label>GPIO pin for wire fault sensor#5:</Label>	    <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
-			<Field id="pin_Up"			type="menu" defaultValue="18" >																			<Label>GPIO pin for Up-#18:</Label>					<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Dn"			type="menu" defaultValue="23" >																			<Label>GPIO pin for Down-#23:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Up"			type="menu" defaultValue="14" >																			<Label>GPIO pin for Up-#14:</Label>					<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dn"			type="menu" defaultValue="15" >																			<Label>GPIO pin for Down-#15:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_amPM1224"	type="menu" defaultValue="18" >																			<Label>GPIO pin for 12/24 Switch-18:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
-			<Field id="pin_intensity"	type="menu" defaultValue="24" >																			<Label>GPIO pin for Intensity Switch-#24:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_restart"		type="menu" defaultValue="25" > 																		<Label>GPIO pin for Restart Switch-#25:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_intensity"	type="menu" defaultValue="23" >																			<Label>GPIO pin for Intensity Switch-#23:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_system"		type="menu" defaultValue="24" > 																		<Label>GPIO pin for Restart/reset Switch-#24:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_leftRight"	type="menu" defaultValue="25" > 																		<Label>GPIO pin for leftRight Switch-#25:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
-			<Field id="pin_webAdhoc"	type="menu" defaultValue="10" >																			<Label>GPIO pin for adhoc Web Switch:-#10</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_amPM1224"	type="menu" defaultValue="11" >																			<Label>GPIO pin for 12/24 Switch-11:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_webAdhoc"	type="menu" defaultValue="8" >																			<Label>GPIO pin for adhoc Web Switch:-#8</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_display"	    type="menu" defaultValue="7" >																			<Label>GPIO pin for Display Switch:-#7</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 		</ConfigUI>
         
 		<States>
@@ -15882,9 +15883,7 @@ You can use up to 3 GPIO input pins to control the range of the motor
 			</Field>
 
             
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
-			</Field>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
             
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
@@ -15911,13 +15910,7 @@ You can use up to 3 GPIO input pins to control the range of the motor
 			<Field id="pin_Sleep"  		type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Sleep-#6:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_Step"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Step-#13:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_Dir"			type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Direction-#19:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Fault"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-1,A4988-1"> 	<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Reset"  		type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="A4988-1"> 				<Label>GPIO pin for Fault-#26:</Label>  	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
-
-			<Field id="pin_sensor0"		type="menu" defaultValue="27" >				<Label>GPIO pin to check if movement should be stopped#0:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor1"		type="menu" defaultValue="22" >				<Label>GPIO pin to check if movement should be stopped#1:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor2"		type="menu" defaultValue="23" >				<Label>GPIO pin to check if movement should be stopped#2:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 		</ConfigUI>
         
 		<States>

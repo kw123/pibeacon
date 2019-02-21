@@ -125,7 +125,7 @@ def execCMDS(data):
 				cmdOut = json.dumps(next)
 				if cmdOut != "":
 					try:
-						#print "execcmd", cmdOut
+						print "execcmd", cmdOut
 						if not U.pgmStillRunning("display.py"):
 							os.system("/usr/bin/python "+G.homeDir+"display.py &" )
 						f=open(G.homeDir+"temp/display.inp","a")
