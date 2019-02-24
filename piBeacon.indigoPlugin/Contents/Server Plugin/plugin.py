@@ -1901,13 +1901,22 @@ class Plugin(indigo.PluginBase):
 
 			self.beacons = self.getParamsFromFile(self.indigoPreferencesPluginDir+ "beacons")
 
+			delList={}
 			for beacon in self.beacons:
 				for nn in _GlobalConst_emptyBeacon:
 					if nn not in self.beacons[beacon]:
 						self.beacons[beacon][nn]=copy.deepcopy(_GlobalConst_emptyBeacon[nn])
 
 				if self.beacons[beacon][u"indigoId"] == 0: continue
-				dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
+
+				try:
+					dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
+				except Exception, e:
+					self.indiLOG.log(40,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+					self.indiLOG.log(40,"beacon"+ beacon+" not an indigo device removing from beacon list")
+					delList[beacon]= True
+					continue
+
 				chList=[]
 				if "closestRPI" in dev.states: # must be RPI ..
 					if dev.states[u"closestRPI"] == "": 
@@ -1934,7 +1943,8 @@ class Plugin(indigo.PluginBase):
 						self.beacons[beacon][u"receivedSignals"][pi]["lastSignal"] = lastUp
 					except:
 						pass
-
+			for beacon in delList:
+				del self.beacons[beacon]
 
 			self.beaconsUUIDtoName	 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoName",		oldName= self.indigoPreferencesPluginDir+"UUIDtoName")
 			self.beaconsUUIDtoIphone = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoIphone",	oldName= self.indigoPreferencesPluginDir+"UUIDtoIphone")
@@ -13946,12 +13956,8 @@ class Plugin(indigo.PluginBase):
 
 								theDict[u"pin_Up"]				= propsOut[u"pin_Up"]
 								theDict[u"pin_Dn"]				= propsOut[u"pin_Dn"]
-								theDict[u"pin_intensity"]		= propsOut[u"pin_intensity"]
-								theDict[u"pin_amPM1224"]		= propsOut[u"pin_amPM1224"]
-								theDict[u"pin_leftRight"]		= propsOut[u"pin_leftRight"]
-								theDict[u"pin_system"]			= propsOut[u"pin_system"]
-								theDict[u"pin_webAdhoc"]		= propsOut[u"pin_webAdhoc"]
-								theDict[u"pin_display"]			= propsOut[u"pin_display"]
+								theDict[u"pin_Select"]			= propsOut[u"pin_Select"]
+								theDict[u"pin_Exit"]			= propsOut[u"pin_Exit"]
 
 		
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)

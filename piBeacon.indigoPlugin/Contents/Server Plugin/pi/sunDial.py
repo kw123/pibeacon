@@ -25,6 +25,43 @@ G.program = "sunDial"
 
 
 
+######### constants #################
+
+ALLCHARACTERS = (		 "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+				 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+				 "1","2","3","4","5","6","7","8","9","0",
+				 ".",",","/","=","-","!","@","#","$","%","^","&","*","_","+",":",";","<",">","(",")","[","]","{","}")
+charCommands=[]
+for ii in range(len(ALLCHARACTERS)):
+	charCommands.append([ALLCHARACTERS[ii],"addChar('"+ALLCHARACTERS[ii]+"')"])
+
+charCommands.append(["delete last Char", "deleteLastChar()"])
+charCommands.append(["exit submenu", "doMenuUp()"] )
+
+##               top option               selection, command
+MENUSTRUCTURE =[[],[]]
+MENUSTRUCTURE[0]=[	"power off",
+					"light intensity",
+					"left Right",
+					"reset",
+					"restart",
+					"start Web for config",
+					"WiFi SID",
+					"WiFi Passwd",
+				]
+#                         menu text          ,  function to call   
+MENUSTRUCTURE[1]=[	[	["confirm power off",	"powerOff()"],												["exit submenu", "doMenuUp()"] 	],
+					[	["light up",   			"increaseLED()"],		["light down", "decreaseLED()"],	["exit submenu", "doMenuUp()"] 	], 
+					[	["move left", 			"moveLeft()"], 			["move right", "moveRight()"],		["exit submenu", "doMenuUp()"] 	],
+					[	["reset clock",  		"doReset()"], 												["exit submenu", "doMenuUp()"] 	],
+					[	["restart system", 		"doReststart()"],											["exit submenu", "doMenuUp()"] 	], 
+					[	["start Web",   		"startWeb()"], 			["stop Web",    "stopWeb()"], 		["exit submenu", "doMenuUp()"] 	],
+						charCommands,				
+						charCommands
+				]
+######### constants #################
+
+
 
 
 # ########################################
@@ -193,50 +230,370 @@ class sh1106():
 # ------------------    ------------------ 
 def startDisplay():
 	global outputDev, displayFont
-	global lineCoordinates, lastLines
+	global lineCoordinates3, lineCoordinates4, lastLines
 	global xPixels, yPixels
-	xPixels 		= 128
-	yPixels 		= 64
-	lineCoordinates = [(0,0),(0,25),(4,50)]
-	lastLines 		= ["","",""]
+	global displayPriority, waitForDisplayToRest
+	global draw, imData
+	global displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive
 
-	outputDev = sh1106(width=xPixels, height=yPixels)
+	xPixels 				= 128
+	yPixels 				= 64
+	lineCoordinates3 		= [(0,0),(0,25),(4,50)]
+	lineCoordinates4 		= [(0,0),(0,16),(0,32),(4,48)]
+	lastLines 				= ["","","",""]
 
-	displayFont = ImageFont.load_default()
+	outputDev				= sh1106(width=xPixels, height=yPixels)
+
+	displayFont 			= ImageFont.load_default()
+	imData					= PIL.Image.new('1', (xPixels,yPixels))
+	draw 					= ImageDraw.Draw(imData)
+	displayPriority    		= 0
+	waitForDisplayToRest	= 60.
+	displayMenuLevelActive	= -1
+	displayMenuAreaActive	= -1
+	displayMenuSubAreaActive= 0
 
 # ------------------    ------------------ 
-def drawDisplayLines( lines ):
+def setDisplayPriority(level=0):
+	global displayPriority
+	displayPriority = level
+
+# ------------------    ------------------ 
+def resetDisplayPriority():
+	global displayPriority
+	displayPriority = 0
+
+# ------------------    ------------------ 
+def reserveDisplayPriority():
+	global displayPriority
+	displayPriority = 5
+
+
+
+# ------------------    ------------------ 
+def drawDisplayLines( lines, nLines=3, clear=True, prio=0):
 	global outputDev, displayFont
-	global lineCoordinates, lastLines
-	global xPixels, yPixels
+	global lineCoordinates3, lineCoordinates4, lastLines
+	global xPixels, yPixels, imData, draw
+	global displayPriority, waitForDisplayToRest
+
+
+	if displayPriority > 0: 
+		if time.time() - displayPriority > waitForDisplayToRest:
+			displayPriority = 0
+	
+	if prio < displayPriority: return 
+	displayPriority = prio 
 
 	new = False
-	for ii in range(min(len(lines),3)):
+	for ii in range(len(lines)):
 		if lines[ii] != lastLines[ii]:
 			new=True
 			break
 	if not new: return 
 
 	lastLines	= copy.copy(lines)
-	imData		= PIL.Image.new('1', (xPixels,yPixels))
-	draw 		= ImageDraw.Draw(imData)
-	draw.rectangle( (0, 0, xPixels, yPixels), outline=0, fill=0)
+	if clear:
+		clearDisplay()
 
-	for ii in range(min(len(lines),3)):
-		draw.text(lineCoordinates[ii], lines[ii],  font=displayFont, fill=255)
+	if nLines ==3:
+		for ii in range(len(lines)):
+			draw.text(lineCoordinates3[ii], lines[ii],  font=displayFont, fill=255)
+	if nLines ==4:
+		for ii in range(len(lines)):
+			draw.text(lineCoordinates4[ii], lines[ii],  font=displayFont, fill=255)
 	outputDev.display(imData)
 
 	return 
 
 # ------------------    ------------------ 
-def clearDisplay( ):
+def drawDisplayLine( line, iLine=1, nLines=3, prio=0 ):
+	global outputDev, displayFont
+	global lineCoordinates3, lineCoordinates4, lastLines
+	global xPixels, yPixels, imData, draw
+	global displayPriority,waitForDisplayToRest
+
+	if displayPriority > 0: 
+		if time.time() - displayPriority > waitForDisplayToRest:
+			displayPriority = 0
+	
+	if prio < displayPriority: return 
+	displayPriority = prio 
+
+	if nLines ==3:
+		clearDisplay((0, lineCoordinates3[iLine[2]]+25, 128, lineCoordinates3[iLine[2]]+25 ) )
+		draw.text(lineCoordinates3[iLine], line,  font=displayFont, fill=255)
+	if nLines ==4:
+		clearDisplay((0, lineCoordinates4[iLine[2]]+16, 128, lineCoordinates4[iLine[2]]+16 ) )
+		draw.text(lineCoordinates4[iLine], line,  font=displayFont, fill=255)
+	
+	outputDev.display(imData)
+
+	return 
+# ------------------    ------------------ 
+def drawDisplayLineOnOff( line, iLine=1, nLines=3, onOff ="off", prio=0):
+	global outputDev, displayFont
+	global lineCoordinates3, lineCoordinates4, lastLines
+	global xPixels, yPixels, imData, draw
+	global displayPriority, waitForDisplayToRest
+
+	if displayPriority > 0: 
+		if time.time() - displayPriority > waitForDisplayToRest:
+			displayPriority = 0
+	
+	if prio < displayPriority: return 
+	displayPriority = prio 
+
+	
+	if onOff !="off": line = "#"+line
+
+	if nLines ==3:
+		clearDisplay((0, lineCoordinates3[iLine[2]]+25, 128, lineCoordinates3[iLine[2]]+25 ) )
+		draw.text(lineCoordinates3[iLine], line,  font=displayFont, fill=255)
+	if nLines ==4:
+		clearDisplay((0, lineCoordinates4[iLine[2]]+16, 128, lineCoordinates4[iLine[2]]+16 ) )
+		draw.text(lineCoordinates4[iLine], line,  font=displayFont, fill=255)
+	
+	outputDev.display(imData)
+
+	return 
+
+#
+# ------------------    ------------------ 
+def clearDisplay( area=[], prio=0):
 	global outputDev, displayFont
 	global lineCoordinates, lastLines
-	global xPixels, yPixels
-	imData 	= PIL.Image.new('1', (xPixels, yPixels))
-	draw 	= ImageDraw.Draw(imData)
-	draw.rectangle((0, 0, xPixels, yPixels), outline=0, fill=0)
-	outputDev.display(imData)
+	global xPixels, yPixels, imData, draw
+	global displayPriority, waitForDisplayToRest
+
+	if displayPriority > 0: 
+		if time.time() - displayPriority > waitForDisplayToRest:
+			displayPriority = 0
+	
+	if prio < displayPriority: return 
+	displayPriority = prio 
+
+
+	if area ==[]:
+		draw.rectangle((0, 0, xPixels, yPixels), outline=0, fill=0)
+		outputDev.display(imData)
+	else:
+		draw.rectangle(area, outline=0, fill=0)
+		outputDev.display(imData)
+		
+# ------------------    ------------------ 
+def composeMenu(useLevel, area,subArea,nLines):
+
+	#print "composeMenu", useLevel, area,subArea,nLines
+	lines=[]
+	short = MENUSTRUCTURE[useLevel]
+	if useLevel== 0:
+		start = max(0, min(area, len(short) - nLines) )
+		end   = min(area+nLines, len(short) )
+		for ii in range(start, end):
+			if ii == area:
+#				lines.append(  str(area)+" "+str(level)+"  "+str(subarea)+" x "+str(MENUSTRUCTURE[level][ii])  )
+				lines.append( "x "+str(short[ii])  )
+			else:
+				lines.append( "  "+str(short[ii])  )
+
+	if useLevel == 1:
+		short2 = short[area]
+		if subArea < len(short2):
+			start = max(0, min(subArea, len(short2) - nLines) )
+			end   = min(subArea+nLines, len(short2) )
+			#print start, end , short2
+			for ii in range(start, end):
+				if ii == subArea:
+					lines.append( "x "+str(short2[ii][0]) )
+				else:
+					lines.append( "  "+str(short2[ii][0])  )
+	return lines
+
+# ########################################
+# #########   button funtions ############
+# ########################################
+# ------------------    ------------------ 
+def doAction(area,subArea):
+	global displayMenuLevelActive
+	print "doAction", displayMenuLevelActive, area, subArea
+
+	if displayMenuLevelActive == 0:
+		lines = composeMenu(0,area, subArea,4)
+		drawDisplayLines( lines, nLines=4, clear=True, prio=time.time()+100)
+		print lines
+
+	elif displayMenuLevelActive == 1:
+		eval(MENUSTRUCTURE[1][area][subArea][1]) 
+		if displayMenuLevelActive==0:
+			lines = composeMenu(1,area, subArea,4)
+			drawDisplayLines( lines, nLines=4, clear=True, prio=time.time()+100)
+			print lines
+
+	elif displayMenuLevelActive < 0:
+		displayMenuLevelActive =-1
+	
+	return 
+
+
+
+# ------------------    ------------------ 
+def buttonPressed(pin):
+	global gpiopinSET, pinsToName
+	global displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive
+
+	if pin not in pinsToName: 				return 
+	if getPinValue(gpiopinSET[pin]) < 1: 	return 
+
+	if gpiopinSET[pin] == "pin_Select": 
+		displayMenuLevelActive += 1
+		if displayMenuLevelActive  == 0:
+			doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+		elif displayMenuLevelActive > 0:
+			displayMenuLevelActive = 1
+			doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+		else:
+			return 	
+
+	if gpiopinSET[pin] == "pin_Up":
+		if displayMenuLevelActive == 0:
+			displayMenuAreaActive += 1
+			if displayMenuAreaActive > len(MENUSTRUCTURE[0]):
+				displayMenuAreaActive = 0
+			doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+		elif displayMenuLevelActive == 1:
+			displayMenuSubAreaActive += 1
+			if displayMenuSubAreaActive > len(MENUSTRUCTURE[1]):
+				displayMenuSubAreaActive = 0
+			doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+		else:
+			return 	
+
+	elif gpiopinSET[pin]=="pin_Dn": 
+		if displayMenuLevelActive == 0:
+			displayMenuAreaActive -= 1
+			if displayMenuAreaActive < 0:
+				displayMenuAreaActive = len(MENUSTRUCTURE[0])-1
+			doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+		elif displayMenuLevelActive == 1:
+			displayMenuSubAreaActive -= 1
+			if displayMenuSubAreaActive < 0:
+				displayMenuSubAreaActive = len(MENUSTRUCTURE[1])-1
+			doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+		else:
+			return 	
+
+	elif gpiopinSET[pin]=="pin_Exit":
+		displayMenuLevelActive -=1
+
+		if displayMenuLevelActive < 0:
+			displayPriority = 0
+			displayMenuLevelActive = -1
+		elif displayMenuLevelActive == 0:
+				doAction(displayMenuAreaActive, displayMenuSubAreaActive)
+
+
+# ------------------    ------------------ 
+def powerOff():
+	print " into powerOff" 
+	doReboot(1.," shut down at " +str(datetime.datetime.now())+"   button pressed",cmd="shutdown -h now ")
+	return 
+
+
+# ------------------    ------------------ 
+def increaseLED():
+	global intensity
+	print " into increaseLED" 
+	nSteps =1
+	while getPinValue("pin_Up") ==1:
+			#print "pin_IntensityUp"
+			nSteps = min(5, nSteps*1.5)
+			intensity["Mult"] = max(10,intensity["Mult"]+nSteps)
+			setColor( force = True)
+			time.sleep(0.3)
+	return 
+
+
+# ------------------    ------------------ 
+def decreaseLED():
+	global intensity
+	print " into decreaseLED" 
+	nSteps =1
+	while getPinValue("pin_Dn")==1:
+			#print "pin_IntensityDn"
+			nSteps = min(5, nSteps*1.5)
+			intensity["Mult"] = max(5,intensity["Mult"]-nSteps)
+			setColor( force = True)
+			time.sleep(0.3)
+	return 
+
+
+# ------------------    ------------------ 
+def startWeb():
+	print " into startWeb" 
+	if webAdhoc: return 
+	pass
+	webAdhoc = False
+
+
+# ------------------    ------------------ 
+def stopWeb():
+	global webAdhoc
+	print " into stopWeb" 
+	if not webAdhoc: return 
+	webAdhoc = False
+	return 
+
+
+
+# ------------------    ------------------ 
+def doReststart():
+	print " into doReststart" 
+	time.sleep(1)	
+ 
+	if getPinValue("pin_Select") ==1:
+		print "restart requested"
+		time.sleep(10)
+		U.restartMyself(param=" restart requested", reason="",doPrint=True)
+	return 
+
+# ------------------    ------------------ 
+def doReset():
+	print " into doReset" 
+	time.sleep(1)	
+ 
+	if getPinValue("pin_Select") == 1:
+		print "restart requested"
+		time.sleep(10)
+		U.restartMyself(param=" restart requested", reason="",doPrint=True)
+
+# ------------------    ------------------ 
+def moveRight():
+	print " into moveRight"
+	while getPinValue("pin_Up") == 1:
+		move(0.05, 2, 1, force = 10)
+	return 
+
+# ------------------    ------------------ 
+def moveLeft():
+	print " into moveLeft"
+	while getPinValue("pin_Dn") == 1:
+		move(0.05, 2, -1, force = 10)
+	return 
+
+# ------------------    ------------------ 
+def doMenuUp():
+	global displayMenuLevelActive 
+	global displayPriority
+
+	displayMenuLevelActive -=1
+
+	if displayMenuLevelActive < 0:
+		displayPriority = 0
+		displayMenuLevelActive =-1
+
+	return 
+
 
 
 # ########################################
@@ -257,6 +614,7 @@ def readParams():
 	global speedOverWrite
 	global SeqCoils
 	global buttonDict, sensorDict
+	global pinsToName
 
 	try:
 
@@ -341,12 +699,8 @@ def readParams():
 
 			if "pin_Up"				in clockDict: gpiopinSET["pin_Up"]				=	int(clockDict["pin_Up"])
 			if "pin_Dn"				in clockDict: gpiopinSET["pin_Dn"]				=	int(clockDict["pin_Dn"])
-			if "pin_intensity"		in clockDict: gpiopinSET["pin_intensity"]		=	int(clockDict["pin_intensity"])
-			if "pin_amPM1224"		in clockDict: gpiopinSET["pin_amPM1224"]		=	int(clockDict["pin_amPM1224"])
-			if "pin_leftRight"		in clockDict: gpiopinSET["pin_leftRight"]		=	int(clockDict["pin_leftRight"])
-			if "pin_system"			in clockDict: gpiopinSET["pin_system"]			=	int(clockDict["pin_system"])
-			if "pin_webAdhoc"		in clockDict: gpiopinSET["pin_webAdhoc"]		=	int(clockDict["pin_webAdhoc"])
-			if "pin_display"		in clockDict: gpiopinSET["pin_display"]			=	int(clockDict["pin_display"])
+			if "pin_Select"			in clockDict: gpiopinSET["pin_Select"]			=	int(clockDict["pin_Select"])
+			if "pin_Exit"			in clockDict: gpiopinSET["pin_Exit"]			=	int(clockDict["pin_Exit"])
 
 
 
@@ -363,7 +717,7 @@ def readParams():
 
 
 			for key in gpiopinSET:
-				if key in [ "pin_Up", "pin_Dn", "amPM1224", "pin_intensity", "pin_System", "pin_LeftRight", "pin_Display", "pin_Web"]:
+				if key in [ "pin_Up", "pin_Dn", "pin_Select", "pin_Exit"]:
 					buttonDict[key] = {"lastCeck":0, "lastValue":-1,"newValue":-1}
 
 
@@ -371,24 +725,21 @@ def readParams():
 			print "buttonDict", buttonDict
 
 			pwm = 0
-			MT  =  motorType.split("-")
 			if PIGPIO == "":
 				import pigpio
 				PIGPIO = pigpio.pi()
 				pwmRange = 1000
-			if len(MT) == 4:
-				if MT[3] == "PIG":
-					if not U.pgmStillRunning("pigpiod"): 	
-						U.toLog(-1, "starting pigpiod", doPrint=True)
-						os.system("sudo pigpiod -s 1 &")
-						time.sleep(0.5)
-						if not U.pgmStillRunning("pigpiod"): 	
-							U.toLog(-1, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888", doPrint=True)
-							time.sleep(20)
-							U.restartMyself(reason="pigpiod not running")
-							exit(0)
+			if not U.pgmStillRunning("pigpiod"): 	
+				U.toLog(-1, "starting pigpiod", doPrint=True)
+				os.system("sudo pigpiod -s 1 &")
+				time.sleep(0.5)
+				if not U.pgmStillRunning("pigpiod"): 	
+					U.toLog(-1, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888", doPrint=True)
+					time.sleep(20)
+					U.restartMyself(reason="pigpiod not running")
+					exit(0)
 
-
+			MT  =  motorType.split("-")
 
 			if motorType.find("unipolar") >-1 or motorType.find("bipolar") >-1:
 				defineGPIOout(gpiopinSET["pin_CoilA1"],pwm=pwm, freq=40000)
@@ -416,12 +767,13 @@ def readParams():
 
 			defineGPIOin("pin_Up")
 			defineGPIOin("pin_Dn")
-			defineGPIOin("pin_intensity")
-			defineGPIOin("pin_system")
-			defineGPIOin("pin_leftRight")
-			defineGPIOin("pin_display")
-			defineGPIOin("pin_amPM1224")
-			defineGPIOin("pin_webAdhoc")
+			defineGPIOin("pin_Select")
+			defineGPIOin("pin_Exit")
+			pinsToName[gpiopinSET["pin_Up"]]		= "pin_Up"
+			pinsToName[gpiopinSET["pin_Dn"]]		= "pin_Dn"
+			pinsToName[gpiopinSET["pin_Select"]]	= "pin_Select"
+			pinsToName[gpiopinSET["pin_Exit"]]		= "pin_Exit"
+
 
 			defineGPIOin("pin_sensor0")
 			defineGPIOin("pin_sensor1")
@@ -583,17 +935,14 @@ def setgpiopinSET():
 	gpiopinSET["pin_Up"]   			= -1
 	gpiopinSET["pin_Dn"]  			= -1
 
-	gpiopinSET["pin_intensity"]		= -1
-	gpiopinSET["pin_restart"]		= -1
+	gpiopinSET["pin_Select"]		= -1
+	gpiopinSET["pin_Exit"]			= -1
 
 	gpiopinSET["pin_sensor0"]  		= -1
 	gpiopinSET["pin_sensor1"] 		= -1
 	gpiopinSET["pin_sensor2"]  		= -1
 	gpiopinSET["pin_sensor3"] 		= -1
 
-	gpiopinSET["pin_amPM1224"]   	= -1
-	gpiopinSET["pin_webAdhoc"]  	= -1
-	gpiopinSET["pin_beep"]  		= -1
 
 	return 
 
@@ -603,7 +952,7 @@ def setgpiopinSET():
 # ########################################
 
 # ------------------    ------------------ 
-def defineGPIOin(pinName):
+def defineGPIOin(pinName, event= False):
 	global PIGPIO, pigpio
 	pin = gpiopinSET[pinName]
 	if pin <=1: return 
@@ -611,6 +960,9 @@ def defineGPIOin(pinName):
 		if PIGPIO !="":
 			PIGPIO.set_mode( pin,  pigpio.INPUT )
 			PIGPIO.set_pull_up_down( pin, pigpio.PUD_UP)
+			if event:
+				PIGPIO.set_glitch_filter(pin, 30000) # steady for 30 msec 
+				PIGPIO.callback(pin, pigpio.FALLING_EDGE, buttonPressed )	
 		else:
 			try:    
 				GPIO.setup( pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -618,14 +970,13 @@ def defineGPIOin(pinName):
 				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 	except	Exception, e:
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
-		
 	return
 
 # ------------------    ------------------ 
 def defineGPIOout(pin, pwm = 0,freq =1000, pig=False):
 	global PIGPIO, pigpio, pwmRange, colPWM
 	print "defineGPIOout", pin, pwm, freq, pig
-	if PIGPIO !="" and pig:
+	if PIGPIO !="" :
 		PIGPIO.set_mode( pin, pigpio.OUTPUT )
 		if pwm !=0:
 			PIGPIO.set_PWM_frequency( pin, pwmRange )
@@ -647,13 +998,13 @@ def defineGPIOout(pin, pwm = 0,freq =1000, pig=False):
 def setGPIOValue(pin,val,amplitude =-1, pig=False):
 	global PIGPIO, pwmRange
 	pin = int(pin)
-	if PIGPIO !="" and  pig:
+	if PIGPIO !="":
 		if amplitude == -1:
 			PIGPIO.write( (pin), val )
 		else:
 			if amplitude >0 and val !=0:
 				PIGPIO.set_PWM_dutycycle( (pin), int(pwmRange*amplitude/100.) )
-				print "setGPIOValue ", pin, val,amplitude, int(pwmRange*amplitude/100.), PIGPIO.get_PWM_dutycycle(int(pin)) 
+				#print "setGPIOValue ", pin, val,amplitude, int(pwmRange*amplitude/100.), PIGPIO.get_PWM_dutycycle(int(pin)) 
 			else:
 				PIGPIO.write( (pin), 0 )
 				#PIGPIO.set_PWM_dutycycle( int(pin), 0)
@@ -665,19 +1016,21 @@ def setGPIOValue(pin,val,amplitude =-1, pig=False):
 	return
 
 # ------------------    ------------------ 
-def getPinValue(pinName):
+def getPinValue(pinName,pin=-1):
 	global gpiopinSET, PIGPIO
-	if pinName not in gpiopinSET: return -1
-	if gpiopinSET[pinName] < 1:   return -1
+
+	if pin ==-1:
+		if pinName not in gpiopinSET: return -1
+		if gpiopinSET[pinName] < 1:   return -1
+		pin = gpiopinSET[pinName]
 
 	if PIGPIO =="":
-		ret =  GPIO.input(gpiopinSET[pinName])
+		ret =  GPIO.input(pin)
 		#print "reading pin", pinName, ret 
 	else:
-		ret = PIGPIO.read( gpiopinSET[pinName])
+		ret = PIGPIO.read(pin)
 
 	return (ret-1)*-1
-
 
 
 # ########################################
@@ -1207,7 +1560,7 @@ def setColor( blink=0, color = [1.,1.,1.], beep=-1, force = False):
 				pin = gpiopinSET["pin_rgbLED"][p]
 				intens = getIntensity(cm[p]*color[p]) 
 				setGPIOValue( pin, 1, amplitude=intens, pig=True )	
-				print "LED int: ", p, intens, lightSensorValue, " secs since last:", abs(secSinMidnit-lastC)
+				#print "LED int: ", p, intens, lightSensorValue, " secs since last:", abs(secSinMidnit-lastC)
 			timeAtlastColorChange = time.time()
 			LastHourColorSet = secSinMidnit
 			LastHourColorSetToRemember = color
@@ -1359,158 +1712,7 @@ def testForAmPM():
 		amPM1224 = "24"
 
 
-
-# ########################################
-# #########    IO    funtions ############
-# ########################################
-# ------------------    ------------------ 
-def getManualParams( sleep ):
-
-	#sleep = testleftRightON(sleep)
-	#testIfRestart()
-
-	sleep = testIfIntensityOn(sleep)
-
-	testForAmPM()
-
-	testForWebAdhoc()
-
-	isFault = testForFault()
-
-	return sleep
-
-# ------------------    ------------------ 
-def testForWebAdhoc():
-	global webAdhocLastOff, webAdhoc
-	global gpiopinSET
-	val  = getPinValue("pin_webAdhoc")
-	if val == 1 and time.time() - webAdhocLastOff >10:
-		if not webAdhoc:
-			print "pin_webAdhoc on"
-			startAdhocWeb()
-			webAdhoc = True
-	
-	if val == 0:
-		webAdhocLastOff = time.time()
-		if webAdhoc:
-			print "pin_webAdhoc off"
-			stopAdhocWeb()
-			webAdhoc = False
-# ------------------    ------------------ 
-def testForRestart():
-	global RestartLastOff
-	val  = getPinValue("pin_Reset")
-	if val == 1 and time.time() - RestartLastOff >3:
-		if not RestartLastOff:
-			print "restart requested"
-		time.sleep(10)
-		U.restartMyself(param=" restart requested", reason="",doPrint=True)
-	
-	if val == 0:
-		RestartLastOff = time.time()
-
-# ------------------    ------------------ 
-def testForFault():
-	global gpiopinSET
-	if motorType.find("DRV8834") == -1: return False
-
-	val  = getPinValue("pin_Fault")
-	if   val == 0:
-			print "fault indicator ON"
-			return True
-	elif val == 1:
-			return False
-
-
-# ------------------    ------------------ 
-def testleftRightON(sleep):
-	global intensity
-	global stepsIn360
-	leftRightON 	= getPinValue("pin_leftRight")
-	up				= getPinValue("pin_Up")
-	down			= getPinValue("pin_Dn")
-	nPress = time.time()
-
-	stayOn = 0.001
-	if  leftRightON:
-		while getPinValue("pin_Up") ==1:
-				#print "move L"
-				move (stayOn,int(nSteps),-1, force=1000)
-				if time.time() - nPress >2:
-					nSteps = min(stepsIn360/10, nSteps*1.5)
-					stayOn = 0.001
-				sleep = min(0.0001, sleep)
-
-		while getPinValue("pin_Dn") ==1:
-				#print "move R"
-				move (stayOn, int(nSteps),1, force=1000)
-				if time.time() - nPress >2:
-					nSteps = min(stepsIn360/10, nSteps*1.5)
-					stayOn = 0.001
-				sleep = min(0.0001, sleep)
-	return sleep
-
-# ------------------    ------------------ 
-def testIfIntensityOn(sleep):
-	global intensity
-	intensityON 	= getPinValue("pin_intensity")
-	up				= getPinValue("pin_Up")
-	down			= getPinValue("pin_Dn")
-	nPress = time.time()
-	return sleep
-	if intensityON:
-		while getPinValue("pin_Up") ==1:
-				#print "pin_IntensityUp"
-				nSteps = min(500, nSteps*1.5)
-				intensity["Mult"] = min(1000,intensity["Mult"]+nSteps)
-				setColor( force = True)
-				time.sleep(0.3)
-				sleep = min(0.0001, sleep)
-
-		while getPinValue("pin_Dn")==1:
-				#print "pin_IntensityDn"
-				nSteps = min(500, nSteps*1.5)
-				intensity["Mult"] = max(5,intensity["Mult"]-nSteps)
-				setColor( force = True)
-				time.sleep(0.3)
-				sleep = min(0.0001, sleep)
-	return sleep
-
-# ------------------    ------------------ 
-def testIfLeftRight(sleep):
-	global intensity
-	LR_ON 	= getPinValue("pin_leftRight")
-	up		= getPinValue("pin_Up")
-	down	= getPinValue("pin_Dn")
-	nPress = time.time()
-	return sleep
-	if LR_ON:
-		while getPinValue("pin_Up") ==1:
-				move(0.1, 2, 1, force = 10)
-		while getPinValue("pin_Dn")==1:
-				move(0.1, 2, -1, force = 10)
-
-	return sleep
-
-
-# ------------------    ------------------ 
-def getButtons():
-	global 	buttonDict
-	anyChange = False
-	for key in buttonDict:
-		newValue = getPinValue( key )
-		if newValue != buttonDict[key]["newValue"]:
-			buttonDict[key]["lastValue"] = buttonDict[key]["newValue"]
-			buttonDict[key]["newValue"] = newValue
-			anyChange = True
-
-
-	return anyChange
-
-# ------------------    ------------------ 
-def buttonAction():
-	return
-
+#
 # ------------------    ------------------ 
 def getSensors():
 	global 	sensorDict
@@ -1549,22 +1751,12 @@ def getSensors():
 			
 	return anyChange
 
-# ------------------    ------------------ 
-def sensorAction():
-	return
 
 
 # ########################################
 # #########    web   funtions ############
 # ########################################
 
-# ------------------    ------------------ 
-def startAdhocWeb():
-	return
-
-# ------------------    ------------------ 
-def stopAdhocWeb():
-	return
 def updateStatus(status):
 	global amPM1224, intensity, whereIs12, whereIsTurnF, whereIsTurnB, totalSteps, stepsIn360
 	WebStatusFile	=  G.homeDir+"/temp/sunDial.status"
@@ -1626,6 +1818,8 @@ global overallStatus
 global buttonDict, sensorDict
 global currentSequenceNo, inbetweenSequences
 global lightSensorValue, lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw
+global pinsToName
+global menuPosition
 
 
 morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 		"F":[0,0,1,0], 	"G":[1,1,0],	"H":[0,0,0,0], 	"I":[0,0],
@@ -1636,6 +1830,8 @@ morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 	
 			"l":[1], # one long
 			"b":[0,0,0,1]}  # beethoven ddd DAAA
 
+menuPosition			= ["",""]
+pinsToName				= {}
 lightSensorValue		= 0.5
 lastlightSensorValue	= 0.5
 lastTimeLightSensorValue =0
@@ -1787,7 +1983,7 @@ while True:
 
 	nextMove = lastMove + waitBetweenSteps/speed
 	testIfRewind( nextStep )
-	sleep = getManualParams( sleepDefault )
+	sleep =  sleepDefault
 	testIfBlink()
 	slept= 0
 	lastDisplay = 0
@@ -1799,6 +1995,7 @@ while True:
 	ii = 1000
 	lastDisplay = time.time()
 	print "	sleep ", sleep," nextMove", nextMove,"minSleep",minSleep,"tt", time.time()
+
 	while ii >0:
 		if getLightSensorValue():
 			setColor(force=True)
@@ -1809,9 +2006,6 @@ while True:
 		ii -= 1
 		time.sleep(minSleep)
 		slept += minSleep
-
-		if  getButtons(): buttonAction()
-		if  getSensors(): sensorAction()
 
 		tt = time.time()
 		if tt >= endSleep: break

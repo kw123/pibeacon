@@ -282,7 +282,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutdownInputPin"   type="menu" defaultValue="11" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
 			<Label>...which pin to use as shutdown-INPUT:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
@@ -15825,21 +15825,15 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 			<Field id="pin_sensor0"		type="menu" defaultValue="10" >																			<Label>GPIO pin for 0 boundary sensor-#9:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 			<Field id="pin_sensor1"		type="menu" defaultValue="9" >																			<Label>GPIO pin for 12oClock sensor-#10:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor2"		type="menu" defaultValue="11" >																			<Label>GPIO pin for wire alarm sensor#11:</Label>	    <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor3"		type="menu" defaultValue="5" >																			<Label>GPIO pin for wire fault sensor#5:</Label>	    <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor2"		type="menu" defaultValue="11" >																			<Label>GPIO pin for wire alarm sensor#11:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_sensor3"		type="menu" defaultValue="5" >																			<Label>GPIO pin for wire fault sensor#5:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 
-			<Field id="pin_Up"			type="menu" defaultValue="14" >																			<Label>GPIO pin for Up-#14:</Label>					<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Dn"			type="menu" defaultValue="15" >																			<Label>GPIO pin for Down-#15:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_amPM1224"	type="menu" defaultValue="18" >																			<Label>GPIO pin for 12/24 Switch-18:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-			<Field id="pin_intensity"	type="menu" defaultValue="23" >																			<Label>GPIO pin for Intensity Switch-#23:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_system"		type="menu" defaultValue="24" > 																		<Label>GPIO pin for Restart/reset Switch-#24:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_leftRight"	type="menu" defaultValue="25" > 																		<Label>GPIO pin for leftRight Switch-#25:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-			<Field id="pin_webAdhoc"	type="menu" defaultValue="8" >																			<Label>GPIO pin for adhoc Web Switch:-#8</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_display"	    type="menu" defaultValue="7" >																			<Label>GPIO pin for Display Switch:-#7</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Up"			type="menu" defaultValue="23" >																			<Label>GPIO pin for Up button-#23:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Dn"			type="menu" defaultValue="24" >																			<Label>GPIO pin for Down button-#24:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Select"		type="menu" defaultValue="25" >																			<Label>GPIO pin for Select button-25:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
+			<Field id="pin_Exit"		type="menu" defaultValue="8" >																			<Label>GPIO pin for EXIT button-#8:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 		</ConfigUI>
-        
+
 		<States>
 			<State id="status">
 				<ValueType>String</ValueType>

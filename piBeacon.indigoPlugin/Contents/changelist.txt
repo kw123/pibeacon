@@ -1,3 +1,11 @@
+Added features / changes in v7.103.274 @ 2019-02-20  
+===================================================
+
+
+1. added check at startup in case indigo device was deleted while pibeacon was not running
+
+
+
 Added features / changes in v7.103.273 @ 2019-02-20  
 ===================================================
 
