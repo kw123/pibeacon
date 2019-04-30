@@ -1162,6 +1162,8 @@ while True:
 						firstValue = False
 		if sendData:
 			U.sendURL(data)
+		#print " bme680 to makeDATfile ", data
+		U.makeDATfile(G.program, data)
 
 		loopCount +=1
 

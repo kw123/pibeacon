@@ -18,10 +18,10 @@
 			</Field>
 
 			<Field id="label14"               type="label" > 
-			<Label>== iBeacon related:...</Label>
+				<Label>== iBeacon related:...</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
-			<Label>.... Transition from UP to Down to Expired after seconds:</Label>
+				<Label>.... Transition from UP to Down to Expired after seconds:</Label>
 				<List>
 					<Option value="10" >10</Option>
 					<Option value="20" >20</Option>
@@ -44,23 +44,28 @@
 
 
 			<Field id="PosXYZ" type="textfield"     defaultValue="0,0,0"  tooltip="use x,y,z coordinates in integer 0..100"> 
-			<Label>... Where is the rPi located :</Label>			</Field>
+				<Label>... Where is the rPi located :</Label>			
+			</Field>
 			<Field id="PosXYZlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label>x,y,z coordinates, for z use the levels for the floors defined in Config </Label>	</Field>
+				<Label>x,y,z coordinates, for z use the levels for the floors defined in Config </Label>	
+			</Field>
 
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999" tooltip=" use a number to overwrite received value or set to 999"> 
-			<Label>.... set txPower,-dBm=</Label>			</Field>
+				<Label>.... set txPower,-dBm=</Label>
+			</Field>
 			<Field id="beaconTxPowerlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label> used to overwrite the received TX power if less than; 999 = no overwrite</Label>	</Field>
+				<Label> used to overwrite the received TX power if less than; 999 = no overwrite</Label>
+			</Field>
 
 			<Field id="rssiOffset" type="textfield"     defaultValue="0" tooltip=" correction to received rssi eg -10 would reduce rssi by 10"> 
-			<Label>.... rssi offset; measured + dBm=</Label>
+				<Label>.... rssi offset; measured + dBm=</Label>
 			</Field>
 			<Field id="rssiOffsetlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label> correction to received rssi eg -10 would reduce rssi by 10; -300: use for up/down, not distance</Label>	</Field>
+				<Label> correction to received rssi eg -10 would reduce rssi by 10; -300: use for up/down, not distance</Label>
+			</Field>
 
 			<Field id="cutOffForClosestBeacon" type="menu"     defaultValue="20" tooltip=""> 
-			<Label>.. CUT OFF distance for determining closest iBeacon: if distance &gt;</Label>
+				<Label>.. CUT OFF distance for determining closest iBeacon: if distance &gt;</Label>
 				<List>
 					<Option value="1"   >&gt; 1 m ignore</Option>
 					<Option value="2"   >&gt; 2 m ignore</Option>
@@ -86,7 +91,7 @@
 
 
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300" tooltip="How often should we update the signal and distance states"> 
-			<Label>....      update indigo states every:</Label>
+				<Label>....      update indigo states every:</Label>
 				<List>
 					<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
 					<Option value="30"  >after  30 secs</Option>
@@ -98,23 +103,24 @@
 				</List>
 			</Field>
 			<Field id="BLELabel" type="label" >  
-			<Label>== BLEconnect:...</Label>	</Field>
+				<Label>== BLEconnect:...</Label>	</Field>
 			<Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" ">
-			<Label> .... queries seq. or parallel on THIS rPi:</Label>
+				<Label> .... queries seq. or parallel on THIS rPi:</Label>
 				<List>
 					<Option value="sequential" > run BLEconnect in sequential in one program</Option>
 					<Option value="parallel"   > run BLEconnect in parallel </Option>
 				</List>
 			</Field>
 			<Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>	</Field>
+				<Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>	
+			</Field>
 
 			<Field id="BLEHCILabel" type="label" > 
 				<Label>== Use which BLE adoptor for which task:...</Label>
 			</Field>
 
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
-			<Label> .... iBeacon:</Label>
+				<Label> .... iBeacon:</Label>
 				<List>
 					<Option value="-1"   >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
@@ -122,7 +128,7 @@
 				</List>
 			</Field>
 			<Field id="BLEconnectUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
-			<Label> .... BLEconnect:</Label>
+				<Label> .... BLEconnect:</Label>
 				<List>
 					<Option value="-1"    >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
@@ -130,13 +136,15 @@
 				</List>
 			</Field>
 			<Field id="BLEHCILabel2" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
+				<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
 (B) for RPI3plus and SSD image &gt; 2018-11  iBeacon does not work w build in BLE chip, needs USB BLE dongle. 
-The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
+The BLEconnect feature does work with the internal BLE chip</Label>	
+			</Field>
 
  
 			<Field id="memberOfLabel" type="label" >  
-			<Label>== Make this RPI member of group:...</Label>	</Field>
+				<Label>== Make this RPI member of group:...</Label>	
+			</Field>
 			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>...Family:</Label>  
 			</Field>
 			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>...Guests:</Label>
@@ -147,104 +155,105 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 
-			<Field id="displayS" type="menu"     defaultValue="status" hidden ="YES"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="status"  >status</Option>
-			</List>
+			<Field id="displayS" type="menu"     defaultValue="status" hidden ="YES"> 
+			<Label>Property to display in the State Column:</Label>
+				<List>
+					<Option value="status"  >status</Option>
+				</List>
 			</Field>
 
 			<Field id="label2"               type="label" > 
-			<Label>== For attached sensors:...</Label>
+				<Label>== For attached sensors:...</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
-			<Label>...read sensor every xx secs :</Label>
-			<List>
-				<Option value="1"  > 1 </Option>
-				<Option value="2"  > 2 </Option>
-				<Option value="3"  > 3 </Option>
-				<Option value="4"  > 4 </Option>
-				<Option value="5"  > 5 </Option>
-				<Option value="8"  > 8 </Option>
-				<Option value="10" > 10 </Option>
-				<Option value="15" > 15 </Option>
-				<Option value="20" > 20 (default)</Option>
-				<Option value="30" > 30 </Option>
-				<Option value="50" > 50 </Option>
-				<Option value="60" > 60 </Option>
-				<Option value="80" > 80 </Option>
-				<Option value="90" > 90  </Option>
-				<Option value="120" > 120  </Option>
-			</List>
+				<Label>...read sensor every xx secs :</Label>
+				<List>
+					<Option value="1"  > 1 </Option>
+					<Option value="2"  > 2 </Option>
+					<Option value="3"  > 3 </Option>
+					<Option value="4"  > 4 </Option>
+					<Option value="5"  > 5 </Option>
+					<Option value="8"  > 8 </Option>
+					<Option value="10" > 10 </Option>
+					<Option value="15" > 15 </Option>
+					<Option value="20" > 20 (default)</Option>
+					<Option value="30" > 30 </Option>
+					<Option value="50" > 50 </Option>
+					<Option value="60" > 60 </Option>
+					<Option value="80" > 80 </Option>
+					<Option value="90" > 90  </Option>
+					<Option value="120" > 120  </Option>
+				</List>
 			</Field>
 
 			<Field id="sendToIndigoSecs" type="menu"     defaultValue="80">
-			<Label>...send update to indigo every xx secs:</Label>
-			<List>
-				<Option value="1"  > 1 </Option>
-				<Option value="2"  > 2 </Option>
-				<Option value="3"  > 3 </Option>
-				<Option value="4"  > 4 </Option>
-				<Option value="5"  > 5 </Option>
-				<Option value="8"  > 8 </Option>
-				<Option value="10" > 10 </Option>
-				<Option value="15" > 15 </Option>
-				<Option value="20" > 20 </Option>
-				<Option value="30" > 30 </Option>
-				<Option value="50" > 50 </Option>
-				<Option value="60" > 60 </Option>
-				<Option value="80" > 80 (default)</Option>
-				<Option value="90" > 90 </Option>
-				<Option value="120" > 120  </Option>
-			</List>
+				<Label>...send update to indigo every xx secs:</Label>
+				<List>
+					<Option value="1"  > 1 </Option>
+					<Option value="2"  > 2 </Option>
+					<Option value="3"  > 3 </Option>
+					<Option value="4"  > 4 </Option>
+					<Option value="5"  > 5 </Option>
+					<Option value="8"  > 8 </Option>
+					<Option value="10" > 10 </Option>
+					<Option value="15" > 15 </Option>
+					<Option value="20" > 20 </Option>
+					<Option value="30" > 30 </Option>
+					<Option value="50" > 50 </Option>
+					<Option value="60" > 60 </Option>
+					<Option value="80" > 80 (default)</Option>
+					<Option value="90" > 90 </Option>
+					<Option value="120" > 120  </Option>
+				</List>
 			</Field>
 
 			<Field id="deltaChangedSensor" type="menu"     defaultValue="5">
-			<Label>...if delta > xx % send update to indigo:</Label>
-			<List>
-				<Option value="1"  > 1 </Option>
-				<Option value="2"  > 2 </Option>
-				<Option value="3"  > 3 </Option>
-				<Option value="4"  > 4 </Option>
-				<Option value="5"  > 5 (default)</Option>
-				<Option value="8"  > 8 </Option>
-				<Option value="10" > 10 </Option>
-				<Option value="15" > 15 </Option>
-				<Option value="20" > 20 </Option>
-				<Option value="30" > 30 </Option>
-				<Option value="50" > 50 </Option>
-				<Option value="90" > 90  </Option>
-				<Option value="120" > 120  </Option>
-			</List>
+				<Label>...if delta > xx % send update to indigo:</Label>
+				<List>
+					<Option value="1"  > 1 </Option>
+					<Option value="2"  > 2 </Option>
+					<Option value="3"  > 3 </Option>
+					<Option value="4"  > 4 </Option>
+					<Option value="5"  > 5 (default)</Option>
+					<Option value="8"  > 8 </Option>
+					<Option value="10" > 10 </Option>
+					<Option value="15" > 15 </Option>
+					<Option value="20" > 20 </Option>
+					<Option value="30" > 30 </Option>
+					<Option value="50" > 50 </Option>
+					<Option value="90" > 90  </Option>
+					<Option value="120" > 120  </Option>
+				</List>
 			</Field>
 			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
-			<Label>... add new ONEWIRE sensors as they get detected:</Label> 
-			<List>
-				<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
-				<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
-			</List>
+				<Label>... add new ONEWIRE sensors as they get detected:</Label> 
+				<List>
+					<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
+					<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
+				</List>
 			</Field>
 			<Field id="enableMuxI2C" type="menu"     defaultValue="0"> 
-			<Label>... enable TCA9548A select i2c for multiplexing:</Label> 
-			<List>
-				<Option value="0"     >off </Option>
-				<Option value="112"   >0x70 = 112  </Option>
-				<Option value="113"   >0x71 = 113  </Option>
-				<Option value="114"   >0x72 = 114  </Option>
-				<Option value="115"   >0x73 = 115  </Option>
-				<Option value="116"   >0x74 = 116  </Option>
-				<Option value="117"   >0x75 = 117  </Option>
-				<Option value="118"   >0x76 = 118  </Option>
-				<Option value="119"   >0x77 = 119  </Option>
-			</List>
+				<Label>... enable TCA9548A select i2c for multiplexing:</Label> 
+				<List>
+					<Option value="0"     >off </Option>
+					<Option value="112"   >0x70 = 112  </Option>
+					<Option value="113"   >0x71 = 113  </Option>
+					<Option value="114"   >0x72 = 114  </Option>
+					<Option value="115"   >0x73 = 115  </Option>
+					<Option value="116"   >0x74 = 116  </Option>
+					<Option value="117"   >0x75 = 117  </Option>
+					<Option value="118"   >0x76 = 118  </Option>
+					<Option value="119"   >0x77 = 119  </Option>
+				</List>
 			</Field>
 
 
 			<Field id="label3"               type="label" > 
-			<Label>== Hardware / reboot configs:...</Label>
+				<Label>== Hardware / reboot configs:...</Label>
 			</Field>
 			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
 			<Field id="labelhw1"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
-			<Label>The plugin supports 2 options for hardware reset and UPS
+				<Label>The plugin supports 2 options for hardware reset and UPS
   -A. "shutdown hardwire reset"": Connect a GPIO out pin to RUN/REST pin on the board. 
       Then the system can initiate a hardware reset by pulling the GPIO pin down
       Eg when the RPI hangs and software reset does not work
@@ -272,24 +281,29 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
   A and B are independent of each other = can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
-			<Label>...which pin to use as shutdown hardwire reset:</Label>
+			<Field id="shutDownPinOutput"   type="menu" defaultValue="-1" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
+				<Label>...which pin to use as shutdown hardwire reset, connected to RUN pin</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
-			<Label>...which pin to use as shutdown disable RESET:</Label>
+			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor reset " >
+				<Label>...which pin to use as shutdown disable/veto RESET:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
-			<Label>...which pin to use as shutdown-INPUT:</Label>
+				<Label>...which pin to use as shutdown-INPUT, (need to press for >2 secs):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="shutdownPinVoltSensor"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+				<Label>...which pin to use as shutdown-V-check:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
-			<Label>...wait with shutdown for xx when shutdown INPUT pin=0 (+5VUPS):</Label>
+			<Field id="batterybatteryMinPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
+				<Label>...wait with shutdown for xx when V-check INPUT pin=low (+5VUPS):</Label>
 				<List>
 					<Option value="0"   >immediate </Option>
 					<Option value="1"   >1 sec </Option>
@@ -316,8 +330,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 
-			<Field id="chargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
-			<Label>...how long to recharge Li Battery to 90%:</Label>
+			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
+				<Label>...how long to recharge Li Battery to 90%:</Label>
 				<List>
 					<Option value="1800"   >30 min</Option>
 					<Option value="3600"   >60 min</Option>
@@ -326,8 +340,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="=  ">
-			<Label>...battery Capacity:</Label>
+				<Label>...battery Capacity:</Label>
 				<List>
+					<Option value="120"    >2 minutes</Option>
+					<Option value="600"    >10 minutes</Option>
+					<Option value="1200"   >20 minutes</Option>
+					<Option value="2400"   >40 minutes</Option>
 					<Option value="3600"   >1 hours</Option>
 					<Option value="7200"   >2 hours</Option>
 					<Option value="10800"  >3 hours</Option>
@@ -340,17 +358,17 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
-			<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-
 			<Field id="labelhwr4"               type="label" > 
-			<Label>== General reboot options:...</Label></Field>
+				<Label>== General reboot options:...</Label>
+			</Field>
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
-			<Label>...overwrite default reboot at midnight:</Label>
+				<Label>...overwrite default reboot at midnight:</Label>
 				<List>
 					<Option value="0" > do not reboot</Option>
 					<Option value="1" > use default for reboot option from config</Option>
@@ -358,7 +376,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sleep 2;sudo reboot" >
-			<Label>...reboot command:</Label>
+				<Label>...reboot command:</Label>
 				<List>
 					<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
 					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
@@ -367,7 +385,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
-			<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
+				<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
 				<List>
 					<Option value="0"  > do NOT wait</Option>
 					<Option value="5"  > wait for 5 secs</Option>
@@ -381,9 +399,61 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
 			</Field>
 
+
+			<Field id="labelFan0"              type="label"> <Label></Label></Field>
+			<Field id="labelFan1"              type="label"> 
+				<Label>== Enable temp driven FAN:...</Label>
+			</Field>
+
+
+			<Field id="fanEnable"	type="menu" defaultValue="-1" tooltip="will read Temp sensor output and switch fan on if temp GT threshold temp" >	
+				<Label>..  mode:</Label>
+				<List>
+					<Option value="-"    >Fan disabled</Option>
+					<Option value="0"    >Fan on if GPIO == 0 / low</Option>
+					<Option value="1"    >Fan on if GPIO == 1 / high</Option>
+				</List>
+			</Field>
+
+			<Field id="fanGPIOPin"	type="menu" defaultValue="12" tooltip="will read Temp sensor output" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+				<Label>.. GPIO pin for FAN :</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" /> 
+
+			</Field>
+			<Field id="fanTempOnAtTempValue"	type="menu" defaultValue="40" tooltip="start fan if temp is GT xx C" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+				<Label>.. Start fan if temp &gt;:</Label>
+				<List>
+					<Option value="0"     >0C   = 32F</Option>
+					<Option value="10"    >10C = 50F</Option>
+					<Option value="15"    >15C = 59F</Option>
+					<Option value="18"    >18C = 64.4F</Option>
+					<Option value="20"    >20C = 68F</Option>
+					<Option value="22"    >22C = 71.6F</Option>
+					<Option value="25"    >25C = 77F</Option>
+					<Option value="27"    >27C = 80.6F</Option>
+					<Option value="30"    >30C = 86F</Option>
+					<Option value="35"    >35C = 95F</Option>
+					<Option value="40"    >40C = 104F</Option>
+					<Option value="45"    >45C = 113F</Option>
+					<Option value="50"    >50C = 122</Option>
+					<Option value="55"    >55C = 131F</Option>
+					<Option value="60"    >60C = 140F</Option>
+					<Option value="65"    >65C = 149F</Option>
+					<Option value="70"    >70C = 158F</Option>
+					<Option value="75"    >75C = 167F</Option>
+				</List>
+			 </Field>
+
+			<Field id="fanTempDevId"	type="menu" defaultValue="0" tooltip="" visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
+				<Label>.. Which TempSensor to use for Fan:</Label>
+				<List class="self" filter="" method="filterTempSensorsOnThisRPI" dynamicReload="false" />
+			 </Field>
+
+
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
 			<Field id="labelGPIOfirst"               type="label"> 
-			<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label></Field>
+				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
+			</Field>
 			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
 				<Label>..set props for GPIO pin A after boot.. first action:</Label>
 				<List>
@@ -420,7 +490,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="labelram"               type="label" > <Label>== Special parameters ...</Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
-			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
+				<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
 				<List>
 					<Option value="1" > yes</Option>
 					<Option value="0" > no default</Option>
@@ -428,7 +498,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="useRTC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
-			<Label>...use HW clock (RTC):</Label>
+				<Label>...use HW clock (RTC):</Label>
 				<List>
 					<Option value="ds1307" > DS1307</Option>
 					<Option value="ds3231" > DS3231</Option>
@@ -437,7 +507,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="syncTimeWithMAC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
-			<Label>...sync time MAC to RPi:</Label>
+				<Label>...sync time MAC to RPi:</Label>
 				<List>
 					<Option value="0" > do not sync</Option>
 					<Option value="1" > sync if  1 secs apart  .. only for testing</Option>
@@ -454,32 +524,65 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 			<Field id="labelemptybroadcasts" type="label" > <Label></Label></Field>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>...send broadcasts to other plugins for status up/x changes:...</Label>
-			<List>
-				<Option value="0" >NO </Option>
-				<Option value="1" >YES send BC, must be enabled in config  </Option>
-			</List>
+				<Label>...send broadcasts to other plugins for status up/x changes:...</Label>
+				<List>
+					<Option value="0" >NO </Option>
+					<Option value="1" >YES send BC, must be enabled in config  </Option>
+				</List>
 			</Field>
+
+
+			<Field id="sep-041" type="separator"/>
+			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info ">
+				<Label>== start web server on RPi @ ip#:80 to show status:</Label>
+				<List>
+					<Option value="0"  >do not start web server</Option>
+					<Option value="80" >start webserver port 80</Option>
+					<Option value="8001" >start webserver port 8001</Option>
+					<Option value="8002" >start webserver port 8002</Option>
+				</List>
+			</Field>
+			<Field id="startWebServerINPUT"   type="menu" defaultValue="0" tooltip="to enab;e input of wifi .. data ">
+				<Label>== start web server on RPi @ ip#:8000 to enable input of wifi ... config:</Label>
+				<List>
+					<Option value="0"  >do not start web server</Option>
+					<Option value="8010" >start webserver port 8010</Option>
+					<Option value="8011" >start webserver port 8011</Option>
+					<Option value="8012" >start webserver port 8012</Option>
+				</List>
+			</Field>
+
+			<Field    id="wifiOFF"   type="menu" defaultValue="off" tooltip="if you have both active (wifi and ethernet), the plugin might get confused, with off wifi will be switched off if ethernet is active ">
+				<Label>WiFi switch off if ethernet cable active:</Label>
+				<List>
+					<Option value="keepON" >keep Wifi on even when ethernet working </Option>
+					<Option value="off"    >switch Wifi Off</Option>
+				</List>    
+			</Field>
+
+
 
 			<Field id="simpleSeparator6" type="separator"/>
 			<Field id="label6"               type="label"  > 
-			<Label>EXPERTS ONLY!!---------------- </Label>
+				<Label>EXPERTS ONLY!!---------------- </Label>
 			</Field>
 
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
-			<Label>... Ignore state of this beacon:</Label>
+				<Label>... Ignore state of this beacon:</Label>
 			<List>
 				<Option value="0" >keep or make active = normal</Option>
 				<Option value="1" >set to short term ignore</Option>
 				<Option value="2" >set to long term ignore (= delete = junk)</Option>
-			</List>
+				</List>
 			</Field>
 			<Field id="newMACNumber" type="textfield"     defaultValue=""> 
-			<Label>... overwrite the current MAC number with:</Label>
+				<Label>... overwrite the current MAC number with:</Label>
 			</Field>
 			<Field id="label61" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 			<Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>	</Field>
  
+
+
 
 		</ConfigUI>
         
@@ -826,7 +929,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<Label>== Use which BLE adoptor for BLE SENSOR (if used):</Label>
 			</Field>
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
-			<Label> .... BLE sensor:</Label>
+				<Label> .... BLE sensor:</Label>
 				<List>
 					<Option value="-1"    >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
@@ -834,14 +937,15 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="BLEHCILabel2" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
-(B) for RPI3plus and SSD image &gt; 2018-11 BLEsensor does not work w build in BLE chip, needs USB BLE dongle.</Label>	</Field>
+				<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
+(B) for RPI3plus and SSD image &gt; 2018-11 BLEsensor does not work w build in BLE chip, needs USB BLE dongle.</Label>
+			</Field>
 
 			<Field id="label2"               type="label" > 
-			<Label>== For attached sensors - if not set in sensor device edit:...</Label>
+				<Label>== For attached sensors - if not set in sensor device edit:...</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
-			<Label>...read sensor every xx secs :</Label>
+				<Label>...read sensor every xx secs :</Label>
 				<List>
 					<Option value="1"  > 1 </Option>
 					<Option value="2"  > 2 </Option>
@@ -862,7 +966,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="sendToIndigoSecs" type="menu"     defaultValue="80">
-			<Label>...send update to indigo every xx secs:</Label>
+				<Label>...send update to indigo every xx secs:</Label>
 				<List>
 					<Option value="1"  > 1 </Option>
 					<Option value="2"  > 2 </Option>
@@ -883,7 +987,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="deltaChangedSensor" type="menu"     defaultValue="5">
-			<Label>...if delta > xx % send update to indigo:</Label>
+				<Label>...if delta > xx % send update to indigo:</Label>
 				<List>
 					<Option value="1"  > 1 </Option>
 					<Option value="2"  > 2 </Option>
@@ -901,7 +1005,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
-			<Label>... add new ONEWIRE sensors as they get detected:</Label> 
+				<Label>... add new ONEWIRE sensors as they get detected:</Label> 
 				<List>
 					<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
 					<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
@@ -909,7 +1013,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="enableMuxI2C" type="menu"     defaultValue="0"> 
-			<Label>...enable TCA9548A select i2c for multiplexing:</Label> 
+				<Label>...enable TCA9548A select i2c for multiplexing:</Label> 
 				<List>
 					<Option value="0"     >off </Option>
 					<Option value="112"   >0x70 = 112  </Option>
@@ -924,12 +1028,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="label3"               type="label" > 
-			<Label>== Hardware / reboot configs:...</Label>
+				<Label>== Hardware / reboot configs:...</Label>
 			</Field>
 
 			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
-			<Field id="labelhw1"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
-			<Label>The plugin supports 2 options for hardware reset and UPS
+			<Field id="labelhw1"           type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
+				<Label>The plugin supports 2 options for hardware reset and UPS
   -A. "shutdown hardwire reset"": Connect a GPIO out pin to RUN/REST pin on the board. 
       Then the system can initiate a hardware reset by pulling the GPIO pin down
       Eg when the RPI hangs and software reset does not work
@@ -958,23 +1062,29 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
-			<Label>...which pin to use as shutdown hardwire reset:</Label>
+				<Label>...which pin to use as shutdown hardwire reset, connected to RUN pin</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
-			<Label>...which pin to use as shutdown disable RESET:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
-			</Field>
-
-			<Field id="shutdownInputPin"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
-			<Label>...which pin to use as shutdown-INPUT:</Label>
+				<Label>...which pin to use as shutdown disable/veto RESET:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="minPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
-			<Label>...wait with shutdown for xx when shutdown INPUT pin=0 (+5VUPS):</Label>
+			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+				<Label>...which pin to use as shutdown-INPUT, (need to press for >2 secs):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="shutdownPinVoltSensor"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+				<Label>...which pin to use as shutdown-V-check:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="batteryMinPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
+				<Label>...wait with shutdown for xx when V-check INPUT pin=low (+5VUPS):</Label>
 				<List>
 					<Option value="0"   >immediate </Option>
 					<Option value="1"   >1 sec </Option>
@@ -1001,8 +1111,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 
-			<Field id="chargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
-			<Label>...how long to recharge Li Battery to 90%:</Label>
+			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
+				<Label>...how long to recharge Li Battery to 90%:</Label>
 				<List>
 					<Option value="1800"   >30 min</Option>
 					<Option value="3600"   >60 min</Option>
@@ -1011,8 +1121,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				</List>
 			</Field>
 			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="=  ">
-			<Label>...battery Capacity:</Label>
+				<Label>...battery Capacity:</Label>
 				<List>
+					<Option value="120"    >2 minutes</Option>
+					<Option value="600"    >10 minutes</Option>
+					<Option value="1200"   >20 minutes</Option>
+					<Option value="2400"   >40 minutes</Option>
 					<Option value="3600"   >1 hours</Option>
 					<Option value="7200"   >2 hours</Option>
 					<Option value="10800"  >3 hours</Option>
@@ -1025,7 +1139,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
-			<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
@@ -1034,7 +1148,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="labelhwr4"               type="label" > <Label>== General reboot options .....</Label></Field>
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
-			<Label>...overwrite default reboot at midnight:</Label>
+				<Label>...overwrite default reboot at midnight:</Label>
 				<List>
 					<Option value="0" > do not reboot</Option>
 					<Option value="1" > use default for reboot option from config</Option>
@@ -1042,7 +1156,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sleep 2;sudo reboot" >
-			<Label>...reboot command:</Label>
+				<Label>...reboot command:</Label>
 				<List>
 					<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
 					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
@@ -1051,7 +1165,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
-			<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
+				<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
 				<List>
 					<Option value="0"  > do NOT wait</Option>
 					<Option value="5"  > wait for 5 secs</Option>
@@ -1065,9 +1179,61 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
 			</Field>
 
+
+			<Field id="labelFan0"              type="label"> <Label></Label></Field>
+			<Field id="labelFan1"              type="label"> 
+				<Label>== Enable temp driven FAN:...</Label>
+			</Field>
+
+
+			<Field id="fanEnable"	type="menu" defaultValue="-1" tooltip="will read Temp sensor output and switch fan on if temp GT threshold temp" >	
+				<Label>..  mode:</Label>
+				<List>
+					<Option value="-"    >Fan disabled</Option>
+					<Option value="0"    >Fan on if GPIO == 0 / low</Option>
+					<Option value="1"    >Fan on if GPIO == 1 / high</Option>
+				</List>
+			</Field>
+
+			<Field id="fanGPIOPin"	type="menu" defaultValue="12" tooltip="will read Temp sensor output" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+				<Label>.. GPIO pin for FAN :</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" /> 
+
+			</Field>
+			<Field id="fanTempOnAtTempValue"	type="menu" defaultValue="40" tooltip="start fan if temp is GT xx C" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+				<Label>.. Start fan if temp &gt;:</Label>
+				<List>
+					<Option value="0"     >0C   = 32F</Option>
+					<Option value="10"    >10C = 50F</Option>
+					<Option value="15"    >15C = 59F</Option>
+					<Option value="18"    >18C = 64.4F</Option>
+					<Option value="20"    >20C = 68F</Option>
+					<Option value="22"    >22C = 71.6F</Option>
+					<Option value="25"    >25C = 77F</Option>
+					<Option value="27"    >27C = 80.6F</Option>
+					<Option value="30"    >30C = 86F</Option>
+					<Option value="35"    >35C = 95F</Option>
+					<Option value="40"    >40C = 104F</Option>
+					<Option value="45"    >45C = 113F</Option>
+					<Option value="50"    >50C = 122</Option>
+					<Option value="55"    >55C = 131F</Option>
+					<Option value="60"    >60C = 140F</Option>
+					<Option value="65"    >65C = 149F</Option>
+					<Option value="70"    >70C = 158F</Option>
+					<Option value="75"    >75C = 167F</Option>
+				</List>
+			 </Field>
+
+			<Field id="fanTempDevId"	type="menu" defaultValue="0" tooltip="" visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
+				<Label>.. Which TempSensor to use for Fan:</Label>
+				<List class="self" filter="" method="filterTempSensorsOnThisRPI" dynamicReload="false" />
+			 </Field>
+
+
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
 			<Field id="labelGPIOfirst"               type="label"> 
-			<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label></Field>
+				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
+			</Field>
 			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
 				<Label>..set props for GPIO pin A after boot.. first action:</Label>
 				<List>
@@ -1104,7 +1270,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="labelram"               type="label" > <Label>=== Special parameters</Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
-			<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
+				<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
 				<List>
 					<Option value="1" > yes</Option>
 					<Option value="0" > no default</Option>
@@ -1112,7 +1278,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="useRTC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
-			<Label>...use HW clock (RTC):</Label>
+				<Label>...use HW clock (RTC):</Label>
 				<List>
 					<Option value="ds1307" > DS1307</Option>
 					<Option value="ds3231" > DS3231</Option>
@@ -1121,7 +1287,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field id="syncTimeWithMAC"   type="menu" defaultValue="" tooltip="use if you have no NTP service">
-			<Label>...sync time MAC to RPi:</Label>
+				<Label>...sync time MAC to RPi:</Label>
 				<List>
 					<Option value="0" > do not sync</Option>
 					<Option value="1" > sync if  1 secs apart  .. only for testing</Option>
@@ -1138,7 +1304,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 
 			<Field id="bluetoothONoff"   type="menu" defaultValue="on" tooltip="eg to reduce load, used command: sudo rfkill (un)block bluetooth ">
-			<Label> ... enable / disable bluetooth drivers:</Label>
+				<Label> ... enable / disable bluetooth drivers:</Label>
 				<List>
 					<Option value="on"  >keep bluetooth on</Option>
 					<Option value="off" >switch bluetooth off</Option>
@@ -1146,7 +1312,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			</Field>
 
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>...send broadcasts to other plugins for status up/x changes</Label>
+				<Label>...send broadcasts to other plugins for status up/x changes</Label>
 				<List>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -1155,11 +1321,40 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 
 			<Field id="sep-031" type="separator"/>
 			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock">
-			<Label>== Enable RPI to run independently from Indigo for some special apps:</Label>
+				<Label>== Enable RPI to run independently from Indigo for some special apps:</Label>
 				<List>
 					<Option value="fullIndigo" > normal Indigo mode</Option>
-					<Option value="clock"      > enable no-network neoPixel Clock</Option>
+					<Option value="clock"      > enable no-network eg Clock</Option>
 				</List>
+			</Field>
+
+
+			<Field id="sep-041" type="separator"/>
+			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info ">
+				<Label>== start web server on RPi @ ip#:80 to show status:</Label>
+				<List>
+					<Option value="0"  >do not start web server</Option>
+					<Option value="80" >start webserver port 80</Option>
+					<Option value="8001" >start webserver port 8001</Option>
+					<Option value="8002" >start webserver port 8002</Option>
+				</List>
+			</Field>
+			<Field id="startWebServerINPUT"   type="menu" defaultValue="0" tooltip="to enab;e input of wifi .. data ">
+				<Label>== start web server on RPi @ ip#:8000 to enable input of wifi ... config:</Label>
+				<List>
+					<Option value="0"  >do not start web server</Option>
+					<Option value="8010" >start webserver port 8010</Option>
+					<Option value="8011" >start webserver port 8011</Option>
+					<Option value="8012" >start webserver port 8012</Option>
+				</List>
+			</Field>
+
+			<Field    id="wifiOFF"   type="menu" defaultValue="off" tooltip="if you have both active (wifi and ethernet), the plugin might get confused, with off wifi will be switched off if ethernet is active ">
+				<Label>WiFi switch off if ethernet cable active:</Label>
+				<List>
+					<Option value="keepON"   >keep Wifi on even when ethernet working</Option>
+					<Option value="off"      >switch Wifi Off</Option>
+				</List>    
 			</Field>
 
 
@@ -1264,183 +1459,183 @@ The BLEconnect feature does work with the internal BLE chip</Label>	</Field>
 			<Field id="isBeaconDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="label1"               type="label" > 
-			<Label>==         iBeacon parameters:         ==</Label>
+				<Label>==         iBeacon parameters:         ==</Label>
 			</Field>
 			<Field id="label14"               type="label" > 
-			<Label>== Transition from UP to Down to Expired:</Label>
+				<Label>== Transition from UP to Down to Expired:</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
-			<Label>....      After seconds:</Label>
-			<List>
-				<Option value="10" >10</Option>
-				<Option value="20" >20</Option>
-				<Option value="30" >30</Option>
-				<Option value="45" >45</Option>
-				<Option value="60" >60</Option>
-				<Option value="65" >65</Option>
-				<Option value="70" >70</Option>
-				<Option value="80" >80</Option>
-				<Option value="90" >90</Option>
-				<Option value="95" >95</Option>
-				<Option value="120" >2 minutes</Option>
-				<Option value="180" >3 minutes</Option>
-				<Option value="240" >4 minutes</Option>
-				<Option value="360" >5 minutes</Option>
-				<Option value="600" >10 minutes</Option>
-				<Option value="1200" >20 minutes</Option>
-			</List>
+				<Label>....      After seconds:</Label>
+				<List>
+					<Option value="10" >10</Option>
+					<Option value="20" >20</Option>
+					<Option value="30" >30</Option>
+					<Option value="45" >45</Option>
+					<Option value="60" >60</Option>
+					<Option value="65" >65</Option>
+					<Option value="70" >70</Option>
+					<Option value="80" >80</Option>
+					<Option value="90" >90</Option>
+					<Option value="95" >95</Option>
+					<Option value="120" >2 minutes</Option>
+					<Option value="180" >3 minutes</Option>
+					<Option value="240" >4 minutes</Option>
+					<Option value="360" >5 minutes</Option>
+					<Option value="600" >10 minutes</Option>
+					<Option value="1200" >20 minutes</Option>
+				</List>
 			</Field>
 			<Field id="label11"               type="label" > 
-			<Label>== Fast UP to down mode:</Label>
+				<Label>== Fast UP to down mode:</Label>
 			</Field>
 			<Field id="fastDown" type="menu"     defaultValue="0" tooltip="if in a iBeacon does not send a signal within xx seconds  it is set to down (set signal to -999) ; all RPI must send down" > 
-			<Label>... send msg to indigo if xx Seconds no signal</Label>
-			<List>
-				<Option value="0"   >do not enable </Option>
-				<Option value="1"   >1 for testing </Option>
-				<Option value="2"   >2 for testing </Option>
-				<Option value="3"   >3 for testing </Option>
-				<Option value="4"   >4 for testing </Option>
-				<Option value="5"   >5 might work </Option>
-				<Option value="10"  >10 if you have many RPI</Option>
-				<Option value="15"  >15 </Option>
-				<Option value="20"  >20 </Option>
-				<Option value="25"  >25  if you have one RPI</Option>
-			</List>
+				<Label>... send msg to indigo if xx Seconds no signal</Label>
+				<List>
+					<Option value="0"   >do not enable </Option>
+					<Option value="1"   >1 for testing </Option>
+					<Option value="2"   >2 for testing </Option>
+					<Option value="3"   >3 for testing </Option>
+					<Option value="4"   >4 for testing </Option>
+					<Option value="5"   >5 might work </Option>
+					<Option value="10"  >10 if you have many RPI</Option>
+					<Option value="15"  >15 </Option>
+					<Option value="20"  >20 </Option>
+					<Option value="25"  >25  if you have one RPI</Option>
+				</List>
 			</Field>
 			<Field id="fastDownMinSignal" type="menu"     defaultValue="-999" tooltip="interprete a signal less than xx dBm as no signal, good if you go away from rpi eg leave the room "> 
-			<Label>... no signal = dBm less than  </Label>
-			<List>
-				<Option value="-60" >-60 dBm </Option>
-				<Option value="-65" >-65 dBm </Option>
-				<Option value="-70" >-70 dBm </Option>
-				<Option value="-72" >-72 dBm </Option>
-				<Option value="-74" >-74 dBm</Option>
-				<Option value="-76" >-76 dBm</Option>
-				<Option value="-78" >-78 dBm</Option>
-				<Option value="-80" >-80 dBm</Option>
-				<Option value="-82" >-82 dBm</Option>
-				<Option value="-84" >-84 dBm</Option>
-				<Option value="-86" >-86 dBm</Option>
-				<Option value="-88" >-88 dBm</Option>
-				<Option value="-90" >-90 dBm</Option>
-				<Option value="-92" >-92 dBm</Option>
-				<Option value="-94" >-94 dBm</Option>
-				<Option value="-96" >-96 dBm</Option>
-				<Option value="-98" >-98 dBm</Option>
-				<Option value="-999" >signal must be off = no signal</Option>
-			</List>
+				<Label>... no signal = dBm less than  </Label>
+				<List>
+					<Option value="-60" >-60 dBm </Option>
+					<Option value="-65" >-65 dBm </Option>
+					<Option value="-70" >-70 dBm </Option>
+					<Option value="-72" >-72 dBm </Option>
+					<Option value="-74" >-74 dBm</Option>
+					<Option value="-76" >-76 dBm</Option>
+					<Option value="-78" >-78 dBm</Option>
+					<Option value="-80" >-80 dBm</Option>
+					<Option value="-82" >-82 dBm</Option>
+					<Option value="-84" >-84 dBm</Option>
+					<Option value="-86" >-86 dBm</Option>
+					<Option value="-88" >-88 dBm</Option>
+					<Option value="-90" >-90 dBm</Option>
+					<Option value="-92" >-92 dBm</Option>
+					<Option value="-94" >-94 dBm</Option>
+					<Option value="-96" >-96 dBm</Option>
+					<Option value="-98" >-98 dBm</Option>
+					<Option value="-999" >signal must be off = no signal</Option>
+				</List>
 			</Field>
             
 			<Field id="label22"               type="label" > 
-			<Label>== Send msg to indigo ... </Label>
+				<Label>== Send msg to indigo ... </Label>
 			</Field>
 			<Field id="signalDelta"   type="menu" defaultValue="20" tooltip="rPI will send a message to indigo if the signal strength changes by more than xx dBm, 
 use eg to track someone moving around - going from one room to the next" >
-			<Label>....      If signal change greater than:</Label> 
-			<List>
-				<Option value="4"  >4 dBm </Option>
-				<Option value="6"  >6 dBm </Option>
-				<Option value="8"  >8 dBm </Option>
-				<Option value="10" >10 dBm</Option>
-				<Option value="12" >12 dBm</Option>
-				<Option value="14" >14 dBm</Option>
-				<Option value="16" >16 dBm</Option>
-				<Option value="18" >18 dBm</Option>
-				<Option value="20" >20 dBm</Option>
-				<Option value="22" >22 dBm</Option>
-				<Option value="24" >24 dBm</Option>
-				<Option value="26" >26 dBm</Option>
-				<Option value="28" >28 dBm</Option>
-				<Option value="30" >30 dBm</Option>
-				<Option value="999" >do not use</Option>
-			</List>
+				<Label>....      If signal change greater than:</Label> 
+				<List>
+					<Option value="4"  >4 dBm </Option>
+					<Option value="6"  >6 dBm </Option>
+					<Option value="8"  >8 dBm </Option>
+					<Option value="10" >10 dBm</Option>
+					<Option value="12" >12 dBm</Option>
+					<Option value="14" >14 dBm</Option>
+					<Option value="16" >16 dBm</Option>
+					<Option value="18" >18 dBm</Option>
+					<Option value="20" >20 dBm</Option>
+					<Option value="22" >22 dBm</Option>
+					<Option value="24" >24 dBm</Option>
+					<Option value="26" >26 dBm</Option>
+					<Option value="28" >28 dBm</Option>
+					<Option value="30" >30 dBm</Option>
+					<Option value="999" >do not use</Option>
+				</List>
 			</Field>
 			<Field id="minSignalCutoff"   type="menu" defaultValue="20" tooltip="if the beaocn is UP: use any signal, if beacon is down, ignore if less than cutoff to stop up/down/up if it has a weak signal" >
-			<Label>.... do NOT send if signal less than xx for down to UP:</Label> 
-			<List>
-				<Option value="-60" >-60 dBm </Option>
-				<Option value="-64" >-64 dBm </Option>
-				<Option value="-66" >-66 dBm </Option>
-				<Option value="-68" >-68 dBm </Option>
-				<Option value="-70" >-70 dBm </Option>
-				<Option value="-72" >-72 dBm </Option>
-				<Option value="-70" >-70 dBm </Option>
-				<Option value="-72" >-72 dBm </Option>
-				<Option value="-74" >-74 dBm</Option>
-				<Option value="-76" >-76 dBm</Option>
-				<Option value="-78" >-78 dBm</Option>
-				<Option value="-80" >-80 dBm</Option>
-				<Option value="-82" >-82 dBm</Option>
-				<Option value="-84" >-84 dBm</Option>
-				<Option value="-86" >-86 dBm</Option>
-				<Option value="-88" >-88 dBm</Option>
-				<Option value="-90" >-90 dBm</Option>
-				<Option value="-92" >-92 dBm</Option>
-				<Option value="-94" >-94 dBm</Option>
-				<Option value="-96" >-96 dBm</Option>
-				<Option value="-98" >-98 dBm</Option>
-				<Option value="-999" >do not use</Option>
-			</List>
+				<Label>.... do NOT send if signal less than xx for down to UP:</Label> 
+				<List>
+					<Option value="-60" >-60 dBm </Option>
+					<Option value="-64" >-64 dBm </Option>
+					<Option value="-66" >-66 dBm </Option>
+					<Option value="-68" >-68 dBm </Option>
+					<Option value="-70" >-70 dBm </Option>
+					<Option value="-72" >-72 dBm </Option>
+					<Option value="-70" >-70 dBm </Option>
+					<Option value="-72" >-72 dBm </Option>
+					<Option value="-74" >-74 dBm</Option>
+					<Option value="-76" >-76 dBm</Option>
+					<Option value="-78" >-78 dBm</Option>
+					<Option value="-80" >-80 dBm</Option>
+					<Option value="-82" >-82 dBm</Option>
+					<Option value="-84" >-84 dBm</Option>
+					<Option value="-86" >-86 dBm</Option>
+					<Option value="-88" >-88 dBm</Option>
+					<Option value="-90" >-90 dBm</Option>
+					<Option value="-92" >-92 dBm</Option>
+					<Option value="-94" >-94 dBm</Option>
+					<Option value="-96" >-96 dBm</Option>
+					<Option value="-98" >-98 dBm</Option>
+					<Option value="-999" >do not use</Option>
+				</List>
 			</Field>
 
 			<Field id="label3"               type="label"  > 
-			<Label>== Set type of beacon (for future use):</Label>
+				<Label>== Set type of beacon (for future use):</Label>
 			</Field>
 			<Field id="typeOfBeacon" type="menu"     defaultValue="other"> 
-			<Label>....       Beacon Type</Label>
-			<List>
-				<Option value="xy"     >xy, txPower -59 dBm</Option>
-				<Option value="radius" >radius, txPower -59 dBm</Option>
-				<Option value="tile"   >tile, txPower -67 dBm</Option>
-				<Option value="sanwo"  >sanwo, txPower -51 dBm</Option>
-				<Option value="pebbleBee">pebble Bee, txPower -67 dBm</Option>
-				<Option value="JINOU"  >JINOU, txPower -67 dBm</Option>
-				<Option value="Jaalee"  >Jaalee , txPower -67 dBm</Option>
-				<Option value="highTx"  >high tx Power, txPower 100 dBm</Option>JINOU
-				<Option value="other"   >other,  txPower 0 dBm</Option>
-				<Option value="other1"  >other1, txPower -10 dBm</Option>
-				<Option value="other2"  >other2, txPower -20 dBm</Option>
-			</List>
+				<Label>....       Beacon Type</Label>
+				<List>
+					<Option value="xy"     >xy, txPower -59 dBm</Option>
+					<Option value="radius" >radius, txPower -59 dBm</Option>
+					<Option value="tile"   >tile, txPower -67 dBm</Option>
+					<Option value="sanwo"  >sanwo, txPower -51 dBm</Option>
+					<Option value="pebbleBee">pebble Bee, txPower -67 dBm</Option>
+					<Option value="JINOU"  >JINOU, txPower -67 dBm</Option>
+					<Option value="Jaalee"  >Jaalee , txPower -67 dBm</Option>
+					<Option value="highTx"  >high tx Power, txPower 100 dBm</Option>JINOU
+					<Option value="other"   >other,  txPower 0 dBm</Option>
+					<Option value="other1"  >other1, txPower -10 dBm</Option>
+					<Option value="other2"  >other2, txPower -20 dBm</Option>
+				</List>
 			</Field>
 			<Field id="label4"               type="label"  > 
-			<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
+				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999"> 
-			<Label>.... -dBm=</Label>
+				<Label>.... -dBm=</Label>
 			</Field>
 			<Field id="label41"               type="label"  > 
-			<Label>== Use min signal if you want to only detect iBeacons that are in the same room as the RPI, 
+				<Label>== Use min signal if you want to only detect iBeacons that are in the same room as the RPI, 
           might lead to false negatives .. try a range -80..-90  </Label>
 			</Field>
 			<Field id="IgnoreBeaconIfSignalLessThan" type="textfield"     defaultValue="-999"> 
-			<Label>.... ignore if signal less than   Minimum:</Label>
+				<Label>.... ignore if signal less than   Minimum:</Label>
 			</Field>
 
 
 
 			<Field id="IgnoreBeaconForClosestToRPI" type="menu"     defaultValue="0"> 
-			<Label>.. Ignore THIS beacon for closest iBeacon to RPI:</Label>
-			<List>
-				<Option value="0"     >use it </Option>
-				<Option value="1"     >do NOT use THIS iBeacon</Option>
-			</List>
+				<Label>.. Ignore THIS beacon for closest iBeacon to RPI:</Label>
+				<List>
+					<Option value="0"     >use it </Option>
+					<Option value="1"     >do NOT use THIS iBeacon</Option>
+				</List>
 			</Field>
 
 			<Field id="label5"               type="label"  > 
-			<Label>== How often should we update the signal and distance states:</Label>
+				<Label>== How often should we update the signal and distance states:</Label>
 			</Field>
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300"> 
-			<Label>....      min Interval:</Label>
-			<List>
-				<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
-				<Option value="30"  >after  30 secs</Option>
-				<Option value="60"  >after   minute</Option>
-				<Option value="120" >after  2 minutes</Option>
-				<Option value="300" >after  5 minutes (default)</Option>
-				<Option value="600" >after 10 minutes</Option>
-				<Option value="1200">after 20 minutes</Option>
-			</List>
+				<Label>....      min Interval:</Label>
+				<List>
+					<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
+					<Option value="30"  >after  30 secs</Option>
+					<Option value="60"  >after   minute</Option>
+					<Option value="120" >after  2 minutes</Option>
+					<Option value="300" >after  5 minutes (default)</Option>
+					<Option value="600" >after 10 minutes</Option>
+					<Option value="1200">after 20 minutes</Option>
+				</List>
 			</Field>
 			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>Member of Family:</Label>			</Field>
 			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>Member of Guests:</Label>			</Field>
@@ -1450,87 +1645,87 @@ use eg to track someone moving around - going from one room to the next" >
 
 			<Field id="simpleSeparator53" type="separator"/>
 			<Field id="label53"               type="label"  > 
-			<Label>== Show beacon position on map, 
+				<Label>== Show beacon position on map, 
                 first setup the general parameters in config, then enable this beacon.</Label>
 			</Field>
 			<Field id="showBeaconOnMap" type="menu"     defaultValue="0"> 
-			<Label>enable THIS beacon to be shown on map:</Label>
-			<List>
-				<Option value="0"            >no</Option>
-				<Option value="text"         >do not show marker, only text</Option>
-				<Option value="dot"          >small dot</Option>
-				<Option value="smallCircle"  >small circle </Option>
-				<Option value="largeCircle"  >circle proportional to uncertainty of position </Option>
-			</List>
+				<Label>enable THIS beacon to be shown on map:</Label>
+				<List>
+					<Option value="0"            >no</Option>
+					<Option value="text"         >do not show marker, only text</Option>
+					<Option value="dot"          >small dot</Option>
+					<Option value="smallCircle"  >small circle </Option>
+					<Option value="largeCircle"  >circle proportional to uncertainty of position </Option>
+				</List>
 			</Field>
 			<Field id="showBeaconSymbolAlpha" type="menu"  defaultValue="0.5" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
-			<Label>symbol transparency:</Label>
-			<List>
-				<Option value="0.2" >80% transparent</Option>
-				<Option value="0.5" >50% transparent</Option>
-				<Option value="0.8" >20% transparent</Option>
-				<Option value="1.0" >not transparent</Option>
-			</List>
+				<Label>symbol transparency:</Label>
+				<List>
+					<Option value="0.2" >80% transparent</Option>
+					<Option value="0.5" >50% transparent</Option>
+					<Option value="0.8" >20% transparent</Option>
+					<Option value="1.0" >not transparent</Option>
+				</List>
 			</Field>
 			<Field id="showBeaconSymbolColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
-			<Label>symbol color:</Label>
-			<List>
-				<Option value="#FF0000" >red</Option>
-				<Option value="#00FF00" >green</Option>
-				<Option value="#0000FF" >blue</Option>
-				<Option value="#FFFF00" >yellow</Option>
-				<Option value="#FF00FF" >mangan</Option>
-				<Option value="#00FFFF" >cyan</Option>
-				<Option value="#FFFFFF" >white</Option>
-				<Option value="#0F0F0F" >grey</Option>
-				<Option value="#000000" >black</Option>
-			</List>
+				<Label>symbol color:</Label>
+				<List>
+					<Option value="#FF0000" >red</Option>
+					<Option value="#00FF00" >green</Option>
+					<Option value="#0000FF" >blue</Option>
+					<Option value="#FFFF00" >yellow</Option>
+					<Option value="#FF00FF" >mangan</Option>
+					<Option value="#00FFFF" >cyan</Option>
+					<Option value="#FFFFFF" >white</Option>
+					<Option value="#0F0F0F" >grey</Option>
+					<Option value="#000000" >black</Option>
+				</List>
 			</Field>
 			<Field id="showBeaconNickName" type="textfield"     defaultValue="device" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
-			<Label>label next to beacon:</Label>
+				<Label>label next to beacon:</Label>
 			</Field>
 			<Field id="showBeaconTextColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
-			<Label>label color:</Label>
-			<List>
-				<Option value="#FF0000" >red</Option>
-				<Option value="#00FF00" >green</Option>
-				<Option value="#0000FF" >blue</Option>
-				<Option value="#FFFF00" >yellow</Option>
-				<Option value="#FF00FF" >mangan</Option>
-				<Option value="#00FFFF" >cyan</Option>
-				<Option value="#FFFFFF" >white</Option>
-				<Option value="#0F0F0F" >grey</Option>
-				<Option value="#000000" >black</Option>
-			</List>
+				<Label>label color:</Label>
+				<List>
+					<Option value="#FF0000" >red</Option>
+					<Option value="#00FF00" >green</Option>
+					<Option value="#0000FF" >blue</Option>
+					<Option value="#FFFF00" >yellow</Option>
+					<Option value="#FF00FF" >mangan</Option>
+					<Option value="#00FFFF" >cyan</Option>
+					<Option value="#FFFFFF" >white</Option>
+					<Option value="#0F0F0F" >grey</Option>
+					<Option value="#000000" >black</Option>
+				</List>
 			</Field>
 
 			<Field id="sep-03" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>== Send broadcasts to other plugins for status up/x changes</Label>
-			<List>
-				<Option value="0" >NO </Option>
-				<Option value="1" >YES send BC, must be enabled in config  </Option>
-			</List>
+				<Label>== Send broadcasts to other plugins for status up/x changes</Label>
+				<List>
+					<Option value="0" >NO </Option>
+					<Option value="1" >YES send BC, must be enabled in config  </Option>
+				</List>
 			</Field>
   
 			<Field id="simpleSeparator6" type="separator"/>
 			<Field id="label6"               type="label"  > 
-			<Label>EXPERTS ONLY!! </Label>
+				<Label>EXPERTS ONLY!! </Label>
 			</Field>
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
-			<Label>... Ignore state of this beacon:</Label>
-			<List>
-				<Option value="0" >keep or make active = normal</Option>
-				<Option value="1" >set to short term ignore</Option>
-				<Option value="2" >set to long term ignore (= delete = junk)</Option>
-			</List>
+				<Label>... Ignore state of this beacon:</Label>
+				<List>
+					<Option value="0" >keep or make active = normal</Option>
+					<Option value="1" >set to short term ignore</Option>
+					<Option value="2" >set to long term ignore (= delete = junk)</Option>
+				</List>
 			</Field>
 			<Field id="newMACNumber" type="textfield"     defaultValue=""> 
-			<Label>... overwrite the current MAC number with:</Label>
+				<Label>... overwrite the current MAC number with:</Label>
 			</Field>
 
 			<Field id="label61"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
-			<Label>Must not be equal to an existing ACTIVE device. Use this to eg replace an iBeacon with a new one. Write MAC address of new beacon here. This will then ONLY replace the MAC number and keep history of THIS device. It will set the old MAC# to IGNORE
+				<Label>Must not be equal to an existing ACTIVE device. Use this to eg replace an iBeacon with a new one. Write MAC address of new beacon here. This will then ONLY replace the MAC number and keep history of THIS device. It will set the old MAC# to IGNORE
 
 You can use this also to create a new iBeacon device   But do NOT use an existing MAC number</Label>
 			</Field>
@@ -1808,15 +2003,15 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="label0"               type="label" >
-			<Label>setup BLE tracking:</Label>
+				<Label>setup BLE tracking:</Label>
 			</Field>
 
 			<Field id="macAddress" type="textfield"     defaultValue="">
-			<Label>enter MAC number for this device: </Label>
+				<Label>enter MAC number for this device: </Label>
 			</Field>
 
 			<Field id="label01"               type="label" >
-			<Label>enable BLE connect search on the following rPi</Label>
+				<Label>enable BLE connect search on the following rPi</Label>
 			</Field>
 
 			<Field id="rPiEnable0" type="checkbox" defaultValue="false">  <Label>rPi #0:</Label> </Field>
@@ -1834,115 +2029,116 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="label1"               type="label" >
-			<Label>Transition from UP to Down to Expired:</Label>
+				<Label>Transition from UP to Down to Expired:</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="120">
-			<Label>....  After seconds:</Label>
-			<List>
-				<Option value="10" >10</Option>
-				<Option value="20" >20</Option>
-				<Option value="30" >30</Option>
-				<Option value="45" >45</Option>
-				<Option value="60" >60</Option>
-				<Option value="65" >65</Option>
-				<Option value="70" >70</Option>
-				<Option value="80" >80</Option>
-				<Option value="90" >90</Option>
-				<Option value="95" >95</Option>
-				<Option value="120" >2 minutes</Option>
-				<Option value="180" >3 minutes</Option>
-				<Option value="240" >4 minutes</Option>
-				<Option value="360" >5 minutes</Option>
-				<Option value="600" >10 minutes</Option>
-				<Option value="1200" >20 minutes</Option>
-			</List>
+				<Label>....  After seconds:</Label>
+				<List>
+					<Option value="10" >10</Option>
+					<Option value="20" >20</Option>
+					<Option value="30" >30</Option>
+					<Option value="45" >45</Option>
+					<Option value="60" >60</Option>
+					<Option value="65" >65</Option>
+					<Option value="70" >70</Option>
+					<Option value="80" >80</Option>
+					<Option value="90" >90</Option>
+					<Option value="95" >95</Option>
+					<Option value="120" >2 minutes</Option>
+					<Option value="180" >3 minutes</Option>
+					<Option value="240" >4 minutes</Option>
+					<Option value="360" >5 minutes</Option>
+					<Option value="600" >10 minutes</Option>
+					<Option value="1200" >20 minutes</Option>
+				</List>
 			</Field>
 
 
 			<Field id="label4"               type="label"  >
-			<Label>set txPower, use a number to overwrite max txPower and RSSI or set to 999</Label>
+				<Label>set txPower, use a number to overwrite max txPower and RSSI or set to 999</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="20">
-			<Label>.... -dBm=</Label>
+				<Label>.... -dBm=</Label>
 			</Field>
 
 			<Field id="label5"               type="label"  >
-			<Label>How often should we ping the BLE device:</Label>
+				<Label>How often should we ping the BLE device:</Label>
 			</Field>
 
 			<Field id="iPhoneRefreshDownSecs" type="menu"     defaultValue="10" toolTip="if phone is in DOWN status, when to check again">
-			<Label>try to reach iPhone when DOWN again after:</Label>
-			<List>
-				<Option value="0"   > try continuously </Option>
-				<Option value="0.1" > 0.1 secs</Option>
-				<Option value="0.2" > 0.2 secs</Option>
-				<Option value="0.5" > 0.5 secs</Option>
-				<Option value="0.7" > 0.7 secs</Option>
-				<Option value="1"   > 1.0 secs</Option>
-				<Option value="1.5" > 1.5 secs</Option>
-				<Option value="2"   > 2 secs</Option>
-				<Option value="5"   > 5 secs</Option>
-				<Option value="10"  > 10 secs (default)</Option>
-				<Option value="30"  > 30 secs</Option>
-				<Option value="60"  > 60 secs</Option>
-				<Option value="90"  > 90 secs  </Option>
-				<Option value="120" > 2 Minutes  </Option>
-				<Option value="180" > 3 Minutes  </Option>
-				<Option value="300" > 5 Minutes  </Option>
-			</List>
+				<Label>try to reach iPhone when DOWN again after:</Label>
+				<List>
+					<Option value="0"   > try continuously </Option>
+					<Option value="0.1" > 0.1 secs</Option>
+					<Option value="0.2" > 0.2 secs</Option>
+					<Option value="0.5" > 0.5 secs</Option>
+					<Option value="0.7" > 0.7 secs</Option>
+					<Option value="1"   > 1.0 secs</Option>
+					<Option value="1.5" > 1.5 secs</Option>
+					<Option value="2"   > 2 secs</Option>
+					<Option value="5"   > 5 secs</Option>
+					<Option value="10"  > 10 secs (default)</Option>
+					<Option value="30"  > 30 secs</Option>
+					<Option value="60"  > 60 secs</Option>
+					<Option value="90"  > 90 secs  </Option>
+					<Option value="120" > 2 Minutes  </Option>
+					<Option value="180" > 3 Minutes  </Option>
+					<Option value="300" > 5 Minutes  </Option>
+				</List>
 			</Field>
 			<Field id="iPhoneRefreshUpSecs" type="menu"     defaultValue="60" toolTip="if phone is in UP status, when to check again">
-			<Label>try to reach iPhone when UP again after :</Label>
-			<List>
-				<Option value="3"  >3 secs</Option>
-				<Option value="5"  >5 secs</Option>
-				<Option value="10" >10 secs</Option>
-				<Option value="20" >20 secs</Option>
-				<Option value="30" >30 secs</Option>
-				<Option value="45" >45 secs</Option>
-				<Option value="60" >60 secs  (default)</Option>
-				<Option value="70" >70 secs</Option>
-				<Option value="80" >80 secs</Option>
-				<Option value="90" >90 secs</Option>
-				<Option value="100" >100 secs</Option>
-				<Option value="120" >2 minutes</Option>
-				<Option value="150" >2.5 minutes</Option>
-				<Option value="180" >3 minutes</Option>
-				<Option value="240" >4 minutes</Option>
-				<Option value="360" >5 minutes</Option>
-				<Option value="720" >8 minutes</Option>
-				<Option value="600" >10 minutes</Option>
-				<Option value="1200" >20 minutes</Option>
-			</List>
+				<Label>try to reach iPhone when UP again after :</Label>
+				<List>
+					<Option value="3"  >3 secs</Option>
+					<Option value="5"  >5 secs</Option>
+					<Option value="10" >10 secs</Option>
+					<Option value="20" >20 secs</Option>
+					<Option value="30" >30 secs</Option>
+					<Option value="45" >45 secs</Option>
+					<Option value="60" >60 secs  (default)</Option>
+					<Option value="70" >70 secs</Option>
+					<Option value="80" >80 secs</Option>
+					<Option value="90" >90 secs</Option>
+					<Option value="100" >100 secs</Option>
+					<Option value="120" >2 minutes</Option>
+					<Option value="150" >2.5 minutes</Option>
+					<Option value="180" >3 minutes</Option>
+					<Option value="240" >4 minutes</Option>
+					<Option value="360" >5 minutes</Option>
+					<Option value="720" >8 minutes</Option>
+					<Option value="600" >10 minutes</Option>
+					<Option value="1200" >20 minutes</Option>
+				</List>
 			</Field>
 			<Field id="BLEtimeout" type="menu"     defaultValue="3" toolTip="wait for an answer from the BLE-phone for how long after ping to phone" >
-			<Label>time out BLE ping after:</Label>
-			<List>
-				<Option value="0.5"   > 0.5 secs </Option>
-				<Option value="0.7"   > 0.7 secs</Option>
-				<Option value="1"     > 1.0 secs</Option>
-				<Option value="1.3"   > 1.3 secs</Option>
-				<Option value="1.5"   > 1.5 secs</Option>
-				<Option value="2"     > 2 secs default    if wifi</Option>
-				<Option value="2.5"   > 2.5secs</Option>
-				<Option value="3"     > 3 secs default if ethernet</Option>
-				<Option value="4"     > 4 secs</Option>
-				<Option value="5"     > 5 secs</Option>
-			</List>
+				<Label>time out BLE ping after:</Label>
+				<List>
+					<Option value="0.5"   > 0.5 secs </Option>
+					<Option value="0.7"   > 0.7 secs</Option>
+					<Option value="1"     > 1.0 secs</Option>
+					<Option value="1.3"   > 1.3 secs</Option>
+					<Option value="1.5"   > 1.5 secs</Option>
+					<Option value="2"     > 2 secs default    if wifi</Option>
+					<Option value="2.5"   > 2.5secs</Option>
+					<Option value="3"     > 3 secs default if ethernet</Option>
+					<Option value="4"     > 4 secs</Option>
+					<Option value="5"     > 5 secs</Option>
+				</List>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="status" hidden ="YES"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="displayStatus"  >displayStatus</Option>
-			</List>
+			<Field id="displayS" type="menu"     defaultValue="status" hidden ="YES"> 
+				<Label>Property to display in the State Column:</Label>
+				<List>
+					<Option value="displayStatus"  >displayStatus</Option>
+				</List>
 			</Field>
 			<Field id="sep-031" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-			<Label>send broadcasts to other plugins for status up/x changes</Label>
-			<List>
-				<Option value="0" >NO </Option>
-				<Option value="1" >YES send BC, must be enabled in config  </Option>
-			</List>
+				<Label>send broadcasts to other plugins for status up/x changes</Label>
+				<List>
+					<Option value="0" >NO </Option>
+					<Option value="1" >YES send BC, must be enabled in config  </Option>
+				</List>
 			</Field>
 
 
@@ -2527,6 +2723,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -2537,7 +2734,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cTMP102" type="label">
-			<Label>Setup i2cTMP102 temp  sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cTMP102 temp  sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -2630,6 +2827,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -2640,7 +2838,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cMCP9808" type="label">
-			<Label>Setup i2cMCP9808  temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cMCP9808  temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -2734,6 +2932,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -2744,7 +2943,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cLM35A" type="label">
-			<Label>Setup i2cLM75A temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cLM75A temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -2845,6 +3044,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -2855,7 +3055,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cT5403" type="label">
-			<Label>Setup i2cT5403 temp pressure sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cT5403 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -2975,6 +3175,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -2985,7 +3186,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2cMS5803 temp pressure sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cMS5803 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3107,6 +3308,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -3117,7 +3319,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cBMPxx" type="label">
-			<Label>Setup i2cBMPxx temp pressure sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cBMPxx temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3239,6 +3441,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -3248,7 +3451,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2cBMP280 temp pressure sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cBMP280 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3371,6 +3574,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -3381,7 +3585,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cSHT21" type="label">
-			<Label>Setup i2cSHT21 temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cSHT21 temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3503,6 +3707,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -3513,7 +3718,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabeli2cAM2320" type="label">
-			<Label>Setup i2cAM2320 temp humidity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cAM2320 temp humidity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3637,6 +3842,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -3647,7 +3853,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2cBME280 temp pressure humidity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cBME280 temp pressure humidity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3801,6 +4007,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -3812,7 +4019,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2cBME680 temp pressure humidity sensor on individual rPis.. 
-    connect 3.3, GND, SLA,SLC.
+    connect 3.3, GND, SDA,SCL.
 It measures Temp, humidity and pressure like eg bme280 and in addition 
      a gas value that is a resistance that chnages with air quality. 
 In clean air the resistance is the highest, if it senses eg VOC gases the 
@@ -4108,6 +4315,7 @@ After some days of running in clean air, proposed setup is:
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -4118,7 +4326,7 @@ After some days of running in clean air, proposed setup is:
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup si7021 temp  humidity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup si7021 temp  humidity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -4239,6 +4447,7 @@ After some days of running in clean air, proposed setup is:
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -4248,7 +4457,7 @@ After some days of running in clean air, proposed setup is:
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup tmp006 temp  sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup tmp006 temp  sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -4260,11 +4469,11 @@ After some days of running in clean air, proposed setup is:
 				<Option value="64"   >0x40 = 64 default addr0=0 addr1=0</Option>
 				<Option value="65"   >0x41 = 65 default addr0=0 addr1=1</Option>
 				<Option value="66"   >0x42 = 66 default addr0=0 addr1=SDA</Option>
-				<Option value="67"   >0x43 = 67 default addr0=0 addr1=SLC</Option>
+				<Option value="67"   >0x43 = 67 default addr0=0 addr1=SCL</Option>
 				<Option value="66"   >0x44 = 68 default addr0=1 addr1=0</Option>
 				<Option value="67"   >0x45 = 69 default addr0=0 addr1=1</Option>
 				<Option value="68"   >0x46 = 70 default addr0=0 addr1=SDA</Option>
-				<Option value="69"   >0x47 = 71 default addr0=0 addr1=SLC</Option>
+				<Option value="69"   >0x47 = 71 default addr0=0 addr1=SCL</Option>
 			</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
@@ -4387,6 +4596,7 @@ After some days of running in clean air, proposed setup is:
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -4396,7 +4606,7 @@ After some days of running in clean air, proposed setup is:
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup tmp007 temp  sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup tmp007 temp  sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -4408,11 +4618,11 @@ After some days of running in clean air, proposed setup is:
 				<Option value="64"   >0x40 = 64 default addr0=0 addr1=0</Option>
 				<Option value="65"   >0x41 = 65 default addr0=0 addr1=1</Option>
 				<Option value="66"   >0x42 = 66 default addr0=0 addr1=SDA</Option>
-				<Option value="67"   >0x43 = 67 default addr0=0 addr1=SLC</Option>
+				<Option value="67"   >0x43 = 67 default addr0=0 addr1=SCL</Option>
 				<Option value="66"   >0x44 = 68 default addr0=1 addr1=0</Option>
 				<Option value="67"   >0x45 = 69 default addr0=0 addr1=1</Option>
 				<Option value="68"   >0x46 = 70 default addr0=0 addr1=SDA</Option>
-				<Option value="69"   >0x47 = 71 default addr0=0 addr1=SLC</Option>
+				<Option value="69"   >0x47 = 71 default addr0=0 addr1=SCL</Option>
 			</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
@@ -4536,6 +4746,7 @@ After some days of running in clean air, proposed setup is:
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -4880,7 +5091,7 @@ After some days of running in clean air, proposed setup is:
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2csgp30 CO2 VOC sensor on individual rPis.. 
-    connect 3.3, GND, SLA,SLC.
+    connect 3.3, GND, SDA,SCL.
 It measures CO2 VOC 
 ====set baseline to fixed value of clean air====
   </Label>
@@ -5036,7 +5247,7 @@ It measures CO2 VOC
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c-MH-Zxx CO2 VOC sensor on individual rPis.. 
     sensor with serial to i2c converter 
-    connect 5V, GND, SLA,SLC, 
+    connect 5V, GND, SDA,SCL, 
     set switch to i2c (right)
     sel voltage bridge to 3.3V (left)
 It measures CO2 and temp using infraed light absorption 
@@ -5379,7 +5590,7 @@ the MH-Z16 has a range of 400-5000
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c-ccs811 CO2 VOC sensor on individual rPis.. 
-    connect 3.3, GND, SLA,SLC. AND connect wake to GND
+    connect 3.3, GND, SDA,SCL. AND connect wake to GND
 It measures CO2 VOC 
 ====set baseline to fixed value of clean air====
   </Label>
@@ -5569,7 +5780,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-			<Label>Setup i2cTCS34725  RGB-white light sensor on individual rPis.. connect 3.3, GND, SLA,SLC
+			<Label>Setup i2cTCS34725  RGB-white light sensor on individual rPis.. connect 3.3, GND, SDA,SCL
                 illuminance is shown in lux</Label>
 			</Field>
 
@@ -5709,7 +5920,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-			<Label>Setup i2c as726x  RGB-Orange-Yellow-Violet light sensor on individual rPis.. connect 3.3, GND, SLA,SLC
+			<Label>Setup i2c as726x  RGB-Orange-Yellow-Violet light sensor on individual rPis.. connect 3.3, GND, SDA,SCL
                 numbers shown are in μW/cm2
                 illuminance is shown in lux, is calculated using green* 6.83</Label>
 			</Field>
@@ -5920,7 +6131,7 @@ It measures CO2 VOC
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2c1145 white - IR-Visible-UV sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2c1145 white - IR-Visible-UV sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -6007,7 +6218,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2cOPT3001 light -eye response sensor on individual rPis.. connect 3.3, GND, SLA,SLC
+			<Label>Setup i2cOPT3001 light -eye response sensor on individual rPis.. connect 3.3, GND, SDA,SCL
   range is from 0.01Lux to 85k Lux </Label>
 			</Field>
 
@@ -6020,7 +6231,7 @@ It measures CO2 VOC
 				<Option value="68"   >0x44  = 68  add - gnd</Option>
 				<Option value="69"   >0x45  = 69  add - VDD</Option>
 				<Option value="70"   >0x46  = 70  add - SDA</Option>
-				<Option value="71"   >0x47  = 71  add - SLC</Option>
+				<Option value="71"   >0x47  = 71  add - SCL</Option>
 			</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
@@ -6120,7 +6331,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup veml7700 light -eye response sensor on individual rPis.. connect 3.3, GND, SLA,SLC
+			<Label>Setup veml7700 light -eye response sensor on individual rPis.. connect 3.3, GND, SDA,SCL
   range is from 0.01Lux to 85k Lux </Label>
 			</Field>
 
@@ -6256,7 +6467,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-			<Label>Setup i2cVEML6030 white - ambient light sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cVEML6030 white - ambient light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -6392,7 +6603,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-			<Label>Setup i2cVEML6040 RGB-White light sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cVEML6040 RGB-White light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -6519,7 +6730,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cVEML6070" type="label">
-			<Label>Setup i2cVEML6070 UV light sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cVEML6070 UV light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -6623,7 +6834,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli" type="label">
-			<Label>Setup i2cVEML6075 UV light sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cVEML6075 UV light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -6726,7 +6937,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cTSL2561" type="label">
-			<Label>Setup i2cTSL2561 IR ambient light sensor on individual rPis .. connect 3.3, GND, SLA,SLC
+			<Label>Setup i2cTSL2561 IR ambient light sensor on individual rPis .. connect 3.3, GND, SDA,SCL
                 illuminance is shown in lux</Label>
 			</Field>
 
@@ -6879,6 +7090,7 @@ It measures CO2 VOC
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
@@ -6889,7 +7101,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabeli2cMLX90614" type="label">
-			<Label>Setup i2cMLX90614 IR remote temp sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cMLX90614 IR remote temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -7072,7 +7284,7 @@ It measures CO2 VOC
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2camg88xx infrared camera sensor on individual rPis.. 
-    connect 3.3, GND, SLA,SLC.
+    connect 3.3, GND, SDA,SCL.
 It measures - all temp values are converted to std temp (set in config)
         -Ambient Temperature, 
         -Average Temperature of pixels,
@@ -7370,7 +7582,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c l3g4200/l3gd20h  XYZ gyroscope sensor on individual rPis
                 the XYZ accelerations  .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -7534,7 +7746,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c mag3110  3 degree  mag sensor on individual rPis
     .. values are measured every xx seconds units are uT, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -7745,7 +7957,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c hmc5883L  3 degree  mag sensor on individual rPis
     .. values are measured every xx seconds units are uT, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -7933,7 +8145,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c BNO055  9 degree sensor mag, lin acc circ-accl gryroscope quatril angles, euler angles  sensor on individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -8162,7 +8374,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c mpu9255  9 degree sensor mag, lin acc circ-accl gryroscope, euler angles  sensor on individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -8375,7 +8587,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c mpu6050  6 degree sensor mag, lin acc circ-accl gyrroscope  on  individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -8554,7 +8766,7 @@ you can setup
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c lsm303  6 degree sensor mag, circ-accl gyrroscope  on  individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SLA,SLC</Label>
+    .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -8764,7 +8976,7 @@ you can setup
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2cADC121 ADC sensor on individual rPis.. connect 5V, GND, SLA,SLC
+			<Label>Setup i2cADC121 ADC sensor on individual rPis.. connect 5V, GND, SDA,SCL
 It can be used as a linear ADC converter or as a frontend to various sensors 
 ie MG gas sensors, Hall-efect and Current sensors
 For the MQ gas sensors you need to understand the required heating voltage. 
@@ -8878,7 +9090,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c INA-219  current (+-3.2A) and voltage sensor on individual rPis
             the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-            .. connect 3.3, GND, SLA,SLC</Label>
+            .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -9030,7 +9242,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c ina-3221  current (+-3.2A) and voltage sensor on individual rPis
             the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-            .. connect 3.3, GND, SLA,SLC and set i2c
+            .. connect 3.3, GND, SDA,SCL and set i2c
             .. if you replace the shunt restsor please change the shunt value for that channel</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9216,7 +9428,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 			<Field id="infoLabeli2cADS1x15" type="label">
-			<Label>Setup ADS1x15 one channel ADC on individual rPis .. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup ADS1x15 one channel ADC on individual rPis .. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -9362,7 +9574,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 			<Field id="infoLabeli2cADS1x15" type="label">
-			<Label>Setup ADS1x15 4 channel ADC on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup ADS1x15 4 channel ADC on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -9786,7 +9998,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 			<Field id="infoLabeli2cPCF8591" type="label">
-			<Label>Setup i2cPCF8591 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cPCF8591 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -9915,7 +10127,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 			<Field id="infoLabeli2cPCF8591" type="label">
-			<Label>Setup i2cPCF8591 ADC  on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2cPCF8591 ADC  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -10806,14 +11018,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<List>
 				<Option value="12i2c"         >pad with 12  keys i2c         MPR121</Option>
 				<Option value="16i2c"         >pad with 8   keys and slider  i2c TTP229-LSF  </Option>
-				<Option value="16Serial"      >pad with 16  keys serial SDO, SLC TTP229 </Option>
+				<Option value="16Serial"      >pad with 16  keys serial SDA, SLC TTP229 </Option>
 			</List>
 			</Field>
             
 			<Field id="infoLabelINFO1-12"  type="label" visibleBindingId="devType"    visibleBindingValue="12i2c"> 
-			<Label>connect V+,GND,SLA,SLC, leave IRQ and ADDR open</Label> </Field>
+			<Label>connect V+,GND,SDA,SCL, leave IRQ and ADDR open</Label> </Field>
 			<Field id="infoLabelINFO1-16"  type="label" visibleBindingId="devType"    visibleBindingValue="16i2c"> 
-			<Label>connect connect V+,GND,SLA,SLCs and keysel jumper </Label> </Field>
+			<Label>connect connect V+,GND,SDA,SCLs and keysel jumper </Label> </Field>
 			<Field id="infoLabelINFO1-16S" type="label" visibleBindingId="devType"    visibleBindingValue="16Serial"> 
 			<Label>connect V+,GND,SDO,SLC to 2 GPIOs and bridge on 2. 2x4 connector the 2. col from right (keysel) to enable serial comm</Label> </Field>
 
@@ -10971,9 +11183,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
             
 			<Field id="infoLabelINFO1-12"  type="label" visibleBindingId="devType"    visibleBindingValue="12i2c"> 
-			<Label>connect V+,GND,SLA,SLC, leave IRQ and ADDR open</Label> </Field>
+			<Label>connect V+,GND,SDA,SCL, leave IRQ and ADDR open</Label> </Field>
 			<Field id="infoLabelINFO1-16"  type="label" visibleBindingId="devType"    visibleBindingValue="16i2c"> 
-			<Label>connect connect V+,GND,SLA,SLCs and keysel jumper </Label> </Field>
+			<Label>connect connect V+,GND,SDA,SCLs and keysel jumper </Label> </Field>
 			<Field id="infoLabelINFO1-16S" type="label" visibleBindingId="devType"    visibleBindingValue="16Serial"> 
 			<Label>connect V+,GND,SDO,SLC to 2 GPIOs and bridge on 2. 2x4 connector the 2. col from right (keysel) to enable serial comm</Label> </Field>
 
@@ -11143,9 +11355,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
             
 			<Field id="infoLabelINFO1-12"  type="label" visibleBindingId="devType"    visibleBindingValue="12i2c"> 
-			<Label>connect V+,GND,SLA,SLC, leave IRQ and ADDR open</Label> </Field>
+			<Label>connect V+,GND,SDA,SCL, leave IRQ and ADDR open</Label> </Field>
 			<Field id="infoLabelINFO1-16"  type="label" visibleBindingId="devType"    visibleBindingValue="16i2c"> 
-			<Label>connect connect V+,GND,SLA,SLCs and keysel jumper </Label> </Field>
+			<Label>connect connect V+,GND,SDA,SCLs and keysel jumper </Label> </Field>
 			<Field id="infoLabelINFO1-16S" type="label" visibleBindingId="devType"    visibleBindingValue="16Serial"> 
 			<Label>connect V+,GND,SDO,SLC to 2 GPIOs and bridge on 2. 2x4 connector the 2. col from right (keysel) to enable serial comm</Label> </Field>
 
@@ -11355,9 +11567,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
             
 			<Field id="infoLabelINFO1-12"  type="label" visibleBindingId="devType"    visibleBindingValue="12i2c"> 
-			<Label>connect V+,GND,SLA,SLC, leave IRQ and ADDR open</Label> </Field>
+			<Label>connect V+,GND,SDA,SCL, leave IRQ and ADDR open</Label> </Field>
 			<Field id="infoLabelINFO1-16"  type="label" visibleBindingId="devType"    visibleBindingValue="16i2c"> 
-			<Label>connect connect V+,GND,SLA,SLCs and keysel jumper </Label> </Field>
+			<Label>connect connect V+,GND,SDA,SCLs and keysel jumper </Label> </Field>
 			<Field id="infoLabelINFO1-16S" type="label" visibleBindingId="devType"    visibleBindingValue="16Serial"> 
 			<Label>connect V+,GND,SDO,SLC to 2 GPIOs and bridge on 2. 2x4 connector the 2. col from right (keysel) to enable serial comm</Label> </Field>
 
@@ -12315,9 +12527,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
 
-			<Field id="nInputs" type="menu"                defaultValue="1" > <Label>how many input channels / GPIOs (1 for Serial):</Label>
+			<Field id="nInputs" type="menu"                defaultValue="1" > <Label>how many input channels / GPIOs </Label>
 				<List>
-					<Option value="1"  >1 </Option>
+					<Option value="1"  >1 for serial</Option>
 					<Option value="2"  >2</Option>
 					<Option value="3"  >3</Option>
 					<Option value="4"  >4</Option>
@@ -12329,15 +12541,15 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
 
-			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="1,2,3,4,5,6,7,8,9"> <Label>GPIO #0 (1):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9">   <Label>GPIO #1 (2):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8,9">     <Label>GPIO #2 (4):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8,9">       <Label>GPIO #3 (8):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8,9">         <Label>GPIO #4 (16):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8,9">           <Label>GPIO #5 (32):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8,9">             <Label>GPIO #6 (64):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8,9">               <Label>GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
-			<Field id="INPUT_8" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="9">                 <Label>GPIO #8 (256):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_0" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="1,2,3,4,5,6,7,8,9"> <Label>INPUT GPIO #0 (1):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_1" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="2,3,4,5,6,7,8,9">   <Label>INPUT GPIO #1 (2):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_2" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="3,4,5,6,7,8,9">     <Label>INPUT GPIO #2 (4):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_3" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="4,5,6,7,8,9">       <Label>INPUT GPIO #3 (8):</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_4" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="5,6,7,8,9">         <Label>INPUT GPIO #4 (16):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_5" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="6,7,8,9">           <Label>INPUT GPIO #5 (32):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_6" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="7,8,9">             <Label>INPUT GPIO #6 (64):</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_7" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="8,9">               <Label>INPUT GPIO #7 (128):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
+			<Field id="INPUT_8" type="menu" defaultValue="-1" visibleBindingId="nInputs" visibleBindingValue="9">                 <Label>INPUT GPIO #8 (256):</Label> <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 
 			<Field id="OUTPUT_0" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialEncoded"> <Label>GPIO CS:</Label>   <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
 			<Field id="OUTPUT_1" type="menu" defaultValue="-1" visibleBindingId="codeType" visibleBindingValue="serialEncoded"> <Label>GPIO CLK:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false"/> </Field>
@@ -12720,7 +12932,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 			<Field id="infoLabelmysensor" type="label">
-			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -12899,7 +13111,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 			<Field id="infoLabelmysensor" type="label">
-			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -13121,7 +13333,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 			<Field id="infoLabelmysensor" type="label">
-			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -13327,7 +13539,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 			<Field id="infoLabelAPDS9960r" type="label">
-			<Label>Setup proximity sensor on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup proximity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13600,9 +13812,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="infoLabelAPDS9960r" type="label">
 			<Label>Setup lightning sensor  as3935on individual rPis.. 
-        connect 3.3, GND, SLA,SLC and int pin to gpio 
+        connect 3.3, GND, SDA,SCL and int pin to gpio 
         and board-Si to V+; EN_V to GND
-        if no other i2c device a 10Kohm SLC to V+ is required</Label>
+        if no other i2c device a 10Kohm SCL to V+ is required</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -14097,11 +14309,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Setup OUTPUT  GPIOs  on individual rPis</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
-			<Label>select rPi-server to which the OUTPUT is connect to:</Label>
+				<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
+				<Label>select rPi-server to which the OUTPUT is connect to:</Label>
 			</Field>
 			<Field  id="buttonPiNumber" type="button"    >
-			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONO</CallbackMethod>
+				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONO</CallbackMethod>
 			</Field>
 			<Field id="piDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
@@ -14110,23 +14322,23 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
-			<Label>(2) select gpio#:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+				<Label>(2) select gpio#:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
-			<Label> OUTPUT type:</Label>
-			<List>
-				<Option value="0"        >set OUTPUT normal </Option>
-				<Option value="1"        >set OUTPUT invers </Option>
-			</List>
+				<Label> OUTPUT type:</Label>
+				<List>
+					<Option value="0"        >set OUTPUT normal </Option>
+					<Option value="1"        >set OUTPUT invers </Option>
+				</List>
 			</Field>
 			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
-			<Label> initial Value:</Label>
-			<List>
-				<Option value="down"      >set OUTPUT initially to low </Option>
-				<Option value="up"        >set OUTPUT initially to High </Option>
-				<Option value="-"        >do not set OUTPUT initially</Option>
-			</List>
+				<Label> initial Value:</Label>
+				<List>
+					<Option value="down"      >set OUTPUT initially to low </Option>
+					<Option value="up"        >set OUTPUT initially to High </Option>
+					<Option value="-"        >do not set OUTPUT initially</Option>
+				</List>
 			</Field>
 			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
@@ -14193,26 +14405,26 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
-			<Label>(2) select gpio#:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+				<Label>(2) select gpio#:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
-			<Label> OUTPUT type:</Label>
-			<List>
-				<Option value="0"        >set OUTPUT normal </Option>
-				<Option value="1"        >set OUTPUT invers </Option>
-			</List>
+				<Label> OUTPUT type:</Label>
+				<List>
+					<Option value="0"        >set OUTPUT normal </Option>
+					<Option value="1"        >set OUTPUT invers </Option>
+				</List>
 			</Field>
 			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
-			<Label> initial Value:</Label>
-			<List>
-				<Option value="down"      >set OUTPUT initially to low </Option>
-				<Option value="up"        >set OUTPUT initially to High </Option>
-				<Option value="-"         >do not set OUTPUT initially</Option>
-			</List>
+				<Label> initial Value:</Label>
+				<List>
+					<Option value="down"      >set OUTPUT initially to low </Option>
+					<Option value="up"        >set OUTPUT initially to High </Option>
+					<Option value="-"         >do not set OUTPUT initially</Option>
+				</List>
 			</Field>
 			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
-			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
+				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
 
 
@@ -14263,82 +14475,82 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabelINPUT" type="label">
-			<Label>Setup i2c TEA5767-FM-radio device  on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+				<Label>Setup i2c TEA5767-FM-radio device  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
-			<Label>select rPi-server to which the INPUT is connect to:</Label> 
+				<Label>select rPi-server to which the INPUT is connect to:</Label> 
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="96"> <Label>i2c address of device:</Label>
-			<List>
-				<Option value="96"   >0x60  = 96</Option>
-			</List>
+				<List>
+					<Option value="96"   >0x60  = 96</Option>
+				</List>
 			</Field>
             
 			<Field id="defFreq" type="textfield"     defaultValue="90.1"> <Label>default Frequency:</Label> </Field>
             
 			<Field id="mono" type="menu"     defaultValue="0"> <Label>mono/stereo:</Label>
-			<List>
-				<Option value="0"   >Stero</Option>
-				<Option value="1"   >Mono</Option>
-			</List>
+				<List>
+					<Option value="0"   >Stero</Option>
+					<Option value="1"   >Mono</Option>
+				</List>
 			</Field>
             
 			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute output:</Label>
-			<List>
-				<Option value="0"   >un-mute</Option>
-				<Option value="1"   >mute</Option>
-			</List>
+				<List>
+					<Option value="0"   >un-mute</Option>
+					<Option value="1"   >mute</Option>
+				</List>
 			</Field>
             
 			<Field id="noiseCancel" type="menu"     defaultValue="1"> <Label>Stereo Noise cancel:</Label>
-			<List>
-				<Option value="1"   >on</Option>
-				<Option value="0"   >off</Option>
-			</List>
+				<List>
+					<Option value="1"   >on</Option>
+					<Option value="0"   >off</Option>
+				</List>
 			</Field>
             
 			<Field id="highCut" type="menu"     defaultValue="1"> <Label>Cut high frequency:</Label>
-			<List>
-				<Option value="1"   >on</Option>
-				<Option value="0"   >off</Option>
-			</List>
+				<List>
+					<Option value="1"   >on</Option>
+					<Option value="0"   >off</Option>
+				</List>
 			</Field>
             
 			<Field id="DTCon" type="menu"     defaultValue="1"  tooltip="DTC = 1 then the de-emphasis time constant = 75 µs; = 0 time constant = 50 µs"> <Label>DTC on:</Label>
-			<List>
-				<Option value="1"   >on</Option>
-				<Option value="0"   >off</Option>
-			</List>
+				<List>
+					<Option value="1"   >on</Option>
+					<Option value="0"   >off</Option>
+				</List>
 			</Field>
             
 			<Field id="PLLREF" type="menu"     defaultValue="0" tooltip="PLLREF=0,XTAl=0: 13MHZ;PLLREF=0,XTAl=1: 32.768kHz;PLLREF=1,XTAl=0: 6.5Mhz;PLLREF=1,XTAl=1: not allowed"> <Label>PLL ref :</Label>
-			<List>
-				<Option value="0"   >default </Option>
-				<Option value="1"   >alt</Option>
-			</List>
+				<List>
+					<Option value="0"   >default </Option>
+					<Option value="1"   >alt</Option>
+				</List>
 			</Field>
             
 			<Field id="XTAL" type="menu"     defaultValue="1" tooltip="PLLREF=0,XTAl=0: 13MHZ;PLLREF=0,XTAl=1: 32.768kHz;PLLREF=1,XTAl=0: 6.5Mhz;PLLREF=1,XTAl=1: not allowed"> <Label>XTAL :</Label>
-			<List>
-				<Option value="1"   >default, see tooltip</Option>
-				<Option value="0"   >alt</Option>
-			</List>
+				<List>
+					<Option value="1"   >default, see tooltip</Option>
+					<Option value="0"   >alt</Option>
+				</List>
 			</Field>
             
 			<Field id="bandLimit" type="menu"     defaultValue="0"> <Label>band limit (for Japan):</Label>
-			<List>
-				<Option value="1"   >on = Japan</Option>
-				<Option value="0"   >off</Option>
-			</List>
+				<List>
+					<Option value="1"   >on = Japan</Option>
+					<Option value="0"   >off</Option>
+				</List>
 			</Field>
             
 			<Field id="HLSI" type="menu"     defaultValue="1"> <Label>HIGH/low injection:</Label>
-			<List>
-				<Option value="1"   >HIGH</Option>
-				<Option value="0"   >low</Option>
-			</List>
+				<List>
+					<Option value="1"   >HIGH</Option>
+					<Option value="0"   >low</Option>
+				</List>
 			</Field>
             
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="yes"> </Field>
@@ -14581,7 +14793,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 	<Device type="custom" id="setMCP4725">
-	<Name>OUTPUT-ADC-1x12bit-i2cMCP4725</Name>
+	<Name>OUTPUT-DAC-1x12bit-i2cMCP4725</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -14589,18 +14801,18 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabelINPUT" type="label">
-			<Label>Setup i2c MCP4725 DAC OUTPUT device  on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+				<Label>Setup i2c MCP4725 DAC OUTPUT device  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
-			<Label>select rPi-server to which the INPUT is connect to:</Label> 
+				<Label>select rPi-server to which the INPUT is connect to:</Label> 
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="98"> <Label>i2c address of device:</Label>
-			<List>
-				<Option value="98"   >0x62 = 98;  A0-GND</Option>
-				<Option value="99"   >0x63 = 99;  A0-+</Option>
-			</List>
+				<List>
+					<Option value="98"   >0x62 = 98;  A0-GND</Option>
+					<Option value="99"   >0x63 = 99;  A0-+</Option>
+				</List>
 			</Field>
             
             
@@ -14632,7 +14844,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabelINPUT" type="label">
-			<Label>Setup i2c PCF8591 DAC OUTPUT device  on individual rPis.. connect 3.3, GND, SLA,SLC</Label>
+			<Label>Setup i2c PCF8591 DAC OUTPUT device  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
@@ -14640,23 +14852,23 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c Address:</Label>
-			<List>
-				<Option value="65"   >0x43 = 65: </Option>
-				<Option value="66"   >0x44 = 66: </Option>
-				<Option value="67"   >0x45 = 67: </Option>
-				<Option value="68"   >0x46 = 68: </Option>
-				<Option value="69"   >0x47 = 69: </Option>
-				<Option value="70"   >0x48 = 70: </Option>
-				<Option value="71"   >0x49 = 71: </Option>
-				<Option value="72"   >0x48 = 72: def = all Ax pins to ground</Option>
-				<Option value="73"   >0x49 = 73: </Option>
-				<Option value="74"   >0x4A = 74: </Option>
-				<Option value="75"   >0x4B = 75: </Option>
-				<Option value="76"   >0x4C = 76: </Option>
-				<Option value="77"   >0x4D = 77: </Option>
-				<Option value="78"   >0x4E = 78: </Option>
-				<Option value="79"   >0x4F = 79: </Option>
-			</List>
+				<List>
+					<Option value="65"   >0x43 = 65: </Option>
+					<Option value="66"   >0x44 = 66: </Option>
+					<Option value="67"   >0x45 = 67: </Option>
+					<Option value="68"   >0x46 = 68: </Option>
+					<Option value="69"   >0x47 = 69: </Option>
+					<Option value="70"   >0x48 = 70: </Option>
+					<Option value="71"   >0x49 = 71: </Option>
+					<Option value="72"   >0x48 = 72: def = all Ax pins to ground</Option>
+					<Option value="73"   >0x49 = 73: </Option>
+					<Option value="74"   >0x4A = 74: </Option>
+					<Option value="75"   >0x4B = 75: </Option>
+					<Option value="76"   >0x4C = 76: </Option>
+					<Option value="77"   >0x4D = 77: </Option>
+					<Option value="78"   >0x4E = 78: </Option>
+					<Option value="79"   >0x4F = 79: </Option>
+				</List>
 			</Field>
             
             
@@ -14700,18 +14912,18 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="devType" type="menu"   defaultValue="sh1106"> 
 			<Label>device type:</Label>
-			<List>
-				<Option value="ssd1306"        >ssd1306 128x64 (i2c)</Option>
-				<Option value="sh1106"         >sh1106  128x64 (i2c)</Option>
-				<Option value="ssd1351"        >ssd1351 RGB 128x128 (SPI)</Option>
-				<Option value="st7735"         >st7735 RGB 160x128 (SPI)</Option>
-				<Option value="RGBmatrix32x32" >RGB matrix  32x32</Option>
-				<Option value="RGBmatrix64x16" >RGB matrix  64x16</Option>
-				<Option value="RGBmatrix64x32" >RGB matrix  64x32</Option>
-				<Option value="RGBmatrix96x32" >RGB matrix  96x32 .. not tested</Option>
-				<Option value="screen"  >large screen connected to HDMI or direct connect</Option>
-				<Option value="LCD1602"  >LCD 2 lines 16 Characters</Option>
-			</List>
+				<List>
+					<Option value="ssd1306"        >ssd1306 128x64 (i2c)</Option>
+					<Option value="sh1106"         >sh1106  128x64 (i2c)</Option>
+					<Option value="ssd1351"        >ssd1351 RGB 128x128 (SPI)</Option>
+					<Option value="st7735"         >st7735 RGB 160x128 (SPI)</Option>
+					<Option value="RGBmatrix32x32" >RGB matrix  32x32</Option>
+					<Option value="RGBmatrix64x16" >RGB matrix  64x16</Option>
+					<Option value="RGBmatrix64x32" >RGB matrix  64x32</Option>
+					<Option value="RGBmatrix96x32" >RGB matrix  96x32 .. not tested</Option>
+					<Option value="screen"  >large screen connected to HDMI or direct connect</Option>
+					<Option value="LCD1602"  >LCD 2 lines 16 Characters</Option>
+				</List>
 			</Field>
 
 			<Field id="displayResolution" type="textfield"   defaultValue="800x600" visibleBindingId="devType" visibleBindingValue="screen"> 
@@ -14721,16 +14933,16 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="i2cAddress" type="menu"     defaultValue="60" enableBindingId="devType" enableBindingValue="ssd1306,sh1106,LCD1602" visibleBindingId="devType" visibleBindingValue="ssd1306,sh1106,LCD1602"> 
 			<Label>i2c address of device:</Label>
 			<List>
-				<Option value="60"   >60 = 0x3c  ssd1306,sh1106</Option>
-				<Option value="61"   >61 = 0x3d  ssd1306,sh1106</Option>
-				<Option value="63"   >63 = 0x3f  LCD1602</Option>
-				<Option value="39"   >39 = 0x27  LCD1602</Option>
+					<Option value="60"   >60 = 0x3c  ssd1306,sh1106</Option>
+					<Option value="61"   >61 = 0x3d  ssd1306,sh1106</Option>
+					<Option value="63"   >63 = 0x3f  LCD1602</Option>
+					<Option value="39"   >39 = 0x27  LCD1602</Option>
 			</List>
 			</Field>
 
 			<Field id="textForssd1351-1" type="textfield" defaultValue="GPIO11 = SCLK" 
                 readonly="yes" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
-			<Label>Connect SLC:</Label>
+				<Label>Connect SCL:</Label>
 			</Field>
 			<Field id="textForssd1351-2" type="textfield" defaultValue="GPIO10 = MOSI" 
                 readonly="yes" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735"> 
@@ -14739,17 +14951,17 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="PIN_RST" type="menu"     defaultValue="26" enableBindingId="devType"    enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735"> 
 				<List>
-				<Option value= "26"  >GPIO26 lower left</Option>
-				<Option value= "25"  >GPIO25 center right  ssd1351</Option>
-				<Option value= "23"  >GPIO23 center right  st7735</Option>
+					<Option value= "26"  >GPIO26 lower left</Option>
+					<Option value= "25"  >GPIO25 center right  ssd1351</Option>
+					<Option value= "23"  >GPIO23 center right  st7735</Option>
 				</List>
 			<Label>..RES:</Label>
 			</Field>
 
 			<Field id="PIN_CS" type="menu"     defaultValue="24" enableBindingId="devType"    enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351"> 
 				<List>
-				<Option value= "19"  >GPIO19 lower left</Option>
-				<Option value= "24"  >GPIO24 center right</Option>
+					<Option value= "19"  >GPIO19 lower left</Option>
+					<Option value= "24"  >GPIO24 center right</Option>
 				</List>
 			<Label>..CS:</Label>
 			</Field>
@@ -14757,9 +14969,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="PIN_DC" type="menu"     defaultValue="23" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735"> 
 				<List>
-				<Option value= "13"  >GPIO13 lower left</Option>
-				<Option value= "23"  >GPIO23 center right ssd1351</Option>
-				<Option value= "25"  >GPIO25 center right st7735</Option>
+					<Option value= "13"  >GPIO13 lower left</Option>
+					<Option value= "23"  >GPIO23 center right ssd1351</Option>
+					<Option value= "25"  >GPIO25 center right st7735</Option>
 				</List>
 			<Label>..DC:</Label>
 			</Field>
@@ -14768,31 +14980,31 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="PIN_CE" type="menu"     defaultValue="1" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351"> 
 			<Label>SPI dev # CEx_N:</Label>
 				<List>
-				<Option value= "0"  >0, no cable connection</Option>
-				<Option value= "1"  >1, no cable connection</Option>
+					<Option value= "0"  >0, no cable connection</Option>
+					<Option value= "1"  >1, no cable connection</Option>
 				</List>
 			</Field>
             
 			<Field id="flipDisplay" type="menu"     defaultValue="0" enableBindingId="devType" enableBindingValue="screen" visibleBindingId="devType" visibleBindingValue="screen"> 
 			<Label>flip display:</Label>
 				<List>
-				<Option value= "0"  >no</Option>
-				<Option value= "1"  >yes</Option>
+					<Option value= "0"  >no</Option>
+					<Option value= "1"  >yes</Option>
 				</List>
 			</Field>
 
 			<Field id="intensity"  type="menu" defaultValue="100" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
 				<List>
-				<Option value= "100"       >100% bright</Option>
-				<Option value= "90"        > 90% </Option>
-				<Option value= "80"        > 80% </Option>
-				<Option value= "70"        > 70% </Option>
-				<Option value= "60"        > 60% </Option>
-				<Option value= "50"        > 50% </Option>
-				<Option value= "40"        > 40% </Option>
-				<Option value= "30"        > 30% </Option>
-				<Option value= "20"        > 20% </Option>
-				<Option value= "10"        > 10% dim</Option>
+					<Option value= "100"       >100% bright</Option>
+					<Option value= "90"        > 90% </Option>
+					<Option value= "80"        > 80% </Option>
+					<Option value= "70"        > 70% </Option>
+					<Option value= "60"        > 60% </Option>
+					<Option value= "50"        > 50% </Option>
+					<Option value= "40"        > 40% </Option>
+					<Option value= "30"        > 30% </Option>
+					<Option value= "20"        > 20% </Option>
+					<Option value= "10"        > 10% dim</Option>
 				</List>
 			<Label>dimm light (applied to RGB values):</Label>
 			</Field>
@@ -14805,48 +15017,48 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 			<Field id="scrollxy" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen"> 
 			<Label>scroll display:</Label> 
-			<List>
-				<Option value="0"     >No</Option>
-				<Option value="up"    >up</Option>
-				<Option value="down"  >down</Option>
-				<Option value="left"  >left</Option>
-				<Option value="right" >right</Option>
-			</List>
+				<List>
+					<Option value="0"     >No</Option>
+					<Option value="up"    >up</Option>
+					<Option value="down"  >down</Option>
+					<Option value="left"  >left</Option>
+					<Option value="right" >right</Option>
+				</List>
 			</Field>
 			<Field id="scrollSpeed" type="menu"     defaultValue="med" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen"> 
 			<Label>scroll/ page change display speed:</Label> 
-			<List>
-				<Option value="slow" >slow</Option>
-				<Option value="med"  >med</Option>
-				<Option value="fast" >fast</Option>
-			</List>
+				<List>
+					<Option value="slow" >slow</Option>
+					<Option value="med"  >med</Option>
+					<Option value="fast" >fast</Option>
+				</List>
 			</Field>
 
 			<Field id="showDateTime" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen"> 
-			<Label>Show page with date and time:</Label> 
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >No</Option>
-			</List>
+				<Label>Show page with date and time:</Label> 
+				<List>
+					<Option value="1"  >yes</Option>
+					<Option value="0"  >No</Option>
+				</List>
 			</Field>
 
 			<Field id="extraPage0Line0"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
-			<Label>Show extra page-1-line1:</Label>
+				<Label>Show extra page-1-line1:</Label>
 			</Field>
 			<Field id="extraPage0Line1"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
-			<Label>Show extra page-1-line2:</Label>
+				<Label>Show extra page-1-line2:</Label>
 			</Field>
 			<Field id="extraPage0Color"  type="textfield" defaultValue="255,255,255" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
-			<Label>Show extra page-1-Color::</Label>
+				<Label>Show extra page-1-Color::</Label>
 			</Field>
 			<Field id="extraPage1Line0"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
-			<Label>Show extra page-2-line1:</Label>
+				<Label>Show extra page-2-line1:</Label>
 			</Field>
 			<Field id="extraPage1Line1"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
-			<Label>Show extra page-2-line2:</Label>
+				<Label>Show extra page-2-line2:</Label>
 			</Field>
 			<Field id="extraPage1Color"  type="textfield" defaultValue="255,255,255" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
-			<Label>Show extra page-2-Color:</Label>
+				<Label>Show extra page-2-Color:</Label>
 			</Field>
 			<Field id="infoLabelsensors3" type="label"><Label>.              extra pages can be overwritten with an ExtraPageAction</Label> </Field>
             
@@ -14877,54 +15089,59 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 		<ConfigUI>            
 			<Field id="isSprinklerDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="infoLabelINPUT" type="label">
-			<Label>Setup sprinkler device</Label>
+				<Label>Setup sprinkler device</Label>
 			</Field>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
-			<Label>msg from plugin</Label>
+				<Label>msg from plugin</Label>
 			</Field>
-            
-            
+ 
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number" >
+					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
+				<Label>select rPi-server of the sprinkler system:</Label> 
+			</Field>
+
+
 			<Field type="menu" id="NumZones" defaultValue="4">
-			<Label>Number of zones:</Label>
-			<List>
-				<Option value="4">4</Option>
-				<Option value="5">5</Option>
-				<Option value="6">6</Option>
-				<Option value="7">7</Option>
-				<Option value="8">8</Option>
-				<Option value="9">9</Option>
-				<Option value="10">10</Option>
-				<Option value="11">11</Option>
-				<Option value="12">12</Option>
-				<Option value="13">13</Option>
-				<Option value="14">14</Option>
-				<Option value="15">15</Option>
-				<Option value="16">16</Option>
-			</List>
+				<Label>Number of zones:</Label>
+				<List>
+					<Option value="4">4</Option>
+					<Option value="5">5</Option>
+					<Option value="6">6</Option>
+					<Option value="7">7</Option>
+					<Option value="8">8</Option>
+					<Option value="9">9</Option>
+					<Option value="10">10</Option>
+					<Option value="11">11</Option>
+					<Option value="12">12</Option>
+					<Option value="13">13</Option>
+					<Option value="14">14</Option>
+					<Option value="15">15</Option>
+					<Option value="16">16</Option>
+				</List>
 			</Field>
 
 			<Field type="textfield" id="ZoneNames" defaultValue="" >
-			<Label>Zone Names eg kitchen,front,back,left... :</Label>
+				<Label>Zone Names eg kitchen,front,back,left... :</Label>
 			</Field>
             
 			<Field type="textfield" id="MaxZoneDurations" defaultValue="10,10,10,10">
-			<Label>Maximum zone durations[Minutes] eg 10,20,15,12...:</Label>
+				<Label>Maximum zone durations[Minutes] eg 10,20,15,12...:</Label>
 			</Field>
 
 			<Field type="checkbox" id="PumpControlOn" defaultValue="false">
-			<Label>Enable pump control:</Label>
-			<Description>Last zone is control Valve</Description>
+				<Label>Enable pump control:</Label>
+				<Description>Last zone is control Valve</Description>
+			</Field>
+
+			<Field type="checkbox" id="relayOnIfLow" defaultValue="true">
+				<Label>Relays ON if GPIO=0:</Label>
+				<Description>uncheck for Relay ON if GPIO=1 </Description>
 			</Field>
 
 			<Field type="separator" id="simpleSeparator1" />
 
-			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
-			<Label>select rPi-server of the sprinkler system:</Label> 
-			</Field>
-
 			<Field id="infoLabelZONES" type="label">
-			<Label>Setup the zones on the RPI,     select the GPIO of the relay for the zones:</Label>
+				<Label>Setup the zones on the RPI,     select the GPIO of the relay for each zone:</Label>
 			</Field>
 
 			<Field id="GPIOzone1"  type="menu" defaultValue="-1" >																					 <Label>gpio# for zone 1:</Label>  <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
@@ -14945,8 +15162,8 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="GPIOzone16" type="menu" defaultValue="-1"  visibleBindingId="NumZones" visibleBindingValue="16" >							 <Label>gpio# for zone 16:</Label> <List class="self" method="filtergpioList" dynamicReload="false"/>  </Field>
 
 			<Field type="checkbox" id="OverrideScheduleActions" defaultValue="false" hidden ="yes">
-			<Label>Override schedule actions:</Label>
-			<Description>Plugin overrides high-level actions</Description>
+				<Label>Override schedule actions:</Label>
+				<Description>Plugin overrides high-level actions</Description>
 			</Field>
 
 		</ConfigUI>
@@ -15351,11 +15568,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Label>Min RGB value that keeps LED on:</Label>
 			</Field>
 
-			<Field id="clockLightSensor"  type="textfield" defaultValue="0" >
-			<Label>Use attached light sensor to dim, norm factor, 0=off, 1= std:</Label>
-			</Field>
-
-
 			<Field id="intensity"  type="menu" defaultValue="100" >
 				<List>
 				<Option value= "100"       >100% bright</Option>
@@ -15684,7 +15896,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 		<ConfigUI>            
 			<Field id="infoLabelINPUT" type="label">
-			<Label>Setup sun dial clock  </Label>
+				<Label>Setup sun dial clock  </Label>
 			</Field>
 
             
@@ -15692,36 +15904,9 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
             
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
-			<Label>select rPi-server to which the device is connect to:</Label> 
+				<Label>select rPi-server to which the device is connect to:</Label> 
 			</Field>
             
-  
-			<Field id="motorType"  type="menu" defaultValue="bipolar-400-2-PIG">
-				<List>
-					<Option value= "unipolar-4096-1-GPIO" > 5 unipolar coils          4096 steps (ULN2003 chip or alike)</Option>
-					<Option value= "bipolar-200-1-GPIO" > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-200-1-PIG"  > 2 bipolar coils bridge 1  *200 steps (L9110/L298N chip or alike) us PIGPIO</Option>
-					<Option value= "bipolar-200-2-GPIO" > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-200-2-PIG"  > 2 bipolar coils bridge 2  *200 steps (L9110/L298N chip or alike) us PIGPIO</Option>
-					<Option value= "bipolar-400-1-GPIO" > 2 bipolar coils bridge 1  *400 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-400-1-PIG"  > 2 bipolar coils bridge 1  *400 steps (L9110/L298N chip or alike) us PIGPIO</Option>
-					<Option value= "bipolar-400-2-GPIO" > 2 bipolar coils bridge 2  *400 steps (L9110/L298N chip or alike)</Option>
-					<Option value= "bipolar-400-2-PIG"  > 2 bipolar coils bridge 2  *400 steps (L9110/L298N chip or alike) us PIGPIO</Option>
-					<Option value= "DRV8834-200-1-GPIO"     > 2 bipolar coils bridge 1  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-200-2-GPIO"     > 2 bipolar coils bridge 2  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-200-4-GPIO"     > 2 bipolar coils bridge 4  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-200-8-GPIO"     > 2 bipolar coils bridge 8  *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-200-16-GPIO"    > 2 bipolar coils bridge 16 *200 steps (DRV8834 chip)</Option>
-					<Option value= "DRV8834-200-32-GPIO"    > 2 bipolar coils bridge 32 *200 steps (DRV8834 chip)</Option>
-					<Option value= "A4988-200-1-GPIO"       > 2 bipolar coils bridge 1  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-200-2-GPIO"       > 2 bipolar coils bridge 2  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-200-4-GPIO"       > 2 bipolar coils bridge 4  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-200-8-GPIO"       > 2 bipolar coils bridge 8  *200 steps (A4988 chip)</Option>
-					<Option value= "A4988-200-16-GPIO"      > 2 bipolar coils bridge 16 *200 steps (A4988 chip)</Option>
-				</List>
-			<Label>Motor and driver chip type:</Label>
-			</Field>
- 
  
 			<Field id="timeZone"   type="menu" defaultValue="6-/US/Central" tooltip="this timezone will also be active for the whole PI" >
 			<Label>select the timezone for this clock:</Label>
@@ -15735,7 +15920,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 					<Option value= "60"  > test = run fast</Option>
 					<Option value= "600" > test = run very fast</Option>
 				</List>
-			<Label>Run Mode:</Label>
+				<Label>Run Mode:</Label>
 			</Field>
 
 			<Field id="amPM1224"  type="menu" defaultValue="1">
@@ -15743,7 +15928,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "12"  >am/pm</Option>
 				<Option value= "24"  >24 hour</Option>
 				</List>
-			<Label>Time mode:</Label>
+				<Label>Time mode:</Label>
 			</Field>
  
 			<Field id="intensityMult"  type="menu" defaultValue="100" >
@@ -15759,7 +15944,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "20"        > 20% </Option>
 				<Option value= "10"        > 10% dim</Option>
 				</List>
-			<Label>dimm light (multiplied with RGB values):</Label>
+				<Label>dimm light (multiplied with RGB values):</Label>
 			</Field>
 
 
@@ -15776,7 +15961,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "20"        > 20% </Option>
 				<Option value= "10"        > 10% dim</Option>
 				</List>
-			<Label>Max limit intensity:</Label>
+				<Label>Max limit intensity:</Label>
 			</Field>
 
 			<Field id="intensityMin"  type="menu" defaultValue="0.6" >
@@ -15798,40 +15983,9 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "0.6"       > 0.6% (min light)</Option>
 				<Option value= "0"         > 0</Option>
 				</List>
-			<Label>Min limit intensity:</Label>
+				<Label>Min limit intensity:</Label>
 			</Field>
 
-
-			<Field id="clockLightSensor"  type="textfield" defaultValue="1" >
-			<Label>Use attached light sensor to dim, norm factor, 0=off, 1= std:</Label>
-			</Field>
-
-           
-          
-			<Field id="pin_CoilB2"  	type="menu" defaultValue="6"  visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 		<Label>GPIO pin for coilB2-#6:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_CoilB1"  	type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 	<Label>GPIO pin for coilB1-#13:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_CoilA2"  	type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 	<Label>GPIO pin for coilA2-#19:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_CoilA1"  	type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="unipolar-4096-1-GPIO,bipolar-200-1-GPIO,bipolar-200-1-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-200-2-GPIO,bipolar-200-2-PIG,bipolar-400-1-GPIO,bipolar-400-1-PIG,bipolar-400-2-GPIO,bipolar-400-2-PIG"> 	<Label>GPIO pin for coilA1-#26:</Label>				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-
-			<Field id="pin_Sleep"  		type="menu" defaultValue="13" visibleBindingId="motorType" visibleBindingValue="DRV8834-200-1-GPIO,DRV8834-200-2-GPIO,DRV8834-200-4-GPIO,DRV8834-200-8-GPIO,DRV8834-200-16-GPIO,DRV8834-200-32-GPIO,A4988-200-1-GPIO,A4988-200-2-GPIO,A4988-200-4-GPIO,A4988-200-8-GPIO,A4988-200-16-GPIO"> 	<Label>GPIO pin for Sleep-#13:</Label>  		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Step"  		type="menu" defaultValue="19" visibleBindingId="motorType" visibleBindingValue="DRV8834-200-1-GPIO,DRV8834-200-2-GPIO,DRV8834-200-4-GPIO,DRV8834-200-8-GPIO,DRV8834-200-16-GPIO,DRV8834-200-32-GPIO,A4988-200-1-GPIO,A4988-200-2-GPIO,A4988-200-4-GPIO,A4988-200-8-GPIO,A4988-200-16-GPIO"> 	<Label>GPIO pin for Step-#19:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Dir"			type="menu" defaultValue="26" visibleBindingId="motorType" visibleBindingValue="DRV8834-200-1-GPIO,DRV8834-200-2-GPIO,DRV8834-200-4-GPIO,DRV8834-200-8-GPIO,DRV8834-200-16-GPIO,DRV8834-200-32-GPIO,A4988-200-1-GPIO,A4988-200-2-GPIO,A4988-200-4-GPIO,A4988-200-8-GPIO,A4988-200-16-GPIO"> 	<Label>GPIO pin for Direction-#26:</Label>  <List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-			<Field id="pin_beep"		type="menu" defaultValue="12" >																			<Label>GPIO pin for beep device-#12:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_rgbLED_G"	type="menu" defaultValue="16" > 																		<Label>GPIO pin for rgbLED_G-#13:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_rgbLED_R"	type="menu" defaultValue="20" >																			<Label>GPIO pin for rgbLED_R-#19:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_rgbLED_B"	type="menu" defaultValue="21" >																			<Label>GPIO pin for rgbLED_B-#26:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-			<Field id="pin_sensor0"		type="menu" defaultValue="10" >																			<Label>GPIO pin for 0 boundary sensor-#9:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor1"		type="menu" defaultValue="9" >																			<Label>GPIO pin for 12oClock sensor-#10:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor2"		type="menu" defaultValue="11" >																			<Label>GPIO pin for wire alarm sensor#11:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_sensor3"		type="menu" defaultValue="5" >																			<Label>GPIO pin for wire fault sensor#5:</Label>	<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-
-			<Field id="pin_Up"			type="menu" defaultValue="23" >																			<Label>GPIO pin for Up button-#23:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Dn"			type="menu" defaultValue="24" >																			<Label>GPIO pin for Down button-#24:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Select"		type="menu" defaultValue="25" >																			<Label>GPIO pin for Select button-25:</Label>		<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
-			<Field id="pin_Exit"		type="menu" defaultValue="8" >																			<Label>GPIO pin for EXIT button-#8:</Label>			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />  </Field>
 		</ConfigUI>
 
 		<States>

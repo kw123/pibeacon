@@ -13,6 +13,7 @@ sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import socket
 import urllib
+import RPi.GPIO as GPIO
 
 ##
 #  do 
@@ -27,6 +28,7 @@ def test():
 #################################
 def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 	try:
+		#print "killOldPgm ",pgmToKill,str(myPID)
 		cmd= "ps -ef | grep '"+pgmToKill+"' | grep -v grep"
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines=ret.split("\n")
@@ -92,7 +94,7 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
 			if unicode(e).find("No space left on device") >-1:
 				fixoutofdiskspace()
 			if unicode(e).find("Read-only file system:") >-1:
-				os.system("sudo reboot")
+				doRebootNow()
 
 	if doPrint:
 			try:
@@ -102,9 +104,20 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
 	return 
 
 
+#################################
+def doRebootNow():
+	try:
+		os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
+		time.sleep(5)
+		os.system("sudo killall python; sudo reboot")
+	except	Exception, e:
+		toLog(-1, u"doRebootNow in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
 
+
+
+
+#################################
 def checkrclocalFile():
-	
 	replace = False
 	if not os.path.isfile("/etc/rc.local"):	 # does not exist
 		replace = True
@@ -124,6 +137,7 @@ def checkrclocalFile():
 
 
 
+#################################
 def fixoutofdiskspace():
 	print " trying to fix oput of disk space" 
 	
@@ -160,59 +174,46 @@ def checkParametersFile(defaultParameters, force=False):
 			# restore old parameters"
 			os.system("cp " +G.homeDir+defaultParameters+"  " +G.homeDir+"parameters")
 			os.system("touch " +G.homeDir+"temp\touchFile")
+			print "lastRead2 >>", lastRead2, "<<"
+			print "inpRaw >>", inpRaw, "<<"
+			print "inp >>", inp, "<<"
 			restartMyself(reason="bad parameter... file.. restored" , doPrint=True)
 
 #################################
 def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=False, deleteAfterRead = False):
 	t=0
-	try:
+	if not os.path.isfile(inFile):
+		if lastTimeStamp != "": 
+			return "","error",t
+		return "","error"
+
+	if testTimeOnly:  return t
+			
+	t = os.path.getmtime(inFile)
+	if lastTimeStamp != "": 
+		if lastTimeStamp == t: 
+			if testTimeOnly: return t
+			else: 			 return "","",t
+	if testTimeOnly:  return t
+	
+	inp, inRaw = readJson(inFile)
+	if deleteAfterRead: os.remove(inFile)
+
+	if inp =={}:
 		if not os.path.isfile(inFile):
 			if lastTimeStamp != "": 
-				return "","error",t
+				if lastTimeStamp == t: return "","error",t
 			return "","error"
-
-		if testTimeOnly:  return t
-				
-		t = os.path.getmtime(inFile)
-		if lastTimeStamp != "": 
-			if lastTimeStamp == t: 
-				if testTimeOnly: return t
-				else: 			 return "","",t
-		if testTimeOnly:  return t
-		
-		f=open(inFile,"r")
-		inRaw =f.read().strip('"')
-		f.close()
-		inp =json.loads(inRaw)
+		time.sleep(0.1)
+		inp, inRaw = readJson(inFile)
+		if inp =={}:
+			if inFile == G.homeDir+"temp/parameters":
+				toLog(1, u"doRead error empty file")
 		if deleteAfterRead: os.remove(inFile)
+		if lastTimeStamp != "":
+			return "","error", t
+		return "","error"
 
-	except	Exception, e :
-			toLog(1, u"doRead in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-			try:
-				if not os.path.isfile(inFile):
-					if lastTimeStamp != "": 
-						if lastTimeStamp == t: return "","error",t
-					return "","error"
-				time.sleep(0.1)
-				f=open(inFile,"r")
-				inRaw = f.read()
-				f.close()
-				if deleteAfterRead: os.remove(inFile)
-				inp =json.loads(inRaw).strip('"')
-			except	Exception, e :
-				if inFile == G.homeDir+"temp/parameters":
-					toLog(1, u"doRead in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-				try:	
-					f.close()
-				except: 
-					pass
-				if deleteAfterRead: os.remove(inFile)
-				if lastTimeStamp != "":
-					return "","error", t
-				return "","error"
-
-	try:	f.close()
-	except: pass
 	if lastTimeStamp != "":
 		return inp, inRaw, t
 	return inp, inRaw
@@ -305,11 +306,21 @@ def doReboot(tt,text,cmd=""):
 		doCmd = cmd
 
 	toLog(-1," rebooting / shutdown "+doCmd+"  "+ text,permanentLog=True,doPrint=True)
+	os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
 
 
 	time.sleep(0.1)
 	os.system("sudo sync") 
 	time.sleep(tt)
+
+
+	if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
+		try: os.system("sudo killall pigpiod &")
+		except: pass
+		try: GPIO.cleanup() 
+		except: pass
+		print " after pig shutdown "
+		time.sleep(0.1)
 
 	if cmd =="":
 		os.system(doCmd)
@@ -324,8 +335,21 @@ def doReboot(tt,text,cmd=""):
 	doRebootThroughRUNpinReset()
 
 #################################
+def checkifRebooting():
+	if os.path.isfile(G.homeDir+"temp/rebooting.now"): return True
+	return False
+
+#################################
+def resetRebootingNow():
+	if os.path.isfile(G.homeDir+"temp/rebooting.now"):
+		os.system( "sudo rm "+G.homeDir+"temp/rebooting.now")
+
+
+#################################
 def doRebootThroughRUNpinReset():
-	if G.shutDownPinOutput >0:
+	if G.shutDownPinOutput >1:
+		os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
+		time.sleep(5) 
 		GPIO.setup(G.shutDownPinOutput, GPIO.OUT) 
 		GPIO.output(G.shutDownPinOutput, True)
 		GPIO.output(G.shutDownPinOutput, False)
@@ -337,7 +361,7 @@ def sendRebootHTML(reason,reboot=True):
 	if reboot:
 	   doReboot(1.," reboot at " +str(datetime.datetime.now())+"  "    +reason)
 	else:
-	   doReboot(1.," shut down at " +str(datetime.datetime.now())+"   " +reason,cmd="shutdown -h now ")
+	   doReboot(1.," shut down at " +str(datetime.datetime.now())+"   " +reason,cmd="sudo killall python; wait 1; shutdown -h now ")
 	
 	return
 
@@ -448,31 +472,38 @@ def getIPCONFIG():
 		if retIfconfig.find("wlan1:") > -1 : G.wifiEnabled= True
 		if retIfconfig.find("eth0:")  > -1 : G.eth0Enabled= True
 
+		# this happens when not connected 
+		if  eth0IP.find("169.254.")>-1:
+			G.eth0Enabled =False
+			##os.system("sudo ifconfig eth0 down")
+
 
 		ifConfigSections = retIfconfig.split("\n\n")
 		for ii in range(len(ifConfigSections)):
-			if ifConfigSections[ii].find("eth0  ") > -1 or ifConfigSections[ii].find("eth0:") > -1:
-				if ifConfigSections[ii].find("inet addr:") >-1:
-					eth0IP= ifConfigSections[ii].split("inet addr:")
-					if len(eth0IP) > 1:
-						eth0IP = eth0IP[1].split(" ")[0]
+			if G.eth0Enabled:
+				if ifConfigSections[ii].find("eth0  ") > -1 or ifConfigSections[ii].find("eth0:") > -1:
+					if ifConfigSections[ii].find("inet addr:") >-1:
+						eth0IP= ifConfigSections[ii].split("inet addr:")
+						if len(eth0IP) > 1:
+							eth0IP = eth0IP[1].split(" ")[0]
 
-				elif ifConfigSections[ii].find("inet ") >-1:
-					eth0IP= ifConfigSections[ii].split("inet ")
-					if len(eth0IP) > 1:
-						eth0IP = eth0IP[1].split(" ")[0]
+					elif ifConfigSections[ii].find("inet ") >-1:
+						eth0IP= ifConfigSections[ii].split("inet ")
+						if len(eth0IP) > 1:
+							eth0IP = eth0IP[1].split(" ")[0]
 
 
-			if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") > -1 or \
-			   ifConfigSections[ii].find("wlan1  ") > -1 or ifConfigSections[ii].find("wlan1:") > -1:
-				if	ifConfigSections[ii].find("inet addr:") >-1:
-					wifiIP= ifConfigSections[ii].split("inet addr:")
-					if len(wifiIP) > 1:
-						wifi0IP = wifiIP[1].split(" ")[0]
-				elif ifConfigSections[ii].find("inet ") >-1:
-					wifi0IP= ifConfigSections[ii].split("inet ")
-					if len(wifi0IP) > 1:
-						wifi0IP = wifi0IP[1].split(" ")[0]
+			if G.wifiEnabled:
+				if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") > -1 or \
+				   ifConfigSections[ii].find("wlan1  ") > -1 or ifConfigSections[ii].find("wlan1:") > -1:
+					if	ifConfigSections[ii].find("inet addr:") >-1:
+						wifiIP= ifConfigSections[ii].split("inet addr:")
+						if len(wifiIP) > 1:
+							wifi0IP = wifiIP[1].split(" ")[0]
+					elif ifConfigSections[ii].find("inet ") >-1:
+						wifi0IP= ifConfigSections[ii].split("inet ")
+						if len(wifi0IP) > 1:
+							wifi0IP = wifi0IP[1].split(" ")[0]
 					
 	except	Exception, e:
 		toLog(-1,u"error in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
@@ -481,157 +512,318 @@ def getIPCONFIG():
 ################################
 def whichWifi():
 	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
-	if	ret.find(":192.168.5.5 ") >-1:
+	#print "whichWifi", ret 
+	if	ret.find("192.168.5.5 ") >-1:
 		G.wifiType="adhoc"
 		return "adhoc"
 	G.wifiType="normal"
 	return "normal"
 
+
+################################
+def checkWhenAdhocWifistarted():
+	if not os.path.isfile(G.homeDir+"adhocWifistarted.time"): return -1
+	xxx, ddd = readJson(G.homeDir+"adhocWifistarted.time")
+	if  xxx =={}: return -1
+	if "startTime" in xxx:
+		return xxx["startTime"]
+	return -1
+
 #################################
-def prepAdhocWifi():
-	print "prepAdhoc Wifi: starting wifi servers as clock  no password "
-	os.system('cp /etc/network/interfaces  '+G.homeDir+'interfaces-old')
-	os.system('cp '+G.homeDir+'interfaces-interfaces-adhoc /etc/network/interfaces')
-	cmd="sudo ifconfig wlan0 down"
-	os.system(cmd) 
-	cmd="sudo ifconfig wlan1 down "
-	os.system(cmd) 
-	time.sleep(0.5)
-	cmd="sudo ifconfig wlan0 up "
-	os.system(cmd) 
-	cmd="sudo ifconfig wlan1 up "
-	os.system(cmd) 
-	startAdhocWebserver()
+def startAdhocWifi():
+	try:
+		toLog(-1, "prepAdhoc Wifi: starting wifi servers as clock  no password ", doPrint=True )
+		#os.system("sudo ifconfig wlan0 up")
+		#os.system("sudo iwconfig wlan0 mode ad-hoc")
+		#os.system('sudo iwconfig wlan0 essid "clock"')
+		#os.system("sudo ifconfig wlan0 192.168.5.5 netmask 255.255.255.0")
+		os.system("sudo cp /etc/network/interfaces "+G.homeDir+"interfaces-old")
+		os.system("sudo cp "+G.homeDir+"interfaces-adhoc /etc/network/interfaces")
+		writeJson(G.homeDir+"adhocWifistarted.time", {"startTime":time.time()})
+		time.sleep(2)
+		doRebootNow()
+	except	Exception, e :
+		toLog(-1, u"startAdhocWifi in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+	return
+
+#################################
+def stopAdhocWifi():
+	if  os.path.isfile(G.homeDir+"adhocWifistarted.time"): 
+		os.system("sudo rm "+ G.homeDir+"adhocWifistarted.time")
+	if os.path.isfile(G.homeDir+"temp/adhocWifi.stop"):
+		os.system("sudo rm "+G.homeDir+"temp/adhocWifi.stop")
+	if os.path.isfile(G.homeDir+"temp/adhocWifi.start"):
+		os.system("sudo rm "+G.homeDir+"temp/adhocWifi.start")
+
+	toLog(-1, "stopAdhocwebserver Wifi: stopping wifi, restoring old interface file and reboot", doPrint=True )
+	os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT /etc/network/interfaces')
+	os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT '+G.homeDir+'interfaces')
+	time.sleep(2)
+	doRebootNow()
 	return
 
 
 #################################
-def startAdhocWebserver():
-	outFile	= G.homeDir+"temp/webparameters.dat"
-	print "startAdhocWebserver Wifi: starting wifi servers as with name = clock  and no password "
+def startWiFi():
+	os.system("sudo rfkill unblock all")
+	os.system("sudo wpa_cli -i wlan0 reconfigure ") 
+	os.system("sudo wpa_cli -i wlan1 reconfigure ") 
+
+	time.sleep(0.5)
+	os.system("sudo ifconfig wlan0 up ") 
+	os.system("sudo ifconfig wlan1 up ") 
+	os.system("sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf & sudo dhcpcd wlan0")
+	os.system("sudo wpa_supplicant -i wlan1 -c /etc/wpa_supplicant/wpa_supplicant.conf & sudo dhcpcd wlan1")
+	os.system("sudo wpa_cli -i wlan0 reconfigure ") 
+	os.system("sudo wpa_cli -i wlan1 reconfigure ") 
+	time.sleep(0.5)
+	os.system("sudo wpa_cli -i wlan0 reassociate ") 
+	os.system("sudo wpa_cli -i wlan1 reassociate ") 
+
+
+	return
+
+#################################
+def stopWiFi():
+	os.system("sudo rfkill unblock all")
+	os.system("sudo ifconfig wlan0 down ") 
+	os.system("sudo ifconfig wlan1 down ") 
+	return
+
+#################################
+def startwebserverINPUT(port):
+	if checkIfStartwebserverINPUT(): return 
+	outFile	= G.homeDir+"temp/webparameters.Input"
+	toLog(-1, "starting web server port "+str(port)+" for  for input ", doPrint=True )
 	if os.path.isfile(outFile):
 		os.system('rm '+outFile)
-	os.system("sudo /usr/bin/python "+G.homeDir+"webserverAdhocForWifiSetup.py 8001 " +outFile+" &")
+	os.system("sudo /usr/bin/python "+G.homeDir+"webserverINPUT.py  "+str(port)+" " +outFile+" &")
 	return
 
 #################################
-def stopAdhocWebserver():
-	killOldPgm(-1,"/webserverAdhocForWifiSetup.py")
+def stopwebserverINPUT():
+	killOldPgm(-1,"/webserverINPUT.py")
 	return
 
 #################################
-def checkAdhocWebserverOutput():
-	outFile	= G.homeDir+"temp/webparameters.dat"
-	if not  os.path.isfile(outFile): return 
-	try:	
-		f = open(outFile)
-		data = json.loads(f.read())
-		f.close()
-	except: data ={}
-	print "updating wifi parameters with: " , data
-	if data =={}: return
-	if "SSID" not in data: return 
-	if "passCode" not in data: return 
-	if "timezone" not in data: return 
-	stopAdhocWebserver()
-	makeNewSupplicantFile(data)
-
-	try:
-		print "updating TZ with:" , (data["timezone"])
-		writeTZ(iTZ= int(data["timezone"]))
-	except	Exception, e :
-		toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
-
-	resetWifi()
-	os.system('rm '+G.homeDir+"temp/webparameters.dat")
+def startwebserverSTATUS(port):
+	if checkIfStartwebserverSTATUS(): return 
+	outFile	= G.homeDir+"temp/showOnwebserver"
+	toLog(-1, "starting web server : port "+str(port)+" for status", doPrint=True )
+	if os.path.isfile(outFile):
+		os.system('rm '+outFile)
+	os.system("sudo /usr/bin/python "+G.homeDir+"webserverSTATUS.py "+str(port)+" " +outFile+" &")
 	return
 
-###############################
-def writeTZ( iTZ = 0, cTZ="" ):
-	try: 
-		if cTZ =="": 
-			try:    newTZ = G.timeZones[int(iTZ)+12]
-			except	Exception, e :
-				toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
-				return 
-
-		else: newTZ = cTZ
-		oldTZ = subprocess.Popen('date +"%Z"' ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r")
-		toLog(-1,"changing timezone from:"+newTZ+";   to:"+ newTZ+";", doPrint=True)
-		if oldTZ != newTZ:
-			toLog(-1,"changing timezone from:"+oldTZ+";   to:"+ newTZ+";", doPrint=True)
-			if os.path.isfile("/usr/share/zoneinfo/"+newTZ):
-				os.system('sudo rm /etc/localtime; sudo  cp /usr/share/zoneinfo/'+newTZ+' /etc/localtime')#  not needed...   ; sudo echo "TZ='+newTZ+'" >> /etc/timezone  ; sudo dpkg-reconfigure -f noninteractive tzdata' )
-			else:
-				toLog(-1," error bad timezone:"+newTZ, doPrint=True)
-	except	Exception, e :
-		toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+#################################
+def stopwebserverSTATUS():
+	toLog(-1, "webserverSTATUS stop", doPrint=True )
+	killOldPgm(-1,"/webserverSTATUS.py")
 	return
 
 
 #################################
-def webserverForStatus():
-	print "start webserverWhenOnline to allow status check and parameters settings"
-	os.system("/usr/bin/python "+G.homeDir+"webserverWhenOnline.py 80 "+G.homeDir+"temp/sunDial.status &")
+def setStartwebserverINPUT():
+	setFileTo(G.homeDir+"temp/webserverINPUT.start", "start")
 	return
+#################################
+def setStopwebserverINPUT():
+	setFileTo(G.homeDir+"temp/webserverINPUT.stop", "stop")
+	return
+#################################
+def setStartwebserverSTATUS():
+	setFileTo(G.homeDir+"temp/webserverSTATUS.start", "start")
+	return
+#################################
+def setStopwebserverSTATUS():
+	setFileTo(G.homeDir+"temp/webserverSTATUS.stop", "stop")
+	return
+#################################
+def setStartAdhocWiFi():
+	setFileTo(G.homeDir+"temp/adhocWifi.start", "start")
+	return
+#################################
+def setStopAdhocWiFi():
+	setFileTo(G.homeDir+"temp/adhocWifi.stop", "stop")
+	return 
+#################################
+def setFileTo(file, value):
+	os.system('echo  '+value+' > '+file)
+	return 
+
 
 #################################
-def updateWebStatus(file, data):
-	#print "updating webserverWhenOnline with status"
-	f=open(file,"w")
+def checkIfStartAdhocWiFi():
+	return testForFile(G.homeDir+"temp/adhocWifi.start")
+
+#################################
+def checkIfStopAdhocWiFi():
+	return testForFile(G.homeDir+"temp/adhocWifi.stop")
+
+#################################
+def checkIfStartwebserverINPUT():
+	return testForFile(G.homeDir+"temp/webserverINPUT.start")
+
+#################################
+def checkIfwebserverINPUTrunning():
+	if pgmStillRunning("/webserverSTATUS.py"): return True
+	return False
+
+#################################
+def checkIfStopwebserverINPUT():
+	return testForFile(G.homeDir+"temp/webserverINPUT.stop")
+
+#################################
+def checkIfStartwebserverSTATUS():
+	return testForFile(G.homeDir+"temp/webserverSTATUS.start")
+
+#################################
+def checkIfStopwebserverSTATUS():
+	return testForFile(G.homeDir+"temp/webserverSTATUS.stop")
+
+
+#################################
+def checkIfwebserverSTATUSrunning():
+	if pgmStillRunning("/webserverSTATUS.py"): return True
+	return False
+
+
+#################################
+def checkIfwebserverINPUTrunning():
+	if pgmStillRunning("/webserverINPUT.py"): return True
+	return False
+
+
+#################################
+def updateWebStatus(data):
+	toLog(1,"updating web status "+unicode(data))
+	f=open(G.homeDir+"temp/showOnwebserver","w")
 	f.write(data)
 	f.close()
 	return
 
 #################################
-def stopNormalWebserver():
-	killOldPgm(-1,"/webserverWhenOnline.py")
+def testForFile(fname):
+	if os.path.isfile(fname):
+		os.system('sudo rm '+fname)
+		return True
+	return False
+
+
+#################################
+def checkwebserverINPUT():
+	try:
+		fName	= G.homeDir+"temp/webparameters.Input"
+		if not  os.path.isfile(fName): return False
+		data = {}
+		ddd  = ""
+		try:	
+			data,ddd = readJson(fName)
+		except: 
+			pass
+		os.system('rm '+fName)
+
+		if len(ddd) > 20 and data !={}: 
+			if "timezone" in data and len(data["timezone"]) >0:
+				try:
+					iTZ = int(data["timezone"])
+					if iTZ !=99:
+						writeTZ(iTZ=iTZ )
+				except	Exception, e :
+					toLog(-1, u"testPing in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+			if makeNewSupplicantFile(data):
+				return True
+
+	except	Exception, e :
+		toLog(-1, u"checkwebserverINPUT in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+	return True
+
+###############################
+def writeTZ( iTZ = 99, cTZ="" ):
+	try: 
+		if cTZ =="": 
+			try:
+				iTZ = int(iTZ)
+				if iTZ == 99: return 
+				newTZ = G.timeZones[iTZ+12]
+			except	Exception, e :
+				toLog(-1, u"writeTZ in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+				return 
+
+		else: newTZ = cTZ
+		oldTZ = subprocess.Popen('date +"%Z"' ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r")
+		toLog(-1,"changing timezone from:"+oldTZ+";   to:"+ newTZ+";", doPrint=True)
+		if oldTZ != newTZ:
+			toLog(-1,"changing timezone executing", doPrint=True)
+			if os.path.isfile("/usr/share/zoneinfo/"+newTZ):
+				os.system('sudo rm /etc/localtime; sudo  cp /usr/share/zoneinfo/'+newTZ+' /etc/localtime')#  not needed...   ; sudo echo "TZ='+newTZ+'" >> /etc/timezone  ; sudo dpkg-reconfigure -f noninteractive tzdata' )
+			else:
+				toLog(-1," error bad timezone:"+newTZ, doPrint=True)
+	except	Exception, e :
+		toLog(-1, u"writeTZ in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
 	return
+
 
 
 
 #################################
 def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
-	print " resetting wifi to default for next re-boot"
+	toLog(-1," resetting wifi to default for next re-boot", doPrint=True)
 	if os.path.isfile(G.homeDir+defaultFile): 
 		os.system("cp "+G.homeDir+defaultFile+" /etc/network/interfaces")
-	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
-	if	ret.find("wlan0") >-1:
-		cmd="sudo ifconfig wlan0 down"
-		os.system(cmd) 
-	if	ret.find("wlan1") >-1:
-		cmd="sudo ifconfig wlan1 down"
-		os.system(cmd) 
+	stopWiFi()
 	time.sleep(0.2)
-	f= open("/etc/wpa_supplicant/wpa_supplicant.conf")
-	ret = f.read()
-	f.close()
-	if	ret.find("wlan0") >-1:
-		cmd="sudo ifconfig wlan0 up "
-		os.system(cmd) 
-	if	ret.find("wlan1") >-1:
-		cmd="sudo ifconfig wlan1 up "
-		os.system(cmd) 
+	startWiFi()
+	return	
+
+#################################
+def restartWifi():
+	toLog(-1," restartWifi  w new config and wps files", doPrint=True)
+	stopWiFi()
+	time.sleep(0.2)
+	startWiFi()
 	return	
 
 #################################
 def makeNewSupplicantFile(data):
-	print "making new supplicant file with", data
-	f= open(G.homeDir+"wpa_supplicant.conf-DEFAULT","r")
-	ret = f.read()
-	f.close()
-	lines= ret.split("\n")
-	print lines
-	f=open(G.homeDir+"wpa_supplicant.conf-new","w")
-	for line in lines:
-		if line.find("ssid=") >-1:
-			f.write('    ssid='+data["SSID"]+'\n')
-		elif line.find("psk=") >-1:
-			f.write('    psk='+data["passCode"]+'\n')
+	try:
+		if "SSID"      not in data: 			return False
+		if "passCode"  not in data: 			return False
+		if len(data["SSID"]) < 1:				return False
+		if len(data["passCode"]) < 1:			return False
+		if data["SSID"] 	== "do not change": return False
+		if data["passCode"] == "do not change": return False
+
+		old = ""
+
+		toLog(-1,"making new supplicant file with: " + unicode(data), doPrint=True)
+		if os.path.isfile("/etc/wpa_supplicant/wpa_supplicant.conf"): 
+			os.system("cp  /etc/wpa_supplicant/wpa_supplicant.conf " +G.homeDir+"wpa_supplicant.conf-temp ")
+			f = open(G.homeDir+"wpa_supplicant.conf-temp","r")
+			old = f.read()
+			f.close()
+			if old.find('"'+data["SSID"]+'"') >-1 and  old.find('"'+data["passCode"]+'"') >-1: 
+				toLog(-1,"ssid and passcode already in config file.. no update", doPrint=True)
+				return False
+
+		if old.find("network={") ==-1: 
+			os.system("cp "+G.homeDir+"wpa_supplicant.conf-DEFAULT " +G.homeDir+"wpa_supplicant.conf-temp")
+
+		f = open(G.homeDir+"wpa_supplicant.conf-temp","a")
+		f.write('network={\n      ssid="'+data["SSID"]+'"\n      psk="'+data["passCode"]+'"\n      key_mgmt=WPA-PSK\n}\n')
+		f.close()
+		os.system("cp "+G.homeDir+"wpa_supplicant.conf-temp /etc/wpa_supplicant/wpa_supplicant.conf")
+		if whichWifi().find("adhoc") > -1:
+			setStopAdhocWiFi()
+			time.sleep(3) 
+			stopAdhocWifi()
 		else:
-			f.write(line+"\n")
-	f.close()
-	return	
+			## need to reboot to get the new configs loaded 
+			time.sleep(2)
+			doRebootNow()
+	except	Exception, e :
+		toLog(-1, u"makeNewSupplicantFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+	return	True
 
 #
 
@@ -642,8 +834,9 @@ def getIPNumberMaster(quiet=False):
 	retcode									  = 0
 	ipHostname								  = gethostnameIP()		   
 	eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
+
 	changed = False
-	if G.wifiOFF.upper() !="ON": 
+	if G.wifiOFF.upper().find("ON") ==-1: 
 		wifi0IP,eth0IP,changed = setWLANoffIFeth0ON(wifi0IP,eth0IP)
 
 	try:
@@ -698,12 +891,8 @@ def setWLANoffIFeth0ON(wifi0IP,eth0IP):
 	if eth0IP.find(testIP) > -1:
 		if wifi0IP.find(testIP) > -1:
 			toLog(-1,u"switching wifi off as ethernet is connected",doPrint=True)
-			cmd="sudo ifconfig wlan0 down "
-			os.system(cmd) 
-			cmd="sudo ifconfig wlan1 down "
-			os.system(cmd) 
-
-			# does not work anymore under new opsys 
+			stopWiFi()
+			# does not work anymore under new opsys:
 			#cmd="sudo iwconfig wlan0 txpower off"
 			#os.system(cmd) 
 			#cmd="sudo iwconfig wlan1 txpower off"
@@ -931,8 +1120,10 @@ def whichHCI():
 
 #################################
 def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False):
+		
 	try:
-			if (G.networkType  not in G.useNetwork or G.wifiType !="normal") or	 (getNetwork() =="off" or getNetwork() =="clock") : 
+			netwM = getNetwork() 
+			if (G.networkType  not in G.useNetwork or G.wifiType !="normal") or	 (netwM=="off" or netwM =="clock") : 
 				G.lastAliveSend	 = time.time()
 				G.lastAliveSend2 = time.time()
 				return
@@ -962,7 +1153,7 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 			else:
 				name = "pi_IN_"+str(G.myPiNumber)
 
-			if G.IndigoOrSocket =="indigo":
+			if G.IndigoOrSocket == "indigo":  # use indigo http restful 
 						var = "/variables/"+name
 						data0 = json.dumps(data, separators=(',',':'))
 						if squeeze: data0 = data0.replace(" ","")
@@ -1001,7 +1192,7 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 							os.system("echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend")
 							#print "echo '"+G.program+":	 "+data0+"' > "+ G.homeDir+"temp/messageSend"
 
-			else:
+			else:  ## do socket comm 
 						
 						sendMSG = False
 						for ii in range(3): # try max 3 times.
@@ -1015,7 +1206,6 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 								len_sent = soc.send(sendData)
 								time.sleep(0.1)
 								response = soc.recv(512)
-
 								if response.find("ok") >-1:
 									os.system("echo '"+G.program+":  "+data0+"' > "+ G.homeDir+"temp/messageSend")
 									sendMSG =True
@@ -1100,11 +1290,8 @@ def muxTCA9548Areset():
 def removeOutPutFromFutureCommands(pin, devType):
 	try:
 		if os.path.isfile(G.homeDir+"execcommands.current"):
-			f=open(G.homeDir+"execcommands.current","r")
-			input = f.read()
+			execcommands, input = readJson(G.homeDir+"execcommands.current")
 			if len(input) < 3: return
-			execcommands=json.loads(input)
-			f.close()
 			rmEXEC={}
 			for channel in execcommands:
 				toLog(2,"removing  testing channel "+str(channel) +"  "+ str(execcommands[channel]) )
@@ -1118,13 +1305,11 @@ def removeOutPutFromFutureCommands(pin, devType):
 							toLog(2,"removing removing channel "+str(channel)) 
 			for channel in rmEXEC:
 				del execcommands[channel]
-			f=open(G.homeDir+"execcommands.current","w")
-			f.write(json.dumps(execcommands))
-			f.close()
+			writeJson(G.homeDir+"execcommands.current",execcommands)
 	except	Exception, e:
 		toLog(-1, u"removeOutPutFromFutureCommands in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+			doRebootNow()
 
 			
 #################################
@@ -1178,15 +1363,40 @@ def doFileCheck(xxx,extension):
 
 #################################
 def makeDATfile(sensor, data):
+	if "sensors" in data:
+		for sens in data["sensors"]:
+			#print sensor, "makeDATfile", sens, data["sensors"][sens]
+			writeJson(G.homeDir+"temp/"+sens+".dat", data["sensors"][sens], indent=2)
+	else:
+			writeJson(G.homeDir+"temp/"+sensor+".dat",data, indent=2)
+
+
+#################################
+def writeJson(fName, data, sort_keys=False, indent=0):
 	try:
-		if G.debug > 1	or G.networkType  not in G.useNetwork :
-			f=open(G.homeDir+"temp/"+sensor+".dat","w")
-			f.write(json.dumps(data))
-			f.close()
+		f=open(fName,"w")
+		out = json.dumps(data,sort_keys=sort_keys, indent=indent)
+		#print "writing json to "+fName, out
+		f.write(out)
+		f.close()
 	except	Exception, e:
-		toLog(-1, u"makeDATfile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+			doRebootNow()
+	return 
+
+
+#################################
+def readJson(fName):
+	data ={}
+	ddd = ""
+	try:
+		f=open(fName,"r")
+		ddd = f.read()
+		data = json.loads(ddd)
+		f.close()
+	except: return {},""
+	return data, ddd
+
 
 #################################
 def checkresetCount(IPCin):
@@ -1195,24 +1405,12 @@ def checkresetCount(IPCin):
 		if not os.path.isfile(G.homeDir + G.program+".reset"): 
 			#print "checkresetCount no file"
 			return IPC
-		try:
-			f = open(G.homeDir + G.program+".reset", "r")
-			inp = f.read()
-			f.close()
-			os.remove(G.homeDir + G.program+".reset")
-		except	Exception, e:
-			try: os.remove(G.homeDir + G.program+".reset")
-			except: pass
-			inp=""
-		try:
-			if len(inp) < 3: 
-				return IPC
-			inp = json.loads(inp)
-		except	Exception, e:
-			toLog(-1, u"checkresetCount in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		inpJ, inp = readJson(G.homeDir + G.program+".reset")
+		os.remove(G.homeDir + G.program+".reset")
+		if len(inp) < 3: 
 			return IPC
 		#print "checkresetCount doing reset", inp
-		for p in inp:
+		for p in inpJ:
 			pin = int(p)
 			if pin > 99:  continue
 			if pin < 0:	  continue
@@ -1228,9 +1426,7 @@ def checkresetCount(IPCin):
 def readINPUTcount():
 		IPC = [0 for i in range(100)]
 		try:
-			f=open(G.homeDir+G.program+".count","r")
-			IPC =json.loads(f.read())
-			f.close()
+			IPC, ddd = readJson(G.homeDir+G.program+".count")
 		except:
 			pass
 		for p in range(100):
@@ -1247,35 +1443,16 @@ def readINPUTcount():
 
 ######################################
 def writeINPUTcount(IPC):
-	try:
-		f=open(G.homeDir+G.program+".count","w")
-		f.write(json.dumps(IPC))
-		f.close()
-	except	Exception, e:
-		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+	writeJson(G.homeDir+G.program+".count",IPC)
 			
 ######################################
 def readRainStatus():
-		try:
-			f=open(G.homeDir+G.program+".status","r")
-			status =json.loads(f.read())
-			f.close()
-			return status
-		except:
-			pass
-		return {}
+	status, ddd = readJson(G.homeDir+G.program+".status")
+	return status
 
 ######################################
 def writeRainStatus(status):
-	try:
-		f=open(G.homeDir+G.program+".status","w")
-		f.write(json.dumps(status))
-		f.close()
-	except	Exception, e:
-		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
-
+	writeJson(G.homeDir+G.program+".status",status)
 ######################################
 def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAction=""): # theAction can be 1 2 3 4 5
 	try:			   
@@ -1625,16 +1802,8 @@ def magCalibrate(theClass, force = False, calibTime=10):
 
 #################################
 def saveCalibration(theClass, calibrationFile, calib):
-		toLog(1,'saveCalibration:  enableCalibration = '+unicode(calib))
-		try:
-			f=open(theClass.calibrationFile, 'w')
-			calib = json.dumps(calib, sort_keys=True)
-			f.write(calib)
-			f.close()
-		except Exception, e:
-			toLog(-1,'saveCalibration unable to save calibration: {0}'.format(e))
-			if unicode(e).find("Read-only file system:") >-1:
-				os.system("sudo reboot")
+	toLog(1,'saveCalibration:  enableCalibration = '+unicode(calib))
+	writeJson(theClass.calibrationFile,calib, sort_keys=True)
 
 #################################
 def setOffsetFromCalibration(calib):
@@ -1651,14 +1820,7 @@ def setOffsetFromCalibration(calib):
 
 #################################
 def loadCalibration(calibrationFile):
-		try:
-			f=open(calibrationFile, 'r')
-			calib = f.read()
-			calibrations = json.loads(calib)
-			f.close()
-		except Exception, e:
-			toLog(-1,'Unable to open  calibration file : {0}'.format(e))
-			return {}
+		calibrations, calib = readJson(G.homeDir+G.program+".status")
 		return calibrations
 
 #################################
@@ -1997,7 +2159,7 @@ def findString(string,file):
 	except	Exception, e:
 		toLog(-1, u"findString in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+			doRebootNow()
 	return 3
 
 
@@ -2084,7 +2246,7 @@ def uncommentOrAdd(string,file,before="",nLines=1):
 	except	Exception, e:
 		toLog(-1, u"uncommentOrAdd in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+			doRebootNow()
 
 
 #################################
@@ -2121,7 +2283,7 @@ def removefromFile(string,file,nLines =1):
 	except	Exception, e:
 		toLog(-1, u"removefromFile in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+			doRebootNow()
 	return 1	
 
 #################################

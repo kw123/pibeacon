@@ -69,7 +69,7 @@ def readParams():
 				else:
 					macList[thisMAC]["iPhoneRefreshDownSecs"] = macListNew[thisMAC]["iPhoneRefreshDownSecs"]
 					macList[thisMAC]["iPhoneRefreshUpSecs"]	  = macListNew[thisMAC]["iPhoneRefreshUpSecs"]
-					macList[thisMAC]["BLEtimeout"]	 = macListNew[thisMAC]["BLEtimeout"]
+					macList[thisMAC]["BLEtimeout"]	 		  = macListNew[thisMAC]["BLEtimeout"]
 
 			delMac={}
 			for thisMAC in macList:
@@ -221,8 +221,8 @@ time.sleep(1)
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 HCIs = U.whichHCI()
-useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
-if devId <0:
+useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
+if BLEid <0:
 	U.toLog(1, "BLEconnect: NO BLE STACK UP ")
 	sys.exit(1)
 
@@ -298,7 +298,7 @@ while True:
 			elif tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshDownSecs"] - macList[thisMAC]["quickTest"]:	 continue
 
 
-			data0 = tryToConnect(thisMAC,macList[thisMAC]["BLEtimeout"],devId)
+			data0 = tryToConnect(thisMAC,macList[thisMAC]["BLEtimeout"],BLEid)
 			#if nowP: print "nowP:	testing: "+thisMAC+"  "+ unicode(data0)
 
 			#print	data0

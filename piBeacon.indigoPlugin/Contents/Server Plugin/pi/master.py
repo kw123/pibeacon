@@ -72,18 +72,19 @@ def checkIfGpioIsInstalled():
 def readNewParams(force=False):
 		global enableRebootCheck,  restart,sensorList,rPiCommandPORT, firstRead
 		global sensorEnabled, enableiBeacons, beforeLoop, cAddress,rebootHour,rebooted,BLEserial,BLEserialOLD,sensors,enableShutDownSwitch, rebootWatchDogTime
-		global shutdownInputPin,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, displayActive
+		global shutdownInputPin, shutdownPinVoltSensor,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, displayActive
 		global actions, output
 		global lastAlive
 		global activePGMdict, bluetoothONoff
 		global oldRaw,	lastRead
-		global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
-		global chargeTimeForMaxCapacity, batteryCapacitySeconds
+		global batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+		global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
 		global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 		global activePGM
 		global configured
+		global startWebServerSTATUS, startWebServerINPUT
+		global fanGPIOPin, fanTempOnAtTempValue, fanTempName, fanTempDevId, fanEnable
 
-		
 		BLEserialOLD= BLEserial
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -103,7 +104,7 @@ def readNewParams(force=False):
 		if "debugRPI"						in inp:	 G.debug=						int(inp["debugRPI"]["debugRPICALL"])
 		if u"BLEserial"						in inp:	 BLEserial =					   (inp["BLEserial"])
 		if u"enableRebootCheck"				in inp:	 enableRebootCheck=				   (inp["enableRebootCheck"])
-		if u"minPinActiveTimeForShutdown" 	in inp:	 minPinActiveTimeForShutdown= float(inp["minPinActiveTimeForShutdown"])
+		if u"batteryMinPinActiveTimeForShutdown" 	in inp:	 batteryMinPinActiveTimeForShutdown= float(inp["batteryMinPinActiveTimeForShutdown"])
 		if u"enableiBeacons"				in inp:	 enableiBeacons=		 		   (inp["enableiBeacons"])
 		if u"cAddress"						in inp:	 cAddress=				  		    inp["cAddress"]
 		if u"rebootHour"					in inp:	 rebootHour=					    int(inp["rebootHour"])
@@ -111,7 +112,7 @@ def readNewParams(force=False):
 		if u"useRamDiskForLogfiles" 		in inp:	 useRamDiskForLogfiles =  		    inp["useRamDiskForLogfiles"]
 		if u"actions"						in inp:	 actions			   =  		    inp["actions"]
 		if u"useRTC"						in inp:	 U.setUpRTC(inp["useRTC"])
-		if u"chargeTimeForMaxCapacity" 		in inp:	 chargeTimeForMaxCapacity= 		float(inp["chargeTimeForMaxCapacity"])
+		if u"batteryChargeTimeForMaxCapacity" 		in inp:	 batteryChargeTimeForMaxCapacity= 		float(inp["batteryChargeTimeForMaxCapacity"])
 		if u"batteryCapacitySeconds" 		in inp:	 batteryCapacitySeconds= 		float(inp["batteryCapacitySeconds"])
 
 		if u"GPIONumberAfterBoot1" 			in inp:	 GPIONumberAfterBoot1= 			 	 (inp["GPIONumberAfterBoot1"])
@@ -119,6 +120,34 @@ def readNewParams(force=False):
 		if u"GPIOTypeAfterBoot1" 			in inp:	 GPIOTypeAfterBoot1= 			 	 (inp["GPIOTypeAfterBoot1"])
 		if u"GPIOTypeAfterBoot2" 			in inp:	 GPIOTypeAfterBoot2= 			 	 (inp["GPIOTypeAfterBoot2"])
 		if u"configured" 					in inp:	 configured= 					 	 (inp["configured"])
+		if u"startWebServerSTATUS" 			in inp:	 startWebServerSTATUS= 			int(inp["startWebServerSTATUS"])
+		if u"startWebServerINPUT" 			in inp:	 startWebServerINPUT= 			int(inp["startWebServerINPUT"])
+		if u"fanEnable" 					in inp:	 fanEnable= 					    (inp["fanEnable"])
+		if fanEnable == "0" or fanEnable == "1":
+			
+			if u"fanTempDevId" 					in inp:	 
+				if "sensors" not in inp: 
+					fanTempDevId = ""
+					fanTempName  = ""
+				else:
+					fanTempName  = "" 
+					fanTempDevId = (inp["fanTempDevId"])
+					for pgmName in inp["sensors"]:
+						for devId in inp["sensors"][pgmName]:
+							if fanTempDevId == devId:
+								fanTempName = pgmName
+								break
+						if fanTempName !="":
+							break
+			if fanTempName !="":
+				if u"fanGPIOPin" in inp and (inp["fanGPIOPin"]) != "-1": 
+					xx= int(inp["fanGPIOPin"])
+					if xx > 0 and xx != fanGPIOPin: 
+						fanGPIOPin = xx
+						GPIO.setup(fanGPIOPin, GPIO.OUT)	
+				if u"fanTempOnAtTempValue" in inp:
+					fanTempOnAtTempValue= int(inp["fanTempOnAtTempValue"])
+
 		
 		doGPIOAfterBoot()
 
@@ -223,6 +252,21 @@ def readNewParams(force=False):
 				if shutdownInputPin ==15 or shutdownInputPin==14:
 					os.system("systemctl disable hciuart")
 					time.sleep(1)
+				if shutdownInputPin !=-1:
+					GPIO.setup(int(shutdownInputPin), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+
+
+		if u"shutdownPinVoltSensor"	 in inp:  
+			xxx=				   int(inp["shutdownPinVoltSensor"])
+			if shutdownPinVoltSensor !=-1 and xxx != shutdownPinVoltSensor:  # is a change, not just switch on 
+				U.toLog(-1, "restart master for new shutdown input pin", doPrint=True)
+				os.system("/usr/bin/python "+G.homeDir+"master.py &" )
+			if shutdownPinVoltSensor != xxx:
+				shutdownPinVoltSensor=	  xxx
+				if shutdownPinVoltSensor ==15 or shutdownPinVoltSensor==14:
+					os.system("systemctl disable hciuart")
+					time.sleep(1)
+				GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
 
 
 		if u"rebootWatchDogTime" in inp :
@@ -237,9 +281,7 @@ def readNewParams(force=False):
 		if "rPiRestartCommand"	in inp:	 rPiRestartCommand=	   (inp["rPiRestartCommand"])
 		if inp["rPiRestartCommand"] !="":
 			inp["rPiRestartCommand"] =""
-			f=open(G.homeDir+"parameters","w")
-			f.write(json.dumps(inp, sort_keys=True, indent=2))
-			f.close()
+			U.writeJson(G.homeDir+"parameters",inp, sort_keys=True, indent=2)
 			#os.system("/usr/bin/python "+G.homeDir+ "copyToTemp.py")
 
 
@@ -650,14 +692,13 @@ def checkIfRebootRequest():
 		f.close()
 		os.remove(G.homeDir+"temp/rebootNeeded")
 		if reason.find("noreboot")>-1:
-			U.toLog(-1, " sending message to plugin re:" + reason ,doPrint=False)
+			U.toLog(-1, " sending message to plugin re:" + reason ,doPrint=True)
 			U.sendURL(sendAlive="alive",text=reason)
 		else:
 			U.toLog(-1, " rebooting due to request:" + reason ,doPrint=True)
 			time.sleep(50)
 			U.sendRebootHTML(reason)
-
-		U.doRebootThroughRUNpinReset()
+			U.doRebootThroughRUNpinReset()
 
 
 	#print "into checkIfRebootRequest restartNeeded" , os.path.isfile(G.homeDir+"temp/restartNeeded")
@@ -669,18 +710,18 @@ def checkIfRebootRequest():
 		os.remove(G.homeDir+"temp/restartNeeded")
 		if reason.find("bluetooth_startup")>-1:
 			count = 0
-			if	os.path.isfile(G.homeDir+"restartCount"):
+			if	os.path.isfile(G.homeDir+"temp/restartCount"):
 				try:
-					f=open(G.homeDir+"restartCount","r") 
+					f=open(G.homeDir+"temp/restartCount","r") 
 					count = int(f.read())
 					f.close()
 					if count > 5: 
-						os.remove(G.homeDir+"restartCount")
+						os.remove(G.homeDir+"temp/restartCount")
 						U.toLog(-1, " rebooting due to repeated request:" + reason ,doPrint=True)
 						U.doReboot(20," rebooting due to repeated request:" + reason)
 				except: pass
 				
-			f=open(G.homeDir+"restartCount","w") 
+			f=open(G.homeDir+"temp/restartCount","w") 
 			f.write(str(count+1))
 			f.close()
 			U.toLog(-1, " starting master due to request:" + reason ,doPrint=True)
@@ -710,91 +751,86 @@ def checkIfNightReboot():
 
 
 
-def checkIfShutDownSwitch():
-	global shutdownInputPin,  minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
-	global chargeTimeForMaxCapacity, batteryCapacitySeconds
+def checkIfShutDownVoltage():
+	global shutdownInputPin, shutdownPinVoltSensor,  batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+	global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
 	global  batteryStatus,lastWriteBatteryStatus
+	#print " checkIfShutDownVoltage into"
 	try:
 		ii = lastWriteBatteryStatus
 	except:
 		try:
 			lastWriteBatteryStatus =0
-			print "checkIfShutDownSwitch initializing"
-			batteryStatus= readJson(G.homeDir+"batteryStatus")
+			#print "checkIfShutDownVoltage initializing"
+			batteryStatus, raw= U.readJson(G.homeDir+"batteryStatus")
 			delItem=[]
 			for item in batteryStatus:
-				if item not in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","chargeTimeForMaxCapacity","minPinActiveTimeForShutdown", "batteryTimeLeft"]:
+				if item not in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","batteryChargeTimeForMaxCapacity","batteryMinPinActiveTimeForShutdown", "batteryTimeLeft"]:
 					delItem.append(item)
 			for item in delItem:
 				del batteryStatus[item]
-			for item in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","chargeTimeForMaxCapacity","minPinActiveTimeForShutdown", "batteryTimeLeft"]:
+			for item in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","batteryChargeTimeForMaxCapacity","batteryMinPinActiveTimeForShutdown", "batteryTimeLeft"]:
 				if item not in batteryStatus:
 					batteryStatus[item] =0
 	
-			if shutdownInputPin != -1:
-				#print	"setting shutDownPin to GPIO: " + str(shutdownInputPin) 
-				U.toLog(-1, "setting shutDownPin to GPIO: " + str(shutdownInputPin) )
-				GPIO.setup(int(shutdownInputPin), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+			if shutdownPinVoltSensor != -1:
+				#print	"setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor) 
+				U.toLog(-1, "setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor), doPrint=True)
+				try: GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+				except: pass
 				inputPinVoltRawLastONTime = time.time()
 		except: pass
 		if batteryStatus =={}: 
-			batteryStatus ={"timeCharged":0, "testTime":time.time(),"percentCharged":0,"inputPinVoltRawLastONTime":0,"batteryTimeLeftEndOfCharge":0,"status":"","batteryCapacitySeconds":0,"chargeTimeForMaxCapacity":0,"minPinActiveTimeForShutdown":0,"batteryTimeLeft":0}
+			batteryStatus ={"timeCharged":0, "testTime":time.time(),"percentCharged":0,"inputPinVoltRawLastONTime":0,"batteryTimeLeftEndOfCharge":0,"status":"","batteryCapacitySeconds":0,"batteryChargeTimeForMaxCapacity":0,"batteryMinPinActiveTimeForShutdown":0,"batteryTimeLeft":0}
 	try:
-		batteryStatus["chargeTimeForMaxCapacity"] 			= chargeTimeForMaxCapacity
+		#print "batteryStatus ", batteryStatus
+		batteryStatus["batteryChargeTimeForMaxCapacity"] 			= batteryChargeTimeForMaxCapacity
 		batteryStatus["batteryCapacitySeconds"] 			= batteryCapacitySeconds
-		batteryStatus["minPinActiveTimeForShutdown"]		= minPinActiveTimeForShutdown
+		batteryStatus["batteryMinPinActiveTimeForShutdown"]		= batteryMinPinActiveTimeForShutdown
 		for ii in range(2):
-			if GPIO.input(int(shutdownInputPin)) == 1:
+			if GPIO.input(int(shutdownPinVoltSensor)) == 1:
 				batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
-				batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],chargeTimeForMaxCapacity),5) # x hour charge time should get to 90+%
+				batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],batteryChargeTimeForMaxCapacity),5) # x hour charge time should get to 90+%
 				batteryStatus["inputPinVoltRawLastONTime"]			= round(time.time(),5)
 				batteryStatus["testTime"]							= round(time.time(),5)
-				batteryStatus["percentCharged"] 					= round(max( 0, batteryStatus["timeCharged"] /chargeTimeForMaxCapacity ),5)
-				batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(minPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
+				batteryStatus["percentCharged"] 					= round(max( 0, batteryStatus["timeCharged"] /batteryChargeTimeForMaxCapacity ),5)
+				batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
 				if batteryStatus["percentCharged"] ==1:				  batteryStatus["status"]	= "charged"
 				else:  												  batteryStatus["status"]	= "charging"
 				batteryStatus["batteryTimeLeft"]					= batteryStatus["batteryTimeLeftEndOfCharge"]
-				lastWriteBatteryStatus= writeJson(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+				lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+				#print "checkIfShutDownVoltage normal return"
 				return
 			time.sleep(0.1)
 
-		batteryStatus["batteryTimeLeftEndOfCharge"]		= round(min(minPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
+		batteryStatus["batteryTimeLeftEndOfCharge"]		= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
 		batteryStatus["timeCharged"] 					= round(batteryStatus["timeCharged"] * max( 0, 1. -  (time.time()-batteryStatus["testTime"])/max(1,batteryCapacitySeconds)  ),5)#discharging
 		batteryStatus["testTime"] 						= round(time.time(),5)
 		batteryStatus["batteryTimeLeft"] 				= round( (batteryStatus["inputPinVoltRawLastONTime"] + batteryStatus["batteryTimeLeftEndOfCharge"]) - time.time(),5)
 		if batteryStatus["batteryTimeLeft"] >0: 
 			batteryStatus["status"]						= "dis-charging"
-			lastWriteBatteryStatus= writeJson(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+			lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+			print "checkIfShutDownVoltage discharging "
 			return 
 
 		batteryStatus["status"]							= "empty"
-		lastWriteBatteryStatus= writeJson(batteryStatus,G.homeDir+"batteryStatus", 0)
+		lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", 0)
 
 	except	Exception, e :
-			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 			return
+	print "checkIfShutDownVoltage rebooting "
 	U.sendRebootHTML("battery empty", reboot=False)
 
 	return 
 
-def writeJson(data,fileName,lastWriteBatteryStatus):
+def writeJson2(data,fileName,lastWriteBatteryStatus):
 	try:
 		if time.time() - lastWriteBatteryStatus < 20: return lastWriteBatteryStatus
-		f=open(fileName,"w")
-		f.write(json.dumps(data,sort_keys=True, indent=0))
-		f.close()
+		U.writeJson(fileName, data,sort_keys=True, indent=0)
 	except: pass
 	return time.time()
 	
-def readJson(fileName):
-	try:
-		f=open(fileName,"r")
-		data= json.loads(f.read())
-		f.close()
-	except: 
-		data ={}
-	return data
 
 
 def checkLogfiles():
@@ -837,20 +873,29 @@ def checkRamDisk():
 
 
 def delayAndWatchDog():
-	global shutdownInputPin, rebootWatchDogTime,lastrebootWatchDogTime
+	global shutdownInputPin, lastshutdownInputPinTime, shutdownPinVoltSensor, rebootWatchDogTime,lastrebootWatchDogTime
+
 	try:
 		for xx in range(20): # thats 20 seconds
 			time.sleep(1)
+			tt = time.time()
 
-			if shutdownInputPin !=-1 and  time.time() - G.tStart > 20:
-				checkIfShutDownSwitch()
+			if shutdownPinVoltSensor >1 and  tt - G.tStart > 20:
+				checkIfShutDownVoltage()
+
+			if shutdownInputPin >1 :
+				if GPIO.input(shutdownInputPin) == 1: 
+					lastshutdownInputPinTime = tt
+
+				if tt - G.tStart > 20  and tt - lastshutdownInputPinTime > 3:
+						 U.doReboot(5, "shudown pin pressed", cmd="sudo sync; wait 2; sudo shutdown now")
 
 			if xx%5 ==1 and False:
 				if	os.path.isfile("/run/nologin"):
 					os.system("rm /run/nologin &")
 
-				if	rebootWatchDogTime > 0 and time.time() - lastrebootWatchDogTime > (rebootWatchDogTime*60 -20.): # rebootWatchDogTime is in minutes
-					lastrebootWatchDogTime = time.time()
+				if	rebootWatchDogTime > 0 and tt - lastrebootWatchDogTime > (rebootWatchDogTime*60 -20.): # rebootWatchDogTime is in minutes
+					lastrebootWatchDogTime = tt
 					rebootWatchDog()
 					
 	except	Exception, e :
@@ -943,7 +988,58 @@ def doGPIOAfterBoot():
 	f.write("\n")
 
 	f.close()
+
 	return
+
+
+	
+	
+def checkTempForFanOnOff(force = False):
+	global fanGPIOPin, fanTempOnAtTempValue, lastTempValue, lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
+	try:
+		#print "into checkTempForFanOnOff",fanTempName, fanTempDevId, fanEnable, fanTempOnAtTempValue, lastTimeTempValueChecked, lastTempValue
+		if not(fanEnable =="0" or fanEnable =="1"):						return
+		if fanTempName   =="": 											return
+		if int(fanGPIOPin) < -1: 										return
+
+		tt0 = time.time()
+		if ( tt0 - lastTimeTempValueChecked  < 5) and not force:		return
+
+		
+		if not os.path.isfile(G.homeDir+"temp/"+fanTempName+".dat"):	return
+
+		rr , raw = U.readJson(G.homeDir+"temp/"+fanTempName+".dat")
+		if rr == {}:
+			time.sleep(0.1)
+			rr, raw = U.readJson(G.homeDir+"temp/"+fanTempName+".dat")
+		lastTimeTempValueChecked = tt0
+
+
+		if rr == {} : 													return
+		if fanTempDevId not in rr : 									return
+		if "temp" not in rr[fanTempDevId]: 								return
+		temp = float(rr[fanTempDevId]["temp"])
+		if temp == lastTempValue:										return 
+
+
+		if temp > fanTempOnAtTempValue: 
+			#print " fan on"
+			if  lastTempValue < fanTempOnAtTempValue: 
+				if fanEnable =="1": GPIO.output(fanGPIOPin, True)
+				if fanEnable =="0": GPIO.output(fanGPIOPin, False)
+		else:
+			#print " fan off"
+			if  lastTempValue > fanTempOnAtTempValue or lastTempValue ==-1: 
+				if fanEnable =="0": GPIO.output(fanGPIOPin, True)
+				if fanEnable =="1": GPIO.output(fanGPIOPin, False)
+
+		lastTempValue = temp
+
+
+	except	Exception, e :
+		U.toLog (-1, u"checkTempForFanOnOff in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+	return
+
 	
 	
 def fixRcLocal(sleepTime):
@@ -1013,15 +1109,26 @@ global rebootWatchDogTime, lastrebootWatchDogTime
 global sensorEnabled,  restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootHour,rebooted,BLEserial,BLEserialOLD
 global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
 
-global shutdownInputPin, shutDownPinVetoOutput
+global shutdownInputPin, shutdownPinVoltSensor, shutDownPinVetoOutput, lastshutdownInputPinTime
 global actions, output, sensors, sensorList
 global activePGMdict, bluetoothONoff
 global oldRaw,	lastRead
-global minPinActiveTimeForShutdown, inputPinVoltRawLastONTime
-global chargeTimeForMaxCapacity, batteryCapacitySeconds
+global batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
 global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2, alreadyBooted
 global activePGM
 global configured
+global startWebServerSTATUS, startWebServerINPUT
+global fanGPIOPin, fanTempOnAtTempValue, lastTempValue, lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
+
+
+fanEnable				= "-"
+fanTempName				= ""
+fanTempDevId			= ""
+lastTempValue			= -1
+lastTimeTempValueChecked= -1
+fanGPIOPin				= -1
+fanTempOnAtTempValue	= -1
 
 activePGM				= {}
 GPIOTypeAfterBoot1		= "off"
@@ -1030,10 +1137,13 @@ GPIONumberAfterBoot1	= "-1"
 GPIONumberAfterBoot2	= "-1"
 alreadyBooted			= False
 
-chargeTimeForMaxCapacity = 3600. # seconds
+
+startWebServerSTATUS	 = 80
+startWebServerINPUT		 = 8010
+batteryChargeTimeForMaxCapacity = 3600. # seconds
 batteryCapacitySeconds   = 5*3600 # 
 
-minPinActiveTimeForShutdown = 9999999999999
+batteryMinPinActiveTimeForShutdown = 9999999999999
 inputPinVoltRawLastONTime = time.time()
 oldRaw					= ""
 lastRead				= 0
@@ -1072,6 +1182,8 @@ loopCount				= 0
 iPhoneMACListOLD		= ""
 shutdownInputPin		= -1
 shutDownPinVetoOutput	= -1
+shutdownPinVoltSensor		= -1
+lastshutdownInputPinTime= 0
 BLEserial				= "serial"
 rebootWatchDogTime		= -1
 sensorAlive				= {}
@@ -1079,6 +1191,7 @@ actions					= []
 firstRead				= True
 activePGMdict			= {}
 configured				= ""
+adhocWifiStarted		= -1
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
@@ -1104,9 +1217,7 @@ if cleanupOldFiles():
 
 G.tStart	  = time.time()
 
-readNewParams()
-
-
+U.resetRebootingNow()
 
 G.last_masterStart = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -1123,14 +1234,26 @@ for ff in G.specialOutputList:
 for ff in G.specialSensorList:
 		U.killOldPgm(-1, ff+".py")
 
+for ff in ["webserverINPUT","webserverSTATUS"]:
+		U.killOldPgm(-1, ff+".py")
+
+
+readNewParams()
+
+
 
 os.system("/usr/bin/python "+G.homeDir+"copyToTemp.py")
 
 
 time.sleep(1)
 
+
+# sets: G.wifiType = normal/ adhoc
 U.whichWifi() 
 
+adhocWifiStarted = U.checkWhenAdhocWifistarted()
+
+print "Master adhocWifi is: ", adhocWifiStarted,";  G.wifiType is: ", G.wifiType 
 
 os.system("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py")
 
@@ -1162,36 +1285,54 @@ if	G.wifiType =="normal" and G.networkType !="clockMANUAL" and	 rPiCommandPORT >
 		startProgam("receiveGPIOcommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
 
 
-if G.wifiType !="normal":
-	#os.system('systemctl start vncserver-x11-serviced.service &')
-	pass
-#	 time.sleep(1)
-#	 os.system('startx &')
-
 
 if configured == "": 
 	if G.networkType  in G.useNetwork and G.wifiType =="normal":
-		for ii in range(100):
+		adhoc    	 = True
+		wifiWaiting  = True
+		for ii in range(500):
 			if G.userIdOfServer	 == "xxstartxx":
+				if adhoc and adhocWifiStarted < 0: 
+					print " launching at start startAdhocWifi "
+					U.startAdhocWifi()
+					U.startwebserverINPUT(startWebServerINPUT)
+				if wifiWaiting: 
+					if U.checkwebserverINPUT():
+						wifiWaiting= False
+				adhoc = False
 				U.toLog (-1, " master not configured yet, lets wait for new config files",doPrint=True)
-				if ii > 98:
+				if ii >498:
 					startProgam("master.py", params="", reason="..not configured yet")
 					exit(0)
-				time.sleep(30)
+				time.sleep(1)
 				readNewParams()
 			else:
 				break
 
-
-
 os.system("sudo chown -R  pi:pi "+G.logDir)
 
+
+if startWebServerSTATUS > 0:
+	if not U.checkIfwebserverSTATUSrunning():
+		U.startwebserverSTATUS(startWebServerSTATUS)
+	
+
+if adhocWifiStarted > 0 and G.wifiType =="adhoc":
+	if not U.checkIfwebserverINPUTrunning():
+		U.startwebserverINPUT(startWebServerINPUT)
+		# restore old interfaces for next reboot 
+		os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT /etc/network/interfaces')
+		for ii in range(999):
+			U.checkwebserverINPUT()
+			time.sleep(1)
+		
+	
 
 
 if G.networkType  in G.useNetwork and G.wifiType =="normal":
 	for ii in range(100):
 		if ii > 98:
-			U.toLog(-1, " master no connection to indigo server at ip:>>"+ G.ipOfServer+"<<",doPrint=True)
+			U.toLog(-1, " master no connection to indigo server at ip:>>"+ G.ipOfServer+"<<  network type:" +G.networkType,doPrint=True)
 			time.sleep(20)
 			startProgam("master.py", params="", reason=".. failed to connect to indigo server")
 			exit(0)
@@ -1257,7 +1398,6 @@ if checkRamDisk():
 lastrebootWatchDogTime = time.time() - rebootWatchDogTime*60. +30.
 os.system("shutdown - c >/dev/null 2>&1") ## stop any pending shutdowns
 
-U.toLog(-1," starting master loop ",doPrint=True)
 beforeLoop			 = False
 # main loop every 30 seconds
 
@@ -1319,7 +1459,11 @@ if changed:
 os.system("rm  "+ G.homeDir+"temp/sending		   > /dev/null 2>&1 ")
 
 
-U.toLog(1," starting master loop ")
+U.toLog(1," starting master loop ", doPrint=True)
+
+
+checkTempForFanOnOff(force = True)
+
 while True:
 
 	if abs(tAtLoopSTart	 - time.time()) > 30:
@@ -1343,7 +1487,7 @@ while True:
 		if loopCount%60 == 0: # every 10 minutes
 			U.sendi2cToPlugin()		   
 			if (unicode(subprocess.Popen("echo x > x" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate())).find("Read-only file system") > 0:
-				U.doReboot(10.," reboot due to bad SD, 'file system is read only'")				   
+				U.doReboot(10.," reboot due to bad SSD, 'file system is read only'")				   
 				time.sleep(10)
 				os.system("reboot now")
 			os.system("rm x")
@@ -1364,13 +1508,15 @@ while True:
 			if ipx ==0 and G.ipAddress !="":
 				U.setNetwork("on")
 			if oldIP != G.ipAddress:
-				U.restartMyself(reason="changed ip number")
+				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
+				if eth0IP =="" or wifi0IP =="": # avoid restart when both are active
+					U.restartMyself(reason="changed ip number,.. eth0IP: "+ eth0IP+";  wifi0IP: "+wifi0IP +";  oldIP: "+oldIP +";  G.ipAddress: "+G.ipAddress )
 
 
 ##########   check if pgms are running
 
 		if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType !="clockMANUAL" and (G.networkStatus).find("indigo") >-1: 
-			checkIfPGMisRunning("receiveGPIOcommands.py",checkAliveFile="", parameters=str(rPiCommandPORT))
+			checkIfPGMisRunning("receiveGPIOcommands.py", checkAliveFile="", parameters=str(rPiCommandPORT))
 
 		if "BLEconnect" in sensors:
 			startBLEconnect()
@@ -1386,6 +1532,8 @@ while True:
 						checkIfNeopixelIsRunning(pgm= "neopixel")
 					elif pp =="neopixelClock":
 						checkIfNeopixelIsRunning(pgm= "neopixelClock")
+					elif pp =="sunDial":
+						checkIfPGMisRunning(pp+".py", checkAliveFile="sunDial")
 					else:
 						checkIfPGMisRunning(pp+".py")
 			
@@ -1411,6 +1559,45 @@ while True:
 
 		checkSystemLOG()
 
+
+
+######### start / stop  wifi  &  web servers 
+		if adhocWifiStarted > 0:
+			if time.time() - adhocWifiStarted > 600:
+				U.stopAdhocWifi()
+		else:
+			adhocWifiStarted = U.checkWhenAdhocWifistarted()
+
+		if U.checkIfStartAdhocWiFi():
+			#print " seems to be tru start adhoc wifi"
+			if U.whichWifi() =="normal":
+				U.startAdhocWifi()
+				adhocWifiStarted = time.time()
+
+		if U.checkIfStopAdhocWiFi():
+			if U.whichWifi() =="adhoc":
+				U.stopAdhocWifi()
+				adhocWifiStarted = -1
+
+		if startWebServerSTATUS >0 or U.checkIfStartwebserverSTATUS():
+			if not U.checkIfwebserverSTATUSrunning():
+				U.startwebserverSTATUS(startWebServerSTATUS)
+
+		if startWebServerSTATUS >0 and  U.checkIfStopwebserverSTATUS():
+			if U.checkIfwebserverSTATUSrunning():
+				U.stopwebserverSTATUS()
+
+		if startWebServerINPUT > 0 and  U.checkIfStopwebserverINPUT() and adhocWifiStarted <0:
+			if U.checkIfwebserverINPUTrunning():
+				U.stopwebserverINPUT()
+
+		if startWebServerINPUT > 0 or U.checkIfStartwebserverINPUT():
+			if not U.checkIfwebserverINPUTrunning():
+				U.startwebserverINPUT(startWebServerINPUT)
+		U.checkwebserverINPUT()
+
+		if fanGPIOPin > 0:
+			checkTempForFanOnOff()
 
 		U.checkIfAliveNeedsToBeSend()
 		
@@ -1448,7 +1635,7 @@ while True:
 					if G.networkType =="clockMANUAL"  and (time.time() - restartCLock)> 0  :
 						xx = G.networkType
 						G.networkType="x"
-						ipOK = U.getIPNumberMaster()
+						ipOK = U.getIPNumberMaster(quiet=True)
 						G.networkType = xx
 						#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
 
@@ -1463,7 +1650,7 @@ while True:
 						U.clearNetwork()
 						xx = G.networkType
 						G.networkType="x"
-						ipOK = U.getIPNumberMaster()
+						ipOK = U.getIPNumberMaster(quiet=False)
 						G.networkType = xx
 						#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
 						if ipOK ==0 and G.networkStatus.find("Inet") >-1:

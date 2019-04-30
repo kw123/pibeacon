@@ -18,8 +18,12 @@
 ####    pins: Di,CLK, GND, DO, V+, CS
 ####    https://www.bourns.com/pdfs/EMS22A.pdf
 #
-
-##
+#### AE18 Absolute Rotary Encoder 12 bit  that is read like SPI, but just very simple code
+####    CLK, CS, DO= read data. it is 12 bits + some status bits
+####    pins: Vcc(Red),  GND(black), CS(yellow), CLK(Blue), DO(green), GRD shield black
+####    http://www.china-encoder.com/product_detail/productId=101.html
+####    this also comes in V=5V;  needs a level shifter to work w raspberry pi 
+####
 
 import	sys, os, subprocess, copy
 import	time,datetime
@@ -83,7 +87,7 @@ def readParams():
 						try:    INPUTS[devId]["nBits"]= int(sens["nBits"])
 						except: pass
 
-					## oupt GPIOs
+					## outp GPIOs
 					for nn in range(27):
 						if "OUTPUT_"+str(nn) in sens:
 							if "pinO" not in INPUTS[devId]:
@@ -104,6 +108,7 @@ def readParams():
 		if restart:
 			U.restartMyself(reason="new parameters")
 		return 
+
 
 
 #################################
@@ -131,11 +136,16 @@ def getINPUTgpio(devId):
 	try:
 
 		if INPUTS[devId]["codeType"].find("serialEncoded") >-1:
-			data, status = getSerialInfo(devId)
-			if status[1] == 0 and status[2] ==0: 
+			data, parityOK, status = getSerialInfo(devId)
+			if status[1] == 0 and status[2] ==0 and parityOK: 
 				value = data
-			else:
-				value = -1
+			else: # try again
+				time.sleep(0.001)
+				data, parityOK, status = getSerialInfo(devId)
+				if status[1] == 0 and status[2] ==0 and parityOK: 
+					value = data
+				else:
+					value = -1
 
 		else:
 			for n in range(nInputs[devId]):
@@ -160,28 +170,40 @@ def getSerialInfo(devId):
 	data = 0
 	status = [0,0,0,0,0,0]
 
+	wait = 0.000001 # 1 uSec
+	on = 1
+	#print INPUTS[devId]
 	GPIO.output(INPUTS[devId]["pinO"][0], GPIO.LOW) # select device
-	time.sleep(0.000001)# wait 1 Micro sec
+	time.sleep(wait*2)# wait 2x Micro sec
 
-	# get data bits
-	nBits = INPUTS[devId]["nBits"]
-	GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW) # clock bits start
-	for bit in range(nBits):
-		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.HIGH) # clock bit HIGH
-		if GPIO.input(INPUTS[devId]["pinI"][0]): # read data bit
-			data += 1 << ( nBits -1 -bit) 
-		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW)# clock bit off
-
-	for bit in range(6):
-		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.HIGH)
-		if GPIO.input(INPUTS[devId]["pinI"][0]):
-			status[bit] = 1
-		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW)
 	
-	GPIO.output(INPUTS[devId]["pinO"][0], GPIO.HIGH) # un- select device
-	#print "data", data," status bits", status
-	return data	, status
+	# get data bits
+	nBits  = INPUTS[devId]["nBits"]
+	bits   = [0 for ii in range(nBits+6)]
+	parity = 0
 
+	GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW) # clock bits start
+
+	time.sleep(wait)# wait x Micro sec
+	for bit in range(nBits+6):
+		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.HIGH) # clock bit HIGH
+		value = GPIO.input(INPUTS[devId]["pinI"][0])# read data bit
+		bits[bit] = value
+		parity   += value  
+		time.sleep(wait)
+		GPIO.output(INPUTS[devId]["pinO"][1], GPIO.LOW)# clock bit off
+		time.sleep(wait)
+	GPIO.output(INPUTS[devId]["pinO"][0], GPIO.HIGH) # un- select device
+
+	status = bits[nBits:]	
+	parity2 = (parity %2) == 0
+	for bit in range(nBits):
+		if bits[bit] == on:
+			data += 1 << ( nBits -1 -bit) 
+
+	time.sleep(wait)
+	#print "data", data,"parity", parity,"parity2", parity2," status bits", status, "bits", bits 
+	return data	, parity2==0 ,status
 
 
 #################################

@@ -3966,7 +3966,6 @@ def readParams():
 		global output
 		global tempUnits, pressureUnits, distanceUnits
 		global oldRaw, lastRead
-		global clockLightSensor
 		global addNewOneWireSensors
 
 		rCode= False
@@ -3991,7 +3990,6 @@ def readParams():
 		if "pressureUnits"		  in inp: pressureUnits=		   (inp["pressureUnits"])
 		if "distanceUnits"		  in inp: distanceUnits=		   (inp["distanceUnits"])
 		if "sensors"			  in inp: sensors =				   (inp["sensors"])
-		if "clockLightSensor"	  in inp: clockLightSensor =	   (inp["clockLightSensor"])
 		if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
 		if "addNewOneWireSensors" in inp: addNewOneWireSensors =   (inp["addNewOneWireSensors"])
 
@@ -4511,13 +4509,12 @@ global tempUnits, pressureUnits, distanceUnits
 global regularCycle
 global sValues, displayInfo
 global oldRaw, lastRead
-global clockLightSensor, sensorRefreshSecs
+global sensorRefreshSecs
 global addNewOneWireSensors
 
 addNewOneWireSensors="0"
 
 sensorRefreshSecs	= 90
-clockLightSensor	= "0"
 oldRaw				= ""
 lastRead			= 0
 tempUnits			="Celsius"
@@ -4569,7 +4566,6 @@ while True:
 		data={}
 		sValues={"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"lux":[[],[],[]]}	  
 		displayInfo={}
-		
 		if regularCycle:
 # temp+ press .. 
 			if "i2cBMExx"		in sensors: data = getBME("i2cBMExx",		 data)
@@ -4639,12 +4635,11 @@ while True:
 							#print data[sens][dd]
 							changed= 7
 							break
-#		 print "changed", changed,	   tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor, data
+		#print "changed? ", changed,	   tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor, data
 		if data !={} and (		changed >0 or	( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
 			lastMsg = tt
 			lastData=copy.copy(data)
 			try:
-				U.toLog(2, u"sending url: "+unicode(data))
 				U.sendURL({"sensors":data})
 			except	Exception, e:
 				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
@@ -4652,9 +4647,8 @@ while True:
 
 		quick = U.checkNowFile(G.program)				 
 
-		U.makeDATfile(G.program, data)
-		if clockLightSensor !=0:
-			makeLightsensorFile(data)
+		U.makeDATfile(G.program, {"sensors":data})
+		makeLightsensorFile(data)
 		U.echoLastAlive(G.program)
 
 
@@ -4666,7 +4660,6 @@ while True:
 
 		for n in range(NSleep):
 			if quick: break
-
 			readParams()
 			time.sleep(0.5)
 			quick = U.checkNowFile(G.program)				 

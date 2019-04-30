@@ -4,12 +4,6 @@ country=US
 
 network={
 	ssid="2x"
-	psk="457654aA."
-	key_mgmt=WPA-PSK
+	psk="xxx."
 }
 
-network={
-	ssid="UPC1682144"
-	psk="PVHCPHCK"
-	key_mgmt=WPA-PSK
-}

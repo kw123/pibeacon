@@ -249,11 +249,11 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         <Label>EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
    </Field>
 
-   <Field    id="wifiOFF"   type="menu" defaultValue="off" tooltip="if you have both active (wifi and ethernet), the plugin might get confused, with off wifi will be switched off if ethernet is active ">
+   <Field    id="wifiOFF"   type="menu" defaultValue="off" tooltip="if you have both active (wifi and ethernet), the plugin might get confused, with off wifi will be switched off if ethernet is active  --is overwritten in pi device edit">
         <Label>WiFi switch off if ethernet cable active:</Label>
         <List>
-            <Option value="ON"   >keep Wifi on even when ethernet working switch Wifi Off </Option>
-            <Option value="off"  >switch Wifi Off</Option>
+            <Option value="keepON"   >keep Wifi on even when ethernet working</Option>
+            <Option value="off"      >switch Wifi Off</Option>
         </List>    
    </Field>
 

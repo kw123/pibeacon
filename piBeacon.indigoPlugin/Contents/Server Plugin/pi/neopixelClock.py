@@ -59,11 +59,7 @@ def readParams():
 		if "neopixelClock" not in output:
 			U.toLog(-1, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
-		clockLightSensor =0
-		if "clockLightSensor"			in inp: 
-			try:	xx = float(inp["clockLightSensor"])
-			except: xx = 0
-			clockLightSensor =xx
+		clockLightSensor =1.
 
 		clock = output["neopixelClock"]
 		for devId in  clock:
@@ -149,9 +145,9 @@ def startNEOPIXEL(setClock = ""):
 		elif LEDintensityFactor.lower() =="dayhigh"		: multHMS = 1.0 ; multMark=1.0
 
 
-		if lightset.lower() =="offoff"   :
+		if lightset.lower() == "offoff":
 			setNightOffPatterns()
-		elif lightset.lower() =="nightoff"   :
+		elif lightset.lower() == "nightoff":
 			setNightPatterns()
 		else:
 			restorefromNightPatterns()
@@ -313,6 +309,29 @@ def startNEOPIXEL(setClock = ""):
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 	return 
+
+def updatewebserverStatus():
+	global eth0IP, wifi0IP, LEDintensityFactor, clockLightSetOverWrite, clockLightSet, timeZone, lightSensorValue
+	statusData		= []
+	statusData.append( "Neopixel CLOCK current Status, updated every 3 secs ")
+	statusData.append( "time........... = "+ datetime.datetime.now().strftime(u"%H:%M:%S") )
+	statusData.append( "time zone...... = "+ str(timeZone))
+	statusData.append( "IP-Number..eth. = "+ eth0IP )
+	statusData.append( "IP-Number..wifi = "+ wifi0IP )
+	statusData.append( "WiFi enabled... = "+ str(G.wifiEnabled) )
+	statusData.append( "ClockLightSet.. = "+ str(clockLightSet) )
+	statusData.append( "LightSensorRaw. = "+ str(lightSensorValue) )
+	statusData.append( "LightSensor.... = "+ str(LEDintensityFactor) )
+	statusData.append( "LightOveride... = "+ str(clockLightSetOverWrite) )
+	statusData.append( "Marks-HH....... = "+ str(clockDict["marks"]["HH"]) )
+	statusData.append( "Marks-MM....... = "+ str(clockDict["marks"]["MM"]) )
+	statusData.append( "Marks-SS....... = "+ str(clockDict["marks"]["SS"]) )
+	statusData.append( "Ticks-HH....... = "+ str(clockDict["ticks"]["HH"]) )
+	statusData.append( "Ticks-MM....... = "+ str(clockDict["ticks"]["MM"]) )
+	statusData.append( "Ticks-SS....... = "+ str(clockDict["ticks"]["SS"]) )
+	U.updateWebStatus(json.dumps(statusData) )
+
+
 
 #################################
 def calcRGBdimm(input,multHMS,minLight=False):
@@ -930,7 +949,7 @@ def checkLastButtonPressTiming(button):
  
 #################################
 def setLightfromSensor():
-	global clockLightSet,clockLightSetOverWrite, clockLightSensor, lightSensorValueLast
+	global clockLightSet,clockLightSetOverWrite, clockLightSensor, lightSensorValueLast, lightSensorValue
 	global lastTimeStampSensorFile, clockLightSetOverWriteOld,  LEDintensityFactor, LEDintensityFactorOld
 	try:
 		if clockLightSensor			  == 0: return
@@ -940,39 +959,41 @@ def setLightfromSensor():
 			lastTimeStampSensorFile	  = 0
 			clockLightSetOverWriteOld = ""
 			LEDintensityFactorOld 	  = ""
+			lightSensorValue          = 0
 
 
 		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"): return
 		t = os.path.getmtime(G.homeDir+"temp/lightSensor.dat")
 	
-		lightSensorValue =""
+		lightSensorValueREAD = ""
 		maxRange = 10000.
 		sensor =""
+		rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
+		if rr =={}: 			return
+		if "light" not in rr: 	return
 		try:
-			f=open(G.homeDir+"temp/lightSensor.dat","r")
-			rr = json.loads(f.read())
-			lightSensorValueREAD = rr["light"]
-			sensor				 = rr["sensor"]
-			tt					 = rr["time"]
-			f.close()  
-			if sensor == "i2cTSL2561":
-				maxRange = 12000.
-			elif sensor == "i2cOPT3001":
-				maxRange =	2000.
-			elif sensor == "i2cVEML6030":
-				maxRange =	700.
-			elif sensor == "i2cIS1145":
-				maxRange =	2000.
+				lightSensorValueREAD = rr["light"]
+				sensor				 = rr["sensor"]
+				tt					 = rr["time"]
+				if sensor == "i2cTSL2561":
+					maxRange = 12000.
+				elif sensor == "i2cOPT3001":
+					maxRange =	2000.
+				elif sensor == "i2cVEML6030":
+					maxRange =	700.
+				elif sensor == "i2cIS1145":
+					maxRange =	2000.
 			
-			#print "lastTimeStampSensorFile, tt", lastTimeStampSensorFile, tt
-			if lastTimeStampSensorFile == tt: return 
+				#print "lastTimeStampSensorFile, tt", lastTimeStampSensorFile, tt
+				if lastTimeStampSensorFile == tt: return 
 
-			lastTimeStampSensorFile = tt
+				lastTimeStampSensorFile = tt
 		
 			
 		except:
-			U.toLog(-1, "error reading light sensor")
+			U.toLog(-1, "error reading light sensor", doPrint=True)
 			return
+		if lightSensorValueREAD =="" : return 
 
 		#print "lightSensorValueREAD, lightSensorValueLast", lightSensorValueREAD, lightSensorValueLast
 		##	check if 0 , must be 2 in a row.
@@ -1003,11 +1024,11 @@ def setLightfromSensor():
 				
 		if restartstartNEOPIXEL:
 			startNEOPIXEL()
+		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor) 
 		U.toLog(1, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
 ##20181122-02:17:22 setting  lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, clockLightSet, LEDintensityFactor:6.0  50.0 daymedium  12000.0 offoff  offoff
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 
@@ -1015,7 +1036,7 @@ def setLightfromSensor():
 def afterAdhocWifistarted(maxTime):
 	global DEVID, clockDict, inp 
 	l0=60 + 48 + 40 
-	clockDict["extraLED"]	  = {"ticks":[ii+l0 for ii in range(maxTime)], "RGB":[100,100,100],"blink":[1,1]} # blink led 7 on 8 ring 
+	clockDict["extraLED"]	  = {"ticks":[ii+l0 for ii in range(maxTime)], "RGB":[0,0,200],"blink":[1,1]} # blink led 7 on 8 ring 
 	return
 
 
@@ -1027,7 +1048,6 @@ def resetEverything():
 	os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT-clock /etc/network/interfaces')
 	os.system('cp '+G.homeDir+'parameters-DEFAULT-clock '+G.homeDir+'parameters')
 	os.system('sudo cp '+G.homeDir+'wpa_supplicant.conf-DEFAULT-clock /etc/wpa_supplicant/wpa_supplicant.conf')
-	os.system('cp '+G.homeDir+'patterns-DEFAULT-clock  '+G.homeDir+'patterns')
 	time.sleep(2)
 	os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
 	return ## dummy
@@ -1043,15 +1063,11 @@ def shutdown():
 #################################
 def readMarksFile():
 	global marksOptions,ticksOptions
-	f=open(G.homeDir+"temp/patterns","r") 
-	rr = json.loads(f.read())
-	f.close()
-	if "marks" not in rr:
+	rr, raw = U.readJson(G.homeDir+"temp/patterns")
+	if rr == {} or "marks" not in rr:
 		restorePattern()
-		f=open(G.homeDir+"temp/patterns","r") 
-		rr = json.loads(f.read())
-		f.close()
-	if "marks" not in rr:
+		rr, raw = U.readJson(G.homeDir+"temp/patterns")
+	if rr == {} or "marks" not in rr:
 		print " fatal error patern file destroyed" 
 		marksOptions = copy.copy(inp["output"]["neopixelClock"][DEVID][0]["marks"])
 		ticksOptions = copy.copy(inp["output"]["neopixelClock"][DEVID][0]["ticks"])
@@ -1077,13 +1093,13 @@ global oldRaw,	lastRead, inp
 global gpiopinSET
 global clockLightSetOverWrite,useRTC, newDate, resetGPIO, lastButtonTime, DEVID
 global timeZone
-global lightSensorValueLast
+global lightSensorValueLast, lightSensorValue
 global doReadParameters
 global nightMode
 global networkIndicatorON
 global lastNeoParamsSet
 global clockLightSensor, clockLightSetOverWrite, clockLightSetOverWriteOld, LEDintensityFactorOld, LEDintensityFactor
-
+global eth0IP, wifi0IP
 
 lastNeoParamsSet	= time.time()
 nightMode			= 0
@@ -1121,6 +1137,7 @@ useRTC						= ""
 newDate						= ""
 resetGPIO					= False
 lightSensorValueLast		= -1
+lightSensorValue			= -1
 clockLightSensor			= 0
 clockLightSetOverWrite		= "daymedium"
 clockLightSetOverWriteOld	= ""
@@ -1142,6 +1159,8 @@ debug						= 5
 first						= False
 loopCount					= 0
 sensor						= G.program
+eth0IP						=""
+wifi0IP						=""
 
 # check for corrupt parameters file 
 U.checkParametersFile("parameters-DEFAULT-clock", force = False)
@@ -1176,12 +1195,11 @@ os.system('cp /etc/network/interfaces '+G.homeDir+'interfaces-old')
 
 	
 sleepTime = slTime
-maxWifiAdHocTime	= 25
+maxWifiAdHocTime	= 12
 if U.whichWifi() == "normal":
 	wifiStarted = -1
 	wifiStartedLastTest = 99999999999999999999.
 else:
-	U.resetWifi() # make sure next reboot it starts normally
 	wifiStarted			= time.time()
 	wifiStartedLastTest = int(time.time())
 	afterAdhocWifistarted(maxWifiAdHocTime)
@@ -1197,6 +1215,10 @@ lastRESETTest	 = -1
 
 
 U.testNetwork()
+U.getIPNumber() 
+eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
+
+
 networkIndicatorON = -1
 if wifiStarted < 0:
 	l0 =60 + 48 + 40 + 32 + 24 + 16 + 12
@@ -1224,7 +1246,9 @@ while True:
 
 				
 		if loopC % 30 ==0: # every 30 secs read parameters file 
+			updatewebserverStatus()
 			# set neopixel params file if not set for 1 minutes 
+
 			if time.time() - lastNeoParamsSet > 290: 
 				setExtraLEDoff() 
 				startNEOPIXEL()
@@ -1241,10 +1265,8 @@ while True:
 		
 		if loopC % 3 ==0: # every 3 secs read parameters file 
 			setLightfromSensor()
-			
-
-			
 			U.echoLastAlive(G.program)
+			updatewebserverStatus()
 		time.sleep(sleepTime)
 
 		if resetGPIO:  # ready to be removed 
@@ -1278,19 +1300,17 @@ while True:
 			lastWIFITest+=1
 			if lastWIFITest > 4: 
 				if wifiStarted ==-1: 
-					U.prepAdhocWifi()
-				else:
-					U.resetWifi() 
-					time.sleep(1)
-					os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
+					afterAdhocWifistarted(maxWifiAdHocTime)
+					startNEOPIXEL()
+					time.sleep(2)
+					U.setStartAdhocWiFi()
+					wifiStarted = time.time()
 		else:
 		   lastWIFITest =-1
 
 		if wifiStarted > -1:
 			if (time.time() - wifiStarted >maxWifiAdHocTime*60 ): # reset wifi after maxWifiAdHocTime minutes
-				U.resetWifi() 
-				time.sleep(1)
-				os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
+				U.setStopAdhocWiFi() 
 			iTT= int(time.time())
 			if	iTT	 - wifiStartedLastTest > 60: # count down LEDs
 				l1 = maxWifiAdHocTime - (iTT - int(wifiStarted))/60

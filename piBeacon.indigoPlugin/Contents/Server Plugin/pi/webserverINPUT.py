@@ -12,6 +12,7 @@ import os
 import time
 import piBeaconUtils   as U
 import piBeaconGlobals as G
+import sys
 
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
@@ -38,10 +39,11 @@ class GetHandler(BaseHTTPRequestHandler):
 
 		x(	'<body style="background-color:rgb(90, 90,90); font-family:Courier;"color:rgb(255, 255,255);">')
 		x(		'<form action = "/cgi-bin/get_UID_etc.cgi" method = "get">'+
-					'SSID......:  <input type = "text" name = "SSID"     value = "" maxlength = "35" /> <br> '+
-					'passCode..:  <input type = "text" name = "passCode" value = "" maxlength = "35" />  <br>'+
+					'SSID......:  <input type = "text" name = "SSID"     value = "do not change" maxlength = "35" /> <br> '+
+					'passCode..:  <input type = "text" name = "passCode" value = "do not change" maxlength = "35" />  <br>'+
 					'Time Zone.:  <select name="timezone">'+
-						'<option value="11">Pacific/Auckland(+12)</option>'+
+						'<option value="99">do not change time zone</option>'+
+						'<option value="12">Pacific/Auckland(+12)</option>'+
 						'<option value="11">Pacific/Pohnpei (+11)</option>'+
 						'<option value="10">Australia/Melbourne (+10)</option>'+
 						'<option value="9">Asia/Tokyo (+9)</option>'+
@@ -79,20 +81,21 @@ class GetHandler(BaseHTTPRequestHandler):
 			item = item1.split("=")
 			if len(item) !=2: continue
 			if   item[0] in outPut: 	outPut[item[0]] = item[1]
-		print outPut
+		one = False
 		for item in outPut:
-			if outPut[item] == "": return 
+			if outPut[item] != "": one = True 
+		if not one: return 
 		f=open(outFile,"w")
 		f.write(json.dumps(outPut))
 		f.close()
-		os.system("kill -9 "+str(pid) )
+		##os.system("kill -9 "+str(pid) )
 		
 		
 
  
 
 global pid, outPut, outFile
-outFile	= G.homeDir+"temp/webparameters.dat"
+outFile	= G.homeDir+"temp/webparameters.Input"
 outPut	= {"SSID":"", "timezone":"","passCode":""}
 port = 8000
 
@@ -111,7 +114,7 @@ pid =  os.getpid()
 if os.path.isfile(outFile):
 	os.system("rm "+outFile)
 
-U.killOldPgm(str(pid),"/webserverAdhocForWifiSetup.py")
+U.killOldPgm(str(pid),"webserverINPUT.py")
 time.sleep(0.5)
 
 

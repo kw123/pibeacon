@@ -8,10 +8,11 @@
 import urllib
 import json
 import urlparse
-import os
+import os, sys 
 import time
 import piBeaconUtils   as U
 import piBeaconGlobals as G
+import sys
 
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
@@ -33,23 +34,25 @@ class GetHandler(BaseHTTPRequestHandler):
 		data ={}
 		try:
 			f= open(dataFile,"r")
-			data = json.loads(f.read())
+			ddd = f.read()
+			data = json.loads(ddd)
 			f.close()
-		except: 
+		except	Exception, e:
+			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+"   bad sensor data", data
 			return 
-
+		#print "webserverSTATUS", data
 		x('<!DOCTYPE html>')
 		x('<html>')
 		x(	'<head style="background-color:rgb(50, 50,50);"> </head>')
 		x(	'<body style="background-color:rgb(50, 50,50); color:rgb(150, 150,150); font-family:Courier;">')
-		x(		'<b>SunDial Current status</b><br>')
-		for item in data:
-			x(	item +'<br>')
+		x(		'<b>'+data[0]+'</b><br>')
+		for nn in range(1,len(data)):
+			x(	data[nn] +'<br>')
 		x(	'</body>')
 		x('</html>')
  
 global pid, dataFile
-dataFile	= G.homeDir+"temp/sunDial.status"
+dataFile	= G.homeDir+"temp/showOnWebServer"
 port 		= 80
 try:
 	port     = int(sys.argv[1])
@@ -62,7 +65,7 @@ ipNumber = f.read()
 f.close()
 pid =  os.getpid()
 
-U.killOldPgm(str(pid),"/webserverWhenOnline.py")
+U.killOldPgm(str(pid),"webserverSTATUS.py")
 time.sleep(0.5)
 
 

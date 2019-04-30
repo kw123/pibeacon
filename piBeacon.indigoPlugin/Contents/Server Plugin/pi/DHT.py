@@ -270,7 +270,7 @@ while True:
 
 		quick = U.checkNowFile(G.program)				 
 
-		U.makeDATfile(G.program, data)
+		U.makeDATfile(G.program, {"sensors":data})
 		U.echoLastAlive(G.program)
 
 
