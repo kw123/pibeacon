@@ -99,6 +99,7 @@ outFile	= G.homeDir+"temp/webparameters.Input"
 outPut	= {"SSID":"", "timezone":"","passCode":""}
 port = 8000
 
+G.program= "webserverINPUT"
 
 try:
 	port    = int(sys.argv[1])

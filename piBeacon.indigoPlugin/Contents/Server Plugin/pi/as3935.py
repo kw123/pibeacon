@@ -379,7 +379,7 @@ def readParams():
 				startSensor(devId )
 				if as3935sensor[devId] =="":
 					return
-				U.toLog(-1," new parameters read: \n  i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+";"+
+				U.toLog(-1,"new parameters read: \n  i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+";"+
 						"  interruptGPIO:"+unicode(interruptGPIO)+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"\n"+
 						"  minStrikes:"+unicode(minStrikes)		 +";  calibrationDynamic:"+unicode(calibrationDynamic) +"  inside:"+str(inside)+";"+
 						"  tuneCapacitor:"+unicode(tuneCapacitor)+ " = "+CapValue[tuneCapacitor]+"pF;"+
@@ -399,7 +399,7 @@ def readParams():
 
 	except	Exception, e:
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		print sensors[sensor]
+		U.toLog(-1,unicode(sensors[sensor]), doPrint=True ) 
 		
 
 
@@ -446,7 +446,7 @@ def startSensor(devId):
 
 	GPIO.setup(interruptGPIO, GPIO.IN)
 	GPIO.add_event_detect(interruptGPIO, GPIO.RISING, callback=handle_interrupt)
-	print "end of event setup"
+	U.toLog(-1, "end of event setup", doPrint=True )
 	return 
 
 #################################

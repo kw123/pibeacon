@@ -1,3 +1,39 @@
+Added features / changes in v7.104.279 @ 2019-05-08
+===================================================
+
+1. moved setGPIO command into execcommands. that reduces delay with older RPI ie RPI1
+   and do not send back status to indigo if not requested
+
+2. now all pibeacon logfiles on the RPI are in ONE file: /var/log/piBeacon.log
+it looks like:
+date              module       debuglvl message 
+20190507-12:56:30 copyToTemp      L:-1= killing copyToTemp.py    
+20190507-12:56:30 sunDial         L:-2= move  return due to: direction1, inFixBoundaryMode:0 cap switch sens: 0;   switch sensor:0 
+20190507-12:56:30 sunDial         L:-3= 1100 === 34 1  
+20190507-12:56:31 master          L:-1=  IP find:::: wifiIP >><<; eth0IP: >>192.168.1.39<<;   hostnameIP >>['192.168.1.39']<<;   ipAddressRead >>192.168.1.39<< 
+20190507-12:56:31 sunDial         L:-2= move  return due to: direction-1, inFixBoundaryMode:0 cap switch sens: 0;   switch sensor:0 
+20190507-12:56:31 sunDial         L:-3= 1300 === 85 -1  
+20190507-12:56:31 master          L:-1=  master can ping indigo server at ip:>>192.168.1.50<< 
+20190507-12:56:32 installLibs     L:-1=  installLibs starting  
+20190507-12:56:32 installLibs     L:-1=  installLibs no opsys upgrade requested 
+ 
+20190507-14:59:04 execcommands    L:-1= next command: {u'device': u'OUTPUTgpio-1', u'inverseGPIO': True, u'command': u'down', u'pin': u'26'} 
+20190507-14:59:04 execcommands    L: 1= next cmd: "down" 
+20190507-14:59:04 execcommands    L: 0= setGPIO pid=16700,  command :{'startAtDateTime': u'1557259144.27', 'values': {}, 'pin': '26', 'debug': 3, 'inverseGPIO': True, 'cmd': u'down', 'devId': 0, 'PWM': 1} 
+20190507-14:59:04 execcommands    L: 0= msg: 156x-6-api_IN_14x-6-a{"outputs":{"OUTPUTgpio-1-ONoff":{"0":{"actualGpioValue":"high"}}},"program":"execcommands","ipAddress":"","pi":"14","ts":{"tz":"CDT","time":1557259144.16}}
+ 
+20190507-14:59:04 execcommands    L:-1= next command: {u'device': u'OUTPUTgpio-1', u'inverseGPIO': True, u'command': u'down', u'pin': u'5'} 
+20190507-14:59:04 execcommands    L: 1= next cmd: "down" 
+20190507-14:59:04 execcommands    L: 0= setGPIO pid=16707,  command :{'startAtDateTime': u'1557259144.36', 'values': {}, 'pin': '5', 'debug': 3, 'inverseGPIO': True, 'cmd': u'down', 'devId': 0, 'PWM': 1} 
+20190507-14:59:04 execcommands    L: 0= msg: 156x-6-api_IN_14x-6-a{"outputs":{"OUTPUTgpio-1-ONoff":{"0":{"actualGpioValue":"high"}}},"program":"execcommands","ipAddress":"","pi":"14","ts":{"tz":"CDT","time":1557259144.29}}
+ 
+
+Added features / changes in v7.103.275 @ 2019-05-06
+===================================================
+
+1. fixed  SPRINKLER relay to be on if GPIO is 0 or 1 
+
+
 Added features / changes in v7.103.274 @ 2019-04-30  
 ===================================================
 
@@ -5,8 +41,6 @@ Added features / changes in v7.103.274 @ 2019-04-30
 	set in device edit.
 
 2. some typos in menus
-
-3. various small changes to clean up code
 
 
 Added features / changes in v7.103.274 @ 2019-02-20  

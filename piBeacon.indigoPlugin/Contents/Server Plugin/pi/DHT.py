@@ -41,7 +41,7 @@ def getDATAdht(DHTpin,Type):
 		try:
 			h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 			if unicode(h) == "None" or unicode(t) == "None":
-				print " return data failed: "+str(h)+" "+str(t), Type,	"pin",str(DHTpin), " try again"
+				U.toLog(-1, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again", doPrint=True )
 				time.sleep(1)
 				h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 			#f h is not None and t is not None:
@@ -198,7 +198,7 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == 1: 
 	if U.getIPNumber() > 0:
-		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+G.program+" no ip number working, giving up"
+		U.toLog(-1," no ip number working, giving up", doPrint=True )
 		time.sleep(10)
 		exit()
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -246,7 +246,7 @@ while True:
 							changed= 5
 							break
 						try:
-							print dd, lastData[sens][dd], data[sens][dd]
+							U.toLog(-1,unicode(dd)+"  "+unicode(lastData[sens][dd])+"  "+unicode(data[sens][dd]), doPrint=True )
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed= xxx

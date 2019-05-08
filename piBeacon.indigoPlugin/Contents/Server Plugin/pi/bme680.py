@@ -425,7 +425,7 @@ class BME680(BME680Data):
 
 		self.chip_id = self._get_regs(CHIP_ID_ADDR, 1)
 		if self.chip_id != CHIP_ID:
-			print "BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id) 
+			U.toLog("BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id), doPrint=True )
 			raise ValueError 
 
 		self.soft_reset()
@@ -919,8 +919,8 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		print sensors[sensor]
+		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, unicode(sensors[sensor]), doPrint=True)
 		
 
 
@@ -930,20 +930,19 @@ def startSensor(devId,i2cAddress):
 	global startTime
 	global gasBaseLine, gasBurnIn
 	global BMEsensor, firstValue
-	U.toLog(-1,"==== Start BME680 ===== @ i2c= " +unicode(i2cAddress))
 	startTime =time.time()
 	gasBaseLine = 0
 	gasBurnIn	= []
 
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-	print " starting with ic2= "+ str(i2cAdd)
+	U.toLog(-1, " starting with ic2= "+ str(i2cAdd), doPrint=True )
 	
 	try:
 		BMEsensor[devId]  = BME680(i2c_addr=i2cAdd)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 		BMEsensor[devId] =""
 		U.muxTCA9548Areset()
 		return

@@ -18,6 +18,156 @@ G.program = "execcommands"
 
 allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","startCalibration","file","BLEreport"]
 
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# by Karl Wachs
+# nov 27 2015
+# version 0.5 
+##
+
+import json
+import sys
+import subprocess
+import time
+import datetime
+import os
+
+
+allowedCommands = ["up", "down", "pulseUp", "pulseDown", "continuousUpDown", "analogWrite"]
+externalGPIO = False
+
+
+def setGPIO(command):
+	global PWM, myPID
+	import RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setwarnings(False)
+	devType = "OUTPUTgpio"
+
+
+
+	try:	PWM= command["PWM"]
+	except: pass
+
+
+	if "cmd" in command:
+		cmd= command["cmd"]
+		if cmd not in allowedCommands:
+			U.toLog(-1, "setGPIO pid=%d, bad command %s  allowed only: %s" %(myPID,unicode(command) ,unicode(allowedCommands))  )
+			exit(1)
+
+	if "pin" in command:
+		pin= int(command["pin"])
+	else:
+			U.toLog(-1, "setGPIO pid=%d, pin not included,  bad command %s"%(myPID,unicode(command)) )
+			exit(1)
+
+
+
+	delayStart = max(0,U.calcStartTime(command,"startAtDateTime")-time.time())
+	if delayStart > 0: 
+		time.sleep(delayStart)
+
+	if "values" in command:
+		values =  command["values"]
+	
+	
+	#	 "values:{analogValue:"analogValue+",pulseUp:"+ pulseUp + ",pulseDown:" + pulseDown + ",nPulses:" + nPulses+"}
+
+	try:
+		if "pulseUp" in values:		pulseUp = float(values["pulseUp"])
+		else:						pulseUp = 0
+		if "pulseDown" in values:	pulseDown = float(values["pulseDown"])
+		else:						pulseDown = 0
+		if "nPulses" in values:		nPulses = int(values["nPulses"])
+		else:						nPulses = 0
+		if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
+		else:						bits = 0
+	except	Exception, e:
+		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		exit(0)
+
+	inverseGPIO = False
+	if "inverseGPIO" in command:
+		inverseGPIO = command["inverseGPIO"]
+
+	if "devId" in command:
+		devId = str(command["devId"])
+	else: devId = "0"
+
+
+	try:
+		if cmd == "up":
+			GPIO.setup(pin, GPIO.OUT)
+			if inverseGPIO: 
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+			else:
+				GPIO.output(pin, True)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+		
+
+		elif cmd == "down":
+			GPIO.setup(pin, GPIO.OUT)
+			if inverseGPIO: 
+				GPIO.output(pin, True)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+			else: 
+				GPIO.output(pin, False )
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+
+		elif cmd == "analogWrite":
+			if inverseGPIO:
+				value = PWM*(100-bits)	# duty cycle on xx hz
+			else:
+				value =   PWM*bits	 # duty cycle on xxx hz 
+			U.toLog(1, "setGPIO analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
+			if value >1.:
+				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
+			else:
+				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
+			GPIO.setup(pin, GPIO.OUT)
+			p = GPIO.PWM(pin, PWM*100)	# 
+			p.start(int(value))	 # start the PWM with  the proper duty cycle
+			time.sleep(1000000000)	# we need to keep it alive otherwise it will stop  this is > 1000 days ~ 3 years
+
+
+		elif cmd == "pulseUp":
+			GPIO.setup(pin, GPIO.OUT)
+			if inverseGPIO: GPIO.output(pin, False)
+			else:			GPIO.output(pin, True)
+			time.sleep(pulseUp)
+			if inverseGPIO: GPIO.output(pin, True)
+			else:			GPIO.output(pin, False)
+
+
+		elif cmd == "pulseDown":
+			GPIO.setup(pin, GPIO.OUT)
+			if inverseGPIO: GPIO.output(pin, True)
+			else:			GPIO.output(pin, False)
+			time.sleep(pulseDown)
+			if inverseGPIO: GPIO.output(pin, False)
+			else:			GPIO.output(pin, True)
+
+		elif cmd == "continuousUpDown":
+			GPIO.setup(pin, GPIO.OUT)
+			for ii in range(nPulses):
+				if inverseGPIO:	  GPIO.output(pin, False)
+				else:			  GPIO.output(pin, True)
+				time.sleep(pulseUp)
+				if inverseGPIO:	  GPIO.output(pin, True)
+				else:			  GPIO.output(pin, False)
+				time.sleep(pulseDown)
+
+		U.removeOutPutFromFutureCommands(pin, devType)
+			
+
+
+	except	Exception, e:
+		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+
+	return 
+
 
 def execCMDS(data):
 	global execcommands, PWM
@@ -27,11 +177,11 @@ def execCMDS(data):
 				next = json.loads(data)
 			except	Exception, e:
 					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-					U.toLog(-1," bad command: json failed  "+unicode(data))
+					U.toLog(-1," bad command: json failed  %s"%unicode(data))
 
 			#print next
 			#print "next command: "+unicode(next)
-			U.toLog(-1,"next command: "+unicode(next))
+			U.toLog(-1,"next command: "+unicode(data))
 			cmd= next["command"]
 
 			for cc in next:
@@ -45,8 +195,6 @@ def execCMDS(data):
 			else:
 				restoreAfterBoot="0"
 
-
-			U.toLog(1,"next cmd: "+json.dumps(cmd))
 
 			if cmd =="general":
 				if "cmdLine" in next:
@@ -237,7 +385,7 @@ def execCMDS(data):
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId })
 							U.toLog(1,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setmcp4725.py '"+ cmdJ+"'  &"
-							U.toLog(1," cmd= "+cmdOut)
+							U.toLog(1," cmd= %s"%cmdOut)
 							os.system(cmdOut)
 							if restoreAfterBoot == "1":
 								execcommands[str(int(i2cAddress)+1000)] = next
@@ -258,7 +406,7 @@ def execCMDS(data):
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId})
 							U.toLog(1,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setPCF8591dac.py '"+ cmdJ+"'  &"
-							U.toLog(1," cmd= "+cmdOut)
+							U.toLog(1," cmd= %s"%cmdOut)
 							os.system(cmdOut)
 							if restoreAfterBoot == "1":
 								execcommands[str(int(i2cAddress)+1000)] = next
@@ -277,7 +425,7 @@ def execCMDS(data):
 							pin = str(pinI)
 						except	Exception, e:
 							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-							U.toLog(-1," bad pin "+unicode(next))
+							U.toLog(-1,"bad pin "+unicode(next))
 							continue
 						#print "pin ok"
 						if "values" in next: values= next["values"]
@@ -288,20 +436,28 @@ def execCMDS(data):
 						else:
 							try: del execcommands[str(pin)]
 							except: pass
-						#U.killOldPgm(-1,"'setGPIO.py "+pin+" '" )
-						if cmd =="disable" :
+						if not externalGPIO:
+							#kill last execcommand for THIS pin, ps -ef grep string: eg '"pin": "12"'  with '' !!!
+							psefString = (json.dumps({"pin":str(pin)})).strip("{}")
+							U.killOldPgm(myPID,"execcommands.py ", param1="'"+psefString+"'")
+						if cmd =="disable":
 							continue
-						cmdJ= json.dumps({"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM, "devId":devId})
-						cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJ+"' &"
-						U.toLog(1," cmd= "+cmdOut)
-						os.system(cmdOut)
+						cmdJ= {"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM, "devId":devId}
+						cmdJD = json.dumps(cmdJ)
+						if externalGPIO:
+							cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJD+"' &"
+							U.toLog(1,"cmd= %s"%cmdOut)
+							os.system(cmdOut)
+						else:
+							U.toLog(1, "setGPIO curr_pid=%d,  command :%s" %(myPID,cmdJD) )
+							setGPIO(cmdJ)
 						continue
 
 			if device=="myoutput":
 						try:
 							text   = next["text"]
 							cmdOut= "/usr/bin/python "+G.homeDir+"myoutput.py "+text+"	&"
-							U.toLog(1," cmd= "+cmdOut)
+							U.toLog(1,"cmd= %s"%cmdOut)
 							os.system(cmdOut)
 						except	Exception, e:
 							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
@@ -317,13 +473,13 @@ def execCMDS(data):
 							else:
 								U.toLog(-1, u"bad command : player not right =" + cmd)
 							if cmdOut != "":
-								U.toLog(1," cmd= "+cmdOut)
+								U.toLog(1,"cmd= %s"%cmdOut)
 								os.system("/usr/bin/python playsound.py '"+cmdOut+"' &" )
 						except	Exception, e:
 							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 						continue
 
-			U.toLog(-1," bad device number/number: "+device)
+			U.toLog(-1,"bad device number/number: "+device)
 	f=open(G.homeDir+"execcommands.current","w")
 	f.write(json.dumps(execcommands))
 	f.close()
@@ -343,9 +499,10 @@ def readParams():
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		 
 
-if __name__ == "__main__":
-	global debug,  execcommands, PWM
+if True: #__name__ == "__main__":
+	global debug,  execcommands, PWM, myPID
 	PWM = 100
+	myPID		= int(os.getpid())
 
 	readParams()
 	G.debug=3
@@ -367,4 +524,3 @@ if __name__ == "__main__":
 
 		
 	execCMDS(sys.argv[1])
-	   

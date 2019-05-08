@@ -52,6 +52,8 @@ class GetHandler(BaseHTTPRequestHandler):
 		x('</html>')
  
 global pid, dataFile
+G.program= "webserverSTATUS"
+
 dataFile	= G.homeDir+"temp/showOnWebServer"
 port 		= 80
 try:

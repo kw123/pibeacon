@@ -4448,17 +4448,17 @@ def doDisplay():
 			f=open(G.homeDir+"temp/display.inp",wmode); f.write(json.dumps(out)+"\n"); f.close()
 		except:
 			try:
-				print "retry to write to display.inp"
+				U.toLog(-1,"retry to write to display.inp", doPrint=True )
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","w"); f.write(json.dumps(out)+"\n"); f.close()
 			except	Exception, e:
-				print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True )
 				if unicode(e).find("No space left on device") >-1:
 					os.system("rm "+G.homeDir+"temp/* ")
 		return 
 	except	Exception, e:
-		print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		print sValues
+		U.toLog(-1,"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True )
+		U.toLog(-1,unicode(sValues), doPrint=True )
 
 
 
@@ -4544,7 +4544,7 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == 1: 
 	if U.getIPNumber() > 0:
-		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+G.program+" no ip number working, giving up"
+		U.toLog(-1,"no ip number working, giving up", doPrint = True )
 		time.sleep(10)
 		exit()
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()

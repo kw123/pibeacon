@@ -41,6 +41,7 @@ def cleanupOldFiles():
 	os.system("rm	 "+G.homeDir+"beaconloop			  >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"errlog				  >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"getsensorvalues.py	  >/dev/null 2>&1")
+	os.system("rm	 "+G.homeDir+"receiveGPIOcommands.py  >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"rennameMeTo_myoutput.py >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"renameMyTo_mysensors.py >/dev/null 2>&1")
 	os.system("rm	 "+G.homeDir+"INPUTRotata*            >/dev/null 2>&1")
@@ -323,7 +324,7 @@ def readNewParams(force=False):
 				checkifActive(ss, ss+".py", True)
 		
 		if	(rPiRestartCommand.find("rPiCommandPORT") >-1) and G.wifiType =="normal" and G.networkType !="clockMANUAL" and rPiCommandPORT >0:
-				startProgam("receiveGPIOcommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
+				startProgam("receiveCommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
 
 		if	not beforeLoop:
 			if rPiRestartCommand.find("beacons") >-1 :
@@ -347,7 +348,7 @@ def setACTIVEorKILL(tag,pgm,check,force=0):
 			activePGMdict[tag]=[pgm,check]
 			startProgam(pgm, params="", reason=" at startup ")
 			checkifActive(tag, pgm, True)
-			print "started:" , pgm
+			U.toLog(-1,"started:%s"%pgm, doPrint= True)
 		elif ( tag not in theList and tag in  activePGMdict) or force==-1:
 			U.killOldPgm(-1,pgm)
 			U.toLog(-1,"stopping sensor as no "+tag+" enabled",doPrint=True)
@@ -741,7 +742,7 @@ def checkIfNightReboot():
 	#print "rebootHour", nn.minute,	 int(G.myPiNumber)*2,  int(G.myPiNumber)*2+1
 	if nn.minute  <	 int(G.myPiNumber)*2:	 return 
 	if nn.minute  >	 int(G.myPiNumber)*2+1 : return 
-	print "re booting"
+	U.toLog (-1, "re booting",doPrint=True )
 
 	rebooted = True
 	time.sleep(30)
@@ -810,7 +811,7 @@ def checkIfShutDownVoltage():
 		if batteryStatus["batteryTimeLeft"] >0: 
 			batteryStatus["status"]						= "dis-charging"
 			lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
-			print "checkIfShutDownVoltage discharging "
+			U.toLog (-1, "checkIfShutDownVoltage discharging ", doPrint=True)
 			return 
 
 		batteryStatus["status"]							= "empty"
@@ -819,7 +820,7 @@ def checkIfShutDownVoltage():
 	except	Exception, e :
 			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 			return
-	print "checkIfShutDownVoltage rebooting "
+	U.toLog (-1, "checkIfShutDownVoltage rebooting ",doPrint=True )
 	U.sendRebootHTML("battery empty", reboot=False)
 
 	return 
@@ -834,17 +835,28 @@ def writeJson2(data,fileName,lastWriteBatteryStatus):
 
 
 def checkLogfiles():
-		global useRamDiskForLogfiles
-		try:
-			if os.path.isfile(G.homeDir+"permanentLog.log") and	 os.path.getsize(G.homeDir+"permanentLog.log") > 20000:
-				os.system("rm "+G.homeDir+"permanentLog.log")	 
-		except: pass
-		if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
-		U.toLog(-1, "delete logfiles  due to  limited disk space ",doPrint=True)
-		os.system("rm /var/log/*")
-		os.system("rm "+G.logDir+"*")
-		if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
-		U.doRebootThroughRUNpinReset()
+	global useRamDiskForLogfiles
+	try:
+		if os.path.isfile(G.homeDir+"permanentLog.log") and	 os.path.getsize(G.homeDir+"permanentLog.log") > 20000:
+			os.system("rm "+G.homeDir+"permanentLog.log")	 
+	except: pass
+
+	if not os.path.isfile(G.logDir+"piBeacon.log"): return 
+	nBytes = os.path.getsize(G.logDir+"piBeacon.log")
+	if nBytes > 30000000: # 30 mbytes
+		if  os.path.isfile(G.logDir+"piBeacon-1.log"):  
+			os.system("sudo rm "+G.logDir+"piBeacon-1.log ")
+		os.system("sudo mv "+G.logDir+"piBeacon.log "+G.logDir+"piBeacon-1.log ")
+
+
+	if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
+	U.toLog(-1, "delete logfiles  due to  limited disk space ",doPrint=True)
+	os.system("sudo rm /var/log/*")
+	os.system("sudo rm "+G.logDir+"*")
+	if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
+	U.doRebootThroughRUNpinReset()
+
+
 
 def checkRamDisk():
 		global useRamDiskForLogfiles
@@ -887,8 +899,9 @@ def delayAndWatchDog():
 				if GPIO.input(shutdownInputPin) == 1: 
 					lastshutdownInputPinTime = tt
 
+				### print "master: shutdown pin #%d;  secs pressed:%.1f"%(shutdownInputPin,tt - lastshutdownInputPinTime )
 				if tt - G.tStart > 20  and tt - lastshutdownInputPinTime > 3:
-						 U.doReboot(5, "shudown pin pressed", cmd="sudo sync; wait 2; sudo shutdown now")
+					 U.doReboot(10, "shudown pin pressed", cmd="sudo sync; wait 2; sudo shutdown now")
 
 			if xx%5 ==1 and False:
 				if	os.path.isfile("/run/nologin"):
@@ -1200,7 +1213,7 @@ GPIO.setmode(GPIO.BCM)
 os.system("rm "+G.homeDir+"*.pyc  > /dev/null 2>&1")
 
 # make dir for our logfiles if they do not exist
-os.system("mkdir "+G.logDir+"> /dev/null 2>&1" )
+#os.system("mkdir "+G.logDir+"> /dev/null 2>&1" )
 
 if	os.path.isdir(G.homeDir+"temp"):
 	os.system("rm  "+G.homeDir+"temp/* > /dev/null 2>&1")
@@ -1240,6 +1253,7 @@ for ff in ["webserverINPUT","webserverSTATUS"]:
 
 readNewParams()
 
+checkLogfiles()
 
 
 os.system("/usr/bin/python "+G.homeDir+"copyToTemp.py")
@@ -1253,7 +1267,7 @@ U.whichWifi()
 
 adhocWifiStarted = U.checkWhenAdhocWifistarted()
 
-print "Master adhocWifi is: ", adhocWifiStarted,";  G.wifiType is: ", G.wifiType 
+U.toLog (-1, "Master adhocWifi is: %s ;  G.wifiType is: %s"%(adhocWifiStarted, G.wifiType) ,doPrint=True)
 
 os.system("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py")
 
@@ -1282,7 +1296,7 @@ readNewParams()
 
 
 if	G.wifiType =="normal" and G.networkType !="clockMANUAL" and	 rPiCommandPORT >0:
-		startProgam("receiveGPIOcommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
+		startProgam("receiveCommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
 
 
 
@@ -1293,7 +1307,7 @@ if configured == "":
 		for ii in range(500):
 			if G.userIdOfServer	 == "xxstartxx":
 				if adhoc and adhocWifiStarted < 0: 
-					print " launching at start startAdhocWifi "
+					U.toLog (-1," launching at start startAdhocWifi ",doPrint=True )
 					U.startAdhocWifi()
 					U.startwebserverINPUT(startWebServerINPUT)
 				if wifiWaiting: 
@@ -1332,7 +1346,7 @@ if adhocWifiStarted > 0 and G.wifiType =="adhoc":
 if G.networkType  in G.useNetwork and G.wifiType =="normal":
 	for ii in range(100):
 		if ii > 98:
-			U.toLog(-1, " master no connection to indigo server at ip:>>"+ G.ipOfServer+"<<  network type:" +G.networkType,doPrint=True)
+			U.toLog(-1, "master no connection to indigo server at ip:>>"+ G.ipOfServer+"<<  network type:" +G.networkType,doPrint=True)
 			time.sleep(20)
 			startProgam("master.py", params="", reason=".. failed to connect to indigo server")
 			exit(0)
@@ -1344,7 +1358,7 @@ if G.networkType  in G.useNetwork and G.wifiType =="normal":
 
 			readNewParams()
 		else: 
-			U.toLog(-1, " master can ping indigo server at ip:>>"+ G.ipOfServer+"<<",doPrint=True)
+			U.toLog(-1, "can ping indigo server at ip:>>"+ G.ipOfServer+"<<",doPrint=True)
 			break
 		time.sleep(10)
 
@@ -1357,7 +1371,7 @@ if not os.path.isdir(G.homeDir+"soundfiles"):
 
 
 if checkDiskSpace() == 1:
-	U.toLog(-1, " please expand hard disk, not enough disk space left either do sudo raspi-config and expand HD	 or replace ssd with larger ssd ",doPrint=True)
+	U.toLog(-1, "please expand hard disk, not enough disk space left either do sudo raspi-config and expand HD	 or replace ssd with larger ssd ",doPrint=True)
 	time.sleep(50)
 	exit()
 
@@ -1402,7 +1416,7 @@ beforeLoop			 = False
 # main loop every 30 seconds
 
 # do a system boot sector check / repair
-os.system("dosfsck -w -r -l -a -v -t /dev/mmcblk0p1 >> "+G.logDir+G.program+".log")
+os.system("dosfsck -w -r -l -a -v -t /dev/mmcblk0p1 >> "+G.logDir+"piBeaacon.log")
 
 
 # reset rights and ownership just in case
@@ -1412,9 +1426,9 @@ os.system("chmod a+x "+G.homeDir0+"callbeacon.py")
 os.system("chmod a+w -R "+G.homeDir+"*")
 os.system("chown -R pi:pi "+G.homeDir0+"*")
 
-os.system("sudo chown -R  pi:pi	 /run/user/1000/pibeacon")
+#os.system("sudo chown -R  pi:pi	 /run/user/1000/pibeacon")
 os.system("sudo chmod a+x  /lib/udev/hwclock-set")
-
+#
 
 checkIfGpioIsInstalled()
 
@@ -1459,7 +1473,7 @@ if changed:
 os.system("rm  "+ G.homeDir+"temp/sending		   > /dev/null 2>&1 ")
 
 
-U.toLog(1," starting master loop ", doPrint=True)
+U.toLog(1,"starting loop", doPrint=True)
 
 
 checkTempForFanOnOff(force = True)
@@ -1516,7 +1530,7 @@ while True:
 ##########   check if pgms are running
 
 		if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType !="clockMANUAL" and (G.networkStatus).find("indigo") >-1: 
-			checkIfPGMisRunning("receiveGPIOcommands.py", checkAliveFile="", parameters=str(rPiCommandPORT))
+			checkIfPGMisRunning("receiveCommands.py", checkAliveFile="", parameters=str(rPiCommandPORT))
 
 		if "BLEconnect" in sensors:
 			startBLEconnect()

@@ -30,6 +30,12 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 	try:
 		#print "killOldPgm ",pgmToKill,str(myPID)
 		cmd= "ps -ef | grep '"+pgmToKill+"' | grep -v grep"
+		if param1 !="":
+			cmd+= " | grep " +param1
+		if param2 !="":
+			cmd+= " | grep " +param2
+		toLog(1, "trying to kill "+ cmd, doPrint = True )
+
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines=ret.split("\n")
 		for line in lines:
@@ -38,20 +44,15 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			pid=int(items[1])
 			if pid == int(myPID): continue
 			
-			if param1 != "":
-				linef = line.find(param1)
-				if linef == -1: continue
-				if param2 != "":
-					if line[linef:].find(param2) == -1: continue
 					
-			toLog(-1, "killing "+pgmToKill+"  "+param1 +" "+param2)
+			toLog(-1, "killing "+pgmToKill+" "+param1 +" "+param2)
 			os.system("kill -9 "+str(pid))
 	except Exception, e:
 		toLog(-1, u"killOldPgm	in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 #################################
 def restartMyself(param="", reason="",doPrint=True):
-	toLog(-1, u"  ---- restarting --- "+param+"  "+ reason,doPrint=doPrint)
+	toLog(-1, u"--- restarting --- "+param+"  "+ reason,doPrint=doPrint)
 	time.sleep(2)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py "+ param+" &")
 
@@ -66,13 +67,13 @@ def setStopCondition(on=True):
 		os.system("sudo chmod 666 /sys/module/i2c_bcm2708/parameters/combined")
 		os.system("sudo echo -n N > /sys/module/i2c_bcm2708/parameters/combined")
 	
+
 #################################
 def toLog(lvl,msg,permanentLog=False,doPrint=False):
 	if lvl < G.debug:
 		try:
 			if G.program =="":
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " toLog  G.program not defined msg= "+ msg 
-				return 
+				G.Program = "unknown"
 			if	not os.path.isdir(G.logDir):
 				print " logfile not ready"
 				os.system("sudo mkdir "+G.logDir+" &")
@@ -80,17 +81,17 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
 			if	not os.path.isdir(G.logDir):
 				return
 
-			f=open(G.logDir+G.program+".log","a")
-			f.write((datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+msg+"\n").encode("utf8"))
+			f=open(G.logDir+"piBeacon.log","a")
+			f.write( ("%s %s L:%2d= %s \n"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
 			f.close()
 			if permanentLog:
 				f=open(G.homeDir+"permanentLog.log","a")
-				f.write((datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+"	"+G.program+" "+msg+"\n").encode("utf8"))
+				f.write( ("%s %s L:%2d= %s \n"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
 				f.close()
 
 				
 		except	Exception, e:
-			print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),"toLog",G.program, " in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+			print ( ( "%s %s L:%2d= in Line '%s' has error='%s'"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, lvl, sys.exc_traceback.tb_lineno, e ) ).encode("utf8") )
 			if unicode(e).find("No space left on device") >-1:
 				fixoutofdiskspace()
 			if unicode(e).find("Read-only file system:") >-1:
@@ -98,9 +99,9 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
 
 	if doPrint:
 			try:
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ "  "+G.program+" "+msg
+				print (  ("%s %s L:%2d= %s"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program.ljust(15), lvl,msg) ) .encode("utf8")  )
 			except	Exception, e:
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, " in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				print ( ("%s %s L:%2d in Line '%s' has error='%s'"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program, lvl, sys.exc_traceback.tb_lineno, e)).encode("utf8")  )
 	return 
 
 
@@ -108,6 +109,7 @@ def toLog(lvl,msg,permanentLog=False,doPrint=False):
 def doRebootNow():
 	try:
 		os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
+		print " rebooting now "
 		time.sleep(5)
 		os.system("sudo killall python; sudo reboot")
 	except	Exception, e:
@@ -155,7 +157,7 @@ def pgmStillRunning(pgmToTest) :
 		lines = ret.split("\n")
 		for line in lines :
 			#print " testing  if pgm is still running	>>"+pgmToTest+"<<  >>"+	 line+"<<"
-			#toLog(-1,	" testing  if pgm is still running	 "+pgmToTest+"	"+	line)
+			#toLog(-1,	"testing  if pgm is still running	 "+pgmToTest+"	"+	line)
 			if len(line) < 10 : continue
 			#print "kill found"
 			return True
@@ -305,7 +307,8 @@ def doReboot(tt,text,cmd=""):
 	else: 
 		doCmd = cmd
 
-	toLog(-1," rebooting / shutdown "+doCmd+"  "+ text,permanentLog=True,doPrint=True)
+	print " rebooting / shutdown "+doCmd+"  "+ text
+	toLog(-1," rebooting / shutdown "+doCmd+"  "+ text, permanentLog=True, doPrint=True)
 	os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
 
 
@@ -758,7 +761,7 @@ def writeTZ( iTZ = 99, cTZ="" ):
 			if os.path.isfile("/usr/share/zoneinfo/"+newTZ):
 				os.system('sudo rm /etc/localtime; sudo  cp /usr/share/zoneinfo/'+newTZ+' /etc/localtime')#  not needed...   ; sudo echo "TZ='+newTZ+'" >> /etc/timezone  ; sudo dpkg-reconfigure -f noninteractive tzdata' )
 			else:
-				toLog(-1," error bad timezone:"+newTZ, doPrint=True)
+				toLog(-1,"error bad timezone:"+newTZ, doPrint=True)
 	except	Exception, e :
 		toLog(-1, u"writeTZ in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
 	return
@@ -768,7 +771,7 @@ def writeTZ( iTZ = 99, cTZ="" ):
 
 #################################
 def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
-	toLog(-1," resetting wifi to default for next re-boot", doPrint=True)
+	toLog(-1,"resetting wifi to default for next re-boot", doPrint=True)
 	if os.path.isfile(G.homeDir+defaultFile): 
 		os.system("cp "+G.homeDir+defaultFile+" /etc/network/interfaces")
 	stopWiFi()
@@ -778,7 +781,7 @@ def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
 
 #################################
 def restartWifi():
-	toLog(-1," restartWifi  w new config and wps files", doPrint=True)
+	toLog(-1,"restartWifi  w new config and wps files", doPrint=True)
 	stopWiFi()
 	time.sleep(0.2)
 	startWiFi()
@@ -847,7 +850,7 @@ def getIPNumberMaster(quiet=False):
 		except:
 			ipAddressRead = ""
 
-		if not quiet: toLog(-1," IP find:::: wifiIP >>"+ wifi0IP+ "<<; eth0IP: >>"+eth0IP+ "<<;   hostnameIP >>"+ unicode(ipHostname)+ "<<;   ipAddressRead >>"+ ipAddressRead+"<<",doPrint=True)
+		if not quiet: toLog(-1,"IP find:::: wifiIP >>"+ wifi0IP+ "<<; eth0IP: >>"+eth0IP+ "<<;   hostnameIP >>"+ unicode(ipHostname)+ "<<;   ipAddressRead >>"+ ipAddressRead+"<<",doPrint=True)
 
 		if testDNS() >0:
 			   retcode=1
@@ -1088,7 +1091,7 @@ def whichHCI():
 	if len(ret[0]) < 5:
 		time.sleep(0.5)
 		ret	  = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()#################################	BLE iBeaconScanner	----> end
-		print "U.whichHCI, hciconfig 2. try: ",ret
+		toLog(-1,"whichHCI, hciconfig...  2. try: "+unicode(ret),doPrint=True)
 		
 	lines = ret[0].split("\n")
 	for ll in range(len(lines)):
@@ -1097,9 +1100,10 @@ def whichHCI():
 			hciNo = lines[ll].split(":")[0]
 			hci[hciNo] = {"bus":bus, "numb":int(hciNo[3:])}
 			if lines[ll+1].find("BD Address:")>-1:
-				mm=lines[ll+1].strip().split(" ")
+				mm=lines[ll+1].strip().split("BD Address: ")[1]
+				mm=mm.split(" ")
 				if len(mm)>2:
-					hci[hciNo]["BLEmac"]=  mm[2]
+					hci[hciNo]["BLEmac"] = mm[0]
 
 		#hci1:	Type: Primary  Bus: UART
 		#	BD Address: B8:27:EB:D4:E3:35  ACL MTU: 1021:8	SCO MTU: 64:1
@@ -1112,7 +1116,7 @@ def whichHCI():
 		#	UP RUNNING 
 		#	RX bytes:11143 acl:0 sco:0 events:379 errors:0
 		#	TX bytes:4570 acl:0 sco:0 commands:125 errors:0
-	if hci =={}: print lines
+	if hci =={}: toLog(-1, unicode(lines), doPrint = True )
 	return	hci				  
 
 
@@ -1316,7 +1320,7 @@ def removeOutPutFromFutureCommands(pin, devType):
 def echoLastAlive(sensor):
 	try: 
 		tt=time.time()
-		if time.time() - G.lastAliveEcho > 60.: 
+		if time.time() - G.lastAliveEcho > 30.: 
 			G.lastAliveEcho = tt
 			os.system("echo	 "+str(tt)+" > "+G.homeDir+"temp/alive."+sensor)
 	except:
@@ -2403,7 +2407,7 @@ def testDNS():
 					toLog(1," DNS server reachable at:"+ip[1])
 					return 0
 				if ret ==-2:
-					toLog(-1," still waiting for installLibs to finish",doPrint=True)
+					toLog(-1,"still waiting for installLibs to finish",doPrint=True)
 					time.sleep(30)
 					return 1
 	except	Exception, e:

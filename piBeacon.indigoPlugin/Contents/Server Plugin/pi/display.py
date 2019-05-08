@@ -60,8 +60,7 @@ class LCD1602():
 			self.clear()			# Clear Screen
 			self.openlight()		# Enable the backlight
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-				print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 		return 
 			
 
@@ -91,8 +90,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-				print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 
 	def send_data(self,data):
 		try:
@@ -112,8 +110,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-				print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 
 
 	def clear(self):
@@ -1377,8 +1374,7 @@ def updateDevice(outputDev,matrix):
 	except	Exception, e:
 			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 			if unicode(e).find("fontDir") > 0:
-				U.toLog(-1," display device not properly setup..") 
-				print " display device interface (eg SPI ...) not properly setup.."
+				U.toLog(-1," display device not properly setup.. display device interface (eg SPI ...) not properly setup..", doPrint=True)
 			exit()
 
 	return fontDir,xmin,xmax,ymin,ymax,matrix,outputDev
@@ -1598,13 +1594,11 @@ while True:
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
-				print " restarting due to new device type, old="+devTypeLast+" new="+devType
-				U.toLog(-1, " restarting due to new device type, old="+devTypeLast+" new="+"devType")
+				U.toLog(-1, " restarting due to new device type, old="+devTypeLast+" new="+"devType", doPrint=True)
 				time.sleep(0.2)
 				os.system("/usr/bin/python "+G.homeDir+"display.py &")
 			if i2cAddress != lasti2cAddress :  # restart  myself if new device type
-				print " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress
-				U.toLog(-1, " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress)
+				U.toLog(-1, " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress, doPrint=True)
 				time.sleep(0.2)
 				os.system("/usr/bin/python "+G.homeDir+"display.py &")
 
@@ -2297,5 +2291,5 @@ while True:
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		items=[]
 
-print " exiting display"		
+U.toLog(-1, " exiting display", doPrint=True) 	
 sys.exit(0)		   

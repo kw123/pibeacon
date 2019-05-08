@@ -55,26 +55,35 @@ MENUSTRUCTURE[0]=[
 					[" power off",				"setMenuParam=''"],
 					[" 12 or 24 clock",			"setMenuParam=''"],
 					[" light intensity",		"setMenuParam=''"],
+					[" light max",				"setMenuParam=''"],
+					[" mode light vs shadow",	"setMenuParam=''"],
 					[" move",					"setMenuParam=''"],
+					[" speed",					"setMenuParam=''"],
 					[" reset",					"setMenuParam=''"],
 					[" restart",				"setMenuParam=''"],
-					[" start Web config",		"setMenuParam=''"],
-					[" WiFi SID",				"setMenuParam='WiFissidString'"],
-					[" WiFi Passwd",			"setMenuParam='WiFiPassString'"],
+					[" start Web config",		"setMenuParam=''"]
 				]
+#					[" WiFi SID",				"setMenuParam='WiFissidString'"],
+#					[" WiFi Passwd",			"setMenuParam='WiFiPassString'"],
+#				]
 #                         menu text          ,  function to call   
 MENUSTRUCTURE[1]=[	
-					[	[" WEB Functions",""], [" Info @ http:ip#",""], [" update @ ..ip#:8001", ""], [" exit submenu", "doMenuUp('')"] 	],
-					[	[" confirm",			"powerOff()"],												[" exit submenu", "doMenuUp('off')"] 	],
-					[	[" 12",   				"set12()"],				[" 24", 	"set24()"],				[" exit submenu", "doMenuUp('amPM')"] 	], 
-					[	[" up",   				"increaseLED()"],		[" down", 	"decreaseLED()"],		[" exit submenu", "doMenuUp('LED')"] 	], 
-					[	[" left", 				"moveLeft()"], 			[" right", 	"moveRight()"],			[" exit submenu", "doMenuUp('move')"] 	],
-					[	[" clock reset",		"doReset()"], 												[" exit submenu", "doMenuUp('reset')"] 	],
-					[	[" system", 			"doReststart()"],											[" exit submenu", "doMenuUp('restart')"]], 
-					[	[" start",   			"startWeb()"], 			[" stop",	"stopWeb()"], 			[" exit submenu", "doMenuUp('WEB')"] 	],
-						charCommandsS,				
-						charCommandsW
+					[	[" WEB Functions",""], [" Info @ http:ip#",""], [" update @ ..ip#:8001", ""], 					[" exit submenu", "doMenuUp('')"] 		],
+					[	[" confirm",			"powerOff()"],															[" exit submenu", "doMenuUp('off')"] 	],
+					[	[" 12",   				"set12()"],				[" 24", 	"set24()"],							[" exit submenu", "doMenuUp('amPM')"] 	], 
+					[	[" up",   				"increaseLED()"],		[" down", 	"decreaseLED()"],					[" exit submenu", "doMenuUp('LED')"] 	], 
+					[	[" up",   				"increaseLEDmax()"],	[" down", 	"decreaseLEDmax()"],				[" exit submenu", "doMenuUp('LEDmax)"] 	], 
+					[	[" normalSunDial",		"setModetoSUN()"], 		[" Sun straight down",	"setSunModetoNormal()"],[" exit submenu", "doMenuUp('move')"] 	],
+					[	[" left", 				"moveLeft()"], 			[" right", 	"moveRight()"],						[" exit submenu", "doMenuUp('move')"] 	],
+					[	[" normal", "setSpeedNormal()"],				[" demo speed",	"setSpeedDemoSlow()"],			[" demo speed fast", "setSpeedDemoFast()"], 		[" exit submenu", "doMenuUp('')"] 		],
+					[	[" clock reset",		"doReset()"], 															[" exit submenu", "doMenuUp('reset')"] 	],
+					[	[" system", 			"doReststart()"],														[" exit submenu", "doMenuUp('restart')"]], 
+					[	[" start",   			"startWeb()"], 			[" stop",	"stopWeb()"], 						[" exit submenu", "doMenuUp('WEB')"] 	]
 				]
+
+#						charCommandsS,				
+#						charCommandsW
+#				]
 ######### constants #################
 
 
@@ -151,7 +160,7 @@ class sh1106():
 			self.SWITCHCAPVCC 		= 0x2
 
 
-			self.command(
+			self.displayCommand(
 				self.DISPLAYOFF,
 				self.MEMORYMODE,
 				self.SETHIGHCOLUMN,			0xB0, 0xC8,
@@ -168,13 +177,13 @@ class sh1106():
 				self.SETVCOMDETECT,			0x20,
 				self.CHARGEPUMP,		 	0x14)
 
-			self.clear()
-			self.show()
+			self.displayClear()
+			self.displayShow()
 
 		except IOError as e:
 			raise IOError(e.errno, "Failed to initialize SH1106 display driver")
 
-	def display(self, image):
+	def displayImage(self, image):
 		"""
 		Takes a 1-bit image and dumps it to the SH1106 OLED display.
 		"""
@@ -188,7 +197,7 @@ class sh1106():
 		for y in range(0, self.pages * step, step):
 
 			# move to given page, then reset the column address
-			self.command(page, 0x02, 0x10)
+			self.displayCommand(page, 0x02, 0x10)
 			page += 1
 
 			buf = []
@@ -200,11 +209,11 @@ class sh1106():
 
 				buf.append(byte)
 
-			self.data(buf)
+			self.displayData(buf)
 
 
 
-	def command(self, *cmd):
+	def displayCommand(self, *cmd):
 		"""
 		Sends a command or sequence of commands through to the
 		device - maximum allowed is 32 bytes in one go.
@@ -212,39 +221,37 @@ class sh1106():
 		assert(len(cmd) <= 32)
 		self.bus.write_i2c_block_data(self.addr, self.cmd_mode, list(cmd))
 
-	def data(self, data):
+	def displayData(self, data):
 		"""
 		Sends a data byte or sequence of data bytes through to the
 		device - maximum allowed in one transaction is 32 bytes, so if
 		data is larger than this it is sent in chunks.
 		"""
 		for i in range(0, len(data), 32):
-			self.bus.write_i2c_block_data(self.addr,
-										  self.data_mode,
-										  list(data[i:i+32]))
+			self.bus.write_i2c_block_data(self.addr, self.data_mode, list(data[i:i+32]))
 
-	def show(self):
+	def displayShow(self):
 		"""
 		Sets the display mode ON, waking the device out of a prior
 		low-power sleep mode.
 		"""
-		self.command(self.DISPLAYON)
+		self.displayCommand(self.DISPLAYON)
 
-	def hide(self):
+	def displayHide(self):
 		"""
 		Switches the display mode OFF, putting the device in low-power
 		sleep mode.
 		"""
-		self.command(self.DISPLAYOFF)
+		self.displayCommand(self.DISPLAYOFF)
 
-	def clear(self):
+	def displayClear(self):
 		"""
 		Initializes the device memory with an empty (blank) image.
 		"""
-		self.display(PIL.Image.new('1', (self.width, self.height)))
+		self.displayImage(PIL.Image.new('1', (self.width, self.height)))
 
 # ------------------    ------------------ 
-def startDisplay():
+def displayStart():
 	global outputDev, displayFont
 	global lineCoordinates, lineCoordDeltaY, lastLines
 	global xPixels, yPixels
@@ -279,30 +286,28 @@ def startDisplay():
 	setMenuParam			= ""
 
 # ------------------    ------------------ 
-def setDisplayPriority(level=0):
+def displaySetPriority(level=0):
 	global displayPriority
 	displayPriority = level
 
 # ------------------    ------------------ 
-def resetDisplayPriority():
+def displayReSetPriority():
 	global displayPriority
 	displayPriority = 0
 
 # ------------------    ------------------ 
-def reserveDisplayPriority():
+def displayReservePriority():
 	global displayPriority
 	displayPriority = 5
 
-
-
 # ------------------    ------------------ 
-def drawDisplayLines( lines, nLines=3, clear=True, prio=0, inverse=False, show=True, force =False):
+def displayDrawLines( lines, nLines=3, clear=True, prio=0, inverse=False, show=True, force =False):
 	global outputDev, displayFont
 	global lineCoordinates, lastLines
 	global xPixels, yPixels, imData, draw
 	global displayPriority, waitForDisplayToRest
 
-	#print "drawDisplayLines", lines, nLines, clear, prio, inverse, show, displayPriority
+	#print "displayDrawLines", lines, nLines, clear, prio, inverse, show, displayPriority
 
 	if displayPriority > 0: 
 		if time.time() - displayPriority > waitForDisplayToRest:
@@ -321,20 +326,20 @@ def drawDisplayLines( lines, nLines=3, clear=True, prio=0, inverse=False, show=T
 
 	lastLines	= copy.copy(lines)
 	if clear:
-		clearDisplay(prio=prio, inverse=inverse, force=force)
+		displayClear(prio=prio, inverse=inverse, force=force)
 
 	if inverse: fill =0
 	else: 		fill =255
 
-	#print "drawDisplayLines draw"
+	#print "displayDrawLines draw"
 	for ii in range(len(lines)):
 		draw.text(lineCoordinates[nLines][ii], lines[ii],  font=displayFont, fill=fill)
 
-	if show: doShowImage()
+	if show: displayDoShowImage()
 	return 
 
 # ------------------    ------------------ 
-def drawDisplayLine( line, iLine=1, nLines=3, focus=False, prio=0, inverse=False):
+def displayDrawLine( line, iLine=1, nLines=3, focus=False, prio=0, inverse=False):
 	global outputDev, displayFont
 	global lineCoordinates, lastLines
 	global xPixels, yPixels, imData, draw
@@ -352,14 +357,14 @@ def drawDisplayLine( line, iLine=1, nLines=3, focus=False, prio=0, inverse=False
 	else: 		fill = 255
 
 	#print "drawDisplayLine", line, iLine, nLines, focus, prio, inverse, fill
-	clearDisplay((lineCoordinates[nLines][iLine][0], lineCoordinates[nLines][iLine][1]-2, xPixels,  lineCoordinates[nLines][iLine][1] +lineCoordDeltaY[nLines]-2), prio=prio, inverse=inverse  )
+	displayClear((lineCoordinates[nLines][iLine][0], lineCoordinates[nLines][iLine][1]-2, xPixels,  lineCoordinates[nLines][iLine][1] +lineCoordDeltaY[nLines]-2), prio=prio, inverse=inverse  )
 	draw.text(lineCoordinates[nLines][iLine], line,  font=displayFont, fill=fill)
 	
 	return 
 
 #
 # ------------------    ------------------ 
-def clearDisplay( area=[], prio=0, inverse=False, show=False, force=False):
+def displayClear( area=[], prio=0, inverse=False, show=False, force=False):
 	global outputDev, displayFont
 	global lineCoordinates, lastLines
 	global xPixels, yPixels, imData, draw
@@ -383,17 +388,17 @@ def clearDisplay( area=[], prio=0, inverse=False, show=False, force=False):
 		draw.rectangle((0, 0, xPixels, yPixels), outline=0, fill=fill)
 	else:
 		draw.rectangle(area, outline=0, fill=fill)
-	if show: doShowImage()
+	if show: displayDoShowImage()
 		
 # ------------------    ------------------ 
-def composeMenu(useLevel, area, subArea, nLines):
+def displayComposeMenu(useLevel, area, subArea, nLines):
 	global setMenuParam, charString
 
 	lines =[]
 	top   = MENUSTRUCTURE[0]
-	print "composeMenu", useLevel, area,subArea,nLines, "top[area][0]", top[area][0]
+	U.toLog(-2,"composeMenu " +unicode(useLevel)+";  "+unicode(area)+";  "+unicode(subArea) +";  " +unicode(nLines)+ "; top[area][0]: " +unicode(top[area][0]), doPrint=True)
 
-	clearDisplay(prio=time.time()+100)
+	displayClear(prio=time.time()+100)
 	if useLevel== 0:
 		start = max(0, min(area, len(top) - nLines) )
 		end   = min(area+nLines, len(top) )
@@ -402,9 +407,9 @@ def composeMenu(useLevel, area, subArea, nLines):
 			nn +=1
 			if ii == area:
 #				lines.append(  str(area)+" "+str(level)+"  "+str(subarea)+" x "+str(MENUSTRUCTURE[level][ii])  )
-				drawDisplayLine( str(top[ii][0]) , iLine=nn, nLines=nLines,  prio=time.time()+100, focus=True, inverse=True)
+				displayDrawLine( str(top[ii][0]) , iLine=nn, nLines=nLines,  prio=time.time()+100, focus=True, inverse=True)
 			else:
-				drawDisplayLine( str(top[ii][0]), iLine=nn, nLines=nLines, prio=time.time()+100)
+				displayDrawLine( str(top[ii][0]), iLine=nn, nLines=nLines, prio=time.time()+100)
 
 	if useLevel == 1:
 		short2 = MENUSTRUCTURE[1][area]
@@ -414,74 +419,80 @@ def composeMenu(useLevel, area, subArea, nLines):
 				end   = min(subArea+nLines-1, len(short2) )
 			else:
 				end   = min(subArea+nLines-2, len(short2) )
-			drawDisplayLine( top[area][0][0:20]+" ==>" , iLine=0, nLines=nLines, prio=time.time()+100, )
+			displayDrawLine( top[area][0][0:20]+" ==>" , iLine=0, nLines=nLines, prio=time.time()+100, )
 			nn=0
-			print "composeMenu start, end, setMenuParam",start, end, setMenuParam, charString
+			U.toLog(-2,"composeMenu  start:"+unicode(start)+"  end:"+unicode(end)+"  setMenuParam:" +unicode(setMenuParam)+"  str:"+unicode(charString), doPrint=True)
 			for ii in range(start, end):
 				nn+=1
 				if ii == subArea:
-					drawDisplayLine( str(short2[ii][0]), iLine=nn, nLines=nLines, prio=time.time()+100, focus=True, inverse=True )
+					displayDrawLine( str(short2[ii][0]), iLine=nn, nLines=nLines, prio=time.time()+100, focus=True, inverse=True )
 				else:
-					drawDisplayLine( str(short2[ii][0]), iLine=nn, nLines=nLines, prio=time.time()+100)
+					displayDrawLine( str(short2[ii][0]), iLine=nn, nLines=nLines, prio=time.time()+100)
 			if charString !="":
-				drawDisplayLine(charString, iLine=nn+1, nLines=nLines, prio=time.time()+100)
-	doShowImage()
+				displayDrawLine(charString, iLine=nn+1, nLines=nLines, prio=time.time()+100)
+	displayDoShowImage()
 	return 
 
 # ------------------    ------------------ 
-def composeMenu0():
+def displayComposeMenu0():
 	global displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive
 	if displayMenuLevelActive ==0:	nLines = 4
 	else:							nLines = 5
-	composeMenu(displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive, nLines)
-	doShowImage()
+	displayComposeMenu(displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive, nLines)
+	displayDoShowImage()
 
 # ------------------    ------------------ 
-def doShowImage():
+def displayDoShowImage():
 	global imData, outputDev
-	outputDev.display(imData)
+	outputDev.displayImage(imData)
 
 
 # ------------------    ------------------ 
-def showStandardStatusDisplay(force=False):
+def displayShowStandardStatus(force=False):
 	global overallStatus, totalSteps, maxStepsUsed, sensorDict
 	value =""
 	for ii in range(len(sensorDict["sensor"])):
 		value +=str(sensorDict["sensor"][ii]["clicked"] )+" "
 	value = value.strip(" ")
-	drawDisplayLines(["St:"+overallStatus+"; Wifi:"+str(G.wifiEnabled)[0]+"; Cl:"+amPM1224,"IP#:"+G.ipAddress ,"SensClicked: "+value,"@ Pos.: %d/%d"%(totalSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")], nLines=5)
+	displayDrawLines(["St:"+overallStatus+"; Wifi:"+str(G.wifiEnabled)[0]+"; Cl:"+amPM1224,"IP#:"+G.ipAddress ,"SensClicked: "+value,"@ Pos.: %d/%d"%(totalSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")], nLines=5)
 	updatewebserverStatus("normal")
 
 # ------------------    ------------------ 
-def showStatus2(force=True):
+def displayShowStatus2(force=True):
 	global overallStatus, totalSteps, maxStepsUsed, sensorDict
-	drawDisplayLines(["Web INFO:","  "+G.ipAddress,"Web ENTRY:","  "+G.ipAddress+":8001","", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")], nLines=5, clear=True, force=force, show=True)
+	displayDrawLines(["Web INFO:","  "+G.ipAddress,"Web ENTRY:","  "+G.ipAddress+":8001","", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")], nLines=5, clear=True, force=force, show=True)
 
 
 # ------------------    ------------------ 
 def updatewebserverStatus(status):
-	global amPM1224, intensity, whereIs12, whereIsTurnF, whereIsTurnB, totalSteps, stepsIn360
+	global amPM1224, intensity, whereIs12, whereIsTurnF, whereIsTurnB, totalSteps, stepsIn360, intensityMaxNorm
 	statusData		= []
 
 	statusData.append( "SunDial Current status" )
 	statusData.append( "time........... = "+ datetime.datetime.now().strftime(u"%H:%M") )
-	statusData.append( "IP-Number...... = "+ G.ipAddress )
-	statusData.append( "WiFi enabled... = "+ str(G.wifiEnabled) )
-	statusData.append( "opStatus....... = "+ status )
-	statusData.append( "12/24 mode..... = "+ amPM1224 )
-	statusData.append( "intensity...... = "+ "scale:%d"%intensity["Mult"] + ", Min:%d"%intensity["Min"] + ", Max:%d"%intensity["Max"]  )
-	statusData.append( "Steps in 360... = "+ "%d"%stepsIn360 )
-	statusData.append( "maxStepsUsed... = "+ "%d"%maxStepsUsed+" from 0 to 24/12" )
-	statusData.append( "Step Now....... = "+ "%d"%totalSteps )
-	statusData.append( "Sensor 0....... = "+ "%s"%sensorDict["sensor"][0]["clicked"])
-	statusData.append( "Sensor 12...... = "+ "%s"%sensorDict["sensor"][1]["clicked"])
-	statusData.append( "Sensor LineChk1 = "+ "%s"%sensorDict["sensor"][2]["clicked"])
-	statusData.append( "Sensor LineChk2 = "+ "%s"%sensorDict["sensor"][3]["clicked"])
+	statusData.append( "IP-Number....... = "+ G.ipAddress )
+	statusData.append( "WiFi enabled.... = "+ str(G.wifiEnabled) )
+	statusData.append( "opStatus........ = "+ status )
+	statusData.append( "12/24 mode...... = "+ amPM1224 )
+	statusData.append( "intensity....... = "+ "scale:%d"%intensity["Mult"] + ", Min:%d"%intensity["Min"] + ", Max:%d"%intensity["Max"]  )
+	statusData.append( "intensitymax.... = "+ "scale:%d"%intensityMaxNorm)
+	statusData.append( "Steps in 360.... = "+ "%d"%stepsIn360 )
+	statusData.append( "maxStepsUsed.... = "+ "%d"%maxStepsUsed+" from 0 to 24/12" )
+	statusData.append( "Step Now........ = "+ "%d"%totalSteps )
+	statusData.append( "Sensor 0........ = "+ "%s"%sensorDict["sensor"][0]["clicked"])
+	statusData.append( "Sensor 12....... = "+ "%s"%sensorDict["sensor"][1]["clicked"])
+	statusData.append( "Sensor 0 marksR. = "+ "%s"%(unicode(sensorDict["sensor"][0]["right"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+	statusData.append( "Sensor 0 marksL. = "+ "%s"%(unicode(sensorDict["sensor"][0]["left"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+	statusData.append( "Sensor 12 marksR.= "+ "%s"%(unicode(sensorDict["sensor"][1]["right"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+	statusData.append( "Sensor 12 marksL.= "+ "%s"%(unicode(sensorDict["sensor"][1]["left"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+	statusData.append( "Sensor LineChk1. = "+ "%s"%sensorDict["sensor"][2]["clicked"])
+	statusData.append( "Sensor LineChk2. = "+ "%s"%sensorDict["sensor"][3]["clicked"])
 	cc = timeToColor(secSinMidnit)
 	statusData.append( "currentColor... = "+ "R:%d"%cc[0] + ", G:%d"%cc[1] + ", B:%d"%cc[2] + " / 255" )
 
 	U.updateWebStatus(json.dumps(statusData) )
-
+def removebracketsetc(data):
+	out = unicode(data).replace("[","").replace("]","").replace(" ","")
 
 # ########################################
 # #########   button funtions ############
@@ -490,39 +501,56 @@ def updatewebserverStatus(status):
 def doAction():
 	global displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive
 	global setMenuParam
-	print "doAction displayMenuLevelActive", displayMenuLevelActive,"; displayMenuAreaActive", displayMenuAreaActive, "; subArea", displayMenuSubAreaActive
+	U.toLog(-2,"doAction displayMenuLevelActive: "+unicode(displayMenuLevelActive)+"; displayMenuAreaActive:"+unicode(displayMenuAreaActive)+ "; subArea:"+unicode(displayMenuSubAreaActive), doPrint=True)
 
 	if displayMenuAreaActive < 0: return 
 
 	if displayMenuLevelActive == 0:
-		composeMenu0()
+		displayComposeMenu0()
 		cmd = MENUSTRUCTURE[0][displayMenuAreaActive][1]
-		print "action0:>>%s<<"%cmd
+		U.toLog(-2,"action0:>>%s<<"%cmd, doPrint=True)
 		exec(cmd) 
 
 	elif displayMenuLevelActive == 1:
 		if displayMenuSubAreaActive < 0: return 
-		composeMenu0()
+		displayComposeMenu0()
 		cmd = MENUSTRUCTURE[1][displayMenuAreaActive][displayMenuSubAreaActive][1]
-		print "action1:>>%s<<"%cmd
+		U.toLog(-2,"action1:>>%s<<"%cmd, doPrint=True)
 		exec(cmd) 
 		if displayMenuLevelActive == 0:
-			composeMenu0()
+			displayComposeMenu0()
 	
 	return 
 
+# ------------------    ------------------ 
+def limitSensorEvent(pin, level, tick):
+	global inFixBoundaryMode, currentlyMoving, limitSensorTriggered
+	getSensors()
+	U.toLog(-2," limitSensorTriggered pin#%d, timeSinceLastMove:%2f,   limitSensorTriggered:%d, inFixBoundaryMode:%d, sensSt2:%d, sensSt3:%d"%(pin,time.time() - currentlyMoving,limitSensorTriggered,inFixBoundaryMode,sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"] ),  doPrint=True)
+	if time.time() - currentlyMoving < 0.1:	return # just moved, ignore .. only for manual move detect 
+	if inFixBoundaryMode !=0: 						return # alread in fix mode
+	if sensorDict["sensor"][2]["status"] == 1 and limitSensorTriggered != 1:	
+		limitSensorTriggered = 1
+		writeFixMode(1)
+		U.restartMyself(reason="entering fixmode, manual trigger of boundaries", doPrint=True)
+	if sensorDict["sensor"][3]["status"] == 1 and limitSensorTriggered != -1:
+		limitSensorTriggered = -1
+		writeFixMode(-1)
+		U.restartMyself(reason="entering fixmode, manual trigger of boundaries", doPrint=True)
+	return
 
+	
 
 # ------------------    ------------------ 
-def buttonPressed(pin, level, tick):
-	global gpiopinNumber, pinsToName, displayPriority
+def buttonPressedEvent(pin, level, tick):
+	global gpiopinNumbers, pinsToName, displayPriority
 	global displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive
 	global lastExpireDisplay
 
 	if pin not in pinsToName: 			return 
 	val = getPinValue("0", pin=pin) 
 	if val ==-1: 						return 
-	print " buttonPressed ", pin, pinsToName[pin], val, displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive
+	U.toLog(-2," buttonPressed "+unicode(pin)+" "+unicode(pinsToName[pin])+"  "+unicode(val)+"  "+unicode(displayMenuLevelActive)+"  "+unicode(displayMenuAreaActive)+"  "+unicode(displayMenuSubAreaActive), doPrint=True)
 
 
 	lastExpireDisplay = time.time() +20.
@@ -530,7 +558,7 @@ def buttonPressed(pin, level, tick):
 	if displayMenuLevelActive < -1:
 		displayMenuLevelActive += 1
 		if displayMenuLevelActive < 0:
-			showStandardStatusDisplay(force=True)
+			displayShowStandardStatus(force=True)
 			return 
 			
 
@@ -550,7 +578,7 @@ def buttonPressed(pin, level, tick):
 
 		elif displayMenuLevelActive  == 1:
 			cmd = MENUSTRUCTURE[0][displayMenuAreaActive][1]
-			print "action0:>>%s<<"%cmd
+			U.toLog(-2,"action0:>>%s<<"%cmd, doPrint=True)
 			exec(cmd) 
 
 		if displayMenuLevelActive > 0:
@@ -568,13 +596,13 @@ def buttonPressed(pin, level, tick):
 			displayMenuAreaActive += 1
 			if displayMenuAreaActive >= len(MENUSTRUCTURE[0]):
 				displayMenuAreaActive = 0
-			composeMenu0()
+			displayComposeMenu0()
 
 		elif displayMenuLevelActive == 1:
 			displayMenuSubAreaActive += 1
 			if displayMenuSubAreaActive >= len(MENUSTRUCTURE[1][displayMenuAreaActive]):
 				displayMenuSubAreaActive = 0
-			composeMenu0()
+			displayComposeMenu0()
 
 		else:
 			return 	
@@ -584,12 +612,12 @@ def buttonPressed(pin, level, tick):
 			displayMenuAreaActive -= 1
 			if displayMenuAreaActive < 0:
 				displayMenuAreaActive = len(MENUSTRUCTURE[0])-1
-			composeMenu0()
+			displayComposeMenu0()
 		elif displayMenuLevelActive == 1:
 			displayMenuSubAreaActive -= 1
 			if displayMenuSubAreaActive < 0:
 				displayMenuSubAreaActive = len(MENUSTRUCTURE[1][displayMenuAreaActive])-1
-			composeMenu0()
+			displayComposeMenu0()
 		else:
 			return 	
 
@@ -598,33 +626,33 @@ def buttonPressed(pin, level, tick):
 		displayMenuSubAreaActive 	= -1
 
 		if displayMenuLevelActive 	< 0:
-			print " setting to normal display"
+			U.toLog(-2,"setting to normal display", doPrint=True)
 			displayPriority 		= 0
 			displayMenuLevelActive 	= -1
-			showStandardStatusDisplay(force=True)
+			displayShowStandardStatus(force=True)
 
 		elif displayMenuLevelActive == 0:
-			composeMenu0()
+			displayComposeMenu0()
 
 # ------------------    ------------------ 
 def addChar(c):
 	global charString, WiFissidString, WiFiPassString, setMenuParam
 	charString +=c
-	print "addChar charString", c, charString
+	U.toLog(-2,"addChar charString %s   %s" %(c, charString), doPrint=True)
 	return 
 
 # ------------------    ------------------ 
 def deleteLastChar():
 	global charString, WiFissidString, WiFiPassString, setMenuParam
-	print "deleteLastChar"
+	U.toLog(-2,"deleteLastChar", doPrint=True)
 	if len(charString)>0: charString = charString[0:-1]
-	print "deleteLastChar charString", charString
+	U.toLog(-2,"deleteLastChar charString %s" %charString, doPrint=True)
 	return 
 
 # ------------------    ------------------ 
 def doSaveMenu(param):
 	global charString, WiFissidString, WiFiPassString, setMenuParam
-	print " into doSaveMenu", param
+	U.toLog(-2," into doSaveMenu %s"%param, doPrint=True)
 	if param == "" : return 
 	if param == setMenuParam:
 		if   setMenuParam == "WiFissidString":
@@ -636,12 +664,12 @@ def doSaveMenu(param):
 		
 def doSetWiFiParams():
 	global charString, WiFissidString, WiFiPassString, setMenuParam
-	print "into doSetWiFiParams WiFissidString:", WiFissidString,";  WiFiPassString:", WiFiPassString
+	U.toLog(-2,"into doSetWiFiParams WiFissidString: %s    WiFiPassString: %s"%(WiFissidString,WiFiPassString), doPrint=True)
 	return 
 
 # ------------------    ------------------ 
 def powerOff():
-	print " into powerOff" 
+	U.toLog(-2,"into powerOff" , doPrint=True)
 	#U.doReboot(1.," shut down at " +str(datetime.datetime.now())+"   button pressed",cmd="shutdown -h now ")
 	return 
 
@@ -649,7 +677,7 @@ def powerOff():
 # ------------------    ------------------ 
 def increaseLED():
 	global intensity
-	print " into increaseLED" 
+	U.toLog(-2,"into increaseLED" ,doPrint=True)
 	nSteps =1
 	while getPinValue("pin_Up") ==1:
 			#print "pin_IntensityUp"
@@ -663,7 +691,7 @@ def increaseLED():
 # ------------------    ------------------ 
 def decreaseLED():
 	global intensity
-	print " into decreaseLED" 
+	U.toLog(-2,"into decreaseLED" ,doPrint=True)
 	nSteps =1
 	while getPinValue("pin_Dn")==1:
 			#print "pin_IntensityDn"
@@ -675,8 +703,36 @@ def decreaseLED():
 
 
 # ------------------    ------------------ 
+def increaseLEDmax():
+	global intensityMaxNorm
+	U.toLog(-2,"into increaseLED Max" ,doPrint=True)
+	nSteps =1
+	while getPinValue("pin_Up") ==1:
+			#print "pin_IntensityUp"
+			nSteps = min(5, nSteps*1.5)
+			intensityMaxNorm = min(1000000,intensityMaxNorm+nSteps)
+			setColor( force = True)
+			time.sleep(0.3)
+	return 
+
+
+# ------------------    ------------------ 
+def decreaseLEDmax():
+	global intensityMaxNorm
+	U.toLog(-2,"into decreaseLED Max" ,doPrint=True)
+	nSteps =1
+	while getPinValue("pin_Dn")==1:
+			#print "pin_IntensityDn"
+			nSteps = min(5, nSteps*1.5)
+			intensityMaxNorm = max(100,intensityMaxNorm-nSteps)
+			setColor( force = True)
+			time.sleep(0.3)
+	return 
+
+
+# ------------------    ------------------ 
 def startWeb():
-	print " into startWeb" 
+	U.toLog(-2,"into startWeb" ,doPrint=True)
 	if webAdhoc: return 
 	pass
 	webAdhoc = False
@@ -685,7 +741,7 @@ def startWeb():
 # ------------------    ------------------ 
 def stopWeb():
 	global webAdhoc
-	print " into stopWeb" 
+	U.toLog(-2,"into stopWeb" ,doPrint=True)
 	if not webAdhoc: return 
 	webAdhoc = False
 	return 
@@ -693,53 +749,91 @@ def stopWeb():
 
 
 # ------------------    ------------------ 
+def setModetoSUN():
+	U.toLog(-2,"into setModetoSUN" ,doPrint=True)
+	sunDialOffset = 4320
+	return 
+
+# ------------------    ------------------ 
+def setSunModetoNormal():
+	U.toLog(-2,"into setSunModetoNormal" ,doPrint=True)
+	sunDialOffset = 0 
+	return 
+
+
+
+# ------------------    ------------------ 
 def doReststart():
-	print " into doReststart" 
+	U.toLog(-2,"into doReststart" ,doPrint=True)
 	time.sleep(1)	
  
 	if getPinValue("pin_Select") ==1:
-		print "restart requested"
+		U.toLog(-2,"restart requested",doPrint=True)
 		time.sleep(1)
-		#U.restartMyself(param=" restart requested", reason="",doPrint=True)
+		#U.restartMyself(reason=" restart requested", doPrint=True)
 	return 
 
 # ------------------    ------------------ 
 def doReset():
-	print " into doReset" 
+	U.toLog(-2,"into doReset" , doPrint=True)
 	time.sleep(1)	
  
 	if getPinValue("pin_Select") == 1:
-		print "restart requested"
+		U.toLog(-2,"restart requested", doPrint=True)
 		time.sleep(1)
-		#U.restartMyself(param=" restart requested", reason="",doPrint=True)
+		#U.restartMyself(reason=" restart requested",doPrint=True)
 
 # ------------------    ------------------ 
 def moveRight():
-	print " into moveRight"
+	U.toLog(-2,"into moveRight", doPrint=True)
 	while getPinValue("pin_Up") == 1:
-		move(0.006, 2, 1, force = 10)
+		move(0.01, 2, 1, force = 10)
 	return 
 
 # ------------------    ------------------ 
 def moveLeft():
-	print " into moveLeft"
+	U.toLog(-2,"into moveLeft", doPrint=True)
 	while getPinValue("pin_Dn") == 1:
-		move(0.006, 2, -1, force = 10)
-	return 
-# ------------------    ------------------ 
-def set12():
-	global amPM1224Update
-	print " set to 24 hour clock"
-	amPM1224Update = "24"
+		move(0.01, 2, -1, force = 10)
 	return 
 # ------------------    ------------------ 
 def set24():
 	global amPM1224Update
-	print " set to 12 hour clock"
+	if amPM1224Update == "24": return 
+	U.toLog(-2,"set to 24 hour clock", doPrint=True)
+	amPM1224Update = "24"
+	return 
+# ------------------    ------------------ 
+def set12():
+	global amPM1224Update
+	if amPM1224Update == "12": return 
+	U.toLog(-2,"set to 12 hour clock", doPrint=True)
 	amPM1224Update = "12"
 	return 
 
+# ------------------    ------------------ 
+def setSpeedDemoSlow():
+	global speed, speedDemoStart
+	if speedDemoStart >1: return 
+	speedDemoStart = time.time()
+	U.toLog(-2,"set speed to demo", doPrint=True)
+	U.restartMyself(reason="setting speed to demo", param= "30",doPrint=True)
+	return 
+# ------------------    ------------------ 
+def setSpeedDemoFast():
+	global speed, speedDemoStart
+	if speedDemoStart >1: return 
+	speedDemoStart = time.time()
+	U.toLog(-2,"set speed to demo", doPrint=True)
+	U.restartMyself(reason="setting speed to demo", param= "500",doPrint=True)
+	return 
 
+def setSpeedNormal():
+	global speed, speedDemoStart
+	if speedDemoStart < 1: return 
+	U.toLog(-2,"set speed to normal", doPrint=True)
+	U.restartMyself(reason="resetting speed to normal",doPrint=True)
+	return
 
 # ------------------    ------------------ 
 def doMenuUp(param):
@@ -748,20 +842,20 @@ def doMenuUp(param):
 	global charString 
 	global amPM1224Update, amPM1224
 
-	print " into doMenuUp", param
+	U.toLog(-2,"into doMenuUp "+unicode(param), doPrint=True)
 
 	displayMenuLevelActive -=1
 
 	if displayMenuLevelActive < 0:
 		displayPriority = 0
 		displayMenuLevelActive =-1
-		showStandardStatusDisplay(force=True)
+		displayShowStandardStatus(force=True)
 	charString =""
-	if param == "amPM" or param == "LED":
+	if param == "amPM" or param == "LED" or param == "LEDmax":
 		updateParams()
 		if amPM1224Update != amPM1224:
 			doSunDialShutdown()
-			U.restartMyself(param=" new AM pm setting", reason="",doPrint=True)
+			U.restartMyself(reason=" new AM pm setting",doPrint=True)
 	return 
 
 
@@ -772,25 +866,36 @@ def doMenuUp(param):
 # ------------------    ------------------ 
 def writeBackParams(data):
 
-	print " writeBackParams"
-	U.writeJson(G.homeDir+"temp/parameters",data,sort_keys=True, indent=2)
-	U.writeJson(G.homeDir+"parameters",data,sort_keys=True, indent=2)
+	U.toLog(-2,"writeBackParams", doPrint=True)
+	U.writeJson(G.homeDir+"temp/parameters", data, sort_keys=True, indent=2)
+	U.writeJson(G.homeDir+"parameters", data, sort_keys=True, indent=2)
 
 # ------------------    ------------------ 
 def updateParams():
-	global clockDict, inp, amPM1224, intensity, timeZone
+	global clockDict, inp, amPM1224, intensity, timeZone, intensityMaxNorm
 
+	anyChange = False
 	for devType in inp["output"]:
 		if devType== "sunDial":
 			for devId in inp["output"]["sunDial"]:
 				#inp["output"]["sunDial"][devId ][0] = copy.copy(clockDict)
-				inp["output"]["sunDial"][devId][0]["amPM1224"] 		= amPM1224
-				inp["output"]["sunDial"][devId][0]["intensityMult"] = intensity["Mult"]
-				inp["output"]["sunDial"][devId][0]["intensityMax"] 	= intensity["Max"]	
-				inp["output"]["sunDial"][devId][0]["intensityMin"] 	= intensity["Min"]	
-				inp["output"]["sunDial"][devId][0]["timeZone"] 		= timeZone
+				anyChange = upINP("amPM1224",			amPM1224, 		   devId ) or anyChange
+				anyChange = upINP("intensityMult",		intensity["Mult"], devId ) or anyChange
+				anyChange = upINP("intensityMax",		intensity["Max"],  devId ) or anyChange
+				anyChange = upINP("intensityMin",		intensity["Min"],  devId ) or anyChange
+				anyChange = upINP("intensityMaxNorm",	intensityMaxNorm,  devId ) or anyChange
+				anyChange = upINP("timeZone",			timeZone, 		   devId ) or anyChange
+	if anyChange: writeBackParams(inp)
 
-	writeBackParams(inp)
+# ------------------    ------------------ 
+def	upINP(parm, value, devId):
+	global inp
+	if parm not in inp["output"]["sunDial"][devId][0] or inp["output"]["sunDial"][devId][0][parm] != value:
+		print "sundial updating", parm, value
+		inp["output"]["sunDial"][devId][0][parm] = value
+		return True
+	return False
+	
 
 # ------------------    ------------------ 
 def changedINPUT(theDict, key, lastValue, func):
@@ -813,13 +918,15 @@ def readParams():
 	global lastCl, timeZone, currTZ
 	global oldRaw, lastRead
 	global doReadParameters
-	global gpiopinNumber
+	global gpiopinNumbers
 	global clockDictLast, clockDict
 	global colPWM
-	global speedOverWrite
+	global speedDemoStart
 	global SeqCoils
 	global buttonDict, sensorDict
 	global pinsToName, anyInputChange
+	global intensityMaxNorm
+	global sunDialOffset
 
 	try:
 
@@ -858,7 +965,7 @@ def readParams():
 
 			#print clockDict
 			if "timeZone"	 in clockDict:	
-				if timeZone !=	(clockDict["timeZone"]):
+				if len(clockDict["timeZone"]) > 5 and timeZone !=	(clockDict["timeZone"]):
 					changed 	= max(2, changed)  
 					timeZone 	= (clockDict["timeZone"])
 					tznew  		= int(timeZone.split(" ")[0])
@@ -875,15 +982,13 @@ def readParams():
 			intensity["Max"] 			= changedINPUT(clockDict, "intensityMax", 	intensity["Max"],				float)
 			intensity["Min"] 			= changedINPUT(clockDict, "intensityMin", 	intensity["Min"],				float)
 			intensity["Mult"] 			= changedINPUT(clockDict, "intensityMult", 	intensity["Mult"],				float)
-
-			speed						= changedINPUT(clockDict, "speed", 			speed,							float)
-			if speedOverWrite >-1: speed = speedOverWrite
-			break
+			intensityMaxNorm			= changedINPUT(clockDict, "intensityMaxNorm",intensityMaxNorm,				float)
+			sunDialOffset				= changedINPUT(clockDict, "sunDialOffset",	sunDialOffset,					float)
+	 		break
 		return changed
 
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
 		time.sleep(10)
 		return 3
 
@@ -945,9 +1050,9 @@ def defineMotorType():
 		mtSplit    		= motorType.split("-")
 		mult 		    = int(mtSplit[2])
 		stepsIn360 		= int(mtSplit[1])*mult
-		maxStepsUsed	= stepsIn360 -1
+		maxStepsUsed	= stepsIn360 
 	except:
-		print " stopping  motorType wrong", motorType, mtSplit
+		U.toLog(-2,"stopping  motorType wrong "+unicode(motorType)+"  "+unicode(tSplit), doPrint=True)
 		exit()
 
 	if mtSplit[0] == "bipolar":
@@ -959,7 +1064,7 @@ def defineMotorType():
 			SeqCoils.append([1, 0, 0, 1])
 			SeqCoils.append([1, 0, 1, 0])
 		elif motorType.find("-2") >-1:
-			print "motorType = ", motorType
+			U.toLog(-2,"motorType = "+unicode(motorType), doPrint=True)
 			SeqCoils.append([0, 0, 0, 0])  # off
 
 			SeqCoils.append([0, 1, 1, 0])
@@ -982,7 +1087,7 @@ def defineMotorType():
 			"""
 
 	else:
-		print " stopping  motorType not defined"
+		U.toLog(-2,"stopping  motorType not defined",doPrint=True)
 		exit()
 
 	nStepsInSequence= len(SeqCoils) -1
@@ -990,36 +1095,37 @@ def defineMotorType():
 	return 
 
 # ------------------    ------------------ 
-def setgpiopinNumber():
-	global gpiopinNumber, motorType, sensorDict, buttonDict, PIGPIO, pwmRange
+def setgpiopinNumbers():
+	global gpiopinNumbers, motorType, sensorDict, buttonDict, PIGPIO, pwmRange
 	### GPIO pins ########
 	motorType						= "bipolar-400-2-PIG"
 
-	gpiopinNumber ={}
-	gpiopinNumber["pin_CoilA1"] 	= 21 # blue
-	gpiopinNumber["pin_CoilA2"] 	= 20 # pink
-	gpiopinNumber["pin_CoilB1"] 	= 16 # yellow
-	gpiopinNumber["pin_CoilB2"] 	= 12 # orange
+## gpio -g mode 23 in;gpio -g read
+	gpiopinNumbers ={}
+	gpiopinNumbers["pin_CoilA1"] 	= 21 # blue
+	gpiopinNumbers["pin_CoilA2"] 	= 20 # pink
+	gpiopinNumbers["pin_CoilB1"] 	= 16 # yellow
+	gpiopinNumbers["pin_CoilB2"] 	= 12 # orange
 
-	gpiopinNumber["pin_sensor0"] 	= 23
-	gpiopinNumber["pin_sensor1"] 	= 24
-	gpiopinNumber["pin_sensor2"] 	= 4
-	gpiopinNumber["pin_sensor3"] 	= 17
+	gpiopinNumbers["pin_sensor0"] 	= 23  # 0 clock
+	gpiopinNumbers["pin_sensor1"] 	= 24  # 12 clock
+	gpiopinNumbers["pin_sensor2"] 	= 4   # cap swicth sens
+	gpiopinNumbers["pin_sensor3"] 	= 17  # switch sensor
 
-	gpiopinNumber["pin_Up"] 		= 11
-	gpiopinNumber["pin_Dn"] 		= 9
-	gpiopinNumber["pin_Select"] 	= 10
-	gpiopinNumber["pin_Exit"] 		= 22
+	gpiopinNumbers["pin_Up"] 		= 11
+	gpiopinNumbers["pin_Dn"] 		= 9
+	gpiopinNumbers["pin_Select"] 	= 10
+	gpiopinNumbers["pin_Exit"] 		= 22
 
-	gpiopinNumber["pin_rgbLED"]		= [19,13,26]
+	gpiopinNumbers["pin_rgbLED"]	= [19,13,26]
 
 
 	sensorDict			 = {}
 	sensorDict["sensor"] = []
-	sensorDict["sensor"].append({"ON":0,"pull":1,"lastCeck":0, "lastValue":-1,"newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status":-1}) 
-	sensorDict["sensor"].append({"ON":0,"pull":1,"lastCeck":0, "lastValue":-1,"newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status":-1}) 
-	sensorDict["sensor"].append({"ON":1,"pull":0,"lastCeck":0, "lastValue":-1,"newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status":0}) 
-	sensorDict["sensor"].append({"ON":1,"pull":1,"lastCeck":0, "lastValue":-1,"newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status":0}) 
+	sensorDict["sensor"].append({"ON":0,"pull":1,"lastCeck":0, "lastValue":-1,"newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status":-1, "event": 0}) 
+	sensorDict["sensor"].append({"ON":0,"pull":1,"lastCeck":0, "lastValue":-1,"newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status":-1, "event": 0}) 
+	sensorDict["sensor"].append({"ON":1,"pull":0,"lastCeck":0, "lastValue":0, "newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status": 0, "event": 1}) 
+	sensorDict["sensor"].append({"ON":0,"pull":1,"lastCeck":0, "lastValue":0, "newValue":-1,"clicked":"N", "left":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "right":[-1,-1,-1,-1,-1,-1,-1,-1,-1], "status": 0, "event":-1}) 
 	sensorDict["sequence"]				= [0,1,1,1,1,0,0,0,0] # sensors firing when turning right in parts of 360/8: (0,1,2,3,4,5,6,7,8=360 )
 																  # 4 magents every 1/8 of 360, 2 reed sensor at 0(#0-sensor0) and 180(#1=sensor1)
 	sensorDict["currentSeqNumber"]		= -1 #  0,1,2,3,4,5,6,7,8
@@ -1030,8 +1136,8 @@ def setgpiopinNumber():
 		buttonDict[key] = {"lastCeck":0, "lastValue":-1,"newValue":-1}
 
 
-	print "sensorDict", sensorDict
-	print "buttonDict", buttonDict
+	U.toLog(-2,unicode(sensorDict),doPrint=True)
+	U.toLog(-2,unicode(buttonDict),doPrint=True)
 
 	if not U.pgmStillRunning("pigpiod"): 	
 		U.toLog(-1, "starting pigpiod", doPrint=True)
@@ -1048,30 +1154,30 @@ def setgpiopinNumber():
 	pwmRange = 1000
 
 
-	defineGPIOout(gpiopinNumber["pin_CoilA1"])
-	defineGPIOout(gpiopinNumber["pin_CoilA2"])
-	defineGPIOout(gpiopinNumber["pin_CoilB1"])
-	defineGPIOout(gpiopinNumber["pin_CoilB2"])
+	defineGPIOout(gpiopinNumbers["pin_CoilA1"])
+	defineGPIOout(gpiopinNumbers["pin_CoilA2"])
+	defineGPIOout(gpiopinNumbers["pin_CoilB1"])
+	defineGPIOout(gpiopinNumbers["pin_CoilB2"])
 
 
-	defineGPIOout(gpiopinNumber["pin_rgbLED"][0], pwm=1)
-	defineGPIOout(gpiopinNumber["pin_rgbLED"][1], pwm=1)
-	defineGPIOout(gpiopinNumber["pin_rgbLED"][2], pwm=1)
+	defineGPIOout(gpiopinNumbers["pin_rgbLED"][0], pwm=1)
+	defineGPIOout(gpiopinNumbers["pin_rgbLED"][1], pwm=1)
+	defineGPIOout(gpiopinNumbers["pin_rgbLED"][2], pwm=1)
 
-	defineGPIOin("pin_Up",		event=True)
-	defineGPIOin("pin_Dn",		event=True)
-	defineGPIOin("pin_Select",	event=True)
-	defineGPIOin("pin_Exit",	event=True)
-	pinsToName[gpiopinNumber["pin_Up"]]		= "pin_Up"
-	pinsToName[gpiopinNumber["pin_Dn"]]		= "pin_Dn"
-	pinsToName[gpiopinNumber["pin_Select"]]	= "pin_Select"
-	pinsToName[gpiopinNumber["pin_Exit"]]		= "pin_Exit"
+	defineGPIOin("pin_Up",		event=1)
+	defineGPIOin("pin_Dn",		event=1)
+	defineGPIOin("pin_Select",	event=1)
+	defineGPIOin("pin_Exit",	event=1)
+	pinsToName[gpiopinNumbers["pin_Up"]]		= "pin_Up"
+	pinsToName[gpiopinNumbers["pin_Dn"]]		= "pin_Dn"
+	pinsToName[gpiopinNumbers["pin_Select"]]	= "pin_Select"
+	pinsToName[gpiopinNumbers["pin_Exit"]]		= "pin_Exit"
 
 
 	defineGPIOin("pin_sensor0", pull =sensorDict["sensor"][0]["pull"] )
 	defineGPIOin("pin_sensor1", pull =sensorDict["sensor"][1]["pull"] )
-	defineGPIOin("pin_sensor2", pull =sensorDict["sensor"][2]["pull"] )
-	defineGPIOin("pin_sensor3", pull =sensorDict["sensor"][3]["pull"] )
+	defineGPIOin("pin_sensor2", pull =sensorDict["sensor"][2]["pull"], event= sensorDict["sensor"][3]["event"], evpgm="sw")
+	defineGPIOin("pin_sensor3", pull =sensorDict["sensor"][3]["pull"], event= sensorDict["sensor"][3]["event"], evpgm="sw" )
 
 	defineMotorType()
 
@@ -1080,35 +1186,46 @@ def setgpiopinNumber():
 
 
 # ########################################
-# #########    masic GPIO funtions  ######
+# #########    basic GPIO funtions  ######
 # ########################################
 
 # ------------------    ------------------ 
-def defineGPIOin(pinName, event= False, pull=1):
+def defineGPIOin(pinName, event= 0, pull=1, evpgm="button"):
 	global PIGPIO
-	pin = gpiopinNumber[pinName]
+	pin = gpiopinNumbers[pinName]
 	if pin <=1: return 
 	try:
-		#print " defineGPIOin ", pin, "pull: ", pull
+		#print "defineGPIOin ", pinName, pin, "pull: ", pull
 		PIGPIO.set_mode( pin,  pigpio.INPUT )
 		if pull==1:
 			PIGPIO.set_pull_up_down( pin, pigpio.PUD_UP)
 		else:
 			PIGPIO.set_pull_up_down( pin, pigpio.PUD_DOWN)
 
-		if event:
+		if event !=0:
 			#print " setup event for ", pin
-			PIGPIO.callback(pin, pigpio.FALLING_EDGE, buttonPressed )	
+			if evpgm =="button":
+				if event == 1 : PIGPIO.callback(pin, pigpio.RISING_EDGE, buttonPressedEvent)	
+				if event ==-1 : PIGPIO.callback(pin, pigpio.FALLING_EDGE, buttonPressedEvent)	
+			else: 				
+				if event == 1 : PIGPIO.callback(pin, pigpio.RISING_EDGE, limitSensorEvent)	
+				if event ==-1 : PIGPIO.callback(pin, pigpio.FALLING_EDGE, limitSensorEvent)	
 			PIGPIO.set_glitch_filter(pin, 30000) # steady for 30 msec 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"defineGPIOin in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		if unicode(e).find("object has no attribute 'send'")> -1:
+			os.system("sudo killall pigpiod")
+			U.toLog(-1, u"restarting pigpiod .. this will take > 30 secs ", doPrint=True)
+			time.sleep(30)
+			U.restartMyself(reason="pigpiod needs to be restarted")
+		U.restartMyself(reason="pigpio does not start, trying to restart")
 	return
 
 # ------------------    ------------------ 
 def defineGPIOout(pin, pwm = 0,freq =1000):
 	global PIGPIO, pwmRange, colPWM
-	# print "defineGPIOout", pin, pwm, freq
+	#print "defineGPIOout", pin, pwm, freq
 	try:
 		PIGPIO.set_mode( pin, pigpio.OUTPUT )
 		if pwm !=0:
@@ -1116,7 +1233,14 @@ def defineGPIOout(pin, pwm = 0,freq =1000):
 			PIGPIO.set_PWM_range( pin, pwmRange )
 			PIGPIO.set_PWM_dutycycle( pin, 0 )
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"defineGPIOout in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		if unicode(e).find("object has no attribute 'send'")> -1:
+			os.system("sudo killall pigpiod")
+			U.toLog(-1, u"restarting pigpiod .. this will take > 30 secs ", doPrint=True)
+			time.sleep(30)
+			U.restartMyself(reason="pigpiod needs to be restarted")
+		U.restartMyself(reason="pigpio does not start, trying to restart")
+		
 	return
 
 
@@ -1125,49 +1249,69 @@ def defineGPIOout(pin, pwm = 0,freq =1000):
 # ------------------    ------------------ 
 def setGPIOValue(pin,val,amplitude =-1):
 	global PIGPIO, pwmRange
-	pin = int(pin)
-	if amplitude == -1:
-		PIGPIO.write( pin, val )
-	else:
-		if amplitude >0 and val !=0:
-			PIGPIO.set_PWM_dutycycle( (pin), int(pwmRange*amplitude/100.) )
-			#print "setGPIOValue ", pin, val,amplitude, int(pwmRange*amplitude/100.), PIGPIO.get_PWM_dutycycle(int(pin)) 
+	try:
+		pin = int(pin)
+		if amplitude == -1:
+			PIGPIO.write( pin, val )
 		else:
-			PIGPIO.write( (pin), 0 )
-			#PIGPIO.set_PWM_dutycycle( int(pin), 0)
+			if amplitude >0 and val !=0:
+				PIGPIO.set_PWM_dutycycle( (pin), int(pwmRange*amplitude/100.) )
+				#print "setGPIOValue ", pin, val,amplitude, int(pwmRange*amplitude/100.), PIGPIO.get_PWM_dutycycle(int(pin)) 
+			else:
+				PIGPIO.write( (pin), 0 )
+				PIGPIO.set_PWM_dutycycle( int(pin), 0)
+	except	Exception, e:
+		U.toLog(-1, u"defineGPIOout in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		if unicode(e).find("object has no attribute 'send'")> -1:
+			os.system("sudo killall pigpiod")
+			U.toLog(-1, u"restarting pigpiod .. this will take > 30 secs ", doPrint=True)
+			time.sleep(30)
+			U.restartMyself(reason="pigpiod needs to be restarted")
+		U.restartMyself(reason="pigpio does not start, trying to restart")
 	return
 
 # ------------------    ------------------ 
 def getPinValue(pinName,pin=-1, ON = 1):
-	global gpiopinNumber, PIGPIO
+	global gpiopinNumbers, PIGPIO
+	try:
+		if pin ==-1:
+			if pinName not in gpiopinNumbers: return -1
+			if gpiopinNumbers[pinName] < 1:   return -1
+			pin = gpiopinNumbers[pinName]
 
-	if pin ==-1:
-		if pinName not in gpiopinNumber: return -1
-		if gpiopinNumber[pinName] < 1:   return -1
-		pin = gpiopinNumber[pinName]
-
-	if ON == 0: 
-		ret = ( PIGPIO.read(pin) -1) * (-1)
-	else: 
 		ret =  PIGPIO.read(pin)
+		if ON == 0: 
+			if ret ==0: ret = 1
+			else:       ret = 0
+
+		#print pinName, pin ,ret ,ON
+	except	Exception, e:
+		U.toLog(-1, u"defineGPIOout in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		if unicode(e).find("object has no attribute 'send'")> -1:
+			os.system("sudo killall pigpiod")
+			U.toLog(-1, u"restarting pigpiod .. this will take > 30 secs ", doPrint=True)
+			time.sleep(30)
+			U.restartMyself(reason="pigpiod needs to be restarted")
+		U.restartMyself(reason="pigpio does not start, trying to restart")
 	return ret
 
-
+###   gpio -g mode 23 out;gpio -g write 23 1
+###   gpio -g mode 23 in;gpio -g read 23
 # ########################################
 # #########  moving functions ############
 # ########################################
  
 # ------------------    ------------------ 
 def makeStep(seq, only2=False):
-	global gpiopinNumber
+	global gpiopinNumbers
 	global SeqCoils
 	if only2 and sum(SeqCoils[seq]) == 1: 
 		return False
 	#print "makeStep", seq, SeqCoils[seq]
-	setGPIOValue(gpiopinNumber["pin_CoilA1"], SeqCoils[seq][0])
-	setGPIOValue(gpiopinNumber["pin_CoilA2"], SeqCoils[seq][1])
-	setGPIOValue(gpiopinNumber["pin_CoilB1"], SeqCoils[seq][2])
-	setGPIOValue(gpiopinNumber["pin_CoilB2"], SeqCoils[seq][3])
+	setGPIOValue(gpiopinNumbers["pin_CoilA1"], SeqCoils[seq][0])
+	setGPIOValue(gpiopinNumbers["pin_CoilA2"], SeqCoils[seq][1])
+	setGPIOValue(gpiopinNumbers["pin_CoilB1"], SeqCoils[seq][2])
+	setGPIOValue(gpiopinNumbers["pin_CoilB2"], SeqCoils[seq][3])
 	return True
 
 
@@ -1180,9 +1324,9 @@ def setMotorOFF():
 
  
 # ------------------    ------------------ 
-def move(stayOn, steps, direction, force = 0, stopIf=[False,False], updateSequence=False, inFixMode=0 ):
+def move(stayOn, steps, direction, force = 0, stopIfMagSensor=[False,False], updateSequence=False, fast=False, stopIfBoundarySensor=[True,True]):
 	global lastStep
-	global gpiopinNumber
+	global gpiopinNumbers
 	global SeqCoils
 	global nStepsInSequence
 	global whereIs12
@@ -1191,11 +1335,14 @@ def move(stayOn, steps, direction, force = 0, stopIf=[False,False], updateSequen
 	global PIGPIO
 	global currentSequenceNo
 	global totalSteps
+	global inFixBoundaryMode
+	global currentlyMoving
+
 
 
 	stayOn = max(minStayOn,stayOn)
 	lStep = lastStep
-	#print "steps, direction, stayOn, force, stopIf, updateSequence, inFixMode ", steps,  direction, stayOn, force, stopIf, updateSequence, inFixMode
+	#U.toLog(-2, "steps%d, direction%d, stayOn%.3f, force%d, stopIfMagSensor%s, updateSequence%s, inFixBoundaryMode%d "%(steps,  direction, stayOn, force, stopIfMagSensor, updateSequence, inFixBoundaryMode), doPrint= True )
 	steps = int(steps)
 	iSteps= 0
 
@@ -1203,35 +1350,36 @@ def move(stayOn, steps, direction, force = 0, stopIf=[False,False], updateSequen
 	last1 = sensorDict["sensor"][1]["status"]
 	last0 = sensorDict["sensor"][0]["status"]
 	for i in range(steps):
+		currentlyMoving = time.time()
 
 		if updateSequence: 
 			 determineSequenceNo(totalSteps+iSteps)
 
-		if (sensorDict["sensor"][2]["status"] == 1  or sensorDict["sensor"][3]["status"] == 1 ) and  inFixMode==0:
+		if (sensorDict["sensor"][2]["status"] == 1  or sensorDict["sensor"][3]["status"] == 1 ) and  inFixBoundaryMode==0:
 			if sensorDict["sensor"][2]["status"] == 1:	writeFixMode( 1)
 			if sensorDict["sensor"][3]["status"] == 1:	writeFixMode(-1)
-			print " fixing  starting due to:", sensorDict["sensor"][2]["status"], sensorDict["sensor"][3]["status"]
-			doSunDialShutdown()
+			U.toLog(-2," fixing  starting due to: cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]), doPrint=True)
 			U.restartMyself(reason="need to fix boundaries #1")
 
-		if sensorDict["sensor"][2]["status"] == 1  and  inFixMode == -1:
-			return iSteps
-		if sensorDict["sensor"][3]["status"] == 1  and  inFixMode ==  1:
+		if inFixBoundaryMode  !=0 and ( (sensorDict["sensor"][2]["status"] == 1  and stopIfBoundarySensor[0])  or  (sensorDict["sensor"][3]["status"] == 1  and stopIfBoundarySensor[1]) ):
+			U.toLog(-2,"move  return due to: direction%d, inFixBoundaryMode:%d" %(direction,inFixBoundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]), doPrint=True)
 			return iSteps
 
 
 		if not updateSequence or ( currentSequenceNo < 8 and sensorDict["sensor"][0] == 1 ):
 			if i >= force: 
-				if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIf[0]: 
+				if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0]: 
+					U.toLog(-2,"move  return due to: direction%d, inFixBoundaryMode:%d" %(direction,inFixBoundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]), doPrint=True)
 					return iSteps
-				if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIf[1]: 
+				if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1]: 
+					U.toLog(-2,"move  return due to: direction%d, inFixBoundaryMode:%d" %(direction,inFixBoundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]), doPrint=True)
 					return iSteps
 
 		if currentSequenceNo == 8 and sensorDict["sensor"][0] == 1:
 			if i >= force: 
-				if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIf[0]: 
+				if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0]: 
 					return iSteps
-				if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIf[1]: 
+				if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1]: 
 					return iSteps
 
 		last1 = sensorDict["sensor"][1]["status"]
@@ -1244,17 +1392,17 @@ def move(stayOn, steps, direction, force = 0, stopIf=[False,False], updateSequen
 		elif lStep <  1: 				lStep = len(SeqCoils)-1
 
 	 	lastStep = lStep
-		if makeStep(lStep, only2=(inFixMode!=0)):
+		if makeStep(lStep, only2=fast):
 			time.sleep(stayOn)
 		getSensors()
 
-###			print " not sleeping"
+###			U.toLog(-2," not sleeping",doPrint=True)
 
 	getSensors()
-	if (sensorDict["sensor"][2]["status"] == 1 or sensorDict["sensor"][3]["status"]== 1) and inFixMode ==0:
+	if (sensorDict["sensor"][2]["status"] == 1 or sensorDict["sensor"][3]["status"]== 1) and inFixBoundaryMode ==0:
 		if sensorDict["sensor"][2]["status"] == 1:	writeFixMode( 1)
 		if sensorDict["sensor"][3]["status"] == 1:	writeFixMode(-1)
-		print " fixing 2  starting due to:", sensorDict["sensor"][2], sensorDict["sensor"][3]
+		U.toLog(-2," fixing  starting due to: cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]), doPrint=True)
 		doSunDialShutdown()
 		U.restartMyself(reason="need to fix boundaries #2" )
 
@@ -1269,28 +1417,28 @@ def testIfMove( waitBetweenSteps, nextStep ):
 	global printON
 	global totalSteps
 	global hour, minute, second
-	global secSinMidnit, hour12, secSinMidnit2	
+	global secSinMidnit	
 	global rewindDone
 	global PIGPIO
 	global currentSequenceNo, inbetweenSequences
 
 	lasttotalSteps = totalSteps
-	nextTotalSteps 	= min( int( secSinMidnit2 / waitBetweenSteps), maxStepsUsed )
+	nextTotalSteps 	= min( int( secSinMidnit / waitBetweenSteps), maxStepsUsed )
 	if nextTotalSteps != totalSteps:
 		nextStep    = nextTotalSteps - totalSteps 
 
 		if nextStep <0:	dir = -1
 		else:			dir =  1
 
-		if False and printON: print "secSinMidnit 2 ", "%.2f"%secSinMidnit, "H",hour, "M",minute, "S",second, "dt %.5f"%(time.time()-t0), "nstep",nextStep, "totSteps",totalSteps,"currentSequenceNo", currentSequenceNo,"inbetweenSequences", inbetweenSequences
+		if printON: U.toLog(-2,"testIfMove.. secSinMidn2:%.2f"%secSinMidnit + "; %0d:%02d:%02d"%(hour,minute,second)+"; dt:%.5f"%(time.time()-t0)+ "; nstep:%d"%nextStep+ "; tSteps:%d"%totalSteps+"; curtSeqN:%d"%currentSequenceNo+";  inbSeq:%d"% inbetweenSequences+";  inFixM:%d"% inFixBoundaryMode+"; s2:%d, s3:%d"%(sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"])+"; dir:%d"%(dir), doPrint=True) 
 
 		if nextStep != 0: 
-			if speed > 10 or nextStep >5: stayOn =0.001
+			if speed > 10 or nextStep >5: stayOn =0.01
 			else:		                  stayOn =0.01
 			if lasttotalSteps < 10: force = 10 
 			else:					force = 0
 			#print "dir, nextStep", dir, nextStep
-			if currentSequenceNo < 7: force = 750
+			if currentSequenceNo < 7: force = int(maxStepsUsed*0.9)
 			steps = move(stayOn, int( abs(nextStep) ), dir, force = force, updateSequence=True)
 			if currentSequenceNo == 8 and sensorDict["sensor"][0]["status"] == 1:
 				nextStep =0
@@ -1332,16 +1480,16 @@ def testIfRewind( nextStep ):
 	global printON
 	global totalSteps
 	global hour, minute, second
-	global secSinMidnit, hour12, secSinMidnit2	
+	global secSinMidnit	
 	global rewindDone
 
 
-	if hour12 > 6: rewindDone = False
-	if (hour12 < 3 and  not rewindDone) or nextStep ==0 and currentSequenceNo ==8 and sensorDict["sensor"][0] == 1:
+	if hour > 12: rewindDone = False
+	if (hour < 3 and  not rewindDone) or nextStep ==0 and currentSequenceNo ==8 and sensorDict["sensor"][0] == 1:
 
-		if printON: print "rewind ", "%.2f"%secSinMidnit, "H",hour, "M",minute, "S",second, "dt %.5f"%(time.time()-t0), "nstep",nextStep, "totSteps",totalSteps
-		move (0.001,maxStepsUsed,-1,  force=30, stopIf = [False,True] )
-		move (0.001,maxStepsUsed,-1,  force=30, stopIf = [True,False] )
+		if printON: U.toLog(-2, "rewind   secSinMidnit:%.2f"%secSinMidnit+ "; %02d:%02d:%02d"%(hour,minute,second)+ "; dt:%.5f"%(time.time()-t0)+ "; nstep:%d"%nextStep+ "; totSteps:%d"%totalSteps, doPrint=True )
+		move (0.001,maxStepsUsed,-1,  force=30, stopIfMagSensor = [False,True] )
+		move (0.001,maxStepsUsed,-1,  force=30, stopIfMagSensor = [True,False] )
 		rewindDone = True
 		totalSteps = 0
 		t0=time.time()
@@ -1355,14 +1503,16 @@ def testIfRewind( nextStep ):
 def findLeftRight():
 	global maxStepsUsed,stepsIn360
 	global printON
-	global waitBetweenSteps, secondsTotalInDay, maxStepsUsed 
+	global waitBetweenSteps, secondsTotalInDay 
 	global amPM1224
 	global whereIs12,  whereIsTurnF, whereIsTurnB
 	global currentSequenceNo
+	global limitSensorTriggered
 
-	time.sleep(0.3)
+	limitSensorTriggered = 0
+	time.sleep(0.1)
 
-	stayOn = 0.006
+	stayOn = 0.01
 
 	maxSteps = int(stepsIn360+2)
 
@@ -1370,172 +1520,202 @@ def findLeftRight():
 	getSensors()
 	#  sensorDict["pin_sensor0"]["status"]
 
-	print " \n starting left right \n"
-	drawDisplayLines(["starting left right","determing limits", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+	U.toLog(-2,"starting left right ", doPrint=True)
+	displayDrawLines(["starting left right","determining limits", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
-	steps 		= 0
+	steps 		= 0 
 	stepsTotal	= 0
 	oneEights = int(stepsIn360 /8.)+10
-	pp = False
-	if pp: print "0000 ===", steps, 0, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+	pp = True
+	if pp: printLrLog("0000 === ", steps, 0, short=True)
 	while True:
 		# THIS IS THE EASIEST SIMPLE CASE:
-		if sensorDict["sensor"][1]["status"] == 1:
-			steps = move(stayOn, oneEights*6  , -1, force=30, stopIf = [True,False] )
-			if pp: print "0100 ===", steps,-1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+		if sensorDict["sensor"][1]["status"] == 1: # 12 o-clock sensor on at start = we are in the middle, exit basic find
+			steps = move(stayOn, oneEights*6  , -1, force=30, stopIfMagSensor = [True,False] )
+			if pp: printLrLog("0100 === ", steps, -1, extra=" fist step done", short=True)
 			break
 
 		# THIS IS THE MOST DIFFICULT, SOMEWHERE CLOSE TO 0 OR 24:
 		elif sensorDict["sensor"][0]["status"] == 1:
 			#test if still on when moving right
-			steps = move(stayOn, 10  , 1, force=11, stopIf = [False,False] )
-			#print "0200 ===", steps, 1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+			steps = move(stayOn, 10  , 1, force=11, stopIfMagSensor = [False,False] )
+			if pp: printLrLog("0200 === ", steps, -1, short=True)
 
 			if sensorDict["sensor"][0]["status"] == 0:
-				steps = move(stayOn, oneEights*8  , 1, force=6, stopIf = [True,True] )
-				if pp: print "0201 ===", steps, 1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+				steps = move(stayOn, oneEights*8  , 1, force=6, stopIfMagSensor = [True,True] )
+				if pp: printLrLog("0201 === ", steps, 1, short=True)
 
 				if sensorDict["sensor"][0]["status"] == 1:
-					steps = move(stayOn, oneEights*10, -1, force=6, stopIf = [False,True] )
-					if pp: print "0202 ===", steps, 1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*10, -1, force=6, stopIfMagSensor = [False,True] )
+					if pp: printLrLog("0202 === ", steps, -1, short=True)
 
 
 				if sensorDict["sensor"][1]["status"] == 1:
-					steps = move(stayOn, oneEights*8  ,-1, force=6, stopIf = [True,False] )
-					if pp: print "0203 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*8  ,-1, force=6, stopIfMagSensor = [True,False] )
+					if pp: printLrLog("0203 === ", steps, -1, short=True)
 					break
 
 
 			if sensorDict["sensor"][0]["status"] == 1:
-				steps = move(stayOn, oneEights*8  , -1, force=6, stopIf = [False,True] )
-				if pp: print "0210 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+				steps = move(stayOn, oneEights*8  , -1, force=6, stopIfMagSensor = [False,True] )
+				if pp: printLrLog("0210 === ", steps, -1, short=True)
 
 
 			if sensorDict["sensor"][1]["status"] == 0:
-				steps = move(stayOn, oneEights*6 , 1, force=30, stopIf = [True,True] )
-				if pp: print "0211 ===", steps, 1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+				steps = move(stayOn, oneEights*6 , 1, force=30, stopIfMagSensor = [True,True] )
+				if pp: U.toLog(-3, "0211 === ", steps, -1, short=True)
 				if sensorDict["sensor"][1]["status"] == 1:
-					steps = move(stayOn, oneEights*6 , -1, force=30, stopIf = [True,False] )
-					if pp: print "0212 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*6 , -1, force=30, stopIfMagSensor = [True,False] )
+					if pp: printLrLog("0212 === ", steps, -1, short=True)
 					break
 
 				if sensorDict["sensor"][0]["status"] == 1:
-					steps = move(stayOn, oneEights*6 , -1, force=30, stopIf = [False,True] )
-					if pp: print "0230 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
-					steps = move(stayOn, oneEights*6 , -1, force=30, stopIf = [True,False] )
+					steps = move(stayOn, oneEights*6 , -1, force=30, stopIfMagSensor = [False,True] )
+					if pp: printLrLog("0230 === ", steps, -1, short=True)
+					steps = move(stayOn, oneEights*6 , -1, force=30, stopIfMagSensor = [True,False] )
 					break
 
 			if sensorDict["sensor"][1]["status"] == 1:
 				# found a midle, just continue to 0
-				steps = move(stayOn, oneEights*6  , -1, force=30, stopIf = [True,False] )
-				if pp: print "0300 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+				steps = move(stayOn, oneEights*6  , -1, force=30, stopIfMagSensor = [True,False] )
+				if pp: printLrLog("0300 === ", steps, -1)
 				break
+			if pp: U.toLog(-3, "0400 === no if condition found", doPrint=True)
 
 
 		else:
-			steps = move(stayOn, 5  , 1, force=6, stopIf = [True,False] )
-			if pp: print "1000 ===", steps, 1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+			
+			steps = move(stayOn, 5  , 1, force=6, stopIfMagSensor = [True,False] )
+			if pp: printLrLog("1000 === ", steps, -1, short=True)
 			if sensorDict["sensor"][1]["status"] == 0 and sensorDict["sensor"][1]["status"] == 0:
-				steps = move(stayOn, oneEights*5  , 1, force=2, stopIf = [True,True] )
-				if pp: print "1100 ===", steps, 1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+				steps = move(stayOn, oneEights*5  , 1, force=2, stopIfMagSensor = [True,True] )
+				if pp: printLrLog("1100 === ", steps, 1, short=True)
 
 			if sensorDict["sensor"][1]["status"] == 1:
-				steps = move(stayOn, oneEights*6 , -1, force=30, stopIf = [True,False] )
-				if pp: print "1200 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
-				break
+				steps = move(stayOn, oneEights*6 , -1, force=30, stopIfMagSensor = [True,False] )
+				if pp: printLrLog("1200 === ", steps, -1, short=True)
 
 			if sensorDict["sensor"][0]["status"] == 1:
-				steps = move(stayOn, oneEights*3 , -1, force=5, stopIf = [True,True] )
-				if pp: print "1300 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+				steps = move(stayOn, oneEights*3 , -1, force=5, stopIfMagSensor = [True,True] )
+				if pp: printLrLog("1300 === ", steps, -1, short=True)
 				if sensorDict["sensor"][0]["status"] == 1:
-					steps = move(stayOn, oneEights*8 ,  -1, force=30, stopIf = [False,True] )
-					if pp: print "1310 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
-					steps = move(stayOn, oneEights*8 , -1, force=30, stopIf = [True,False] )
-					if pp: print "1311 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*8 ,  -1, force=30, stopIfMagSensor = [False,True] )
+					if pp: printLrLog("1310 === ", steps, -1, short=True)
+					steps = move(stayOn, oneEights*8 , -1, force=30, stopIfMagSensor = [True,False] )
+					if pp: printLrLog("1311 === ", steps, -1, short=True)
 					break
 					# done
 
 				elif sensorDict["sensor"][1]["status"] == 1:
-					steps = move(stayOn, oneEights*8, -1, force=10, stopIf = [True,False] )
-					if pp: print "1320 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*8, -1, force=10, stopIfMagSensor = [True,False] )
+					if pp: printLrLog("1321 === ", steps, -1)
 					break
 					# done
 
 				elif sensorDict["sensor"][0]["status"] == 0:
-					steps = move(stayOn, oneEights*8 , -1, force=30, stopIf = [True,True] )
-					if pp: print "1340 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*8 , -1, force=30, stopIfMagSensor = [True,True] )
+					if pp: printLrLog("1340 === ", steps, -1, short=True)
 					if sensorDict["sensor"][1]["status"] == 1:
-						steps = move(stayOn, oneEights*8 , -1, force=10, stopIf = [False,True] )
+						steps = move(stayOn, oneEights*8 , -1, force=10, stopIfMagSensor = [False,True] )
 						break
 
-					steps = move(stayOn, oneEights*5 , -1, force=30, stopIf = [True,False] )
-					if pp: print "11341 ===", steps, -1, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+					steps = move(stayOn, oneEights*5 , -1, force=30, stopIfMagSensor = [True,False] )
+					if pp: printLrLog("11341 === ", steps, -1, short=True)
 					break
-		print " no sensors found"
-		time.sleep(1000)
+		U.toLog(-2,"============ no sensors found ===============", doPrint=True)
+		#time.sleep(1)
+		U.restartMyself(reason="no sensor found")
 		return 
+
 	if getLightSensorValue(force=True): setColor(force=True)
 
-	drawDisplayLines(["confirming"," left-right limits", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+	displayDrawLines(["confirming"," left-right limits", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+
+	U.toLog(-2,"finding limits checking 6 left beyond limits, then right 360 + 1 magnet ",doPrint=True)
+	time.sleep(0.1)
+	steps = move(stayOn, oneEights*2,             -1, force=0, stopIfMagSensor = [False,False] )
+	time.sleep(0.1)
+	steps = move(stayOn, oneEights*2,              1, force=0, stopIfMagSensor = [False,False])
+	U.toLog(-2,"finding limits ,  2 mags left and right, back at 0",doPrint=True)
+	time.sleep(0.1)
+
 
 	sensorDict["sensor"][0]["left"][0]  = 0
 	## now we are at start
 	## do full 360:
-	pp = False
-	print "\n finding limits"
+	pp = True
+	U.toLog(-2,"finding limits, first turn right %d times"%len(sensorDict["sequence"]),doPrint=True)
+	#time.sleep(5)
 	seqN       = 0
 	stepsTotal = 0
 	if  sensorDict["sensor"][0]["status"] == 1:
 		sensorDict["sensor"][0]["right"][0]  = 0
-	for nn in range(len(sensorDict["sequence"])-1):
-		steps = move(stayOn, oneEights*6,  1, force=20, stopIf = [True,True] )
+	for nn in range(len(sensorDict["sequence"])-1): # move right (+1) 
+		steps = move(stayOn, oneEights*6,  1, force=20, stopIfMagSensor = [True,True] )
 		stepsTotal += steps
 		seqN +=1
-		if pp: print "right ===", nn,  steps, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+		if pp: printLrLog("right === ", nn, steps)
 		if  sensorDict["sensor"][1]["status"] == 1:
 			sensorDict["sensor"][1]["right"][seqN]  = stepsTotal
 		if  sensorDict["sensor"][0]["status"] == 1:
 			sensorDict["sensor"][0]["right"][seqN]  = stepsTotal
-	rightLimit = stepsTotal
-	drawDisplayLines(["right limit set","confirming left limit", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
-	if pp: print "right limit set","confirming left limit", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")
+		#time.sleep(2)
+	U.toLog(-2,"finding limits checking 2 right beyond limits, then back to 0 ",doPrint=True)
+	time.sleep(0.1)
+	steps = move(stayOn, oneEights*2,             1, force=0, stopIfMagSensor = [False,False], fast=False )
+	time.sleep(0.1)
+	steps = move(stayOn, oneEights*2,            -1, force=0, stopIfMagSensor = [False,False], fast=False )
+	time.sleep(0.1)
+
+	rightLimit  = int(min(stepsIn360*1.04,max(stepsIn360*0.96,stepsTotal)))
+	displayDrawLines(["right limit set  confirming left limit", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+	if pp: U.toLog(-3, "right limit set  confirming left limit %s"%datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M"), doPrint=True)
 	if getLightSensorValue(force=True): setColor(force=True)
 
 	stepsTotal = 0
 	seqN       = 8
+	U.toLog(-2,"finding limits, second turn left %d times"%len(sensorDict["sequence"]),doPrint=True)
+	#time.sleep(5)
 	if  sensorDict["sensor"][0]["status"] == 1:
 		sensorDict["sensor"][0]["left"][seqN]  = rightLimit - 0
 	for nn in range(len(sensorDict["sequence"])-1):
-		steps = move(stayOn, int(oneEights*2), -1, force=20, stopIf = [True,True] )
+		steps = move(stayOn, int(oneEights*2), -1, force=20, stopIfMagSensor = [True,True] )
 		stepsTotal += steps
 		seqN -=1
-		if pp: print "left  ===", nn,  steps, sensorDict["sensor"][0], "--",sensorDict["sensor"][1]
+		if pp: printLrLog("left  === ", nn, steps)
 		if  sensorDict["sensor"][1]["status"] == 1:
 			sensorDict["sensor"][1]["left"][seqN]  = rightLimit - stepsTotal
 		if  sensorDict["sensor"][0]["status"] == 1:
 			sensorDict["sensor"][0]["left"][seqN]  = rightLimit - stepsTotal
+		#time.sleep(2)
 
 	leftLimit = stepsTotal
 	
 	if getLightSensorValue(force=True): setColor(force=True)
 
 
-	if pp: print sensorDict
+	if pp: U.toLog(-3, unicode(sensorDict), doPrint=True )
 	if abs(rightLimit + leftLimit) > stepsIn360*2:
 		addToBlinkQueue(text=["S","O","S"])
 
 	time.sleep(0.1)
 
-	maxStepsUsed  = max(1,rightLimit)
+	maxStepsUsed  = int(min(stepsIn360*1.04,max(stepsIn360*0.96,rightLimit)))
 
 	if amPM1224 =="24":	waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
 	else: 				waitBetweenSteps 	= secondsTotalInHalfDay / maxStepsUsed 
 	currentSequenceNo = 0
-	print "waitBetweenSteps", waitBetweenSteps, "maxStepsUsed",maxStepsUsed
-	drawDisplayLines(["wait and nSteps:","%d, %d"%(waitBetweenSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+	U.toLog(-2,"waitBetweenSteps:%1f; maxStepsUsed:%d"%(waitBetweenSteps,maxStepsUsed), doPrint=True)
+	displayDrawLines(["wait:%.1f; nSteps:%d"%(waitBetweenSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
 	return 
 
+def printLrLog(lead,a,b, extra="", short=False):
+	global sensorDict
+	if short:
+		U.toLog(-3, lead+ "%d %d %s"%(a,b,extra), doPrint=True)
+	else:
+		U.toLog(-3, lead+ "%d %d %s\n0 : %s\n12:%s"%(a,b,extra,unicode(sensorDict["sensor"][0]),unicode(sensorDict["sensor"][1])), doPrint=True)
 
 
 
@@ -1606,15 +1786,15 @@ def doBlink(action):
 
 # ------------------    ------------------ 
 def setColor( blink=0, color = [1.,1.,1.], force = False):
-	global colPWM, LastHourColorSet, secSinMidnit, LastHourColorSetToRemember, timeAtlastColorChange
-	global gpiopinNumber
+	global colPWM, LastHourColorSet, secSinMidnit,secSinMidnit0, LastHourColorSetToRemember, timeAtlastColorChange
+	global gpiopinNumbers
 
 	lastC = LastHourColorSet
 
 	if stopBlink: return 
 	if blink !=0 : 
-		for p in range(len(gpiopinNumber["pin_rgbLED"])):
-			pin = gpiopinNumber["pin_rgbLED"][p]
+		for p in range(len(gpiopinNumbers["pin_rgbLED"])):
+			pin = gpiopinNumbers["pin_rgbLED"][p]
 			if  blink ==1: 
 				if color[p] >= 0:
 					setGPIOValue( pin, 1, amplitude= getIntensity(100*color[p]))
@@ -1625,15 +1805,15 @@ def setColor( blink=0, color = [1.,1.,1.], force = False):
 
 
 	else:
-		if abs(secSinMidnit-lastC) > 30  and (time.time() - timeAtlastColorChange) >10 or force:
-			cm = timeToColor(secSinMidnit)
-			for p in range(len(gpiopinNumber["pin_rgbLED"])):
-				pin = gpiopinNumber["pin_rgbLED"][p]
+		if abs(secSinMidnit0-lastC) > 30  and (time.time() - timeAtlastColorChange) >10 or force:
+			cm = timeToColor(secSinMidnit0)
+			for p in range(len(gpiopinNumbers["pin_rgbLED"])):
+				pin = gpiopinNumbers["pin_rgbLED"][p]
 				intens = getIntensity(cm[p]*color[p]) 
 				setGPIOValue( pin, 1, amplitude=intens)	
 				#print "LED int: ", p, intens, lightSensorValue, " secs since last:", abs(secSinMidnit-lastC)
 			timeAtlastColorChange = time.time()
-			LastHourColorSet = secSinMidnit
+			LastHourColorSet = secSinMidnit0
 			LastHourColorSetToRemember = color
 
 # ------------------    ------------------ 
@@ -1695,7 +1875,7 @@ def timeToColor(tt):
 
 # ------------------    ------------------ 
 def getLightSensorValue(force=False):
-	global lightSensorValue, lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw
+	global lightSensorValue, lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, intensityMaxNorm
 	try:
 		tt0 = time.time()
 		if ( tt0 - lastTimeLightSensorValue  < 2) and not force:	return False
@@ -1711,16 +1891,14 @@ def getLightSensorValue(force=False):
 		lastTimeLightSensorFile = tt
 		lightSensorValueREAD = float(rr["light"])
 		sensor = rr["sensor"]
-		if sensor == "i2cTSL2561":
-			maxRange = 15000.
-		elif sensor == "i2cOPT3001":
-			maxRange =	2000.
-		elif sensor == "i2cVEML6030":
-			maxRange =	700.
-		elif sensor == "i2cIS1145":
-			maxRange =	2000.
-		else:
-			maxRange =	1000.
+		if   sensor == "i2cTSL2561":	maxRange = 15000.
+		elif sensor == "i2cOPT3001":	maxRange =	2000.
+		elif sensor == "i2cVEML6030":	maxRange =	700.
+		elif sensor == "i2cIS1145":		maxRange =	2000.
+		else:							maxRange =	1000.
+		if intensityMaxNorm != 1000000:	maxRange = intensityMaxNorm
+		intensityMaxNorm	= maxRange
+
 		lightSensorValueRaw =  max(min(1.,lightSensorValueREAD/maxRange) ,0.0001 ) *2. # scale factor 2 to not just reduce, but also increase light, max will cut if off at 100%
 		if force:	
 			lightSensorValue = lightSensorValueRaw
@@ -1728,11 +1906,11 @@ def getLightSensorValue(force=False):
 		if (  abs(lightSensorValueRaw-lastlightSensorValue) / (max (0.005,lightSensorValueRaw+lastlightSensorValue))  ) < 0.05: return False
 		lightSensorValue = (lightSensorValueRaw*5 + lastlightSensorValue*4) / 9.
 		lastTimeLightSensorValue = tt0
-		print "lightSensorValue2 ", lightSensorValueRaw, lightSensorValue, lastlightSensorValue, lightSensorValueREAD, maxRange
+		#U.toLog( 1,"lightSensorValue raw:%.3f"%(lightSensorValueRaw)+";  new used:%.4f"%(lightSensorValue)+ ";  last:%.4f"%(lastlightSensorValue)+";  read:%.1f"%(lightSensorValueREAD)+ ";  maxR:%.1f"%(maxRange), doPrint=True)
 		lastlightSensorValue = lightSensorValue
 		return True
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+"   bad sensor data", doPrint=True)
+		U.toLog(-1, u"getLightSensorValue in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return False
 
 
@@ -1743,23 +1921,21 @@ def getLightSensorValue(force=False):
 def getTime():
 	global speed, amPM1224
 	global hour, minute, second
-	global secSinMidnit, hour12, secSinMidnit2	
+	global secSinMidnit, secSinMidnit0
 
 	today = datetime.date.today()
-	secSinMidnit = (time.time() - time.mktime(today.timetuple()))*speed
-	secSinMidnit = secSinMidnit %(secondsTotalInDay)
+	secSinMidnit  = (time.time() - time.mktime(today.timetuple()))*speed
+	secSinMidnit0 = secSinMidnit
+	secSinMidnit += sunDialOffset
+	if amPM1224 == "12":
+		secSinMidnit *= 2 
+	secSinMidnit %= secondsTotalInDay
+
 	hour   = int( secSinMidnit/(60*60) )
 	minute = int( (secSinMidnit - hour*60*60) /60 )
 	second = int( secSinMidnit - hour*60*60 - minute*60)
-	if amPM1224 == "12": 
-		hour12 = hour%12
-		secSinMidnit2 = secSinMidnit%secondsTotalInHalfDay
-	elif amPM1224 == "24": 
-		hour12 = hour
-		secSinMidnit2  =secSinMidnit
-	else: 
-		hour12 = hour
-		secSinMidnit2  =secSinMidnit
+	
+
 	return 
 
 #
@@ -1771,6 +1947,7 @@ def getSensors():
 		newValue = getPinValue( "pin_sensor"+str(n), ON=sensorDict["sensor"][n]["ON"] )
 		#print "getSensors:   pin_sensor"+str(n), newValue
 		if newValue != sensorDict["sensor"][n]["newValue"]:
+			anyChange = True
 			sensorDict["sensor"][n]["lastValue"]	= sensorDict["sensor"][n]["newValue"]
 			sensorDict["sensor"][n]["clicked"]		= "Y"
 			sensorDict["sensor"][n]["newValue"]		= newValue
@@ -1778,14 +1955,14 @@ def getSensors():
 			if newValue == 1:
 				sensorDict["sensor"][n]["status"]	= 1
 			else:
-				if n < 3: # only for reed switches, the boundary switches are rest by the test pgm
+				if n < 2: # only for reed switches, the boundary switches are reset by the test pgm
 					sensorDict["sensor"][n]["status"]	= 0
 	
 
 		out =""
-		for ii in range(3):
+		for ii in range(4):
 			out += str(ii)+":" + str(sensorDict["sensor"][ii]["newValue"])+", "+ str(sensorDict["sensor"][ii]["status"])+", "+ str(sensorDict["sensor"][ii]["pull"])+";  ==  "
-		#print "getSensors:  sensorDict sensors ",out
+		#if anyChange: print "getSensors:  sensorDict sensors ",out
  
 			
 	return 
@@ -1800,52 +1977,72 @@ def readFixMode():
 	zz, raw = U.readJson(G.homeDir+"sunDial.fixMode")
 	if "fixMode" in zz:
 		return zz["fixMode"]
-	return 	False
+	return 0
 
 # ------------------    ------------------ 
-def fixBoundaries(inFixMode):
+def fixBoundaries():
 	global sensorDict
 	global stepsIn360
+	global inFixBoundaryMode
+	global limitSensorTriggered
+	global currentSequenceNo
+
+	limitSensorTriggered = 0
+	stayOn = 0.015
+
+	sens = sensorDict["sensor"]
+	sens[2]["status"] = 0
+	sens[3]["status"] = 0
+	if inFixBoundaryMode == 0: return 
 
 
-	print " fixing 3 turns starting due to:",inFixMode,  "3",  sensorDict["sensor"][2]["status"],"4", sensorDict["sensor"][3]["status"]
-	sensorDict["sensor"][2]["status"] = 0
-	sensorDict["sensor"][3]["status"] = 0
-	move(0.006, stepsIn360*3, inFixMode, force=stepsIn360*3, stopIf=[False,False],  updateSequence=False, inFixMode=inFixMode)
-	print " fixing  after 1:",inFixMode,  "2", sensorDict["sensor"][2]["status"],"3", sensorDict["sensor"][3]["status"]
+	currentSequenceNo = 0
+	completTurns = 3.5
+	nTurns = int(stepsIn360*completTurns)
 
-	if inFixMode == -1:
-		if sensorDict["sensor"][2]["newValue"] == 1:
-			sensorDict["sensor"][2]["status"] = 0
-			print " fixing  after 2: +1 dir 1.1 turns"
-			move(0.006, int(stepsIn360*1.1),  1, force=stepsIn360*3, stopIf=[False,False],  updateSequence=False, inFixMode=1)
-			getSensors()
-			print " fixing  after 2.1:  ", "3",sensorDict["sensor"][2]["status"], "4",sensorDict["sensor"][3]["status"]
+	U.toLog(-2,"fixingBoundary 1, %.1f*360 turns starting due to: inFixBoundaryMode:%d; capS:%d; switchS:%d"%(completTurns,inFixBoundaryMode, sens[2]["status"], sens[3]["status"]),  doPrint=True)
+
+	if inFixBoundaryMode ==1:
+		stepsDone = move(stayOn, nTurns, 1,  force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True , stopIfBoundarySensor=[False,True])
 	else:
-		if sensorDict["sensor"][3]["newValue"] == 1:
-			sensorDict["sensor"][3]["status"] = 0
-			print " fixing  after 3: -1 dir 1.1 turns"
-			move(0.006, int(stepsIn360*1.1), -1, force=stepsIn360*3, stopIf=[False,False],  updateSequence=False, inFixMode=-1)
-			print " fixing  after 3.1:",inFixMode, "2",sensorDict["sensor"][2]["status"], "3",sensorDict["sensor"][3]["status"]
+		stepsDone = move(stayOn, nTurns, -1, force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True , stopIfBoundarySensor=[True,False])
+	U.toLog(-2,"fixingBoundary after 1, capS:%d; switchS:%d; stepsDone:%d"%((sens[2]["status"]),(sens[3]["status"]),stepsDone), doPrint=True)
+
+	if inFixBoundaryMode == -1:
+		if sens[2]["newValue"] == 1:
+			U.toLog(-2,"fixingBoundary 2; after  +1(right) direction %.1f*360 turns forward"%completTurns,doPrint=True)
+			sens[2]["status"] = 0
+			sens[3]["status"] = 0
+			stepsDone = move(stayOn, nTurns,  1, force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True, stopIfBoundarySensor=[False,True])
 			getSensors()
+			U.toLog(-2,"fixing  after 2.1: capS:%d; switchS:%d; stepsDone:%d"%(sens[2]["status"], sens[3]["status"],stepsDone), doPrint=True)
+	else:
+		if sens[3]["newValue"] == 1:
+			U.toLog(-2,"fixing  3; after  +1(lft) direction %.1f*360 turns backwards"%completTurns,doPrint=True)
+			sens[2]["status"] = 0
+			sens[3]["status"] = 0
+			stepsDone = move(stayOn, nTurns, -1, force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True, stopIfBoundarySensor=[True,False])
+			getSensors()
+			U.toLog(-2,"fixingBoundary  after 3.1, capS:%d; switchS:%d; stepsDone:%d"%(sens[2]["status"], sens[3]["status"], stepsDone), doPrint=True)
 
-	if sensorDict["sensor"][2]["newValue"] == 0: sensorDict["sensor"][2]["status"] = 0
-	if sensorDict["sensor"][3]["newValue"] == 0: sensorDict["sensor"][3]["status"] = 0
+	if sens[2]["newValue"] == 0: sens[2]["status"] = 0
+	if sens[3]["newValue"] == 0: sens[3]["status"] = 0
 
-	if  sensorDict["sensor"][2]["status"]==0 and sensorDict["sensor"][3]["status"]==0: 
+	if  sens[2]["status"]==0 and sens[3]["status"]==0: 
 		writeFixMode(0)
+		inFixBoundaryMode = 0
 		return 
 
-	if sensorDict["sensor"][2]["status"] == 1:	writeFixMode( 1)
-	if sensorDict["sensor"][3]["status"] == 1:	writeFixMode(-1)
-	print " fixing  redo due to:",  "3",sensorDict["sensor"][2]["status"], "4",sensorDict["sensor"][3]["status"]
-	doSunDialShutdown()
+	if sens[2]["status"] == 1:	writeFixMode( 1)
+	if sens[3]["status"] == 1:	writeFixMode(-1)
+	U.toLog(-2,"fixingBoundary end, redo due to: capS:%d; switchS:%d; stepsDone:%d"%(sens[2]["status"],sens[3]["status"],stepsDone), doPrint=True)
 	U.restartMyself(reason="need to fix boundaries #3")
 
 
 # ------------------    ------------------ 
 def doSunDialShutdown():
-	try: clearDisplay(show=True,force=True)
+	U.toLog(-2," setting shutdown params ", doPrint=True)
+	try: displayClear(show=True, force=True)
 	except: pass
 	try:	setMotorOFF()
 	except: pass
@@ -1875,9 +2072,6 @@ def checkNumberOfRestarts():
 	return 
 
 
-# ########################################
-# #########    web   funtions ############
-# ########################################
  #######################################
 # #########       main        ##########
 # ######################################
@@ -1892,13 +2086,13 @@ global lastStep, colPWM,  LastHourColorSet
 global intensity
 global maxStepsUsed, startSteps, stepsIn360, nStepsInSequence
 global speed, amPM1224,amPM1224Update, motorType, adhocWeb
-global gpiopinNumber, SeqCoils
+global gpiopinNumbers, SeqCoils
 global blinkHour
 global t0
 global printON
 global totalSteps
 global hour, minute, second
-global secSinMidnit, hour12, secSinMidnit2	
+global secSinMidnit, secSinMidnit0
 global webAdhocLastOff, webAdhoc
 global rewindDone
 global longBlink, shortBlink, breakBlink
@@ -1913,7 +2107,7 @@ global clockDictLast
 global blinkThread, stopBlink
 global PIGPIO, pwmRange
 global colPWM
-global speedOverWrite
+global speedDemoStart
 global timeAtlastColorChange
 global overallStatus
 global buttonDict, sensorDict
@@ -1922,7 +2116,11 @@ global lightSensorValue, lastlightSensorValue, lastTimeLightSensorValue, lastTim
 global pinsToName
 global menuPosition
 global lastExpireDisplay
-
+global intensityMaxNorm
+global inFixBoundaryMode
+global currentlyMoving
+global limitSensorTriggered
+global sunDialOffset
 
 morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 		"F":[0,0,1,0], 	"G":[1,1,0],	"H":[0,0,0,0], 	"I":[0,0],
 			"J":[0,1,1,1], 	"K":[1,0,1], 	"L":[0,1,0,0], 	"M":[1,1], 		"N":[1,0], 		"O":[1,1,1], 	"P":[0,1,1,0],	"Q":[1,1,0,1], 	"R":[0,1,0],
@@ -1932,6 +2130,11 @@ morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 	
 			"l":[1], # one long
 			"b":[0,0,0,1]}  # beethoven ddd DAAA
 
+sunDialOffset				= 0
+limitSensorTriggered	= 0
+currentlyMoving			= time.time() + 10000.
+inFixBoundaryMode				= 0
+intensityMaxNorm		= 1000000
 lastExpireDisplay		= time.time()
 menuPosition			= ["",""]
 pinsToName				= {}
@@ -1940,14 +2143,15 @@ lastlightSensorValue	= 0.5
 lastTimeLightSensorValue =0
 lastTimeLightSensorFile = 0
 lightSensorValueRaw		= 0
-
+secSinMidnit0			= 0
 inbetweenSequences			= False
 currentSequenceNo		= 0
 overallStatus 			="OK"
 buttonDict				= {}
 sensorDict				= {}
 timeAtlastColorChange	= 0
-speedOverWrite			= -1
+speedTestValue			= -1
+speedDemoStart			= -1
 
 PIGPIO					= ""
 pwmRange				= 0
@@ -1988,7 +2192,7 @@ oldRaw					= ""
 lastRead				= 0
 inpRaw					= ""
 inp						= ""
-debug					= 5
+debug					= 0
 loopCount				= 0
 sensor					= G.program
 lastGPIOreset	 		= 0
@@ -2008,31 +2212,40 @@ whereIsTurnB 			= {-1:-1, 1:-1, "average":-1, "active":False}
 clockDictLast			= {}
 LastHourColorSetToRemember =[]
 
+U.toLog(-2, "====== starting ======", doPrint=True )
+
+
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
-try:    speedOverWrite = int(sys.argv[1])
-except: speedOverWrite =-1
-	
+try:    
+	speed = float(sys.argv[1])
+	speedDemoStart = time.time()
+	U.toLog(-2, "demo mode,  speed = %.0f"%speed, doPrint=True )
+except: 
+	speed = 1.
+	speedDemoStart = -1
+
 
 checkNumberOfRestarts()
 
-startDisplay()
+displayStart()
 
-drawDisplayLines(["Status:   starting up",".. read params, time..",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+displayDrawLines(["Status:   starting up",".. read params, time..",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
 
-setgpiopinNumber()
+setgpiopinNumbers()
 
 setupTimeZones()
 #print "current tz:", currTZ,JulDelta,JanDelta,NowDelta, timeZones[currTZ+12], timeZones
 
 if readParams() ==3:
-		U.toLog(-1," parameters not defined", doPrint=True)
-		U.checkParametersFile("parameters-DEFAULT-sunDial", force = True)
-		time.sleep(20)
-		doSunDialShutdown()
-		U.restartMyself(param=" bad parameters read", reason="",doPrint=True)
+	U.toLog(-1," parameters not defined", doPrint=True)
+	U.checkParametersFile("parameters-DEFAULT-sunDial", force = True)
+	time.sleep(20)
+	doSunDialShutdown()
+	U.restartMyself(reason=" bad parameters read",doPrint=True)
 
 
 setMotorOFF()
@@ -2043,7 +2256,7 @@ getTime()
 U.echoLastAlive(G.program)
 
 
-print "gpiopinNumber", gpiopinNumber
+U.toLog(-2, "gpiopinNumbers:"+unicode(gpiopinNumbers), doPrint=True)
 
 
 
@@ -2061,43 +2274,42 @@ setColor(force=True)
 
 
 ## check if out of boundary, if yes: fix it 
-fixmode =readFixMode()
-if fixmode !=0:
-	print "in FIX boundary mode"
-	drawDisplayLines(["Status:     ","in FIX boundary mode",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+inFixBoundaryMode =readFixMode()
+if inFixBoundaryMode !=0:
+	U.toLog(-2,"in FIX boundary mode",doPrint=True)
+	displayDrawLines(["Status:     ","in FIX boundary mode",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 	addToBlinkQueue(text=["s","o","s"])
-	fixBoundaries(fixmode)
+	fixBoundaries()
 	
+U.echoLastAlive(G.program)
 
 
 #addToBlinkQueue(text = ["S","T","A","R","T"][1,1,1],)
 #time.sleep(3)
 
-drawDisplayLines(["Status:     finding",".. L/R  Stop-Limits",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+displayDrawLines(["Status:     finding",".. L/R  Stop-Limits",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
 leftLimit 			= 0
-rightLimit 			= 800
-maxStepsUsed  		= rightLimit
 waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
 findLeftRight()
+U.echoLastAlive(G.program)
 
 
 
 getLightSensorValue(force=True)
 setColor(force=True)
-
 sleepDefault = waitBetweenSteps/(5*speed)
 
 
-print "clock starting;   waitBetweenSteps", waitBetweenSteps, "speed", speed, "totalSteps",totalSteps,"sleepDefault", sleepDefault,"amPM1224",amPM1224,"secSinMidnit2",secSinMidnit2
-print "intensity", intensity
+U.toLog(-1,"clock starting;  waitBetweenSteps:%.2f, speed:%.1f, totalSteps:%d, sleepDefault:%.1f, amPM1224:%s, secSinMidnit:%.1f " %(waitBetweenSteps, speed, totalSteps, sleepDefault, amPM1224, secSinMidnit), doPrint=True )
+U.toLog(-1,"intensity %s:"%unicode(intensity), doPrint=True )
 
 nextStep = 1
 
 U.getIPNumber() 
 eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 
-print "eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled", eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
+U.toLog(-1,  "eth0IP:%s, wifi0IP:%s, G.eth0Enabled:%s, G.wifiEnabled:%s"%(eth0IP, wifi0IP, unicode(G.eth0Enabled), unicode(G.wifiEnabled)), doPrint=True )
 if not G.eth0Enabled and not G.wifiEnabled:
 	U.setStartAdhocWiFi()
 
@@ -2106,13 +2318,19 @@ U.setStartwebserverINPUT()
 updatewebserverStatus(status="starting")
 
 
-showStandardStatusDisplay(force=True)
+displayShowStandardStatus(force=True)
 
 expireDisplay = 50
 lastExpireDisplay = time.time()
-
+lastWriteBack	  = 0
+inFixBoundaryMode =0
 while True:
-			
+	if speedDemoStart > 1 and time.time() - speedDemoStart > 300:
+		U.restartMyself(reason=" resetting speed to normal", doPrint=True)
+
+	if limitSensorTriggered != 0:
+		U.restartMyself(reason="entering fixmode, manual trigger of boundaries", doPrint=True)
+
 	getTime()
 
 	lastMove = time.time()
@@ -2124,7 +2342,6 @@ while True:
 	testIfBlink()
 	slept= 0
 	lastDisplay = 0
-	sleep = nextMove - time.time()
 	startSleep = time.time()
 	sleep = nextMove - startSleep
 	endSleep = startSleep + sleep
@@ -2132,6 +2349,7 @@ while True:
 	ii = 1000
 	lastDisplay = time.time()
 	#print "	sleep ", sleep," nextMove", nextMove,"minSleep",minSleep,"tt", time.time()
+	U.echoLastAlive(G.program)
 
 	while ii >0:
 		if getLightSensorValue():
@@ -2139,12 +2357,14 @@ while True:
 		elif (  abs(lightSensorValueRaw-lightSensorValue) / (max (0.005,lightSensorValueRaw+lightSensorValue))  ) > 0.05: 
 				lightSensorValue = (lightSensorValueRaw*5 + lightSensorValue*4) / 9.
 				setColor(force=True)
-
+		if ii%30==0:
+			U.echoLastAlive(G.program)
 		ii -= 1
 		time.sleep(minSleep)
 		slept += minSleep
 
-		if U.checkifRebooting(): doSunDialShutdown()
+		if U.checkifRebooting(): 
+			doSunDialShutdown()
 
 
 		tt = time.time()
@@ -2152,15 +2372,17 @@ while True:
 		if tt - lastDisplay  > 5:	
 			lastDisplay = tt
 			if tt - lastExpireDisplay < expireDisplay:
-				showStandardStatusDisplay()
+				displayShowStandardStatus()
 				#print "main loop showStandardStatusDisplay"
 			else:
 				#print "main loop clear display"
 				displayMenuSubAreaActive = -2
-				clearDisplay(show = True)
+				displayClear(show = True)
 
+			if tt- lastWriteBack > 100:
+				updateParams()
+				lastWriteBack = tt
 			readParams()
-
 		
 
 	

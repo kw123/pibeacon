@@ -15930,6 +15930,14 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				</List>
 				<Label>Time mode:</Label>
 			</Field>
+
+			<Field id="sunDialOffset"  type="menu" defaultValue="0">
+				<List>
+				<Option value= "0"      >Sundial mode: sun shines against pole time is shadow</Option>
+				<Option value= "43200"  >Sun mode: sun shines straight down, time is the light</Option>
+				</List>
+				<Label>Normal Sundial or Light Down:</Label>
+			</Field>
  
 			<Field id="intensityMult"  type="menu" defaultValue="100" >
 				<List>

@@ -49,7 +49,7 @@ def readParams():
 			sList+=sensor
 			
 		if "INPUTgpio" not in sList:
-			print "INPUTgpio not in sensorlist" 
+			U.toLog(-1,"INPUTgpio not in sensorlist", doPrint =True) 
 			exit()
 		else:
 			if oldSensors != {}: # this is {}  at startup.. dont do anything 

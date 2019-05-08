@@ -27,7 +27,7 @@ import pstats
 import logging
 import MAC2Vendor
 
-dataVersion = 38.92
+dataVersion = 38.94
 
 
 
@@ -289,7 +289,7 @@ class Plugin(indigo.PluginBase):
 
 		formats=	{   logging.THREADDEBUG: "%(asctime)s %(msg)s",
 						logging.DEBUG:       "%(asctime)s %(msg)s",
-						logging.INFO:        "%(msg)s",
+						logging.INFO:        "%(asctime)s %(msg)s",
 						logging.WARNING:     "%(asctime)s %(msg)s",
 						logging.ERROR:       "%(asctime)s.%(msecs)03d\t%(levelname)-12s\t%(name)s.%(funcName)-25s %(msg)s",
 						logging.CRITICAL:    "%(asctime)s.%(msecs)03d\t%(levelname)-12s\t%(name)s.%(funcName)-25s %(msg)s" }
@@ -316,13 +316,13 @@ class Plugin(indigo.PluginBase):
 		indigo.server.log(  u"Plugin params         "+self.indigoPreferencesPluginDir)
 
 		indigo.server.log(  u"(testing logger; see >"+self.PluginLogFile +"<   for detailed logging")
-		self.indiLOG.log( 0, "logger  enabled for   0 ===> only test <===")
-		self.indiLOG.log( 5, "logger  enabled for   THREADDEBUG ===> only test <===")
-		self.indiLOG.log(10, "logger  enabled for   DEBUG ===> only test <===")
-		self.indiLOG.log(20, "logger  enabled for   INFO ===> only test <===")
-		self.indiLOG.log(30, "logger  enabled for   WARNING ===> only test <===")
-		self.indiLOG.log(40, "logger  enabled for   ERROR ===> only test <===")
-		self.indiLOG.log(50, "logger  enabled for   CRITICAL ===> only test <===")
+		self.indiLOG.log( 0, "logger  enabled for   0 ==> TEST ONLY ")
+		self.indiLOG.log( 5, "logger  enabled for   THREADDEBUG    ==> TEST ONLY ")
+		self.indiLOG.log(10, "logger  enabled for   DEBUG          ==> TEST ONLY ")
+		self.indiLOG.log(20, "logger  enabled for   INFO           ==> TEST ONLY ")
+		self.indiLOG.log(30, "logger  enabled for   WARNING        ==> TEST ONLY ")
+		self.indiLOG.log(40, "logger  enabled for   ERROR          ==> TEST ONLY ")
+		self.indiLOG.log(50, "logger  enabled for   CRITICAL       ==> TEST ONLY ")
 		indigo.server.log(  u"end testing logger .... )")
 		indigo.server.log(  u"Plugin short Name     "+self.pluginShortName)
 		indigo.server.log(  u"my PID                "+str(self.myPID))	 
@@ -1609,6 +1609,10 @@ class Plugin(indigo.PluginBase):
 				dictForRPI[ u"deviceDefs"] = json.dumps(deviceDefs)
 				dictForRPI[ u"cmd"]		   =  u"pulseUp"
 				dictForRPI[ u"pulseUp"]	   = dev.zoneMaxDurations[action.zoneIndex-1]*60
+				if "relayOnIfLow" in props and not props["relayOnIfLow"]:
+					dictForRPI[ u"inverseGPIO"] = False
+				else:
+					dictForRPI[ u"inverseGPIO"] = True
 				self.setPin(dictForRPI)
 
 			self.sleep(0.1)	   ## we need to wait until all gpios are of, other wise then next might be before one of the last off
@@ -1616,6 +1620,10 @@ class Plugin(indigo.PluginBase):
 			dictForRPI[ u"deviceDefs"]	= json.dumps(deviceDefs)
 			dictForRPI[ u"cmd"]			=  u"pulseUp"
 			dictForRPI[ u"pulseUp"]		= dev.zoneMaxDurations[action.zoneIndex-1]*60
+			if "relayOnIfLow" in props and not props["relayOnIfLow"]:
+				dictForRPI[ u"inverseGPIO"] = False
+			else:
+				dictForRPI[ u"inverseGPIO"] = True
 			self.setPin(dictForRPI)
 
 			durations		 = dev.zoneScheduledDurations
@@ -7415,9 +7423,7 @@ class Plugin(indigo.PluginBase):
 				rampTime = 0.
 
 
-
-
-			inverseGPIO=False
+			inverseGPIO = False
 
 			if typeId == "myoutput":
 				if u"text" not in valuesDict:
@@ -7565,8 +7571,13 @@ class Plugin(indigo.PluginBase):
 				else:
 					self.indiLOG.log(20, u" setPIN bad parameter: no GPIOpin defined:" + unicode(valuesDict))
 					return
-				if deviceDefs[int(output)][u"outType"] == "0": inverseGPIO = False
-				else:										   inverseGPIO = True
+
+				if u"inverseGPIO" in valuesDict:  # overwrite individual defs  if explicitely inverse defined 
+					try: 											inverseGPIO = (valuesDict[u"inverseGPIO"])
+					except:											inverseGPIO = False
+				else:
+					if deviceDefs[int(output)][u"outType"] == "0":	inverseGPIO = False
+					else:										  	inverseGPIO = True
 
 				if typeId == "OUTPUTgpio-1":
 					analogValue = float(analogValue)
@@ -7633,6 +7644,7 @@ class Plugin(indigo.PluginBase):
 					line +="\n	,\"pulseUp\":\""+unicode(pulseUp)+"\""
 					line +="\n	,\"pulseDown\":\""+unicode(pulseDown)+"\""
 					line +="\n	,\"rampTime\":\""+unicode(rampTime)+"\""
+					line +="\n	,\"analogValue\":\""+unicode(analogValue)+"\""
 					line +="\n	,\"analogValue\":\""+unicode(analogValue)+"\""
 					line +="\n	,\"GPIOpin\":\""+unicode(GPIOpin)+"\"})\n"
 					line+= "##=======  end  =====\n"
@@ -9795,7 +9807,9 @@ class Plugin(indigo.PluginBase):
 								except:
 									reset = True
 								if not reset: 
-									if	(float(dev.states[ttx+u"MaxToday"]) == float(dev.states[ttx+u"MinToday"]) and float(dev.states[ttx+u"MaxToday"]) == 0.) :	 reset = True
+									try:
+										if	(float(dev.states[ttx+u"MaxToday"]) == float(dev.states[ttx+u"MinToday"]) and float(dev.states[ttx+u"MaxToday"]) == 0.) :	 reset = True
+									except: pass
 								if reset:
 									self.addToStatesUpdateDict(unicode(dev.id),ttx+u"MaxYesterday", val,decimalPlaces=decimalPlaces)
 									self.addToStatesUpdateDict(unicode(dev.id),ttx+u"MinYesterday", val,decimalPlaces=decimalPlaces)
@@ -13969,13 +13983,13 @@ class Plugin(indigo.PluginBase):
 
 						if typeId.find(u"sunDial") >-1:
 								theDict={}
-								if "motorType" in propsOut:
-									theDict[u"timeZone"] 			= propsOut[u"timeZone"]
-									theDict[u"speed"]				= propsOut[u"speed"]
-									theDict[u"intensityMult"]		= propsOut[u"intensityMult"]
-									theDict[u"intensityMax"]		= propsOut[u"intensityMax"]
-									theDict[u"intensityMin"]		= propsOut[u"intensityMin"]
-									theDict[u"amPM1224"]			= propsOut[u"amPM1224"]
+								theDict[u"timeZone"] 			= propsOut[u"timeZone"]
+								theDict[u"speed"]				= propsOut[u"speed"]
+								theDict[u"intensityMult"]		= propsOut[u"intensityMult"]
+								theDict[u"intensityMax"]		= propsOut[u"intensityMax"]
+								theDict[u"intensityMin"]		= propsOut[u"intensityMin"]
+								theDict[u"amPM1224"]			= propsOut[u"amPM1224"]
+								theDict[u"sunDialOffset"]		= propsOut[u"sunDialOffset"]
 
 		
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)

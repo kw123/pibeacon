@@ -133,8 +133,7 @@ def tryToConnect(MAC,BLEtimeout,devId):
 			hci_sock.close()
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
 	U.toLog(2, MAC + "	"+unicode(ret))
 	#print	MAC + "	 "+unicode(ret)
 	return ret
@@ -194,7 +193,7 @@ lastData			= {}
 lastRead			= -1
 
 if U.getIPNumber() > 0:
-	print " no ip number "
+	U.toLog(-1," no ip number ", doPrint=True)
 	time.sleep(10)
 	exit()
 
@@ -228,8 +227,7 @@ if BLEid <0:
 
 
 
-U.toLog(0, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEconnect	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]
+U.toLog(-1, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"], doPrint =True)
 
 while True:
 

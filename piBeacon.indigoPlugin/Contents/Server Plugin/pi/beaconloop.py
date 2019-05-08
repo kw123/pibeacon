@@ -139,10 +139,7 @@ def startBlueTooth(pi):
 		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BeaconUseHCINo,"UART")
 		if myBLEmac ==  -1:
 			return 0,  0, -1
-		print "Beacon Use HCINo ", G.BeaconUseHCINo, "; useHCI ",useHCI, "; myBLEmac ",myBLEmac,"; devId ", devId
-		print "HCIs",HCIs
-				
-		print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	MAC#: "+myBLEmac+" on channel:"+ useHCI +"; bus:"+HCIs[useHCI]["bus"]
+		U.toLog(-1,"Beacon Use HCINo " +unicode(G.BeaconUseHCINo)+";  useHCI:" +unicode(useHCI)+ ";  myBLEmac:"+unicode(myBLEmac)+"; devId:" +unicode(devId), doPrint = True )
 			
 
 		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
@@ -154,7 +151,7 @@ def startBlueTooth(pi):
 		min					= " 00 "+"0%x"%(int(pi))
 		txP					= " C5 00"
 		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + maj + min + txP
-		print  "\n"+datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop  "+cmd
+		U.toLog(-1,cmd, doPrint =True) 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
 		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
@@ -162,18 +159,17 @@ def startBlueTooth(pi):
 		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
 		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
 		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
-		print  datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	 "+cmd
+		U.toLog(-1,cmd, doPrint =True) 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		####################################LE Set Advertise Enable
 		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
-		print  datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop	 "+cmd
+		U.toLog(-1,cmd, doPrint =True) 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		ret = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		U.toLog(-1,"BLE start returned :  "+unicode(ret))
 	except Exception, e: 
-		print "beaconloop exit at restart BLE stack error: ", e
-		U.toLog(-1,u"beaconloop in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		U.toLog(-1,u"exit at restart BLE stack error  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True, doPrint =True)
 		time.sleep(10)
 		f = open(G.homeDir+"temp/restartNeeded","w")
 		f.write("bluetooth_startup.ERROR:"+unicode(e))
@@ -775,7 +771,7 @@ fixOldNames()
 
 # getIp address 
 if U.getIPNumber() > 0:
-	print " no ip number "
+	U.toLog(-1, " no ip number ", doPrint=True)
 	time.sleep(10)
 	exit(2)
 
@@ -800,7 +796,7 @@ paramCheck	 = tt
 os.system("echo "+str(tt)+" > "+ G.homeDir+"temp/alive.beaconloop  &" )
 lastAlive=tt
 lastIgnoreReset =tt
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop "+" starting loop" 
+U.toLog(-1, "starting loop", doPrint=True )
 G.tStart= time.time()
 beaconsNew={}
 
@@ -878,7 +874,7 @@ try:
 			allBeaconMSGs=[]
 			try: pkt = sock.recv(255)
 			except: 
-				print " timeout exception"
+				U.toLog(-1, " timeout exception", doPrint = True)
 				pkt=""
 			doP = False
 			U.toLog(5, "loopCount:"+unicode(loopCount)+ "  #:"+unicode(iiWhile)+"  len:"+unicode(len(pkt))) 
@@ -890,7 +886,7 @@ try:
 					offS = 7
 					for i in range(0, num_reports):
 						if pkLen < offS + 6: 
-							print "bad data", i, num_reports,offS + 6, pkLen, "xx"
+							U.toLog(-1, "bad data" +unicode(i)+ " "+ +unicode(num_reports)+ " "+unicode(offS + 6)+ " " +unicode(pkLen)+ "xx", doPrint = True)
 							break
 						# build the return string: mac#, uuid-major-minor,txpower??,rssi
 						mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
@@ -993,7 +989,7 @@ try:
 							pkLen		= nBytesThisMSG
 						except	Exception, e:
 							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
-							print "bad data >> ", beaconMSG,"  <<beaconMSG"
+							U.toLog(-1, "bad data >> "+unicode(beaconMSG)+"  <<beaconMSG", doPrint=True)
 							continue# skip if bad data
  
 						### if in fast down lost and signal < xx ignore this signal= count as not there 
@@ -1027,9 +1023,7 @@ try:
 						####if beaconMAC =="0C:F3:EE:00:66:15": print  beaconsNew
 
 				except	Exception, e:
-					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
-					print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-					print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop "+"bad data, skipping"
+					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping",permanentLog=True, doPrint=True)
 					try:
 						print "	 MAC:  ", mac
 						print "	 UUID: ", UUID
@@ -1076,5 +1070,5 @@ except	Exception, e:
 	time.sleep(20)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" beaconloop end of beaconloop.py "	 
+U.toLog(-1,"end of beaconloop.py ", doPrint=True ) 
 sys.exit(0)		   

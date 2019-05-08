@@ -12,7 +12,7 @@ import copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "receiveGPIOcommands"
+G.program = "receiveCommands"
 
 class MyTCPHandler(SocketServer.BaseRequestHandler):
 
@@ -32,7 +32,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 			commands = json.loads(data.strip("\n"))
 		except	Exception, e:
 				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-				U.toLog(-1," bad command: json failed  "+unicode(buffer))
+				U.toLog(-1,"bad command: json failed  "+unicode(buffer))
 				return
 
 		U.toLog(2, "len of package:"+str(len(data)))
@@ -41,7 +41,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 			if execGeneral(next): continue
 
 			cmdJ = json.dumps(next)
-			U.toLog(1," cmd= "+cmdJ)
+			U.toLog(1,"cmd= "+cmdJ)
 			#print cmdJ
 			cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
 			os.system(cmdOut)
@@ -102,7 +102,7 @@ def getcurentCMDS():
 					found = False
 					for dev in output:
 						for devid in output[dev]:
-							print dev, devid, output[dev][devid]
+							toLog(0,unicode(dev)+" "+ unicode(devid)+" "+unicode(output[dev][devid]), doPrint = True )
 							for nn in range(len(output[dev][devid])):
 								if "gpio" in output[dev][devid][nn]:
 									if str(output[dev][devid][nn]["gpio"]) == str(pin): 
@@ -121,7 +121,7 @@ def getcurentCMDS():
 					continue
 				cmdJ = json.dumps(next)
 				cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
-				U.toLog(-1," cmd= "+cmdOut)
+				U.toLog(-1,"cmd= "+cmdOut)
 				os.system(cmdOut)
 				time.sleep(0.3) # give each command time to finish
 			if keep!={}:
@@ -171,24 +171,24 @@ if __name__ == "__main__":
 	readParams()
 
 	if U.getNetwork < 1:
-		U.toLog(-1, u" network not active, sleeping ")
+		U.toLog(-1, u"network not active, sleeping ")
 		time.sleep(500)# == 500 secs
 		exit(0)
 	# if not connected to network pass
 		
 		
 	if G.wifiType !="normal": 
-		U.toLog(-1, u" no need to receiving commands in adhoc mode pausing receive GPIO commands")
+		U.toLog(-1, u"no need to receiving commands in adhoc mode pausing receive GPIO commands")
 		time.sleep(500)
 		exit(0)
-	U.toLog(-1, u" proceding with normal on no ad-hoc network")
+	U.toLog(-1, u"proceding with normal on no ad-hoc network")
 
 	U.getIPNumber()
 	
 	getcurentCMDS()
 	   
 
-	print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" receive GPIO commands started, listing to port: "+ str(PORT)
+	U.toLog(-1,"started, listening to port: "+ str(PORT),doPrint=True )
 	restartMaster = False
 	try:	
 		# Create the server, binding on port 9999
@@ -197,11 +197,11 @@ if __name__ == "__main__":
 	except	Exception, e:
 		####  trying to kill the process thats blocking the port# 
 		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		U.toLog(-1, "getting  socket does not work, trying to reset "+ str(PORT),doPrint=True )
+		U.toLog(-1, "getting  socket does not work, trying to reset "+ str(PORT), doPrint=True )
 		ret = subprocess.Popen("sudo ss -apn | grep :"+str(PORT),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines= ret.split("\n")
 		for line in lines:
-			print line
+			U.toLog(-1, line, doPrint=True) 
 			pidString = line.split(",pid=")
 			for ppp in pidString:
 				pid = ppp.split(",")[0]
@@ -214,14 +214,13 @@ if __name__ == "__main__":
 				if len (subprocess.Popen("ps -ef | grep "+str(pid)+"| grep -v grep | grep master.py",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]) >5:
 					restartMaster=True
 					# will need to restart the whole things
-				print "killing task with : pid= ", pid
+				U.toLog(-1, "killing task with : pid= %d"% pid, doPrint=True )
 				ret = subprocess.Popen("sudo kill -9 "+str(pid),shell=True)
 				time.sleep(0.2)
 
 
 		if restartMaster:
-			print "killing tasks with port = "+str(PORT)+"	did not work, restarting everything"
-			U.toLog(-1, "killing taks with port = "+str(PORT)+"	 did not work, restarting everything")
+			U.toLog(-1, "killing taks with port = "+str(PORT)+"	 did not work, restarting everything", doPrint=True)
 			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 			exit()
 			
@@ -229,8 +228,7 @@ if __name__ == "__main__":
 			# Create the server, binding on port eg 9999
 			server = SocketServer.TCPServer((G.ipAddress, PORT), MyTCPHandler)
 		except	Exception, e:
-			print "restarting  master from receiveGPIOcommands on port "+ str(PORT) 
-			U.toLog(-1, "getting  socket does not work, try restarting master  "+ str(PORT) )
+			U.toLog(-1, "getting  socket does not work, try restarting master  "+ str(PORT) , doPrint=True)
 			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True)
 			exit()
 

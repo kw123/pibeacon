@@ -316,7 +316,7 @@ debug=1
 readNewParams()
 
 
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs starting "
+U.toLog(-1," installLibs starting ")
 
 test=[False for ii in range(10)]
 try:
@@ -330,7 +330,7 @@ myPID			= str(os.getpid())
 upgradeOpSys =""
 try:
 	upgradeOpSys = sys.argv[1]
-	print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs	 will do a complete upgrade of the opsys , this might take a LOOONG time"
+	U.toLog(-1," installLibs	 will do a complete upgrade of the opsys , this might take a LOOONG time")
 	# kill some of the programs that might be in conflict with installing new opsys s..
 	U.killOldPgm(myPID,"callbeacon.py")
 	U.killOldPgm(myPID,"beaconloop.py")
@@ -343,7 +343,7 @@ try:
 	test[0] = -1
 	arguments = unicode(sys.argv)
 except:
-	print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs no opsys upgrade requested"
+	U.toLog(-1," installLibs no opsys upgrade requested")
 	arguments = ""
 
 
@@ -368,8 +368,8 @@ if test[0] < 4.0 or	 doU:
 else:
 		U.toLog(-1,	 "==== libraries seem to be setup, no need for action")
 
-U.toLog(-1,	 "==== libraries install finished")
+U.toLog(-1,	 "==== libraries install finished",doPrint=True)
 
-print  datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs install finished"
+
 
 sys.exit(0)		   

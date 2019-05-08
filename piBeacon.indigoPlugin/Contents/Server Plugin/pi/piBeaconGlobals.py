@@ -9,7 +9,8 @@
 #
 homeDir				= "/home/pi/pibeacon/"
 homeDir0			= "/home/pi/"
-logDir				= "/run/user/1000/pibeacon/"
+#logDir				= "/run/user/1000/pibeacon/"
+logDir				= "/var/log/"
 program				= "undefined"
 debug				= 1
 ipAddress			= ""
@@ -91,7 +92,7 @@ programFiles=[			"beaconloop",
 						"installLibs",
 						"mysensors",
 						"myprogram",
-						"receiveGPIOcommands",
+						"receiveCommands",
 						"myoutput",
 						"simplei2csensors",
 						"BLEconnect",
