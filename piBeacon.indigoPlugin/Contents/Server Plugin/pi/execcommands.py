@@ -181,7 +181,7 @@ def execCMDS(data):
 
 			#print next
 			#print "next command: "+unicode(next)
-			U.toLog(-1,"next command: "+unicode(data))
+			U.toLog(0,"next command: "+unicode(data))
 			cmd= next["command"]
 
 			for cc in next:
@@ -340,7 +340,7 @@ def execCMDS(data):
 					if next["device"].find(",")> 1:
 						list = next["device"].split(",")
 					elif next["device"]== "all":
-						list = G.programFiles
+						list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
 					else:
 						list = [next["device"]]
 					for pgm in list:
@@ -352,7 +352,7 @@ def execCMDS(data):
 					if next["device"].find(",")> 1:
 						list = next["device"].split(",")
 					elif next["device"]== "all":
-						list = G.programFiles
+						list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
 					else:
 						list = [next["device"]]
 					for pgm in list:
@@ -366,7 +366,7 @@ def execCMDS(data):
 					if next["device"].find(",")> 1:
 						list = next["device"].split(",")
 					elif next["device"]== "all":
-						list = G.files
+						list = G.specialSensorList
 					else:
 						list = [next["device"]]
 					for pgm in list:
@@ -504,9 +504,9 @@ if True: #__name__ == "__main__":
 	PWM = 100
 	myPID		= int(os.getpid())
 
+	G.debug = 1
 	readParams()
-	G.debug=3
-#### read exec command list for restart values, update if needed and write back 
+#### read exec command list for restart values, update if needed and write back
 	execcommands={}
 	#print "execcommands" , sys.argv
 	if os.path.isfile(G.homeDir+"execcommands.current"):

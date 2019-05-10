@@ -733,7 +733,7 @@ def decreaseLEDmax():
 # ------------------    ------------------ 
 def startWeb():
 	U.toLog(-2,"into startWeb" ,doPrint=True)
-	if webAdhoc: return 
+	#if webAdhoc: return
 	pass
 	webAdhoc = False
 
@@ -1052,7 +1052,7 @@ def defineMotorType():
 		stepsIn360 		= int(mtSplit[1])*mult
 		maxStepsUsed	= stepsIn360 
 	except:
-		U.toLog(-2,"stopping  motorType wrong "+unicode(motorType)+"  "+unicode(tSplit), doPrint=True)
+		U.toLog(-2,"stopping  motorType wrong "+unicode(motorType)+"  "+unicode(mtSplit), doPrint=True)
 		exit()
 
 	if mtSplit[0] == "bipolar":
@@ -1146,7 +1146,7 @@ def setgpiopinNumbers():
 		if not U.pgmStillRunning("pigpiod"): 	
 			U.toLog(-1, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888", doPrint=True)
 			time.sleep(20)
-			doSunDialShutdown
+			doSunDialShutdown()
 			U.restartMyself(reason="pigpiod not running")
 			exit(0)
 
@@ -1427,10 +1427,10 @@ def testIfMove( waitBetweenSteps, nextStep ):
 	if nextTotalSteps != totalSteps:
 		nextStep    = nextTotalSteps - totalSteps 
 
-		if nextStep <0:	dir = -1
-		else:			dir =  1
+		if nextStep <0:	direction = -1
+		else:			direction =  1
 
-		if printON: U.toLog(-2,"testIfMove.. secSinMidn2:%.2f"%secSinMidnit + "; %0d:%02d:%02d"%(hour,minute,second)+"; dt:%.5f"%(time.time()-t0)+ "; nstep:%d"%nextStep+ "; tSteps:%d"%totalSteps+"; curtSeqN:%d"%currentSequenceNo+";  inbSeq:%d"% inbetweenSequences+";  inFixM:%d"% inFixBoundaryMode+"; s2:%d, s3:%d"%(sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"])+"; dir:%d"%(dir), doPrint=True) 
+		if printON: U.toLog(-2,"testIfMove.. secSinMidn2:%.2f"%secSinMidnit + "; %0d:%02d:%02d"%(hour,minute,second)+"; dt:%.5f"%(time.time()-t0)+ "; nstep:%d"%nextStep+ "; tSteps:%d"%totalSteps+"; curtSeqN:%d"%currentSequenceNo+";  inbSeq:%d"% inbetweenSequences+";  inFixM:%d"% inFixBoundaryMode+"; s2:%d, s3:%d"%(sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"])+"; dir:%d"%(direction), doPrint=True)
 
 		if nextStep != 0: 
 			if speed > 10 or nextStep >5: stayOn =0.01
@@ -1439,7 +1439,7 @@ def testIfMove( waitBetweenSteps, nextStep ):
 			else:					force = 0
 			#print "dir, nextStep", dir, nextStep
 			if currentSequenceNo < 7: force = int(maxStepsUsed*0.9)
-			steps = move(stayOn, int( abs(nextStep) ), dir, force = force, updateSequence=True)
+			steps = move(stayOn, int( abs(nextStep) ), direction, force = force, updateSequence=True)
 			if currentSequenceNo == 8 and sensorDict["sensor"][0]["status"] == 1:
 				nextStep =0
 			setColor()
@@ -1563,7 +1563,7 @@ def findLeftRight():
 
 			if sensorDict["sensor"][1]["status"] == 0:
 				steps = move(stayOn, oneEights*6 , 1, force=30, stopIfMagSensor = [True,True] )
-				if pp: U.toLog(-3, "0211 === ", steps, -1, short=True)
+				if pp: printLrLog(-3, "0211 === ", steps, -1, short=True)
 				if sensorDict["sensor"][1]["status"] == 1:
 					steps = move(stayOn, oneEights*6 , -1, force=30, stopIfMagSensor = [True,False] )
 					if pp: printLrLog("0212 === ", steps, -1, short=True)
@@ -2388,7 +2388,7 @@ while True:
 	
 stopBlink	= True
 time.sleep(1)
-blinkThread["thread"].join
+#  blinkThread["thread"].join
 
 
 		

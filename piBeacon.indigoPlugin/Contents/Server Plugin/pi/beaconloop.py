@@ -147,10 +147,10 @@ def startBlueTooth(pi):
 		OCF					= " 0x0008"
 		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
 		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
-		maj					= " 00 09"
-		min					= " 00 "+"0%x"%(int(pi))
+		MAJ					= " 00 09"
+		MIN					= " 00 "+"0%x"%(int(pi))
 		txP					= " C5 00"
-		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + maj + min + txP
+		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
 		U.toLog(-1,cmd, doPrint =True) 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
@@ -886,7 +886,7 @@ try:
 					offS = 7
 					for i in range(0, num_reports):
 						if pkLen < offS + 6: 
-							U.toLog(-1, "bad data" +unicode(i)+ " "+ +unicode(num_reports)+ " "+unicode(offS + 6)+ " " +unicode(pkLen)+ "xx", doPrint = True)
+							U.toLog(-1, "bad data" +unicode(i)+ " "+unicode(num_reports)+ " "+unicode(offS + 6)+ " " +unicode(pkLen)+ "xx", doPrint = True)
 							break
 						# build the return string: mac#, uuid-major-minor,txpower??,rssi
 						mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()

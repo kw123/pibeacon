@@ -1,3 +1,16 @@
+Added features / changes in v7.105.280 @ 2019-05-08
+===================================================
+
+1. added option to show BLEconnect devices on location plot.
+   you need to set options (color, name etc) in devcie edit.
+
+2. fixed some code inconsistencies after running code inspec w pycharm.
+   and found some bugs, but only when exceptions occur = not under normal operations
+   hence they do not show up frequently
+
+3. remove old style version check, now depends on indigo to do version checking (7.3 and higher)
+
+
 Added features / changes in v7.104.279 @ 2019-05-08
 ===================================================
 

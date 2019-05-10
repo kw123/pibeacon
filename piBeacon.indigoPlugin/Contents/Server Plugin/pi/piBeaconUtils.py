@@ -34,7 +34,7 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			cmd+= " | grep " +param1
 		if param2 !="":
 			cmd+= " | grep " +param2
-		toLog(1, "trying to kill "+ cmd, doPrint = True )
+		toLog(1, "trying to kill " + cmd, doPrint=False )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines=ret.split("\n")
@@ -43,15 +43,14 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			items=line.split()
 			pid=int(items[1])
 			if pid == int(myPID): continue
-			
-					
-			toLog(-1, "killing "+pgmToKill+" "+param1 +" "+param2)
+
+			toLog(1, "killing "+pgmToKill+" "+param1 +" "+param2)
 			os.system("kill -9 "+str(pid))
 	except Exception, e:
 		toLog(-1, u"killOldPgm	in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 #################################
-def restartMyself(param="", reason="",doPrint=True):
+def restartMyself(param="", reason="", doPrint=True):
 	toLog(-1, u"--- restarting --- "+param+"  "+ reason,doPrint=doPrint)
 	time.sleep(2)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py "+ param+" &")
@@ -69,7 +68,7 @@ def setStopCondition(on=True):
 	
 
 #################################
-def toLog(lvl,msg,permanentLog=False,doPrint=False):
+def toLog(lvl, msg, permanentLog=False, doPrint=False):
 	if lvl < G.debug:
 		try:
 			if G.program =="":
@@ -2417,7 +2416,7 @@ def testDNS():
 #################################
 ##networkStatus		  = "no"   # "no" = no network what so ever / "local" =only local cant find anything else/ "inet" = internet yes, indigo no / "indigoLocal" = indigo not internet / "indigoInet" = indigo with inetrnet
 def testNetwork(force=False):
-	global lasttestNetwork, rememberLineSystemLOG
+	global lasttestNetwork
 	try: 
 		ii = lasttestNetwork
 	except: 

@@ -19,7 +19,6 @@ class MAP2Vendor:
     ########################################
     def __init__(self, pathToMACFiles = "", refreshFromIeeAfterDays = 10):
 
-
         self.mac2VendorDict ={"6":{},"7":{},"9":{}}
 
         self.MAChome     = os.path.expanduser("~")+"/"

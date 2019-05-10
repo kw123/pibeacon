@@ -1223,6 +1223,7 @@ else:
 	alreadyBooted = False
 os.system("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp")
 
+G.debug = 0
 
 if cleanupOldFiles():
 	startProgam("master.py", params="", reason="..cleanedup old files")

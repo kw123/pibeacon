@@ -2132,6 +2132,63 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 					<Option value="displayStatus"  >displayStatus</Option>
 				</List>
 			</Field>
+
+			<Field id="simpleSeparator53" type="separator"/>
+			<Field id="label53"               type="label"  >
+				<Label>== Show device position on map,
+                first setup the general parameters in config, then enable this device.</Label>
+			</Field>
+			<Field id="showBeaconOnMap" type="menu"     defaultValue="0">
+				<Label>enable THIS device to be shown on map:</Label>
+				<List>
+					<Option value="0"            >no</Option>
+					<Option value="text"         >do not show marker, only text</Option>
+					<Option value="dot"          >small dot</Option>
+					<Option value="smallCircle"  >small circle </Option>
+					<Option value="largeCircle"  >circle proportional to uncertainty of position </Option>
+				</List>
+			</Field>
+			<Field id="showBeaconSymbolAlpha" type="menu"  defaultValue="0.5" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+				<Label>symbol transparency:</Label>
+				<List>
+					<Option value="0.2" >80% transparent</Option>
+					<Option value="0.5" >50% transparent</Option>
+					<Option value="0.8" >20% transparent</Option>
+					<Option value="1.0" >not transparent</Option>
+				</List>
+			</Field>
+			<Field id="showBeaconSymbolColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+				<Label>symbol color:</Label>
+				<List>
+					<Option value="#FF0000" >red</Option>
+					<Option value="#00FF00" >green</Option>
+					<Option value="#0000FF" >blue</Option>
+					<Option value="#FFFF00" >yellow</Option>
+					<Option value="#FF00FF" >mangan</Option>
+					<Option value="#00FFFF" >cyan</Option>
+					<Option value="#FFFFFF" >white</Option>
+					<Option value="#0F0F0F" >grey</Option>
+					<Option value="#000000" >black</Option>
+				</List>
+			</Field>
+			<Field id="showBeaconNickName" type="textfield"     defaultValue="device" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+				<Label>label next to device:</Label>
+			</Field>
+			<Field id="showBeaconTextColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+				<Label>label color:</Label>
+				<List>
+					<Option value="#FF0000" >red</Option>
+					<Option value="#00FF00" >green</Option>
+					<Option value="#0000FF" >blue</Option>
+					<Option value="#FFFF00" >yellow</Option>
+					<Option value="#FF00FF" >mangan</Option>
+					<Option value="#00FFFF" >cyan</Option>
+					<Option value="#FFFFFF" >white</Option>
+					<Option value="#0F0F0F" >grey</Option>
+					<Option value="#000000" >black</Option>
+				</List>
+			</Field>
+
 			<Field id="sep-031" type="separator"/>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
 				<Label>send broadcasts to other plugins for status up/x changes</Label>
