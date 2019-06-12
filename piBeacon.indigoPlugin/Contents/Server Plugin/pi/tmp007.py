@@ -70,7 +70,7 @@ class TMP007:
 	def __init__(self, i2cAddress=""):
 
 		self.debug = G.debug
-		if i2cAddress =="" or i2cAddress ==0:
+		if i2cAddress == "" or i2cAddress == 0:
 			self.address = 0x40
 		else:
 			self.address = i2cAddress
@@ -78,6 +78,8 @@ class TMP007:
 		self.bus = smbus.SMBus(1)
 
 		self.BUFFER = bytearray(4)
+
+		self.errMsg = ""
 
 		time.sleep(0.5)
 		return 
@@ -272,7 +274,7 @@ class TMP007:
 
 #################################		 
 def readParams():
-	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
+	global sensorList, sensors, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, tmp007sensor, minSendDelta
 	global oldRaw, lastRead
@@ -353,7 +355,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -376,7 +378,7 @@ def getValues(devId):
 		return data
 	except	Exception, e:
 		if badSensor >2 and badSensor < 5: 
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.toLog(-1, u"temp>>" + unicode(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
@@ -494,6 +496,6 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

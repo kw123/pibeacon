@@ -158,7 +158,7 @@ def getINPUTgpio(devId):
 			elif INPUTS[devId]["codeType"].find("bourns8Bit")>-1:	value = burnsTableToInt(value)
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return {"INPUT":value}
 
 
@@ -236,7 +236,7 @@ def startGPIO(devId):
 				GPIO.output(INPUTS[devId]["pinO"][n], 1)
 		return
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		U.toLog(-1,"start "+ G.program+ "  "+ unicode(sensors), doPrint=True)
 	return
 
@@ -344,7 +344,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		time.sleep(5.)
 
 

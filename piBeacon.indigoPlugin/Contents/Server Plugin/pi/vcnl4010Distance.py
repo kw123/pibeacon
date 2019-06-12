@@ -140,7 +140,7 @@ def readParams():
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -253,7 +253,7 @@ class VCNL40xx():
             return   distance, luminance, data
             #return self._device.readU16BE(VCNL40xx_AMBIENTDATA)
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         return "","",[]
 
 
@@ -295,7 +295,7 @@ def readSensor():
             time.sleep(0.02)
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             U.toLog(-1, u"distance>>" + unicode(distance)+"<<")
     return distance  , luminance     
 
@@ -436,7 +436,7 @@ while True:
         time.sleep(1)
         #print "end of loop", loopCount
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)
         

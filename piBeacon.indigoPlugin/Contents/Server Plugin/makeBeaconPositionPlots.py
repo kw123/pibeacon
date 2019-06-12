@@ -36,8 +36,9 @@ global logfileName, logLevel, printON
 printON = False
 
 
+pluginDir		  = sys.argv[0].split("makeBeaconPositionPlots.py")[0]
+indigoDir		  = pluginDir.split("Plugins/")[0]
 
-indigoDir	   = sys.argv[0].split("makeBeaconPositionPlots")[0]
 piPositionsDir  = sys.argv[1]
 
 f=open(piPositionsDir+"positions.json")
@@ -261,7 +262,7 @@ try:
 	try:
 		if plotData["compress"] :
 			toLog("time used %4.2f"%(time.time()-tStart)+ " --   compressing the png file ")
-			cmd = "'"+indigoDir+"pngquant' --force --ext .xxx '"+piPositionsDir+"beaconPositions.png"+"'"
+			cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+piPositionsDir+"beaconPositions.png"+"'"
 			ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
 			try:	compSize = os.path.getsize((piPositionsDir+"beaconPositions.xxx").encode('utf8'))/1024.
 			except: compSize = 0

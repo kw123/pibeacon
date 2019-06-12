@@ -22,7 +22,7 @@ def setVoltage(bytes, persist=False):
 		else:
 			bus.write_i2c_block_data(i2cAddress, 0x40, bytes)
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 ###########
 def readParams():
@@ -32,7 +32,7 @@ def readParams():
 	try:
 		if u"debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIOUTPUT"])
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 ######### main ######
 
@@ -105,7 +105,7 @@ if cmd =="analogWrite":
 	try:
 		setVoltage(bytes,persist=False)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 
 if cmd =="continuousUpDown":
@@ -118,7 +118,7 @@ if cmd =="continuousUpDown":
 			setVoltage([0,0],persist=False)
 			time.sleep(pulseDown)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 	
 if cmd =="pulseUp":
@@ -127,7 +127,7 @@ if cmd =="pulseUp":
 		time.sleep(pulseUp)
 		setVoltage([0,0],persist=False)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 	
 if cmd =="pulseDown":
@@ -136,7 +136,7 @@ if cmd =="pulseDown":
 		time.sleep(pulseDown)
 		setVoltage(bytes,persist=False)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 	
 U.toLog(-1, u"cmd not implemented: "+cmd)

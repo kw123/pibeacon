@@ -27,7 +27,7 @@ def readParams():
         if u"debugRPI"          in inp:  G.debug=             int(inp["debugRPI"]["debugRPIOUTPUT"])
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
          
 
 ######### main ######
@@ -57,7 +57,7 @@ if "startAtDateTime" in command:
             U.toLog(2, "delayStart delayed by: "+ str(delayStart))
             time.sleep(delayStart)
     except  Exception, e:
-        U.toLog(-1,  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1,  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 bus = smbus.SMBus(1)
@@ -120,4 +120,4 @@ try:
             
 
 except  Exception, e:
-    U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+    U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

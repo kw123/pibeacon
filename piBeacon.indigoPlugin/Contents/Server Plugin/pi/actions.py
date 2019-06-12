@@ -40,7 +40,7 @@ def doActions():
 
 ### actions: [{1},{2},{3}]
 		except	Exception, e:
-			print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, " in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+			U.toLog(-1," in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True )
 
 
 #################################
@@ -92,7 +92,7 @@ while True:
 
 		time.sleep(0.1)
 	except	Exception, e:
-		toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

@@ -314,7 +314,7 @@ def set_pixel(x, y, r, g, b):
 		if index is not None:
 			ws2812.setPixelColorRGB(index, r, g, b)
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def get_pixel(x, y):
 	"""Get the RGB value of a single pixel
@@ -370,7 +370,7 @@ def show():
 		"""Update UnicornHat with the contents of the display buffer"""
 		ws2812.show()
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -472,14 +472,14 @@ class draw():
 					self.PIXELS[max(0,min(self.maxY1,y))][x]=applyIntensity(pos[4:7])
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.toLog(-1, u"pos " + unicode(pos))
 
 	def point(self,pos):
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] =applyIntensity(pos[2:5])
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.toLog(-1, u"pos " + unicode(pos))
 		return 
 
@@ -527,7 +527,7 @@ class draw():
 			else:		 
 				U.toLog(-1,u" error type:"+cType+" pos:"+ unicode(pos) )
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 	def rotateCenter(self,phi=math.pi/2.):
@@ -646,7 +646,7 @@ class draw():
 				
 				
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.toLog(-1," pixel len:"+ unicode(len(self.PIXELS))+"  "+ unicode(self.PIXELS)[0:100])
 			
 	def clear(self,RGB):
@@ -735,7 +735,7 @@ def readParams(pgmType="neopixel"):
 						retCode = 1
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return	retCode
 					   
 def readNewInput():
@@ -765,7 +765,7 @@ def saveLastCommands(items):
 		f.write(json.dumps(items))	
 		f.close()
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def readLastCommands():
 	try:
@@ -775,7 +775,7 @@ def readLastCommands():
 			f.close()
 			return json.loads(xxx)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return []
 
 def deleteLastCommands():
@@ -902,13 +902,13 @@ while True:
 					data = json.loads(item)
 				except	Exception, e:
 					if loop >0:
-						U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						U.toLog(-1,unicode(item)[0:100])
 					data = item
 				#print json.dumps(data,sort_keys=True, indent=2)
 			except	Exception, e:
 				U.toLog(-1,"bad input "+ unicode(item) )
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 
 			restoreAfterBoot = False
@@ -967,7 +967,7 @@ while True:
 			except:
 				pass
 							
-	
+			cType =""
 			nnxx =0		
 			while nnxx < repeat or repeat < 0:
 					tt0 =time.time()
@@ -1070,7 +1070,7 @@ while True:
 									if "speed" in pos:
 										try: speed = int(pos["speed"])
 										except: 
-											#print	u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+											#print	u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 											pass
 									if tt- lastClock < 1 and speed ==1 and setClock =="":
 										#print	"tt- lastClock", tt- lastClock
@@ -1157,7 +1157,7 @@ while True:
 															ll = lin[ii][2:]
 															lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
 											except	Exception, e:
-												U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+												U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 												U.toLog(-1, aa +"  "+ unicode(pos[aa]))
 									for ii in range(len(lin)):
 										lin[ii] =  [0,lin[ii][1], min(255,max(lin[ii][2],0)),min(255,max(lin[ii][3],0)),min(255,max(lin[ii][4],0)) ]
@@ -1195,7 +1195,7 @@ while True:
 								if checkIfnewInput(): break
 								
 						except	Exception, e:
-							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							#U.toLog(-1, unicode(cmd))
 					if checkIfnewInput(): break
 					if cType == "clock": 
@@ -1207,7 +1207,7 @@ while True:
 			if checkIfnewInput():
 				items=readNewInput()
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				
 		if loop %20 ==0:
 			if readParams(pgmType=pgmType) ==1:
@@ -1218,7 +1218,7 @@ while True:
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		items=[]
 
 

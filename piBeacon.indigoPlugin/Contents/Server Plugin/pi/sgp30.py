@@ -246,7 +246,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -273,7 +273,7 @@ def startSensor(devId,i2cAddress):
 		setBaseLine(devId)
 				
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		sgp30sensor[devId]	 =""
 	time.sleep(.1)
 
@@ -305,10 +305,9 @@ def getValues(devId):
 	global lastBaseLine
 	global lastCO2, lastVOC
 
-
+	ret = ""
 	try:
-		ret =""
-		if sgp30sensor[devId] =="": 
+		if sgp30sensor[devId] =="":
 			badSensor +=1
 			return "badSensor"
 		if time.time() - lastBaseLine[devId] > 1000:
@@ -347,7 +346,7 @@ def getValues(devId):
 			U.toLog(3, unicode(ret)) 
 			badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	U.muxTCA9548Areset()
@@ -482,7 +481,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

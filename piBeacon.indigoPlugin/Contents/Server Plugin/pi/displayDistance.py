@@ -252,13 +252,13 @@ def displayDistance(dist,sensor,sensors, output,distanceUnits):
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
 			except	Exception, e:
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 				if unicode(e).find("No space left on device") >-1:
 					os.system("rm "+G.homeDir+"temp/* ")
 		return 
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return
 	
@@ -292,5 +292,5 @@ def formatNumber(ddd, data,distanceUnits):
 				   dist0 = ("%8.2f"%(dist)).replace(" ","")
  
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return dist1, dist, dist0, ud

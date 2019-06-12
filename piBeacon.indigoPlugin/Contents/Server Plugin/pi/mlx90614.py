@@ -476,12 +476,12 @@ def doDisplay():
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
 			except	Exception, e:
-				print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+				print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 				if unicode(e).find("No space left on device") >-1:
 					os.system("rm "+G.homeDir+"temp/* ")
 		return 
 	except	Exception, e:
-		print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+		print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 		print sValues
 
 
@@ -529,7 +529,7 @@ def incrementBadSensor(devId,sensor,data):
 			data[sensor][devId]["badSensor"]=True
 			badSensors[devId] =0
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return data 
 
 
@@ -588,7 +588,7 @@ def readParams():
 			
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -724,7 +724,7 @@ def getMLX90614(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if sensor in data["sensors"] and data["sensors"][sensor]=={}: del data["sensors"][sensor]
 		U.muxTCA9548Areset()
 		return data
@@ -836,7 +836,7 @@ while True:
 		time.sleep(0.3)
 		#print "end of loop", loopCount
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 		

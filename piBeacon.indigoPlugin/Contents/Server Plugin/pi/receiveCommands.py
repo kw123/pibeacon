@@ -31,7 +31,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 		try:
 			commands = json.loads(data.strip("\n"))
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.toLog(-1,"bad command: json failed  "+unicode(buffer))
 				return
 
@@ -82,7 +82,7 @@ def execGeneral(next):
 			return True
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return False
 
 def getcurentCMDS():
@@ -102,7 +102,7 @@ def getcurentCMDS():
 					found = False
 					for dev in output:
 						for devid in output[dev]:
-							toLog(0,unicode(dev)+" "+ unicode(devid)+" "+unicode(output[dev][devid]), doPrint = True )
+							U.toLog(0,unicode(dev)+" "+ unicode(devid)+" "+unicode(output[dev][devid]), doPrint = True )
 							for nn in range(len(output[dev][devid])):
 								if "gpio" in output[dev][devid][nn]:
 									if str(output[dev][devid][nn]["gpio"]) == str(pin): 
@@ -117,7 +117,7 @@ def getcurentCMDS():
 				try:
 					next = execcommands[pin]
 				except	Exception, e:
-					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					continue
 				cmdJ = json.dumps(next)
 				cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
@@ -129,7 +129,7 @@ def getcurentCMDS():
 				f.write(json.dumps(keep))
 				f.close()
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				 
 def readParams():
 	global	output, useLocalTime, myPiNumber, inp
@@ -145,7 +145,7 @@ def readParams():
 		if u"output"			in inp:	 output=				inp["output"]
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		 
 	try:
 		if os.path.isfile(G.homeDir+"temp/networkOFF"):
@@ -196,8 +196,8 @@ if __name__ == "__main__":
 
 	except	Exception, e:
 		####  trying to kill the process thats blocking the port# 
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-		U.toLog(-1, "getting  socket does not work, trying to reset "+ str(PORT), doPrint=True )
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, "getting  socket does not work, trying to reset {}".format(str(PORT)), doPrint=True )
 		ret = subprocess.Popen("sudo ss -apn | grep :"+str(PORT),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines= ret.split("\n")
 		for line in lines:

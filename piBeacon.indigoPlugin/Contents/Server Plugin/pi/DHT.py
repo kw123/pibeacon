@@ -50,7 +50,7 @@ def getDATAdht(DHTpin,Type):
 			return ("%.2f"%float(t)).strip(),("%3d"%float(h)).strip()
 			#else: return "" ,""  
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.toLog(-1, u" pin: "+ str(DHTpin)+" return	 value: t="+ unicode(t)+"; h=" + unicode(h)	 )
 		return "",""
 
@@ -78,7 +78,7 @@ def getDHT(sensor,data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if sensor in data and data[sensor]== {}: del data[sensor]
 	return data
@@ -98,7 +98,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 			data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return data 
 
 
@@ -213,8 +213,8 @@ G.tStart			= tt
 lastregularCycle	= tt
 lastRead			= tt
 regularCycle		= True
-lastData={}
-
+lastData			= {}
+xxx 				= -1
 while True:
 	try:
 		tt = time.time()
@@ -246,10 +246,10 @@ while True:
 							changed= 5
 							break
 						try:
-							U.toLog(-1,unicode(dd)+"  "+unicode(lastData[sens][dd])+"  "+unicode(data[sens][dd]), doPrint=True )
+							U.toLog(1,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]), doPrint=True )
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
-								changed= xxx
+								changed = xxx
 								break
 						except	Exception, e:
 							#print e
@@ -265,7 +265,7 @@ while True:
 				#U.toLog(2, u"sending url: "+unicode(data))
 				U.sendURL({"sensors":data})
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 			time.sleep(0.05)
 
 		quick = U.checkNowFile(G.program)				 
@@ -290,6 +290,6 @@ while True:
 				lastRead = tt
 				U.checkIfAliveNeedsToBeSend()
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 		time.sleep(5.)
 sys.exit(0)

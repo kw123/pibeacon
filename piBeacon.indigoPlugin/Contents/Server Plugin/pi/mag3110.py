@@ -53,7 +53,7 @@ class THESENSORCLASS():
 				self.calibrations= U.loadCalibration(self.calibrationFile)
 				U.magCalibrate(self, force = False,calibTime=5)
 		except Exception ,e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return
 
 
@@ -65,7 +65,7 @@ class THESENSORCLASS():
 			byte = self.bus.read_byte_data(self.address, 1)
 			U.toLog(1,'Found compass at {0}'.format(self.address))
 		except Exception ,e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return False
 
 		#warm up the compass
@@ -76,7 +76,7 @@ class THESENSORCLASS():
 		try:
 			self.bus.write_byte_data(self.address, register, data)
 		except Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return False
 
 		# System operation
@@ -89,7 +89,7 @@ class THESENSORCLASS():
 		try:
 			self.bus.write_byte_data(self.address, register, data)
 		except Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return False
 		return True
 
@@ -110,7 +110,7 @@ class THESENSORCLASS():
 			else:			temp += self.offsetTemp
 
 		except Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return [0,0,0,0],-1000
 
 		return [x,y,z],temp
@@ -160,7 +160,7 @@ def readParams():
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #################################
 def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declination, magResolution,enableCalibration):
@@ -174,7 +174,7 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 		else:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination, offsetTemp =offsetTemp)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -199,7 +199,7 @@ def getValues(devId):
 			U.toLog(2, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
@@ -278,6 +278,6 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

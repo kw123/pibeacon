@@ -66,7 +66,7 @@ class mhz_class:
 			self.parse(self.receive())
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
 
 #################################		 
@@ -78,7 +78,7 @@ class mhz_class:
 				self.send(self.amplification[str(r)])
 				return
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #################################		 
 	def calibrate(self):
@@ -87,7 +87,7 @@ class mhz_class:
 			self.parse(self.receive())
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
 
 
@@ -115,7 +115,7 @@ class mhz_class:
 		try: 
 			ll = len(response)
 		except	Exception, e:
-			print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+			print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 			return 
 		if ll != 9: return
 		for i in range (0, 9):
@@ -204,7 +204,8 @@ def readParams():
 				if "amplification" in sensors[sensor][devId]:
 					old = sensors[sensor][devId]["amplification"]
 			except:
-				amplification = 5000	
+				amplification = 5000
+				old = -1
 			if	amplification != old:
 				amplification  = old 
 				restart = True
@@ -266,7 +267,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -292,7 +293,7 @@ def startSensor(devId,calibrationPin):
 		calibrateSensor(devId)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		mhz19sensor[devId] =""
 	return
 
@@ -308,7 +309,7 @@ def restartSensor():
 		GPIO.output(calibrationPin, True)
 		time.sleep(0.1)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	time.sleep(.1)
 
 
@@ -319,7 +320,8 @@ def calibrateSensor(devId):
 	global CO2normal, CO2offset,sensitivity	  
 	
 	#print "calibrating"
-	ret ="" 
+	ret = ""
+	co2 = ""
 	try: 
 		CO2offset[devId] = 0  
 		mhz19sensor[devId].measure()
@@ -328,7 +330,7 @@ def calibrateSensor(devId):
 		#print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
 	except	Exception, e:
 		print "co2", co2
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	time.sleep(.1)
 
 
@@ -337,9 +339,9 @@ def getValues(devId,nMeasurements=5):
 	global sensor, sensors,	 mhz19sensor, badSensor
 	global startTime, CO2offset, CO2normal, sensitivity
 
+	ret = "badSensor"
 	try:
-		ret ="badSensor"
-		if mhz19sensor[devId] =="": 
+		if mhz19sensor[devId] =="":
 			badSensor +=1
 			return "badSensor"
 		nnn		 = max(2,nMeasurements)
@@ -384,7 +386,7 @@ def getValues(devId,nMeasurements=5):
 		U.toLog(1, unicode(ret)) 
 		badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
  
@@ -529,7 +531,7 @@ while True:
 						try:
 							current = float(values[xx])
 							delta	= abs(current-lastValues[devId][xx])/ max (0.5,(current+lastValues[devId][xx])/2.)
-							deltaN	= max(deltaN,delta) 
+							deltaN	= max(deltaN, delta)
 							lastValues[devId][xx] = current
 						except: pass
 					#print "delta %.4f" % deltaN, deltaX[devId]
@@ -576,7 +578,7 @@ while True:
 			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

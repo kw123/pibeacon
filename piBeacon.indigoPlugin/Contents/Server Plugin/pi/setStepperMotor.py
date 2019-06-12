@@ -10,7 +10,7 @@ import sys
 import smbus
 import json,  os, time, datetime
 import copy
-import	RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import threading
 import Queue
 

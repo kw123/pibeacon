@@ -186,7 +186,7 @@ def startBlueTooth(pi):
 		hci_le_set_scan_parameters(sock)
 		hci_enable_le_scan(sock)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 		if unicode(e).find("Bad file descriptor") >-1:
 			f = open(G.homeDir+"temp/rebootNeeded","w")
 			f.write("bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
@@ -256,7 +256,7 @@ def readParams(init):
 		U.toLog(-1, "BLE sensors found: %s"%unicode(BLEsensorMACs), doPrint=True )
 
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return	True
 
@@ -324,7 +324,7 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 			U.sendURL({"sensors":data})
 
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		#print RawData				
 	""" from the sensor web site:
 		private void submitScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
@@ -459,7 +459,7 @@ try:
 				pkt = sock.recv(255)
 				errCount = 0
 			except	Exception, e:
-				U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+				U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 				errCount += 1
 				if errCount > 3:
 					break
@@ -517,7 +517,7 @@ try:
 
 
 				except	Exception, e:
-					U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True,doPrint=True)
+					U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True,doPrint=True)
 					U.toLog(-1, " BLEsensor "+"bad data", doPrint=True) 
 					continue# skip if bad data
 
@@ -525,7 +525,7 @@ try:
 		#print "reason",datetime.datetime.now(), reason
 		U.echoLastAlive(G.program)
 except	Exception, e:
-	U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+	U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 	U.toLog(-1, "  exiting loop due to error\n")
 
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEcsensor end of "+G.program	 

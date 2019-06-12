@@ -448,7 +448,7 @@ class APDS9960():
 				if( not self.WriteDataByte( self.APDS9960_GCONF4,out) ): return False
 				return True
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return False
 
 		""" 
@@ -539,7 +539,7 @@ class APDS9960():
 					time.sleep(self.FIFO_PAUSE_TIME)
 					return motion, nearFar,UPdown,LEFTright
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return motion, nearFar,UPdown,LEFTright
 			
 
@@ -753,7 +753,7 @@ class APDS9960():
 
 				U.toLog(1,	"motion:"+ motion +";  nearFAR:"+nearFAR)  
 			except	Exception, e:
-					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					U.toLog(-1, "leftD:"+ unicode(leftD))
 			return motion ,nearFAR, udDel, lrDel	   
 
@@ -1657,7 +1657,7 @@ class APDS9960():
 				#print	u"WriteByte"
 				self.BUS.write_quick(self.address) 
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return False
 			return True
 		
@@ -1675,7 +1675,7 @@ class APDS9960():
 				self.BUS.write_byte_data(self.address,reg, val)
 				return True
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return False	   
 		
 
@@ -1695,7 +1695,7 @@ class APDS9960():
 					self.BUS.write_block_data(self.address,val[i])
 				return True
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return False	   
 
 		""""
@@ -1709,7 +1709,7 @@ class APDS9960():
 			try:
 				val = self.BUS.read_byte_data(self.address,reg)
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return False, 0
 			#print	u"ReadDataByte return",hex(reg), hex(val)
 			return True, val
@@ -1734,7 +1734,7 @@ class APDS9960():
 				#print "ReadDataBlock", i+1, val 
 				return lenOUT, val
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return -1, []
 
 
@@ -1749,7 +1749,7 @@ class APDS9960():
 				#print "ReadDataBlock",ret
 				return lenOUT, ret
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return -1, []
 
 
@@ -1777,7 +1777,7 @@ class APDS9960():
 				#print "ReadDataBlock", lenOut, val2
 				return lenOut, val2
 			except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				return -1, []
 
 
@@ -1870,7 +1870,7 @@ def getinput(devid):
 		
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	sensorDev.clearGestureFIFO()
 	return data
 
@@ -2022,7 +2022,7 @@ def readParams():
 								print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+	" GPIO interrupt pin setup"
 								interruptGPIOAlreadySetup = interruptGPIO
 					except Exception, e:
-						U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					
 
 		if sensorUp == -1:
@@ -2033,7 +2033,7 @@ def readParams():
 
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
@@ -2168,6 +2168,6 @@ while True:
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

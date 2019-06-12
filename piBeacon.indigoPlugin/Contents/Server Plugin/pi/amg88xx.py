@@ -171,7 +171,7 @@ class AMG88xx_class(object):
 			self._fpsc.FPS = AMG88xx_FPS_10
 			self.bus.write_byte_data(self.i2c_addr,AMG88xx_FPSC, self._fpsc.get())
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 	def readU16(self, reg, little_endian=True):
@@ -341,7 +341,7 @@ class AMG88xx_class(object):
 
 			return buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 
 		
@@ -464,7 +464,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -485,7 +485,7 @@ def startSensor(devId,i2cAddress):
 		amg88xxsensor[devId]  =	 AMG88xx_class(address=i2cAdd)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		amg88xxsensor[devId] =""
 	time.sleep(.1)
 
@@ -499,11 +499,11 @@ def getValues(devId):
 	global oldPixels
 	global startTime
 	global lastMeasurement
-	global uniformityOLD,  movementOLD, horizontal1OLD, horizontal2OLD, vertical1OLD, vertical2OLD 
+	global uniformityOLD,  movementOLD, horizontal1OLD, horizontal2OLD, vertical1OLD, vertical2OLD
 
+	ret = ""
 	try:
-		ret =""
-		if amg88xxsensor[devId] =="": 
+		if amg88xxsensor[devId] =="":
 			badSensor +=1
 			return "badSensor"
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
@@ -526,7 +526,7 @@ def getValues(devId):
 		U.toLog(2, unicode(ret)) 
 		badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	U.muxTCA9548Areset()
@@ -668,7 +668,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

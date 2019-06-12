@@ -115,8 +115,8 @@ def readParams():
 		return changed
 
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
 		return 3
 
@@ -304,8 +304,8 @@ def startNEOPIXEL(setClock = ""):
 		setNEOinput(out)
 
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 	return 
@@ -384,7 +384,7 @@ def setupGPIOforTimeset():
 		GPIO.setup(gpiopinSET["down"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 		GPIO.add_event_detect(gpiopinSET["down"], GPIO.FALLING,		callback=downPressed, bouncetime=500)  
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return
 
@@ -684,12 +684,12 @@ def setTimeZone(upDown):
 	startNEOPIXEL()
 	return
 #################################
-def make(tz):
+def makeTZ(tz):
 	global inp, clockDict, DEVID, currTZ
 	clockDict["timeZone"] = str(currTZ)+" "+tz
 	inp["output"]["neopixelClock"][DEVID][0]["timeZone"] = str(currTZ)+" "+tz
 	#print "sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime"
-	G.writeTZ(  cTZ="tz" )
+	U.writeTZ(  cTZ="tz" )
 
 def writeTZ(tz ):
 	os.system("sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime")
@@ -704,8 +704,8 @@ def setExtraLEDoff():
 			inp["output"]["neopixelClock"][DEVID][0]["extraLED"]		= ""
 			saveParameters()
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 		print "DEVID=", DEVID,"<<"
@@ -762,8 +762,8 @@ def setLIGHT(upDown):
 		startNEOPIXEL()
 		return
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 
@@ -813,8 +813,8 @@ def getCurrentPatterns():
 			elif clockDict["marks"]["HH"]["marks"] == [0]:				marksONoff = 4
 			else:														marksONoff = 3
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 
 #################################
@@ -873,8 +873,8 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 		if restart:
 			startNEOPIXEL()
 	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict", clockDict
 		print "inp", inp
 		print "DEVID", DEVID
@@ -1028,7 +1028,7 @@ def setLightfromSensor():
 		U.toLog(1, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
 ##20181122-02:17:22 setting  lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, clockLightSet, LEDintensityFactor:6.0  50.0 daymedium  12000.0 offoff  offoff
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 
@@ -1332,7 +1332,7 @@ while True:
 		#print "setC",GPIO.input(gpiopinSET["setC"])
 			
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10.)
 		if unicode(e).find("string indices must be integers") >-1:
 			U.toLog(-1,"clockDict: "+unicode(clockDict)+"<<" )

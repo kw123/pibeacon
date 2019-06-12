@@ -167,9 +167,9 @@ def startBlueTooth(pi):
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		ret = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.toLog(-1,"BLE start returned :  "+unicode(ret))
+		U.toLog(-1,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]), doPrint=True )
 	except Exception, e: 
-		U.toLog(-1,u"exit at restart BLE stack error  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True, doPrint =True)
+		U.toLog(-1,u"exit at restart BLE stack error  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), permanentLog=True, doPrint =True)
 		time.sleep(10)
 		f = open(G.homeDir+"temp/restartNeeded","w")
 		f.write("bluetooth_startup.ERROR:"+unicode(e))
@@ -202,7 +202,7 @@ def startBlueTooth(pi):
 		hci_le_set_scan_parameters(sock)
 		hci_enable_le_scan(sock)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 		if unicode(e).find("Bad file descriptor") >-1:
 			f = open(G.homeDir+"temp/rebootNeeded","w")
 			f.write("bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
@@ -229,7 +229,9 @@ def toReject(text):
 		f.close()
 	except	Exception, e:
 		if unicode(e).find("Read-only file system:") >-1:
-			os.system("sudo reboot")
+			f = open(G.homeDir+"temp/rebootNeeded","w")
+			f.write("Read-only file system")
+			f.close()
 
 #################################
 def readbeacon_ExistingHistory():
@@ -354,7 +356,7 @@ def readParams(init):
 					##print BLEsensorMACs
 
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -445,7 +447,7 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 					data.append([str(beaconMAC),beacon_ExistingHistory[beaconMAC]["reason"],uuid,aveSignal,avePower,beaconsNew[beaconMAC]["count"],beaconsNew[beaconMAC]["bLevel"],beaconsNew[beaconMAC]["pkLen"]])
 					beacon_ExistingHistory[beaconMAC]["rssi"]=beaconsNew[beaconMAC]["rssi"]/max(beaconsNew[beaconMAC]["count"],1.) # average last rssi
 			except	Exception, e:
-				U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.toLog(-1, " error composing msg \n"+unicode(beaconsNew[beaconMAC]))
 
 		secsCollected=int(time.time()-timeAtLoopStart)
@@ -454,7 +456,7 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 		data ={"msgs":data,"pi":str(G.myPiNumber),"mac":myBLEmac,"secsCol":secsCollected,"reason":reason}
 		U.sendURL(data)
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -506,7 +508,7 @@ def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
 		beacon_ExistingHistory[beaconMAC]["reason"]= max(1,beacon_ExistingHistory[beaconMAC]["reason"])
 		beacon_ExistingHistory[beaconMAC]["timeSt"]= t
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return reason
 
 
@@ -522,7 +524,7 @@ def checkIfIphone(uuid,beaconMAC):
 			return True,  macFound
 
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return False, beaconMAC
 
 #################################
@@ -540,7 +542,7 @@ def findUUIDcompare(uuid,UUIDtoIphone,UUIDtoIphoneReverse):
 
 		return ""
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return ""
 		
 #################################
@@ -555,7 +557,7 @@ def setUUIDcompare(uuid, constantUUIDmajMIN,lenOfUUID):
 		elif constantUUIDmajMIN	 == "uuid--":		UUid = UUIDx[0]
 		return True, UUid
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return False, uuid
 
 
@@ -601,7 +603,7 @@ def checkIfFastDown(beaconsNew,reason):
 				"pkLen":beacon_ExistingHistory[beacon]["pkLen"],
 				"count":1}# [uid-major-minor,txPower,signal strength, # of measuremnts
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 				
 	return reason, beaconsNew
@@ -613,7 +615,7 @@ def checkIfFastDownMinSignal(beaconMAC,rssi,fastDown):
 			if "fastDownMinSignal" in fastDown[beaconMAC]:
 				if fastDown[beaconMAC]["fastDownMinSignal"] > rssi: return True
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return False
 		
 #################################
@@ -662,13 +664,13 @@ def checkIfBLErestart():
 
 
 #################################
-def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
+def doSensors(pkt, UUID, Maj, Min, mac, rx, tx):
 	global BLEsensorMACs
 	try:
 		if time.time() - BLEsensorMACs[mac]["lastUpdate"]  < BLEsensorMACs[mac]["updateIndigoTiming"]: 
 			#print "rejecting ", time.time() - BLEsensorMACs[mac]["lastUpdate"] ,  BLEsensorMACs[mac]["updateIndigoTiming"]
 			return 
-		#print "accepting ", time.time() - BLEsensorMACs[mac]["lastUpdate"] ,  BLEsensorMACs[mac]["updateIndigoTiming"]
+		#print "accepting ", time.time() - BLEsensorMACs[mac]["lastUpdate"],  BLEsensorMACs[mac]["updateIndigoTiming"]
 		BLEsensorMACs[mac]["lastUpdate"] = time.time()
 		
 		RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
@@ -686,7 +688,7 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 		data[sensor][devId] = {"temp":temp, "type":BLEsensorMACs[mac]["type"],"mac":mac,"rssi":float(rx),"txPower":float(tx),"UUID":UUID}
 		composeMSGSensor(data)
 	except	Exception, e:
-		U.toLog(-1,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		#print RawData				
 	""" from the sensor web site:
 		private void submitScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
@@ -988,7 +990,7 @@ try:
 							bLevel		= bl
 							pkLen		= nBytesThisMSG
 						except	Exception, e:
-							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 							U.toLog(-1, "bad data >> "+unicode(beaconMSG)+"  <<beaconMSG", doPrint=True)
 							continue# skip if bad data
  
@@ -1023,7 +1025,7 @@ try:
 						####if beaconMAC =="0C:F3:EE:00:66:15": print  beaconsNew
 
 				except	Exception, e:
-					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping",permanentLog=True, doPrint=True)
+					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping",permanentLog=True, doPrint=True)
 					try:
 						print "	 MAC:  ", mac
 						print "	 UUID: ", UUID
@@ -1065,7 +1067,7 @@ try:
 			restartCount = 0
 
 except	Exception, e:
-	U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+	U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 	U.toLog(-1, "  exiting loop due to error\n restarting "+G.program)
 	time.sleep(20)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py &")

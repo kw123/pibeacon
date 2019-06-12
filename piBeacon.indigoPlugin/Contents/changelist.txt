@@ -1,3 +1,16 @@
+Added features / changes in v7.105.282 @ 2019-06-12
+===================================================
+
+1. added option to select wlan/ eth on rpasberry 
+    switch wlan/eth : on / off / on if other off/ do not change
+    useIP# use / do not use / use if other off/
+       this is the IP # send to the plugin to ID the device
+    the default is 
+      eth : do not change, useIP#
+      wlan: on if eth off, useIP if eth off
+== this was added to cover: wifi is used for comm to indigo and eth for another subnet
+
+
 Added features / changes in v7.105.280 @ 2019-05-08
 ===================================================
 

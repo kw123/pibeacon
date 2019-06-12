@@ -49,7 +49,9 @@ class thisSensorClass:
 		nGoodMeasurements	= 0
 		acumValues			= [ 0 for ii in range(12)]
 		receivedCharacters	= ""
-		self.debugPrint = G.debug
+		self.debugPrint 	= G.debug
+		sleepTime 			= 0
+
 		try:
 			for jj in range(3): # do 3 comple reads
 			
@@ -142,7 +144,7 @@ class thisSensorClass:
 				print "---------------------------------------"
 			return acumValues
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		U.toLog(-1, " bad read, ..	receivedCharacters"+ str(len(receivedCharacters))+":"+str(":".join("{:02x}".format(ord(c)) for c in receivedCharacters)), doPrint=True)
 		return "badSensor"
 
@@ -250,7 +252,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		U.toLog(-1,str(sensors[sensor]) )
 		
 
@@ -268,7 +270,7 @@ def startSensor(devId):
 		thisSensor[devId]  = thisSensorClass(serialPort = sP)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		thisSensor[devId] =""
 	return
 
@@ -301,7 +303,7 @@ def getValues(devId):
 			badSensor = 0
 			return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	badSensor+=1
 	if badSensor >3: return "badSensor"
 	return ""
@@ -384,7 +386,7 @@ lastSend			= 0
 lastDisplay			= 0
 startTime			= time.time()
 G.lastAliveSend		= time.time() -1000
-
+data				= ""
 
 sensorWasBad = False
 while True:
@@ -456,7 +458,7 @@ while True:
 				time.sleep(5.)
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 		

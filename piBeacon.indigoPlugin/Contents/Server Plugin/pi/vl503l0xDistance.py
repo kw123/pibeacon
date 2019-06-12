@@ -156,7 +156,7 @@ def readParams():
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def startSensor(mode):
@@ -179,7 +179,7 @@ def startSensor(mode):
                 exit()
         U.toLog(-1, "==== ranging started ok ====")
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 #################################
@@ -319,7 +319,7 @@ def getDistance():
 
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             U.toLog(-1, u"distance>>" + unicode(distance)+"<<")
     return ""        
 
@@ -470,6 +470,6 @@ while True:
             time.sleep(loopSleep)
         #print "end of loop", loopCount
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

@@ -60,7 +60,7 @@ class LCD1602():
 			self.clear()			# Clear Screen
 			self.openlight()		# Enable the backlight
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		return 
 			
 
@@ -90,7 +90,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 
 	def send_data(self,data):
 		try:
@@ -110,7 +110,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 
 
 	def clear(self):
@@ -321,7 +321,7 @@ class SSD1351:
 			#self.Clear() # Blank the screen.
 			return
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.toLog(-1, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
@@ -537,7 +537,7 @@ class st7735:
 			#self.Clear() # Blank the screen.
 			return
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.toLog(-1, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
@@ -961,7 +961,7 @@ def analogClockInit(intensity, intensityDevice, inParms={}):
 			## show first pic
 			analogClockShow()
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		
 		return 
 		
@@ -1017,7 +1017,7 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 			 
 
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 
@@ -1056,7 +1056,7 @@ def analogClockdrNumbers(angle,number,hand):
 			
 			draw.text(pos, unicode(number), font=fontx[fontF], fill=(int(255.*intensity),int(255.*intensity),int(255.*intensity)))
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
@@ -1139,7 +1139,7 @@ def analogClockdrTheLine(angle,hand,ss=0):
 
 
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -1148,7 +1148,7 @@ def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 		try:
 			draw.ellipse( (x0 - widthX , y0 - widthY , x0 + widthX , y0 + widthY ), fill=fill, outline=outline)
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 ################### ###################	  analogClock  ############################################### END
@@ -1175,7 +1175,7 @@ def digitalClockInit(intensity, intensityDevice, inParms={}):
 					digitalClockParams[pp] = copy.copy(inParms[pp])
 			digitalClockShow()
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 		
 	
@@ -1195,7 +1195,7 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 			 
 
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 
@@ -1372,7 +1372,7 @@ def updateDevice(outputDev,matrix):
 		fontDir= G.homeDir+"fonts/"
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			if unicode(e).find("fontDir") > 0:
 				U.toLog(-1," display device not properly setup.. display device interface (eg SPI ...) not properly setup..", doPrint=True)
 			exit()
@@ -1410,7 +1410,7 @@ def getScrollPages(data):
 			except: pass
 		return scrollPages, scrollDelay, scrollDelayBetweenPages, scrollxy
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def setScrollPages(scrollxy,scrollPages):
 	global maxPages
@@ -1464,7 +1464,7 @@ def mkfont(cmd):
 				elif  font.lower().find(".ttf")>-1:
 					fontx[fontF] = ImageFont.truetype(fontDir+font, int(fontw))
 			except	Exception, e:
-					U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		else:
 			fontF = font+fontw
 	return fontF
@@ -1590,7 +1590,7 @@ while True:
 				#print json.dumps(data,sort_keys=True, indent=2)
 			except	Exception, e:
 				U.toLog(-1,"bad input "+ unicode(item) )
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
@@ -2254,7 +2254,7 @@ while True:
 
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
 					except	Exception, e:
-							U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							U.toLog(-1, unicode(cmd))
 
 				newRead = False
@@ -2288,7 +2288,7 @@ while True:
 		loop +=1 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		items=[]
 
 U.toLog(-1, " exiting display", doPrint=True) 	

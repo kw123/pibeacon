@@ -135,7 +135,7 @@ class INA219:
 			else:
 				return float(  ((result[0] << 8) | (result[1]) ) >>3) *self.ina219_busMultiplier 
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return ""
 		
 	def getShuntVoltage_mV(self):
@@ -149,7 +149,7 @@ class INA219:
 			else:
 				return (float((result[0] << 8) | (result[1])) * self.ina219_ShuntVoltageMultiplier)
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return ""
 
 	def getCurrent_mA(self):
@@ -163,7 +163,7 @@ class INA219:
 			else:
 				return float((result[0] << 8) | (result[1])) *self.ina219_currentMultiplier_mA
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return ""
 
 	def getPower_mW(self):
@@ -177,7 +177,7 @@ class INA219:
 			else:
 				return float((result[0] << 8) | (result[1]) )* self.ina219_powerMutiplier_mW
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return ""
  # ===========================================================================
 # read params
@@ -279,7 +279,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -289,6 +289,7 @@ def getValues(devId):
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+	Current = 0
 	for ii in range(2):
 		try:
 			ShuntVoltage = INAsensor[devId].getShuntVoltage_V()
@@ -302,7 +303,7 @@ def getValues(devId):
 			return data
 		except	Exception, e:
 			if badSensor >2 and badSensor < 5: 
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.toLog(-1, u"Current>>" + unicode(Current)+"<<")
 			badSensor+=1
 	if badSensor >3: 
@@ -419,6 +420,6 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

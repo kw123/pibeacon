@@ -21,7 +21,7 @@ import	piBeaconGlobals as G
 G.program = "INPUTgpio"
 
 
-
+devId = ""
 def readParams():
 		global sList,sensors
 		global INPgpioType,INPUTcount,INPUTlastvalue
@@ -57,7 +57,6 @@ def readParams():
 					if "INPUTgpio" in sensor.split("-")[0]:
 						if sensor not in oldSensors:
 							restart=True
-							U.toLog(-1, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	)
 							break
 						for devId in sensors[sensor]:
 							if devId  not in oldSensors[sensor]:
@@ -146,7 +145,7 @@ def getINPUTgpio(all,sens):
 					INPUTlastvalue[gpioPIN]=dd
 					##print d,new
 		except	Exception, e:
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		return d,new
 
 
@@ -180,7 +179,7 @@ def startGPIO():
 						GPIO.setup(gpioPIN, GPIO.IN)
 		return
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		U.toLog(-1,"startGPIO: "+ unicode(sensors),doPrint=True)
 	return
 
@@ -302,7 +301,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		time.sleep(5.)
 
 

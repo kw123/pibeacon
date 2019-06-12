@@ -342,7 +342,7 @@ def getTouched16Serial(np):
 		return keys
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint =True)
 
 
 def getTouched16i2c(np):
@@ -467,12 +467,13 @@ def readParams():
 
 def getINPUTcapacitor(sensors,data,devType, NPads):
 	global INPUTlastvalue, INPUTcount
+	new = False
 	try:
-		new=False
-		### get ALLL xx pad data data for sensor 
+		### get ALLL xx pad data data for sensor
 		if	 devType =="16Serial":	channelData = getTouched16Serial(NPads)
 		elif devType =="16i2c":		channelData = getTouched16i2c(NPads)
 		elif devType =="12i2c":		channelData = getTouched12i2c(NPads)
+		else: channelData  = {}
 		#print devType, INPUTsensors, data
 		#if sum( channelData ) > 0: print channelData
 		new		= False

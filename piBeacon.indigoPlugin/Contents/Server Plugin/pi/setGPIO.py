@@ -85,7 +85,7 @@ try:
 	if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 	else:						bits = 0
 except	Exception, e:
-	U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit(0)
 
 inverseGPIO = False
@@ -169,6 +169,6 @@ try:
 
 
 except	Exception, e:
-	U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 exit(0)

@@ -38,7 +38,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			data = json.loads(ddd)
 			f.close()
 		except	Exception, e:
-			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)+"   bad sensor data", data
+			print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+"   bad sensor data", data
 			return 
 		#print "webserverSTATUS", data
 		x('<!DOCTYPE html>')

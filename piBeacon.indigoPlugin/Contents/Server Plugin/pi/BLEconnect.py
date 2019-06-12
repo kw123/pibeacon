@@ -42,7 +42,7 @@ def readParams():
 		try:
 
 			U.getGlobalParams(inp)
-			if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIBLE"])
+			if "debugRPI"			in inp:	 G.debug=			 		   int(inp["debugRPI"]["debugRPIBLE"])
 			if "restartBLEifNoConnect"	in inp:	 restartBLEifNoConnect=		  (inp["restartBLEifNoConnect"])
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])
 
@@ -85,7 +85,7 @@ def readParams():
 			return True
 			
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
 		return False
 
 def tryToConnect(MAC,BLEtimeout,devId):
@@ -133,7 +133,7 @@ def tryToConnect(MAC,BLEtimeout,devId):
 			hci_sock.close()
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	U.toLog(2, MAC + "	"+unicode(ret))
 	#print	MAC + "	 "+unicode(ret)
 	return ret

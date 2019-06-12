@@ -151,7 +151,7 @@ class ccs811_class(object):
 			#default to read every second
 			self.setDriveMode(mode)
 		except	Exception, e:
-			U.toLog(-1, u" error in starting css sensor in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		
 
 
@@ -199,7 +199,7 @@ class ccs811_class(object):
 				else:
 					return 0
 		except	Exception, e:
-			U.toLog(-1, u" error in starting css sensor in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return	0		
 
 
@@ -281,26 +281,26 @@ class ccs811_class(object):
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
 		except	Exception, e:
-			U.toLog(-1, u"writeList	 in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"writeList	 in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def readList(self, command,	 length):
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
 		except	Exception, e:
-			U.toLog(-1, u"readList	in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"readList	in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return []
 
 	def readU8(self, reg):
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
 		except	Exception, e:
-			U.toLog(-1, u"readU8  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"readU8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 0
 	def write8(self, reg,value):
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
 		except	Exception, e:
-			U.toLog(-1, u"write8  in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"write8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -407,7 +407,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -440,7 +440,7 @@ def startSensor(devId,i2cAddress):
 		except: pass
 				
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		ccs811sensor[devId]	  =""
 	time.sleep(.1)
 
@@ -560,7 +560,7 @@ def getValues(devId):
 			lastVOC	  = VOC
 			lastTemp  = TEMP
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		ccs811sensor[devId].start()
@@ -711,7 +711,7 @@ while True:
 			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

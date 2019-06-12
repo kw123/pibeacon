@@ -27,7 +27,6 @@ G.debug = 0
 #H.yasuhiro,2017/1/17
 
 class mhz16_class:
-	type
 	ppm			= 0
 	 
 	IOCONTROL	= 0X0E << 3
@@ -74,7 +73,7 @@ class mhz16_class:
 			time.sleep(0.1)
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
  
 	def measure(self):
@@ -84,7 +83,7 @@ class mhz16_class:
 			self.parse(self.receive())
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
  
 	def parse(self, response):
@@ -150,7 +149,7 @@ class mhz16_class:
 				
 			return buf
 		except	Exception, e:
-			U.toLog(-1, u"receive in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"receive in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return []
 
 
@@ -279,7 +278,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -304,7 +303,7 @@ def startSensor(devId,i2cAddress):
 		mhz16sensor[devId].start()
 						
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		mhz16sensor[devId]	 =""
 	time.sleep(.1)
 
@@ -335,7 +334,7 @@ def calibrateSensor(devId):
 		 #print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
 	except	Exception, e:
 		print "ret =", ret
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	time.sleep(.1)
 
 
@@ -344,9 +343,9 @@ def getValues(devId,nMeasurements=5):
 	global sensor, sensors,	 mhz16sensor, badSensor
 	global startTime, CO2offset, CO2normal, sensitivity
 
+	ret = "badSensor"
 	try:
-		ret ="badSensor"
-		if mhz16sensor[devId] =="": 
+		if mhz16sensor[devId] =="":
 			badSensor +=1
 			return "badSensor"
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
@@ -391,7 +390,7 @@ def getValues(devId,nMeasurements=5):
 		U.toLog(1, unicode(ret)) 
 		badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		mhz16sensor[devId].start()
@@ -534,8 +533,8 @@ while True:
 					for xx in lastValues0:
 						try:
 							current = float(values[xx])
-							delta	= abs(current-lastValues[devId][xx])/ max (0.5,(current+lastValues[devId][xx])/2.)
-							deltaN	= max(deltaN,delta) 
+							delta	= abs(current-lastValues[devId][xx]) / max (0.5,(current+lastValues[devId][xx])/2.)
+							deltaN	= max(deltaN, delta)
 							lastValues[devId][xx] = current
 						except: pass
 					#print "delta %.4f" % deltaN, deltaX[devId]
@@ -582,7 +581,7 @@ while True:
 			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

@@ -735,7 +735,7 @@ while True:
 						value  = values[color]
 						#print value, lastValue[devId][color]
 						delta	= value-lastValue[devId][color]
-						delta  /=  max (0.5,(current+lastValues2[devId][color])/2.)
+						delta  /=  max (0.5,(value+lastValue[devId][color])/2.)
 						deltaN	= max(deltaN, abs(delta) )
 
 				if ( ( deltaN > deltaX[devId]							) or 

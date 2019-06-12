@@ -16,10 +16,10 @@ import piBeaconUtils as U
 
 
 if __name__ == "__main__":
-	G.program = "copyToTemp"
-	timeLastFile =0
-	myPID		= str(os.getpid())
-	U.killOldPgm(myPID,G.program+".py")
+	G.program 		= "copyToTemp"
+	timeLastFile	= 0
+	myPID			= str(os.getpid())
+	U.killOldPgm(myPID, G.program+".py")
 
 	os.system("chmod a+w -R "+G.homeDir+"*")
 	os.system("chown -R pi:pi "+G.homeDir+"*")
@@ -30,18 +30,18 @@ if __name__ == "__main__":
 		timeLastFile = 0
 
 	while True:	   
-		doCopy= 0
+		doCopy = 0
 
 		if os.path.isfile(G.homeDir+"temp/touchFile"):
 			if timeLastFile != os.path.getmtime(G.homeDir+"temp/touchFile"):
-				doCopy= 1
+				doCopy = 1
 				
 		elif os.path.isdir(G.homeDir+"temp"):
-				doCopy= 2
+				doCopy = 2
 				os.system("touch "+G.homeDir+"temp/touchFile")
 
 		if not os.path.isfile(G.homeDir+"temp/parameters"):
-				doCopy= 3
+				doCopy = 3
 				
 		###print G.program, doCopy 
 		if doCopy >0:

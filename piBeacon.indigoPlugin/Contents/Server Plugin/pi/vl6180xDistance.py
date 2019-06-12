@@ -130,7 +130,7 @@ def readParams():
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -445,7 +445,7 @@ class vl6180x:
             self.set_register(self.__VL6180X_SYSTEM_INTERRUPT_CLEAR, 0x07)
             return distance
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         return -1
 
     def get_ambient_light(self, lastGain):
@@ -541,7 +541,7 @@ class vl6180x:
             #print " ret:",als_calculated,als_raw, lastGain
             return als_calculated,  lastGain
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         return 0,0
         
     def get_register(self, register_address):
@@ -605,7 +605,7 @@ def getDistance():
 
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             U.toLog(-1, u"distance>>" + unicode(distance)+"<<")
     return ""        
 
@@ -626,7 +626,7 @@ def getLight():
 
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             U.toLog(-1, u"lux>>" + unicode(lux)+"<<")
     return ""        
 
@@ -766,6 +766,6 @@ while True:
             time.sleep(loopSleep)
         
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

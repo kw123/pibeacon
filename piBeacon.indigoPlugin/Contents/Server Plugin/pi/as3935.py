@@ -305,6 +305,7 @@ def readParams():
 				if "minStrikes" in sensors[sensor][devId]:
 					minStrikes = int(sensors[sensor][devId]["minStrikes"])
 			except:
+				old = 0
 				minStrikes = 1	  
 			if old != minStrikes: restart = True
 
@@ -398,7 +399,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		U.toLog(-1,unicode(sensors[sensor]), doPrint=True ) 
 		
 
@@ -415,7 +416,7 @@ def startSensor(devId):
 	startTime =time.time()
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-	
+	data = ""
 	try:
 		as3935sensor[devId]	 =	RPi_AS3935(address=i2cAdd, minNoiseFloor=minNoiseFloor)
 		as3935sensor[devId].set_indoors( inside == 1)
@@ -428,7 +429,7 @@ def startSensor(devId):
 		else: badSensor = False
 						
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		data={"sensors":{sensor:{devId:{"eventType":"badsensor"}}}}
 		badSensor = True
 	if badSensor:
@@ -580,7 +581,7 @@ lastRead = time.time()
 
 try:
 	f=open(G.homeDir+"lightning.dat","r")
-	msg = json.reads(f.read())
+	msg = json.loads(f.read())
 	f.close()
 	if "lastTime"  in msg: lastTime	 = msg["lastTime"]
 	if "lastEvent" in msg: lastEvent = msg["lastEvent"]

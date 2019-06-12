@@ -7,6 +7,8 @@
 # then ref the variables as G.xxx
 # they will be valid across all imported modules if included.
 #
+import copy
+
 homeDir				= "/home/pi/pibeacon/"
 homeDir0			= "/home/pi/"
 #logDir				= "/run/user/1000/pibeacon/"
@@ -66,12 +68,14 @@ expectedIPnumberOfRPI =""
 wifiType			="normal"
 eth0Enabled			= False
 wifiEnabled			= False
-wifiOFF				= "ON"
+wifiEth				= {"eth0":{"on":"dontChange", "useIP":"use"}, "wlan0":{"on":"dontChange", "useIP":"use"}}
+wifiEthOld			= copy.copy(wifiEth)
 shutDownPinOutput	= -1
 enableMuxI2C		= -1
 enableMuxBus		= ""
 IndigoOrSocket		= "indigo"
 indigoInputPORT		= 0
+switchedToWifi 		= False
 
 BeaconUseHCINo		="-1"
 BLEconnectUseHCINo	="-1"

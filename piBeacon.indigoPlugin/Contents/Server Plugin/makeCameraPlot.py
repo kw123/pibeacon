@@ -36,13 +36,14 @@ def toLog(text):
 global logfileName, logLevel, printON
 
 tStart			  = time.time()
-indigoDir		  = sys.argv[0].split("makeCamera")[0]
+pluginDir		  = sys.argv[0].split("makeCamera")[0]
+indigoDir		  = pluginDir.split("Plugins/")[0]
 imageParams		  = json.loads(sys.argv[1])
 data			  = json.loads(sys.argv[2])
 
 imageOutfile	  = imageParams["fileName"] 
-logdir			  = imageOutfile.split("/")
-logfileName		  = "/".join(logdir[0:-1])+"/cameraImage.log"
+logdir			  = indigoDir+"Logs/com.karlwachs.piBeacon/"
+logfileName		  = logdir+"plugin.log"
 logLevel		  = imageParams["logLevel"] =="1"
 printON			  = False
 numberOfPixels	  = float(imageParams["numberOfDots"])
@@ -93,7 +94,7 @@ elif imageType == "dynamicWindow":
 		
 	vmid = (mm-ma) /2. +mm
 	norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-	toLog( "min:%3.1f;	max:%3.1f;	mid:%3.1f;	lower:%3.1f;  upper:%3.1f"%(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+	toLog( "min:%3.1f;  max:%3.1f;  mid:%3.1f; lower:%3.1f;   upper:%3.1f"%(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
 cur_axes = plt.gca()
@@ -125,7 +126,7 @@ except: pnGsize = 0
 toLog("time used %4.2f"%(time.time()-tStart)+ "	 plot saved")
 
 if compress:
-	cmd = "'"+indigoDir+"pngquant' --force --ext .xxx '"+ifname+"'"
+	cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+ifname+"'"
 	ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
 	try:	compSize = os.path.getsize((imageOutfile+".xxx").encode('utf8'))/1024.
 	except: compSize = 0

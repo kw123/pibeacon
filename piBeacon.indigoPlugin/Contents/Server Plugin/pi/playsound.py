@@ -29,7 +29,7 @@ def killOldPgm(myPID,pgmToKill):
                 toLog(-1, "killing "+pgmToKill)
                 os.system("kill -9 "+str(pid))
         except Exception, e:
-            toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def toLog(lvl,msg):
         global debug
@@ -61,7 +61,7 @@ try:
     toLog(1, cmdOut)
     os.system(cmdOut)
 except  Exception, e:
-    toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+    toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
         
 sys.exit(0)        

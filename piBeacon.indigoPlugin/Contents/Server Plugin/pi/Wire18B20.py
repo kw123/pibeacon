@@ -29,6 +29,7 @@ def get18B20(sensor, data):
     if sensor not in sensors:    return data 
     if len(sensors[sensor]) == 0:return data 
 
+    foundId = -1
     try:
         data[sensor]={}
         try:
@@ -53,7 +54,7 @@ def get18B20(sensor, data):
                             ret[line] = ("%.2f"%(float(t1[1])/1000.)).strip()
             tempList= ret # {"28-800000035de5": "21.6", ...}  
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             U.toLog(-1, u"return  value: data="+ unicode(data))
             tempList = {} 
 
@@ -68,7 +69,7 @@ def get18B20(sensor, data):
             elif "serialNumber" in sensors[sensor][devId0]:
                 #print tempList
                 for serialNumber in tempList:
-                    foundId =""
+                    foundId = -1
                     for devId in sensors[sensor]:
                         #print "trying devId", devId ,sensors[sensor][devId]
                         if "serialNumber" in sensors[sensor][devId] and serialNumber == sensors[sensor][devId]["serialNumber"]:
@@ -83,20 +84,20 @@ def get18B20(sensor, data):
                             foundId = devId
                             break
                     
-                    if foundId =="" and addNewOneWireSensors =="1":
+                    if foundId == -1 and addNewOneWireSensors == "1":
                             if devId0 not in data[sensor]:         data[sensor][devId0]={}
                             if "temp" not in data[sensor][devId0]: data[sensor][devId0]["temp"] =[]
                             data[sensor][devId0]["temp"].append({serialNumber:tempList[serialNumber]}) # not registered in indigo yet, add it to the last devId
                             #print "2", devId0, data[sensor][devId0]
                 
                 
-                if devId in badSensors: del badSensors[devId]
+                if foundId in badSensors: del badSensors[devId]
                 time.sleep(0.1)
         else:
                 data= incrementBadSensor(devId0,sensor,data,text="badSensor, no info")
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
 
@@ -116,7 +117,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return data 
 
 
@@ -238,7 +239,8 @@ G.tStart            = tt
 lastregularCycle    = tt
 lastRead            = tt
 regularCycle        = True
-lastData={}
+lastData            = {}
+xxx                 = -1
 
 while True:
     try:
@@ -273,10 +275,9 @@ while True:
                             break
                         try:
                             #print dd, lastData[sens][dd], data[sens][dd]
-                            xxx = 0
                             if sens =="Wire18B20":
                                 nSens = len(data[sens][devid][devType])
-                                if nSes != len(lastData[sens][devid][devType]):
+                                if nSens != len(lastData[sens][devid][devType]):
                                     changed =7
                                     break
                                 for nnn in range(nSens):
@@ -303,7 +304,7 @@ while True:
                 #U.toLog(2, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
-                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+                U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -328,6 +329,6 @@ while True:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
         time.sleep(5.)
 sys.exit(0)

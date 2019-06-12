@@ -46,24 +46,24 @@ def startMCP3008(devId):
                         spi1.open(0,1)
                     #print spiAdd, spi0,spi1    
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"spi channel used: "+ unicode(spiAdd)+";    dev= "+unicode(dev))
+            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.toLog(-1, u"spi channel used: "+ unicode(spiAdd)+";    dev= "+unicode(devId))
 
 def getMCP3008(sensor, data):
     global sensorMCP3008, MCP3008Started
     global sensors
     global spi0,spi1
 
-    if "spiMCP3008" in sensors:
-        spiAdd = int(sensors["spiMCP3008"][devId]["spiAddress"])
-    if "spiMCP3008-1" in sensors:
-        spiAdd = int(sensors["spiMCP3008-1"][devId]["spiAddress"])
-
     data[sensor] ={}
-
+    spiAdd = 0
+    adc = 0
     try:
         if sensor.find("-1") ==-1:
             for devId in sensors[sensor]:
+                if "spiMCP3008" in sensors:
+                    spiAdd = int(sensors["spiMCP3008"][devId]["spiAddress"])
+                if "spiMCP3008-1" in sensors:
+                    spiAdd = int(sensors["spiMCP3008-1"][devId]["spiAddress"])
                 data[sensor][devId]={}
                 # read the analog pin
                 v=["","","","","","","",""]
@@ -71,7 +71,7 @@ def getMCP3008(sensor, data):
                 for pin in range(s,e):
                     if spiAdd == 0:
                         adc = spi0.xfer2([1,(8+pin)<<4,0])
-                    if spiAdd==1:
+                    else:
                         adc = spi1.xfer2([1,(8+pin)<<4,0])
                     v = int(1000*(((adc[1]&3) << 8) + adc[2])*3.3/1024.)
                     data[sensor][devId]["INPUT_"+str(pin)]  =v
@@ -79,6 +79,10 @@ def getMCP3008(sensor, data):
             if sensor in data and data[sensor]=={}: del data[sensor]
         else:
             for devId in sensors[sensor]:
+                if "spiMCP3008" in sensors:
+                    spiAdd = int(sensors["spiMCP3008"][devId]["spiAddress"])
+                if "spiMCP3008-1" in sensors:
+                    spiAdd = int(sensors["spiMCP3008-1"][devId]["spiAddress"])
                 data[sensor][devId]={}
                 if "input" in sensors[sensor][devId]:
                     pin= int(sensors[sensor][devId]["input"])
@@ -92,8 +96,8 @@ def getMCP3008(sensor, data):
                 data[sensor][devId]["INPUT_0"]  =v
                 if devId in badSensors: del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        data= incrementBadSensor(devId,sensor,data)
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        data= incrementBadSensor(sensor,data)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
 
@@ -113,7 +117,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return data 
 
 
@@ -255,7 +259,8 @@ G.tStart            = tt
 lastregularCycle    = tt
 lastRead            = tt
 regularCycle        = True
-lastData={}
+lastData            = {}
+xxx                 = -1
 
 while True:
     try:
@@ -265,8 +270,8 @@ while True:
         displayInfo={}
         
         if regularCycle:
-            if "spiMCP3008"     in sensors: data = getMCP3008("spiMCP3008",  data)
-            if "spiMCP3008-1"   in sensors: data = getMCP3008("spiMCP3008-1",data)
+            if "spiMCP3008"     in sensors: data = getMCP3008("spiMCP3008",   data)
+            if "spiMCP3008-1"   in sensors: data = getMCP3008("spiMCP3008-1", data)
 
         loopCount +=1
         
@@ -309,7 +314,7 @@ while True:
                 #U.toLog(2, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
-                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+                U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -334,6 +339,6 @@ while True:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
         time.sleep(5.)
 sys.exit(0)

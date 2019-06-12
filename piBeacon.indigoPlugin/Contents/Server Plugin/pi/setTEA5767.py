@@ -64,7 +64,7 @@ def readParams():
             U.toLog(-1, u"stopping FM radio, no device defined in parameters file")
             exit()
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     U.toLog(-1,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
     return
          
@@ -117,7 +117,7 @@ def readNew():
             os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
     
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     U.toLog(-1,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
    
 class tea5767:
@@ -469,7 +469,7 @@ while (True):
             U.echoLastAlive(G.program)
 
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     
     
 

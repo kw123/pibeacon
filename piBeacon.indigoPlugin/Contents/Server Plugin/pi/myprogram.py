@@ -47,7 +47,7 @@ def getMyprogram(sensor, data):
             else:
                 data= incrementBadSensor(devId,sensor,data)
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data
 
@@ -65,7 +65,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return data 
 
 
@@ -126,7 +126,7 @@ def checkIfAliveNeedsToBeSend():
         if time.time() - G.lastAliveSend> 330:  # do we have to send alive signal to plugin?
             U.sendURL(sendAlive=True )
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
     return
 
 
@@ -237,7 +237,7 @@ while True:
                 #U.toLog(2, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
-                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+                U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -262,6 +262,6 @@ while True:
                 lastRead = tt
                 checkIfAliveNeedsToBeSend()
     except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
         time.sleep(5.)
 sys.exit(0)

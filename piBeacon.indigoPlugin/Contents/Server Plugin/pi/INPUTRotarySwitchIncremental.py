@@ -233,7 +233,7 @@ def workQueue():
 				if threadDict["stopThread"]: return 
 			time.sleep(0.2)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 
@@ -306,7 +306,7 @@ def startGPIO(devId):
 
 		return
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		U.toLog(-1,"start "+ G.program+ "  "+ unicode(sensors), doPrint=True)
 	return
 
@@ -376,7 +376,7 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 			executePinChange(devIDUsed, pin, stateA, stateB, tt)
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 
 			return 
 
@@ -453,7 +453,7 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 			IP["pinALastValue"] = stateA
 			IP["pinBLastValue"] = stateB
 	except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return 
 
 
@@ -607,7 +607,7 @@ while True:
 
 		newData = False
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 		time.sleep(5.)
 
 stopProgram()

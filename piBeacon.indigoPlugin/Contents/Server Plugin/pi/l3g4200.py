@@ -42,7 +42,7 @@ class THESENSORCLASS:
 			self.L3G4200SetCalibration()
 
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 	def L3G4200SetCalibration(self):

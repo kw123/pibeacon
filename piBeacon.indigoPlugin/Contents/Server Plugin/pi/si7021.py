@@ -46,7 +46,7 @@ class si7021:
 			temp = ( (r1 * 256 + r2) * 175.72 / 65536.0) - 46.85 
 			return temp,hum
 		except	Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return "",""
  # ===========================================================================
 # read params
@@ -133,7 +133,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -142,6 +142,8 @@ def getValues(devId):
 	global sensor, sensors,	 SI7021sensor, badSensor
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+	temp = ""
+	hum = ""
 	try:
 		temp,hum	 = SI7021sensor[devId].getdata()
 		if temp =="" or hum =="" :
@@ -154,7 +156,7 @@ def getValues(devId):
 		return data
 	except	Exception, e:
 		if badSensor >2 and badSensor < 5: 
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.toLog(-1, u"temp>>" + unicode(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
@@ -271,6 +273,6 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

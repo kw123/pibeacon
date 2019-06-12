@@ -28,24 +28,24 @@ G.program = "master"
 def cleanupOldFiles():
 
 
-	os.system("rm -r "+G.homeDir+"logs					  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"iPhoneBLE.py			  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"rejects.*				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"logfile				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"logfile-1				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"call-log				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"alive					  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"master.log			  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"interface				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"logfile				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"beaconloop			  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"errlog				  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"getsensorvalues.py	  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"receiveGPIOcommands.py  >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"rennameMeTo_myoutput.py >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"renameMyTo_mysensors.py >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"INPUTRotata*            >/dev/null 2>&1")
-	os.system("rm	 "+G.homeDir+"INPUTRotateSwitchGrey.py >/dev/null 2>&1")
+	os.system("rm -r {}logs                     >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}iPhoneBLE.py             >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}rejects.*                >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}logfile                  >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}logfile-1                >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}call-log                 >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}alive                    >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}master.log               >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}interface                >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}logfile                  >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}beaconloop               >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}errlog                   >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}getsensorvalues.py       >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}receiveGPIOcommands.py   >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}rennameMeTo_myoutput.py  >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}renameMyTo_mysensors.py  >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}INPUTRotata*             >/dev/null 2>&1".format(G.homeDir))
+	os.system("rm	 {}INPUTRotateSwitchGrey.py >/dev/null 2>&1".format(G.homeDir))
 
 	restart=False
 	return restart
@@ -59,11 +59,11 @@ def checkIfGpioIsInstalled():
 		if ret[0].find("version:") ==-1:
 			os.system("rm -R /tmp/wiringPi")
 			installGPIO = "cd /tmp; git clone git://git.drogon.net/wiringPi; cd wiringPi; ./build ;	 rm -R /tmp/wiringPi"
-			U.toLog(-1,"installing gpio wiringPi .... "+ unicode(ret)+"\n with: "+installGPIO,doPrint=True)
+			U.toLog(-1,"installing gpio wiringPi .... {}\n with: {}".format(unicode(ret), installGPIO), doPrint=True)
 			ret = subprocess.Popen(installGPIO,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-			U.toLog(-1,"result of installing gpio wiringPi .... "+ unicode(ret),doPrint=True)
+			U.toLog(-1,"result of installing gpio wiringPi .... {}".format(unicode(ret)), doPrint=True)
 	except	Exception, e:
-		U.toLog(-1, u"checkIfGpioIsInstalled in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"checkIfGpioIsInstalled in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 
 
 
@@ -85,15 +85,22 @@ def readNewParams(force=False):
 		global configured
 		global startWebServerSTATUS, startWebServerINPUT
 		global fanGPIOPin, fanTempOnAtTempValue, fanTempName, fanTempDevId, fanEnable
+		global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 
 		BLEserialOLD= BLEserial
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		if inp == "": 
+			os.system("cp "+G.homeDir+"parameters  "+G.homeDir+"temp/parameters")
+			inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+
+
 		if not force:
 			if inp == "": return
 			if lastRead2 == lastRead: return
 			lastRead  = lastRead2
 			if inpRaw == oldRaw: return
+
 		lastRead   = lastRead2
 		oldRaw	   = inpRaw
 
@@ -102,10 +109,23 @@ def readNewParams(force=False):
 		rPiRestartCommand =""
 			
 		U.getGlobalParams(inp)
+
+		if wifiEthCheck != {} and wifiEthCheck != G.wifiEthOld:
+			U.restartMyself(reason="new wifi, eth defs, need to restart master", doPrint=True)
+		wifiEthCheck = copy.copy(G.wifiEthOld)
+
+		if BeaconUseHCINoOld != "" and BeaconUseHCINoOld != G.BeaconUseHCINo:
+			U.restartMyself(reason="new hci-Beacon defs, need to restart master", doPrint=True)
+		BeaconUseHCINoOld = copy.copy(G.BeaconUseHCINo)
+
+		if BLEconnectUseHCINoOld != "" and BLEconnectUseHCINoOld != G.BLEconnectUseHCINo:
+			U.restartMyself(reason="new hci-BLEconnect defs, need to restart master", doPrint=True)
+		BLEconnectUseHCINoOld = copy.copy(G.BLEconnectUseHCINo)
+
 		if "debugRPI"						in inp:	 G.debug=						int(inp["debugRPI"]["debugRPICALL"])
 		if u"BLEserial"						in inp:	 BLEserial =					   (inp["BLEserial"])
 		if u"enableRebootCheck"				in inp:	 enableRebootCheck=				   (inp["enableRebootCheck"])
-		if u"batteryMinPinActiveTimeForShutdown" 	in inp:	 batteryMinPinActiveTimeForShutdown= float(inp["batteryMinPinActiveTimeForShutdown"])
+		if u"batteryMinPinActiveTimeForShutdown" in inp: batteryMinPinActiveTimeForShutdown= float(inp["batteryMinPinActiveTimeForShutdown"])
 		if u"enableiBeacons"				in inp:	 enableiBeacons=		 		   (inp["enableiBeacons"])
 		if u"cAddress"						in inp:	 cAddress=				  		    inp["cAddress"]
 		if u"rebootHour"					in inp:	 rebootHour=					    int(inp["rebootHour"])
@@ -113,17 +133,17 @@ def readNewParams(force=False):
 		if u"useRamDiskForLogfiles" 		in inp:	 useRamDiskForLogfiles =  		    inp["useRamDiskForLogfiles"]
 		if u"actions"						in inp:	 actions			   =  		    inp["actions"]
 		if u"useRTC"						in inp:	 U.setUpRTC(inp["useRTC"])
-		if u"batteryChargeTimeForMaxCapacity" 		in inp:	 batteryChargeTimeForMaxCapacity= 		float(inp["batteryChargeTimeForMaxCapacity"])
-		if u"batteryCapacitySeconds" 		in inp:	 batteryCapacitySeconds= 		float(inp["batteryCapacitySeconds"])
+		if u"batteryChargeTimeForMaxCapacity" in inp: batteryChargeTimeForMaxCapacity= 	float(inp["batteryChargeTimeForMaxCapacity"])
+		if u"batteryCapacitySeconds" 		in inp:	 batteryCapacitySeconds= 			float(inp["batteryCapacitySeconds"])
 
 		if u"GPIONumberAfterBoot1" 			in inp:	 GPIONumberAfterBoot1= 			 	 (inp["GPIONumberAfterBoot1"])
 		if u"GPIONumberAfterBoot2" 			in inp:	 GPIONumberAfterBoot2= 			 	 (inp["GPIONumberAfterBoot2"])
 		if u"GPIOTypeAfterBoot1" 			in inp:	 GPIOTypeAfterBoot1= 			 	 (inp["GPIOTypeAfterBoot1"])
 		if u"GPIOTypeAfterBoot2" 			in inp:	 GPIOTypeAfterBoot2= 			 	 (inp["GPIOTypeAfterBoot2"])
 		if u"configured" 					in inp:	 configured= 					 	 (inp["configured"])
-		if u"startWebServerSTATUS" 			in inp:	 startWebServerSTATUS= 			int(inp["startWebServerSTATUS"])
-		if u"startWebServerINPUT" 			in inp:	 startWebServerINPUT= 			int(inp["startWebServerINPUT"])
-		if u"fanEnable" 					in inp:	 fanEnable= 					    (inp["fanEnable"])
+		if u"startWebServerSTATUS" 			in inp:	 startWebServerSTATUS= 			  int(inp["startWebServerSTATUS"])
+		if u"startWebServerINPUT" 			in inp:	 startWebServerINPUT= 			  int(inp["startWebServerINPUT"])
+		if u"fanEnable" 					in inp:	 fanEnable= 					     (inp["fanEnable"])
 		if fanEnable == "0" or fanEnable == "1":
 			
 			if u"fanTempDevId" 					in inp:	 
@@ -204,9 +224,9 @@ def readNewParams(force=False):
 		for pp in xx:
 			pgm = xx[pp]
 			if sensorList.find(pp) >-1:
-					U.toLog(1, "setting "+pgm+" ON") 
+					U.toLog(1, "setting {} ON".format(pgm)) 
 					if pgm not in activePGM:
-						startProgam(pgm+".py", params="", reason="restarting "+pgm+"..not running")
+						startProgam(pgm+".py", params="", reason="restarting {}..not running".format(pgm))
 					activePGM[pgm] =True
 			else:
 				try: del activePGM[pp] 
@@ -231,7 +251,7 @@ def readNewParams(force=False):
 		if u"shutDownPinVetoOutput"	  in inp:  
 			xxx=				   int(inp["shutDownPinVetoOutput"])
 			if shutDownPinVetoOutput !=-1 and xxx != shutDownPinVetoOutput: # is a change, not just switch on 
-				U.toLog(-1, "restart master for new shutdown input pin",doPrint=True)
+				U.toLog(-1, "restart master for new shutdown input pin", doPrint=True)
 				os.system("/usr/bin/python "+G.homeDir+"master.py &" )
 			if shutDownPinVetoOutput != xxx:
 				shutDownPinVetoOutput=	   xxx
@@ -299,7 +319,7 @@ def readNewParams(force=False):
 
 
 		if	rPiRestartCommand.find("master") > -1:
-			U.toLog(-1,"restart due to new input " + rPiRestartCommand,doPrint=True)
+			U.toLog(-1,"restart due to new input {}".format(rPiRestartCommand), doPrint=True)
 			os.system("/usr/bin/python "+G.homeDir+"master.py &" )
 			sys.exit()
 
@@ -351,12 +371,12 @@ def setACTIVEorKILL(tag,pgm,check,force=0):
 			U.toLog(-1,"started:%s"%pgm, doPrint= True)
 		elif ( tag not in theList and tag in  activePGMdict) or force==-1:
 			U.killOldPgm(-1,pgm)
-			U.toLog(-1,"stopping sensor as no "+tag+" enabled",doPrint=True)
+			U.toLog(-1,"stopping sensor as no {} enabled".format(tag), doPrint=True)
 			if tag	in activePGMdict: del activePGMdict[tag] 
 		elif tag  in activePGMdict and force ==0:
 			del activePGMdict[tag] 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -379,7 +399,7 @@ def doWeNeedToStartTouch(sensors,sensorsOld):
 				U.toLog(1, "enabled sensor " +sensor)
 		return 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		U.toLog(-1,"start INPUTtouch12: "+ unicode(sensors))
 	return 0
 
@@ -431,7 +451,7 @@ def startBLEconnect():
 				if not U.pgmStillRunning("BLEconnect.py "+mac):
 					startProgam("BLEconnect.py", params=mac, reason="..starting in parallel mode ")
 	except	Exception, e :
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 
@@ -444,7 +464,7 @@ def startBLEsensor():
 		if not U.pgmStillRunning("BLEsensor.py"):
 			startProgam("BLEsensor.py", params="", reason="")
 	except	Exception, e :
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 	
@@ -470,7 +490,7 @@ def checkIfDisplayIsRunning():
 			checkIfAliveFileOK("display",force="set")
 			return
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return
 	return
 
@@ -486,9 +506,9 @@ def checkIfNeopixelIsRunning(pgm= "neopixel"):
 	if tt - lastcheckIfNeopixelIsRunning < 30: return 
 	lastcheckIfNeopixelIsRunning = tt
 	try:
-		U.toLog (1, u"checking if "+pgm+" running")
+		U.toLog (1, u"checking if  {} running".format(pgm))
 		if not U.pgmStillRunning(pgm+".py"):
-			U.toLog (1, u"restarting  "+pgm)
+			U.toLog (1, u"restarting  {}".format(pgm))
 			startProgam(pgm+".py", params="", reason="..not running ")
 			checkIfAliveFileOK(pgm,force="set")
 			return
@@ -501,7 +521,7 @@ def checkIfNeopixelIsRunning(pgm= "neopixel"):
 			checkIfAliveFileOK("neopixel",force="set")
 			return
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return
 	return
 
@@ -522,7 +542,7 @@ def checkIfPGMisRunning(pgmToStart,force=False,checkAliveFile="", parameters="")
 				return
 
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
 
 
@@ -562,7 +582,7 @@ def checkIfbeaconLoopIsRunning():
 					startProgam("beaconloop.py", params="", reason=" alive file is old ")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 
@@ -606,7 +626,7 @@ def checkIfAliveFileOK(sensor,force=""):
 					except: pass
 
 		except	Exception, e:
-			U.toLog(-1, u"(2) in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+			U.toLog(-1, u"(2) in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 			lastUpdate=0
 		#print "alive test 2 for " , sensor, data
 			
@@ -620,7 +640,7 @@ def checkIfAliveFileOK(sensor,force=""):
 			alive = False
 		sensorAlive[sensor] = lastUpdate
 	except	Exception, e:
-		U.toLog(-1, u"(3) in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog(-1, u"(3) in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return alive
 
 
@@ -661,7 +681,7 @@ def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk 
 
 		return retCode
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def rebootWatchDog():
@@ -682,7 +702,7 @@ def rebootWatchDog():
 
 
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def checkIfRebootRequest():
@@ -693,10 +713,10 @@ def checkIfRebootRequest():
 		f.close()
 		os.remove(G.homeDir+"temp/rebootNeeded")
 		if reason.find("noreboot")>-1:
-			U.toLog(-1, " sending message to plugin re:" + reason ,doPrint=True)
+			U.toLog(-1, " sending message to plugin re:{}".format(reason) , doPrint=True)
 			U.sendURL(sendAlive="alive",text=reason)
 		else:
-			U.toLog(-1, " rebooting due to request:" + reason ,doPrint=True)
+			U.toLog(-1, " rebooting due to request:{}".format(reason), doPrint=True)
 			time.sleep(50)
 			U.sendRebootHTML(reason)
 			U.doRebootThroughRUNpinReset()
@@ -718,14 +738,14 @@ def checkIfRebootRequest():
 					f.close()
 					if count > 5: 
 						os.remove(G.homeDir+"temp/restartCount")
-						U.toLog(-1, " rebooting due to repeated request:" + reason ,doPrint=True)
-						U.doReboot(20," rebooting due to repeated request:" + reason)
+						U.toLog(-1, " rebooting due to repeated request:{}".format(reason), doPrint=True)
+						U.doReboot(20," rebooting due to repeated request:{}".format(reason))
 				except: pass
 				
 			f=open(G.homeDir+"temp/restartCount","w") 
 			f.write(str(count+1))
 			f.close()
-			U.toLog(-1, " starting master due to request:" + reason ,doPrint=True)
+			U.toLog(-1, " starting master due to request:" + reason , doPrint=True)
 			U.restartMyself()
 			
 
@@ -742,7 +762,7 @@ def checkIfNightReboot():
 	#print "rebootHour", nn.minute,	 int(G.myPiNumber)*2,  int(G.myPiNumber)*2+1
 	if nn.minute  <	 int(G.myPiNumber)*2:	 return 
 	if nn.minute  >	 int(G.myPiNumber)*2+1 : return 
-	U.toLog (-1, "re booting",doPrint=True )
+	U.toLog (-1, "re booting", doPrint=True )
 
 	rebooted = True
 	time.sleep(30)
@@ -776,7 +796,7 @@ def checkIfShutDownVoltage():
 	
 			if shutdownPinVoltSensor != -1:
 				#print	"setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor) 
-				U.toLog(-1, "setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor), doPrint=True)
+				U.toLog(-1, "setting shutdownPinVoltSensor to GPIO: {}".format(shutdownPinVoltSensor), doPrint=True)
 				try: GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
 				except: pass
 				inputPinVoltRawLastONTime = time.time()
@@ -818,9 +838,9 @@ def checkIfShutDownVoltage():
 		lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", 0)
 
 	except	Exception, e :
-			U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 			return
-	U.toLog (-1, "checkIfShutDownVoltage rebooting ",doPrint=True )
+	U.toLog (-1, "checkIfShutDownVoltage rebooting ", doPrint=True )
 	U.sendRebootHTML("battery empty", reboot=False)
 
 	return 
@@ -850,7 +870,7 @@ def checkLogfiles():
 
 
 	if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
-	U.toLog(-1, "delete logfiles  due to  limited disk space ",doPrint=True)
+	U.toLog(-1, "delete logfiles  due to  limited disk space ", doPrint=True)
 	os.system("sudo rm /var/log/*")
 	os.system("sudo rm "+G.logDir+"*")
 	if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
@@ -872,12 +892,12 @@ def checkRamDisk():
 		if useRamDiskForLogfiles=="1" and not ramDiskActive: 
 			if	U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab") ==1:
 				U.uncommentOrAdd("tmpfs	  /var/log	  tmpfs	   defaults,noatime,nosuid,mode=0755,size=60m	 0 0","/etc/fstab")
-				U.toLog(-1," master need to reboot, added ram disk for /var/log ",doPrint=True)
+				U.toLog(-1," master need to reboot, added ram disk for /var/log ", doPrint=True)
 				return True
 		if useRamDiskForLogfiles=="0" and ramDiskActive: 
 			if	U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab") ==1:
 				U.removefromFile("tmpfs /var/log","/etc/fstab")
-				U.toLog(-1," master need to reboot, removed ram disk for /var/log ",doPrint=True)
+				U.toLog(-1," master need to reboot, removed ram disk for /var/log ", doPrint=True)
 				return True
 		return False
 
@@ -912,7 +932,7 @@ def delayAndWatchDog():
 					rebootWatchDog()
 					
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -949,7 +969,7 @@ def checkSystemLOG():
 					U.sendURL(sendAlive="alive",text="checkSystemLOG_register_dump_occured_noreboot_"+line)
 			
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def cycleWifi():
@@ -1050,7 +1070,7 @@ def checkTempForFanOnOff(force = False):
 
 
 	except	Exception, e :
-		U.toLog (-1, u"checkTempForFanOnOff in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog (-1, u"checkTempForFanOnOff in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 	return
 
 	
@@ -1079,7 +1099,7 @@ def fixRcLocal(sleepTime):
 			out+=line+"\n"
 
 	if writeOut:
-		U.toLog(-1, "writing new rc.local file with new line:\n "+test, doPrint=True)
+		U.toLog(-1, "writing new rc.local file with new line:\n {}".format(test), doPrint=True)
 		f=open("/etc/rc.local","w")
 		f.write(out)
 		f.close()
@@ -1107,7 +1127,7 @@ def fixRcLocal(sleepTime):
 			out+=line+"\n"
 
 	if writeOut:
-		U.toLog(-1, "writing new callbeacon.py file  with new line:\n "+test, doPrint=True)
+		U.toLog(-1, "writing new callbeacon.py file  with new line:\n {}".format(test), doPrint=True)
 		f=open("/home/pi/pibeacon/callbeacon.py","w")
 		f.write(out)
 		f.close()
@@ -1133,8 +1153,12 @@ global activePGM
 global configured
 global startWebServerSTATUS, startWebServerINPUT
 global fanGPIOPin, fanTempOnAtTempValue, lastTempValue, lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
+global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 
 
+wifiEthCheck			= {}
+BeaconUseHCINoOld		= ""
+BLEconnectUseHCINoOld	= ""
 fanEnable				= "-"
 fanTempName				= ""
 fanTempDevId			= ""
@@ -1251,14 +1275,13 @@ for ff in G.specialSensorList:
 for ff in ["webserverINPUT","webserverSTATUS"]:
 		U.killOldPgm(-1, ff+".py")
 
+os.system("/usr/bin/python "+G.homeDir+"copyToTemp.py")
+time.sleep(1)
 
-readNewParams()
+readNewParams(force=True)
+U.toLog (-1, "START.. indigoServer IP:>>{}<<".format(G.ipOfServer) , doPrint=True)
 
 checkLogfiles()
-
-
-os.system("/usr/bin/python "+G.homeDir+"copyToTemp.py")
-
 
 time.sleep(1)
 
@@ -1268,7 +1291,7 @@ U.whichWifi()
 
 adhocWifiStarted = U.checkWhenAdhocWifistarted()
 
-U.toLog (-1, "Master adhocWifi is: %s ;  G.wifiType is: %s"%(adhocWifiStarted, G.wifiType) ,doPrint=True)
+U.toLog (-1, "Master adhocWifi is:{} ;  G.wifiType is:{}".format(adhocWifiStarted, G.wifiType) , doPrint=True)
 
 os.system("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py")
 
@@ -1282,11 +1305,11 @@ if G.networkType  in G.useNetwork and G.wifiType =="normal":
 			G.networkType="clockMANUAL"
 			break
 	
-		ipx, changed = U.getIPNumberMaster()
-		if ipx > 1 or G.ipAddress =="":
+		retCode, changed = U.getIPNumberMaster()
+		if retCode > 1 or G.ipAddress =="":
 			U.setNetwork("off")
 			time.sleep(5)
-			U.toLog (-1, " master no ip number working, trying again, retcode="+ str(ipx))
+			U.toLog (-1, " master no ip number working, trying again, retcode="+ str(retCode))
 		else:
 			U.clearNetwork()
 			break
@@ -1308,14 +1331,14 @@ if configured == "":
 		for ii in range(500):
 			if G.userIdOfServer	 == "xxstartxx":
 				if adhoc and adhocWifiStarted < 0: 
-					U.toLog (-1," launching at start startAdhocWifi ",doPrint=True )
+					U.toLog (-1," launching at start startAdhocWifi ", doPrint=True )
 					U.startAdhocWifi()
 					U.startwebserverINPUT(startWebServerINPUT)
 				if wifiWaiting: 
 					if U.checkwebserverINPUT():
 						wifiWaiting= False
 				adhoc = False
-				U.toLog (-1, " master not configured yet, lets wait for new config files",doPrint=True)
+				U.toLog (-1, " master not configured yet, lets wait for new config files", doPrint=True)
 				if ii >498:
 					startProgam("master.py", params="", reason="..not configured yet")
 					exit(0)
@@ -1347,19 +1370,27 @@ if adhocWifiStarted > 0 and G.wifiType =="adhoc":
 if G.networkType  in G.useNetwork and G.wifiType =="normal":
 	for ii in range(100):
 		if ii > 98:
-			U.toLog(-1, "master no connection to indigo server at ip:>>"+ G.ipOfServer+"<<  network type:" +G.networkType,doPrint=True)
-			time.sleep(20)
+			U.toLog(-1, "master no connection to indigo server at ip:>>{}<<  network type:{}".format(G.ipOfServer, G.networkType) , doPrint=True)
+			time.sleep(7)
 			startProgam("master.py", params="", reason=".. failed to connect to indigo server")
 			exit(0)
 		if U.testPing() >0:
+			readNewParams()
 			if time.time() - G.ipConnection > 600.: # after 10 minutes 
 				if enableRebootCheck.find("rebootPing") >-1:
 					U.sendURL(sendAlive="reboot")
 					U.doReboot(30.," reboot due to no  PING reply from MAC for 10 minutes ")				
-
-			readNewParams()
+			if time.time() - G.ipConnection > 100.: 
+				if  G.wifiEth["wlan0"]["on"]  in ["onIf","off"] and G.wifiEth["eth0"]["on"] !="off":
+					G.wifiEthOld = copy.copy(G.wifiEth)
+					G.wifiEth["wlan0"]["on"] 	= "on"
+					G.wifiEth["wlan0"]["useIP"] = "use"
+					G.wifiEth["eth0"]["on"]     = "onIf"
+					G.wifiEth["eth0"]["useIP"]  = "useIf"
+					G.switchedToWifi = True
+					U.getIPNumberMaster()
 		else: 
-			U.toLog(-1, "can ping indigo server at ip:>>"+ G.ipOfServer+"<<",doPrint=True)
+			U.toLog(-1, "can ping indigo server at ip:>>{}<<".format(G.ipOfServer), doPrint=True)
 			break
 		time.sleep(10)
 
@@ -1372,7 +1403,7 @@ if not os.path.isdir(G.homeDir+"soundfiles"):
 
 
 if checkDiskSpace() == 1:
-	U.toLog(-1, "please expand hard disk, not enough disk space left either do sudo raspi-config and expand HD	 or replace ssd with larger ssd ",doPrint=True)
+	U.toLog(-1, "please expand hard disk, not enough disk space left either do sudo raspi-config and expand HD	 or replace ssd with larger ssd ", doPrint=True)
 	time.sleep(50)
 	exit()
 
@@ -1390,7 +1421,7 @@ for ii in range(200):
 	if	os.path.isfile(G.homeDir+"installLibs.done"):
 		break
 	if ii%10==0:
-		U.toLog (-1, " master still waiting for installibs to finish",doPrint=True)
+		U.toLog (-1, " master still waiting for installibs to finish", doPrint=True)
 	time.sleep(5)
 
 
@@ -1406,7 +1437,7 @@ if enableiBeacons =="1":
 	checkIfAliveFileOK("beaconloop",force="set")
  
 if checkRamDisk(): 
-	U.toLog (-1, " master  waiting to reboot due to ram disk change",doPrint=True)
+	U.toLog (-1, " master  waiting to reboot due to ram disk change", doPrint=True)
 	time.sleep(60) # give it some time, it should never happen here 
 	U.sendRebootHTML("change_in_ramdisk_for_logfiles")
 
@@ -1464,8 +1495,8 @@ startingnetworkStatus = G.networkStatus
 startingnetworkype	  = G.networkType
 restartCLock		  = time.time() +  999999999.
 
-ipx, changed = U.getIPNumberMaster(quiet=True)
-if ipx ==0 and G.ipAddress !="":
+retCode, changed = U.getIPNumberMaster(quiet=True)
+if retCode ==0 and G.ipAddress !="":
 	U.setNetwork("on")
 	
 if changed: 
@@ -1493,7 +1524,7 @@ while True:
 		if loopCount%5 == 0: 
 			if checkRamDisk():
 				if loopCount < 10: 
-					U.toLog (-1, " master  waiting to reboot due to ram disk change",doPrint=True)
+					U.toLog (-1, " master  waiting to reboot due to ram disk change", doPrint=True)
 					time.sleep(60) # give it some time directly after reboot
 				U.sendRebootHTML("change_in_ramdisk_for_logfiles")
 			# check if fs is still ok
@@ -1508,24 +1539,27 @@ while True:
 			os.system("rm x")
 			
 			os.system("sudo chown -R  pi:pi	 "+G.homeDir)
-			os.system("sudo chown -R  pi:pi	 /run/user/1000/pibeacon")
 
-			#check if IP number has changed, or if we should switch off IP for wifi if eth0 is present 
+		#check if IP number has changed, or if we should switch off wlan0 if eth0 is present 
 		if loopCount%24 == 0: # every 2 minutes
 			oldIP = G.ipAddress
-			ipx, changed = U.getIPNumberMaster(quiet=True)
+			retCode, changed = U.getIPNumberMaster(quiet=True)
+
 			if	G.ipAddress =="" and G.networkType !="clockMANUAL" :
 				U.doReboot(10.," reboot due to no IP nummber")				   
 				time.sleep(10)
 				os.system("reboot now")
+
 			if changed: 
 				U.restartMyself(reason="changed ip number, ie wifi was switched off with eth0 present")
-			if ipx ==0 and G.ipAddress !="":
+
+			if retCode == 0 and G.ipAddress !="":
 				U.setNetwork("on")
+
 			if oldIP != G.ipAddress:
 				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
-				if eth0IP =="" or wifi0IP =="": # avoid restart when both are active
-					U.restartMyself(reason="changed ip number,.. eth0IP: "+ eth0IP+";  wifi0IP: "+wifi0IP +";  oldIP: "+oldIP +";  G.ipAddress: "+G.ipAddress )
+				if eth0IP == "" or wifi0IP == "": # avoid restart when both are active
+					U.restartMyself(reason="changed ip number,.. eth0IP: {};  wifi0IP: {};  oldIP: {};  G.ipAddress:{}".format(eth0IP, wifi0IP, oldIP, G.ipAddress) )
 
 
 ##########   check if pgms are running
@@ -1539,7 +1573,7 @@ while True:
 			startBLEsensor()
 
 		for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","spiMCP3008","simplei2csensors","sunDial","setStepperMotor"]:
-				U.toLog(1, "setting "+pp+" ON") 
+				U.toLog(1, "setting {} ON".format(pp) ) 
 				if pp in activePGM:
 					if   pp =="display":
 						checkIfDisplayIsRunning()
@@ -1681,7 +1715,7 @@ while True:
 		delayAndWatchDog()
 	   
 	except	Exception, e :
-		U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		
 time.sleep(10)
 sys.exit(0)		   

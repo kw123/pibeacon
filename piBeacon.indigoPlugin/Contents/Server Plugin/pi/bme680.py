@@ -425,7 +425,7 @@ class BME680(BME680Data):
 
 		self.chip_id = self._get_regs(CHIP_ID_ADDR, 1)
 		if self.chip_id != CHIP_ID:
-			U.toLog("BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id), doPrint=True )
+			U.toLog(-1,"BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id), doPrint=True )
 			raise ValueError 
 
 		self.soft_reset()
@@ -782,15 +782,15 @@ class BME680(BME680Data):
 			return int(duration + (factor * 64))
 
 		return 0xff
-		
 
 
 
- # ===========================================================================
+
+# ===========================================================================
 # read params
 # ===========================================================================
 
-#################################		 
+###############################
 def readParams():
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global rawOld
@@ -919,7 +919,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		U.toLog(-1, unicode(sensors[sensor]), doPrint=True)
 		
 
@@ -936,13 +936,13 @@ def startSensor(devId,i2cAddress):
 
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-	U.toLog(-1, " starting with ic2= "+ str(i2cAdd), doPrint=True )
+	U.toLog(-1, "starting with ic2= "+ str(i2cAdd), doPrint=True )
 	
 	try:
 		BMEsensor[devId]  = BME680(i2c_addr=i2cAdd)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 		BMEsensor[devId] =""
 		U.muxTCA9548Areset()
 		return
@@ -1036,7 +1036,7 @@ def getValues(devId):
 			badSensor = 0
 			return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	badSensor+=1
 	if badSensor >3: return "badSensor"
 	return ""
@@ -1115,6 +1115,7 @@ while True:
 	try:
 		tt = time.time()
 		sendData = False
+		data ={}
 		if sensor in sensors:
 			data = {"sensors": {sensor:{}}}
 			for devId in sensors[sensor]:
@@ -1153,7 +1154,7 @@ while True:
 					continue
 				if (   ( deltaN > deltaX[devId]	 ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
 						if time.time() - startTime < 120 and deltaN > 0.5: 
-							sendData = false
+							sendData = False
 						else:
 							sendData = True
 						if not firstValue: # do not send first measurement, it is always OFFFF
@@ -1180,7 +1181,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep )
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 		
