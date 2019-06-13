@@ -26,8 +26,6 @@ import MAC2Vendor
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
 
 
-dataVersion = 38.96 # for rpi programs to send new versions to all RPI if not the same
-
 try:
     # noinspection PyUnresolvedReferences
     import indigo
@@ -346,6 +344,9 @@ class Plugin(indigo.PluginBase):
 
 			if not self.moveToIndigoPrefsDir(self.indigoPluginDirOld, self.indigoPreferencesPluginDir):
 				exit()
+
+			if os.path.isfile(self.indigoPreferencesPluginDir+"dataVersion"):
+				os.system("rm '"+self.indigoPreferencesPluginDir+"dataVersion' &")	
 
 
 			self.startTime = time.time()
@@ -1904,13 +1905,13 @@ class Plugin(indigo.PluginBase):
 							except:	 delDev[devId] = True
 						for devId in delDev:
 							del self.RPI[unicode(pi)][iii][sensor][devId]
-							indigo.server.log("RPI cleanup "+ unicode(pi)+" del "+iii+" devId:"+ devId)
+							self.indiLOG.log(20,"RPI cleanup {} del {} devId:{}".format(pi, iii, devId)  )
 
 						if self.RPI[unicode(pi)][iii][sensor] =={}:
 							delSens[sensor]=True
 
 					for sensor in delSens:
-						indigo.server.log("RPI cleanup "+ unicode(pi)+" deleting "+iii+"  "+ sensor)
+						self.indiLOG.log(20,"RPI cleanup {} deleting {}  {}".format(pi, iii, sensor) )
 						del self.RPI[unicode(pi)][iii][sensor]
 
 
@@ -1970,7 +1971,7 @@ class Plugin(indigo.PluginBase):
 			self.beaconsUUIDtoIphone = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoIphone",	oldName= self.indigoPreferencesPluginDir+"UUIDtoIphone")
 			self.beaconsIgnoreUUID	 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsIgnoreUUID",		oldName= self.indigoPreferencesPluginDir+"beaconsIgnoreFamily")
 			self.rejectedByPi		 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"rejected/rejectedByPi.json")
-			self.version			 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"dataVersion", default=0)
+			self.currentVersion		 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"currentVersion", default="0")
 
 
 			self.readCARS()
@@ -2827,12 +2828,12 @@ class Plugin(indigo.PluginBase):
 				"rPI","rPI-Sensor","beacon","BLEconnect"]
 
 				dev.stateListOrDisplayStateIdChanged()	# update  from device.xml info if changed
-				if self.version < 32.50:
-					indigo.server.log(" checking for deviceType upgrades: "+ dev.name)
+				if int(self.currentVersion.split(".")[0]) < 7:
+					self.indiLOG.log(20," checking for deviceType upgrades: {}".format(dev.name) )
 					if dev.deviceTypeId in doSensorValueAnalog:
 						props = dev.pluginProps
 						if "SupportsSensorValue" not in props:
-							indigo.server.log(" processing: "+ dev.name )
+							self.indiLOG.log(20," processing: {}".format(dev.name) )
 							dev = indigo.device.changeDeviceTypeId(dev, dev.deviceTypeId)
 							dev.replaceOnServer()
 							dev = indigo.devices[dev.id]
@@ -2843,12 +2844,12 @@ class Plugin(indigo.PluginBase):
 							props["AllowOnStateChange"] 		= False
 							props["SupportsStatusRequest"] 		= False
 							dev.replacePluginPropsOnServer(props)
-							indigo.server.log("SupportsSensorValue  after replacePluginPropsOnServer")
+							self.indiLOG.log(20,"SupportsSensorValue  after replacePluginPropsOnServer")
 
 					if dev.deviceTypeId in doSensorValueOnOff:
 						props = dev.pluginProps
 						if "SupportsOnState" not in props:
-							indigo.server.log(" processing: "+ dev.name )
+							self.indiLOG.log(20," processing: {}".format(dev.name) )
 							dev = indigo.device.changeDeviceTypeId(dev, dev.deviceTypeId)
 							dev.replaceOnServer()
 							dev = indigo.devices[dev.id]
@@ -2870,7 +2871,7 @@ class Plugin(indigo.PluginBase):
 									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 								dev.replaceOnServer()
 
-							indigo.server.log("SupportsOnState after replacePluginPropsOnServer")
+							self.indiLOG.log(20,"SupportsOnState after replacePluginPropsOnServer")
 
 
 
@@ -4412,7 +4413,7 @@ class Plugin(indigo.PluginBase):
 			#indigo.server.log(" dev Pi #sensor: " + piN)
 			for dev in indigo.devices.iter("props.isTempSensor"):
 				props = dev.pluginProps
-				indigo.server.log(" devid name temp sensor: " + dev.name+"  pi#: "+props["piServerNumber"])
+				self.indiLOG.log(20," devid name temp sensor: {} pi#: {}".format(dev.name, props["piServerNumber"]) )
 				if props["piServerNumber"] == piN:
 					xList.append( (unicode(dev.id), dev.name +" " + unicode(dev.id)) )
 
@@ -7248,7 +7249,7 @@ class Plugin(indigo.PluginBase):
 	def actionControlGeneral(self, action, dev):
 		###### STATUS REQUEST ######
 		if action.deviceAction == indigo.kDeviceGeneralAction.RequestStatus:
-			indigo.server.log(u"sent \"%s\" %s" % (dev.name, u"status request"))
+			self.indiLOG.log(20,u"sent \"{}\" %s\ status request".format(dev.name) )
 
 ####-------------------------------------------------------------------------####
 	def setBacklightBrightness(self, pluginAction, dev):
@@ -8617,12 +8618,12 @@ class Plugin(indigo.PluginBase):
 
 		while True:
 			if self.userIdOfServer !="" and self.passwordOfServer !="" : break
-			indigo.server.log( u"userid or password not configured in config")
+			self.indiLOG.log(20, u"userid or password not configured in config")
 			self.sleep(20)
 
 
 
-		self.writeJson(dataVersion, fName=self.indigoPreferencesPluginDir + "dataVersion")
+		self.writeJson(self.pluginVersion, fName=self.indigoPreferencesPluginDir + "currentVersion")
 
 		self.initSprinkler()
 
@@ -8631,7 +8632,7 @@ class Plugin(indigo.PluginBase):
 			self.socketServer, self.stackReady	= self.startTcpipListening(self.myIpNumber, self.indigoInputPORT)
 			self.currentlyBooting				= time.time() + 20
 		else:
-			indigo.server.log(u" ..  subscribing to indigo variable changes" )
+			self.indiLOG.log(20,u" ..  subscribing to indigo variable changes" )
 			indigo.variables.subscribeToChanges()
 			self.currentlyBooting	= time.time() + 20
 			self.stackReady			= True
@@ -8701,7 +8702,7 @@ class Plugin(indigo.PluginBase):
 
 		self.rPiRestartCommand = [u"master" for ii in range(_GlobalConst_numberOfRPI)]	## which part need to restart on rpi
 		self.setupFilesForPi()
-		if self.version != dataVersion :
+		if self.currentVersion != self.pluginVersion :
 			self.currentlyBooting = time.time() + 40
 			self.indiLOG.log(10, u" ..  new py programs  etc will be send to rPis")
 			for pi in range(_GlobalConst_numberOfRPI) :
@@ -8842,7 +8843,7 @@ class Plugin(indigo.PluginBase):
 			serverPlugin.restart(waitUntilDone=False)
 
 
-		indigo.server.log( u"killing 2")
+		self.indiLOG.log(20, u"killing 2")
 		os.system("/bin/kill -9 "+unicode(self.myPID) )
 
 		return
@@ -14952,7 +14953,7 @@ class Plugin(indigo.PluginBase):
 		elif action.deviceAction == indigo.kUniversalAction.RequestStatus:
 			# Query hardware module (dev) for its current status here:
 			# ** IMPLEMENT ME **
-			indigo.server.log(u"sent \"%s\" %s" % (dev.name, "status request not implemented"))
+			self.indiLOG.log(20,u"sent \"%s\" %s" % (dev.name, "status request not implemented"))
 
 	########################################
 	# Sensor Action callback
@@ -15080,10 +15081,8 @@ class Plugin(indigo.PluginBase):
 					nKeys =0
 					for key in local[devId]:
 						value = local[devId][key]["value"]
-						if key =="sensorValue" and dev.name =="s-3-rainSensorRG11 ":
-							indigo.server.log(" execute   sensorValue: "+unicode(local[devId][key]) )
 						if key not in dev.states and key != "lastSensorChange":
-							self.indiLOG.log(20, u"executeUpdateStatesDict: key: "+key+ u"  not in states for dev:"+dev.name)
+							self.indiLOG.log(20, u"executeUpdateStatesDict: key: {}  not in states for dev:{}".format(key, dev.name) )
 						elif key in dev.states:
 							upd = False
 							if local[devId][key]["decimalPlaces"] != "": # decimal places present?
@@ -15373,7 +15372,7 @@ class Plugin(indigo.PluginBase):
 ########################################
 	####------ --------
 	def moveToIndigoPrefsDir(self, fromPath, toPath):
-		if os.path.isdir(toPath): 		
+		if os.path.isdir(toPath): 	
 			return True
 		indigo.server.log(u"--------------------------------------------------------------------------------------------------------------")
 		indigo.server.log("creating plugin prefs directory ")

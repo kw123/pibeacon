@@ -1,4 +1,4 @@
-Added features / changes in v7.105.282 @ 2019-06-12
+Added features / changes in v7.105.283 @ 2019-06-13
 ===================================================
 
 1. added option to select wlan/ eth on rpasberry 
@@ -9,6 +9,11 @@ Added features / changes in v7.105.282 @ 2019-06-12
       eth : do not change, useIP#
       wlan: on if eth off, useIP if eth off
 == this was added to cover: wifi is used for comm to indigo and eth for another subnet
+
+2. fixed pibeacon utils format error
+
+general setting is done in config, as soon as the rpi is edited the device edit setting is used.
+
 
 
 Added features / changes in v7.105.280 @ 2019-05-08

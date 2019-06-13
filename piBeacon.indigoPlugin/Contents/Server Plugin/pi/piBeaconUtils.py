@@ -1036,7 +1036,7 @@ def testPing(ipIn=""):
 		if ipIn !="":
 			return 1
 
-		toLog(1,"testPing can not connect to server: {}	ping code:{}".format(ipToPing,unicode(ret) )
+		toLog(1,"testPing can not connect to server: {}	ping code:{}".format(ipToPing,unicode(ret)) )
 			
 		return 2
 
