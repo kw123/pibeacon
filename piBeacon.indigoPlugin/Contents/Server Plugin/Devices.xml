@@ -420,7 +420,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" /> 
 
 			</Field>
-			<Field id="fanTempOnAtTempValue"	type="menu" defaultValue="40" tooltip="start fan if temp is GT xx C" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+			<Field id="fanTempOnAtTempValue"	type="menu" defaultValue="40" tooltip="start fan if temp is &gt; xx C" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
 				<Label>.. Start fan if temp &gt;:</Label>
 				<List>
 					<Option value="0"     >0C   = 32F</Option>
@@ -441,6 +441,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="65"    >65C = 149F</Option>
 					<Option value="70"    >70C = 158F</Option>
 					<Option value="75"    >75C = 167F</Option>
+					<Option value="80"    >75C = 167F</Option>
+					<Option value="85"    >75C = 167F</Option>
 				</List>
 			 </Field>
 
@@ -553,36 +555,37 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 
 			<Field id="infoLabel45" type="label">
-				<Label>setup Wifi(wlan0) vs cable (eth0)
-			on/off: : ON/On if other off/off/do not change
-			use IP: which IP# to send to Indigo to ID raspberry
-			if you have both ON the RPI might send packages to indigo from 2 different IP numbers
-			if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
+				<Label>== Setup Wifi(wlan0) vs cable (eth0)
+    on/off: ON/On if other off/off/do not change
+    use IP: which IP# to send to Indigo to ID raspberry
+    if you have both ON the RPI might send packages to indigo from 2 different IP numbers
+    if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
 			</Field>
+
 			<Field    id="eth0"   type="menu" defaultValue='{"on":"on", "useIP":"use"}' tooltip="">
 				<Label>ethernet cable(eth0) active:</Label>
 				<List>
 							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 off</Option>
+							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
 							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP#</Option>
+							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
 							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
 							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
-							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if Wifi off</Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
 							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
 				</List> 
 			</Field>
+
 			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
 				<Label>WiFi(wlan0) active:</Label>
 				<List>
 							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if wlan0 off</Option>
+							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP#</Option>
+							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
 							<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
-							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 off</Option>
-							<Option value='{"on":"dontChange", "useIP":"doNotUse"}'	>do not change , must be set by user, do not use wlan0 IP#</Option>
+							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
 				</List> 
 			</Field>
 
@@ -1377,35 +1380,37 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 
 			<Field id="infoLabel45" type="label">
-				<Label>setup Wifi(wlan0) vs cable (eth0)
-			on/off: : ON/On if other off/off/do not change
-			use IP: which IP# to send to Indigo to ID raspberry
-			if you have both ON the RPI might send packages to indigo from 2 different IP numbers
-			if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
+				<Label>== Setup Wifi(wlan0) vs cable (eth0)
+    on/off: ON/On if other off/off/do not change
+    use IP: which IP# to send to Indigo to ID raspberry
+    if you have both ON the RPI might send packages to indigo from 2 different IP numbers
+    if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
 			</Field>
+
 			<Field    id="eth0"   type="menu" defaultValue='{"on":"on", "useIP":"use"}' tooltip="">
 				<Label>ethernet cable(eth0) active:</Label>
 				<List>
 							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 off</Option>
+							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
 							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP#</Option>
+							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
 							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
 							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
-							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if Wifi off</Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
 							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
 				</List> 
 			</Field>
+
 			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
 				<Label>WiFi(wlan0) active:</Label>
 				<List>
 							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if wlan0 off</Option>
+							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP#</Option>
+							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
 							<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
-							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 off</Option>
+							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"dontChange", "useIP":"doNotUse"}'	>do not change , must be set by user, do not use wlan0 IP#</Option>
 						</List> 
 			</Field>

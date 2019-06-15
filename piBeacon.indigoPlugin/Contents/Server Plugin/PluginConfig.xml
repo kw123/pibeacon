@@ -249,39 +249,41 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         <Label>EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
    </Field>
 
-	<Field id="infoLabel45" type="label">
-		<Label>setup Wifi(wlan0) vs cable (eth0)
-    on/off: : ON/On if other off/off/do not change
+   <Field id="infoLabel45" type="label">
+		<Label>- Setup Wifi(wlan0) vs cable (eth0)
+    on/off: ON/On if other off/off/do not change
     use IP: which IP# to send to Indigo to ID raspberry
     if you have both ON the RPI might send packages to indigo from 2 different IP numbers
-    if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
+    if you have eg wifi off and no ethernet connection it will try with wifi ON
+    is overwritten in RPI device edit</Label>
 	</Field>
-	<Field    id="eth0"   type="menu" defaultValue='{"on":"use", "useIP":"use"}' tooltip="">
-		<Label>ethernet cable(eth0) active:</Label>
-		<List>
+
+			<Field    id="eth0"   type="menu" defaultValue='{"on":"on", "useIP":"use"}' tooltip="">
+				<Label>ethernet cable(eth0) active:</Label>
+				<List>
 							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 off</Option>
+							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
 							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP#</Option>
+							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
 							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
 							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
-							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if Wifi off</Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
 							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
-		</List> 
-	</Field>
-	<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
-		<Label>WiFi(wlan0) active:</Label>
-		<List>
+				</List> 
+			</Field>
+
+			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
+				<Label>WiFi(wlan0) active:</Label>
+				<List>
 							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if wlan0 off</Option>
+							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP#</Option>
+							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
 							<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
-							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 off</Option>
-							<Option value='{"on":"dontChange", "useIP":"doNotUse"}'	>do not change , must be set by user, do not use wlan0 IP#</Option>
-		</List> 
-	</Field>
+							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
+				</List> 
+			</Field>
 
 
    <Field    id="piUpdateWindow"   type="menu" defaultValue="0">

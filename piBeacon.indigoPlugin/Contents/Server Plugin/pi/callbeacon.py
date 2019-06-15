@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import time
+import subprocess
 
 #set GPIOs if requested BEFOR master.py runs just onece after boot 
 os.system("/usr/bin/python /home/pi/pibeacon/doGPIOatStartup.py & ")
@@ -80,5 +81,13 @@ os.system("rm  /home/pi/pibeacon/beacon_minSignalCutoff>  /dev/null 2>&1")
 os.system("rm  /home/pi/pibeacon/beacon_onlyTheseMAC>  /dev/null 2>&1")	 
 os.system("rm  /home/pi/pibeacon/beacon_signalDelta>  /dev/null 2>&1")
 
+time.sleep(50)
+ret = subprocess.Popen("ps -ef | grep master.py | grep -v grep", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+lines = ret.split("\n")
+for line in lines :
+	if len(line) < 10 : continue
+	exit()
+print ("callbeacon       restarting master.py, seems to not be active")
+os.system("cd /home/pi/pibeacon; /usr/bin/python   /home/pi/pibeacon/master.py & ")		
 
 exit()

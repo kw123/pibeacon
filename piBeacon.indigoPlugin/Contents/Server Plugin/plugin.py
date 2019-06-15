@@ -31,8 +31,9 @@ try:
     import indigo
 except ImportError:
     pass
-
-## Static parameters, not changed in pgm
+################################################################################
+##########  Static parameters, not changed in pgm
+################################################################################
 _GlobalConst_numberOfiBeaconRPI	 = 10
 _GlobalConst_numberOfRPI		 = 20
 _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"lastUp": 0, u"note": u"beacon", u"expirationTime": 90,
@@ -242,17 +243,20 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"INPUTpulse",
 						 u"mysensors", u"myprogram",
 						 u"BLEconnect"]
-i2cSensors				 = ["si7021","bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
+_GlobalConst_i2cSensors				 = ["si7021","bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
-_GlobalConst_allowedOUTPUT		   = [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725", u"display", u"setPCF8591dac", u"setTEA5767", u"sunDial", u"setStepperMotor"]
-_GlobalConst_allowedpiSends		   = [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
+_GlobalConst_allowedOUTPUT			= [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725", u"display", u"setPCF8591dac", u"setTEA5767", u"sunDial", u"setStepperMotor"]
+_GlobalConst_allowedpiSends			= [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
 
 
-_GlobalConst_groupList			   = [u"Family", u"Guests", u"Other1", u"Other2"]
+_GlobalConst_groupList				= [u"Family", u"Guests", u"Other1", u"Other2"]
 
-_defaultDateStampFormat			   = u"%Y-%m-%d %H:%M:%S"
+_defaultDateStampFormat				= u"%Y-%m-%d %H:%M:%S"
 
 ################################################################################
+################################################################################
+################################################################################
+
 # 
 # noinspection PySimplifyBooleanCheck,PySimplifyBooleanCheck,PySimplifyBooleanCheck,PySimplifyBooleanCheck,PySimplifyBooleanCheck,PySimplifyBooleanCheck,PySimplifyBooleanCheck,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyAttributeOutsideInit,PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences,PyUnresolvedReferences
 class Plugin(indigo.PluginBase):
@@ -306,7 +310,7 @@ class Plugin(indigo.PluginBase):
 		self.indiLOG = logging.getLogger("Plugin")  
 		self.indiLOG.setLevel(logging.THREADDEBUG)
 
-		self.indigo_log_handler.setLevel(logging.ERROR)
+		self.indigo_log_handler.setLevel(logging.WARNING)
 		indigo.server.log("initializing	 ... ")
 
 		indigo.server.log(  u"path To files:        =================")
@@ -316,7 +320,7 @@ class Plugin(indigo.PluginBase):
 		indigo.server.log(  u"Plugin params         {}".format(self.indigoPreferencesPluginDir) )
 
 		indigo.server.log(  u"(testing logger; see >{}<   for detailed logging".format(self.PluginLogFile))
-		self.indiLOG.log( 0, "logger  enabled for   0 ==> TEST ONLY ")
+		self.indiLOG.log( 0, "logger  enabled for   0              ==> TEST ONLY ")
 		self.indiLOG.log( 5, "logger  enabled for   THREADDEBUG    ==> TEST ONLY ")
 		self.indiLOG.log(10, "logger  enabled for   DEBUG          ==> TEST ONLY ")
 		self.indiLOG.log(20, "logger  enabled for   INFO           ==> TEST ONLY ")
@@ -3514,7 +3518,7 @@ class Plugin(indigo.PluginBase):
 					if u"gpioPin" in valuesDict:
 						valuesDict[u"description"] = "GPIO-PIN: " +valuesDict[u"gpioPin"]+"; type: "+valuesDict[u"dhtType"]
 
-				if ("i2c" in typeId.lower() or typeId in i2cSensors):  
+				if ("i2c" in typeId.lower() or typeId in _GlobalConst_i2cSensors):  
 					if "i2cAddress" in valuesDict:
 						try:
 							addrhex = "     = #"+hex(int(valuesDict[u"i2cAddress"]))
@@ -4407,13 +4411,13 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def filterTempSensorsOnThisRPI(self, valuesDict=None, filter="", typeId="", devId="x"):
-		xList = []
+		xList = [("0","internal temp sensor of RPI")]
 		try:
 			piN = indigo.devices[devId].states["note"].split("-")[1]
 			#indigo.server.log(" dev Pi #sensor: " + piN)
 			for dev in indigo.devices.iter("props.isTempSensor"):
 				props = dev.pluginProps
-				self.indiLOG.log(20," devid name temp sensor: {} pi#: {}".format(dev.name, props["piServerNumber"]) )
+				self.indiLOG.log(20," selecting devid name temp sensor: {} pi#: {}".format(dev.name, props["piServerNumber"]) )
 				if props["piServerNumber"] == piN:
 					xList.append( (unicode(dev.id), dev.name +" " + unicode(dev.id)) )
 
@@ -4671,11 +4675,11 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 		if pi == 999:
 			for pi in range(_GlobalConst_numberOfRPI):
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python ;sudo halt &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python;sleep 4 ;sudo halt &"}])
 				self.indiLOG.log(20, u"hard shutdown of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		else:
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo killall python; sudo halt &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo killall python;sleep 4; sudo halt &"}])
 				self.indiLOG.log(20, u"hard shutdown of rpi  "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		return
@@ -4694,11 +4698,11 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 		if pi == 999:
 			for pi in range(_GlobalConst_numberOfRPI):
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python ;sudo reboot -f &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python;sleep 4;sudo reboot -f &"}])
 				self.indiLOG.log(20, u"hard reboot of rpi	 "+self.RPI[unicode(pi)][u"ipNumberPi"] +";   "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		else:
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python ;sudo reboot -f &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python;sleep 4;sudo reboot -f &"}])
 				self.indiLOG.log(20, u"hard reboot of rpi	 "+self.RPI[unicode(pi)][u"ipNumberPi"] +";   "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		return
@@ -4716,11 +4720,11 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 		if pi == 999:
 			for pi in range(_GlobalConst_numberOfRPI):
-				out= json.dumps([{u"command":"general","cmdLine":";sudo killall python; sudo reboot &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sudo killall python;sleep 4; sudo reboot &"}])
 				self.indiLOG.log(20, u"regular reboot of rpi    "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		else:
-				out= json.dumps([{u"command":"general","cmdLine":";sudo killall python; sudo reboot &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sudo killall python;sleep 4; sudo reboot &"}])
 				self.indiLOG.log(20, u"regular reboot of rpi    "+self.RPI[unicode(pi)][u"ipNumberPi"] +";  "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 
@@ -6924,9 +6928,11 @@ class Plugin(indigo.PluginBase):
 							if time.time() - self.RPIBusy[unicode(pi)]  > 20: # supress warning if we just updated the RPI
 								self.indiLOG.log(20, u"socket-send not working,  rPi:%s is currently updating, delaying send "%unicode(ip))
 							else:
-								self.indiLOG.log(40, u"error in socket-send to rPi:%s  cmd= %s"%(unicode(ip),theString) )
-								try:	self.indiLOG.log(40, u"line:%s;  err:%s" % (sys.exc_traceback.tb_lineno, e))
-								except: pass
+								if unicode(e).find("onnection refused") ==-1:
+									self.indiLOG.log(40, u"error in socket-send to rPi:{}  cmd= {}".format(ip,theString) )
+									self.indiLOG.log(40, "in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								else:
+									self.indiLOG.log(30, u"error in socket-send to rPi:{}, connection refused, rebooting RPI?".format(ip) )
 							self.checkIPSendSocketOk[ip][u"count"] += 1 
 							self.checkIPSendSocketOk[ip][u"time"]	= time.time()
 						try:	sock.close()
@@ -6937,9 +6943,11 @@ class Plugin(indigo.PluginBase):
 		except Exception, e:
 			if len(unicode(e)) > 5 :
 				if	time.time() > self.currentlyBooting: # NO MSG IF RPIS ARE BOOTING
-					self.indiLOG.log(40,u"error in socket-send to rPi:"+unicode(ip)+"  "+ theString)
-					self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					self.indiLOG.log(40, unicode(self.checkIPSendSocketOk))
+					if unicode(e).find("onnection refused") ==-1:
+						self.indiLOG.log(40, u"error in socket-send to rPi:{}  cmd= {}".format(ip,theString) )
+						self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					else:
+						self.indiLOG.log(30, u"error in socket-send to rPi:{}, connection refused, , rebooting RPI?".format(ip) )
 					self.checkIPSendSocketOk[ip]["count"] += 1 
 					self.checkIPSendSocketOk[ip]["time"]   = -time.time()
 				try:	sock.close()
@@ -7163,7 +7171,6 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, "valuesDict "+unicode(valuesDict) )
 
 				self.setneopixelCALLBACKmenu(valuesDict)
-
 
 				return
 
@@ -8549,10 +8556,11 @@ class Plugin(indigo.PluginBase):
 		ss = valuesDict[u"wifiSSID"]
 		pp = valuesDict[u"wifiPassword"]
 		kk = valuesDict[u"key_mgmt"]
-		try:
-			mm = json.loads(valuesDict[u"wifiEth"])
-		except:
-			mm = self.wifiEth
+		eth0					= '{"on":"dontChange",	"useIP":"use"}'
+		wlan0					= '{"on":"dontChange",	"useIP":"useIf"}'
+		try:	mm  			= { "eth0":json.loads(valuesDict[u"eth0"]), "wlan0":json.loads(valuesDict["wlan0"]) }
+		except: mm  			= {"eth0":json.loads(eth0),"wlan0":json.loads(wlan0)}
+
 		if ss != self.wifiSSID or pp != self.wifiPassword or kk != self.key_mgmt or mm != self.wifiEth:
 			self.wifiSSID		= ss
 			self.wifiPassword	= pp
@@ -10413,8 +10421,12 @@ class Plugin(indigo.PluginBase):
 		try:
 			if self.decideMyLog(u"DevMgmt"):	 self.indiLOG.log(20,	u"rPi alive message :  " + varUnicode)
 			if (varUnicode).find(u"_dump_") >-1: 
-				self.indiLOG.log(20, u"rPi error message: Please check that RPI  you might need to replace SD")
-				self.indiLOG.log(20, varUnicode)
+				self.indiLOG.log(30, u"rPi error message: Please check that RPI  you might need to replace SD")
+				self.indiLOG.log(30, varUnicode)
+				return 
+			if (varUnicode).find(u"data may be corrupt") >-1: 
+				self.indiLOG.log(30, u"rPi error message: >>dosfsck has error: data may be corrupt<<<   Please check that RPI  you might need to replace SD")
+				self.indiLOG.log(30, varUnicode)
 				return 
 			pi = int(varJson[u"pi"])
 			if pi >= _GlobalConst_numberOfRPI:
@@ -15575,7 +15587,7 @@ class Plugin(indigo.PluginBase):
 			ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			if self.decideMyLog(u"Socket"): self.indiLOG.log(10, u"lsof output:()".format(unicode(ret)) )
 			self.killHangingProcess(ret)
-			for ii in range(50):  #	 gives port busy for ~ 60 secs if restart, new start it is fine, error message continues even if it works -- indicator =ok: if lsof gives port number  
+			for ii in range(60):  #	 gives port busy for ~ 60 secs if restart, new start it is fine, error message continues even if it works -- indicator =ok: if lsof gives port number  
 				try:
 					socketServer = ThreadedTCPServer((myIpNumber,int(indigoInputPORT)), ThreadedTCPRequestHandler)
 					if self.decideMyLog(u"Socket"): self.indiLOG.log(10, u"TCPIPsocket:: setting reuse	= 1 " )

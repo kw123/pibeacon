@@ -1,3 +1,26 @@
+Added features / changes in v7.105.284 @ 2019-06-13
+===================================================
+
+1. fixed some code and menus for select wlan/eth on raspberry 
+
+2. added option to sitwch on fan when RPI internal temp is > xx C
+   in addtion to any external temp sensor 
+   this is set in RPI device edit
+
+3. now warnings are also printoed into the standard indigo logfile, was send only to pibeacon.log file before
+
+4. when the RPI boots it check if the "dirty bit was on (ie shutdown = simple power off)"
+   when after boot the dirty bit is still on the plugin will get a message ( shown in the logfile)
+
+6. increase wait time for proper start of tcpip stack to > 75 secs from 65 secs. should always work after 25 secs.
+   but some slower MAC might take a little longer
+
+7. change error message when tcpip stack does not strat properly to something meaingfull beside error in line ..
+
+8. changed log message when sending data to rpi and it is not accepting commands while rebooting to a simple warning, not error
+
+
+
 Added features / changes in v7.105.283 @ 2019-06-13
 ===================================================
 

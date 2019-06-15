@@ -877,7 +877,8 @@ def getIPNumberMaster(quiet=False):
 		except:
 			ipAddressRead = ""
 
-		if not quiet: toLog(-1,"IP find:::: Indigo IP#>>{}<<; wifiIP >>{}<<; eth0IP: >>{}<<;   hostnameIP >>{}<<;   ipAddressRead >>{}<<;   requested Config:{}".format( G.ipOfServer, wlan0IP, eth0IP, unicode(ipHostname), ipAddressRead, unicode(G.wifiEth)),doPrint=True)
+		if not quiet: toLog(-1,"IP find:::: Indigo IP#>>{}<<; wlan0IP >>{}<<; eth0IP: >>{}<<;   hostnameIP >>{}<<;   ipAddressRead >>{}<<;   requested Config:{}".format( G.ipOfServer, wlan0IP, eth0IP, unicode(ipHostname), ipAddressRead, unicode(G.wifiEth)),doPrint=True)
+
 
 		if testDNS() >0:
 			retcode = 1
@@ -919,7 +920,7 @@ def getIPNumberMaster(quiet=False):
 	except	Exception, e:
 		toLog(-1,u"U.getIPNumberMaster error in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 
-	toLog(-1,u"U.getIPNumberMaster bad IP number ...  ipHostname >>{}<<  old from file ipAddressRead>>{}<< not in sync with ifconfig output: wlan0IP>>{}<<;	eth0IP>>{}<<".format(unicode(ipHostname), ipAddressRead, wlan0IP), doPrint=True  )
+	toLog(-1,u"U.getIPNumberMaster bad IP number ...  ipHostname >>{}<<  old from file ipAddressRead>>{}<< not in sync with ifconfig output: wlan0IP>>{}<<;	eth0IP>>{}<<".format(unicode(ipHostname), ipAddressRead, wlan0IP,eth0IP), doPrint=True  )
 	return 2, changed
 
 #################################
