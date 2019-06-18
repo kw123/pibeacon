@@ -520,7 +520,6 @@ def getIPCONFIG():
 	except	Exception, e:
 		toLog(-1,u"error in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
 	return eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled
-wlan0IPwlan0IP
 ################################
 def whichWifi():
 	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]

@@ -1,3 +1,9 @@
+Added features / changes in v7.105.286 @ 2019-06-17
+===================================================
+
+1. fixed "error in Line 513 has error=global name 'wifiIP' "
+   previous version had a bug introduced 
+
 Added features / changes in v7.105.285 @ 2019-06-13
 ===================================================
 

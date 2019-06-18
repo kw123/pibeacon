@@ -166,8 +166,11 @@ def startBlueTooth(pi):
 		U.toLog(-1,cmd, doPrint =True) 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-		ret = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if ret[1] != "": U.toLog(-1,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]), doPrint=True )
+		ret = subprocess.Popen("hciconfig ", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
+
+		if ret[1] != "": 
+			U.toLog(-1,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]), doPrint=True )
 		else:			 U.toLog(-1,"BLE start returned:\n{}".format(ret[0]), doPrint=True )
 	except Exception, e: 
 		U.toLog(-1,u"exit at restart BLE stack error  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), permanentLog=True, doPrint =True)
