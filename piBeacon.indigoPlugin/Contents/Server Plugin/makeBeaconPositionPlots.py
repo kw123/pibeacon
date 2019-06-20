@@ -54,7 +54,7 @@ try:
 
 
 	# print start to logfile 
-	toLog("========= start @ "+unicode(datetime.datetime.now())+"  =========== " )
+	toLog("========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	tStart= time.time()
 
 	toLog("imageYscale        :"+unicode(plotData["Yscale"]) )
@@ -102,7 +102,7 @@ try:
 
 
 	#
-	toLog("time used %4.2f"%(time.time()-tStart)+ " --   setup fig, ax" )
+	toLog("time used {:4.2f} --   setup fig, ax".format((time.time()-tStart)) )
 	plt.figure()
 	fig = plt.gcf()
 	ax = fig.add_axes([0, 0, 1, 1], frameon=False)
@@ -121,17 +121,30 @@ try:
 
 	#  
 	backgroundFile		  = "background.png"
+	ok = False	
 	if os.path.isfile((piPositionsDir+backgroundFile).encode('utf8')):
-		toLog("time used %4.2f"%(time.time()-tStart)+ " --   loading background image file " )
-		img = plt.imread(piPositionsDir+backgroundFile)
+		backGFile = piPositionsDir+backgroundFile
+		ok = True
+	else:
+		ff = imageOutfile.rfind("/")
+		p = imageOutfile[:ff+1]
+		if os.path.isfile((p+"background.png").encode('utf8')):
+			backGFile = p+"background.png"
+			ok = True
+	if ok: 
+		toLog("time used {:4.2f} --   loading background image file: '{}'".format( (time.time()-tStart),backGFile ) )
+		img = plt.imread(backGFile)
 		ax.imshow(img, extent=[0., Xscale, 0., Yscale])
+	else:
+		toLog("time used     --   background image file not loaded, not found --  background.png  not in {} and not in {}".format(imageOutfile, piPositionsDir) )
+
 	  
 
 
 	# 
 	imageText				= plotData["Text"]
 	if imageText != "": 
-		toLog("time used %4.2f"%(time.time()-tStart)+ " --   adding  text" )
+		toLog("time used {:4.2f} --   adding  text".format((time.time()-tStart)) )
 		imageTextColor		= plotData["TextColor"]
 		imageTextSize		= int(plotData["TextSize"])
 		imageTextPos		= plotData["TextPos"].split(",")
@@ -144,7 +157,7 @@ try:
 
 	piColor = "#00FF00"
   
-	toLog("time used %4.2f"%(time.time()-tStart)+ " --   now loop though the beacons and add them" )
+	toLog("time used {:4.2f} --   now loop though the beacons and add them".format((time.time()-tStart)) )
 	for mac in plotData["mac"]: # get the next beacon
 		try:
 				this  = plotData["mac"][mac]
@@ -216,7 +229,7 @@ try:
 						ax.text(pos[0]+ textOffX ,pos[1]- textOffY ,this["nickName"], color=this["textColor"] ,size="x-small")
 
 		except  Exception, e:
-			toLog(mac + u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
+			toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e),  force=True )
 
 	try:
 		if plotData["ShowCaption"] != "0":
@@ -249,10 +262,10 @@ try:
 
 
 	# 
-	toLog("time used %4.2f"%(time.time()-tStart)+ " --   making the plot:")
+	toLog("time used {:4.2f} --   making the plot:".format((time.time()-tStart)))
 	try: 	plt.savefig((piPositionsDir+"beaconPositions.png").encode('utf8'))	# this does not work ==>   ,bbox_inches = 'tight', pad_inches = 0)
 	except  Exception, e:
-			toLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
+			toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e),  force=True )
 
 
 	try:	pngSize = os.path.getsize((piPositionsDir+"beaconPositions.png").encode('utf8'))/1024.
@@ -261,30 +274,30 @@ try:
 
 	try:
 		if plotData["compress"] :
-			toLog("time used %4.2f"%(time.time()-tStart)+ " --   compressing the png file ")
+			toLog("time used {:4.2f} --   compressing the png file ".format((time.time()-tStart)))
 			cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+piPositionsDir+"beaconPositions.png"+"'"
 			ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
 			try:	compSize = os.path.getsize((piPositionsDir+"beaconPositions.xxx").encode('utf8'))/1024.
 			except: compSize = 0
 			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
 			os.rename((piPositionsDir+"beaconPositions.xxx").encode('utf8'),(piPositionsDir+"beaconPositions.png").encode('utf8') )
-			toLog("time used %4.2f"%(time.time()-tStart)+ " --   file sizes: original file: %5.1f;  compressed file: %5.1f  [KB]"%(pngSize,compSize) )
+			toLog("time used {:4.2f}  --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 	except  Exception, e:
 			toLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
 	
 	try:
 		if imageOutfile != piPositionsDir+"beaconPositions.png":
-			toLog("time used %4.2f"%(time.time()-tStart)+ " --   moving file to destination: "+  imageOutfile)
+			toLog("time used {:4.2f} --   moving file to destination: '{}'".format((time.time()-tStart), imageOutfile) )
 			if os.path.isfile((imageOutfile).encode('utf8')): os.remove((imageOutfile).encode('utf8'))
 			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')):
 				os.rename((piPositionsDir+"beaconPositions.png").encode('utf8'),(imageOutfile).encode('utf8') )
 				if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
 	except  Exception, e:
-			toLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
+			toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e), force=True )
 
-	toLog("time used %4.2f"%(time.time()-tStart)+  " --   end  @ " +unicode(datetime.datetime.now() )  )
+	toLog("time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 except  Exception, e:
-	toLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
+	toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e), force=True )
 
 sys.exit(0)

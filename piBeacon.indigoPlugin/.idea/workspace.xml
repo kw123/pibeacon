@@ -12,26 +12,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/sunDial.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="894" column="26" lean-forward="true" selection-start-line="894" selection-start-column="26" selection-end-line="894" selection-end-column="26" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/beaconloop.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="672" column="9" selection-start-line="672" selection-start-column="9" selection-end-line="672" selection-end-column="9" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -111,8 +92,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="350" />
-    <option name="y" value="53" />
+    <option name="x" value="187" />
+    <option name="y" value="119" />
     <option name="width" value="1603" />
     <option name="height" value="1000" />
   </component>
@@ -252,12 +233,12 @@
       <workItem from="1557530247302" duration="556000" />
       <workItem from="1557547202059" duration="5783000" />
       <workItem from="1557615546056" duration="10852000" />
-      <workItem from="1557671924423" duration="5378000" />
+      <workItem from="1557671924423" duration="6258000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="38844000" />
+    <option name="totallyTimeSpent" value="39724000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -269,8 +250,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="350" y="53" width="1603" height="1000" extended-state="0" />
-    <editor active="true" />
+    <frame x="187" y="119" width="1603" height="1000" extended-state="0" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23254324" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -626,7 +606,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/beaconloop.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
+        <state relative-caret-position="-1313">
           <caret line="672" column="9" selection-start-line="672" selection-start-column="9" selection-end-line="672" selection-end-column="9" />
         </state>
       </provider>

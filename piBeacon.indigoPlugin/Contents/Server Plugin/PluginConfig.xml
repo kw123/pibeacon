@@ -519,12 +519,14 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         </List>
     </Field>
     <Field id="posLabel2" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">  
-    <Label>                  This will create a png file with the positions of the selected iBeacons (in beacon device edit)
-                  =you can supply a background image  in ~/indigo/piBeacon/plotPositions/background.png
-                  =the x,y scale number should be measured in your distance units eg 20 by30 feet/ meter ..
-                  =the xzy positions of the RPIs must be accurate as the TX power parameter of the iBeacons
-                  =The position calculation is a simple trilateration starting with the highest RPI signal. 
-                     Beacon device edit has an option to size the markers with the position accuracy</Label>    </Field>
+    <Label>        This will create a png file with the positions of the selected iBeacons (in beacon device edit)
+        =you can supply a "background.png" image in either  
+          1. check: ".../Indigo x.y/Preferences/Plugins/com.karlwachs.piBeacon/plotPositions/"
+          2. check: "/output image path/"  set below
+        =the x,y scale number should be measured in your distance units eg 20 by30 feet/ meter ..
+        =the xzy positions of the RPIs must be accurate as the TX power parameter of the iBeacons
+        =The position calculation is a simple trilateration starting with the highest RPI signal. 
+              Beacon device edit has an option to size the markers with the position accuracy</Label>    </Field>
     <Field    id="beaconPositionsdeltaDistanceMinForImage"   type="menu" defaultValue="10" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">
         <Label>...update position if an ibeacon moved by:</Label>
         <List>
