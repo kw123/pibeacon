@@ -511,7 +511,7 @@ def getIPCONFIG():
 					if	ifConfigSections[ii].find("inet addr:") >-1:
 						wlan0IP= ifConfigSections[ii].split("inet addr:")
 						if len(wlan0IP) > 1:
-							wlan0IP = wlIP[1].split(" ")[0]
+							wlan0IP = wlan0IP[1].split(" ")[0]
 					elif ifConfigSections[ii].find("inet ") >-1:
 						wlan0IP= ifConfigSections[ii].split("inet ")
 						if len(wlan0IP) > 1:

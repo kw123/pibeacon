@@ -1,3 +1,10 @@
+Added features / changes in v7.105.288 @ 2019-06-20
+===================================================
+
+1. fixed: error in Line 514 has error=global name 'wlIP' is not defined
+
+
+
 Added features / changes in v7.105.287 @ 2019-06-19
 ===================================================
 
