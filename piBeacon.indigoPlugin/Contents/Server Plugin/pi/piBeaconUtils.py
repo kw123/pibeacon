@@ -470,10 +470,15 @@ def gethostnameIP():
 
 ################################
 def getIPCONFIG():
-	wlan0IP = ""
-	eth0IP = ""
-	G.wifiEnabled = False
-	G.eth0Enabled = False
+	wlan0IP 			= ""
+	eth0IP 				= ""
+	G.packetsTimeOld	= G.packetsTime
+	G.eth0PacketsOld 	= G.eth0Packets
+	G.eth0Packets 		= ""
+	G.wlan0PacketsOld 	= G.wlan0Packets
+	G.wlan0Packets 		= ""
+	G.wifiEnabled 		= False
+	G.eth0Enabled 		= False
 	try:
 		retIfconfig = subprocess.Popen("/sbin/ifconfig " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 		if retIfconfig.find("wlan0   ") > -1: G.wifiEnabled= True
@@ -504,6 +509,12 @@ def getIPCONFIG():
 						if len(eth0IP) > 1:
 							eth0IP = eth0IP[1].split(" ")[0]
 
+					if ifConfigSections[ii].find("RX packets ") >-1:
+						eth0Packets = ifConfigSections[ii].split("RX packets ")
+						if len(eth0Packets) ==2:
+							G.eth0Packets = eth0Packets[1].split(" ")[0]
+							
+
 
 			if G.wifiEnabled:
 				if ifConfigSections[ii].find("wlan0  ") > -1 or ifConfigSections[ii].find("wlan0:") > -1 or \
@@ -516,10 +527,18 @@ def getIPCONFIG():
 						wlan0IP= ifConfigSections[ii].split("inet ")
 						if len(wlan0IP) > 1:
 							wlan0IP = wlan0IP[1].split(" ")[0]
+
+					if ifConfigSections[ii].find("RX packets ") >-1:
+						wlan0Packets = ifConfigSections[ii].split("RX packets ")
+						if len(wlan0Packets) ==2:
+							G.eth0Packets = wlan0Packets[1].split(" ")[0]
 					
 	except	Exception, e:
 		toLog(-1,u"error in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+
+	G.packetsTime = time.time()
 	return eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled
+
 ################################
 def whichWifi():
 	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
@@ -864,9 +883,10 @@ def getIPNumberMaster(quiet=False):
 	ipHostname								  = gethostnameIP()		   
 	eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
 
-	wlan0IP,eth0IP,changed = setWlanEthONoff(wlan0IP,eth0IP)
+	wlan0IP,eth0IP,changed = setWlanEthONoff(wlan0IP, eth0IP)
 	if changed: 
-		eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
+		time.sleep(2)
+		eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled= getIPCONFIG()
 
 	try:
 		try:
@@ -876,7 +896,9 @@ def getIPNumberMaster(quiet=False):
 		except:
 			ipAddressRead = ""
 
-		if not quiet: toLog(-1,"IP find:::: Indigo IP#>>{}<<; wlan0IP >>{}<<; eth0IP: >>{}<<;   hostnameIP >>{}<<;   ipAddressRead >>{}<<;   requested Config:{}".format( G.ipOfServer, wlan0IP, eth0IP, unicode(ipHostname), ipAddressRead, unicode(G.wifiEth)),doPrint=True)
+		if not quiet: 
+			toLog(-1,"IP find:: IPs#: Indigo>{}<; wlan0>{}<; eth0>{}<; hostname>{}<; AddressFile>{}<; PKTS(eth0>{},{}<; wlan0>{},{}<, dTime:{:.1f})".format( G.ipOfServer, wlan0IP, eth0IP, ipHostname, ipAddressRead, G.eth0Packets, G.eth0PacketsOld, G.wlan0Packets,G .wlan0PacketsOld, min(99.9,G.packetsTime-G.packetsTimeOld)),doPrint=True)
+			toLog(-1,"          Requested Config:{}".format(G.wifiEth),doPrint=True)
 
 
 		if testDNS() >0:
@@ -929,34 +951,44 @@ def setWlanEthONoff(wlan0IP, eth0IP):
 # G.wifiEth["wlan0"] ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 
 	changed	= False
-	if G.wifiEth["eth0"]["on"] in ["on","onIf","dontChange"] and eth0IP == "" and not G.eth0Enabled:
-		if not ( G.wifiEth["eth0"]["on"] == "onIf" and wlan0IP == "" ): 
+	if wlan0IP == "": 
+		if G.wifiEth["eth0"]["on"] in ["on","onIf","dontChange"] and eth0IP == "" and not G.eth0Enabled:
 			startEth()
 			time.sleep(10)
 			changed	= True
+			toLog(-1,u"setWlanEthONoff  ip changed: eth0[on]: {}, eth0IP:/, eth0Enabled:F, wlan0IP:{}, eth0Packets:{}, wlan0Packets:{} .. starting eth0".format(G.wifiEth["eth0"]["on"], G.eth0Packets, G.wlan0Packets) ) 
 		
-	if G.switchedToWifi and wlan0IP != "": 
-			eth0IP = ""
-			changed	= True
-
-	if G.switchedToWifi:
+	if G.switchedToWifi != 0 and time.time() - G.switchedToWifi < 100:
+		G.switchedToWifi =time.time() + 100.
+		# reset eth packet counters
+		if G.eth0Enabled:
+			##sudo rfkill unblock all ;sudo ifconfig eth0 down ;sudo modprobe -r e1000 ;sudo modprobe e1000 ;sudo ifconfig eth0 up
+			stopEth()
+			startEth()
 		if wlan0IP == "": 
 			if not G.wifiEnabled:
 				startWiFi()
 				time.sleep(10)
 			changed	= True
+			toLog(-1,u"etWlanEthONoff  ip changed: switchedToWifi:T , wlan0IP:/, wifiEnabled:F starting WiFi".format(wlan0IP, G.eth0Packets, G.wlan0Packets) ) 
 
-		elif eth0IP != "" and G.eth0Enabled:
-			G.wifiEth	= copy.copy(G.wifiEthOld)
-			G.switchedToWifi	= False
-			if G.wifiEth["wlan0"]["on"]  in ["onIf","off"]:
-				wlan0IP = ""
-				stopWiFi()
-				time.sleep(2)
-				changed	= True
+	# check if ethernet is back after 5 minutes
+	if G.switchedToWifi != 0 and time.time() - G.switchedToWifi > 300:
+		if eth0IP != "" and G.eth0Enabled:
+			if G.eth0Packets != G.eth0PaketsOld and (G.packetsTime- G.packetsTimeOld > 2.):
+				if testPing() != 0:
+					G.wifiEth	= copy.copy(G.wifiEthOld)
+					G.switchedToWifi = 0
+					if G.wifiEth["wlan0"]["on"]  in ["onIf","off"]:
+						stopWiFi()
+						time.sleep(2)
+					changed	= True
+					toLog(-1,u"setWlanEthONoff  ip changed: resetting switchedToWifi, eth0 seems to be back(packet count);  wlan0[on]:{}, eth0IP:{}, G.eth0Enabled:T, stopWiFi".format(G.wifiEth["wlan0"]["on"],eth0IP) ) 
 
 	if changed: 
+		time.sleep(2)
 		eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
+		toLog(-1,u"setWlanEthONoff  return: eth0IP:{}, wlan0IP:{}, eth0Enabled:{}, wifiEnabled:{}, eth0Packets:{},eth0PacketsOld:{}, wlan0Packets:{},  wlan0PacketsOld:{}".format(eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled, G.eth0Packets, G.wlan0Packets  ) ) 
 		return wlan0IP, eth0IP, True
 
 
@@ -964,25 +996,26 @@ def setWlanEthONoff(wlan0IP, eth0IP):
 		if eth0IP !="":
 			toLog(-1,u"switching WiFi off",doPrint=True)
 			stopWiFi()
-			wlan0IP = ""
 			changed = True
+			toLog(-1,u"setWlanEthONoff  ip changed: G.wifiEth[wlan0][on] not in [on,dontChange] and wlan0IP:{}  and G.wifiEnabled, eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(wlan0IP, eth0IP, G.eth0Packets, G.wlan0Packets ) ) 
 		else:
-			toLog(-1,u"switching wifi off not possible as eth0 not on ",doPrint=True)
+			toLog(-1,u"switching WiFi off not possible as eth0 not on ",doPrint=True)
 
 
 	if G.wifiEth["eth0"]["on"] == "off" and eth0IP != "": 
 			toLog(-1,u"switching eth0 off",doPrint=True)
+			toLog(-1,u"setWlanEthONoff  ip changed: G.wifiEth[eth0][on] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(eth0IP, G.eth0Packets, G.wlan0Packets) ) 
 			stopEth()
-			eth0IP = ""
 			changed = True
 
 	if  G.wifiEth["eth0"]["useIP"] == "off" and eth0IP !="":
-		eth0IP  = ""
+		toLog(-1,u"setting eth0 /",doPrint=True)
+		toLog(-1,u"setWlanEthONoff  ip changed: G.wifiEth[eth0][useIP] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(eth0IP, G.eth0Packets, G.wlan0Packets) ) 
 		changed = True
 
 	if  G.wifiEth["wlan0"]["useIP"] == "off" and wlan0IP !="":
-		wlan0IP =""
 		changed = True
+		toLog(-1,u"setWlanEthONoff  ip changed: G.wifiEth[wlan0][useIP] ==off and  wlan0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(wlan0IP, G.eth0Packets, G.wlan0Packets) ) 
 
 
 
@@ -1012,7 +1045,7 @@ def testPing(ipIn=""):
 
 		if ipIn =="": ipToPing = G.ipOfServer
 		else:		  ipToPing = ipIn
-		toLog(-1, "testPing input>>{}<< indigoIP>>{}<<".format(ipIn,G.ipOfServer) )
+		toLog(1, "testPing input>>{}<< indigoIP>>{}<<".format(ipIn,G.ipOfServer) )
 		
 		# IPnumber setup?
 		ipi =  (ipToPing.strip()).split(".")
@@ -1036,7 +1069,7 @@ def testPing(ipIn=""):
 		if ipIn !="":
 			return 1
 
-		toLog(1,"testPing can not connect to server: {}	ping code:{}".format(ipToPing,unicode(ret)) )
+		toLog(-1,"testPing can not connect to server: {}	ping code:{}".format(ipToPing,unicode(ret)) )
 			
 		return 2
 
@@ -2494,7 +2527,7 @@ def testDNS():
 				ret =testPing(ipIn=ip[1]) 
 				if	ret ==0:
 					#print	" DNS server reachable at:"+ip[1]
-					toLog(-1," DNS server reachable at:"+ip[1])
+					toLog(1," DNS server reachable at:"+ip[1])
 					return 0
 				if ret ==-2:
 					toLog(-1,"still waiting for installLibs to finish",doPrint=True)

@@ -75,7 +75,13 @@ enableMuxI2C		= -1
 enableMuxBus		= ""
 IndigoOrSocket		= "indigo"
 indigoInputPORT		= 0
-switchedToWifi 		= False
+switchedToWifi 		= 0
+wlan0Packets		= ""
+eth0Packets			= ""
+wlan0PacketsOld		= ""
+eth0PacketsOld		= ""
+packetsTime			= 0
+packetsTimeOld		= 0
 
 BeaconUseHCINo		="-1"
 BLEconnectUseHCINo	="-1"

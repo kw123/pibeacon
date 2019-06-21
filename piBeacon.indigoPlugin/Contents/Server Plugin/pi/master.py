@@ -1463,7 +1463,7 @@ if True:
 						G.wifiEth["wlan0"]["useIP"] = "use"
 						G.wifiEth["eth0"]["on"]     = "onIf"
 						G.wifiEth["eth0"]["useIP"]  = "useIf"
-						G.switchedToWifi = True
+						G.switchedToWifi = time.time()
 						U.getIPNumberMaster()
 			else: 
 				U.toLog(-1, "can ping indigo server at ip:>>{}<<".format(G.ipOfServer), doPrint=True)
@@ -1570,12 +1570,12 @@ if True:
 	startingnetworkype	  = G.networkType
 	restartCLock		  = time.time() +  999999999.
 
-	retCode, changed = U.getIPNumberMaster(quiet=True)
+	retCode, changed = U.getIPNumberMaster(quiet=False)
 	if retCode ==0 and G.ipAddress !="":
 		U.setNetwork("on")
 	
 	if changed: 
-		U.restartMyself(reason="changed ip number, ie wifi was switched off with eth0 present")
+		U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (1)")
 
 	os.system("rm  "+ G.homeDir+"temp/sending		   > /dev/null 2>&1 ")
 
@@ -1629,7 +1629,7 @@ if True:
 					os.system("reboot now")
 
 				if changed: 
-					U.restartMyself(reason="changed ip number, ie wifi was switched off with eth0 present")
+					U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (loop)")
 
 				if retCode == 0 and G.ipAddress !="":
 					U.setNetwork("on")
@@ -1762,7 +1762,7 @@ if True:
 						if G.networkType =="clockMANUAL"  and (time.time() - restartCLock)> 0  :
 							xx = G.networkType
 							G.networkType="x"
-							ipOK = U.getIPNumberMaster(quiet=True)
+							ipOK, changed = U.getIPNumberMaster(quiet=True)
 							G.networkType = xx
 							#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
 
@@ -1777,7 +1777,7 @@ if True:
 							U.clearNetwork()
 							xx = G.networkType
 							G.networkType="x"
-							ipOK = U.getIPNumberMaster(quiet=False)
+							ipOK, changed = U.getIPNumberMaster(quiet=False)
 							G.networkType = xx
 							#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
 							if ipOK ==0 and G.networkStatus.find("Inet") >-1:
