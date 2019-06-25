@@ -1,8 +1,34 @@
+Added features / changes in v7.105.293 @ 2019-06-22
+===================================================
+
+1. allows now to "nnormally creat an RPi beside "basic initial setup of RPI.
+   you can now setup all parameters from device edit 
+   basic initial setup is still available
+
+2. cleaned up device edit py programs (internal only)
+
+3. cleaned up wlan/eth management on RPI
+
+
+
+Added features / changes in v7.105.291 @ 2019-06-22
+===================================================
+
+1. fix .. hopefully .. last bug w wlan eth management
+    did not read changed settings on RPI
+2. packages w wrong/changed RPI-IP number are now processed not rejected - a warning message is logged, data is ignored
+      IF message does NOT start w "pi_IN_":
+          NO ACK is send to that device w wrong sender IP .. assuming junk data and from a bad IP number
+      IF message has right structure:
+          ok ACK is send nervertheless
+
+
 Added features / changes in v7.105.290 @ 2019-06-20
 ===================================================
 
 1. fixed: wifi only setup, RPI master  was always restarting
    added check for # of wlan0 / wifi packages to check if networks are up
+
 
 
 Added features / changes in v7.105.288 @ 2019-06-20

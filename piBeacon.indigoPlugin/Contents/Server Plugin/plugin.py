@@ -328,9 +328,9 @@ class Plugin(indigo.PluginBase):
 		self.indiLOG.log(40, "logger  enabled for   ERROR          ==> TEST ONLY ")
 		self.indiLOG.log(50, "logger  enabled for   CRITICAL       ==> TEST ONLY ")
 		indigo.server.log(  u"end testing logger .... )")
-		indigo.server.log(  u"Plugin short Name     {}".format(self.pluginShortName) )
-		indigo.server.log(  u"my PID                {}".format(unicode(self.myPID)) )
-		indigo.server.log(  u"set params 4 indigo V {}".format(unicode(self.indigoVersion)) )
+		indigo.server.log(  u"Plugin short Name       {}".format(self.pluginShortName) )
+		indigo.server.log(  u"my PID                  {}".format(unicode(self.myPID)) )
+		indigo.server.log(  u"set params for indigo V {}".format(unicode(self.indigoVersion)) )
 
 ####-------------------------------------------------------------------------####
 	def __del__(self):
@@ -379,6 +379,8 @@ class Plugin(indigo.PluginBase):
 			## create the folder and variables we use to receive the messages from the pis through the indigo webserver
 			self.deleteAndCeateVariables(False)
 
+			self.initMac2Vendor()
+
 			self.startupFIXES1()
 
 			self.resetMinMaxSensors(init=True)
@@ -390,7 +392,6 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(10, "startup(self): setting variables, debug ..   finished ")
 	  
-			self.initMac2Vendor()
  
 		except Exception, e:
 			self.indiLOG.critical(u"--------------------------------------------------------------------------------------------------------------")
@@ -483,33 +484,33 @@ class Plugin(indigo.PluginBase):
 							dev.updateStateOnServer(u"lastSensorChange",dateString)
 
 					if dev.deviceTypeId == u"BLEconnect":
-						props["isBLEconnectDevice"] = True
+						props[u"isBLEconnectDevice"] = True
 
 					if dev.deviceTypeId in _GlobalConst_allowedSensors:
-						props["isSensorDevice"] = True
+						props[u"isSensorDevice"] = True
 						upd = True
 
 					if dev.deviceTypeId in _GlobalConst_allowedOUTPUT:
-						props["isOutputDevice"] = True
+						props[u"isOutputDevice"] = True
 						upd = True
 
 					if (dev.deviceTypeId.lower()) =="rpi":
-						props["isRPIDevice"] = True
-						props["typeOfBeacon"] =u"rPI"
+						props[u"isRPIDevice"] = True
+						props[u"typeOfBeacon"] =u"rPI"
 						upd = True
 						if props[u"address"] in self.beacons:
 							self.beacons[props[u"address"]][u"typeOfBeacon"] = u"rPI"
 
 					if dev.deviceTypeId =="rPI-Sensor":
-						props["isRPISensorDevice"] = True
+						props[u"isRPISensorDevice"] = True
 						upd = True
 
 					if dev.deviceTypeId =="beacon":
-						props["isBeaconDevice"] = True
+						props[u"isBeaconDevice"] = True
 						upd = True
 
 					if dev.deviceTypeId =="car":
-						props["isCARDevice"] = True
+						props[u"isCARDevice"] = True
 						upd = True
 
 					if upd:
@@ -523,6 +524,78 @@ class Plugin(indigo.PluginBase):
 				os.remove(self.indigoPreferencesPluginDir + "config")
 			except:
 				pass
+
+
+			self.indiLOG.log(10, u" ..   checking devices tables" )
+
+	######## fix rPi- --> Pi-
+			for dev in indigo.devices.iter("props.isRPIDevice,props.isRPISensorDevice"):
+				dd = dev.description
+				if dev.description.find("rPI") >-1:
+					dd = dd.split("-")
+					if len(dd) == 3:
+						dev.description = "Pi-"+dd[1]+"-"+dd[2]
+						dev.replaceOnServer()
+
+				props = dev.pluginProps
+
+				if dev.deviceTypeId.find("rPI") >-1:
+					if dev.deviceTypeId.find("rPI-Sensor") >-1:
+						dev.updateStateOnServer("note","Pi-"+dev.address)
+					else:
+						if dev.description.find("Pi-"):
+							nn = dev.states["note"].split("-")
+							if len(nn) == 3:
+								dev.updateStateOnServer("note","Pi-"+nn[1])
+
+
+	######## fix  address vendors ..
+			for dev in indigo.devices.iter(self.pluginId):
+				props = dev.pluginProps
+
+				if dev.deviceTypeId == u"rPi" or dev.deviceTypeId == u"beacon":
+					self.freezeAddRemove = False
+
+					try:
+						beacon = props[u"address"]
+					except:
+						self.indiLOG.log(40,"device has no address: " + dev.name + u" " + unicode(dev.id) +
+							unicode(props) + u" " + unicode(dev.globalProps) + u" please delete and let the plugin create the devices")
+						continue
+
+					if beacon not in self.beacons:
+						self.beacons[beacon]			 = copy.deepcopy(_GlobalConst_emptyBeacon)
+						self.beacons[beacon][u"indigoId"] = dev.id
+						self.beacons[beacon][u"created"]  = dev.states[u"created"]
+
+					if "vendorName" in dev.states and  len(dev.states["vendorName"]) == 0:
+						vname = self.getVendortName(beacon)
+						if vname !="" and  vname != dev.states["vendorName"]:
+							dev.updateStateOnServer( "vendorName", vname)
+
+
+				if dev.deviceTypeId.find(u"OUTPUTgpio") > -1:
+					xxx = json.loads(props[u"deviceDefs"])
+					nn = len(xxx)
+					update=False
+					for n in range(nn):
+						if u"gpio" in xxx[n]:
+							if xxx[n][u"gpio"] == "-1":
+								del xxx[n]
+								continue
+							if	u"initialValue" not in xxx[n]:
+								xxx[n][u"initialValue"] ="-"
+								update=True
+					if update: 
+						props[u"deviceDefs"] = json.dumps(xxx)
+						dev.replacePluginPropsOnServer(props)
+					###indigo.server.log(dev.name+" "+unicode(props))
+
+
+				if "description" in props: 
+					props["description"] =""
+					dev.replacePluginPropsOnServer(props)
+
 
 
 		except Exception, e:
@@ -680,7 +753,7 @@ class Plugin(indigo.PluginBase):
 			self.newBeaconsLogTimer			= 0
 			self.selectBeaconsLogTimer		= {}
 
-			self.rPi						= {}
+			self.RPI						= {}
 			self.beacons					= {}
 
 			self.PasswordsAreSet			= 0
@@ -1235,7 +1308,7 @@ class Plugin(indigo.PluginBase):
 		self.saveTcpipSocketStats()
 
 ####-------------------------------------------------------------------------####
-	def saveTcpipSocketStats(self):
+	def	saveTcpipSocketStats(self):
 		 self.writeJson(self.dataStats, fName=self.indigoPreferencesPluginDir + u"dataStats", fmtOn=True )
 
 
@@ -1595,7 +1668,7 @@ class Plugin(indigo.PluginBase):
 		###### ZONE ON ######
 		if action.sprinklerAction == indigo.kSprinklerAction.ZoneOn:
 			# first reset all relays -- besides the new and controll 
-			if props["PumpControlOn"]: nValves = dev.zoneCount-1
+			if props[u"PumpControlOn"]: nValves = dev.zoneCount-1
 			else: nValves = dev.zoneCount
 			try:	activeZone = int(int(action.zoneIndex))
 			except: activeZone = 0
@@ -1606,11 +1679,11 @@ class Plugin(indigo.PluginBase):
 			inverseGPIO		   = []
 			for nn in range(nValves):
 				if nn+1 == int(action.zoneIndex):							 continue
-				##if nn-1 ==  nValves and dev.pluginProps["PumpControlOn"]: continue 
-				GPIOpin.append(props["GPIOzone"+unicode(nn+1)])
+				##if nn-1 ==  nValves and dev.pluginprops[u"PumpControlOn"]: continue 
+				GPIOpin.append(props[u"GPIOzone"+unicode(nn+1)])
 				dictForRPI["deviceDefs"] = json.dumps(deviceDefs)
 				cmd.append("down")
-				if "relayOnIfLow" in props and not props["relayOnIfLow"]:
+				if "relayOnIfLow" in props and not props[u"relayOnIfLow"]:
 					inverseGPIO.append(False)
 				else:
 					inverseGPIO.append(True)
@@ -1620,18 +1693,18 @@ class Plugin(indigo.PluginBase):
 				dictForRPI[ u"deviceDefs"] = json.dumps(deviceDefs)
 				dictForRPI[ u"cmd"]		   =  u"pulseUp"
 				dictForRPI[ u"pulseUp"]	   = dev.zoneMaxDurations[action.zoneIndex-1]*60
-				if "relayOnIfLow" in props and not props["relayOnIfLow"]:
+				if "relayOnIfLow" in props and not props[u"relayOnIfLow"]:
 					dictForRPI[ u"inverseGPIO"] = False
 				else:
 					dictForRPI[ u"inverseGPIO"] = True
 				self.setPin(dictForRPI)
 
 			self.sleep(0.1)	   ## we need to wait until all gpios are of, other wise then next might be before one of the last off
-			deviceDefs[0][ u"gpio"]		= props["GPIOzone"+unicode(action.zoneIndex)]
+			deviceDefs[0][ u"gpio"]		= props[u"GPIOzone"+unicode(action.zoneIndex)]
 			dictForRPI[ u"deviceDefs"]	= json.dumps(deviceDefs)
 			dictForRPI[ u"cmd"]			=  u"pulseUp"
 			dictForRPI[ u"pulseUp"]		= dev.zoneMaxDurations[action.zoneIndex-1]*60
-			if "relayOnIfLow" in props and not props["relayOnIfLow"]:
+			if "relayOnIfLow" in props and not props[u"relayOnIfLow"]:
 				dictForRPI[ u"inverseGPIO"] = False
 			else:
 				dictForRPI[ u"inverseGPIO"] = True
@@ -1691,10 +1764,10 @@ class Plugin(indigo.PluginBase):
 			cmd=[]
 			inverseGPIO =[]
 			for nn in range(nValves):
-				GPIOpin.append(props["GPIOzone"+unicode(nn+1)])
+				GPIOpin.append(props[u"GPIOzone"+unicode(nn+1)])
 				dictForRPI["deviceDefs"] = json.dumps(deviceDefs)
 				cmd.append("down")
-				if "relayOnIfLow" in props and not props["relayOnIfLow"]:
+				if "relayOnIfLow" in props and not props[u"relayOnIfLow"]:
 					inverseGPIO.append(False)
 				else:
 					inverseGPIO.append(True)
@@ -1797,7 +1870,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(unicode(dev.id), "allZonesMinutesDuration",	 0)
 
 				else:
-					if props["PumpControlOn"]: nValves = dev.zoneCount-1
+					if props[u"PumpControlOn"]: nValves = dev.zoneCount-1
 					else: nValves	 = dev.zoneCount
 					durations		 = dev.zoneScheduledDurations
 					zoneMaxDurations = dev.zoneMaxDurations
@@ -1836,7 +1909,7 @@ class Plugin(indigo.PluginBase):
 						if len(lastList) != dev.zoneCount:
 							lastList = ["0" for ii in range(dev.zoneCount)]
 						lastList[activeZone-1] = unicode( int(lastList[activeZone-1])+1 )
-						if props["PumpControlOn"] :
+						if props[u"PumpControlOn"] :
 							lastList[dev.zoneCount-1] = unicode( int(lastList[dev.zoneCount-1])+1 )
 						lastList = ",".join(lastList)
 						self.addToStatesUpdateDict(unicode(dev.id),xx,lastList)
@@ -1982,6 +2055,8 @@ class Plugin(indigo.PluginBase):
 
 			self.startUpdateRPIqueues("start")
 
+			self.fixPropsAtStart()
+
 			self.indiLOG.log(10, u" .. config read from files")
 			self.fixConfig(checkOnly = ["all","rpi","beacon","CARS","sensors","output","force"], fromPGM="readconfig") 
 
@@ -1989,6 +2064,10 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			exit(1)
 
+
+####-------------------------------------------------------------------------####
+	def	fixPropsAtStart(self):
+		return 
 
 ####-------------------------------------------------------------------------####
 	def getParamsFromFile(self,newName, oldName="", default ={}): # called from read config for various input files
@@ -2087,7 +2166,7 @@ class Plugin(indigo.PluginBase):
 			for dev in indigo.devices.iter("props.isBLEconnectDevice"):
 					try:
 						props = dev.pluginProps
-						beacon = props["macAddress"]
+						beacon = props[u"macAddress"]
 						if "showBeaconOnMap" not in props: continue
 						if props[u"showBeaconOnMap"] =="0": continue
 						if self.beaconPositionsData[u"ShowExpiredBeacons"] == "0" and dev.states["status"] == u"expired": continue
@@ -2265,7 +2344,7 @@ class Plugin(indigo.PluginBase):
 								props[u"addNewOneWireSensors"] = "0"
 								upd = True
 
-							if u"ipNumberPi" not in props or ( len(self.RPI[unicode(pi)][u"ipNumberPi"])> 6 and self.RPI[unicode(pi)][u"ipNumberPi"] != props[u"ipNumberPi"]):
+							if u"ipNumberPi" not in props or (self.isValidIP(self.RPI[unicode(pi)][u"ipNumberPi"]) and self.RPI[unicode(pi)][u"ipNumberPi"] != props[u"ipNumberPi"]):
 								upd=True
 								props[u"ipNumberPi"] = self.RPI[unicode(pi)][u"ipNumberPi"]
 
@@ -2295,7 +2374,7 @@ class Plugin(indigo.PluginBase):
 
 							if dev.enabled:
 								if self.RPI[unicode(pi)][u"piOnOff"] != "1":
-									try:	del self.checkIPSendSocketOk[self.RPI[unicode(pi)][u"ipNumber"]]
+									try:	del self.checkIPSendSocketOk[self.RPI[unicode(pi)][u"ipNumberPi"]]
 									except: pass
 								self.RPI[unicode(pi)][u"piOnOff"] = "1"
 							else:
@@ -2311,13 +2390,17 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							self.indiLOG.log(40, u"communication to indigo is interrupted")
 							return
-						self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-						self.indiLOG.log(40,u"error normal if rpi has been deleted, removing from list: setting piDevId=0")
-						self.RPI[unicode(pi)][u"piDevId"] =0
+						self.sleep(0.2)
+						if self.RPI[unicode(pi)][u"piDevId"] !=0:
+							try:
+								self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								self.indiLOG.log(40,u"error normal if rpi has been deleted, removing from list: setting piDevId=0")
+							except: pass
+							self.delRPI(pi=pi)
 						anyChange = True
 
 					if self.RPI[unicode(pi)][u"piOnOff"] != "0":
-						if len(self.RPI[unicode(pi)][u"ipNumberPi"]) < 8:
+						if not self.isValidIP(self.RPI[unicode(pi)][u"ipNumberPi"]):
 							self.RPI[unicode(pi)][u"piOnOff"] = "0"
 							anyChange = True
 							continue
@@ -2328,9 +2411,9 @@ class Plugin(indigo.PluginBase):
 		try:
 			if "all" in checkOnly:
 				delDEV = []
-				for dev in indigo.devices.iter("props.isCARDevice,props.isBeaconDevice,props.isRPIDevice"):
+				for dev in indigo.devices.iter("props.isCARDevice,props.isBeaconDevice,props.isRPIDevice,props.isRPISensorDevice"):
+					props=dev.pluginProps
 					if dev.deviceTypeId==u"car": 
-						props=dev.pluginProps
 						newP = self.setupCARS(dev.id,props,mode="init")
 						if newP[u"description"] != dev.description:
 							if self.decideMyLog(u"CAR"): self.indiLOG.log(10, u"replacing car props"+ dev.name+"  "+ newP[u"description"]+"  "+ dev.description)
@@ -2339,6 +2422,16 @@ class Plugin(indigo.PluginBase):
 							anyChange = True
 						continue
 
+
+					if u"description" in props:
+						if props[u"description"] !="":
+							if dev.description != props[u"description"]:
+								dev.description = props[u"description"]
+								self.indiLOG.log(20,"{} updating descriptions {}".format(dev.name, props[u"description"]))
+								props[u"description"] =""
+								dev.replaceOnServer()
+								updateProps = True
+
 					if dev.deviceTypeId.find(u"rPI") >-1: 
 						props= dev.pluginProps
 						try:	pi = int(dev.states[u"note"].split(u"-")[1])
@@ -2346,9 +2439,17 @@ class Plugin(indigo.PluginBase):
 						try:	beacon = props[u"address"]
 						except: beacon =""
 
-						if u"ipNumberPi" in props and len(props[u"ipNumberPi"])> 6 and self.RPI[unicode(pi)][u"ipNumberPi"] != props[u"ipNumberPi"]:
-							self.indiLOG.log(20, u"dev :" + dev.name + " fixing ipNumber in RPI")
-							self.RPI[unicode(pi)][u"ipNumberPi"] = props[u"ipNumberPi"]
+						if u"ipNumberPi" in props and self.isValidIP(self.RPI[unicode(pi)][u"ipNumberPi"]) and self.RPI[unicode(pi)][u"ipNumberPi"] != props[u"ipNumberPi"]:
+							self.indiLOG.log(20, "{} fixing ipNumber in RPI device props to {}".format(dev.name, self.RPI[unicode(pi)][u"ipNumberPi"]))
+							dev.description = "Pi-{}-{}".format(pi,self.RPI[unicode(pi)][u"ipNumberPi"])
+							dev.replaceOnServer()
+							props[u"ipNumberPi"] = self.RPI[unicode(pi)][u"ipNumberPi"]  
+							dev.replacePluginPropsOnServer(props)
+							anyChange = True
+
+						if u"ipNumberPi" in props and self.isValidIP(props[u"ipNumberPi"]) and self.RPI[unicode(pi)][u"ipNumberPi"] != props[u"ipNumberPi"]:
+							self.indiLOG.log(20, "{} fixing ipNumber in RPI device props to {}".format(dev.name, props[u"ipNumberPi"]))
+							self.RPI[unicode(pi)][u"ipNumberPi"]  = props[u"ipNumberPi"]
 							anyChange = True
 
 						if dev.id != self.RPI[unicode(pi)][u"piDevId"]:
@@ -2502,7 +2603,7 @@ class Plugin(indigo.PluginBase):
 
 
 						else:
-							self.beacons[beacon][u"updateSignalValuesSeconds"] = _GlobalConst_emptyBeacon[u"updateSignalValuesSeconds"]
+							self.beacons[beacon][u"updateSignalValuesSeconds"] = copy.copy(_GlobalConst_emptyBeacon[u"updateSignalValuesSeconds"])
 				for beacon in remove:
 					self.indiLOG.log(20,  u"fixConfig:  deleting beacon:"+beacon+" " +unicode(self.beacons[beacon]))
 					del self.beacons[beacon]
@@ -2517,7 +2618,7 @@ class Plugin(indigo.PluginBase):
 					if self.beacons[beacon][u"typeOfBeacon"].lower() == "rpi":
 						if self.beacons[beacon][u"note"].find(u"Pi-") == 0:
 							try:
-								pi = int(self.beacons[beacon][u"note"][3:])
+								pi = int(self.beacons[beacon][u"note"].split("-")[1])
 							except:
 								continue
 							if self.beacons[beacon][u"indigoId"] != 0 :# and self.beacons[beacon][u"ignore"] ==0:
@@ -2623,20 +2724,28 @@ class Plugin(indigo.PluginBase):
 		return ""
 
 ####-------------------------------------------------------------------------####
-	def saveConfig(self):
-		self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
+	def saveConfig(self, only="all"):
 
-		self.saveCARS()
+		if only in ["all", "RPIconf"]:
+			self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
 
-		self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
+		if only in ["all"]:
+			self.saveCARS()
 
-		self.makeBeacons_parameterFile()
+		if only in ["all"]:
+			self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
 
-		self.writeJson( self.beaconsUUIDtoName, fName=self.indigoPreferencesPluginDir + u"beaconsUUIDtoName")
+		if only in ["all"]:
+			self.makeBeacons_parameterFile()
 
-		self.writeJson( self.beaconsIgnoreUUID, fName=self.indigoPreferencesPluginDir + u"beaconsIgnoreUUID")
+		if only in ["all"]:
+			self.writeJson( self.beaconsUUIDtoName, fName=self.indigoPreferencesPluginDir + u"beaconsUUIDtoName")
 
-		self.writeJson(self.beaconsUUIDtoIphone,fName=self.indigoPreferencesPluginDir + u"beaconsUUIDtoIphone")
+		if only in ["all"]:
+			self.writeJson( self.beaconsIgnoreUUID, fName=self.indigoPreferencesPluginDir + u"beaconsIgnoreUUID")
+
+		if only in ["all"]:
+			self.writeJson(self.beaconsUUIDtoIphone,fName=self.indigoPreferencesPluginDir + u"beaconsUUIDtoIphone")
 
 
 ####-------------------------------------------------------------------------####
@@ -2644,14 +2753,6 @@ class Plugin(indigo.PluginBase):
 		dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 		updateProps = False
 		props = dev.pluginProps
-
-		if u"description" in props:
-			if dev.description != props[u"description"] and props[u"description"] !="":
-				dev.description = props[u"description"]
-				props[u"description"] =""
-				dev.replaceOnServer()
-				updateProps = True
-
 		if dev.deviceTypeId == u"rPI-Sensor":
 			if len(unicode(dev.address)) < 2 or unicode(dev.address) == "-None-" or dev.address is None:
 				notes =	 dev.description.split(u"-")
@@ -2683,7 +2784,7 @@ class Plugin(indigo.PluginBase):
 
  
 
-
+		updatedev = False
 		if dev.deviceTypeId == "rPI":
 			for prop in _GlobalConst_emptyrPiProps:
 				if prop not in props:
@@ -2695,14 +2796,17 @@ class Plugin(indigo.PluginBase):
 							props[prop] = True
 						else:
 							props[prop] = False
-
-			if dev.description.find(u"rPI-") > -1:
+			
+			if dev.description.find(u"Pi-") > -1:
 				if dev.states[u"note"].find(u"Pi-") > -1:
 					pi= dev.states[u"note"].split(u"-")[1]
-					if dev.description != "rPI-"+pi+"-"+self.RPI[unicode(pi)][u"ipNumberPi"]:
-						updateProps = True
-						dev.description = "rPI-"+pi+"-"+self.RPI[unicode(pi)][u"ipNumberPi"]
 					self.RPI[unicode(pi)][u"piDevId"] =dev.id
+
+
+		if updatedev:
+			dev.replaceOnServer()
+
+
 		if updateProps:
 			updateProps= False
 			dev.replacePluginPropsOnServer(props)
@@ -2842,11 +2946,11 @@ class Plugin(indigo.PluginBase):
 							dev.replaceOnServer()
 							dev = indigo.devices[dev.id]
 							props = dev.pluginProps
-							props["SupportsSensorValue"] 		= True
-							props["SupportsOnState"] 			= False
-							props["AllowSensorValueChange"] 	= False
-							props["AllowOnStateChange"] 		= False
-							props["SupportsStatusRequest"] 		= False
+							props[u"SupportsSensorValue"] 		= True
+							props[u"SupportsOnState"] 			= False
+							props[u"AllowSensorValueChange"] 	= False
+							props[u"AllowOnStateChange"] 		= False
+							props[u"SupportsStatusRequest"] 		= False
 							dev.replacePluginPropsOnServer(props)
 							self.indiLOG.log(20,"SupportsSensorValue  after replacePluginPropsOnServer")
 
@@ -2858,11 +2962,11 @@ class Plugin(indigo.PluginBase):
 							dev.replaceOnServer()
 							dev = indigo.devices[dev.id]
 							props = dev.pluginProps
-							props["SupportsSensorValue"] 		= False
-							props["SupportsOnState"] 			= True
-							props["AllowSensorValueChange"] 	= False
-							props["AllowOnStateChange"] 		= False
-							props["SupportsStatusRequest"] 		= False
+							props[u"SupportsSensorValue"] 		= False
+							props[u"SupportsOnState"] 			= True
+							props[u"AllowSensorValueChange"] 	= False
+							props[u"AllowOnStateChange"] 		= False
+							props[u"SupportsStatusRequest"] 		= False
 							dev.replacePluginPropsOnServer(props)
 							if dev.deviceTypeId in ["rPI","rPI-Sensor","beacon","BLEconnect"]:
 								dev= indigo.devices[dev.id]
@@ -2880,6 +2984,13 @@ class Plugin(indigo.PluginBase):
 
 
 				props= dev.pluginProps
+				if dev.deviceTypeId in ["rPI","rPI-Sensor"]:
+					if "ipNumber" in props:
+						if "ipNumberPi" not in props:
+							props[u"ipNumberPi"] = props["ipNumber"]
+						del props["ipNumber"]
+						dev.replacePluginPropsOnServer(props)
+
 				if u"piServerNumber" in props:
 					piN = props[u"piServerNumber"]	  
 					self.updateNeeded = "enable-"+unicode(piN)
@@ -2906,6 +3017,13 @@ class Plugin(indigo.PluginBase):
 						self.beacons[beacon][u"indigoId"] = 0
 						self.beacons[beacon][u"ignore"]	  = 1
 						self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
+		if dev.deviceTypeId.find("rPI") > -1:
+			try:
+				pi = dev.description.split("-")
+				if len(pi) > 0:
+					self.delRPI(pi=pi[1])
+			except:
+				pass
 		self.deviceStopComm(dev)
 		return
 
@@ -2917,9 +3035,7 @@ class Plugin(indigo.PluginBase):
 
 				if self.freezeAddRemove : self.sleep(0.2)
 
-				if u"piServerNumber" in props:
-					piN = props[u"piServerNumber"]	  
-					self.updateNeeded = "disable-"+unicode(piN)
+				self.updateNeeded = " disable "
 
 				self.statusChanged=2
  
@@ -2940,16 +3056,59 @@ class Plugin(indigo.PluginBase):
 	###########################		DEVICE	#################################
 ####-------------------------------------------------------------------------####
 	def getDeviceConfigUiValues(self, pluginProps, typeId="", devId=0):
-		if typeId in [u"beacon", u"rPI"]:
+		if typeId in [u"beacon", u"rPI", u"rPI-Sensor"]:
 			try:
 				theDictList =  super(Plugin, self).getDeviceConfigUiValues(pluginProps, typeId, devId)
-				## indigo.server.log("1:\n"+unicode(theDictList[0])+"\n2\n"+ unicode(theDictList[1]) )
-				if u"address" in theDictList[0]: # 0= valuesDict,1 = errors dict
-					if theDictList[0][u"address"] != "00:00:00:00:00:00": 
-						theDictList[0][u"newMACNumber"] = copy.copy(theDictList[0][u"address"])
-					else:
-						theDictList[0][u"newMACNumber"] = ""
-				return theDictList
+				if typeId != "rPI-Sensor":
+					if u"address" in theDictList[0]: # 0= valuesDict,1 = errors dict
+						if theDictList[0][u"address"] != "00:00:00:00:00:00": 
+							theDictList[0][u"newMACNumber"] = copy.copy(theDictList[0][u"address"])
+						else:
+							theDictList[0][u"newMACNumber"] = ""
+
+
+				if typeId.find("rPI") >- 1:
+					try:
+						if "MSG" in theDictList[0]:
+							theDictList[0][u"enablePiNumberMenu"]  = False
+						else:
+							theDictList[0][u"newauthKeyOrPassword"]  = "assword"
+							theDictList[0][u"newenableRebootCheck"]  = "restartLoop,-"
+							theDictList[0][u"enablePiNumberMenu"]  = True
+
+
+						dev = indigo.devices[devId]
+						pi = "-1"
+						if typeId =="rPI":	rpiNo = dev.states["note"].split("-")
+						else:				rpiNo = dev.address.split("-")
+
+						try:	
+							pi = str(int(rpiNo[1]))
+							theDictList[0][u"RPINumber"] = pi
+						except: 
+							if typeId == "rPI-Sensor":
+								for xx in range(_GlobalConst_numberOfiBeaconRPI,_GlobalConst_numberOfRPI):
+									if self.RPI[unicode(xx)]["piDevId"] == 0:
+										theDictList[0][u"RPINumber"] = unicode(xx)
+										break
+							else:
+								for xx in range(_GlobalConst_numberOfiBeaconRPI):
+									if self.RPI[unicode(xx)]["piDevId"] == 0:
+										theDictList[0][u"RPINumber"] = unicode(xx)
+										break
+
+						if pi !="-1":
+							theDictList[0][u"newIPNumber"]   = self.RPI[pi][u"ipNumberPi"]
+							theDictList[0][u"newpasswordPi"] = self.RPI[pi]["passwordPi"]
+							theDictList[0][u"newuserIdPi"]   = self.RPI[pi]["userIdPi"]
+							theDictList[0][u"newauthKeyOrPassword"]   = self.RPI[pi]["authKeyOrPassword"]
+							theDictList[0][u"newenableRebootCheck"]   = self.RPI[pi]["enableRebootCheck"]
+						if typeId =="rPI" and pi == "-1":
+								theDictList[0][u"newMACNumber"] = "00:00:00:00:pi:00"
+					except:
+						self.indiLOG.log(30,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+				return theDictList 
 			except Exception, e:
 				self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -2967,30 +3126,16 @@ class Plugin(indigo.PluginBase):
 		beacon = "xx"
 		try:
 			dev = indigo.devices[devId]
-			props = dev.pluginProps
-
-			if typeId in [u"beacon", u"rPI"]:
-				try:
-					beacon = props[u"address"]
-				except: pass
-
-			if typeId in [u"rPI-Sensor",u"rPI"]:
-				for pi0 in range(_GlobalConst_numberOfRPI):
-					if unicode(devId) == unicode(self.RPI[unicode(pi0)][u"piDevId"]):
-						self.setONErPiV(pi0,"piUpToDate", [u"updateParamsFTP"])
+			props = dev.pluginProps	
+			self.indiLOG.log(20, u"{} devid:{} typeId:{} ".format(dev.name, devId, typeId) )
+				
+			# just a  reminder: new devices have props ={}, need to use valueDict
+		
 
 			if typeId == "car":
 				valuesDict = self.setupCARS(devId,valuesDict,mode="validate")
 				return (True, valuesDict)
 
-
-			if typeId == "BLEconnect":
-					if len(valuesDict[u"macAddress"]) == len(u"01:02:03:04:05:06"):
-						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
-						valuesDict[u"macAddress"] = valuesDict[u"macAddress"].upper()
-					else:
-						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
-						return ( False, valuesDict, errorDict )
 
 			if typeId == "sprinkler":
 				#valuesDict[u"description"] = "Pi-"+valuesDict[u"piServerNumber"]
@@ -2998,11 +3143,177 @@ class Plugin(indigo.PluginBase):
 				#self.updateNeeded += " fixConfig "
 				return (True, valuesDict)
 
+			beacon = ""
+			if typeId in [u"beacon", u"rPI"]:
+				try:
+					beacon = props[u"address"]
+				except: pass
 
+			thisPi = "-1"
+			if typeId.find(u"rPI") > -1:
+				for pi0 in range(_GlobalConst_numberOfRPI):
+					if devId == self.RPI[unicode(pi0)][u"piDevId"]:
+						thisPi = unicode(pi0)
+						break
+				if thisPi == "-1":
+					try: thisPi = unicode(int(valuesDict["RPINumber"]))
+					except: pass
+				valuesDict["RPINumber"] = thisPi 
+
+			if typeId in [u"rPI-Sensor",u"rPI"]:
+				if thisPi == "-1":
+					valuesDict["enablePiNumberMenu"] = True
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad RPI Number")
+					return ( False, valuesDict, errorDict )
+
+				if not self.isValidIP(valuesDict["newIPNumber"]):
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad IP Number")
+					return ( False, valuesDict, errorDict )
+
+				if len(valuesDict["newpasswordPi"]) < 2:
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad password")
+					return ( False, valuesDict, errorDict )
+
+				if len(valuesDict["newuserIdPi"]) < 2:
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad userId for Pi")
+					return ( False, valuesDict, errorDict )
+
+
+############ RPI  -------
+			if typeId == "rPI":
+				try:
+					if u"address" not in props: new = True
+					else:						new = False
+					newMAC = valuesDict[u"newMACNumber"].upper()
+					valuesDict[u"newMACNumber"] = newMAC
+					if len(newMAC) != len(u"01:02:03:04:05:06"):
+						valuesDict[u"newMACNumber"] = beacon
+						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+						return ( False, valuesDict, errorDict )
+
+					if not new:
+						if beacon != newMAC:
+							self.indiLOG.log(20, u"replacing RPI BLE mac {} with {}".format(beacon, newMAC) )
+							piFound =-1
+							for pi in range(_GlobalConst_numberOfiBeaconRPI): 
+								if self.RPI[unicode(pi)][u"piMAC"] == newMAC:
+									self.indiLOG.log(20, u"replacing RPI BLE mac failed. rpi already exists with this MAC number")
+									valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad beacon#, already exist as RPI")
+									return ( False, valuesDict, errorDict )
+
+							self.indiLOG.log(20, u"replacing existing beacon")
+							if newMAC not in self.beacons:
+								self.beacons[newMAC] = copy.deepcopy(_GlobalConst_emptyBeacon)
+								self.beacons[newMAC][u"note"] = "PI-"+pi0
+							else:
+								self.beacons[newMAC] = copy.deepcopy(self.beacons[beacon])
+							self.newADDRESS[devId]			= newMAC
+							valuesDict[u"address"]			= newMAC
+							self.RPI[thisPi][u"piMAC"]		= newMAC
+							if beacon in self.beacons:
+								self.beacons[beacon][u"indigoId"]= 0
+							beacon = newMAC
+					if new:
+						self.indiLOG.log(20, u"setting up new RPI device for pi#{} mac#  {}".format(thisPi, newMAC) )
+						for pi in range(_GlobalConst_numberOfiBeaconRPI): 
+							if self.RPI[unicode(pi)][u"piMAC"] == newMAC:
+								self.indiLOG.log(20, u"adding new RPI another RPI(#{}) has already that this MAC number:{}".format(pi, newMAC ))
+								valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad beacon#, already exist as RPI")
+								return ( False, valuesDict, errorDict )
+						for ll in _GlobalConst_emptyrPiProps:
+							if ll not in valuesDict: valuesDict[ll]= _GlobalConst_emptyrPiProps[ll]
+
+					self.RPI[thisPi][u"piDevId"] 			= devId
+					valuesDict[u"address"]					= newMAC
+					self.RPI[thisPi][u"piMAC"]				= newMAC
+					beacon 									= newMAC
+
+
+					self.RPI[thisPi][u"ipNumberPi"] 		= valuesDict["newIPNumber"]
+					self.RPI[thisPi][u"ipNumberPiSendTo"] 	= valuesDict["newIPNumber"]
+					self.RPI[thisPi]["userIdPi"] 			= valuesDict["newuserIdPi"]
+					self.RPI[thisPi]["passwordPi"]			= valuesDict["newpasswordPi"]
+					valuesDict["passwordPi"] 				= valuesDict["newpasswordPi"]
+					valuesDict["userIdPi"] 					= valuesDict["newuserIdPi"]
+					valuesDict[u"description"] 				= "Pi-{}-{}".format(thisPi, valuesDict["newIPNumber"])
+
+
+					if beacon in self.beacons and beacon.find("00:00:00:00") ==-1:
+						self.beacons[beacon][u"expirationTime"] 			= float(valuesDict[u"expirationTime"])
+						self.beacons[beacon][u"updateSignalValuesSeconds"]	= float(valuesDict[u"updateSignalValuesSeconds"])
+						self.beacons[beacon][u"beaconTxPower"] 				= int(valuesDict[u"beaconTxPower"])
+						self.beacons[beacon][u"ignore"] 					= int(valuesDict[u"ignore"])
+						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
+
+					self.RPI[thisPi][u"sendToIndigoSecs"] 					= valuesDict[u"sendToIndigoSecs"]	
+					self.RPI[thisPi][u"sensorRefreshSecs"] 					= valuesDict[u"sensorRefreshSecs"]
+					self.RPI[thisPi][u"deltaChangedSensor"] 				= valuesDict[u"deltaChangedSensor"]
+					try:	 self.RPI[thisPi][u"rssiOffset"]				= float(valuesDict["rssiOffset"])
+					except:	 self.RPI[thisPi][u"rssiOffset"]				= 0.
+					self.RPI[thisPi][u"BLEserial"] 							= valuesDict[u"BLEserial"]
+					self.setONErPiV(thisPi,"piUpToDate", [u"updateParamsFTP"])
+					self.rPiRestartCommand[int(thisPi)] 					= "master"
+					self.RPI[thisPi]["authKeyOrPassword"]						= valuesDict[u"newauthKeyOrPassword"]  
+					self.RPI[thisPi]["enableRebootCheck"]						= valuesDict[u"newenableRebootCheck"]  
+
+					xyz = valuesDict[u"PosXYZ"]
+					try:
+						xyz = xyz.split(u",")
+						if len(xyz) == 3:
+							self.RPI[thisPi][u"PosX"] = float(xyz[0]) * self.distanceUnits
+							self.RPI[thisPi][u"PosY"] = float(xyz[1]) * self.distanceUnits
+							self.RPI[thisPi][u"PosZ"] = float(xyz[2]) * self.distanceUnits
+					except Exception, e:
+						self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.indiLOG.log(40,u"bad input for xyz-coordinates:{}".format(valuesDict[u"PosXYZ"]) )
+
+					self.executeUpdateStatesDict(calledFrom="validateDeviceConfigUi RPI")
+					self.updateNeeded += " fixConfig "
+					self.saveConfig(only="RPIconf")
+
+					return (True, valuesDict)
+				except Exception, e:
+					self.indiLOG.log(40,"setting up RPI in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
+					return ( False, valuesDict, errorDict )
+
+
+				
+	
+############ RPI- sensors  -------
+			if typeId == "rPI-Sensor":
+				try: 
+					self.RPI[thisPi][u"piDevId"] 			= devId
+					self.RPI[thisPi]["userIdPi"] 			= valuesDict["newuserIdPi"]
+					self.RPI[thisPi]["passwordPi"] 			= valuesDict["newpasswordPi"]
+					self.RPI[thisPi]["authKeyOrPassword"]	= valuesDict[u"newauthKeyOrPassword"]  
+					self.RPI[thisPi]["enableRebootCheck"]	= valuesDict[u"newenableRebootCheck"]  
+					valuesDict["passwordPi"]				= valuesDict["newpasswordPi"]
+					valuesDict["userIdPi"] 					= valuesDict["newuserIdPi"]
+					self.RPI[thisPi][u"ipNumberPi"]			= valuesDict["newIPNumber"]
+					valuesDict["ipNumberPi"] 				= valuesDict["newIPNumber"]
+					valuesDict[u"address"] 					= "Pi-{}".format(thisPi)
+					valuesDict[u"description"] 				= "Pi-{}-{}".format(thisPi, valuesDict["newIPNumber"])
+					self.RPI[thisPi][u"sendToIndigoSecs"]	= valuesDict[u"sendToIndigoSecs"]
+					self.RPI[thisPi][u"sensorRefreshSecs"]	= valuesDict[u"sensorRefreshSecs"]
+					self.RPI[thisPi][u"deltaChangedSensor"]	=  valuesDict[u"deltaChangedSensor"]
+					self.setONErPiV(thisPi,"piUpToDate", [u"updateParamsFTP"])
+					self.rPiRestartCommand[int(thisPi)] 	= "master"
+					self.updateNeeded 					   += " fixConfig "
+					self.saveConfig(only="RPIconf")
+					return (True, valuesDict)
+				except Exception, e:
+					self.indiLOG.log(40,"setting up RPI-Sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
+					return ( False, valuesDict, errorDict )
+
+
+############ beacons  -------
 			if typeId == "beacon":
-				newMAC = valuesDict[u"newMACNumber"].upper()
-				valuesDict[u"newMACNumber"] = newMAC
-				if len(newMAC) == len(u"01:02:03:04:05:06"):
+				try:
+					newMAC = valuesDict[u"newMACNumber"].upper()
+					valuesDict[u"newMACNumber"] = newMAC
+					if len(newMAC) == len(u"01:02:03:04:05:06"):
 						if beacon != newMAC:
 							self.indiLOG.log(20, u"replacing beacon mac "+beacon+u" with "+newMAC)
 							if beacon !="xx" and beacon in self.beacons:
@@ -3023,95 +3334,27 @@ class Plugin(indigo.PluginBase):
 								dev = indigo.devices[devId]
 								props = dev.pluginProps
 							beacon = newMAC
-				else:
-					valuesDict[u"newMACNumber"] = beacon
-					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
-					return ( False, valuesDict, errorDict )
-				self.beaconPositionsUpdated = 1
+					else:
+						valuesDict[u"newMACNumber"] = beacon
+						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+						return ( False, valuesDict, errorDict )
+					self.beaconPositionsUpdated = 1
 	
-				if len(beacon) !=len(u"01:02:03:04:05:06"):
-					error = "bad Mac Number"
-					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
-					return ( False, valuesDict, errorDict )
-				self.beaconPositionsUpdated = 1
+					if len(beacon) !=len(u"01:02:03:04:05:06"):
+						error = "bad Mac Number"
+						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+						return ( False, valuesDict, errorDict )
+					self.beaconPositionsUpdated = 1
 
+					if beacon in self.beacons and beacon.find("00:00:00:00") ==-1:
+						self.beacons[beacon][u"expirationTime"] = float(valuesDict[u"expirationTime"])
+						self.beacons[beacon][u"updateSignalValuesSeconds"] = float(valuesDict[u"updateSignalValuesSeconds"])
+						self.beacons[beacon][u"beaconTxPower"] = int(valuesDict[u"beaconTxPower"])
+						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
+						self.beacons[beacon][u"ignore"] = int(valuesDict[u"ignore"])
 
-			if typeId == "rPI":
-				newMAC = valuesDict[u"newMACNumber"].upper()
-				valuesDict[u"newMACNumber"] = newMAC
-				if len(newMAC) == len(u"01:02:03:04:05:06"):
-						if beacon != newMAC:
-							self.indiLOG.log(20, u"replacing RPI BLE mac "+beacon+u" with "+newMAC)
-							piFound =-1
-							for pi in range(_GlobalConst_numberOfiBeaconRPI): 
-								if self.RPI[unicode(pi)][u"piMAC"] == newMAC:
-									self.indiLOG.log(20, u"replacing RPI BLE mac failed. rpi already exists with this MAC number")
-									valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad beacon#, already exist as RPI")
-									return ( False, valuesDict, errorDict )
-							pi0 = "-1"
-							for pi in range(_GlobalConst_numberOfiBeaconRPI): 
-								if self.RPI[unicode(pi)][u"piMAC"] == beacon:
-									pi0 = unicode(pi)
-									break
-							if pi0 ==u"-1":
-									self.indiLOG.log(40,u"replacing RPI BLE mac failed. beacon mac not found ")
-									error = "non existing beacon#"
-									valuesDict[u"newMACNumber"] = beacon
-									valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  error)
-									return ( False, valuesDict, errorDict )
-
-							self.indiLOG.log(20, u"replacing existing beacon")
-							if newMAC not in self.beacons:
-								self.beacons[newMAC] = copy.deepcopy(_GlobalConst_emptyBeacon)
-								self.beacons[newMAC][u"note"] = "PI-"+pi0
-							else:
-								self.beacons[newMAC] = copy.deepcopy(self.beacons[beacon])
-							self.newADDRESS[devId]			 = newMAC
-							props[u"address"]				  = self.newADDRESS[devId]
-							self.RPI[pi0][u"piMAC"]			  = newMAC
-							dev.replacePluginPropsOnServer(props)
-							dev = indigo.devices[devId]
-							props = dev.pluginProps
-							if beacon in self.beacons:
-								self.beacons[beacon][u"indigoId"]= 0
-							beacon = newMAC
-
-				else:
-					valuesDict[u"newMACNumber"] = beacon
-					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
-					return ( False, valuesDict, errorDict )
-
-				if len(beacon) !=len(u"01:02:03:04:05:06"):
-					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number") 
-
-
-
-			if typeId == "rPI" or typeId == "beacon":
-				if beacon in self.beacons and beacon.find("00:00:00:00") ==-1:
-					self.beacons[beacon][u"expirationTime"] = float(valuesDict[u"expirationTime"])
-					self.beacons[beacon][u"updateSignalValuesSeconds"] = float(valuesDict[u"updateSignalValuesSeconds"])
-					self.beacons[beacon][u"beaconTxPower"] = int(valuesDict[u"beaconTxPower"])
-					dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
-					self.beacons[beacon][u"ignore"] = int(valuesDict[u"ignore"])
-
-					if typeId == "beacon":
 						self.beacons[beacon][u"note"] = "beacon-" + valuesDict[u"typeOfBeacon"]
 						self.addToStatesUpdateDict(unicode(dev.id),"note", self.beacons[beacon][u"note"])
-						if valuesDict[u"typeOfBeacon"] != self.beacons[beacon][u"typeOfBeacon"]:
-							self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"update RPI due to typeOfBeacon")
-						if int(valuesDict[u"signalDelta"]) != self.beacons[beacon][u"signalDelta"]:
-							self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"update RPI due to signalDelta")
-						if int(valuesDict[u"minSignalCutoff"]) != self.beacons[beacon][u"minSignalCutoff"]:
-							self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"update RPI due to minSignalCutoff")
-						if int(valuesDict[u"fastDown"]) != self.beacons[beacon][u"fastDown"]:
-							self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"update RPI due to fastDown")
-						if int(valuesDict[u"fastDownMinSignal"]) != self.beacons[beacon][u"fastDownMinSignal"]:
-							self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"update RPI due to fastDownMinSignal")
 
 						self.beacons[beacon][u"showBeaconOnMap"]		 = valuesDict[u"showBeaconOnMap"]
 						self.beacons[beacon][u"typeOfBeacon"]			 = valuesDict[u"typeOfBeacon"]
@@ -3125,151 +3368,61 @@ class Plugin(indigo.PluginBase):
 								memberList += group+"/"
 						memberList = memberList.strip(u"/")
 						if dev.states[u"groupMember"] != memberList:
-								dev.updateStateOnServer(u"groupMember",memberList)
-
-
-
-			if typeId.find(u"rPI") > -1:
-				pi = -1
-				for pi0 in range(_GlobalConst_numberOfRPI):
-					if devId == self.RPI[unicode(pi0)][u"piDevId"]:
-						pi = pi0
-						break
-				if pi >= 0:
-					if u"shutDownPinInput"	not in props  or (u"shutDownPinInput"  in props and valuesDict[u"shutDownPinInput"]	 != props[u"shutDownPinInput"]):
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.rPiRestartCommand[pi] = "master"
-					if u"shutDownPinOutput" not in props  or (u"shutDownPinOutput" in props and valuesDict[u"shutDownPinOutput"] != props[u"shutDownPinOutput"]):
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.rPiRestartCommand[pi] = "master"
-					if u"useRamDiskForLogfiles" not in props  or (u"useRamDiskForLogfiles" in props and valuesDict[u"useRamDiskForLogfiles"] != props[u"useRamDiskForLogfiles"]):
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.rPiRestartCommand[pi] = "master"
-					if u"useRTC" not in props  or (u"useRTC" in props and valuesDict[u"useRTC"] != props[u"useRTC"]):
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.rPiRestartCommand[pi] = "master"
-
-					srf = valuesDict[u"sendToIndigoSecs"]
-					if srf != self.RPI[unicode(pi)][u"sendToIndigoSecs"] :
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.updateNeeded += " fixConfig sendToIndigoSecs "
-						self.rPiRestartCommand[pi] = "master"
-					self.RPI[unicode(pi)][u"sendToIndigoSecs"] = srf
-
-					srf = valuesDict[u"sensorRefreshSecs"]
-					if srf != self.RPI[unicode(pi)][u"sensorRefreshSecs"] :
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.updateNeeded += " fixConfig sensorRefreshSecs "
-						self.rPiRestartCommand[pi] = "master"
-					self.RPI[unicode(pi)][u"sensorRefreshSecs"] = srf
-
-					srf = valuesDict[u"deltaChangedSensor"]
-					if srf != self.RPI[unicode(pi)][u"deltaChangedSensor"] :
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.updateNeeded += " fixConfig deltaChangedSensor "
-						self.rPiRestartCommand[pi] = "master"
-					self.RPI[unicode(pi)][u"deltaChangedSensor"] = srf
-
-			if typeId == "rPI":
-				pi = -1
-				for pi0 in range(_GlobalConst_numberOfiBeaconRPI):
-					if devId == self.RPI[unicode(pi0)][u"piDevId"]:
-						pi = pi0
-						break
-				if pi >= 0:
-					try:	 self.RPI[unicode(pi)][u"rssiOffset"]	= float(valuesDict["rssiOffset"])
-					except:	 self.RPI[unicode(pi)][u"rssiOffset"]	= 0.
-
-					if not (u"BLEserial" in props and valuesDict[u"BLEserial"] == props[u"BLEserial"]) :
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-						self.updateNeeded += " fixConfig BLEserial "
-						self.rPiRestartCommand[pi] = "BLEconnect"
-					self.RPI[unicode(pi)][u"BLEserial"] = valuesDict[u"BLEserial"]
-
-					xyz = valuesDict[u"PosXYZ"]
-					try:
-						xyz = xyz.split(u",")
-						if len(xyz) == 3:
-							self.RPI[unicode(pi)][u"PosX"] = float(xyz[0]) * self.distanceUnits
-							self.RPI[unicode(pi)][u"PosY"] = float(xyz[1]) * self.distanceUnits
-							self.RPI[unicode(pi)][u"PosZ"] = float(xyz[2]) * self.distanceUnits
-					except Exception, e:
-						self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-						self.indiLOG.log(40,u"bad input for xyz-coordinates: " + valuesDict[u"PosXYZ"])
-				self.executeUpdateStatesDict(calledFrom="validateDeviceConfigUi RPI")
-				self.updateNeeded += " fixConfig "
-				return (True, valuesDict)
-
-
-
-			elif typeId	 ==u"BLEconnect":
-				BLEMAC = valuesDict[u"macAddress"].upper()
-				
-				if len(BLEMAC) != 17: 
-					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+							dev.updateStateOnServer(u"groupMember",memberList)
+						self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+				except Exception, e:
+					self.indiLOG.log(40,"setting up iBeacon in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
 					return ( False, valuesDict, errorDict )
 
-				active=""
-				for pi in range(_GlobalConst_numberOfiBeaconRPI):
-					update=0
-					if valuesDict[u"rPiEnable"+unicode(pi)]:
-						if typeId not in self.RPI[unicode(pi)][u"input"]:
-							self.RPI[unicode(pi)][u"input"][typeId]={}
-							update=1
-						if unicode(devId) not in self.RPI[unicode(pi)][u"input"][typeId]:
-							self.RPI[unicode(pi)][u"input"][typeId][unicode(devId)]=""
-						if BLEMAC !=  self.RPI[unicode(pi)][u"input"][typeId][unicode(devId)]:
-							update=1
-						self.RPI[unicode(pi)][u"input"][typeId][unicode(devId)] = BLEMAC
-						active+=" "+unicode(pi)+","
+
+
+
+############ RPI- BLEconnect  -------
+			if typeId ==u"BLEconnect":
+				try:
+					if len(valuesDict[u"macAddress"]) == len(u"01:02:03:04:05:06"):
+						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
+						valuesDict[u"macAddress"] = valuesDict[u"macAddress"].upper()
 					else:
-						if typeId in self.RPI[unicode(pi)][u"input"]:
-							if unicode(devId) in self.RPI[unicode(pi)][u"input"][typeId]:
+						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+						return ( False, valuesDict, errorDict )
+					BLEMAC = valuesDict[u"macAddress"].upper()
+
+					active=""
+					for pi in range(_GlobalConst_numberOfiBeaconRPI):
+						if valuesDict[u"rPiEnable"+unicode(pi)]:
+							if typeId not in self.RPI[unicode(pi)][u"input"]:
+								self.RPI[unicode(pi)][u"input"][typeId]={}
+							if unicode(devId) not in self.RPI[unicode(pi)][u"input"][typeId]:
+								self.RPI[unicode(pi)][u"input"][typeId][unicode(devId)]=""
+							self.RPI[unicode(pi)][u"input"][typeId][unicode(devId)] = BLEMAC
+							active+=" "+unicode(pi)+","
+						else:
+							if typeId in self.RPI[unicode(pi)][u"input"] and  unicode(devId) in self.RPI[unicode(pi)][u"input"][typeId]:
 								del	 self.RPI[unicode(pi)][u"input"][typeId][unicode(devId)]
-								update=1
-					valuesDict[u"description"] = "on rPi "+ active
-					valuesDict[u"address"] = BLEMAC
-					if typeId in self.RPI[unicode(pi)][u"input"]:
-						if self.RPI[unicode(pi)][u"input"][typeId] == {}:
+						valuesDict[u"description"] = "on Pi "+ active
+						valuesDict[u"address"] = BLEMAC
+
+						### remove if not un this pi:
+						if typeId in self.RPI[unicode(pi)][u"input"] and self.RPI[unicode(pi)][u"input"][typeId] == {}:
 							del self.RPI[unicode(pi)][u"input"][typeId]
+						if typeId not in self.RPI[unicode(pi)][u"input"] and typeId in self.RPI[unicode(pi)][u"sensorList"]:
+								self.RPI[unicode(pi)][u"sensorList"] = self.RPI[unicode(pi)][u"sensorList"].replace(typeId+",","")
 
-					if typeId not in self.RPI[unicode(pi)][u"input"]:
-						if typeId in self.RPI[unicode(pi)][u"sensorList"]:
-							self.RPI[unicode(pi)][u"sensorList"]= self.RPI[unicode(pi)][u"sensorList"].replace(typeId+",","")
-
-					if u"iPhoneRefreshDownSecs" in props :
-						if props[u"iPhoneRefreshDownSecs"] != valuesDict[u"iPhoneRefreshDownSecs"]:
-							update = 1
-					else:
-							update = 1
-
-					if u"iPhoneRefreshUpSecs" in props :
-						if props[u"iPhoneRefreshUpSecs"] != valuesDict[u"iPhoneRefreshUpSecs"] :
-							update = 1
-					else:
-							update = 1
-
-					if u"BLEtimeout" in props :
-						if props[u"BLEtimeout"] != valuesDict[u"BLEtimeout"] :
-							update = 1
-					else :
-						update = 1
-
-					if u"retryIfUP" in props :
-						 if props[u"retryIfUP"] != valuesDict[u"retryIfUP"] :
-							update = 1
-					else:
-							update = 1
-
-					if update==1:
-						self.rPiRestartCommand[pi] +="BLEconnect,"
-						self.updateNeeded += " fixConfig "
-						self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-				return (True, valuesDict)
+						if True:
+							self.rPiRestartCommand[pi] +="BLEconnect,"
+							self.updateNeeded += " fixConfig "
+							self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
+					return (True, valuesDict)
+				except Exception, e:
+					self.indiLOG.log(40,"setting up BLEconnect in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
+					return ( False, valuesDict, errorDict )
 
 
 
-
+###########  sensors --------
 			if typeId.find(u"INPUTRotatary")>-1 :
 				active = ""
 				update = 0
@@ -3461,7 +3614,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-			elif typeId in _GlobalConst_allowedSensors:
+			if typeId in _GlobalConst_allowedSensors:
 				update = 0
 				pi = int(valuesDict[u"piServerNumber"])
 				if pi >= 0:
@@ -3590,7 +3743,7 @@ class Plugin(indigo.PluginBase):
 					return ( False, valuesDict, errorDict )
 
 
-			elif typeId in _GlobalConst_allowedOUTPUT:
+			if typeId in _GlobalConst_allowedOUTPUT:
 				if typeId==u"neopixel-dimmer":
 					try:
 						neopixelDevice = indigo.devices[int(valuesDict[u"neopixelDevice"])]
@@ -3722,7 +3875,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				pass
 			valuesDict[u"MSG"] =error
-			if error ==u"":
+			if error == u"":
 				self.updateNeeded += " fixConfig "
 				return (True, valuesDict)
 			else:
@@ -3734,8 +3887,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			if unicode(e).find(u"timeout waiting") > -1:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "communication to indigo is interrupted")
-				return ( False, valuesDict, errorDict )
-			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "please fill out all fields")
+			else:
+				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "please fill out all fields")
 			return ( False, valuesDict, errorDict )
 
 		self.updateNeeded += " fixConfig "
@@ -3983,7 +4136,6 @@ class Plugin(indigo.PluginBase):
 
 
 		return
-
 
 ####-------------------------------------------------------------------------####
 	def filterAllpiSimple(self, filter="", valuesDict=None, typeId="", devId=""):
@@ -4413,13 +4565,15 @@ class Plugin(indigo.PluginBase):
 	def filterTempSensorsOnThisRPI(self, valuesDict=None, filter="", typeId="", devId="x"):
 		xList = [("0","internal temp sensor of RPI")]
 		try:
-			piN = indigo.devices[devId].states["note"].split("-")[1]
-			#indigo.server.log(" dev Pi #sensor: " + piN)
-			for dev in indigo.devices.iter("props.isTempSensor"):
-				props = dev.pluginProps
-				self.indiLOG.log(20," selecting devid name temp sensor: {} pi#: {}".format(dev.name, props["piServerNumber"]) )
-				if props["piServerNumber"] == piN:
-					xList.append( (unicode(dev.id), dev.name +" " + unicode(dev.id)) )
+			piN = indigo.devices[devId].states["note"].split("-")
+			if len(piN) >1:
+				piN = piN[1]
+				#indigo.server.log(" dev Pi #sensor: " + piN)
+				for dev in indigo.devices.iter("props.isTempSensor"):
+					props = dev.pluginProps
+					#self.indiLOG.log(20," selecting devid name temp sensor: {} pi#: {}".format(dev.name, props[u"piServerNumber"]) )
+					if props[u"piServerNumber"] == piN:
+						xList.append( (unicode(dev.id), dev.name +" " + unicode(dev.id)) )
 
 		except Exception, e:
 			self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -7995,25 +8149,7 @@ class Plugin(indigo.PluginBase):
 			p01 = valuesDict[u"piOnOff"]
 
 			if p01 =="delete":
-
-
-				try:
-					devID = int(self.RPI[unicode(pi)]["piDevId"])
-					dev = indigo.devices[devID]
-					self.indiLOG.log(30,"=== deleting buttonConfirmPiServerConfigCALLBACK:  deleting dev: "+ dev.name )
-					indigo.device.delete(devID)
-					if int(pi) >= _GlobalConst_numberOfiBeaconRPI:
-						self.RPI[unicode(pi)] = _GlobalConst_emptyRPISENSOR
-					else: 
-						self.RPI[unicode(pi)] = _GlobalConst_emptyRPI
-					self.RPI[unicode(pi)][u"piOnOff"] = "0" 
-					self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
-
-				except Exception, e:
-					self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					self.indiLOG.log(40,"trying to delete indigo device for pi# "+unicode(pi)+";  devID:"+unicode(devID))
-
-
+				self.delRPI(pi=pi)
 				return valuesDict
 
 			if p01 == u"0":  # off 
@@ -8033,14 +8169,7 @@ class Plugin(indigo.PluginBase):
 
 		####### check ipnumber
 			ipn = valuesDict[u"ipNumberPi"]
-			checkIPN = ipn.split(u".")
-			if len(checkIPN) != 4:
-				valuesDict[u"MSG"] = "ip number not correct"
-				return valuesDict
-			try:
-				for iii in range(4):
-					int(checkIPN[iii])
-			except:
+			if not self.isValidIP(ipn):
 				valuesDict[u"MSG"] = "ip number not correct"
 				return valuesDict
 
@@ -8089,10 +8218,10 @@ class Plugin(indigo.PluginBase):
 							found =False
 							for dev in indigo.devices.iter("props.isRPIDevice"):
 								try: 
-									if dev.address.split(u"-")[1] == unicode(pi):
+									if dev.description.split(u"-")[1] == unicode(pi):
 										props=dev.pluginProps
-										if props[u"ipNumber"] != ipn:
-											props[u"ipNumber"] = ipn
+										if props[u"ipNumberPi"] != ipn:
+											props[u"ipNumberPi"] = ipn
 											dev.replacePluginPropsOnServer(props)
 											self.updateNeeded += "fixConfig"
 											self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
@@ -8105,9 +8234,9 @@ class Plugin(indigo.PluginBase):
 							if not found:
 									indigo.device.create(
 										protocol		= indigo.kProtocol.Plugin,
-										address			= "00:00:00:00:pi:%02d"%pi,
-										name			= "Pi_%d"%pi,
-										description		= "rPI-%d-%s"%(pi,ipn),
+										address			= "00:00:00:00:pi:{:02d}".format(pi),
+										name			= "Pi_{}".format(pi),
+										description		= "Pi-{}-{}".format(pi,ipn),
 										pluginId		= self.pluginId,
 										deviceTypeId	= "rPI",
 										folder			= self.piFolderId,
@@ -8147,7 +8276,7 @@ class Plugin(indigo.PluginBase):
 									self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi))
 									self.addToStatesUpdateDict(unicode(dev.id),u"created",dateString)
 									self.executeUpdateStatesDict(onlyDevID=unicode(dev.id),calledFrom="updateBeaconStates new rpi")
-									self.RPI[unicode(pi)][u"piMAC"] = "00:00:00:00:pi:%02d"%pi
+									self.RPI[unicode(pi)][u"piMAC"] = "00:00:00:00:pi:{:02d}".format(pi)
 									self.RPI[unicode(pi)][u"piDevId"] = dev.id
 
 						else:
@@ -8157,44 +8286,32 @@ class Plugin(indigo.PluginBase):
 								if unicode(e).find(u"not found in database") >-1:
 									dev = indigo.device.create(
 										protocol		= indigo.kProtocol.Plugin,
-										address			= "00:00:00:00:pi:%02d"%pi,
-										name			= "Pi_%d"%pi,
-										description		= "rPI-%d-%s"%(pi,ipn),
+										address			= "Pi-{:02d}".format(pi),
+										name			= "Pi_{}".format(pi),
+										description		= "Pi-{}-{}".format(pi,ipn),
 										pluginId		= self.pluginId,
 										deviceTypeId	= "rPI",
 										folder			= self.piFolderId,
 										props		= {
-											u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
 											u"updateSignalValuesSeconds": _GlobalConst_emptyrPiProps[u"updateSignalValuesSeconds"],
 											u"beaconTxPower":			  _GlobalConst_emptyrPiProps[u"beaconTxPower"],
 											u"SupportsBatteryLevel":	  _GlobalConst_emptyrPiProps[u"SupportsBatteryLevel"],
 											u"sendToIndigoSecs":		  _GlobalConst_emptyrPiProps[u"sendToIndigoSecs"],
 											u"shutDownPinInput":		  _GlobalConst_emptyrPiProps[u"shutDownPinInput"],
 											u"shutDownPinOutput" :		  _GlobalConst_emptyrPiProps[u"shutDownPinOutput"],
-											u"PosXYZ":					  _GlobalConst_emptyrPiProps[u"PosXYZ"],
 											u"signalDelta" :			  _GlobalConst_emptyrPiProps[u"signalDelta"],
 											u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
 											u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
-											u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
-											u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
 											u"isRPIDevice":				  True,
 											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
 											}
 										)
-									self.RPI[unicode(pi)][u"piMAC"] = "00:00:00:00:pi:%02d"%pi
+									self.RPI[unicode(pi)][u"piMAC"] = "00:00:00:00:pi:{:02d}".format(pi)
 									self.RPI[unicode(pi)][u"piDevId"] = dev.id
 						props= dev.pluginProps
-						self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-%d"%pi)
-						props[u"description"] = "rPI-%d-%s"%(pi,ipn)
+						self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-{}".format(pi))
+						props[u"description"] = "Pi-{}-{}".format(pi,ipn)
 						dev.replacePluginPropsOnServer(props)
-			try:
-				dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
-				dev.enabled = (p01 == "1")
-				dev.replaceOnServer()
-				self.executeUpdateStatesDict(onlyDevID= unicode(dev.id), calledFrom="buttonConfirmPiServerConfigCALLBACK end")
-				self.startUpdateRPIqueues("restart", pi=pi)
-			except:
-				pass
 
 
 ###### 
@@ -8204,8 +8321,8 @@ class Plugin(indigo.PluginBase):
 							for dev in indigo.devices.iter("props.isRPISensorDevice"):
 								if dev.address.split(u"-")[1] == unicode(pi):
 									props=dev.pluginProps
-									if props[u"ipNumber"] != ipn:
-										props[u"ipNumber"] = ipn
+									if props[u"ipNumberPi"] != ipn:
+										props[u"ipNumberPi"] = ipn
 										dev.replacePluginPropsOnServer(props)
 										self.updateNeeded += "fixConfig"
 										self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
@@ -8218,7 +8335,7 @@ class Plugin(indigo.PluginBase):
 									protocol		= indigo.kProtocol.Plugin,
 									address			= "Pi-"+unicode(pi),
 									name			= "Pi_Sensor_" + unicode(pi),
-									description		= "rPI-" + unicode(pi)+"-"+ipn,
+									description		= "Pi-" + unicode(pi)+"-"+ipn,
 									pluginId		= self.pluginId,
 									deviceTypeId	= "rPI-Sensor",
 									folder			= self.piFolderId,
@@ -8232,10 +8349,10 @@ class Plugin(indigo.PluginBase):
 										   u"expirationTime" : "90",
 										   u"isRPISensorDevice" : True,
 										   u"fastDown" : "0",
-										   u"ipNumber":ipn}
+										   u"ipNumberPi":ipn}
 									)
 								self.addToStatesUpdateDict(unicode(dev.id),u"created",datetime.datetime.now().strftime(_defaultDateStampFormat))
-								self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi)+"-"+ipn)
+								self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi))
 								self.RPI[unicode(pi)][u"piDevId"] = dev.id
 								self.updateNeeded += "fixConfig"
 								self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
@@ -8248,7 +8365,7 @@ class Plugin(indigo.PluginBase):
 										protocol		= indigo.kProtocol.Plugin,
 										address			= "Pi-"+unicode(pi),
 										name			= "Pi_Sensor_" + unicode(pi),
-										description		= "rPI-" + unicode(pi)+"-"+ipn,
+										description		= "Pi-" + unicode(pi)+"-"+ipn,
 										pluginId		= self.pluginId,
 										deviceTypeId	= "rPI-Sensor",
 										folder			= self.piFolderId,
@@ -8260,24 +8377,24 @@ class Plugin(indigo.PluginBase):
 											   u"expirationTime" : "90",
 											   u"fastDown" : "0",
 											   u"isRPISensorDevice" : True,
-											   u"ipNumber":ipn}
+											   u"ipNumberPi":ipn}
 										)
 									self.addToStatesUpdateDict(unicode(dev.id),"created",dateString)
-									self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi)+"-"+ipn)
+									self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi))
 									self.RPI[unicode(pi)][u"piDevId"] = dev.id
 									self.updateNeeded += "fixConfig"
 									self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 						dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
 						props= dev.pluginProps
-						self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi)+"-"+ipn)
-						props[u"description"] = "rPI-"+unicode(pi)+"-"+ipn
+						self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + unicode(pi))
+						props[u"description"] = "Pi-"+unicode(pi)+"-"+ipn
 						self.RPI[unicode(pi)][u"piMAC"] = unicode(pi)
 						dev.replacePluginPropsOnServer(props)
 			try:
 				dev= indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
 				dev.enabled = (p01 == "1")
 				dev.replaceOnServer()
-				try:	del self.checkIPSendSocketOk[self.RPI[unicode(pi)][u"ipNumber"]]
+				try:	del self.checkIPSendSocketOk[self.RPI[unicode(pi)][u"ipNumberPi"]]
 				except: pass
 				self.executeUpdateStatesDict(onlyDevID= unicode(dev.id), calledFrom="buttonConfirmPiServerConfigCALLBACK end")
 			except:
@@ -8296,7 +8413,50 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
+	def delRPI(self, pi="", dev="none"):
+		try:
+			devID ="none"
+			if dev == "none" and pi == "": return
+			if pi !="":
+				try: pi = int(pi)
+				except: return 
+				devID = int(self.RPI[unicode(pi)]["piDevId"])
+				self.indiLOG.log(30,"=== delRPI:  deleting pi:{}  devID:{} ".format(pi, devID) )
+				try: indigo.device.delete(devID)
+				except: pass
+				self.resetRPI(pi)	
+				return
 
+			if dev !="none":
+				devID = dev.id
+				self.indiLOG.log(30,"=== delRPI:  deleting dev:{} ".format(dev.name) )
+				pp =  dev.description.split("-")
+				try: indigo.device.delete(devID)
+				except: pass
+				if len(pp) >1:
+					try: pi = int(pp[1])
+					except: return
+					self.resetRPI(pi)	
+				return
+
+		except Exception, e:
+			self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(40,"trying to delete indigo device for pi# "+unicode(pi)+";  devID:"+unicode(devID))
+		return 
+
+####-------------------------------------------------------------------------####
+	def resetRPI(self, pi):
+		if pi<0: 						   return
+		if pi >= _GlobalConst_numberOfRPI: return 
+
+		if pi >= _GlobalConst_numberOfiBeaconRPI:
+			self.RPI[unicode(pi)] = copy.copy(_GlobalConst_emptyRPISENSOR)
+		else: 
+			self.RPI[unicode(pi)] = copy.copy(_GlobalConst_emptyRPI)
+		self.RPI[unicode(pi)][u"piOnOff"] = "0" 
+		self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
+
+####-------------------------------------------------------------------------####
 
 # noinspection SpellCheckingInspection
 	def validatePrefsConfigUi(self, valuesDict):
@@ -8651,57 +8811,6 @@ class Plugin(indigo.PluginBase):
 		self.countLoop			= 0
 		self.indiLOG.log(10, u" ..   checking sensors" )
 		self.syncSensors()
-		self.indiLOG.log(10, u" ..   checking devices tables" )
-		for dev in indigo.devices.iter(self.pluginId):
-			props = dev.pluginProps
-			if (dev.deviceTypeId.lower()) == u"rpi" or dev.deviceTypeId == u"beacon":
-				self.freezeAddRemove = False
-
-				try:
-					beacon = props[u"address"]
-				except:
-					self.indiLOG.log(40,"device has no address: " + dev.name + u" " + unicode(dev.id) +
-						unicode(props) + u" " + unicode(dev.globalProps) + u" please delete and let the plugin create the devices")
-					continue
-
-				if beacon not in self.beacons:
-					self.beacons[beacon]			 = copy.deepcopy(_GlobalConst_emptyBeacon)
-					self.beacons[beacon][u"indigoId"] = dev.id
-					self.beacons[beacon][u"created"]  = dev.states[u"created"]
-
-				if "vendorName" in dev.states and  len(dev.states["vendorName"]) == 0:
-					vname = self.getVendortName(beacon)
-					if vname !="" and  vname != dev.states["vendorName"]:
-						dev.updateStateOnServer( "vendorName", vname)
-
-
-
-
-			else:
-				if u"description" in props:
-					if dev.description != props[u"description"] and props[u"description"] != "":
-						dev.description = props[u"description"]
-						props[u"description"] = u""
-						dev.replaceOnServer()
-						updateProps = True
-
-
-			if dev.deviceTypeId.find(u"OUTPUTgpio") > -1:
-				xxx = json.loads(props[u"deviceDefs"])
-				nn = len(xxx)
-				update=False
-				for n in range(nn):
-					if u"gpio" in xxx[n]:
-						if xxx[n][u"gpio"] == "-1":
-							del xxx[n]
-							continue
-						if	u"initialValue" not in xxx[n]:
-							xxx[n][u"initialValue"] ="-"
-							update=True
-				if update: 
-					props[u"deviceDefs"] = json.dumps(xxx)
-					dev.replacePluginPropsOnServer(props)
-				###indigo.server.log(dev.name+" "+unicode(props))
 
 		self.indiLOG.log(10, u" ..   checking BLEconnect" )
 		self.BLEconnectCheckPeriod(now, force=True)
@@ -9179,22 +9288,19 @@ class Plugin(indigo.PluginBase):
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 
 			if self.updateNeeded.find(u"enable") > -1 or self.updateNeeded.find(u"disable") > -1: 
-				self.syncSensors()
+				self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="checkForUpdates") # checkForUpdates  # ok only if changes requested
+				#self.syncSensors()
 				self.setupFilesForPi(calledFrom="enable")
 				try:
 					pi = self.updateNeeded.split(u"-")[1]
 					self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
-					if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u"sending update to pi#"+ unicode(pi))
+					if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u"sending update to pi#{}".format(pi))
 				except: pass
 
 				self.updateNeeded = "" 
 	 
 			if self.updateNeeded.find(u"fixConfig") > -1 or self.findAnyTaskPi(u"piUpToDate"):
-				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"checkForUpdates updateNeeded "+ unicode(self.updateNeeded)+"  findAnyTaskPi: "+ unicode(self.findAnyTaskPi(u"piUpToDate")) )
-				for pi in range(_GlobalConst_numberOfRPI):
-					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, unicode(pi) + u" checkForUpdates piUpToDate "+ unicode(self.RPI[unicode(pi)]["piUpToDate"]) )
-					
-
+				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"checkForUpdates updateNeeded {}  findAnyTaskPi: {}".format(self.updateNeeded, self.findAnyTaskPi(u"piUpToDate")) )
 				self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="checkForUpdates") # checkForUpdates  # ok only if changes requested
 				self.setupFilesForPi(calledFrom="checkForUpdates")
 				self.updateNeeded = ""
@@ -9929,9 +10035,9 @@ class Plugin(indigo.PluginBase):
 				if dev.deviceTypeId.find(u"rainSensorRG11") == -1: continue
 				if	not dev.enabled: continue
 				props = dev.pluginProps
-				lastTest = props["lastDateCheck"].split("-")
+				lastTest = props[u"lastDateCheck"].split("-")
 				try:
-					ff = datetime.datetime.strptime(props["lastDateCheck"], "%Y-%m-%d-%H")
+					ff = datetime.datetime.strptime(props[u"lastDateCheck"], "%Y-%m-%d-%H")
 					lastweek = ff.isocalendar()[1]
 				except:
 					lastweek = -1
@@ -9950,7 +10056,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(unicode(dev.id),ttx, 0,decimalPlaces=self.rainDigits)
 					try:	 props[test+"RainTotal"]  = float(dev.states["totalRain"])
 					except:	 props[test+"RainTotal"]  = 0
-				props["lastDateCheck"] = dd.strftime("%Y-%m-%d-%H")
+				props[u"lastDateCheck"] = dd.strftime("%Y-%m-%d-%H")
 				dev.replacePluginPropsOnServer(props)
 				self.executeUpdateStatesDict(onlyDevID =unicode(dev.id),calledFrom="rollOverRainSensors")
 		except Exception, e:
@@ -10017,8 +10123,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def variableUpdated(self, origVar, newVar):
 		try:
-			if len(newVar.value) < 3:			   return
 			if newVar.name.find(u"pi_IN_") != 0:   return
+			if len(newVar.value) < 3:			   return
 			self.addToDataQueue(newVar.name,json.loads(newVar.value),newVar.value )
 			return
 		except Exception, e:
@@ -10140,7 +10246,7 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(20, u"sel.beacon logging: RPI msg	:"+piMAC+"; "+(" ").ljust(36)  + " pi#="+unicode(pi) )
 
 			if u"msgs" in data:
-				if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u"new iBeacon message----------------------------------- \n "+varUnicode)
+				if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u"new iBeacon message----------------------------------- \n {}".format(varUnicode) )
 				secondsCollected = 0
 				if u"secsCol" in data:
 					secondsCollected = data[u"secsCol"]
@@ -10153,26 +10259,25 @@ class Plugin(indigo.PluginBase):
 						if self.RPI[unicode(pi)][u"ipNumberPi"] != "" and self.RPI[unicode(pi)][u"ipNumberPi"] != ipAddress:
 							if ipAddress == "":
 								self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP","rebootSSH"])
-								self.indiLOG.log(20, u"rPi#: " + unicode(pi) + u"  >>" + ipAddress + u"<<   ip#  send from rPi is empty, will restart rPi, ip# should be" + self.RPI[unicode(pi)][u"ipNumberPi"])
+								self.indiLOG.log(30, u"rPi#: {}  ip# send from rPi is empty, you should restart rPi, ip# should be {}".format(pi, self.RPI[unicode(pi)][u"ipNumberPi"] ))
 								return beaconUpdatedIds
 							else:
-								self.indiLOG.log(20, u"rPi#: " + unicode(pi) + u"  >>" + ipAddress +
-										   u"<<   ip number has changed, please fix in menue/pibeacon/setup pi or changed Ip number or send restart to rPi; old >>" +
-										   self.RPI[unicode(pi)][u"ipNumberPi"] + u"<< received from pi: >>" + ipAddress+u"<<")
+								self.indiLOG.log(30, u"rPi#:{} {}: IP number has changed to {}, please fix in menue/pibeacon/setup RPI to reflect changed IP number or fix IP# on RPI\n this can happen when WiFi and ethernet are both active, try setting wlan/eth parameters in RPI device edit;  ==> ignoring data".format(pi, self.RPI[unicode(pi)][u"ipNumberPi"], ipAddress ))
 								return beaconUpdatedIds
 					else:
-						ipAddress = u""
+						return beaconUpdatedIds
+
 					beaconUpdatedIds = self.updateBeaconStates(pi, unicode(piN), ipAddress, piMAC, secondsCollected, msgs)
 					self.RPI[unicode(pi)][u"emptyMessages"] = 0
 				elif len(msgs) == 0 and piMAC != "":
 					self.RPI[unicode(pi)][u"emptyMessages"] +=1
 					if	self.RPI[unicode(pi)][u"emptyMessages"] >  min(self.enableRebootRPIifNoMessages,10) :
 						if	self.RPI[unicode(pi)][u"emptyMessages"] %5 ==0:
-							self.indiLOG.log(20, "RPI# "+unicode(pi)+" check , too many empty messages in a row: " + unicode(self.RPI[unicode(pi)][u"emptyMessages"]) )
+							self.indiLOG.log(20, "RPI# {} check , too many empty messages in a row: {}".format(pi, self.RPI[unicode(pi)][u"emptyMessages"]) )
 							self.indiLOG.log(20, " please check RPI" )
 						if	self.RPI[unicode(pi)][u"emptyMessages"] > self.enableRebootRPIifNoMessages:
-							self.indiLOG.log(20, "RPI# "+unicode(pi)+" check , too many empty messages in a row: " + unicode(self.RPI[unicode(pi)][u"emptyMessages"]) )
-							self.indiLOG.log(20, "sending reboot command to RPI")
+							self.indiLOG.log(30, "RPI# {} check , too many empty messages in a row: {}".format(pi, self.RPI[unicode(pi)][u"emptyMessages"]) )
+							self.indiLOG.log(30, "sending reboot command to RPI")
 							self.setONErPiV(pi,"piUpToDate",[u"updateParamsFTP","rebootSSH"])
 							self.RPI[unicode(pi)][u"emptyMessages"] = 0
 
@@ -10198,7 +10303,7 @@ class Plugin(indigo.PluginBase):
 			rpiProps = rpiDev.pluginProps
 			cutOffForClosestBeacon = 300
 			if "cutOffForClosestBeacon" in rpiProps:
-				try:	cutOffForClosestBeacon = float(rpiProps["cutOffForClosestBeacon"])
+				try:	cutOffForClosestBeacon = float(rpiprops[u"cutOffForClosestBeacon"])
 				except:	pass
 			cutOffForClosestBeacon /= self.distanceUnits
 			closestName = ""
@@ -10218,7 +10323,7 @@ class Plugin(indigo.PluginBase):
 				props = dev.pluginProps
 				if "isRPIDevice" 		in props:															continue
 				if "isRPISensorDevice"	in props:															continue
-				if "IgnoreBeaconForClosestToRPI" in props and props["IgnoreBeaconForClosestToRPI"] !="0":	continue
+				if "IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0":	continue
 
 
 
@@ -10279,7 +10384,7 @@ class Plugin(indigo.PluginBase):
 				if len(beacon) == 17: ## len(u"11:22:33:44:55:66")
 						indigoId = int(self.RPI[unicode(pi)][u"piDevId"])
 						if len(self.RPI[unicode(pi)][u"piMAC"]) != 17 or indigoId == 0:
-							if self.decideMyLog(u"Logic"): self.indiLOG.log(10, u"MAC# from RPI message is new "+beacon+u" not in internal list .. new RPI?"+unicode(pi))
+							self.indiLOG.log(10, u"MAC# from RPI message is new {} not in internal list .. new RPI?{}".format(beacon, pi))
 
 						else: # existing RPI with valid MAC # and indigo ID 
 							if self.RPI[unicode(pi)][u"piMAC"] != beacon and indigoId > 0:
@@ -10507,7 +10612,12 @@ class Plugin(indigo.PluginBase):
 			#self.indiLOG.log(20,	u" setting online status of pi:"+unicode(pi)+" to "+ new)
 
 			now = datetime.datetime.now().strftime(_defaultDateStampFormat)
-			dev = indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
+			try: dev = indigo.devices[self.RPI[unicode(pi)][u"piDevId"]]
+			except:
+				self.indiLOG.log(20,u"setRPIonline looks like device is deleted.. setting pi:{}  devId:{} to delete".format(pi, devID))
+				self.delRPI(pi=pi)
+				return 
+
 			if new==u"up":
 				#self.addToStatesUpdateDict(unicode(dev.id),u"lastMessage", now)
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -10945,7 +11055,7 @@ class Plugin(indigo.PluginBase):
 				actualGpioValue = unicode(data["actualGpioValue"]).lower()
 
 				self.addToStatesUpdateDict(unicode(dev.id),u"actualGpioValue", data["actualGpioValue"])
-				if props["outType"] == "0": # not inverse
+				if props[u"outType"] == "0": # not inverse
 					if actualGpioValue =="high" :upState = "on"
 					else:               		 upState = "off"
 				else:
@@ -11330,17 +11440,17 @@ class Plugin(indigo.PluginBase):
 
 					if sensor == u"amg88xx" and u"rawData" in data :
 						try:
-							if ("imageFilesaveRawData" in props and props["imageFilesaveRawData"] =="1") or ("imageFileNumberOfDots" in props and props["imageFileNumberOfDots"] !="-"):
+							if ("imageFilesaveRawData" in props and props[u"imageFilesaveRawData"] =="1") or ("imageFileNumberOfDots" in props and props[u"imageFileNumberOfDots"] !="-"):
 								# exapnd to 8x8 matrix, data is in 4 byte packages *100
 								pixPerRow = 8
 								dataRaw = json.loads(data[u"rawData"])
 								dataRaw = json.dumps([[dataRaw[kkkx] for kkkx in range(pixPerRow*(iiix), pixPerRow*(iiix+1))] for iiix in range(pixPerRow)])
 
-								if "imageFilesaveRawData" in props and props["imageFilesaveRawData"] =="1":
+								if "imageFilesaveRawData" in props and props[u"imageFilesaveRawData"] =="1":
 										newStatus = self.setStatusCol( dev, u"rawData", dataRaw,"", whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = "")
-								if "imageFileNumberOfDots" in props and props["imageFileNumberOfDots"] !="-":
-									if "imageFileName" in props and len(props["imageFileName"])>1:
-										imageParams	  = json.dumps( {"logLevel":props["imageFilelogLevel"],"compress":props["imageFileCompress"],"fileName":self.cameraImagesDir+props["imageFileName"],"numberOfDots":props["imageFileNumberOfDots"],"dynamic":props["imageFileDynamic"],"colorBar":props["imageFileColorBar"]} )
+								if "imageFileNumberOfDots" in props and props[u"imageFileNumberOfDots"] !="-":
+									if "imageFileName" in props and len(props[u"imageFileName"])>1:
+										imageParams	  = json.dumps( {"logLevel":props[u"imageFilelogLevel"],"compress":props[u"imageFileCompress"],"fileName":self.cameraImagesDir+props[u"imageFileName"],"numberOfDots":props[u"imageFileNumberOfDots"],"dynamic":props[u"imageFileDynamic"],"colorBar":props[u"imageFileColorBar"]} )
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "  
 										os.system(cmd)
 						except Exception, e:
@@ -11395,8 +11505,8 @@ class Plugin(indigo.PluginBase):
 	def updaterainSensorRG11(self, dev, data, whichKeysToDisplay):
 		try:
 			props = dev.pluginProps
-			if "lastUpdate" not in props or props["lastUpdate"]=="0":
-				props["lastUpdate"] = time.time()
+			if "lastUpdate" not in props or props[u"lastUpdate"]=="0":
+				props[u"lastUpdate"] = time.time()
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			updateDev = False
 			##indigo.server.log(unicode(data))
@@ -11409,8 +11519,8 @@ class Plugin(indigo.PluginBase):
 			elif self.rainUnits == "cm":	   mult = 0.1 		; unit = "cm"
 			else:                              mult = 1 		; unit = "mm"
 
-			if "format" in props and len(props["format"])<2: form = "%."+unicode(self.rainDigits+1)+"f["+self.rainUnits+"]"
-			else:											 form = props["format"]
+			if "format" in props and len(props[u"format"])<2: form = "%."+unicode(self.rainDigits+1)+"f["+self.rainUnits+"]"
+			else:											 form = props[u"format"]
 
 			for cc in ["totalRain", "rainRate", "measurementTime", "mode", "rainLevel", "sensitivity","nBuckets","nBucketsTotal","bucketSize"]:
 				if cc in data:
@@ -11434,7 +11544,7 @@ class Plugin(indigo.PluginBase):
 						rainChanges.append([cc, x, form%x, self.rainDigits+1])
 						self.fillMinMaxSensors(dev,"rainRate",x,self.rainDigits)
 						if "rainTextMap" in props:
-							rtm	 = props["rainTextMap"].split(";")
+							rtm	 = props[u"rainTextMap"].split(";")
 							lowerLimit =[]
 							rainText =[]
 							for nn in range(len(rtm)):
@@ -11454,7 +11564,7 @@ class Plugin(indigo.PluginBase):
 					elif cc == "rainLevel":
 						try: x = int(data[cc])
 						except: x = 0
-						labels = (props["rainMsgMap"]).split(";")
+						labels = (props[u"rainMsgMap"]).split(";")
 						if x in [0,1,2,3,4]:
 							if x >1: 
 								rainChanges.append(["lastRain",dd,dd,""])
@@ -11481,9 +11591,9 @@ class Plugin(indigo.PluginBase):
 						x = data[cc]
 						rainChanges.append([cc, x,unicode(x),""])
 			if len(rainChanges)>0:
-				if time.time() - props["lastUpdate"] > 900:	  # force update every 15 minutes
+				if time.time() - props[u"lastUpdate"] > 900:	  # force update every 15 minutes
 					ff = True
-					props["lastUpdate"] = time.time()
+					props[u"lastUpdate"] = time.time()
 					updateDev = True
 				else:
 					ff = False
@@ -11672,7 +11782,7 @@ class Plugin(indigo.PluginBase):
 						if not foundSelf : # really not setup
 							try:
 								props = indigo.devices[int(self.RPI[unicode(pi)]["piDevId"])].pluginProps
-								if "addNewOneWireSensors" in props and props["addNewOneWireSensors"] == "1":
+								if "addNewOneWireSensors" in props and props[u"addNewOneWireSensors"] == "1":
 									dev1 = indigo.device.create(
 											protocol		= indigo.kProtocol.Plugin,
 											address			= "Pi-"+unicode(pi),
@@ -11959,7 +12069,7 @@ class Plugin(indigo.PluginBase):
 			input = u"adc"
 			props = dev.pluginProps
 			type  = props[u"type"]
-			pp = {"offset": props["offset"],"mult":props["mult"], "unit": "ppm","format":"%2d"}
+			pp = {"offset": props[u"offset"],"mult":props[u"mult"], "unit": "ppm","format":"%2d"}
 
 			if unicode(data[input]).find(u"bad") >-1:
 					self.addToStatesUpdateDict(unicode(dev.id),u"status", u"no sensor data - disconnected?")
@@ -12719,8 +12829,8 @@ class Plugin(indigo.PluginBase):
 							#self.addToStatesUpdateDict(unicode(dev.id),u"note", u"Pi-" + piNReceived)
 						self.beacons[piMACSend][u"lastUp"] = time.time()
 						self.RPI[unicode(piNReceived)][u"piDevId"] = dev.id
-						if dev.description != "rPI-"+ unicode(piNReceived)+"-"+ipAddress:
-							dev.description = "rPI-"+ unicode(piNReceived)+"-"+ipAddress
+						if dev.description != "Pi-"+ unicode(piNReceived)+"-"+ipAddress:
+							dev.description = "Pi-"+ unicode(piNReceived)+"-"+ipAddress
 							dev.replaceOnServer()
 
 					else:
@@ -12774,7 +12884,7 @@ class Plugin(indigo.PluginBase):
 						protocol		= indigo.kProtocol.Plugin,
 						address			= piMACSend,
 						name			= "Pi_" + piMACSend,
-						description		= "rPI-" + piNReceived+"-"+ipAddress,
+						description		= "Pi-" + piNReceived+"-"+ipAddress,
 						pluginId		= self.pluginId,
 						deviceTypeId	= "rPI",
 						folder			= self.piFolderId,
@@ -13094,7 +13204,7 @@ class Plugin(indigo.PluginBase):
 								txx = float(txPower)
 								if minTxPower <	 991.: txx = minTxPower
 								distCalc = self.calcDist(  txx, (rssi+rssiOffset) )/ self.distanceUnits
-								if dev.deviceTypeId == "beacon"  and distCalc < 300*self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props["IgnoreBeaconForClosestToRPI"] !="0"):
+								if dev.deviceTypeId == "beacon"  and distCalc < 300*self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0"):
 									beaconUpdatedIds.append([fromPi,dev.id, distCalc])
 									self.beacons[mac][u"receivedSignals"][fromPi]["lastSignal"] = distCalc
 								newStates = self.addToStatesUpdateDict(unicode(dev.id),u"Pi_" + unicode(fromPi) + "_Distance", distCalc,newStates=newStates ,decimalPlaces=1  )
@@ -13652,18 +13762,19 @@ class Plugin(indigo.PluginBase):
 							return
 						if unicode(e).find(u"not found in database") >-1:
 							self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							self.indiLOG.log(40,u"RPI:"+piS+" devid:"+unicode(piID)+" not in indigo, please restart plugin ")
+							self.indiLOG.log(40,u"RPI:{} devid:{} not in indigo, if RPI justd eleted, it will resolve itself ".format(pi ,piID))
+							self.delRPI(pi=pi)
 							self.updateNeeded += ",fixConfig"
-							self.fixConfig(checkOnly = ["all","rpi"],fromPGM="makeParametersFile bad rpi") 
+							self.fixConfig(checkOnly = ["all","rpi,force"],fromPGM="makeParametersFile bad rpi") 
 						else:	 
 							self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							self.indiLOG.log(40,u"RPI:"+piS+" error ..  piDevId not set:"+ unicode(self.RPI[piS]))
+							self.indiLOG.log(40,u"RPI: {} error ..  piDevId not set:{}".format(piS ,self.RPI[pi]))
 							self.updateNeeded += ",fixConfig"
 							self.fixConfig(checkOnly = ["all","rpi"],fromPGM="makeParametersFile2")
 
 					if piDeviceExist: 
 						if u"eth0" in props and "wlan0" in props:
-							try: 	out[u"wifiEth"] =  {"eth0":json.loads(props[u"eth0"]), "wlan0":json.loads(props["wlan0"])}
+							try: 	out[u"wifiEth"] =  {"eth0":json.loads(props[u"eth0"]), "wlan0":json.loads(props[u"wlan0"])}
 							except: pass			
 
 						out[u"startWebServerSTATUS"]  = "0"
@@ -14552,7 +14663,7 @@ class Plugin(indigo.PluginBase):
 		#				  1234567890123456	1234567890123456789012 1234567890 123456 123456789
 		#				  75:66:B5:0A:9F:DB beacon-75:66:B5:0A:9   expired		   0	  1346
 		self.myLog( text = u"#	defined beacons-------------", mType="pi configuration")
-		self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig    LastUp[s] ExpTime updDelay created",  mType=u"pi configuration")
+		self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig    LastUp[s] ExpTime updDelay created   lastStatusChange",  mType=u"pi configuration")
 		for status in [u"ignored", u""]:
 			for type in _GlobalConst_typeOfBeacons:
 				self.printBeaconInfoLine(status, type)
@@ -14574,7 +14685,7 @@ class Plugin(indigo.PluginBase):
 		self.myLog( text = u"WiFi Password                " + "...." + unicode(self.wifiPassword)[4:],	   mType= u"pi configuration")
 		self.myLog( text = u"WiFi SSID                    " + unicode(self.wifiSSID),					   mType= u"pi configuration")
 		self.myLog( text = u"wifi OFF if ETH0             " + unicode(self.wifiEth),					   mType= u"pi configuration")
-		self.myLog( text = u"Seconds UP to DOWN	          " + unicode(self.secToDown),					   mType= u"pi configuration")
+		self.myLog( text = u"Seconds UP to DOWN           " + unicode(self.secToDown),					   mType= u"pi configuration")
 		self.myLog( text = u"enable FINGSCAN interface    " + unicode(self.enableFING),					   mType= u"pi configuration")
 		self.myLog( text = u"rejct Beacons with txPower > " + unicode(self.txPowerCutoffDefault) + " dBm", mType= u"pi configuration")
 		self.myLog( text = u"beacon indigo folder Name    " + unicode(self.iBeaconFolderName),			   mType= u"pi configuration")
@@ -14583,11 +14694,9 @@ class Plugin(indigo.PluginBase):
 		self.myLog( text = u"send Full UUID everytime     " + unicode(self.sendFullUUID),				   mType= u"pi configuration")
 		self.myLog( text = u"distance Units	              " + unicode(self.distanceUnits) + "; 1=m, 0.01=cm , 0.0254=in, 0.3=f, 0.9=y", mType= u"pi configuration")
 		self.myLog( text = u"", mType="pi configuration")
-		self.myLog( text = u"Parameters for each rPi      ", mType="pi configuration")
-		self.myLog( text = u"", mType="pi configuration")
 		self.myLog( text = u" ========== EXPERT parameters for each PI:----------", mType= u"pi configuration")
 		self.myLog( text = u"delete History after xSecs   " + unicode(self.deleteHistoryAfterSeconds),		mType="pi configuration")
-		self.myLog( text = u"colct x secs bf snd          " + unicode(self.sendAfterSeconds), 				mType= u"pi configuration")
+		self.myLog( text = u"collect x secs bf snd        " + unicode(self.sendAfterSeconds), 				mType= u"pi configuration")
 		self.myLog( text = u"port# on rPi 4 GPIO commands " + unicode(self.rPiCommandPORT),	   				mType= u"pi configuration")
 		self.myLog( text = u" "															  ,	   				mType= u"pi configuration")
 
@@ -14671,7 +14780,7 @@ class Plugin(indigo.PluginBase):
 		#				  75:66:B5:0A:9F:DB beacon-75:66:B5:0A:9   expired		   0	  1346
 		if True:
 			self.myLog( text = u" ==========  defined beacons ==============", mType= "pi configuration")
-			self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status          type      txMin ignore sigDlt minSig     LastUp[s] ExpTime updDelay      created",
+			self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status          type      txMin ignore sigDlt minSig     LastUp[s] ExpTime updDelay           created    lastStatusChange",
 					   mType= "pi configuration")
 			for status in [u"up", u"down", u"expired"]:
 				for cType in _GlobalConst_typeOfBeacons:
@@ -14843,13 +14952,16 @@ class Plugin(indigo.PluginBase):
 			if self.beacons[beacon][u"typeOfBeacon"] != type: continue
 			if self.beacons[beacon][u"status"] != status: continue
 			try:
-				name = indigo.devices[self.beacons[beacon][u"indigoId"]].name
+				dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
+				name = dev.name
+				lastStatusChange = indigo.devices[self.beacons[beacon][u"indigoId"]].states["lastStatusChange"]
 			except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					self.indiLOG.log(40, u"communication to indigo is interrupted")
 					return
-				continue
+				name = " "
+				lastStatusChange = " "
 
 			cc += 1
 			if len(name) > 22: name = name[:21] + ".."
@@ -14863,7 +14975,8 @@ class Plugin(indigo.PluginBase):
 				   unicode(int(time.time() - self.beacons[beacon][u"lastUp"])).rjust(12) + " " + \
 				   unicode(int(self.beacons[beacon][u"expirationTime"])).rjust(7) + " " + \
 				   unicode(int(self.beacons[beacon][u"updateSignalValuesSeconds"])).rjust(8) + " " + \
-				   unicode(self.beacons[beacon][u"created"]).ljust(19)
+				   unicode(self.beacons[beacon][u"created"]).ljust(19)+ " " + \
+				   lastStatusChange.ljust(19)
 			self.myLog( text = line, mType= "pi configuration")
 
 		if status != u"ignored":
@@ -15128,7 +15241,7 @@ class Plugin(indigo.PluginBase):
 										st	= unicode(value).lower() 
 										if st in ["up","down","expired","on",u"off",u"1","0"]:
 											props =dev.pluginProps
-											if	self.enableBroadCastEvents == "all" or	("enableBroadCastEvents" in props and props["enableBroadCastEvents"] == "1" ):
+											if	self.enableBroadCastEvents == "all" or	("enableBroadCastEvents" in props and props[u"enableBroadCastEvents"] == "1" ):
 												msg = {"action":"event", "id":unicode(dev.id), "name":dev.name, "state":"status", "valueForON":"up", "newValue":st}
 												if self.decideMyLog(u"BC"): self.indiLOG.log(10, u"executeUpdateStatesDict msg added :" + unicode(msg))
 												self.sendBroadCastEventsList.append(msg)
@@ -15535,14 +15648,28 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def ipNumberOK(self,ipcheck):
+		if not self.isValidIP(ipcheck): return False
 		for pi in self.RPI:
 			if self.RPI[pi][u"piOnOff"] == "0": continue
-			if ipcheck == self.RPI[unicode(pi)][u"ipNumberPi"]:
+			if ipcheck == self.RPI[pi][u"ipNumberPi"]:
 				return True
+
 		return False
+####-------------------------------------------------------------------------####
+	def isValidIP(self, ip0):
+		ipx = ip0.split(u".")
+		if len(ipx) != 4:
+			return False
+		else:
+			for ip in ipx:
+				try:
+					if int(ip) < 0 or  int(ip) > 255: return False
+				except:
+					return False
+		return True
 
 ####-------------------------------------------------------------------------####
-	def handlesockReporting(self,IPN,nBytes,name,type,msg=""):
+	def handlesockReporting(self, IPN, nBytes, name, type, msg=""):
 
 		try:
 			if IPN not in self.dataStats[u"data"]:
@@ -15563,7 +15690,7 @@ class Plugin(indigo.PluginBase):
 			if type != u"ok" : # log if " errxxx" and previous event was less than xxx min ago	ago
 				if time.time() - self.dataStats[u"data"][IPN][name][type][u"lastTime"]	< self.maxSocksErrorTime : # log if previous event was less than 10 minutes ago
 					dtLT = datetime.datetime.fromtimestamp(self.dataStats[u"data"][IPN][name][type][u"lastTime"] ).strftime(_defaultDateStampFormat)
-					self.indiLOG.log(30, u"TCPIP socket error rate high for "+IPN+"/"+name +u" ; previous:"+dtLT )
+					self.indiLOG.log(30, u"TCPIP socket error rate high for {}/{} ; previous:{}".format(IPN, name, dtLT) )
 					self.printTCPIPstats(all=IPN)
 				self.saveTcpipSocketStats()
 			elif "Socket" in self.debugLevel:
@@ -15653,12 +15780,16 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			tStart=time.time()
 			len0 = 0
 			name = "none"
+			wrongIP = 0
 
 			if	not indigo.activePlugin.ipNumberOK(self.client_address[0]) : 
+				wrongIP = 2
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} not in accepted ip number list, please fix in >>initial setup RPI<<".format(self.client_address)  )
+				#  add looking for ip = ,"ipAddress":"192.168.1.20"
+				# but need first to read data 
 				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"unknown",u"errIP" )
-				self.request.close()
-				return
+				#self.request.close()
+				#return
 
 			# 3 secs should be enough even for slow network mostly one package, should all be send in one package
 			self.request.settimeout(5) 
@@ -15760,13 +15891,16 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  listener bad name {}".format(name) )
 				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"badName" )
 			else:
-
+				wrongIP -= 1
 				#### now update Indigo dev/ states 
 				indigo.activePlugin.addToDataQueue( name, dataJ,dataS[2] )
-				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"ok",msg=data0 )
+				if wrongIP < 1: indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"ok",msg=data0 )
 
-			if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.myLog( text = u" sending ok to {} data: {}..{}".format(name.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
-			try:	self.request.send(u"ok-"+unicode(lenData) )
+			try:	
+				if wrongIP < 2: 
+					if indigo.activePlugin.decideMyLog(u"Socket"): 
+						indigo.activePlugin.myLog( text = u" sending ok to {} data: {}..{}".format(name.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
+					self.request.send(u"ok-"+unicode(lenData) )
 			except: pass
 			self.request.close()
 

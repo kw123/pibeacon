@@ -12,10 +12,65 @@
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="enablePiNumberMenu" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="label1"  type="label" >
 			<Label>Parameters for rPi devices</Label>
 			</Field>
+ 
+			<Field id="infoLabel55" type="label">
+				<Label>== Setup basic network params for RPI, use this or set parameters in "initial setup of RPI" menu"</Label>
+			</Field>
+
+ 
+			<Field id="RPINumber" type="menu"    enabledBindingId="enablePiNumberMenu"  defaultValue=""> 
+				<Label>... RPi #:(only use undefined RPIs)</Label>
+				<List>
+					<Option value="0" >0</Option>
+					<Option value="1" >1</Option>
+					<Option value="2" >2</Option>
+					<Option value="3" >3</Option>
+					<Option value="4" >4</Option>
+					<Option value="5" >5</Option>
+					<Option value="6" >6</Option>
+					<Option value="7" >7</Option>
+					<Option value="8" >8</Option>
+					<Option value="9" >9</Option>
+				</List>
+			</Field>
+
+ 
+			<Field id="newIPNumber" type="textfield"     defaultValue=""> 
+				<Label>... (over)write the current IP number of RPI with:</Label>
+			</Field>
+ 
+
+			<Field id="newuserIdPi" type="textfield"     defaultValue=""> 
+				<Label>... (over)write the current RPI-userId with:</Label>
+			</Field>
+
+			<Field id="newpasswordPi" type="textfield"     defaultValue=""> 
+				<Label>... (over)write the current RPI-password with:</Label>
+			</Field>
+
+			<Field    id="newauthKeyOrPassword"   type="menu" defaultValue="assword">
+				 <List>
+					<Option value="assword"    >uses std Login/Password</Option>
+					<Option value="login:"     >uses authkey (uses login: as prompt, skips password entry)</Option>
+				  </List>
+			<Label>normal login, or authkey - no password entry:</Label>
+			</Field>
+			<Field    id="newenableRebootCheck"   type="menu" defaultValue="restartLoop">
+				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
+				 <List>
+					<Option value="doNothing"            >do nothing (not recommended)</Option>
+					<Option value="restartLoop,-"        >restart progams on rPi(default) </Option>
+					<Option value="rebootloop,-"         >reboot rPi if internal problem</Option>
+					<Option value="restartLoop,pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
+					<Option value="rebootloop,pingBoot"  >reboot rPi </Option>
+				</List>
+			</Field>
+
 
 			<Field id="label14"               type="label" > 
 				<Label>== iBeacon related:...</Label>
@@ -610,12 +665,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 			<Field id="label61" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 			<Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>	</Field>
- 
-
 
 
 		</ConfigUI>
-        
+
 		<States>
 			<State id="displayStatus">
 				<ValueType>String</ValueType>
@@ -948,10 +1001,64 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="enablePiNumberMenu" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="label1"  type="label" >
 			<Label>Parameters for rPi Sensors types only -- not used for ibeacons or BLE connect devices</Label>
+			</Field>
+
+ 
+			<Field id="infoLabel55" type="label">
+				<Label>== Setup basic network params for RPI, use this or set parameters in "initial setup of RPI" menu"</Label>
+			</Field>
+
+			<Field id="RPINumber" type="menu"    enabledBindingId="enablePiNumberMenu"  defaultValue=""> 
+				<Label>... RPi #:(only use undefined RPIs)</Label>
+				 <List>
+					<Option value="10" >10</Option>
+					<Option value="11" >11</Option>
+					<Option value="12" >12</Option>
+					<Option value="13" >13</Option>
+					<Option value="14" >14</Option>
+					<Option value="15" >15</Option>
+					<Option value="16" >16</Option>
+					<Option value="17" >17</Option>
+					<Option value="18" >18</Option>
+					<Option value="19" >19</Option>
+				</List>
+			</Field>
+ 
+ 
+			<Field id="newIPNumber" type="textfield"     defaultValue=""> 
+				<Label>... (over)write the current IP number of RPI with:</Label>
+			</Field>
+ 
+
+			<Field id="newuserIdPi" type="textfield"     defaultValue=""> 
+				<Label>... (over)write the current RPI-userId with:</Label>
+			</Field>
+
+			<Field id="newpasswordPi" type="textfield"     defaultValue=""> 
+				<Label>... (over)write the current RPI-password with:</Label>
+			</Field>
+
+			<Field    id="newauthKeyOrPassword"   type="menu" defaultValue="assword">
+				 <List>
+					<Option value="assword"    >uses std Login/Password</Option>
+					<Option value="login:"     >uses authkey (uses login: as prompt, skips password entry)</Option>
+				  </List>
+			<Label>normal login, or authkey - no password entry:</Label>
+			</Field>
+			<Field    id="newenableRebootCheck"   type="menu" defaultValue="restartLoop">
+				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
+				 <List>
+					<Option value="doNothing"            >do nothing (not recommended)</Option>
+					<Option value="restartLoop,-"        >restart progams on rPi(default) </Option>
+					<Option value="rebootloop,-"         >reboot rPi if internal problem</Option>
+					<Option value="restartLoop,pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
+					<Option value="rebootloop,pingBoot"  >reboot rPi </Option>
+				</List>
 			</Field>
 
 
@@ -1414,8 +1521,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 							<Option value='{"on":"dontChange", "useIP":"doNotUse"}'	>do not change , must be set by user, do not use wlan0 IP#</Option>
 						</List> 
 			</Field>
-
-
 
 		</ConfigUI>
 

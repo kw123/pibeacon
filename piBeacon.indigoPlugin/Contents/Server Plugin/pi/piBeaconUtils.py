@@ -270,8 +270,7 @@ def getGlobalParams(inp):
 
 
 		if u"wifiEth"				in inp:	 
-			try: 	xxx = json.loads(inp["wifiEth"])
-			except: xxx = {}
+			xxx = inp["wifiEth"]
 			if len(xxx) == 2 and "eth0" in xxx and "wlan0" in xxx: 
 				if xxx != G.wifiEthOld:
 					G.wifiEth = xxx
@@ -481,18 +480,51 @@ def getIPCONFIG():
 	G.eth0Enabled 		= False
 	try:
 		retIfconfig = subprocess.Popen("/sbin/ifconfig " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-		if retIfconfig.find("wlan0   ") > -1: G.wifiEnabled= True
-		if retIfconfig.find("wlan1   ") > -1: G.wifiEnabled= True
-		if retIfconfig.find("eth0   ")  > -1: G.eth0Enabled= True
+		#eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+		#        inet 192.168.1.21  netmask 255.255.255.0  broadcast 192.168.1.255
+		#        inet6 fe80::5b33:6d88:a2c6:34b  prefixlen 64  scopeid 0x20<link>
+		#        ether b8:27:eb:00:30:7f  txqueuelen 1000  (Ethernet)
+		#        RX packets 1010518  bytes 147369407 (140.5 MiB)
+		#        RX errors 0  dropped 70  overruns 0  frame 0
+		#        TX packets 81052  bytes 9516989 (9.0 MiB)
+		#        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 
-		if retIfconfig.find("wlan0:") > -1: G.wifiEnabled= True
-		if retIfconfig.find("wlan1:") > -1: G.wifiEnabled= True
-		if retIfconfig.find("eth0:")  > -1: G.eth0Enabled= True
+		#lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+		#        inet 127.0.0.1  netmask 255.0.0.0
+		#        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+		#        loop  txqueuelen 1000  (Local Loopback)
+		#        RX packets 28688  bytes 6781920 (6.4 MiB)
+		#        RX errors 0  dropped 0  overruns 0  frame 0
+		#        TX packets 28688  bytes 6781920 (6.4 MiB)
+		#        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 
-		# this happens when not connected 
-		if  eth0IP.find("169.254.")>-1:
-			G.eth0Enabled =False
-			##os.system("sudo ifconfig eth0 down")
+		if retIfconfig.find("lo") > -1: 
+			packets 	= retIfconfig
+			networks 	= retIfconfig 
+			ifconfig 	= True
+		else:
+			packets = subprocess.Popen("cat /proc/net/dev " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+			#Inter-|   Receive                                                |  Transmit
+			# face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+			#    lo: 6758900   28590    0    0    0     0          0         0  6758900   28590    0    0    0     0       0          0
+			#  eth0: 147198293 1008371    0   69    0     0          0         0  9488704   80818    0    0    0     0       0          0
+			networks = subprocess.Popen("ip -4 a show ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+			#1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+			#    inet 127.0.0.1/8 scope host lo
+			#       valid_lft forever preferred_lft forever
+			#2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+			#    inet 192.168.1.21/24 brd 192.168.1.255 scope global eth0
+			#      valid_lft forever preferred_lft forever
+			ifconfig = False
+			
+		if networks.find("wlan0   ") > -1: G.wifiEnabled= True
+		if networks.find("wlan1   ") > -1: G.wifiEnabled= True
+		if networks.find("eth0   ")  > -1: G.eth0Enabled= True
+
+		if networks.find("wlan0:") > -1: G.wifiEnabled= True
+		if networks.find("wlan1:") > -1: G.wifiEnabled= True
+		if networks.find("eth0:")  > -1: G.eth0Enabled= True
+
 
 
 		ifConfigSections = retIfconfig.split("\n\n")
@@ -508,11 +540,15 @@ def getIPCONFIG():
 						eth0IP= ifConfigSections[ii].split("inet ")
 						if len(eth0IP) > 1:
 							eth0IP = eth0IP[1].split(" ")[0]
+					if  eth0IP.find("169.254.")>-1:
+						G.eth0Enabled =False
+						##os.system("sudo ifconfig eth0 down")
 
 					if ifConfigSections[ii].find("RX packets ") >-1:
 						eth0Packets = ifConfigSections[ii].split("RX packets ")
 						if len(eth0Packets) ==2:
 							G.eth0Packets = eth0Packets[1].split(" ")[0]
+					# this happens when not connected 
 							
 
 
@@ -531,7 +567,7 @@ def getIPCONFIG():
 					if ifConfigSections[ii].find("RX packets ") >-1:
 						wlan0Packets = ifConfigSections[ii].split("RX packets ")
 						if len(wlan0Packets) ==2:
-							G.eth0Packets = wlan0Packets[1].split(" ")[0]
+							G.wlan0Packets = wlan0Packets[1].split(" ")[0]
 					
 	except	Exception, e:
 		toLog(-1,u"error in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
@@ -600,6 +636,9 @@ def startWiFi():
 	os.system("sudo wpa_cli -i wlan0 reconfigure ") 
 	os.system("sudo wpa_cli -i wlan1 reconfigure ") 
 
+
+	# new tool to be converted..  --> use ip instead if ifconfig 
+	# ip link set dev wlan1 up
 	time.sleep(0.5)
 	os.system("sudo ifconfig wlan0 up ") 
 	os.system("sudo ifconfig wlan1 up ") 
@@ -628,6 +667,7 @@ def stopWiFi():
 	os.system("sudo rfkill unblock all")
 	os.system("sudo ifconfig wlan0 down ") 
 	os.system("sudo ifconfig wlan1 down ") 
+	# ip link set dev wlan1 down
 	G.wifiEnabled = False
 	return
 #################################
