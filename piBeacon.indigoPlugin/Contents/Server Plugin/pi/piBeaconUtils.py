@@ -370,9 +370,9 @@ def doRebootThroughRUNpinReset():
 def sendRebootHTML(reason,reboot=True):
 	sendURL(sendAlive="reboot",text=reason)
 	if reboot:
-	   doReboot(1.," reboot at " +str(datetime.datetime.now())+"  "    +reason)
+	   doReboot(3," reboot at " +str(datetime.datetime.now())+"  "    +reason)
 	else:
-	   doReboot(1.," shut down at " +str(datetime.datetime.now())+"   " +reason,cmd="sudo killall python; wait 1; shutdown -h now ")
+	   doReboot(3.," shut down at " +str(datetime.datetime.now())+"   " +reason,cmd="sudo killall python; wait 1; shutdown -h now ")
 	
 	return
 

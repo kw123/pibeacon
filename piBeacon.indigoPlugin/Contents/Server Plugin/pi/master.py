@@ -854,7 +854,7 @@ def checkIfShutDownVoltage():
 		if batteryStatus["batteryTimeLeft"] >0: 
 			batteryStatus["status"]						= "dis-charging"
 			lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
-			U.toLog (-1, "checkIfShutDownVoltage discharging ", doPrint=True)
+			U.toLog (-1, "checkIfShutDownVoltage  --> ac power off (pin {} low),  discharging battery, time left:{:6.1f} secs".format(shutdownPinVoltSensor, batteryStatus["batteryTimeLeft"] ), doPrint=True)
 			return 
 
 		batteryStatus["status"]							= "empty"
@@ -864,15 +864,16 @@ def checkIfShutDownVoltage():
 			U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 			return
 	U.toLog (-1, "checkIfShutDownVoltage rebooting ", doPrint=True )
+	#this will send and HTML to indigo and then issue a shutdown command
 	U.sendRebootHTML("battery empty", reboot=False)
 
 	return 
 
 ####################      #########################
-def writeJson2(data,fileName,lastWriteBatteryStatus):
+def writeJson2(data, fileName, lastWriteBatteryStatus):
 	try:
 		if time.time() - lastWriteBatteryStatus < 20: return lastWriteBatteryStatus
-		U.writeJson(fileName, data,sort_keys=True, indent=0)
+		U.writeJson(fileName, data, sort_keys=True, indent=0)
 	except: pass
 	return time.time()
 	

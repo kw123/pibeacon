@@ -7527,7 +7527,9 @@ you can setup
 			</Field>
 			<Field id="i2cAddress" type="menu"     defaultValue="105"> <Label>i2c address of device:</Label>
 			<List>
+				<Option value="104"   >0x68 = 104  </Option>
 				<Option value="105"   >0x69 = 105 default </Option>
+				<Option value="106"   >0x6A = 106  </Option>
 				<Option value="107"   >0x6B = 107 </Option>
 			</List>
 			</Field>

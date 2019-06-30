@@ -1,3 +1,10 @@
+Added features / changes in v7.105.294 @ 2019-06-30
+===================================================
+
+1. addded options for AMG88xx i2c address - added 0x68 0x6A
+
+
+
 Added features / changes in v7.105.293 @ 2019-06-22
 ===================================================
 

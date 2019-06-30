@@ -462,13 +462,18 @@ def displayDoShowImage():
 
 # ------------------    ------------------ 
 def displayShowStandardStatus(force=False):
-	global overallStatus, totalSteps, maxStepsUsed, sensorDict
+	global overallStatus, totalSteps, maxStepsUsed, sensorDict, amPM1224
 	value =""
 	for ii in range(len(sensorDict["sensor"])):
 		value +=str(sensorDict["sensor"][ii]["clicked"] )+" "
 	value = value.strip(" ")
 	displayDrawLines(["St:"+overallStatus+"; Wifi:"+str(G.wifiEnabled)[0]+"; Cl:"+amPM1224,"IP#:"+G.ipAddress ,"SensClicked: "+value,"@ Pos.: %d/%d"%(totalSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")], nLines=5)
 	updatewebserverStatus("normal")
+
+# ------------------    ------------------ 
+def displayShowShutDownMessage():
+	value = value.strip(" ")
+	displayDrawLines(["shutting down...","Save to disconnect","  power in 30 secs", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M"),""], nLines=5, clear=True, force=force, show=True)
 
 # ------------------    ------------------ 
 def displayShowStatus2(force=True):
@@ -504,6 +509,7 @@ def updatewebserverStatus(status):
 	statusData.append( "currentColor... = "+ "R:%d"%cc[0] + ", G:%d"%cc[1] + ", B:%d"%cc[2] + " / 255" )
 
 	U.updateWebStatus(json.dumps(statusData) )
+
 def removebracketsetc(data):
 	out = unicode(data).replace("[","").replace("]","").replace(" ","")
 
@@ -1131,7 +1137,7 @@ def setgpiopinNumbers():
 
 ## gpio -g mode 23 in;gpio -g read
 	gpiopinNumbers ={}
-	gpiopinNumbers["pin_CoilA1"] 	= 21 # blue
+	gpiopinNumbers["pin_CoilA1"] 	= 21 # blue lowest GPIO right 
 	gpiopinNumbers["pin_CoilA2"] 	= 20 # pink
 	gpiopinNumbers["pin_CoilB1"] 	= 16 # yellow
 	gpiopinNumbers["pin_CoilB2"] 	= 12 # orange
@@ -1146,7 +1152,9 @@ def setgpiopinNumbers():
 	gpiopinNumbers["pin_Select"] 	= 10
 	gpiopinNumbers["pin_Exit"] 		= 22
 
-	gpiopinNumbers["pin_rgbLED"]	= [19,13,26]
+	gpiopinNumbers["pin_rgbLED"]	= [26, # R: 2x 6.8 Ohm = 3.8  Ohm; dV at 0.3A = 2.2V;  lowest GPIO left
+									   19, # G: 2x 2.7 Ohm = 1.35 Ohm; dV at 0.3A = 3.0V
+									   13] # B: 2x 2.1 Ohm = 1.1  Ohm; dV at 0.3A = 3.1V
 
 
 	sensorDict			 = {}
@@ -1851,10 +1859,8 @@ def getIntensity(intens):
 	if sunDialOffset != 0:
 		intens *= 0.5
 	retV=  min(
-		intensity["Max"], max(
-			intensity["Min"], float(intens)*(intensity["Mult"]/100.) * lightSensorValue)
-		)
-	#print  "intens", retV
+		intensity["Max"], max( intensity["Min"], float(intens)*(intensity["Mult"]/100.) * lightSensorValue) 	)
+	print  "intens", intens, retV
 	return retV
 
 
@@ -1925,7 +1931,7 @@ def getLightSensorValue(force=False):
 		lastTimeLightSensorFile = tt
 		lightSensorValueREAD = float(rr["light"])
 		sensor = rr["sensor"]
-		if   sensor == "i2cTSL2561":	maxRange = 5000.
+		if   sensor == "i2cTSL2561":	maxRange = 2000.
 		elif sensor == "i2cOPT3001":	maxRange = 2000.
 		elif sensor == "i2cVEML6030":	maxRange = 700.
 		elif sensor == "i2cIS1145":		maxRange = 2000.
@@ -1940,7 +1946,7 @@ def getLightSensorValue(force=False):
 		if (  abs(lightSensorValueRaw-lastlightSensorValue) / (max (0.005, lightSensorValueRaw+lastlightSensorValue))  ) < 0.05: return False
 		lightSensorValue = (lightSensorValueRaw*5 + lastlightSensorValue*4) / 9.
 		lastTimeLightSensorValue = tt0
-		U.toLog( 1, "lightSensorValue raw:%.3f"%(lightSensorValueRaw)+";  new used:%.4f"%(lightSensorValue)+ ";  last:%.4f"%(lastlightSensorValue)+";  read:%.1f"%(lightSensorValueREAD)+ ";  maxR:%.1f"%(maxRange), doPrint=True)
+		U.toLog( 1, "lightSensorValue raw:{:.3f};  new used:{:.4f};  last:{:.4f}  read:{:.1f};  maxR:{:.1f}".format(lightSensorValueRaw, lightSensorValue, lastlightSensorValue, lightSensorValueREAD, maxRange), doPrint=True)
 		lastlightSensorValue = lightSensorValue
 		return True
 	except	Exception, e:
@@ -2404,7 +2410,11 @@ while True:
 		slept += minSleep
 
 		if U.checkifRebooting(): 
+			displayShowShutDownMessage()
+			time.sleep(3)
 			doSunDialShutdown()
+			time.sleep(1)
+			exit()
 
 
 		tt = time.time()
