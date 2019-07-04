@@ -25,7 +25,7 @@ def toLog(text, force=False):
 	if not logLevel and not force: return 
 
 	l=open(logfileName,"a")
-	l.write("plotPosition: " + text+"\n")
+	l.write("plotPosition: {}\n".format(text) )
 	l.close()
 	if printON:
 		print text

@@ -95,21 +95,7 @@
             <Option value="999"  >no limit</Option>
         </List>
    </Field>
-    <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="1" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
-        <Label>reboot RPI if GT xx empty beacon messages received:</Label>
-        <List>
-            <Option value="999999999"  > disable </Option>
-            <Option value="1"   > 1  for testing</Option>
-            <Option value="2"   > 2  for testing</Option>
-            <Option value="3"   > 3  for testing</Option>
-            <Option value="5"   > 5  </Option>
-            <Option value="10"  > 10 </Option>
-            <Option value="20"  > 20 </Option>
-            <Option value="50"  > 50 </Option>
-            <Option value="100" > 100 </Option>
-        </List>    
-   </Field>
-
+ 
        <Field    id="acceptNewiBeacons"   type="menu" defaultValue="-999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
         <Label>Accept any new iBeacons:</Label>
         <List>
@@ -135,6 +121,35 @@
             <Option value="-999" >accept ALL</Option>
         </List>
    </Field>
+
+       <Field    id="rebootIfNoMessages"   type="menu" defaultValue="3" tooltip="if no ibeacon messages reboot">
+        <Label>reboot RPI if GT xx empty beacon messages (on RPI)):</Label>
+        <List>
+            <Option value="1"   >reboot after 1 loop (~1min)</Option>
+            <Option value="2"   >reboot after 2 loops</Option>
+            <Option value="4"   >reboot after 4 loops</Option>
+            <Option value="6"   >reboot after 6 loops</Option>
+            <Option value="8"   >reboot after 8 loops</Option>
+            <Option value="12"  >reboot after 12 loops</Option>
+            <Option value="16"  >reboot after 16 loops</Option>
+            <Option value="9999999999"  >do NOT reboot, just wait </Option>
+      </List>
+   </Field>
+   <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="5" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
+        <Label>reboot RPI if GT xx empty beacon messages received (from plugin):</Label>
+        <List>
+            <Option value="999999999"  > disable </Option>
+            <Option value="1"   > 1  for testing</Option>
+            <Option value="2"   > 2  for testing</Option>
+            <Option value="3"   > 3  for testing</Option>
+            <Option value="5"   > 5  </Option>
+            <Option value="10"  > 10 </Option>
+            <Option value="20"  > 20 </Option>
+            <Option value="50"  > 50 </Option>
+            <Option value="100" > 100 </Option>
+        </List>    
+   </Field>
+
 
    <Field    id="setClostestRPItextToBlank"   type="menu" defaultValue="1" tooltip="">
         <Label>set clostestRPItext to blank when iBeacon down:</Label>
@@ -645,63 +660,63 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
     <Field id="simpleSeparator57" type="separator"/>
 
-    <Field id="infoLabel97" type="label">  <Label>debug level on rPi servers:</Label>  </Field>
+    <Field id="infoLabel97" type="label">  <Label>debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
 
     <Field id="debugRPICALL"   type = "menu" defaultValue = "0"  >
-        <Label>Debug...                   ... (1) supervisorPGM level:</Label>
+        <Label>Debug...                   ... (1) master level:</Label>
         <List>
+            <Option value="3"   >get data +</Option>
+            <Option value="2"   >reboot restart etc +</Option>
+            <Option value="1"   >http, ping, .. to server</Option>
             <Option value="0"   >min</Option>
-            <Option value="1"   >get data</Option>
-            <Option value="2"   >reboot ...</Option>
-            <Option value="3"   >http, ping, .. to server</Option>
         </List>
     </Field>
 
     <Field id="debugRPIBEACON"   type = "menu" defaultValue = "0"   >
         <Label>    ... (2) beacon PGM level:</Label>
         <List>
-            <Option value="0"   >min</Option>
-            <Option value="2"   >get data</Option>
-            <Option value="3"   >get data details</Option>
+            <Option value="3"   >details +</Option>
+            <Option value="2"   >get data +</Option>
             <Option value="1"   >http to server</Option>
+            <Option value="0"   >min</Option>
         </List>
     </Field>
 
     <Field id="debugRPISENSOR"   type = "menu" defaultValue = "0"  >
         <Label>    ... (3) sensor PGM level:</Label>
         <List>
-            <Option value="0"   >min</Option>
-            <Option value="2"   >get data</Option>
-            <Option value="3"   >get data details</Option>
+            <Option value="3"   >details +</Option>
+            <Option value="2"   >get data +</Option>
             <Option value="1"   >http to server</Option>
+            <Option value="0"   >min</Option>
         </List>
     </Field>
 
     <Field id="debugRPIOUTPUT"   type = "menu" defaultValue = "0"  >
         <Label>     ... (4) output PGM level:</Label>
         <List>
+            <Option value="3"   >details +</Option>
+            <Option value="2"   >get data +</Option>
             <Option value="0"   >min</Option>
-            <Option value="1"   >get data</Option>
-            <Option value="3"   >details</Option>
         </List>
     </Field>
 
     <Field id="debugRPIBLE"   type = "menu" defaultValue = "0"  >
         <Label>    ... (5) BLE PGM level:</Label>
         <List>
-            <Option value="0"   >min</Option>
-            <Option value="2"   >get data</Option>
-            <Option value="3"   >get data details</Option>
+            <Option value="3"   >get data details +</Option>
+            <Option value="2"   >get data +</Option>
             <Option value="1"   >http to server</Option>
+            <Option value="0"   >min</Option>
         </List>
     </Field>
 
     <Field id="debugRPImystuff"   type = "menu" defaultValue = "0"  >
         <Label>    ... (6) myprogram.py...   PGM level:</Label>
         <List>
-            <Option value="0"   >min</Option>
+            <Option value="3"   >get data details +</Option>
             <Option value="2"   >get data</Option>
-            <Option value="3"   >get data details</Option>
+            <Option value="0"   >min</Option>
         </List>
     </Field>
      

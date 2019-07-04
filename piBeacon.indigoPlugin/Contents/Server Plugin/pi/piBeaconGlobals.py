@@ -82,6 +82,7 @@ wlan0PacketsOld		= ""
 eth0PacketsOld		= ""
 packetsTime			= 0
 packetsTimeOld		= 0
+rebootIfNoMessages	= 4
 
 BeaconUseHCINo		="-1"
 BLEconnectUseHCINo	="-1"

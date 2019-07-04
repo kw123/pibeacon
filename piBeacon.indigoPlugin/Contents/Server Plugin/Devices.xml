@@ -1360,6 +1360,27 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="75"    >75C = 167F</Option>
 				</List>
 			 </Field>
+			<Field id="fanTempOffAtTempValue"	type="menu" defaultValue="4" tooltip="stop fan if temp is LT on temp -xx C" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+				<Label>.. Stop fan if temp &lt; Temp ON - xx:</Label>
+				<List>
+					<Option value="0"    >0C  = 0F</Option>
+					<Option value="1"    >1C  = 2F</Option>
+					<Option value="2"    >2C  = 4F</Option>
+					<Option value="3"    >3C  = 6F</Option>
+					<Option value="4"    >4C  = 8F</Option>
+					<Option value="5"    >5C  = 9F</Option>
+					<Option value="6"    >6C  = 11F</Option>
+					<Option value="7"    >7C  = 13F</Option>
+					<Option value="8"    >8C  = 15F</Option>
+					<Option value="9"    >9C  = 16F</Option>
+					<Option value="10"   >10C = 18F</Option>
+					<Option value="12"   >12C = 22F</Option>
+					<Option value="15"   >15C = 27</Option>
+					<Option value="20"   >20C = 36F</Option>
+					<Option value="30"   >30C = 54F</Option>
+					<Option value="99"    >keep on once started</Option>
+				</List>
+			 </Field>
 
 			<Field id="fanTempDevId"	type="menu" defaultValue="0" tooltip="" visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
 				<Label>.. Which TempSensor to use for Fan:</Label>
@@ -7504,7 +7525,7 @@ It measures CO2 VOC
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2camg88xx infrared camera sensor on individual rPis.. 
+			<Label>Setup i2c amg88xx infrared camera sensor on individual rPis.. 
     connect 3.3, GND, SDA,SCL.
 It measures - all temp values are converted to std temp (set in config)
         -Ambient Temperature, 
@@ -7614,15 +7635,15 @@ you can setup
 			<Label>save raw pixel data to device state:</Label> 
 			</Field>
 
-			<Field id="imageFileNumberOfDots" type="menu"     defaultValue="-" tooltip="this is NOT the number of pixel of the camera, but the numebr of pixels in one dimension on the image displayed. it is upscaled / inetrpolatedfrom 8x8 to nxn"> 
+			<Field id="imageFileNumberOfDots" type="menu"     defaultValue="-" tooltip="this is NOT the number of pixel of the camera, but the number of pixels in one dimension on the image displayed. it is upscaled / interpolatedfrom 8x8 to nxn"> 
 			<List>
 				<Option value="-"   >off</Option>
-				<Option value="8"   >8</Option>
+				<Option value="8"   >8 this will be VERY small</Option>
 				<Option value="16"  >16</Option>
 				<Option value="32"  >32</Option>
 				<Option value="64"  >64</Option>
 				<Option value="128" >128</Option>
-				<Option value="256" >256</Option>
+				<Option value="256" >256 this one looks ok</Option>
 				<Option value="512" >512</Option>
 				<Option value="1024">1024</Option>
 			</List>
@@ -7643,7 +7664,7 @@ you can setup
 			<Label>compress png file:</Label> 
 			</Field>
 			<Field id="imageFileName" type="textfield"     defaultValue=""  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
-			<Label>create png file from pixels, set filename (bl=no):</Label> 
+			<Label>create png file from pixels, set filename (bl=no, in directory: Indigo 7.x/Preferences/Plugins/com.karlwachs.piBeacon/cameraImages/):</Label> 
 			</Field>
 			<Field id="imageFileDynamic" type="menu"     defaultValue="0"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
 			<List>
@@ -16160,6 +16181,10 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "43200"  >Sun mode: sun shines straight down, time is the light</Option>
 				</List>
 				<Label>Normal Sundial or Light Down:</Label>
+			</Field>
+
+			<Field id="offSetOfPosition"  type="textfield" defaultValue="0">
+				<Label>offset of 0 position in steps (0...800):</Label>
 			</Field>
  
 			<Field id="intensityMult"  type="menu" defaultValue="100" >

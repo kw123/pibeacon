@@ -87,7 +87,7 @@ def readNewParams(force=False):
 		global activePGM
 		global configured
 		global startWebServerSTATUS, startWebServerINPUT
-		global fanGPIOPin, fanTempOnAtTempValue, fanTempName, fanTempDevId, fanEnable
+		global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, fanTempName, fanTempDevId, fanEnable
 		global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 
 		BLEserialOLD= BLEserial
@@ -175,6 +175,8 @@ def readNewParams(force=False):
 						GPIO.setup(fanGPIOPin, GPIO.OUT)	
 				if u"fanTempOnAtTempValue" in inp:
 					fanTempOnAtTempValue= int(inp["fanTempOnAtTempValue"])
+				if u"fanTempOffAtTempValue" in inp:
+					fanTempOffAtTempValue= int(inp["fanTempOffAtTempValue"])
 
 		
 		doGPIOAfterBoot()
@@ -1060,9 +1062,9 @@ def doGPIOAfterBoot():
 	
 ####################      #########################
 def checkTempForFanOnOff(force = False):
-	global fanGPIOPin, fanTempOnAtTempValue, lastTempValue, lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
+	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
 	try:
-		#print "into checkTempForFanOnOff",fanTempName, fanTempDevId, fanEnable, fanTempOnAtTempValue, lastTimeTempValueChecked, lastTempValue
+		#print "into checkTempForFanOnOff",fanTempName, fanTempDevId, fanEnable, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTimeTempValueChecked, lastTempValue
 		#U.toLog (-1, u"checkTempForFanOnOff fanEnable:{}  fanTempName:{}   fanGPIOPin:{}".format(fanEnable, fanTempName, fanGPIOPin), doPrint=True)
 		if not(fanEnable =="0" or fanEnable =="1"):						return
 		if fanTempName   =="": 											return
@@ -1097,17 +1099,16 @@ def checkTempForFanOnOff(force = False):
 
 		if temp > fanTempOnAtTempValue: 
 			#print " fan on"
-			if  lastTempValue < fanTempOnAtTempValue: 
+			if  fanWasOn <=0: 
 				if fanEnable =="1": GPIO.output(fanGPIOPin, True)
 				if fanEnable =="0": GPIO.output(fanGPIOPin, False)
-		else:
-			#print " fan off"
-			if  lastTempValue > fanTempOnAtTempValue or lastTempValue ==-1: 
+				fanWasOn = 1
+			#print " fan off"  .. only if 1 degree lower than target
+		elif  (fanWasOn > 0  and  temp < (fanTempOnAtTempValue - fanTempOffAtTempValue ) ) or fanWasOn == 0: 
 				if fanEnable =="0": GPIO.output(fanGPIOPin, True)
 				if fanEnable =="1": GPIO.output(fanGPIOPin, False)
-
+				fanWasOn = -1
 		lastTempValue = temp
-
 
 	except	Exception, e :
 		U.toLog (-1, u"checkTempForFanOnOff in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
@@ -1226,7 +1227,7 @@ if True:
 	global activePGM
 	global configured
 	global startWebServerSTATUS, startWebServerINPUT
-	global fanGPIOPin, fanTempOnAtTempValue, lastTempValue, lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
+	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
 	global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 
 
@@ -1238,9 +1239,11 @@ if True:
 	fanTempName				= ""
 	fanTempDevId			= ""
 	lastTempValue			= -1
+	fanWasOn				= 0
 	lastTimeTempValueChecked= -1
 	fanGPIOPin				= -1
 	fanTempOnAtTempValue	= -1
+	fanTempOffAtTempValue   = 99
 
 	activePGM				= {}
 	GPIOTypeAfterBoot1		= "off"

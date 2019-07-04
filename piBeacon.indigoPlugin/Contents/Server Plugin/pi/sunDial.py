@@ -472,7 +472,6 @@ def displayShowStandardStatus(force=False):
 
 # ------------------    ------------------ 
 def displayShowShutDownMessage():
-	value = value.strip(" ")
 	displayDrawLines(["shutting down...","Save to disconnect","  power in 30 secs", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M"),""], nLines=5, clear=True, force=force, show=True)
 
 # ------------------    ------------------ 
@@ -926,19 +925,19 @@ def updateParams():
 def	upINP(parm, value, devId):
 	global inp
 	if parm not in inp["output"]["sunDial"][devId][0] or inp["output"]["sunDial"][devId][0][parm] != value:
-		print "sundial updating", parm, value
+		#print "sundial updating", parm, value
 		inp["output"]["sunDial"][devId][0][parm] = value
 		return True
 	return False
 	
 
 # ------------------    ------------------ 
-def changedINPUT(theDict, key, lastValue, func):
+def changedINPUT(theDict, key, lastValue, func, countChange=False):
 	global anyInputChange
 	if key not in theDict: return lastValue
 	try: 	newV = func(theDict[key])
 	except: return lastValue
-	if lastValue != newV: anyInputChange = True
+	if lastValue != newV and countChange: anyInputChange += 1
 	return newV
 		
 # ------------------    ------------------ 
@@ -961,7 +960,7 @@ def readParams():
 	global buttonDict, sensorDict
 	global pinsToName, anyInputChange
 	global intensityMaxNorm
-	global sunDialOffset
+	global sunDialOffset, offSetOfPosition
 
 	try:
 
@@ -1011,16 +1010,19 @@ def readParams():
 
 			clockDict["timeZone"] = str(currTZ)+" "+ timeZones[currTZ+12]
 				
-			amPM1224 					= changedINPUT(clockDict, "amPM1224", 		amPM1224, 						dummy)
+			amPM1224 					= changedINPUT(clockDict, "amPM1224", 		amPM1224, 				dummy, countChange=True)
 			amPM1224Update				= amPM1224
-			intensity["Mult"] 			= changedINPUT(clockDict, "intensityMult", 	intensity["Mult"],				float)
-			intensity["Max"] 			= changedINPUT(clockDict, "intensityMax", 	intensity["Max"],				float)
-			intensity["Min"] 			= changedINPUT(clockDict, "intensityMin", 	intensity["Min"],				float)
-			intensity["Mult"] 			= changedINPUT(clockDict, "intensityMult", 	intensity["Mult"],				float)
-			intensityMaxNorm			= changedINPUT(clockDict, "intensityMaxNorm",intensityMaxNorm,				float)
-			sunDialOffset				= changedINPUT(clockDict, "sunDialOffset",	sunDialOffset,					float)
+			intensity["Mult"] 			= changedINPUT(clockDict, "intensityMult", 	intensity["Mult"],		float)
+			intensity["Max"] 			= changedINPUT(clockDict, "intensityMax", 	intensity["Max"],		float)
+			intensity["Min"] 			= changedINPUT(clockDict, "intensityMin", 	intensity["Min"],		float)
+			intensity["Mult"] 			= changedINPUT(clockDict, "intensityMult", 	intensity["Mult"],		float)
+			intensityMaxNorm			= changedINPUT(clockDict, "intensityMaxNorm",intensityMaxNorm,		float)
+			sunDialOffset				= changedINPUT(clockDict, "sunDialOffset",	sunDialOffset,			float, countChange=True)
+			offSetOfPosition			= changedINPUT(clockDict, "offSetOfPosition", offSetOfPosition,	int,   countChange=True)
+
+
 	 		break
-		return changed
+		return -changed - anyInputChange
 
 	except	Exception, e:
 		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
@@ -1458,6 +1460,7 @@ def testIfMove( waitBetweenSteps, nextStep ):
 	global rewindDone
 	global PIGPIO
 	global currentSequenceNo, inbetweenSequences
+	global offSetOfPosition
 
 	lasttotalSteps = totalSteps
 	nextTotalSteps 	= min( int(secSinMidnit / waitBetweenSteps), maxStepsUsed )
@@ -1477,8 +1480,11 @@ def testIfMove( waitBetweenSteps, nextStep ):
 			#print "dir, nextStep", dir, nextStep
 			if currentSequenceNo < 7: force = int(maxStepsUsed*0.9)
 			steps = move(stayOn, int(abs(nextStep)), direction, force=force, updateSequence=True)
-			if currentSequenceNo == 8 and sensorDict["sensor"][0]["status"] == 1:
-				nextStep =0
+
+			### no with offset!!
+			##if currentSequenceNo == 8 and sensorDict["sensor"][0]["status"] == 1:
+			##	nextStep =0
+
 			setColor()
 
 		totalSteps += nextStep
@@ -1522,11 +1528,25 @@ def testIfRewind( nextStep ):
 
 
 	if hour > 12: rewindDone = False
-	if (hour < 3 and  not rewindDone) or nextStep == 0 and currentSequenceNo == 8 and sensorDict["sensor"][0] == 1:
 
-		if printON: U.toLog(-2, "rewind   secSinMidnit:%.2f"%secSinMidnit+ "; %02d:%02d:%02d"%(hour,minute,second)+ "; dt:%.5f"%(time.time()-t0)+ "; nstep:%d"%nextStep+ "; totSteps:%d"%totalSteps, doPrint=True )
+	# this needs to change
+	#if (hour < 3 and  not rewindDone) or nextStep == 0 and currentSequenceNo == 8 and sensorDict["sensor"][0] == 1:
+
+	if not rewindDone and totalSteps > maxStepsUsed: 
+
+		if printON: U.toLog(-2, "rewind..   secSinMidnit:{:.2f}; {:02d}:{:02d}:{:02d}; dt:{:.5f}; nstep:{}; totSteps:{}".format(secSinMidnit, hour,minute,second, (time.time()-t0), nextStep, totalSteps), doPrint=True )
 		move (0.001,maxStepsUsed,-1,  force=30, stopIfMagSensor=[False,True] )
 		move (0.001,maxStepsUsed,-1,  force=30, stopIfMagSensor=[True,False] )
+		move (0.001,maxStepsUsed,-1,  force=30, stopIfMagSensor=[True,False] )
+		useoffSetOfPosition = offSetOfPosition+sunDialOffset
+		if useoffSetOfPosition !=0:
+			if useoffSetOfPosition			 > stepsIn360/2: useoffSetOfPosition -= stepsIn360/2
+			else:								pass
+			if useoffSetOfPosition >=0:			dir = 1
+			else:								dir = -1
+			move (0.001,useoffSetOfPosition, dir,   force=30, stopIfMagSensor=[True,False] )
+			
+
 		rewindDone = True
 		totalSteps = 0
 		t0=time.time()
@@ -1860,7 +1880,7 @@ def getIntensity(intens):
 		intens *= 0.5
 	retV=  min(
 		intensity["Max"], max( intensity["Min"], float(intens)*(intensity["Mult"]/100.) * lightSensorValue) 	)
-	print  "intens", intens, retV
+	#print  "intens", intens, retV
 	return retV
 
 
@@ -1944,7 +1964,7 @@ def getLightSensorValue(force=False):
 			lightSensorValue = lightSensorValueRaw
 			return True
 		if (  abs(lightSensorValueRaw-lastlightSensorValue) / (max (0.005, lightSensorValueRaw+lastlightSensorValue))  ) < 0.05: return False
-		lightSensorValue = (lightSensorValueRaw*5 + lastlightSensorValue*4) / 9.
+		lightSensorValue = (lightSensorValueRaw*1 + lastlightSensorValue*9) / 10.
 		lastTimeLightSensorValue = tt0
 		U.toLog( 1, "lightSensorValue raw:{:.3f};  new used:{:.4f};  last:{:.4f}  read:{:.1f};  maxR:{:.1f}".format(lightSensorValueRaw, lightSensorValue, lastlightSensorValue, lightSensorValueREAD, maxRange), doPrint=True)
 		lastlightSensorValue = lightSensorValue
@@ -2162,6 +2182,7 @@ global currentlyMoving
 global limitSensorTriggered
 global sunDialOffset
 global displayStarted
+global offSetOfPosition
 
 morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 		"F":[0,0,1,0], 	"G":[1,1,0],	"H":[0,0,0,0], 	"I":[0,0],
 			"J":[0,1,1,1], 	"K":[1,0,1], 	"L":[0,1,0,0], 	"M":[1,1], 		"N":[1,0], 		"O":[1,1,1], 	"P":[0,1,1,0],	"Q":[1,1,0,1], 	"R":[0,1,0],
@@ -2171,7 +2192,8 @@ morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 	
 			"l":[1], # one long
 			"b":[0,0,0,1]}  # beethoven ddd DAAA
 
-sunDialOffset				= 0
+offSetOfPosition		= 0
+sunDialOffset			= 0
 limitSensorTriggered	= 0
 currentlyMoving			= time.time() + 10000.
 inFixBoundaryMode				= 0
@@ -2282,6 +2304,7 @@ except:
 displayDrawLines(["Status:   starting up", ".. read params, time..",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
 
+
 setgpiopinNumbers()
 
 setupTimeZones()
@@ -2338,9 +2361,11 @@ displayDrawLines(["Status:     finding",".. L/R  Stop-Limits",  datetime.datetim
 
 leftLimit 			= 0
 waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
-findLeftRight()
-U.echoLastAlive(G.program)
 
+## here we find mag sensor 0/12 or A/B limits:
+findLeftRight()
+
+U.echoLastAlive(G.program)
 
 
 getLightSensorValue(force=True)
@@ -2350,6 +2375,14 @@ sleepDefault = waitBetweenSteps/(5*speed)
 
 U.toLog(-1, "clock starting;  waitBetweenSteps:%.2f, speed:%.1f, totalSteps:%d, sleepDefault:%.1f, amPM1224:%s, secSinMidnit:%.1f " %(waitBetweenSteps, speed, totalSteps, sleepDefault, amPM1224, secSinMidnit), doPrint=True )
 U.toLog(-1, "intensity %s:"%unicode(intensity), doPrint=True )
+
+useoffSetOfPosition = offSetOfPosition+sunDialOffset
+if useoffSetOfPosition !=0:
+	if useoffSetOfPosition			 > stepsIn360/2: useoffSetOfPosition -= stepsIn360/2
+	else:								pass
+	if useoffSetOfPosition >=0:			dir = 1
+	else:								dir = -1
+	move (0.001,useoffSetOfPosition, dir,  force=30, stopIfMagSensor=[True,False] )
 
 nextStep = 1
 
@@ -2375,12 +2408,14 @@ while True:
 		U.restartMyself(reason=" resetting speed to normal", doPrint=True)
 
 	if limitSensorTriggered != 0:
-		U.restartMyself(reason="entering fixmode, manual trigger of boundaries", doPrint=True)
+		U.restartMyself(reason="entering fixmode,  trigger of boundaries", doPrint=True)
 
 	getTime()
 
 	lastMove = time.time()
+	##  here we move
 	nextStep = testIfMove( waitBetweenSteps, nextStep )
+	##  
 
 	nextMove = lastMove + waitBetweenSteps/speed
 	testIfRewind( nextStep )
@@ -2391,7 +2426,7 @@ while True:
 	startSleep = time.time()
 	sleep = nextMove - startSleep
 	endSleep = startSleep + sleep
-	minSleep = max(0.1, min(0.25, sleep))
+	minSleep = max(0.1, min(0.2, sleep))
 	ii = 1000
 	lastDisplay = time.time()
 	#print "	sleep ", sleep," nextMove", nextMove,"minSleep",minSleep,"tt", time.time()
@@ -2401,7 +2436,9 @@ while True:
 		if getLightSensorValue():
 			setColor(force=True)
 		elif (  abs(lightSensorValueRaw - lightSensorValue) / (max(0.005, lightSensorValueRaw + lightSensorValue))  ) > 0.05:
-				lightSensorValue = (lightSensorValueRaw*5 + lightSensorValue*4) / 9.
+				#print " step up down light: ",lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*9) / 10.
+				lightSensorValue = (lightSensorValueRaw*1 + lightSensorValue*9) / 10.
+				lastlightSensorValue = lightSensorValue
 				setColor(force=True)
 		if ii % 30 == 0:
 			U.echoLastAlive(G.program)
@@ -2430,8 +2467,9 @@ while True:
 				displayClear(show = True)
 
 			updateParams()
-			readParams()
-		
+			if readParams() < -1:
+				U.restartMyself(reason="parameters changed significantly", doPrint=True)
+	
 
 	
 stopBlink = True

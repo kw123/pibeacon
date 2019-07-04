@@ -27,8 +27,8 @@ def toLog(text):
 	if not logLevel: return 
 
 	l=open(logfileName,"a")
-	l.write( text+"\n")
-	l.close()
+	l.write("AMG88         {}\n".format(text) )
+	l.close() 
 	if printON:
 		print text
    
@@ -42,23 +42,17 @@ imageParams		  = json.loads(sys.argv[1])
 data			  = json.loads(sys.argv[2])
 
 imageOutfile	  = imageParams["fileName"] 
-logdir			  = indigoDir+"Logs/com.karlwachs.piBeacon/"
-logfileName		  = logdir+"plugin.log"
+logfileName		  = imageParams["logFile"]
 logLevel		  = imageParams["logLevel"] =="1"
-printON			  = False
 numberOfPixels	  = float(imageParams["numberOfDots"])
 imageFileDynamic  = imageParams["dynamic"] 
 colorBar		  = imageParams["colorBar"].split(",") 
 compress		  = imageParams["compress"]	 =="1"
 
-try:  
-	if os.path.getsize(logfileName.encode('utf8')) > 200000:   # delet logfile if > 2 MB
-		os.remove((logfileName).encode('utf8'))
-except: pass
+# for debugging
+printON			  = False
 
-
-
-toLog("\nstart @ "+unicode(datetime.datetime.now()) )
+toLog("========= start @ {}  =========== ".format(datetime.datetime.now()) )
 
 imageType = "dynamic"
 if "," in imageFileDynamic:
@@ -69,14 +63,14 @@ else:
 	if imageFileDynamic >0:
 		imageType= "dynamicWindow"
 	
-toLog("imageFile:		 " + imageOutfile+".png")
-toLog("Dynamic:			 " + unicode(imageFileDynamic))
-toLog("imageType:		 " + imageType)
-toLog("colorBar:		 " + unicode(colorBar))
-toLog("numberOfPixels:	 " + unicode(int(numberOfPixels)))
-toLog("data:			 ")
+toLog("imageFile:           {}.png".format(imageOutfile) )
+toLog("Dynamic:             {}".format(imageFileDynamic) )
+toLog("imageType:           {}".format(imageType) )
+toLog("colorBar:            {}".format(colorBar) )
+toLog("numberOfPixels in x: {} ".format(numberOfPixels) )
+toLog("data:")
 for kk in range(len(data)):
-	toLog( unicode(data[kk]).replace(" ","") )
+	toLog( "{}".format(data[kk]).replace(" ","") )
 
 pixelsIndata = len(data)
 pltDpi = 256
@@ -94,7 +88,7 @@ elif imageType == "dynamicWindow":
 		
 	vmid = (mm-ma) /2. +mm
 	norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-	toLog( "min:%3.1f;  max:%3.1f;  mid:%3.1f; lower:%3.1f;   upper:%3.1f"%(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+	toLog( "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
 cur_axes = plt.gca()
@@ -123,16 +117,17 @@ try:	pngSize = os.path.getsize((ifname).encode('utf8'))/1024.
 except: pnGsize = 0
 
 # compress file
-toLog("time used %4.2f"%(time.time()-tStart)+ "	 plot saved")
-
+toLog( "file sizes: original file: {:5.1f}[KB]".format(pngSize) )
 if compress:
+	tt1= time.time()
 	cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+ifname+"'"
 	ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
 	try:	compSize = os.path.getsize((imageOutfile+".xxx").encode('utf8'))/1024.
 	except: compSize = 0
 	if os.path.isfile((ifname).encode('utf8')): os.remove((ifname).encode('utf8'))
 	os.rename((imageOutfile+".xxx").encode('utf8'),(imageOutfile+".png").encode('utf8') )
-	toLog("time used %4.2f"%(time.time()-tStart)+ " --	 file sizes: original file: %5.1f;	compressed file: %5.1f	[KB]"%(pngSize,compSize) )
-toLog("time used %4.2f"%(time.time()-tStart)+ " --	 finished\nEND")
+	toLog( "          compressed file: {:5.1f}[KB];  time used {:4.2f}".format(compSize, (time.time()-tt1)) )
+
+toLog("time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 sys.exit(0)

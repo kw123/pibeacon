@@ -3,6 +3,17 @@ Added features / changes in v7.105.294 @ 2019-06-30
 
 1. addded options for AMG88xx i2c address - added 0x68 0x6A
 
+Added features / changes in v7.105.295 @ 2019-06-30
+===================================================
+
+1. fixed  chmod for pibeacon.log removed, as it is in std log directory now
+
+2. checking if userid password is set AND ( authorisathion is basic or digest)
+   = does not wait for userid and passsword if no indigo security enabled.
+
+3. cleaned up threads for sending files to RPI
+   now much clearer and will also manage new RPI w/o restarting plugin.
+
 
 
 Added features / changes in v7.105.293 @ 2019-06-22

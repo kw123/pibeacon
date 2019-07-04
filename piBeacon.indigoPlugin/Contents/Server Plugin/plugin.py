@@ -298,10 +298,10 @@ class Plugin(indigo.PluginBase):
 						logging.ERROR:       "%(asctime)s.%(msecs)03d\t%(levelname)-12s\t%(name)s.%(funcName)-25s %(msg)s",
 						logging.CRITICAL:    "%(asctime)s.%(msecs)03d\t%(levelname)-12s\t%(name)s.%(funcName)-25s %(msg)s" }
 
-		date_Format = { logging.THREADDEBUG: "%d %H:%M:%S",
-						logging.DEBUG:       "%d %H:%M:%S",
-						logging.INFO:        "%H:%M:%S",
-						logging.WARNING:     "%H:%M:%S",
+		date_Format = { logging.THREADDEBUG: "%Y-%m-%d %H:%M:%S",
+						logging.DEBUG:       "%Y-%m-%d %H:%M:%S",
+						logging.INFO:        "%Y-%m-%d %H:%M:%S",
+						logging.WARNING:     "%Y-%m-%d %H:%M:%S",
 						logging.ERROR:       "%Y-%m-%d %H:%M:%S",
 						logging.CRITICAL:    "%Y-%m-%d %H:%M:%S" }
 		formatter = LevelFormatter(fmt="%(msg)s", datefmt="%Y-%m-%d %H:%M:%S", level_fmts=formats, level_date=date_Format)
@@ -737,17 +737,22 @@ class Plugin(indigo.PluginBase):
 			self.updateStatesDict			= {}
 			self.executeUpdateStatesDictActive = ""
 
-			self.resetRpiQueue				= {}
-			self.rpiUpdateQueueList			= {}
-			self.rpiUpdateState				= {}
-			self.rpiUpdateThreadDict		= {}
+			self.rpiQueues					= {}
+			self.rpiQueues["reset"]			= {}
+			self.rpiQueues["data"]			= {}
+			self.rpiQueues["state"]			= {}
+			self.rpiQueues["lastActive"]	= {}
+			self.rpiQueues["thread"] 		= {}
 			self.RPIBusy					= {}
 			for ii in range(_GlobalConst_numberOfRPI):
 				iiU = unicode(ii)
-				self.resetRpiQueue[iiU] 	= False
-				self.rpiUpdateQueueList[iiU]= Queue.Queue()
-				self.rpiUpdateState[iiU]	= ""
-				self.RPIBusy[iiU]			= 0
+				self.rpiQueues["reset"][iiU] 		= False
+				self.rpiQueues["data"][iiU]			= Queue.Queue()
+				self.rpiQueues["state"][iiU]		= ""
+				self.rpiQueues["lastActive"][iiU]	= -1
+				self.RPIBusy[iiU]					= 0
+
+
 
 			self.newBeaconsLogTimer			= 0
 			self.selectBeaconsLogTimer		= {}
@@ -3126,7 +3131,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			dev = indigo.devices[devId]
 			props = dev.pluginProps	
-			self.indiLOG.log(20, u"{} devid:{} typeId:{} ".format(dev.name, devId, typeId) )
+			#self.indiLOG.log(20, u"{} devid:{} typeId:{} ".format(dev.name, devId, typeId) )
 				
 			# just a  reminder: new devices have props ={}, need to use valueDict
 		
@@ -8208,9 +8213,9 @@ class Plugin(indigo.PluginBase):
 			valuesDict[u"MSG"] = "Pi server configuration set"
 
 			valuesDict[u"enablePiEntries"] = False
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"pi#=        "+unicode(pi))
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"valuesDict= "+unicode(valuesDict))
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"RPI=        "+unicode(self.RPI[unicode(pi)]))
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"buttonConfirmPiServerConfigCALLBACK... pi#=        {}".format(pi))
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"valuesDict= {}".format(valuesDict))
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"RPI=        {}".format(self.RPI[unicode(pi)]))
 
 			if pi < _GlobalConst_numberOfiBeaconRPI:
 						if self.RPI[unicode(pi)][u"piDevId"] == 0: # check if  existing device
@@ -8407,7 +8412,9 @@ class Plugin(indigo.PluginBase):
 
 		self.RPI[unicode(pi)][u"piOnOff"] = "1"
 		self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
-		self.startUpdateRPIqueues("restart", pi=pi)
+		self.startUpdateRPIqueues("restart", piSelect=pi)
+		self.setONErPiV(pi,"piUpToDate", [u"updateAllFilesFTP"])
+
 
 		return valuesDict
 
@@ -8784,8 +8791,8 @@ class Plugin(indigo.PluginBase):
 
 
 		while True:
-			if self.userIdOfServer !="" and self.passwordOfServer !="" : break
-			self.indiLOG.log(20, u"userid or password not configured in config")
+			if self.userIdOfServer !="" and self.passwordOfServer !=""  and self.pluginPrefs.get(u"authentication", u"digest") != "none": break
+			self.indiLOG.log(20, u"userid or password not configured in config and security level  digest or basic")
 			self.sleep(20)
 
 
@@ -9005,6 +9012,8 @@ class Plugin(indigo.PluginBase):
 		# save all parameters to file 
 		self.fixConfig(checkOnly = ["all","rpi","beacon","CARS","sensors","output","force"],fromPGM="finish") # runConcurrentThread end
 
+		self.stopUpdateRPIqueues()
+		self.sleep(0.1)
 		self.stopUpdateRPIqueues()
 
 		if self.socketServer is not None:  
@@ -9289,7 +9298,7 @@ class Plugin(indigo.PluginBase):
 			if self.updateNeeded.find(u"enable") > -1 or self.updateNeeded.find(u"disable") > -1: 
 				self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="checkForUpdates") # checkForUpdates  # ok only if changes requested
 				#self.syncSensors()
-				self.setupFilesForPi(calledFrom="enable")
+				self.setupFilesForPi(calledFrom="checkForUpdates enable")
 				try:
 					pi = self.updateNeeded.split(u"-")[1]
 					self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
@@ -11449,8 +11458,9 @@ class Plugin(indigo.PluginBase):
 										newStatus = self.setStatusCol( dev, u"rawData", dataRaw,"", whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = "")
 								if "imageFileNumberOfDots" in props and props[u"imageFileNumberOfDots"] !="-":
 									if "imageFileName" in props and len(props[u"imageFileName"])>1:
-										imageParams	  = json.dumps( {"logLevel":props[u"imageFilelogLevel"],"compress":props[u"imageFileCompress"],"fileName":self.cameraImagesDir+props[u"imageFileName"],"numberOfDots":props[u"imageFileNumberOfDots"],"dynamic":props[u"imageFileDynamic"],"colorBar":props[u"imageFileColorBar"]} )
+										imageParams	  = json.dumps( {"logFile":self.PluginLogFile, "logLevel":props[u"imageFilelogLevel"],"compress":props[u"imageFileCompress"],"fileName":self.cameraImagesDir+props[u"imageFileName"],"numberOfDots":props[u"imageFileNumberOfDots"],"dynamic":props[u"imageFileDynamic"],"colorBar":props[u"imageFileColorBar"]} )
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "  
+										if props[u"imageFilelogLevel"] == "1": self.indiLOG.log(20,"AMG88 command:{}".format(cmd))
 										os.system(cmd)
 						except Exception, e:
 							self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -13567,7 +13577,7 @@ class Plugin(indigo.PluginBase):
 
 			cmds = json.dumps(cmd1)
 
-			if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10,	u"sendGPIOCommand-s-: " + cmds)
+			if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10,u"sendGPIOCommand-s-: {}".format(cmds) )
 			self.sendtoRPI(ip, pi ,cmds, calledFrom="sendGPIOCommand")
 
 		except Exception, e:
@@ -13585,7 +13595,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			if time.time() - self.lastsetupFilesForPi < 5: return 
 			self.lastsetupFilesForPi = time.time()
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"updating pi server files called from"+calledFrom)
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"updating pi server files called from: {}".format(calledFrom) )
 
 			self.makeBeacons_parameterFile()
 
@@ -13744,6 +13754,7 @@ class Plugin(indigo.PluginBase):
 				out[u"deltaChangedSensor"]		  = self.RPI[piS][u"deltaChangedSensor"]
 				out[u"sensorRefreshSecs"]		  = float(self.RPI[piS][u"sensorRefreshSecs"])
 				out[u"sendFullUUID"]			  = self.sendFullUUID
+				out[u"rebootIfNoMessages"]		  = self.pluginPrefs.get(u"rebootIfNoMessages", 4)
 
 				try :
 					piDeviceExist=False
@@ -13851,7 +13862,8 @@ class Plugin(indigo.PluginBase):
 
 						out = self.updateSensProps(out, props, u"fanEnable", elseSet="-")
 						out = self.updateSensProps(out, props, u"fanGPIOPin", elseSet="-1")
-						out = self.updateSensProps(out, props, u"fanTempOnAtTempValue", elseSet="0")
+						out = self.updateSensProps(out, props, u"fanTempOnAtTempValue", elseSet="60")
+						out = self.updateSensProps(out, props, u"fanTempOffAtTempValue", elseSet="2")
 						out = self.updateSensProps(out, props, u"fanTempDevId", elseSet="0")
 
 
@@ -14188,6 +14200,7 @@ class Plugin(indigo.PluginBase):
 								theDict[u"intensityMin"]		= propsOut[u"intensityMin"]
 								theDict[u"amPM1224"]			= propsOut[u"amPM1224"]
 								theDict[u"sunDialOffset"]		= propsOut[u"sunDialOffset"]
+								theDict[u"offSetOfPosition"]	= propsOut[u"offSetOfPosition"]
 
 		
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
@@ -14298,83 +14311,88 @@ class Plugin(indigo.PluginBase):
 ####------------------rpi update queue management ----------------------------START
 
 ####-------------------------------------------------------------------------####
-	def startUpdateRPIqueues(self, state, pi="all"):
+	def startUpdateRPIqueues(self, state, piSelect="all"):
 		if state =="start":
 			self.laststartUpdateRPIqueues = time.time()
 			self.indiLOG.log(10, u"starting UpdateRPIqueues ")
 			for pi in range(_GlobalConst_numberOfRPI):
 				piU= unicode(pi)
-				if self.RPI[piU][u"piOnOff"] == "0": 	continue
-				if self.RPI[piU][u"ipNumberPi"] == "": 	continue
-				self.rpiUpdateState[piU] = "run"
-				self.sleep(0.1)
-				self.rpiUpdateThreadDict[piU]  = threading.Thread(name=u'self.rpiUpdateThread', target=self.rpiUpdateThread, args=(piU,))
-				self.rpiUpdateThreadDict[piU].start()
+				if piSelect == "all" or piU == piSelect:
+					self.startOneUpdateRPIqueues(piU)
 
 		elif state =="restart":
-			if (pi == "all" and time.time() - self.laststartUpdateRPIqueues > 70) or pi != "all":
+			if (piSelect == "all" and time.time() - self.laststartUpdateRPIqueues > 70) or piSelect != "all":
 				self.laststartUpdateRPIqueues = time.time()
-				for ii in range(_GlobalConst_numberOfRPI):
-					piU= unicode(ii)
-					if pi == "all" or piU == pi:
-						if self.RPI[piU][u"piOnOff"] == "0": 	continue
-						if self.RPI[piU][u"ipNumberPi"] == "": 	continue
-						if self.rpiUpdateState[pi] != "run":
-							self.rpiUpdateState[pi]	= "quit"
-							self.sleep(2)
-							self.rpiUpdateThreadDict[pi].join()
-							self.rpiUpdateState[pi]= "run"
-							self.rpiUpdateThreadDict[pi]  	= threading.Thread(name=u'self.rpiUpdateThread', target=self.rpiUpdateThread, args=(piU,))
-							self.rpiUpdateThreadDict[pi].start()
+				for pi in range(_GlobalConst_numberOfRPI):
+					piU= unicode(pi)
+					if piSelect == "all" or piU == piSelect:
+						if time.time() - self.rpiQueues["lastActive"][piU] > 100:
+							self.stopUpdateRPIqueues(piSelect=piU)
+						if  time.time() - self.rpiQueues["lastActive"][piU] > 100 or self.rpiQueues["state"][piU]	!= "running":
+							self.startOneUpdateRPIqueues(piU)
 		return 
 
 ####-------------------------------------------------------------------------####
-	def stopUpdateRPIqueues(self):
-		self.resetRpiQueue		= {}
+	def startOneUpdateRPIqueues(self, piSelect):
+		piU= unicode(piSelect)
+		self.rpiQueues["lastActive"][piU] = time.time()
+		self.rpiQueues["state"][piU]	= "start"
+		self.sleep(0.1)
+		self.rpiQueues["thread"][piU]  = threading.Thread(name=u'self.rpiUpdateThread', target=self.rpiUpdateThread, args=(piU,))
+		self.rpiQueues["thread"][piU].start()
+		return 
+###-------------------------------------------------------------------------####
+	def stopUpdateRPIqueues(self, piSelect="all"):
+		self.rpiQueues["reset"]		= {}
 		for pi in range(_GlobalConst_numberOfRPI):
 			piU= unicode(pi)
-			self.rpiUpdateState[piU]	= "quit"
-			self.resetRpiQueue[piU]		= True
-			self.sleep(2)
-			try: self.rpiUpdateThreadDict[piU].join()
-			except: pass
-			self.rpiUpdateState[piU]	= ""
+			if piU == piSelect or piSelect == "all":
+				self.stopOneUpdateRPIqueues(piU)
+		return 
+###-------------------------------------------------------------------------####
+	def stopOneUpdateRPIqueues(self, piSelect):
+		piU= unicode(piSelect)
+		self.rpiQueues["state"][piU]	= "stop"
+		self.rpiQueues["reset"][piU]		= True
+		self.sleep(1)
+		try: self.rpiQueues["thread"][piU].join()
+		except: pass
 		return 
 
 
 ####-------------------------------------------------------------------------####
 	def sendFilesToPiFTP(self, pi, fileToSend="",endAction="repeatUntilFinished"):
 		piU= unicode(pi)
-		if self.rpiUpdateState[piU] !="run":
-			self.startUpdateRPIqueues("restart", pi=piU)
+		if time.time() - self.rpiQueues["lastActive"][piU] > 100:
+			self.startUpdateRPIqueues("restart", piSelect=piU)
 		next = {"pi":pi, "fileToSend":fileToSend, "endAction":endAction, "type":"ftp", "tries":0, "exeTime":time.time()}
 		self.removeONErPiV(pi, u"piUpToDate", [fileToSend])
 		if self.testIfAlreadyInQ(next,piU): 	return 
-		if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"FTP adding to update list " + unicode(next) )
-		self.rpiUpdateQueueList[piU].put(next)
+		if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"FTP adding to update list {}".format(next) )
+		self.rpiQueues["data"][piU].put(next)
 		return
 ####-------------------------------------------------------------------------####
 	def sshToRPI(self, pi, fileToSend="", endAction="repeatUntilFinished"):
 		piU= unicode(pi)
-		if self.rpiUpdateState[piU] !="run":
-			self.startUpdateRPIqueues("restart", pi=piU)
+		if time.time() - self.rpiQueues["lastActive"][piU] > 100:
+			self.startUpdateRPIqueues("restart", piSelect=piU)
 		next = {"pi":pi, "fileToSend":fileToSend, "endAction":endAction, "type":"ssh", "tries":0, "exeTime":time.time()}
 		self.removeONErPiV(pi, u"piUpToDate", [fileToSend])
 		if self.testIfAlreadyInQ(next,piU): 	return 
-		if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"SSH adding to update list " + unicode(next) )
-		self.rpiUpdateQueueList[piU].put(next)
+		if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"SSH adding to update list {}".format(next) )
+		self.rpiQueues["data"][piU].put(next)
 		return
 ####-------------------------------------------------------------------------####
 	def resetUpdateQueue(self, pi):
-		self.resetRpiQueue[unicode(pi)] = True
+		self.rpiQueues["reset"][unicode(pi)] = True
 		return
 ####-------------------------------------------------------------------------####
 	def testIfAlreadyInQ(self, next, pi):
 		found = False
-		currentQueue = list(self.rpiUpdateQueueList[pi].queue)
+		currentQueue = list(self.rpiQueues["data"][pi].queue)
 		for q in currentQueue:
 			if q["pi"] == next["pi"] and q["fileToSend"] == next["fileToSend"]:
-				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"FTP NOT adding to update list already presend" + unicode(next) )
+				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"FTP NOT adding to update list already presend {}".format(next) )
 				return True
 		return False
 
@@ -14382,22 +14400,32 @@ class Plugin(indigo.PluginBase):
 	def rpiUpdateThread(self,thisPi):
 		piUIN = unicode(thisPi)
 		try:
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"rpiUpdateThread starting  for pi# " + piUIN)
-			while self.rpiUpdateState[piUIN] =="run":
+			self.rpiQueues["state"][piUIN] = "running"
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"rpiUpdateThread starting  for pi# {}".format(piUIN) )
+			while self.rpiQueues["state"][piUIN] == "running":
+				self.rpiQueues["lastActive"][piUIN]  = time.time()
 				time.sleep(1)
 				addBack =[]
-				while not self.rpiUpdateQueueList[piUIN].empty():
-					next 	= self.rpiUpdateQueueList[piUIN].get()
-					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"rpiUpdateThread executing  " + unicode(next) )
-					piU 	= unicode(next["pi"])
-					if self.RPI[piU][u"piOnOff"] == "0": 	continue
-					if self.RPI[piU][u"ipNumberPi"] == "": 	continue
-					if piU in self.resetRpiQueue and self.resetRpiQueue[piU]: continue
+				while not self.rpiQueues["data"][piUIN].empty():
+					next 	= self.rpiQueues["data"][piUIN].get()
+					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"rpiUpdateThread executing  {}".format(next) )
+					if piUIN != unicode(next["pi"]): 			
+						if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"rpiUpdateThread skipping; pi numbers wrong  {} vs {} ".format(piUIN, next["pi"]) )
+						continue
+					if self.RPI[piUIN][u"piOnOff"] == "0": 		
+						if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"rpiUpdateThread skipping;  Pi#: {} is OFF".format(piUIN) )
+						continue
+					if self.RPI[piUIN][u"ipNumberPi"] == "": 	
+						if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"rpiUpdateThread skipping pi#:{}  ip number blank".format(piUIN)  )
+						continue
+					if piUIN in self.rpiQueues["reset"] and self.rpiQueues["reset"][piUIN]: 
+						if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"rpiUpdateThread resetting queue data for pi#:{}".format(piUIN) )
+						continue
 					try:
-						id = int(self.RPI[piU][u"piDevId"])
-						if id !=0 and not indigo.devices[id].enabled: 
-							self.resetRpiQueue[piU] =True
-							if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(10, u"device "+indigo.devices[id].name+"not enabled, no sending to RPI")
+						id = int(self.RPI[piUIN][u"piDevId"])
+						if id != 0 and not indigo.devices[id].enabled: 
+							self.rpiQueues["reset"][piUIN] = True
+							if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(20, u"device {} not enabled, no sending to RPI".format(indigo.devices[id].name) )
 							continue
 					except:
 						pass
@@ -14406,16 +14434,16 @@ class Plugin(indigo.PluginBase):
 					if next["exeTime"] > time.time():
 						addBack.append((next)) # no , wait 
 						continue
-					self.RPIBusy[piU] = time.time()
+					self.RPIBusy[piUIN] = time.time()
 
 					if next["type"] =="ftp":
-						retCode, text = self.execSendFilesToPiFTP(next["pi"], fileToSend=next["fileToSend"], endAction= next["endAction"])
+						retCode, text = self.execSendFilesToPiFTP(piUIN, fileToSend=next["fileToSend"], endAction= next["endAction"])
 					else:
-						retCode, text = self.execSshToRPI(next["pi"], fileToSend=next["fileToSend"], endAction= next["endAction"])
+						retCode, text = self.execSshToRPI(piUIN, fileToSend=next["fileToSend"], endAction= next["endAction"])
 
 					if retCode ==0: # all ok?
-						self.setRPIonline(piU)
-						self.RPI[piU][u"lastMessage"] = time.time()
+						self.setRPIonline(piUIN)
+						self.RPI[piUIN][u"lastMessage"] = time.time()
 						continue
 
 					else: # some issues
@@ -14423,26 +14451,26 @@ class Plugin(indigo.PluginBase):
 						next["exeTime"]  = time.time()+5
 
 						if 5 < next["tries"] and next["tries"] < 10: # wait a little longer
-							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"last updates were not successful wait, then try again")
+							if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"last updates were not successful wait, then try again")
 							next["exeTime"] = time.time()+10
 
 						elif next["tries"] > 9:  # wait a BIT longer before trying again
-							if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(10, u"rPi update delayed due to failed updates rPI# "+ piU)
+							if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(20, u"rPi update delayed due to failed updates rPI# {}".format(piU) )
 							self.setRPIonline(piU, new=u"offline")
-							next["exeTime"]  = time.time()+50
+							next["exeTime"]  = time.time()+20
 							next["tries"] = 0
 
 						addBack.append(next)
-				try: 	self.rpiUpdateQueueList[piUIN].task_done()
+				try: 	self.rpiQueues["data"][piUIN].task_done()
 				except: pass
 				if addBack !=[]:
 					for next in addBack:
-						self.rpiUpdateQueueList[piUIN].put(next)
-				self.resetRpiQueue[piUIN] =False
+						self.rpiQueues["data"][piUIN].put(next)
+				self.rpiQueues["reset"][piUIN] =False
 		except Exception, e:
 			self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		self.indiLOG.log(20, u"rpiUpdateThread stopping  rpiUpdateState= >>"+self.rpiUpdateState+"<<")
-		self.rpiUpdateState[piUIN] ="stopped"
+		self.rpiQueues["state"][piUIN] = "stopped"
+		self.indiLOG.log(20, u"rpiUpdateThread stopping,  rpi: {}  state: stopped".format(piUIN) )
 		return
 
 
@@ -14450,27 +14478,27 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def execSendFilesToPiFTP(self, pi, fileToSend=u"updateParamsFTP.exp",endAction="repeatUntilFinished"):
 		ret =["",""]
+		piU = unicode(pi)
 		try:
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"enter  sendFilesToPiFTP #" + unicode(pi) +"  fileToSend:"+ fileToSend)
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"enter  sendFilesToPiFTP #{}  fileToSend:".format(pi, fileToSend) )
 			if fileToSend==u"updateParamsFTP.exp": self.newIgnoreMAC = 0
 			self.lastUpdateSend = time.time()
 
 
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"updating pi server config for # " + unicode(pi))
-			pingR = self.testPing(self.RPI[unicode(pi)][u"ipNumberPiSendTo"])
+			pingR = self.testPing(self.RPI[piU][u"ipNumberPiSendTo"])
 			if pingR != 0:
-				if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(10,u" pi server # " + unicode(pi) + u"  PI# " + self.RPI[unicode(pi)][u"ipNumberPiSendTo"] + u"    not online - does not answer ping - , skipping update")
+				if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(20,u" pi server # {}  PI# {}    not online - does not answer ping - , skipping update".format(pi, self.RPI[piU][u"ipNumberPiSendTo"]) )
 				self.setRPIonline(pi,new="offline")
 				return 1, ["ping offline",""]
 
 			prompt = self.getPrompt(pi,fileToSend)
 
 			cmd0 = "/usr/bin/expect '" + self.pathToPlugin + fileToSend + u"'" + u" "
-			cmd0+=	self.RPI[unicode(pi)][u"userIdPi"] + " " + self.RPI[unicode(pi)][u"passwordPi"]+" " + prompt+" "
-			cmd0+=	self.RPI[unicode(pi)][u"ipNumberPiSendTo"] + " "
-			cmd0+=	unicode(pi) + " '" + self.indigoPreferencesPluginDir + "' '" + self.pathToPlugin + "pi'" + " "+self.expectTimeout
+			cmd0+=	self.RPI[piU][u"userIdPi"] + " " + self.RPI[piU][u"passwordPi"]+" " + prompt+" "
+			cmd0+=	self.RPI[piU][u"ipNumberPiSendTo"] + " "
+			cmd0+=	piU + " '" + self.indigoPreferencesPluginDir + "' '" + self.pathToPlugin + "pi'" + " "+self.expectTimeout
 
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"updating pi server config for # " + unicode(pi) + u" executing\n" + cmd0)
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"updating pi server config for # {} executing\n{}".format(pi, cmd0) )
 			p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 			ret = p.communicate()
 
@@ -14485,14 +14513,14 @@ class Plugin(indigo.PluginBase):
 				ret = p.communicate()
 
 			if ret[0][-600:].find(u"sftp> ") > -1:
-				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"UpdateRPI seems have been completed for pi# "+unicode(pi).rjust(2)+"  "+fileToSend)
+				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"UpdateRPI seems to have been completed for pi# {}  {}".format(pi, fileToSend) )
 				return 0, ["ok",""]
 			else:
 				self.sleep(2)  # try it again after 2 seconds
 				p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 				ret = p.communicate()
 				if ret[0][-600:].find(u"sftp> ") > -1:
-					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"UpdateRPI seems have been completed for pi# "+unicode(pi)+"  "+fileToSend)
+					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"UpdateRPI seems to have been completed for pi# {}  {}".format(pi, fileToSend) )
 					return 0, ["ok",""]
 				else:
 					self.indiLOG.log(30, u"setup pi response (2) message \n" + ret[0])
@@ -14509,10 +14537,10 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def execSshToRPI(self, pi,fileToSend="", endAction="repeatUntilFinished"):
 		ret=[u"",""]
+		piU = unicode(pi)
 		try:
-			if self.testPing(self.RPI[unicode(pi)][u"ipNumberPi"]) != 0:
-				if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(10, u" pi server # " + unicode(pi) + u"  PI# " + self.RPI[unicode(pi)][
-					u"ipNumberPiSendTo"] + "  not online - does not answer ping - , skipping update")
+			if self.testPing(self.RPI[piU][u"ipNumberPi"]) != 0:
+				if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(20, u" pi server # {} PI# {}  not online - does not answer ping - , skipping update".format(pi, self.RPI[piU][u"ipNumberPiSendTo"] ))
 				if endAction =="repeatUntilFinished":
 					return 1, ret
 				else:
@@ -14525,11 +14553,11 @@ class Plugin(indigo.PluginBase):
 
 			prompt = self.getPrompt(pi,fileToSend)
 
-			cmd = "/usr/bin/expect '" + self.pathToPlugin + fileToSend+"' " + " " + self.RPI[unicode(pi)][u"userIdPi"] + " " + self.RPI[unicode(pi)][u"passwordPi"] + " " + prompt+" "+ self.RPI[unicode(pi)][u"ipNumberPiSendTo"]+ " "+self.expectTimeout+ " "+batch
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, fileToSend+u" rPi# " + unicode(pi) + "\n" + cmd)
+			cmd = "/usr/bin/expect '" + self.pathToPlugin + fileToSend+"' " + " " + self.RPI[piU][u"userIdPi"] + " " + self.RPI[piU][u"passwordPi"] + " " + prompt+" "+ self.RPI[piU][u"ipNumberPiSendTo"]+ " "+self.expectTimeout+ " "+batch
+			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, fileToSend+u" rPi# {}\n{}".format(pi, cmd) )
 			if batch ==u" ":
 				ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"response: " + unicode(ret) )
+				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"response: {}".format(ret) )
 				if len(ret[1]) > 0:
 					ret, ok = self.fixHostsFile(ret,pi)
 					if not ok: 
@@ -14546,14 +14574,14 @@ class Plugin(indigo.PluginBase):
 				return 0, ret
 
 			if len(ret[1]) > 0:
-				self.indiLOG.log(20, fileToSend+" Pi# "+unicode(pi) + unicode(ret).replace(u"\n\n", u"\n"))
+				self.indiLOG.log(20, fileToSend+" Pi# {}  {}".format(pi, ret.replace(u"\n\n", u"\n")) )
 
 			if fileToSend.find(u"getStats") >-1: 
 				try:
 					ret1= ((ret[0].split(u"===fix==="))[-1])
-					self.indiLOG.log(20, u"stats from rpi# "+unicode(pi)+" \n===fix===" + (ret1).replace(u"\n\n", u"\n"))
+					self.indiLOG.log(20, u"stats from rpi# {} \n===fix==={}".format(pi, (ret1).replace(u"\n\n", u"\n")) )
 				except:
-					self.indiLOG.log(20, u"stats from rpi# raw \n\n "+unicode(pi)+" \n" + ret[0].replace(u"\n\n", u"\n")+"\n errors:\n"+ret[1].replace(u"\n\n", u"\n"))
+					self.indiLOG.log(20, u"stats from rpi# {} raw \n {} \n errors:\n{}" .format(pi, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
 
 				return 0, ret
 			return 0, ret
@@ -14581,11 +14609,12 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def fixHostsFile(self, ret, pi):
 		try:
+			piU = unicode(pi)
 			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10, u"setup pi response (1)\n" + unicode(ret))
 			if ret[0].find(u".ssh/known_hosts:") > -1:
 				if (subprocess.Popen(u"/usr/bin/csrutil status" , shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].find(u"enabled")) >-1:
 					if self.decideMyLog(u"bigErr"): 
-						self.indiLOG.log(40,u'ERROR can not update hosts known_hosts file,    "/usr/bin/csrutil status" shows system enabled SIP; please edit manually with \n"nano '+self.MAChome+u'/.ssh/known_hosts"\n and delete line starting with '+self.RPI[unicode(pi)][u"ipNumberPiSendTo"])
+						self.indiLOG.log(40,u'ERROR can not update hosts known_hosts file,    "/usr/bin/csrutil status" shows system enabled SIP; please edit manually with \n"nano '+self.MAChome+u'/.ssh/known_hosts"\n and delete line starting with '+self.RPI[piU][u"ipNumberPiSendTo"])
 						self.indiLOG.log(40,u"trying to from within plugin, if it happens again you need to do it manually")
 					try:
 						f=open(self.MAChome+u'/.ssh/known_hosts',u"r")
@@ -14593,7 +14622,7 @@ class Plugin(indigo.PluginBase):
 						f.close()
 						f=open(self.MAChome+u'/.ssh/known_hosts',u"w")
 						for line in lines:
-							if line.find(self.RPI[unicode(pi)][u"ipNumberPiSendTo"]) >-1:continue
+							if line.find(self.RPI[piU][u"ipNumberPiSendTo"]) >-1:continue
 							f.write(line+u"\n")
 						f.close()
 					except Exception, e:

@@ -81,7 +81,7 @@ def toLog(lvl, msg, permanentLog=False, doPrint=False):
 			if	not os.path.isdir(G.logDir):
 				return
 
-			f=open(G.logDir+"piBeacon.log","a")
+			f=open(G.logDir+"pibeacon.log","a")
 			f.write( ("%s %s L:%2d= %s \n"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
 			f.close()
 			if permanentLog:
@@ -264,6 +264,7 @@ def getGlobalParams(inp):
 		if "IndigoOrSocket"			in inp:	 G.IndigoOrSocket=				(inp["IndigoOrSocket"])
 		if "BeaconUseHCINo"			in inp:	 G.BeaconUseHCINo=				(inp["BeaconUseHCINo"])
 		if "BLEconnectUseHCINo"		in inp:	 G.BLEconnectUseHCINo=			(inp["BLEconnectUseHCINo"])
+		if "rebootIfNoMessages"		in inp:	 G.rebootIfNoMessages=		 int(inp["rebootIfNoMessages"])
 
 
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
