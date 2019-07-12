@@ -1,19 +1,20 @@
 
 
-Added features / changes in v7.107.297 @ 2019-07-11
+Added features / changes in v7.107.298 @ 2019-07-12
 ===================================================
 
 1. added menu option in send ... to RPI:
    - get pibeacon log:  does an tail - 100 on /var/log/pibeacon and puts it into the plugin.log file
    - gets output of hcitool lesacn from the rpi to plugin.log
+   - lines for rpi log are preceded by "-Pi#x - " to easily id that info
 
-2. added option to use the new rpi UPS v2 ups. It has an interface (rx/tx and signal shutdown iminent) 
-   you can connect the 3 pins to your rpi (rx,tx and one gpio) and set shutdown at xx % battery poer left and or use shutdown iminent signal to shut down the rpi.
-   this version (2) is significantlyu better than the previous UPS version.
+2. added option to use the new rpi UPS v2 ups. It has an interface (rx/tx and signal shutdown eminent) 
+   you can connect the 3 pins to your rpi (rx,tx and one gpio) and set shutdown at xx % battery power left and or use shutdown eminent signal to shut down the rpi.
+   this version (2) is significantly  better than the previous UPS version.
 
-3. cleaned up thread for sending stuff to the rpi's better management of donw rpi ...
+3. cleaned up thread for sending stuff to the rpi's better management of down rpi ...
 
-4. fixed sevreal little things, menus
+4. fixed several little things, menus
 
 
 
