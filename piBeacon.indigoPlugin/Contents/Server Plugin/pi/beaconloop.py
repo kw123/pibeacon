@@ -1059,10 +1059,10 @@ try:
 			maxLoopCount = 20
 			restartCount +=1
 			U.toLog(-1, u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount),doPrint=True)
-			if dt2 > G.rebootIfNoMessages*60 :
+			if dt2 > 400 :
 				time.sleep(20)
 				U.restartMyself(param="", reason="bad BLE (2),restart",doPrint=True)
-			if restartCount %2 ==1:
+			if restartCount > 1:
 				U.toLog(-1, " restarting BLE stack due to no messages "+G.program)
 				G.debug = 0
 				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)

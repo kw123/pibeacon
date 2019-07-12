@@ -304,14 +304,16 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 
 
 			<Field id="label3"               type="label" > 
-				<Label>== Hardware / reboot configs:...</Label>
+				<Label>== Hardware/reboot/UPS configs:...</Label>
 			</Field>
+
 			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
-			<Field id="labelhw1"               type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
-				<Label>The plugin supports 2 options for hardware reset and UPS
-  -A. "shutdown hardwire reset"": Connect a GPIO out pin to RUN/REST pin on the board. 
-      Then the system can initiate a hardware reset by pulling the GPIO pin down
+			<Field id="labelhw1"           type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
+				<Label>The plugin supports 3 options for hardware reset and UPS etc
+  -A. "shutdown hardwire reset": Connect a GPIO out pin to RUN/REST pin on the board. 
+      1. Then the system can initiate a hardware reset by pulling the GPIO pin down
       Eg when the RPI hangs and software reset does not work
+      2. shutDown input pin if pulled down for > 2 secs rpi will do a soft shutdown
   -B. Support of a PI-HAT UPS board. 
       This setup enables a soft shutdown as well as auto restart when power comes back
       Tow GPIO pins are used: 
@@ -322,7 +324,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
          where the Collector disables the +5V raw trigger to restart the PRI, 
          ie pulls it low under normal cuircumstance, 
          hence RESET is only active when RPi is NOT running
-      The software monitors the shutdown-INPUT pin: 
+      The software monitors the shutdown-Voltage INPUT pin: 
         if LOW, a counter starts: if &gt; "wait with shutdown" it initiates shutdown (soft then hard)
         if HIGH it increases the internal counter for battery charge, up to "battery Capacity"
         Parameter "how long to recharge": 
@@ -333,31 +335,54 @@ The BLEconnect feature does work with the internal BLE chip</Label>
           collector connected to the RUN/REST pin. THAT transistor will then be disabled by #2
           during normal run. This is enables the RPI to restart after regular shutdown
           as it does not restart if its +5V is still on, ie battery  still working
-  A and B are independent of each other = can be used together</Label>
+  -C. using RPI UPS Pack Version 2
+      That UPS signals 
+      1. shutdown iminent (set pin ot detect) and 
+      2. Through serial port (TXRX pins 13,14) sends  Vin(good/NG), Vout(mV), BatCapleft(%) info.
+      You can select to use shutdown signal pin and or % Battery capacity left to shutdown (if Vin is NG)
+  A, B, C are independent of each other and can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinOutput"   type="menu" defaultValue="-1" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
-				<Label>...which pin to use as shutdown hardwire reset, connected to RUN pin</Label>
+			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="">
+				<Label>--(A)... enable shutdown pin IN/output:</Label>
+				<List>
+					<Option value="0"   >off</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+
+			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="shutDownPinEnable" visibleBindingValue="1" tooltip="set this pin to low to reeset / run RPI" >
+				<Label> ...which pin to use as OUTPUT-shutdown hardwire reset, connected to RUN pin</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="15" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor reset " >
+			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="shutDownPinEnable" visibleBindingValue="1"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+				<Label>...which pin to use as INPUT-shutdown, (need to press for >2 secs):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="simpleBatteryBackupEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip=" ">
+				<Label>--(B).. enable Reset / Restart Vsens pins:</Label>
+				<List>
+					<Option value="0"   >off</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+
+			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
 				<Label>...which pin to use as shutdown disable/veto RESET:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
-				<Label>...which pin to use as shutdown-INPUT, (need to press for >2 secs):</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
-			</Field>
 
-			<Field id="shutdownPinVoltSensor"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+			<Field id="shutdownPinVoltSensor"   type="menu" defaultValue="18" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
 				<Label>...which pin to use as shutdown-V-check:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="batterybatteryMinPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
+			<Field id="batteryMinPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="= keep running until expired  ">
 				<Label>...wait with shutdown for xx when V-check INPUT pin=low (+5VUPS):</Label>
 				<List>
 					<Option value="0"   >immediate </Option>
@@ -385,7 +410,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
+			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="= ">
 				<Label>...how long to recharge Li Battery to 90%:</Label>
 				<List>
 					<Option value="1800"   >30 min</Option>
@@ -394,7 +419,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="7200"   >120min</Option>
 				</List>
 			</Field>
-			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="=  ">
+
+			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="=  ">
 				<Label>...battery Capacity:</Label>
 				<List>
 					<Option value="120"    >2 minutes</Option>
@@ -412,10 +438,35 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
-				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+
+			<Field id="batteryUPSshutdownEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip=" on if you use UPS V2 hardware option">
+				<Label>--(C) UPS V2  enabled interface:</Label>
+				<List>
+					<Option value="0"   >off</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+
+			<Field id="shutdownSignalFromUPSPin"   type="menu" defaultValue="-1" visibleBindingId="batteryUPSshutdownEnable" visibleBindingValue="1" tooltip="triggers from UPS at around 30% of capacity left" >
+				<Label> ...which pin for input from UPS to signal UPS shutdown iminent:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
+
+			<Field id="batteryUPSshutdownAtxPercent"   type="menu" defaultValue="-1" visibleBindingId="batteryUPSshutdownEnable" visibleBindingValue="1"  tooltip=" and if Vin is not good ie not charging">
+				<Label>... shutdown if &lt; battery capacity left:</Label>
+				<List>
+					<Option value="-1"   >off</Option>
+					<Option value="25"   >25 % likely too low </Option>
+					<Option value="27"   >27 %</Option>
+					<Option value="30"   >30 %</Option>
+					<Option value="35"   >35 %</Option>
+					<Option value="45"   >45 % safe option</Option>
+					<Option value="50"   >50 %</Option>
+					<Option value="60"   >60 %</Option>
+					<Option value="70"   >70 %</Option>
+				</List>
+			</Field>
+
 
 
 			<Field id="labelhwr4"               type="label" > 
@@ -455,13 +506,22 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 
 
-			<Field id="labelFan0"              type="label"> <Label></Label></Field>
-			<Field id="labelFan1"              type="label"> 
-				<Label>== Enable temp driven FAN:...</Label>
+			<Field id="labelwebAdhoc0"               type="label" > 
+				<Label>== Webserver options:...</Label>
+			</Field>
+			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
+				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="fanEnable"	type="menu" defaultValue="-1" tooltip="will read Temp sensor output and switch fan on if temp GT threshold temp" >	
+			<Field id="labelFan0"              type="label"> <Label></Label></Field>
+			<Field id="labelFan1"              type="label"> 
+				<Label>== Enable temp driven FAN (connect fan/driver to a GPIO):...</Label>
+			</Field>
+
+
+			<Field id="fanEnable"	type="menu" defaultValue="-" tooltip="will read Temp sensor output and switch fan on if temp GT threshold temp" >	
 				<Label>..  mode:</Label>
 				<List>
 					<Option value="-"    >Fan disabled</Option>
@@ -667,7 +727,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>	</Field>
 
 
-		</ConfigUI>
+	</ConfigUI>
 
 		<States>
 			<State id="displayStatus">
@@ -982,6 +1042,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<TriggerLabel>vendorName</TriggerLabel>
 				<ControlPageLabel>vendorName</ControlPageLabel>
 			</State>
+			<State id="sensors_active">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sensors_active</TriggerLabel>
+				<ControlPageLabel>sensors_active</ControlPageLabel>
+			</State>
 
 
 		</States>
@@ -1165,15 +1230,16 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 
 			<Field id="label3"               type="label" > 
-				<Label>== Hardware / reboot configs:...</Label>
+				<Label>== Hardware/reboot configs:...</Label>
 			</Field>
 
 			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
 			<Field id="labelhw1"           type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
-				<Label>The plugin supports 2 options for hardware reset and UPS
-  -A. "shutdown hardwire reset"": Connect a GPIO out pin to RUN/REST pin on the board. 
-      Then the system can initiate a hardware reset by pulling the GPIO pin down
+				<Label>The plugin supports 3 options for hardware reset and UPS etc
+  -A. "shutdown hardwire reset": Connect a GPIO out pin to RUN/REST pin on the board. 
+      1. Then the system can initiate a hardware reset by pulling the GPIO pin down
       Eg when the RPI hangs and software reset does not work
+      2. shutDown input pin if pulled down for > 2 secs rpi will do a soft shutdown
   -B. Support of a PI-HAT UPS board. 
       This setup enables a soft shutdown as well as auto restart when power comes back
       Tow GPIO pins are used: 
@@ -1184,7 +1250,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
          where the Collector disables the +5V raw trigger to restart the PRI, 
          ie pulls it low under normal cuircumstance, 
          hence RESET is only active when RPi is NOT running
-      The software monitors the shutdown-INPUT pin: 
+      The software monitors the shutdown-Voltage INPUT pin: 
         if LOW, a counter starts: if &gt; "wait with shutdown" it initiates shutdown (soft then hard)
         if HIGH it increases the internal counter for battery charge, up to "battery Capacity"
         Parameter "how long to recharge": 
@@ -1195,32 +1261,54 @@ The BLEconnect feature does work with the internal BLE chip</Label>
           collector connected to the RUN/REST pin. THAT transistor will then be disabled by #2
           during normal run. This is enables the RPI to restart after regular shutdown
           as it does not restart if its +5V is still on, ie battery  still working
-  A and B are independent of each other = can be used together</Label>
+  -C. using RPI UPS Pack Version 2
+      That UPS signals 
+      1. shutdown iminent (set pin ot detect) and 
+      2. Through serial port (TXRX pins 13,14) sends  Vin(good/NG), Vout(mV), BatCapleft(%) info.
+      You can select to use shutdown signal pin and or % Battery capacity left to shutdown (if Vin is NG)
+  A, B, C are independent of each other and can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low to reeset / run RPI" >
-				<Label>...which pin to use as shutdown hardwire reset, connected to RUN pin</Label>
+			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="">
+				<Label>--(A)... enable shutdown pin IN/output:</Label>
+				<List>
+					<Option value="0"   >off</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+
+			<Field id="shutDownPinOutput"   type="menu" defaultValue="14" visibleBindingId="shutDownPinEnable" visibleBindingValue="1" tooltip="set this pin to low to reeset / run RPI" >
+				<Label> ...which pin to use as OUTPUT-shutdown hardwire reset, connected to RUN pin</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="rebootHardware" visibleBindingValue="true" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
+			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="shutDownPinEnable" visibleBindingValue="1"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+				<Label>...which pin to use as INPUT-shutdown, (need to press for >2 secs):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="simpleBatteryBackupEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip=" ">
+				<Label>--(B).. enable Reset / Restart Vsens pins:</Label>
+				<List>
+					<Option value="0"   >off</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+
+			<Field id="shutDownPinVetoOutput"   type="menu" defaultValue="14" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1" tooltip="set this pin to low and connect via  npn transitor to veto npn transitor rest " >
 				<Label>...which pin to use as shutdown disable/veto RESET:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="shutdownInputPin"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
-				<Label>...which pin to use as shutdown-INPUT, (need to press for >2 secs):</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
-			</Field>
-
-			<Field id="shutdownPinVoltSensor"   type="menu" defaultValue="18" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
+			<Field id="shutdownPinVoltSensor"   type="menu" defaultValue="18" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="set this pin to low will cause the timer to start shutdown  counter software shutdown command">
 				<Label>...which pin to use as shutdown-V-check:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="batteryMinPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= keep running until expired  ">
+			<Field id="batteryMinPinActiveTimeForShutdown"   type="menu" defaultValue="60" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="= keep running until expired  ">
 				<Label>...wait with shutdown for xx when V-check INPUT pin=low (+5VUPS):</Label>
 				<List>
 					<Option value="0"   >immediate </Option>
@@ -1248,7 +1336,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="= ">
+			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="= ">
 				<Label>...how long to recharge Li Battery to 90%:</Label>
 				<List>
 					<Option value="1800"   >30 min</Option>
@@ -1257,7 +1345,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="7200"   >120min</Option>
 				</List>
 			</Field>
-			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="=  ">
+			<Field id="batteryCapacitySeconds"   type="menu" defaultValue="18000" visibleBindingId="simpleBatteryBackupEnable" visibleBindingValue="1"  tooltip="=  ">
 				<Label>...battery Capacity:</Label>
 				<List>
 					<Option value="120"    >2 minutes</Option>
@@ -1275,9 +1363,33 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
-				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+
+			<Field id="batteryUPSshutdownEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip=" on if you use UPS V2 hardware option">
+				<Label>--(C) UPS V2  enabled interface:</Label>
+				<List>
+					<Option value="0"   >off</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+
+			<Field id="shutdownSignalFromUPSPin"   type="menu" defaultValue="-1" visibleBindingId="batteryUPSshutdownEnable" visibleBindingValue="1" tooltip="triggers from UPS at around 30% of capacity left" >
+				<Label> ...which pin for input from UPS to signal UPS shutdown iminent:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="batteryUPSshutdownAtxPercent"   type="menu" defaultValue="-1" visibleBindingId="batteryUPSshutdownEnable" visibleBindingValue="1"  tooltip=" and if Vin is not good ie not charging">
+				<Label>... shutdown if &lt; battery capacity left:</Label>
+				<List>
+					<Option value="-1"   >off</Option>
+					<Option value="25"   >25 % likely too low </Option>
+					<Option value="27"   >27 %</Option>
+					<Option value="30"   >30 %</Option>
+					<Option value="35"   >35 %</Option>
+					<Option value="45"   >45 % safe option</Option>
+					<Option value="50"   >50 %</Option>
+					<Option value="60"   >60 %</Option>
+					<Option value="70"   >70 %</Option>
+				</List>
 			</Field>
 
 
@@ -1317,13 +1429,20 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 
 
-			<Field id="labelFan0"              type="label"> <Label></Label></Field>
-			<Field id="labelFan1"              type="label"> 
-				<Label>== Enable temp driven FAN:...</Label>
+			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
+				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="fanEnable"	type="menu" defaultValue="-1" tooltip="will read Temp sensor output and switch fan on if temp GT threshold temp" >	
+
+			<Field id="labelFan0"              type="label"> <Label></Label></Field>
+			<Field id="labelFan1"              type="label"> 
+				<Label>== Enable temp driven FAN (connect fan/driver to a GPIO):...</Label>
+			</Field>
+
+
+			<Field id="fanEnable"	type="menu" defaultValue="-" tooltip="will read Temp sensor output and switch fan on if temp GT threshold temp" >	
 				<Label>..  mode:</Label>
 				<List>
 					<Option value="-"    >Fan disabled</Option>
@@ -1632,6 +1751,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="sensors_active">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sensors_active</TriggerLabel>
+				<ControlPageLabel>sensors_active</ControlPageLabel>
 			</State>
 
 		</States>
@@ -5188,7 +5312,7 @@ After some days of running in clean air, proposed setup is:
 				<Option value="180" > 3   minutes</Option>
 			</List>
 			</Field>
-			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+			<Field id="minSendDelta" type="menu"     defaultValue="10" hidden="no" > 
 			<Label>min delta secs between indigo updates :</Label>
 			<List>
 				<Option value="2"   > 2   secs</Option>
@@ -5197,6 +5321,9 @@ After some days of running in clean air, proposed setup is:
 				<Option value="6"   > 6   secs</Option>
 				<Option value="8"   > 8   secs</Option>
 				<Option value="10"  > 10  secs</Option>
+				<Option value="20"  > 20  secs</Option>
+				<Option value="30"  > 30  secs</Option>
+				<Option value="60"  > 60  secs</Option>
 			</List>
 			</Field>
 			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise"> 

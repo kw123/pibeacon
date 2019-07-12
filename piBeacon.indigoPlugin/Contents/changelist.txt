@@ -1,9 +1,23 @@
-Added features / changes in v7.105.294 @ 2019-06-30
+
+
+Added features / changes in v7.107.297 @ 2019-07-11
 ===================================================
 
-1. addded options for AMG88xx i2c address - added 0x68 0x6A
+1. added menu option in send ... to RPI:
+   - get pibeacon log:  does an tail - 100 on /var/log/pibeacon and puts it into the plugin.log file
+   - gets output of hcitool lesacn from the rpi to plugin.log
 
-Added features / changes in v7.105.295 @ 2019-06-30
+2. added option to use the new rpi UPS v2 ups. It has an interface (rx/tx and signal shutdown iminent) 
+   you can connect the 3 pins to your rpi (rx,tx and one gpio) and set shutdown at xx % battery poer left and or use shutdown iminent signal to shut down the rpi.
+   this version (2) is significantlyu better than the previous UPS version.
+
+3. cleaned up thread for sending stuff to the rpi's better management of donw rpi ...
+
+4. fixed sevreal little things, menus
+
+
+
+Added features / changes in v7.105.295 @ 2019-07-03
 ===================================================
 
 1. fixed  chmod for pibeacon.log removed, as it is in std log directory now
@@ -14,6 +28,10 @@ Added features / changes in v7.105.295 @ 2019-06-30
 3. cleaned up threads for sending files to RPI
    now much clearer and will also manage new RPI w/o restarting plugin.
 
+Added features / changes in v7.105.294 @ 2019-06-30
+===================================================
+
+1. addded options for AMG88xx i2c address - added 0x68 0x6A
 
 
 Added features / changes in v7.105.293 @ 2019-06-22

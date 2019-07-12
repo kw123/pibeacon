@@ -97,7 +97,7 @@ Then the rPi will start sending data to plugin
     </MenuItem>         
 
     <MenuItem id="configurePiServer">
-        <Name>Send Config/Restart/PGM/Sound/... to rPi server</Name>
+        <Name>Send/get Config/Restart/PGM/Sound/logs... to/from rPi server</Name>
         <ConfigUI>
             <Field id="configurePi" type="menu" defaultValue="999" tooltip="This will send all config files/ reboot .. to the selected rpi server ">
                 <Label>Select rPi server #:</Label>
@@ -115,10 +115,6 @@ Then the rPi will start sending data to plugin
                 <Label>click to</Label><Title>Restart master.py through ssh</Title>
                 <CallbackMethod>buttonConfirmRestartMasterCALLBACK</CallbackMethod>
             </Field>
-            <Field   id="buttonResetOutput" type="button"	tooltip="login to rPi and delete file execommands.current and reboot">
-                <Label>click to</Label><Title>reset GPIO output pins memory</Title>
-                <CallbackMethod>buttonResetOutputCALLBACK</CallbackMethod>
-            </Field>
             <Field   id="buttonsendBigFiles" type="button"	tooltip="send and sync file from ~/Documents/piBeacons/soundFiles /displayFiles to rPi ~/soundfiles">
                 <Label>click to</Label><Title>send ALL files (Programs.py,fonts,images,config ...)</Title>
                 <CallbackMethod>buttonSendBigFilesCALLBACK</CallbackMethod>
@@ -126,12 +122,6 @@ Then the rPi will start sending data to plugin
             <Field   id="buttonSendAllandReboot" type="button"	tooltip="">
                 <Label>click to</Label><Title>send ALL files (...) and REBOOT</Title>
                 <CallbackMethod>buttonSendAllandRebootCALLBACK</CallbackMethod>
-            </Field>
-
-
-            <Field   id="buttonGetSystemParameters" type="button"	tooltip="login do ps -ef grep python df etc ">
-                <Label>click to</Label><Title>get rPi system stats to logfile</Title>
-                <CallbackMethod>buttonGetSystemParametersCALLBACK</CallbackMethod>
             </Field>
 
             <Field   id="buttonReboot" type="button"	tooltip="login to rPi and issue sudo reboot">
@@ -173,14 +163,48 @@ Then the rPi will start sending data to plugin
                 <Label>click to</Label><Title>stop NTP service</Title>
                 <CallbackMethod>buttonstopNTPCALLBACK</CallbackMethod>
             </Field>
+ 
+           <Field   id="logsStart" type="label">
+                <Label> -------- get info / logs </Label>
+            </Field>
 
+            <Field   id="buttonGetpiBeaconLog" type="button"	tooltip="using tail -1000 /var/log/pibeacon.log">
+                <Label>click to</Label><Title>get 1000 lines from rPi pibeacon.log  to indigo plugin.log </Title>
+                <CallbackMethod>buttonbuttonGetpiBeaconLogCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonGetSystemParameters" type="button"	tooltip="login do ps -ef grep python df etc; output in plugin.log">
+                <Label>click to</Label><Title>get rPi system stats to logfile</Title>
+                <CallbackMethod>buttonGetSystemParametersCALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="buttonGetiBeacon0List" type="button"	tooltip="if you use HCI0 (uart / dongle); output in plugin.log; will restart master.py on RPI, using
+  cd /home/pi/pibeacon; sudo hciconfig hci0 down;sudo hciconfig hci0 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
+
+
+                <Label>click to</Label><Title>get ibeacon list (using hci0 from rPi); will collect data for 30secs</Title>
+                <CallbackMethod>buttonGetiBeaconList0CALLBACK</CallbackMethod>
+            </Field>
+            <Field   id="buttonGetiBeacon1List" type="button"	tooltip="if you use HCI1 (uart / dongle); output in plugin.log; will restart master.py on RPI, using
+  cd /home/pi/pibeacon; sudo hciconfig hci1 down;sudo hciconfig hci1 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
+                <Label>click to</Label><Title>get ibeacon list (using hci1 from rPi); will collect data for 30secs</Title>
+                <CallbackMethod>buttonGetiBeaconList1CALLBACK</CallbackMethod>
+            </Field>
+          <Field   id="logsEnd" type="label">
+                <Label> -------- other </Label>
+            </Field>
+           <Field   id="buttonResetOutput" type="button"	tooltip="login to rPi and delete file execommands.current and reboot">
+                <Label>click to</Label><Title>reset GPIO output pins memory</Title>
+                <CallbackMethod>buttonResetOutputCALLBACK</CallbackMethod>
+            </Field>
+ 
             <Field   id="buttonInit" type="button"	tooltip="send and sync file from ~/Documents/piBeacons/soundFiles /displayFiles to rPi ~/soundfiles">
                 <Label>click to</Label><Title>ONLY ONCE: setup directories, send pgm reboot</Title>
                 <CallbackMethod>buttonSendINITCALLBACK</CallbackMethod>
             </Field>
 
             <Field   id="buttonStopConfig" type="button"	tooltip=" stop any send activity ">
-                <Label>click to</Label><Title>STOP any send in progress</Title>
+                <Label>click to</Label><Title>STOP any send/action in progress</Title>
                 <CallbackMethod>buttonStopConfigCALLBACK</CallbackMethod>
             </Field>
             <Field   id="anycmd" type="label">
@@ -209,15 +233,12 @@ Then the rPi will start sending data to plugin
             <Field   id="upgrade4" type="label">
                 <Label>you must "ssh pi@ x.x.x.x" to the rPi and issue the command there </Label>
             </Field>
+<!--
            <Field   id="buttonUpgrade" type="button"	tooltip="  ">
                 <Label> OR CLICK </Label><Title>start upgrade NOW</Title>
                 <CallbackMethod>buttonUpgradeCALLBACK</CallbackMethod>
             </Field>
-
-            <Field   id="upgrade5" type="label">
-                <Label> -------------------------------------------------------------- </Label>
-            </Field>
-
+-->
         </ConfigUI>
     </MenuItem>
 
@@ -532,7 +553,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
   <MenuItem id="d15"> <Name>-------------print configs etc ---------------------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
 
     <MenuItem id="enableLoggingStuff">
-        <Name>Enable special beacon logging</Name>
+        <Name>Enable special logging</Name>
         <ConfigUI>
 
             <Field   id="labelnewBeaconsLogTimer" type="label">
@@ -652,6 +673,19 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
             <Field   id="idbuttontrackSignalChangeOfRPI" type="button"	tooltip="">
                 <Label>click to </Label><Title>execute</Title>
                 <CallbackMethod>buttonConfirmselectChangeOfRPICALLBACK</CallbackMethod>
+            </Field>
+
+            <Field   id="labeltrackRPImessages0" type="label">  <Label> </Label>  </Field>
+            <Field   id="labeltrackRPImessages1" type="label">
+                <Label>Enable tracking of ALL raw data from a specific RPI</Label>
+            </Field>
+            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number" >
+                        <List class="self" filter="" method="filterPiDONoff" dynamicReload="true"/>
+                <Label>select rPi to track:</Label> 
+            </Field>
+            <Field   id="idbuttontrackRPImessages" type="button"	tooltip="">
+                <Label>click to </Label><Title>execute</Title>
+                <CallbackMethod>buttonConfirmselectRPImessagesCALLBACK</CallbackMethod>
             </Field>
       
         </ConfigUI>

@@ -150,14 +150,14 @@ def getValues(devId):
 			badSensor+=1
 			U.muxTCA9548Areset()
 			return "badSensor"
-		data = {"temp":("%7.1f"%temp).strip(), "hum":("%7d"%hum).strip()}
+		data = {"temp":round(temp,1), "hum":round(hum,1)}
 		badSensor = 0
 		U.muxTCA9548Areset()
 		return data
 	except	Exception, e:
 		if badSensor >2 and badSensor < 5: 
 			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"temp>>" + unicode(temp)+"<<")
+			U.toLog(-1, u"temp>>{}<<".format(temp) )
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()

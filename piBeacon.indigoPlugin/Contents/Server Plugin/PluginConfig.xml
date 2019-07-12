@@ -122,8 +122,8 @@
         </List>
    </Field>
 
-       <Field    id="rebootIfNoMessages"   type="menu" defaultValue="3" tooltip="if no ibeacon messages reboot">
-        <Label>reboot RPI if GT xx empty beacon messages (on RPI)):</Label>
+       <Field    id="rebootIfNoMessages"   type="menu" defaultValue="4" tooltip="if no ibeacon messages reboot">
+        <Label>reboot RPI if GT xx empty beacon messages (on RPI):</Label>
         <List>
             <Option value="1"   >reboot after 1 loop (~1min)</Option>
             <Option value="2"   >reboot after 2 loops</Option>

@@ -75,23 +75,20 @@ def toLog(lvl, msg, permanentLog=False, doPrint=False):
 			if G.program =="":
 				G.Program = "unknown"
 			if	not os.path.isdir(G.logDir):
-				print " logfile not ready"
-				os.system("sudo mkdir "+G.logDir+" &")
-				os.system("sudo chown -R  pi:pi	 "+G.logDir)
-			if	not os.path.isdir(G.logDir):
 				return
 
 			f=open(G.logDir+"pibeacon.log","a")
-			f.write( ("%s %s L:%2d= %s \n"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
+			f.write( (  "{} {} L:{:2d}= {} \n".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
 			f.close()
 			if permanentLog:
 				f=open(G.homeDir+"permanentLog.log","a")
-				f.write( ("%s %s L:%2d= %s \n"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
+				f.write( (  "{} {} L:{:2d}= {} \n".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
 				f.close()
 
 				
 		except	Exception, e:
-			print ( ( "%s %s L:%2d= in Line '%s' has error='%s'"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, lvl, sys.exc_traceback.tb_lineno, e ) ).encode("utf8") )
+			f.write( (  "{} {} L:{:2d}= {} \n".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
+			print ( ( "{} {} L:{:2d}= in Line {} has error={}".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, lvl, sys.exc_traceback.tb_lineno, e ) ).encode("utf8") )
 			if unicode(e).find("No space left on device") >-1:
 				fixoutofdiskspace()
 			if unicode(e).find("Read-only file system:") >-1:
@@ -99,9 +96,9 @@ def toLog(lvl, msg, permanentLog=False, doPrint=False):
 
 	if doPrint:
 			try:
-				print (  ("%s %s L:%2d= %s"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program.ljust(15), lvl,msg) ) .encode("utf8")  )
+				print ( (  "{} {} L:{:2d}= {}".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
 			except	Exception, e:
-				print ( ("%s %s L:%2d in Line '%s' has error='%s'"%(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program, lvl, sys.exc_traceback.tb_lineno, e)).encode("utf8")  )
+				print ( ( "{} {} L:{:2d}= in Line {} has error={}".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, lvl, sys.exc_traceback.tb_lineno, e ) ).encode("utf8") )
 	return 
 
 
@@ -252,20 +249,27 @@ def getNetwork():
 def getGlobalParams(inp):
 
 		sensors ={}
-		if "debugRPI"				in inp:	 G.debug=					 int(inp["debugRPI"]["debugRPISENSOR"])
+		try:
+			if "debugRPI"				in inp:	 G.debug=				 int(inp["debugRPI"]["debugRPISENSOR"])
+		except: pass
 		if "ipOfServer"				in inp:	 G.ipOfServer=					(inp["ipOfServer"])
 		if "myPiNumber"				in inp:	 G.myPiNumber=					(inp["myPiNumber"])
 		if "authentication"			in inp:	 G.authentication=				(inp["authentication"])
-		if "sendToIndigoSecs"		in inp:	 G.sendToIndigoSecs=	   float(inp["sendToIndigoSecs"])
+		try:
+			if "sendToIndigoSecs"		in inp:	 G.sendToIndigoSecs=	float(inp["sendToIndigoSecs"])
+		except: pass
 		if "passwordOfServer"		in inp:	 G.passwordOfServer=			(inp["passwordOfServer"])
 		if "userIdOfServer"			in inp:	 G.userIdOfServer=				(inp["userIdOfServer"])
 		if "portOfServer"			in inp:	 G.portOfServer=				(inp["portOfServer"])
-		if "indigoInputPORT"		in inp:	 G.indigoInputPORT=			 int(inp["indigoInputPORT"])
+		try:
+			if "indigoInputPORT"		in inp:	 G.indigoInputPORT=		 int(inp["indigoInputPORT"])
+		except: pass
 		if "IndigoOrSocket"			in inp:	 G.IndigoOrSocket=				(inp["IndigoOrSocket"])
 		if "BeaconUseHCINo"			in inp:	 G.BeaconUseHCINo=				(inp["BeaconUseHCINo"])
 		if "BLEconnectUseHCINo"		in inp:	 G.BLEconnectUseHCINo=			(inp["BLEconnectUseHCINo"])
-		if "rebootIfNoMessages"		in inp:	 G.rebootIfNoMessages=		 int(inp["rebootIfNoMessages"])
-
+		try:
+			if "rebootIfNoMessages"		in inp:	 G.rebootIfNoMessages=	 int(inp["rebootIfNoMessages"])
+		except: pass
 
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
 
@@ -1130,13 +1134,15 @@ def getSerialDEV():
 	# should return something like:
 	#lrwxrwxrwx 1 root root			  5 Apr 20 11:17 serial0 -> ttyS0
 	#lrwxrwxrwx 1 root root			  7 Apr 20 11:17 serial1 -> ttyAMA0
+	#or just:
+	#lrwxrwxrwx 1 root root           7 Jul  7 13:30 serial1 -> ttyAMA0
+
 
 
 	if version[0].find("Raspberry") ==-1:
-		toLog(-1,"cat /proc/device-tree/model something is wrong... "+unicode(version) )
-		print "cat /proc/device-tree/model something is wrong... "+unicode(version) 
+		toLog(-1,"cat /proc/device-tree/model something is wrong... "+unicode(version) ,doPrint=True )
 		time.sleep(10)
-		exit(1)
+		return ""
 		
 	if version[0].find("Pi 3") == -1 and version[0].find("Pi Zero") == -1:	# not RPI3
 		sP = "/dev/ttyAMA0"
@@ -1146,10 +1152,21 @@ def getSerialDEV():
 		subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		if serials[0].find("serial0 -> ttyAMA0") ==-1 :
-			toLog(-1, "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0")
-			print     "pi2 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0"
+			toLog(-1, "pi2 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0" ,doPrint=True)
 			time.sleep(10)
-			exit(1)
+			return ""
+
+	elif version[0].find("Pi Zero") >-1:	# not RPI3
+		sP = "/dev/ttyS0"
+
+		### disable and remove tty usage for console
+		subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
+		if serials[0].find("serial0 -> ttyS0")==-1:
+			toLog(-1, "pi3 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" ,doPrint=True)
+			time.sleep(10)
+			return ""
 
 	else:# RPI3
 		sP = "/dev/ttyS0"
@@ -1159,10 +1176,9 @@ def getSerialDEV():
 		subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		if serials[0].find("serial0 -> ttyS0")==-1:
-			toLog(-1, "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0")
-			print     "pi3 .. wrong serial port setup  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0"
+			toLog(-1, "pi3 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" ,doPrint=True)
 			time.sleep(10)
-			exit(1)
+			return ""
 	return sP
 
 
@@ -1750,7 +1766,7 @@ def checkIfrebootAction(action):
 ################################
 
 
-def sendi2cToPlugin():
+def sendi2cToPlugin(sensDict):
 	i2c			= ""
 	lastBoot	= ""
 	os			= ""
@@ -1758,6 +1774,19 @@ def sendi2cToPlugin():
 	rpiType		= ""
 	try:
 		i2c		 = geti2c()
+		sensList = ""		
+		for sens in sensDict:
+			if sens.find("i2c") == 0: # strip i2c from the beginning of name.
+				ss = sens[3:]
+			else:
+				ss = sens
+			ll = len(sensDict[sens])
+			if ll > 1:
+				sensList += str(ll)+" "+ss+"; "
+			else:
+				sensList += ss+"; "
+
+		if len(sensList) > 0: sensList = sensList.strip(" ").strip(";")
 		#																	remove trailing null chars;  \\ for escape  of \
 		rpiType	 = subprocess.Popen("cat /sys/firmware/devicetree/base/model | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		###print "rpiType1>>"+rpiType+"<<"
@@ -1785,7 +1814,7 @@ def sendi2cToPlugin():
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
 
-		data ={"i2c_active":json.dumps(i2c).replace(" ","").replace("[","").replace("]",""),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
+		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2c).replace(" ","").replace("[","").replace("]",""),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
 		##print data
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
 

@@ -14,6 +14,7 @@ import sys, os, subprocess, copy
 import time,datetime
 import json
 import RPi.GPIO as GPIO
+import serial
 
 sys.path.append(os.getcwd())
 import	piBeaconGlobals as G
@@ -89,6 +90,7 @@ def readNewParams(force=False):
 		global startWebServerSTATUS, startWebServerINPUT
 		global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, fanTempName, fanTempDevId, fanEnable
 		global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
+		global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime
 
 		BLEserialOLD= BLEserial
 
@@ -187,6 +189,7 @@ def readNewParams(force=False):
 		
 		if u"bluetoothONoff"			 in inp:
 			if bluetoothONoff != inp["bluetoothONoff"]:
+				U.toLog(-1, " updating BLE stack from{}  to {}".format(bluetoothONoff,inp["bluetoothONoff"] ), doPrint=True)
 				if inp["bluetoothONoff"].lower() =="on":
 					os.system("rfkill unblock bluetooth")
 					os.system("systemctl enable hciuart")
@@ -299,8 +302,45 @@ def readNewParams(force=False):
 				GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
 
 
+
+		if u"batteryUPSshutdownEnable"	 in inp and  inp["batteryUPSshutdownEnable"] == 1:
+			if u"shutdownSignalFromUPSPin"	 in inp:  
+				xxx = int(inp["shutdownSignalFromUPSPin"])
+				if shutdownSignalFromUPSPin !=-1 and xxx != shutdownSignalFromUPSPin:  # is a change, not just switch on 
+					U.toLog(-1, "UPS-V2 restart master for new shutdownSignalFromUPSPin input pin", doPrint=True)
+					os.system("/usr/bin/python "+G.homeDir+"master.py &" )
+					time.sleep(2)
+				if shutdownSignalFromUPSPin ==-1 and xxx != shutdownSignalFromUPSPin and xxx > 1:  # is a change, not just switch on 
+					shutdownSignalFromUPSPin =	  xxx
+					shutdownSignalFromUPS_InitTime = time.time()
+					U.toLog(-1,"UPS-V2 setting shutdown signal event tracking to init in in 2 minutes, using pin#{}".format(shutdownSignalFromUPSPin),doPrint=True)
+
+
+			if u"batteryUPSshutdownAtxPercent"	 in inp:  
+				xxx= int(inp["batteryUPSshutdownAtxPercent"])
+				if batteryUPSshutdownAtxPercent !=-1 and xxx != batteryUPSshutdownAtxPercent:  # is a change, not just switch on 
+					U.toLog(-1, "UPS-V2 restart master for new batteryUPSshutdownAtxPercent ", doPrint=True)
+					os.system("/usr/bin/python "+G.homeDir+"master.py &" )
+					time.sleep(2)
+				if batteryUPSshutdownAtxPercent ==-1 and xxx != batteryUPSshutdownAtxPercent:  # is a change, not just switch on 
+					batteryUPSshutdownAtxPercent =	  xxx
+					U.toLog(-1,"UPS-V2 starting serial port for UPS support",doPrint=True)
+					port = U.getSerialDEV()
+					if port =="":
+						U.toLog(-1, "UPS-V2 serial port not setup properly, setting  interface to off ", doPrint=True)
+						shutdownSignalFromUPS_SerialInput =""
+						batteryUPSshutdownAtxPercent = -1
+					else:		
+						U.toLog(-1, "UPS-V2 serial port startiung w port= {}".format(port), doPrint=True)
+						shutdownSignalFromUPS_SerialInput  = serial.Serial(port, 9600)
+		else:
+			U.toLog(-1, "UPS-V2 interface NOT enabled")
+	
+
+
+
 		if u"rebootWatchDogTime" in inp :
-			xxx	  =int(inp["rebootWatchDogTime"])
+			xxx  =int(inp["rebootWatchDogTime"])
 			if U.pgmStillRunning("shutdownd"):
 				if xxx <=0: os.system("shutdown -c >/dev/null 2>&1") 
 			elif xxx != rebootWatchDogTime:
@@ -365,7 +405,34 @@ def readNewParams(force=False):
 		firstRead = False
 		return 
 
+
+
 ####################      #########################
+def startUPSShutdownPinAfterStart():
+	global shutdownSignalFromUPSPin, shutdownSignalFromUPS_InitTime
+	U.toLog(-1,"UPS-V2 starting shutdown signal event listening pgm using pin#{}".format(shutdownSignalFromUPSPin),doPrint=True)
+	shutdownSignalFromUPS_InitTime = -1
+	GPIO.setup(int(shutdownSignalFromUPSPin), GPIO.IN, pull_up_down = GPIO.PUD_DOWN)
+	GPIO.add_event_detect(shutdownSignalFromUPSPin, GPIO.FALLING, callback= shutdownSignalFromUPS, bouncetime=1000)
+
+####################      #########################
+def shutdownSignalFromUPS(channel):
+	global shutdownSignalFromUPS_pin, shutdownSignalFromUPS_InitTime, batteryUPSshutdown_Vin
+	U.toLog(-1, "LOW battery capacity event called for pi# {}".format(channel),doPrint=True)
+	if channel != shutdownSignalFromUPSPin: return 
+	if batteryUPSshutdown_Vin == "GOOD": 
+		U.toLog(-1, "LOW battery capacity event reset because Vin is GOOD, wait for 1 minute to restart",doPrint=True)
+		GPIO.remove_event_detect(shutdownSignalFromUPSPin)
+		shutdownSignalFromUPS_InitTime = time.time() - 60 # just 1 minute not 2 
+		return 
+	U.toLog(-1, "detected LOW battery capacity",doPrint=True)
+	time.sleep(1)
+	if GPIO.input(shutdownSignalFromUPSPin) >1:
+		U.toLog(-1, "LOW battery capacity event cancelled ... UPS system back up",doPrint=True)
+		return
+	print "shutting down"
+	U.doReboot(10, "shutdown by UPS signal battery capacity", cmd="sudo killall python; sudo sync; wait 2; sudo shutdown now")
+
 def setACTIVEorKILL(tag,pgm,check,force=0):
 	global sensors, activePGMdict
 	#print tag, sensorList
@@ -797,77 +864,174 @@ def checkIfNightReboot():
 
 
 ####################      #########################
+
+def getSerialUPSdata():
+	global shutdownSignalFromUPS_SerialInput
+	try:
+		version 	= ""
+		vin 		= ""
+		batcap 		= ""
+		vout 		= ""
+		if shutdownSignalFromUPS_SerialInput =="": return version, "no connection", vin, vout
+		# first flush and wait for new data , sending every 1 sec
+		#print "inWaiting() bf flush:",shutdownSignalFromUPS_SerialInput.inWaiting()
+		#self.ser.flushInput()		
+		#time.sleep(0.1)
+		##
+		# GOOD,BATCAP 84,Vout 5204 $
+		#$ SmartUPS V1.00,Vin GOOD,BATCAP 84,Vout 5204 $
+		#$ SmartUPS V1.00,Vin GOO 
+		####
+
+		uart_string =""
+		good  = ""
+		for ii in range(10):
+			nn = shutdownSignalFromUPS_SerialInput.inWaiting()
+			#print "inWaiting", nn
+			if  nn !=0:
+				time.sleep(0.01)
+				nn = shutdownSignalFromUPS_SerialInput.inWaiting()
+				uart_string = shutdownSignalFromUPS_SerialInput.read(nn)
+				# check if we got a full line
+				#$ SmartUPS V1.00,Vin GOOD,BATCAP 84,Vout 5204 $
+				if len(uart_string) > 30 and uart_string[-2] =="$" and uart_string[0] =="$": break
+				if len(uart_string) > 50 : break
+				if uart_string[0] !="$": continue
+				#print "uart_string not complete - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
+				time.sleep(0.2)
+				nn = shutdownSignalFromUPS_SerialInput.inWaiting()
+				uart_string += shutdownSignalFromUPS_SerialInput.read(nn)
+				if len(uart_string) > 30 and uart_string[-2] =="$": 
+					#print "uart_string not complete after 2. read - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
+					break
+				#print "uart_string  after continue to read not complete - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
+				
+				
+			else:
+				time.sleep(0.2)
+		lines = uart_string.strip().split("\n")
+		nLines = len(lines)
+
+		for nn in range(nLines):
+			if lines[nLines-nn-1].count("$") == 2 and lines[nLines-nn-1][-1] =="$":
+				good = lines[nLines-nn-1].strip().strip("$").strip().split(",")	
+				break			
+
+		if good == "":
+			return "", "no connection", "", ""
+
+#	print(uart_string)
+		#print "tries",ii, "data", good 
+		for dd in good:
+			if   "SmartUPS" in dd: version 	= dd.split(" ")[1]
+			elif "Vin" 		in dd: vin 		= dd.split(" ")[1]
+			elif "BATCAP" 	in dd: batcap 	= int(dd.split(" ")[1])
+			elif "Vout" 	in dd: vout 	= float(dd.split(" ")[1])/1000.
+		return version, vin, batcap, vout
+	except	Exception, e :
+		U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+	return version, "no connection", batcap, vout
+
+
+####################      #########################
 def checkIfShutDownVoltage():
 	global shutdownInputPin, shutdownPinVoltSensor,  batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime
 	global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
-	global  batteryStatus,lastWriteBatteryStatus
-	#print " checkIfShutDownVoltage into"
-	try:
-		ii = lastWriteBatteryStatus
-	except:
+	global batteryStatus,lastWriteBatteryStatus
+	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_LastCall , shutdownSignalFromUPS_LastCount, batteryUPSshutdown_Vin
+
+
+	if batteryUPSshutdownAtxPercent > 1 and shutdownSignalFromUPS_SerialInput !="":
+		try: 
+			ii=shutdownSignalFromUPS_LastCall# init if called first time 
+		except: 
+			shutdownSignalFromUPS_LastCall = time.time() -100
+			shutdownSignalFromUPS_LastCount = 0
+		if time.time() - shutdownSignalFromUPS_LastCall > 20:
+			shutdownSignalFromUPS_LastCall = time.time()
+			version, vin, batcap, vout = getSerialUPSdata()
+			batteryUPSshutdown_Vin = vin
+
+			U.toLog(-1, "UPS-V2 data: Vin {}, battery-capacity@ {}[%], Vout {}[mV]".format(vin, batcap, vout), doPrint=True) 
+			if version !="" and batcap != "": 
+				if vin == "NG":
+					if int(batcap) < batteryUPSshutdownAtxPercent:
+						shutdownSignalFromUPS_LastCount +=1
+						U.toLog(-1, "UPS-V2 Vin is off and battery capacity {}%  below limit {}%.. checking countdown to 0: {}".format(batcap, batteryUPSshutdownAtxPercent, 5-shutdownSignalFromUPS_LastCount), doPrint=True) 
+						if shutdownSignalFromUPS_LastCount > 3:
+							U.toLog(-1, "UPS-V2.. rebooting after 4 wait / test".format(batteryUPSshutdownAtxPercent, batcap), doPrint=True) 
+							U.doReboot(10, "UPS-V2 shutdown by UPS  battery capacity message", cmd="sudo killall python; sudo sync; wait 2; sudo shutdown now")
+
+
+
+	if shutdownPinVoltSensor >1: 
 		try:
-			lastWriteBatteryStatus =0
-			#print "checkIfShutDownVoltage initializing"
-			batteryStatus, raw= U.readJson(G.homeDir+"batteryStatus")
-			delItem=[]
-			for item in batteryStatus:
-				if item not in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","batteryChargeTimeForMaxCapacity","batteryMinPinActiveTimeForShutdown", "batteryTimeLeft"]:
-					delItem.append(item)
-			for item in delItem:
-				del batteryStatus[item]
-			for item in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","batteryChargeTimeForMaxCapacity","batteryMinPinActiveTimeForShutdown", "batteryTimeLeft"]:
-				if item not in batteryStatus:
-					batteryStatus[item] =0
+			ii = lastWriteBatteryStatus
+		except:
+			try:
+				lastWriteBatteryStatus =0
+				#print "checkIfShutDownVoltage initializing"
+				batteryStatus, raw= U.readJson(G.homeDir+"batteryStatus")
+				delItem=[]
+				for item in batteryStatus:
+					if item not in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","batteryChargeTimeForMaxCapacity","batteryMinPinActiveTimeForShutdown", "batteryTimeLeft"]:
+						delItem.append(item)
+				for item in delItem:
+					del batteryStatus[item]
+				for item in ["timeCharged", "testTime","percentCharged","inputPinVoltRawLastONTime","batteryTimeLeftEndOfCharge","status","batteryCapacitySeconds","batteryChargeTimeForMaxCapacity","batteryMinPinActiveTimeForShutdown", "batteryTimeLeft"]:
+					if item not in batteryStatus:
+						batteryStatus[item] =0
 	
-			if shutdownPinVoltSensor != -1:
-				#print	"setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor) 
-				U.toLog(-1, "setting shutdownPinVoltSensor to GPIO: {}".format(shutdownPinVoltSensor), doPrint=True)
-				try: GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
-				except: pass
-				inputPinVoltRawLastONTime = time.time()
-		except: pass
-		if batteryStatus =={}: 
-			batteryStatus ={"timeCharged":0, "testTime":time.time(),"percentCharged":0,"inputPinVoltRawLastONTime":0,"batteryTimeLeftEndOfCharge":0,"status":"","batteryCapacitySeconds":0,"batteryChargeTimeForMaxCapacity":0,"batteryMinPinActiveTimeForShutdown":0,"batteryTimeLeft":0}
-	try:
-		#print "batteryStatus ", batteryStatus
-		batteryStatus["batteryChargeTimeForMaxCapacity"] 			= batteryChargeTimeForMaxCapacity
-		batteryStatus["batteryCapacitySeconds"] 			= batteryCapacitySeconds
-		batteryStatus["batteryMinPinActiveTimeForShutdown"]		= batteryMinPinActiveTimeForShutdown
-		for ii in range(2):
-			if GPIO.input(int(shutdownPinVoltSensor)) == 1:
-				batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
-				batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],batteryChargeTimeForMaxCapacity),5) # x hour charge time should get to 90+%
-				batteryStatus["inputPinVoltRawLastONTime"]			= round(time.time(),5)
-				batteryStatus["testTime"]							= round(time.time(),5)
-				batteryStatus["percentCharged"] 					= round(max( 0, batteryStatus["timeCharged"] /batteryChargeTimeForMaxCapacity ),5)
-				batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
-				if batteryStatus["percentCharged"] ==1:				  batteryStatus["status"]	= "charged"
-				else:  												  batteryStatus["status"]	= "charging"
-				batteryStatus["batteryTimeLeft"]					= batteryStatus["batteryTimeLeftEndOfCharge"]
+				if shutdownPinVoltSensor >1:
+					#print	"setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor) 
+					U.toLog(-1, "setting shutdownPinVoltSensor to GPIO: {}".format(shutdownPinVoltSensor), doPrint=True)
+					try: GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+					except: pass
+					inputPinVoltRawLastONTime = time.time()
+			except: pass
+			if batteryStatus =={}: 
+				batteryStatus ={"timeCharged":0, "testTime":time.time(),"percentCharged":0,"inputPinVoltRawLastONTime":0,"batteryTimeLeftEndOfCharge":0,"status":"","batteryCapacitySeconds":0,"batteryChargeTimeForMaxCapacity":0,"batteryMinPinActiveTimeForShutdown":0,"batteryTimeLeft":0}
+		try:
+			#print "batteryStatus ", batteryStatus
+			batteryStatus["batteryChargeTimeForMaxCapacity"] 			= batteryChargeTimeForMaxCapacity
+			batteryStatus["batteryCapacitySeconds"] 			= batteryCapacitySeconds
+			batteryStatus["batteryMinPinActiveTimeForShutdown"]		= batteryMinPinActiveTimeForShutdown
+			for ii in range(2):
+				if GPIO.input(int(shutdownPinVoltSensor)) == 1:
+					batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
+					batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],batteryChargeTimeForMaxCapacity),5) # x hour charge time should get to 90+%
+					batteryStatus["inputPinVoltRawLastONTime"]			= round(time.time(),5)
+					batteryStatus["testTime"]							= round(time.time(),5)
+					batteryStatus["percentCharged"] 					= round(max( 0, batteryStatus["timeCharged"] /batteryChargeTimeForMaxCapacity ),5)
+					batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
+					if batteryStatus["percentCharged"] ==1:				  batteryStatus["status"]	= "charged"
+					else:  												  batteryStatus["status"]	= "charging"
+					batteryStatus["batteryTimeLeft"]					= batteryStatus["batteryTimeLeftEndOfCharge"]
+					lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+					#print "checkIfShutDownVoltage normal return"
+					return
+				time.sleep(0.1)
+
+			batteryStatus["batteryTimeLeftEndOfCharge"]		= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
+			batteryStatus["timeCharged"] 					= round(batteryStatus["timeCharged"] * max( 0, 1. -  (time.time()-batteryStatus["testTime"])/max(1,batteryCapacitySeconds)  ),5)#discharging
+			batteryStatus["testTime"] 						= round(time.time(),5)
+			batteryStatus["batteryTimeLeft"] 				= round( (batteryStatus["inputPinVoltRawLastONTime"] + batteryStatus["batteryTimeLeftEndOfCharge"]) - time.time(),5)
+			if batteryStatus["batteryTimeLeft"] >0: 
+				batteryStatus["status"]						= "dis-charging"
 				lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
-				#print "checkIfShutDownVoltage normal return"
+				U.toLog (-1, "checkIfShutDownVoltage  --> ac power off (pin {} low),  discharging battery, time left:{:6.1f} secs".format(shutdownPinVoltSensor, batteryStatus["batteryTimeLeft"] ), doPrint=True)
+				return 
+
+			batteryStatus["status"]							= "empty"
+			lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", 0)
+
+		except	Exception, e :
+				U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 				return
-			time.sleep(0.1)
-
-		batteryStatus["batteryTimeLeftEndOfCharge"]		= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["percentCharged"]),5)
-		batteryStatus["timeCharged"] 					= round(batteryStatus["timeCharged"] * max( 0, 1. -  (time.time()-batteryStatus["testTime"])/max(1,batteryCapacitySeconds)  ),5)#discharging
-		batteryStatus["testTime"] 						= round(time.time(),5)
-		batteryStatus["batteryTimeLeft"] 				= round( (batteryStatus["inputPinVoltRawLastONTime"] + batteryStatus["batteryTimeLeftEndOfCharge"]) - time.time(),5)
-		if batteryStatus["batteryTimeLeft"] >0: 
-			batteryStatus["status"]						= "dis-charging"
-			lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
-			U.toLog (-1, "checkIfShutDownVoltage  --> ac power off (pin {} low),  discharging battery, time left:{:6.1f} secs".format(shutdownPinVoltSensor, batteryStatus["batteryTimeLeft"] ), doPrint=True)
-			return 
-
-		batteryStatus["status"]							= "empty"
-		lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", 0)
-
-	except	Exception, e :
-			U.toLog (-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
-			return
-	U.toLog (-1, "checkIfShutDownVoltage rebooting ", doPrint=True )
-	#this will send and HTML to indigo and then issue a shutdown command
-	U.sendRebootHTML("battery empty", reboot=False)
+		U.toLog (-1, "checkIfShutDownVoltage rebooting ", doPrint=True )
+		#this will send and HTML to indigo and then issue a shutdown command
+		U.sendRebootHTML("battery empty", reboot=False)
 
 	return 
 
@@ -942,7 +1106,7 @@ def delayAndWatchDog():
 			time.sleep(1)
 			tt = time.time()
 
-			if shutdownPinVoltSensor >1 and  tt - G.tStart > 20:
+			if (shutdownPinVoltSensor >1 or batteryUPSshutdownAtxPercent >1) and  tt - G.tStart > 20:
 				checkIfShutDownVoltage()
 
 			if shutdownInputPin >1 :
@@ -1229,6 +1393,7 @@ if True:
 	global startWebServerSTATUS, startWebServerINPUT
 	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
 	global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
+	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime, batteryUPSshutdown_Vin
 
 
 	checkFSCHECKfileDone	= False
@@ -1297,8 +1462,14 @@ if True:
 	iPhoneMACListOLD		= ""
 	shutdownInputPin		= -1
 	shutDownPinVetoOutput	= -1
-	shutdownPinVoltSensor		= -1
+	shutdownPinVoltSensor	= -1
 	lastshutdownInputPinTime= 0
+	shutdownSignalFromUPSPin= -1
+	batteryUPSshutdownAtxPercent =-1
+	shutdownSignalFromUPS_SerialInput=""
+	shutdownSignalFromUPS_InitTime= -1
+	batteryUPSshutdown_Vin = "notSet"
+
 	BLEserial				= "serial"
 	rebootWatchDogTime		= -1
 	sensorAlive				= {}
@@ -1549,7 +1720,7 @@ if True:
 
 	G.tStart	  = time.time()
 
-	U.sendi2cToPlugin()
+	U.sendi2cToPlugin(sensors)	
 	tAtLoopSTart =time.time()
 
 	U.testNetwork()
@@ -1595,6 +1766,10 @@ if True:
 			if G.networkType.find("indigo") >-1 and G.wifiType =="normal":
 				U.restartMyself(reason="new time set, delta="+unicode(tAtLoopSTart	- time.time()))
 		
+		if shutdownSignalFromUPS_InitTime > 0 and time.time() - shutdownSignalFromUPS_InitTime >100: #   2 minutes after start
+			startUPSShutdownPinAfterStart()
+			
+
 		tAtLoopSTart =time.time()
 		
 		loopCount += 1
@@ -1613,7 +1788,6 @@ if True:
 
 				
 			if loopCount%60 == 0: # every 10 minutes
-				U.sendi2cToPlugin()		   
 				if (unicode(subprocess.Popen("echo x > x" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate())).find("Read-only file system") > 0:
 					U.doReboot(10.," reboot due to bad SSD, 'file system is read only'")				   
 					time.sleep(10)
@@ -1734,6 +1908,9 @@ if True:
 		
 			if loopCount%5 == 0: 
 				U.checkrclocalFile()
+
+			if loopCount%8 == 0: 
+				U.sendi2cToPlugin(sensors)		   
 		
 			if loopCount %4 ==0: # check network every 40 secs
 				U.testNetwork(force = True)

@@ -1026,12 +1026,12 @@ def getValues(devId):
 			hum	  +=  float(sensors[sensor][devId]["offsetHum"])  
 			gas	  +=  float(sensors[sensor][devId]["offsetGas"])
 			 
-			data = {"temp":			("%.2f"%( temp	 ) ).strip(), 
-					"press":		(  "%7d"%( press  ) ).strip(), 
-					"hum":			(  "%7d"%( hum	  ) ).strip(), 
-					"GasResistance":(  "%7d"%( gas	  ) ).strip(), 
-					"GasBaseline":	(  "%7d"%( gasBaseLine	  ) ).strip(), 
-					"AirQuality":			   gasScore}
+			data = {"temp":			round(temp,1), 
+					"press":		round(press,1), 
+					"hum":			round(hum,1),
+					"GasResistance":gas, 
+					"GasBaseline":	gasBaseLine, 
+					"AirQuality":	gasScore}
 			U.toLog(2, unicode(data)) 
 			badSensor = 0
 			return data

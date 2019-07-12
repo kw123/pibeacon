@@ -2919,17 +2919,17 @@ def getT5403(sensor, data):
 			o = (((( c8 * temp_raw) >> 15) * temp_raw) >> 4) + (( c7 * temp_raw) >> 3) + (c6 * 0x4000)
 			press= (s * pressure_raw + o) >> 14
 			#U.toLog(5, u" temp press "+ str(temp_raw)+ " "+ str(pressure_raw))
-			t =("%.2f"%(temp_actual)).strip()
-			p = ("%7d"%float(press)).strip()
+			t = temp_actual
+			p = press
 
 			if t!="":
-				try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+				try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
 				except: pass
-				data[sensor][devId] = {"temp":str(t).strip(" ")}
+				data[sensor][devId] = {"temp":round(t,1)}
 				if p!="":
-					try:	p = str(float(p) + float(sensors[sensor][devId]["offsetPress"]))
+					try:	p = (float(p) + float(sensors[sensor][devId]["offsetPress"]))
 					except: pass
-				data[sensor][devId]["press"]=str(p).strip(" ")
+				data[sensor][devId]["press"]=round(p,1)
 				putValText(sensors[sensor][devId],[t],["temp"])
 				if devId in badSensors: del badSensors[devId]
 				time.sleep(0.1)
@@ -2970,25 +2970,23 @@ def getBMP(sensor, data):
 				sensorBMP[devId]= BMP085(address=i2cAdd)
 			try:
 				t =float(sensorBMP[devId].read_temperature())
-				t =("%.2f"%t).strip()
 				p =sensorBMP[devId].read_pressure()
 				if p < 0: 
 					raise ValueError("bad return value, pressure < 0") 
-				p =("%7d"%p).strip()
 			except	Exception, e:
 					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.toLog(-1, u"return  value: t="+ unicode(t)+"; p=" + unicode(p) + u" i2c address used: "+ unicode(i2cAdd) )
+					U.toLog(-1, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t!="":
-				try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+				try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
 				except:	 pass
-				data[sensor][devId] = {"temp":str(t).strip(" ")}
+				data[sensor][devId] = {"temp":round(t,1)}
 
 				if p!="":
-					try:	p = str(float(p) + float(sensors[sensor][devId]["offsetPress"]))
+					try:	p = float(p) + float(sensors[sensor][devId]["offsetPress"])
 					except: pass
-					data[sensor][devId]["press"]=str(p).strip(" ")
+					data[sensor][devId]["press"]=round(p,1)
 				
 				if devId in badSensors: del badSensors[devId]
 				putValText(sensors[sensor][devId],[t,p],["temp","press"])
@@ -3029,40 +3027,36 @@ def getBME(sensor, data,BMP=False):
 				sensorBME280[devId]= BME280(mode=4,address=i2cAdd)
 			try:
 				t =float(sensorBME280[devId].read_temperature())
-				t =("%.2f"%t).strip()
 				p =sensorBME280[devId].read_pressure()
 				if p < 0: 
-					
 					raise ValueError("bad return value, pressure < 0") 
-				p =("%7d"%p).strip()
 				if not BMP:
-					h =("%3d"%sensorBME280[devId].read_humidity()).strip()
+					h = sensorBME280[devId].read_humidity()
 			except	Exception, e:
 					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.toLog(-1, u"return  value: t="+ unicode(t)+"; p=" + unicode(p)+"; h="+ unicode(h)+ u";   i2c address used: "+ unicode(i2cAdd)	  )
+					U.toLog(-1, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
-					
 			if t!="":
-				try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+				try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
 				except:	 
 					data = incrementBadSensor(devId,sensor,data)
 					return data
-				data[sensor][devId] = {"temp":str(t).strip(" ")}
+				data[sensor][devId] = {"temp":round(t,1)}
 
 				if p!="":
-					try:	p = str(float(p) + float(sensors[sensor][devId]["offsetPress"]))
+					try:	p = float(p) + float(sensors[sensor][devId]["offsetPress"])
 					except:	 
 						data = incrementBadSensor(devId,sensor,data)
 						return data
-					data[sensor][devId]["press"]=str(p).strip(" ")
+					data[sensor][devId]["press"]=round(p,1)
 
 				if h!= "":
-					try:	h = str(float(h)  + float(sensors[sensor][devId]["offsetHum"]))
+					try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
 					except:	 
 						data = incrementBadSensor(devId,sensor,data)
 						return data
-					data[sensor][devId]["hum"]=str(h).strip(" ")
+					data[sensor][devId]["hum"]=round(h,1)
 				
 				if devId in badSensors: del badSensors[devId]
 				if not BMP:
@@ -3108,12 +3102,12 @@ def getSHT21(sensor, data):
 				if t!="":
 					try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
 					except:	 pass
-					data[sensor][devId] = {"temp":str(t).strip(" ")}
+					data[sensor][devId] = {"temp":round(t,1)}
 
 					if h!= "":
-						try:	h = str(float(h)  + float(sensors[sensor][devId]["offsetHum"]))
+						try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
 						except: pass
-						data[sensor][devId]["hum"]=str(h).strip(" ")
+						data[sensor][devId]["hum"]=round(h,1)
 				
 					if devId in badSensors: del badSensors[devId]
 					putValText(sensors[sensor][devId],[t,h],["temp","hum"])
@@ -3151,11 +3145,11 @@ def getLM75A(sensor, data):
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				if devId not in sensorLM75A:
 					sensorLM75A[devId]= LM75A(i2cAdd=i2cAdd)
-				t =("%.2f"%float(sensorLM75A[devId].read_temperature())).strip()
+				t =float(sensorLM75A[devId].read_temperature())
 				if t!="":
-					try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+					try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
 					except:	 pass
-					data[sensor][devId] = {"temp":str(t).strip(" ")}
+					data[sensor][devId] = {"temp":round(t,1)}
 					
 					if devId in badSensors: del badSensors[devId]
 					putValText(sensors[sensor][devId],[t],["temp"])
@@ -3196,17 +3190,15 @@ def getAM2320(sensor, data):
 					if devId not in sensorAM2320:
 						sensorAM2320[devId]= AM2320(i2cAdd=i2cAdd)
 					t,h =sensorAM2320[devId].read()
-					t =("%.2f"%t).strip()
-					h =("%3d"%h).strip()
 					if t!="":
-						try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+						try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
 						except:	 pass
-						data[sensor][devId] = {"temp":str(t).strip(" ")}
+						data[sensor][devId] = {"temp":round(t,1)}
 
 						if h!= "":
-							try:	h = str(float(h)  + float(sensors[sensor][devId]["offsetHum"]))
+							try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
 							except: pass
-							data[sensor][devId]["hum"]=str(h).strip(" ")
+							data[sensor][devId]["hum"]=round(h,1)
 						
 						if devId in badSensors: del badSensors[devId]
 						putValText(sensors[sensor][devId],[t,h],["temp","hum"])
@@ -3242,11 +3234,10 @@ def getMCP9808(sensor, data):
 				sensorMCP9808[devId] = MCP9808(int(i2cAdd))
 				sensorMCP9808[devId].begin()
 			t=sensorMCP9808[devId].readTempC()
-			t = ("%.2f"%float(t)).strip()
 			if t!="" :
-				try:   t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+				try:   t = (float(t) + float(sensors[sensor][devId]["offsetTemp"]))
 				except: pass
-				data[sensor][devId] = {"temp":str(t).strip(" ")}
+				data[sensor][devId] = {"temp":round(t,1)}
 				putValText(sensors[sensor][devId],[t],["temp"])
 				if devId in badSensors: del badSensors[devId]
 				time.sleep(0.1)
@@ -3347,7 +3338,7 @@ def getMS5803(sensor, data):
 					try:	temp +=	 float(sensors[sensor][devId]["offsetTemp"])
 					except: pass
 					data[sensor][devId]={}
-					data[sensor][devId]["temp"]=temp
+					data[sensor][devId]["temp"]= round(temp,1)
 					if press >-90:
 						try:	press +=  float(sensors[sensor][devId]["offsetPress"])
 						except: pass
@@ -3596,11 +3587,11 @@ def getTMP102(sensor, data):
 			tRaw =	sensorTMP102[devId].read_word_data(i2cAdd,0)
 			t = (((tRaw << 8) & 0xFF00) + (tRaw >> 8)>>4)
 			if t > 2047: t = t-4096
-			t= ("%.2f"%(float(t)*0.0625)).strip()
+			t= float(t)*0.0625
 			if t!="":
-				try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+				try:	t = (float(t) + float(sensors[sensor][devId]["offsetTemp"]))
 				except: pass
-				data[sensor][devId]={"temp":t.strip(" ")}
+				data[sensor][devId]={"temp":round(t,1)}
 				putValText(sensors[sensor][devId],[t],["temp"])
 				if devId in badSensors: del badSensors[devId]
 				time.sleep(0.1) 

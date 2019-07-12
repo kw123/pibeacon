@@ -27,7 +27,7 @@ def toLog(text):
 	if not logLevel: return 
 
 	l=open(logfileName,"a")
-	l.write("AMG88         {}\n".format(text) )
+	l.write( ( "{} AMG88          {} \n".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),text )).encode("utf8") )
 	l.close() 
 	if printON:
 		print text

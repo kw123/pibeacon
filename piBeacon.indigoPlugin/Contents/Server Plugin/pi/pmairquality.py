@@ -378,7 +378,7 @@ U.echoLastAlive(G.program)
 
 resetSensor()
 
-lastValues0			= {"particles_03um":0,"particles_05um":0,"particles_10um":0,"particles_25um":0,"particles_50um":0, "particles_100m":0}
+lastValues0			= {"particles_03um":0,"particles_05um":0,"particles_10um":0,"particles_25um":0,"particles_50um":0, "particles_10um":0}
 lastValues			= {}
 lastValues2			= {}
 lastData			= {}
@@ -415,7 +415,6 @@ while True:
 					lastValues[devId]  =copy.copy(lastValues0)
 					continue
 				elif values["particles_03um"] !="" :
-					
 					data["sensors"][sensor][devId] = values
 					deltaN =0
 					for xx in lastValues0:
@@ -424,10 +423,11 @@ while True:
 							delta= current-lastValues2[devId][xx]
 							deltaN= max(deltaN,abs(delta) / max (0.5,(current+lastValues2[devId][xx])/2.))
 							lastValues[devId][xx] = current
-						except: pass
+						except	Exception, e:
+							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
 				else:
 					continue
-				if sensorWasBad or (   ( deltaN > deltaX[devId]	 ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
+				if sensorWasBad or (   ( deltaN > deltaX[devId] ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
 						sensorWasBad = False
 						sendData = True
 						if not firstValue: # do not send first measurement, it is always OFFFF

@@ -51,8 +51,10 @@ def get18B20(sensor, data):
                     if "YES" in dataW[0]:
                         t1=dataW[1].split("t=")
                         if len(t1)==2:
-                            ret[line] = ("%.2f"%(float(t1[1])/1000.)).strip()
-            tempList= ret # {"28-800000035de5": "21.6", ...}  
+                            try:ret[line] = round(float(t1[1])/1000.,1)
+                            except: ret[line] ="bad data"
+                            ##ret[line] = ("%.2f"%(float(t1[1])/1000.)).strip()
+            tempList= ret # {"28-800000035de5": 21.6, ...}  
         except  Exception, e:
             U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             U.toLog(-1, u"return  value: data="+ unicode(data))
@@ -73,7 +75,7 @@ def get18B20(sensor, data):
                     for devId in sensors[sensor]:
                         #print "trying devId", devId ,sensors[sensor][devId]
                         if "serialNumber" in sensors[sensor][devId] and serialNumber == sensors[sensor][devId]["serialNumber"]:
-                            try:     tempList[serialNumber]  = str(  float(tempList[serialNumber]) + float(sensors[sensor][devId]["offsetTemp"])  )
+                            try:     tempList[serialNumber]  = round(  float(tempList[serialNumber]) + float(sensors[sensor][devId]["offsetTemp"]) ,1)
                             except:  pass
                             if devId not in data[sensor]: data[sensor][devId]={}
                             if "temp" not in data[sensor][devId] : 
