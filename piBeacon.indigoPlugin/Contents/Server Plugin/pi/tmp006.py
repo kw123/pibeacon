@@ -94,7 +94,7 @@ class TMP006:
 		"""
 		if samplerate not in (CFG_1SAMPLE, CFG_2SAMPLE, CFG_4SAMPLE, CFG_8SAMPLE, CFG_16SAMPLE):
 			raise ValueError('Unexpected samplerate value! Must be one of: CFG_1SAMPLE, CFG_2SAMPLE, CFG_4SAMPLE, CFG_8SAMPLE, or CFG_16SAMPLE')
-		U.toLog(-1,'Using samplerate value: {0:04X}'.format(samplerate))
+		U.logger.log(30,'Using samplerate value: {0:04X}'.format(samplerate))
 		# Set configuration register to turn on chip, enable data ready output,
 		# and start sampling at the specified rate.
 		config = TMP006_CFG_MODEON | TMP006_CFG_DRDYEN | samplerate
@@ -106,8 +106,8 @@ class TMP006:
 		# Check manufacturer and device ID match expected values.
 		mid = self.readU16BE(TMP006_MANID)
 		did = self.readU16BE(TMP006_DEVID)
-		U.toLog(-1,'Read manufacturer ID: {0:04X}'.format(mid))
-		U.toLog(-1,'Read device ID: {0:04X}'.format(did))
+		U.logger.log(30,'Read manufacturer ID: {0:04X}'.format(mid))
+		U.logger.log(30,'Read device ID: {0:04X}'.format(did))
 		return mid == 0x5449 and did == 0x0067
 
 
@@ -118,21 +118,21 @@ class TMP006:
 		control = self.readU16BE(TMP006_CONFIG)
 		control &= ~(TMP006_CFG_MODEON)
 		self.write16(TMP006_CONFIG, control)
-		U.toLog(0,'TMP006 entered sleep mode.')
+		U.logger.log(10,'TMP006 entered sleep mode.')
 
 	def wake(self):
 		"""Wake up TMP006 from low power sleep mode."""
 		control = self.readU16BE(TMP006_CONFIG)
 		control |= TMP006_CFG_MODEON
 		self.write16(TMP006_CONFIG, control)
-		U.toLog(0,'TMP006 woke from sleep mode.')
+		U.logger.log(10,'TMP006 woke from sleep mode.')
 
 	def readRawVoltage(self):
 		"""Read raw voltage from TMP006 sensor.	 Meant to be used in the
 		calculation of temperature values.
 		"""
 		raw = self.readS16BE(TMP006_VOBJ)
-		U.toLog(0,'Raw voltage: 0x{0:04X} ({1:0.4F} uV)'.format(raw & 0xFFFF,
+		U.logger.log(10,'Raw voltage: 0x{0:04X} ({1:0.4F} uV)'.format(raw & 0xFFFF,
 			raw * 156.25 / 1000.0))
 		return raw
 
@@ -148,7 +148,7 @@ class TMP006:
 			Tdie = self.readRawDieTemperature()
 			return Tdie * 0.03125
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 		
 	def getdata(self):
@@ -168,7 +168,7 @@ class TMP006:
 			Tdie = self.readRawDieTemperature()
 			Vobj = self.readRawVoltage()
 			Vobj *= 156.25		   # 156.25 nV per bit
-			U.toLog(0,'Vobj = {0:0.4} nV'.format(Vobj))
+			U.logger.log(10,'Vobj = {0:0.4} nV'.format(Vobj))
 			Vobj /= 1000000000.0   # Convert nV to volts
 			Tdie *= 0.03125		   # Convert to celsius
 			Tdie += 273.14		   # Convert to kelvin
@@ -184,7 +184,7 @@ class TMP006:
 			Tobj = math.sqrt(math.sqrt(math.pow(Tdie, 4.0) + (fVobj/S)))
 			return Tobj - 273.15
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return ""
 
 
@@ -373,7 +373,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -407,12 +407,12 @@ def readParams():
 
 				
 			if devId not in tmp006sensor:
-				U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				tmp006sensor[devId] = TMP006(i2cAddress=i2cAdd)
 				tmp006sensor[devId].begin()
 				U.muxTCA9548Areset()
-				U.toLog(-1," started ")
+				U.logger.log(30," started ")
 				
 		deldevID={}		   
 		for devId in tmp006sensor:
@@ -425,7 +425,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -447,8 +447,8 @@ def getValues(devId):
 		return data
 	except	Exception, e:
 		if badSensor >2 and badSensor < 5: 
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"temp>>" + unicode(temp)+"<<")
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"temp>>" + unicode(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -486,6 +486,8 @@ loopSleep					= 1
 rawOld						= ""
 tmp006sensor				={}
 deltaX						= {}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -527,13 +529,13 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["Current"]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					lastValue[devId] =-100.
 					continue
 				elif values["temp"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
 					current = float(values["temp"])
@@ -565,6 +567,6 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

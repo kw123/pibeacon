@@ -13,6 +13,7 @@ import	time
 sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import piBeaconUtils as U
+U.setLogging()
 
 
 if __name__ == "__main__":

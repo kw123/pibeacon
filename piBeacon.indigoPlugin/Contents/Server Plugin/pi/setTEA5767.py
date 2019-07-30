@@ -61,11 +61,11 @@ def readParams():
                 break
 
         else:
-            U.toLog(-1, u"stopping FM radio, no device defined in parameters file")
+            U.logger.log(30, u"stopping FM radio, no device defined in parameters file")
             exit()
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-    U.toLog(-1,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    U.logger.log(30,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
     return
          
 
@@ -112,13 +112,13 @@ def readNew():
                     break
         os.remove(G.homeDir+G.program+".set")
         if restart:
-            U.toLog(0, u"restarting radio")
+            U.logger.log(10, u"restarting radio")
             time.sleep(0.1)
             os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
     
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-    U.toLog(-1,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    U.logger.log(30,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
    
 class tea5767:
     ### tea flags
@@ -161,7 +161,7 @@ class tea5767:
     def __init__(self, i2cAddress = 0x60, bus = 1):
         self.bus  = smbus.SMBus(1)
         self.add  = i2cAddress# I2C address circuit 
-        U.toLog(0, u"FM Radio Module TEA5767 init")
+        U.logger.log(10, u"FM Radio Module TEA5767 init")
         print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " FM Radio Module TEA5767 init"
 
         # open two file streams, one for reading and one for writing
@@ -191,7 +191,7 @@ class tea5767:
         time.sleep(1)
 
     def writeToDevice(self,freq, mute=0,mono=0,highCut=1,noiseCancel=1,bandLimit=0,DTCon=1,PLLREF=0,XTAL=1,HLSI=1, scan=0,searchLevel=1):
-        U.toLog(-1,  "FM Radio Module frequency: " + str(freq)+
+        U.logger.log(30,  "FM Radio Module frequency: " + str(freq)+
          "  mute: "        + str(mute)    +
          "  mono: "        + str(mono)+
          "  highCut: "     + str(highCut) + 
@@ -331,10 +331,11 @@ fastMinSignal  = 10
 minSignal      = fastMinSignal 
 devIdFound     = "0"
 newCommand     = False
+U.setLogging()
 
 myPID          = str(os.getpid())
 readParams()
-U.toLog(0, G.program+"  command :" + unicode(sys.argv))
+U.logger.log(10, G.program+"  command :" + unicode(sys.argv))
 
 
 command =""
@@ -359,7 +360,7 @@ if "startAtDateTime" in command:
     try:
         delayStart = max(0,U.calcStartTime(command,"startAtDateTime")-time.time())
         if delayStart > 0:
-            U.toLog(2, "delayStart delayed by: "+ str(delayStart))
+            U.logger.log(10, "delayStart delayed by: "+ str(delayStart))
             time.sleep(delayStart)
     except:
         pass
@@ -382,7 +383,7 @@ oldPLLREF      = PLLREF
 oldXTAL        = XTAL
 oldHLSI        = HLSI
 
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " FM Radio Module TEA5767 radio v 4.2"
+U.logger.log(30,  " FM Radio Module TEA5767 radio v 4.2")
 
 lastParams     = time.time()
 while (True):
@@ -469,7 +470,7 @@ while (True):
             U.echoLastAlive(G.program)
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     
     
 

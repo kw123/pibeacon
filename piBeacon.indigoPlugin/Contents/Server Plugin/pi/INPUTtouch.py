@@ -342,7 +342,7 @@ def getTouched16Serial(np):
 		return keys
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint =True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def getTouched16i2c(np):
@@ -361,7 +361,7 @@ def getTouched16i2c(np):
 			# pins[i] = 0/1 for i ..0..16 if pressed 
 		return keys
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 
 def startTouch12i2c():
@@ -372,7 +372,7 @@ def startTouch12i2c():
 	REL_THRESH		= 6
 	devClass12i2c = MPR121()
 	if not devClass12i2c.begin():
-		U.toLog(-1, "Error initializing MPR121.	 Check your wiring!", doPrint =True)
+		U.logger.log(30, "Error initializing MPR121.	 Check your wiring!")
 		sys.exit(1)
 
 def getTouched12i2c(np):
@@ -389,7 +389,7 @@ def getTouched12i2c(np):
 
 	except	Exception, e:
 		restartCount+=1
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -520,7 +520,7 @@ def getINPUTcapacitor(sensors,data,devType, NPads):
 		if new: U.writeINPUTcount(INPUTcount)
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 	return data,new
 
@@ -551,6 +551,7 @@ sensBase		  = G.program
 INPUTtouchCountFilename =sensBase+"Count"
 
 #################### same for all 
+U.setLogging()
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
@@ -559,10 +560,10 @@ sensor			  = G.program
 sensors			  ={}
 loopCount		  = 0
 
-U.toLog(-1, "starting "+G.program+" program", doPrint =True)
+U.logger.log(30, "starting "+G.program+" program")
 readParams()
 if U.getIPNumber() > 0:
-	U.toLog(-1, " sensors no ip number	exiting ", doPrint =True)
+	U.logger.log(30, " sensors no ip number	exiting ")
 	time.sleep(10)
 	exit()
 
@@ -618,7 +619,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), doPrint =True)
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

@@ -47,7 +47,7 @@ def readParams():
 		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 
 		if sensor not in sensors:
-			U.toLog(0,	"no "+ G.program+" sensor defined, exiting",doPrint=True)
+			U.logger.log(30,	"no "+ G.program+" sensor defined, exiting")
 			exit()
 
 		sens= sensors[sensor]
@@ -65,8 +65,8 @@ def readParams():
 
 			if gpioIn != -1 and gpioIn != int(sss["gpioIn"]):
 				restart = True
-				U.toLog(0,	"gpios channel changed, need to restart",doPrint=True)
-				U.restartMyself(param="", reason=" new gpioIn",doPrint=True)
+				U.logger.log(30,	"gpios channel changed, need to restart")
+				U.restartMyself(param="", reason=" new gpioIn")
 				return 
 
 			cyclePower = True 
@@ -118,21 +118,21 @@ def readParams():
 
 			
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				
 
 def setupSensors():
 
-		U.toLog(0, "starting setup GPIOs ",doPrint=True)
+		U.logger.log(30, "starting setup GPIOs ")
 
 		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		return True
@@ -156,15 +156,15 @@ def GPIOchanged(gpio):
 	if gpio != gpioIn: return 
 	gpioStatus1 = getGPIO(gpioIn,calledFrom="event1") 
 	simpleCount +=1
-	U.toLog(1,	"into GPIOchanged, GPIO in: " +str(gpioStatus1)+" "+str(lastGPIOStatus)+";	 count: "+str(simpleCount)+ " since last %.4f"%(time.time() - lastClick)+";	 inGPIOchanged: "+str(inGPIOchanged), doPrint=doPrint)
+	U.logger.log(10,	"into GPIOchanged, GPIO in: " +str(gpioStatus1)+" "+str(lastGPIOStatus)+";	 count: "+str(simpleCount)+ " since last %.4f"%(time.time() - lastClick)+";	 inGPIOchanged: "+str(inGPIOchanged))
 	if time.time() - ProgramStart < 0: return 
 	if time.time() - lastClick < 0.06: return  # click come at > 50 msec so they must be > that apart 
 
 	gpioStatus2 = getGPIO(gpioIn,calledFrom="event2") 
-	U.toLog(1,	"gpio"+str(gpio)+ " "+ str(gpioStatus1)+"  "+str(gpioStatus2)+ " since last %.4f"%(time.time() - lastClick),doPrint=doPrint )
+	U.logger.log(10,	"gpio"+str(gpio)+ " "+ str(gpioStatus1)+"  "+str(gpioStatus2)+ " since last %.4f"%(time.time() - lastClick) )
 	lastClick2 = lastClick
 	lastClick  = time.time()
-	U.toLog(1, "accepted  currentMode "+ status["currentMode"], doPrint=False)
+	U.logger.log(10, "accepted  currentMode "+ status["currentMode"])
 
 	inGPIOchanged = True
 
@@ -195,7 +195,7 @@ def GPIOchanged(gpio):
 		# calc amount of rain etc	  
 		bucket = bucketSize[status["currentMode"] ]
 		accumBuckets(bucket)
-		U.toLog(1,status["currentMode"] +"	"+str(bucket)+"	 "+ str(newRainTime) , doPrint=False )
+		U.logger.log(10,status["currentMode"] +"	"+str(bucket)+"	 "+ str(newRainTime))
 		U.writeRainStatus(status)
 
 
@@ -256,7 +256,7 @@ def GPIOchanged(gpio):
 		# calc amount of rain etc	  
 		bucketsize = bucketSize[status["currentMode"] ]
 		accumBuckets(bucketsize)
-		U.toLog(1,status["currentMode"] +";	  bucketsize:"+str(bucketsize)+";	 buckets:"+str(status["values"]["nMesSinceLastReset"])+";	 newRainTime: "+ str(newRainTime) , doPrint=doPrint )
+		U.logger.log(10,status["currentMode"] +";	  bucketsize:"+str(bucketsize)+";	 buckets:"+str(status["values"]["nMesSinceLastReset"])+";	 newRainTime: "+ str(newRainTime)  )
 
 
 		if status["currentMode"]  == "highSensitive":
@@ -290,11 +290,11 @@ def setModeTo(newMode, calledFrom="", powerCycle=True, force = False):
 
 	#if time.time() - ProgramStart < 20: return 
 
-	U.toLog(0, "try to set new mode	 "+newMode+ " from "+status["currentMode"]+"  tt - nextModeSwitchNotBefore: "+str(time.time() - nextModeSwitchNotBefore) +" called from: "+calledFrom,doPrint=doPrint )
+	U.logger.log(10, "try to set new mode	 "+newMode+ " from "+status["currentMode"]+"  tt - nextModeSwitchNotBefore: "+str(time.time() - nextModeSwitchNotBefore) +" called from: "+calledFrom )
 	if (time.time() - nextModeSwitchNotBefore < 0) and not force: 
 		return False
 		
-	U.toLog(0, "setting mode to: "+newMode+ ";	 from currrentMode: "+status["currentMode"] ,doPrint=False)
+	U.logger.log(10, "setting mode to: "+newMode+ ";	 from currrentMode: "+status["currentMode"] )
 	
 	if status["currentMode"] != newMode or force:
 		setSwitch(newMode, powerCycle=powerCycle)
@@ -417,10 +417,10 @@ def checkIfRelayON():
 		if cyclePower:
 			if sensorMode == "checkIfIsRaining":
 				if time.time()- eventStartedList[nEvenstStarted-1] < maxONTime: return 
-				U.toLog(-1, "resetting device in \"check if raining mode\", signal relay is ON for > "+str(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" ,doPrint=doPrint)
+				U.logger.log(30, "resetting device in \"check if raining mode\", signal relay is ON for > "+str(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
 			else:
 				if time.time()- eventStartedList[nEvenstStarted-1] < 5: return 
-				U.toLog(-1, "hanging? resetting device, signal relay is on for > "+str(maxONTime)+"secs: "+str( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] ,doPrint=doPrint)
+				U.logger.log(30, "hanging? resetting device, signal relay is on for > "+str(maxONTime)+"secs: "+str( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
 				powerCyleRelay()
 			eventStartedList= [time.time()-(7+5*(nEvenstStarted-ii)) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
 		else:
@@ -470,7 +470,6 @@ def sendShortStatus(level):
 def setcheckIfIsRaining():
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
-	if doPrint: print datetime.datetime.now().strftime("%M:%S.%f: ") + "setcheckIfIsRaining.. cyclePower", cyclePower
 	if cyclePower:
 		setGPIO(gpioSW5, ON)
 		setGPIO(gpioSW2, off)
@@ -478,7 +477,6 @@ def setcheckIfIsRaining():
 def sethighSensitive():
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
-	if doPrint: print datetime.datetime.now().strftime("%M:%S.%f: ") + "sethighSensitive.. cyclePower", cyclePower
 	if cyclePower:
 		setGPIO(gpioSW5, off)
 		setGPIO(gpioSW2, ON)
@@ -486,7 +484,6 @@ def sethighSensitive():
 def setmedSensitive():
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
-	if doPrint: print datetime.datetime.now().strftime("%M:%S.%f: ") + "setmedSensitive.. cyclePower", cyclePower
 	if cyclePower:
 		setGPIO(gpioSW5, off)
 		setGPIO(gpioSW2, off)
@@ -494,7 +491,6 @@ def setmedSensitive():
 def setlowSensitive():
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
-	if doPrint: print datetime.datetime.now().strftime("%M:%S.%f: ") + "setlowSensitive.. cyclePower", cyclePower
 	if cyclePower:
 		setGPIO(gpioSW5, off)
 		setGPIO(gpioSW2, off)
@@ -507,12 +503,10 @@ def powerCyleRelay():
 
 def powerON(calledFrom=""):
 	global gpioSWP, ON, off
-	if doPrint: print datetime.datetime.now().strftime("%M:%S.%f: ") + "powerON called from: "+ calledFrom+"  "+str(off)
 	setGPIO(gpioSWP, off)
 
 def powerOFF(calledFrom=""):
 	global gpioSWP, ON, off
-	if doPrint: print datetime.datetime.now().strftime("%M:%S.%f: ") + "powerOFF called from: "+ calledFrom.ljust(10)+"	 "+str(ON)
 	setGPIO(gpioSWP, ON)
 
 
@@ -527,8 +521,6 @@ def getGPIO(pin,calledFrom=""):
 		lastGPIOStatus = newGPIOStatus
 		st =  GPIO.input(pin) == ON
 		newGPIOStatus = st
-		if doPrint and (calledFrom !="loop" or (calledFrom =="loop" and newGPIOStatus !=lastGPIOStatus) ):
-			print datetime.datetime.now().strftime("%M:%S.%f: ") +" getGPIO === calledFrom:"+calledFrom.ljust(15)+ ";  new / previous",newGPIOStatus,lastGPIOStatus
 		return st
 	return 0
 
@@ -554,7 +546,6 @@ global ProgramStart
 global lastShortMsgSend
 global lastShortMsg
 global inGPIOchanged, lastGPIOStatus, newGPIOStatus
-global doPrint 
 
 ###################### init #################
 	
@@ -581,7 +572,6 @@ cyclePower				 = True
 ON						 = False # for relay outoput 
 off						 = True	 # for relay outoput 
 
-doPrint					 = False
 
 restart					 = False
 lastRead				 = 0
@@ -601,6 +591,8 @@ inGPIOchanged			 = False
 lastGPIOStatus			 = 0
 newGPIOStatus			 = 0
 
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
 
@@ -610,11 +602,11 @@ GPIO.setwarnings(False)
 for i in range(100):
 	if not setupSensors(): 
 		time.sleep(10)
-		if i%50==0: U.toLog(-1,"sensor libs not installed, need to wait until done",doPrint=True)
+		if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
 	else:
 		break	 
 if U.getIPNumber() > 0:
-	U.toLog(-1," sensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," sensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -622,7 +614,7 @@ sensor			  = G.program
 sensors			  ={}
 loopCount		  = 0
 
-U.toLog(-1, "starting "+G.program+" program",doPrint=True)
+U.logger.log(30, "starting "+G.program+" program")
 
 ret = U.readRainStatus()
 if ret != {}: status = ret
@@ -677,13 +669,13 @@ while True:
 		getGPIO(gpioIn,calledFrom="loop")
 
 		if restart:
-			U.restartMyself(param="", reason=" new definitions",doPrint=True)
+			U.restartMyself(param="", reason=" new definitions")
 
 
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

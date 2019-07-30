@@ -52,10 +52,10 @@ def startMySensors(parameter):
             # do your init here
 
             ## add any init code here for address # addr
-            U.toLog(-1, u"starting my sensors " + unicode(parameter) )
+            U.logger.log(30, u"starting my sensors " + unicode(parameter) )
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"channel used: " + unicode(parameter) )
+            U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"channel used: " + unicode(parameter) )
 
 def getMySensors(parameter):
         try:
@@ -65,7 +65,7 @@ def getMySensors(parameter):
             v = [str(x), str(x/2), "0", "1", "2", "3", "4", "5", "6", "7"]  ## <-- this is your data to be send back
             return v
         except  Exception, e:
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
         return ""
 
 
@@ -90,6 +90,8 @@ sensorList        = [] # list of sensor, we are looking for "mysensors"
 freeParameter     = {}  # store address / parameters we get from indigo in device config of mysensors in readParams
 
 sensor            = G.program
+U.setLogging()
+
 readParams()           # get parameters send from indigo
 
 if U.getIPNumber() > 0:
@@ -134,7 +136,7 @@ while True:  # loop for ever
                 U.echoLastAlive(G.program)
 
         except  Exception, e :
-            U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
         time.sleep(sensorRefreshSecs) # sleep the requested amount
         readParams()  # check if we have new parameetrs

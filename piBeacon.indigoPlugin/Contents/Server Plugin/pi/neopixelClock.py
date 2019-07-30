@@ -57,7 +57,7 @@ def readParams():
 		if "minLightNotOff"			in inp:	 minLightNotOff=  int(inp["minLightNotOff"])
 		#### G.debug = 2 
 		if "neopixelClock" not in output:
-			U.toLog(-1, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
+			U.logger.log(30, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
 		clockLightSensor =1.
 
@@ -85,7 +85,7 @@ def readParams():
 					timeZone =				   (clockDict["timeZone"])
 					tznew  = int(timeZone.split(" ")[0])
 					if tznew != currTZ:
-						U.toLog(-1, u"changing timezone from "+str(currTZ)+"  "+G.timeZones[currTZ+12]+" to "+str(tznew)+"  "+G.timeZones[tznew+12])
+						U.logger.log(30, u"changing timezone from "+str(currTZ)+"  "+G.timeZones[currTZ+12]+" to "+str(tznew)+"  "+G.timeZones[tznew+12])
 						os.system("sudo cp /usr/share/zoneinfo/"+G.timeZones[tznew+12]+" /etc/localtime")
 						currTZ = tznew
 
@@ -116,7 +116,7 @@ def readParams():
 
 	except	Exception, e:
 		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
 		return 3
 
@@ -179,7 +179,7 @@ def startNEOPIXEL(setClock = ""):
 		string = ""
 		for tt in ["HH","MM","SS"]:
 			string+=  " "+tt+":" +unicode(clockDict["marks"][tt])
-		U.toLog(1, u"startNEOPIXEL..lightset: "+unicode(lightset)+string)
+		U.logger.log(10, u"startNEOPIXEL..lightset: "+unicode(lightset)+string)
 ##20181122-02:21:04 startNEOPIXEL..lightset: offoff;  clockDict[marks] {u'MM': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'SS': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'DD': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'HH': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}}
 
 		pos={}
@@ -287,7 +287,7 @@ def startNEOPIXEL(setClock = ""):
 			
 
 
-		U.toLog(3, " starting neopixel with:"+ unicode(pos) )	 
+		U.logger.log(10, " starting neopixel with:"+ unicode(pos) )	 
 		#print	" starting neopixel with MM :", unicode(pos["MM"]["RGB"])
 		#print	" starting neopixel with:", unicode(pos["marks"])
 
@@ -305,7 +305,7 @@ def startNEOPIXEL(setClock = ""):
 
 	except	Exception, e:
 		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 	return 
@@ -384,7 +384,7 @@ def setupGPIOforTimeset():
 		GPIO.setup(gpiopinSET["down"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 		GPIO.add_event_detect(gpiopinSET["down"], GPIO.FALLING,		callback=downPressed, bouncetime=500)  
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return
 
@@ -393,13 +393,13 @@ def setA(gpio):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime,switchON
 	global doReadParameters
 	button = "setA"
-	U.toLog(1, " into "+ button)
+	U.logger.log(10, " into "+ button)
 	if checkLastButtonPressTiming(button) !=0: return
 	time.sleep(0.1)
 	currHH, currMM, newDate = setAllSwitchesOff()
 	if GPIO.input(gpio) ==0:
 		enableupDown	= True
-		U.toLog(1, button+" on")
+		U.logger.log(10, button+" on")
 		switchON[1]		= True
 		enableupDown	= True
 		if		 switchON[1] and not switchON[2] and not switchON[3]:
@@ -418,7 +418,7 @@ def setA(gpio):
 			pass
 					
 	else:
-		U.toLog(1, button+" off ")
+		U.logger.log(10, button+" off ")
 		switchON[1]		= False
 		if	 not switchON[1] and not switchON[2] and not switchON[3]:
 			setExtraLEDoff()
@@ -439,7 +439,7 @@ def setA(gpio):
 				U.stopNTP(mode="temp")
 		saveParameters()
 
-	U.toLog(1,	"switchON:"+str(switchON)+"; enableupDown: "+str(enableupDown)+";  enableHH: "+str(enableHH)+";	 enableMM: "+str(enableMM)+";  enableDD: "+str(enableDD)+";	 enableDDonOFF: "+str(enableDDonOFF)+";	 enableLight: "+str(enableLight)+";	 enableTZset: "+str(enableLight)+";	 enableTZset: "+str(enablePattern))
+	U.logger.log(10,	"switchON:"+str(switchON)+"; enableupDown: "+str(enableupDown)+";  enableHH: "+str(enableHH)+";	 enableMM: "+str(enableMM)+";  enableDD: "+str(enableDD)+";	 enableDDonOFF: "+str(enableDDonOFF)+";	 enableLight: "+str(enableLight)+";	 enableTZset: "+str(enableLight)+";	 enableTZset: "+str(enablePattern))
 	if not switchON[1] and not switchON[2] and not switchON[3]: doReadParameters = True
 	else:														doReadParameters = False
 	return
@@ -451,13 +451,13 @@ def setB(gpio):
 	global doReadParameters
 
 	button = "setB"
-	U.toLog(1, " into "+ button)
+	U.logger.log(10, " into "+ button)
 	if checkLastButtonPressTiming(button) !=0: return
 	time.sleep(0.1)
 	currHH, currMM, newDate = setAllSwitchesOff()
 	
 	if GPIO.input(gpio) ==0:
-		U.toLog(1, button+" on")
+		U.logger.log(10, button+" on")
 		switchON[2]		= True
 		enableupDown	= True
 		if	 not switchON[1] and	switchON[2] and not switchON[3]:
@@ -475,7 +475,7 @@ def setB(gpio):
 			enableTZset		= True
 
 	else:
-		U.toLog(1, button+" off ")
+		U.logger.log(10, button+" off ")
 		switchON[2]		= False
 		if	not switchON[1] and not switchON[2] and not switchON[3]:
 			setExtraLEDoff()
@@ -493,7 +493,7 @@ def setB(gpio):
 			enableDDonOFF	= True
 		saveParameters()
 
-	U.toLog(1,	"switchON:"+str(switchON)+"; enableupDown: "+str(enableupDown)+";  enableHH: "+str(enableHH)+";	 enableMM: "+str(enableMM)+";  enableDD: "+str(enableDD)+";	 enableDDonOFF: "+str(enableDDonOFF)+";	 enableLight: "+str(enableLight)+";	 enableTZset: "+str(enableLight)+";	 enableTZset: "+str(enablePattern))
+	U.logger.log(10,	"switchON:"+str(switchON)+"; enableupDown: "+str(enableupDown)+";  enableHH: "+str(enableHH)+";	 enableMM: "+str(enableMM)+";  enableDD: "+str(enableDD)+";	 enableDDonOFF: "+str(enableDDonOFF)+";	 enableLight: "+str(enableLight)+";	 enableTZset: "+str(enableLight)+";	 enableTZset: "+str(enablePattern))
 
 	if not switchON[1] and not switchON[2] and not switchON[3]: doReadParameters = True
 	else:														doReadParameters = False
@@ -505,12 +505,12 @@ def setC(gpio):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime,switchON
 	global doReadParameters
 	button = "setC"
-	U.toLog(1, " into "+ button)
+	U.logger.log(10, " into "+ button)
 	if checkLastButtonPressTiming(button) !=0: return
 	time.sleep(0.1)
 	currHH, currMM, newDate = setAllSwitchesOff()
 	if GPIO.input(gpio) ==0:
-		U.toLog(1, button+" on")
+		U.logger.log(10, button+" on")
 		switchON[3]		= True
 		enableupDown	= True
 		if	 not switchON[1] and not switchON[2] and	 switchON[3]:
@@ -523,7 +523,7 @@ def setC(gpio):
 		elif not switchON[1] and	 switchON[2] and	 switchON[3]:
 			enablePattern	= True
 	else:
-		U.toLog(1, button+" off ")
+		U.logger.log(10, button+" off ")
 		switchON[3]		= False
 		if	not switchON[1] and not switchON[2] and not switchON[3]:
 			setExtraLEDoff()
@@ -545,7 +545,7 @@ def setC(gpio):
 				U.stopNTP(mode="temp")
 		saveParameters()
 
-	U.toLog(1,	"switchON:"+str(switchON)+"; enableupDown: "+str(enableupDown)+";  enableHH: "+str(enableHH)+";	 enableMM: "+str(enableMM)+";  enableDD: "+str(enableDD)+";	 enableDDonOFF: "+str(enableDDonOFF)+";	 enableLight: "+str(enableLight)+";	 enableTZset: "+str(enableLight)+";	 enableTZset: "+str(enablePattern))
+	U.logger.log(10,	"switchON:"+str(switchON)+"; enableupDown: "+str(enableupDown)+";  enableHH: "+str(enableHH)+";	 enableMM: "+str(enableMM)+";  enableDD: "+str(enableDD)+";	 enableDDonOFF: "+str(enableDDonOFF)+";	 enableLight: "+str(enableLight)+";	 enableTZset: "+str(enableLight)+";	 enableTZset: "+str(enablePattern))
 	if not switchON[1] and not switchON[2] and not switchON[3]: doReadParameters = True
 	else:														doReadParameters = False
 	return
@@ -559,7 +559,7 @@ def upPressed(gpio):
 	button = "UP"
 	if checkLastButtonPressTiming(button) !=0: return
 	time.sleep(0.1)
-	U.toLog(1, button+" button")
+	U.logger.log(10, button+" button")
 	if	enableHH: 
 		currHH +=1
 		if currHH <	 0:	 currHH = 23
@@ -596,7 +596,7 @@ def downPressed(gpio):
 	button = "DOWN"
 	if checkLastButtonPressTiming(button) !=0: return
 	time.sleep(0.1)
-	U.toLog(1, button+" button")
+	U.logger.log(10, button+" button")
 	if	 enableHH: 
 		currHH -=1
 		if currHH <	 0:	 currHH = 23
@@ -644,16 +644,16 @@ def setAllSwitchesOff():
 
 #################################
 def startWithNewDate(newDate,set):
-	U.toLog(1, set+':	;;; date -s "'+newDate+'" ' +set)
+	U.logger.log(10, set+':	;;; date -s "'+newDate+'" ' +set)
 	if newDate !="":
 		os.system("date -s '"+newDate+"'")
 		if "useRTC" in inp and (inp["useRTC"] !="" and inp["useRTC"] !="0"):
-				U.toLog(1, " sync hwclock" )
+				U.logger.log(10, " sync hwclock" )
 				os.system("sudo hwclock -w") # set hw clock to system time stamp, only works if HW is enabled
-	U.toLog(1, 'set1:	;;; date -s finished ')
+	U.logger.log(10, 'set1:	;;; date -s finished ')
 	startNEOPIXEL()
 	### no!	  resetGPIO = True
-	U.toLog(1, " endof "+set)
+	U.logger.log(10, " endof "+set)
 	if G.ntpStatus == "temp disabled":
 			U.startNTP()
 
@@ -665,7 +665,7 @@ def setTimeZone(upDown):
 
 	l0=60 + 48 + 40 + 32 +1
 	ind = currTZ
-	U.toLog(1,"set timezone "+	 upDown) 
+	U.logger.log(10,"set timezone "+	 upDown) 
 	if	upDown =="UP":
 		ind +=1
 	else:
@@ -674,7 +674,7 @@ def setTimeZone(upDown):
 	if ind <-12:  ind = -12
 	tz= G.timeZones[ind+12]
 	currTZ =  ind
-	U.toLog(0, 'set tz:	  '+upDown+ '  new tz: '+ str(ind)+"  "+tz)
+	U.logger.log(10, 'set tz:	  '+upDown+ '  new tz: '+ str(ind)+"  "+tz)
 	clockDict["extraLED"]										= {"ticks":[ii+l0 for ii in range(ind+12)], "RGB":[100,100,100],"blink":[1,0]} # start on 8 ring 
 	clockDict["clockLightSet"]									= clockLightSet
 	inp["output"]["neopixelClock"][DEVID][0]["clockLightSet"]	= clockDict["clockLightSet"] 
@@ -705,7 +705,7 @@ def setExtraLEDoff():
 			saveParameters()
 	except	Exception, e:
 		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 		print "DEVID=", DEVID,"<<"
@@ -713,7 +713,7 @@ def setExtraLEDoff():
 #################################
 def startNEOPIXELNewTime(h,m,d,tz=""):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime, switchON
-	U.toLog(1,"startNEOPIXELNewTime "+	 str(d)+"  "+ str(h)+"	"+ str(m)) 
+	U.logger.log(10,"startNEOPIXELNewTime "+	 str(d)+"  "+ str(h)+"	"+ str(m)) 
 	if h <	0:	h = 23
 	if h > 23:	h =	 0
 	if m <	0:	m = 59
@@ -727,7 +727,7 @@ def startNEOPIXELNewTime(h,m,d,tz=""):
 	else:
 		dd = datetime.datetime.now() - datetime.timedelta(d-dd.day)
 		newDate = dd.strftime("%Y-%m-%d ")+"%02d"%h+":"+"%02d"%m+":00"
-	U.toLog(1, 'bf startNEOPIXEL:	;;; date -s "'+newDate+'"')
+	U.logger.log(10, 'bf startNEOPIXEL:	;;; date -s "'+newDate+'"')
 	#os.system("date -s '"+newDate+"'")
 	startNEOPIXEL(setClock="%02d"%d+":%02d"%h+":%02d"%m+":00")
  
@@ -739,7 +739,7 @@ def setLIGHT(upDown):
 		lightOptions = ["offoff","nightoff", "nightdim","daylow","daymedium", "dayhigh","auto"]
 		ind =4
 		l0 =60 + 48 + 40 + 32 + 24 + 16 + 12
-		U.toLog(1,"setLIGHT "+  upDown) 
+		U.logger.log(10,"setLIGHT "+  upDown) 
 		try: 
 			ind =  lightOptions.index(clockLightSet.lower())
 			if	upDown =="UP":
@@ -752,7 +752,7 @@ def setLIGHT(upDown):
 				pass
 		except:
 			ind = 4
-		U.toLog(1, 'setLIGHT:   '+upDown+ '    '+ str(ind))
+		U.logger.log(10, 'setLIGHT:   '+upDown+ '    '+ str(ind))
 		clockLightSet = lightOptions[ind]
 		clockDict["extraLED"]										= {"ticks":[ii+l0 for ii in range(ind)] , "RGB":[100,100,100],"blink":[1,1]} # start on 8 ring 
 		clockDict["clockLightSet"]									= clockLightSet
@@ -763,7 +763,7 @@ def setLIGHT(upDown):
 		return
 	except	Exception, e:
 		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 
@@ -775,8 +775,8 @@ def setPatternUPdown(upDown):
 	global inp,	 DEVID
 	global marksONoff, hoursPix, minutesPix,ticksMMHH
 	global marksOptions, ticksOptions
-	U.toLog(1,"setPattern "+   upDown) 
-	U.toLog(1, unicode( clockDict["clockLightSet"] )) 
+	U.logger.log(10,"setPattern "+   upDown) 
+	U.logger.log(10, unicode( clockDict["clockLightSet"] )) 
 	
 	getCurrentPatterns()
 
@@ -814,7 +814,7 @@ def getCurrentPatterns():
 			else:														marksONoff = 3
 	except	Exception, e:
 		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict=", clockDict,"<<"
 
 #################################
@@ -874,7 +874,7 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 			startNEOPIXEL()
 	except	Exception, e:
 		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print "clockDict", clockDict
 		print "inp", inp
 		print "DEVID", DEVID
@@ -887,8 +887,8 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 def setDDonOff(upDown):
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime, switchON
 	global DEVID, clockDict, inp 
-	U.toLog(1,"setDDonOff "+   upDown) 
-	U.toLog(1, unicode(clockDict["clockLightSet"]))
+	U.logger.log(10,"setDDonOff "+   upDown) 
+	U.logger.log(10, unicode(clockDict["clockLightSet"]))
 	if upDown=="UP":
 		if clockDict["ticks"]["DD"]["npix"] == 0:
 			inp["output"]["neopixelClock"][DEVID][0]["ticks"]["DD"]["npix"] = 1
@@ -910,7 +910,7 @@ def showNWstatus():
 	global clockLightSet, enableupDown,enableHH,enableMM,enableDD,enableDDonOFF, enableTZset,enablePattern,enableLight,currHH, currMM, currDD, currTZ,	useRTC, newDate, resetGPIO, lastButtonTime, switchON
 	global DEVID, clockDict, inp 
 	global networkIndicatorON
-	U.toLog(1,"show NW status ") 
+	U.logger.log(10,"show NW status ") 
 
 	l0 =60 + 48 + 40 + 32 + 24 + 16 + 12
 	if G.networkStatus.find("Inet") >-1: # set network indicator = on for 30 secs 
@@ -941,9 +941,9 @@ def checkLastButtonPressTiming(button):
 	dt =  tt - lastButtonTime[button]
 	lastButtonTime[button] = tt
 	if dt < 0.35: 
-		U.toLog(1,button + " time: "+str(dt)+"	rejected" )
+		U.logger.log(10,button + " time: "+str(dt)+"	rejected" )
 		return 1
-	U.toLog(1,button+ "	 time: "+str(dt) )
+	U.logger.log(10,button+ "	 time: "+str(dt) )
 	return	0
 
  
@@ -991,7 +991,7 @@ def setLightfromSensor():
 		
 			
 		except:
-			U.toLog(-1, "error reading light sensor", doPrint=True)
+			U.logger.log(30, "error reading light sensor")
 			return
 		if lightSensorValueREAD =="" : return 
 
@@ -1025,10 +1025,10 @@ def setLightfromSensor():
 		if restartstartNEOPIXEL:
 			startNEOPIXEL()
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor) 
-		U.toLog(1, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
+		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
 ##20181122-02:17:22 setting  lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, clockLightSet, LEDintensityFactor:6.0  50.0 daymedium  12000.0 offoff  offoff
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
 
 
@@ -1161,15 +1161,16 @@ loopCount					= 0
 sensor						= G.program
 eth0IP						=""
 wifi0IP						=""
+U.setLogging()
 
 # check for corrupt parameters file 
 U.checkParametersFile("parameters-DEFAULT-clock", force = False)
 
 if readParams() ==3:
-		U.toLog(-1," parameters not defined", doPrint=True)
+		U.logger.log(30," parameters not defined")
 		U.checkParametersFile("parameters-DEFAULT-clock", force = True)
 		time.sleep(20)
-		U.restartMyself(param=" bad parameters read", reason="",doPrint=True)
+		U.restartMyself(param=" bad parameters read", reason="")
 	
 
 myPID		= str(os.getpid())
@@ -1257,11 +1258,11 @@ while True:
 			if ret == 1: 
 				startNEOPIXEL()
 			elif ret == 2: 
-				U.restartMyself(reason="restarting due to new device specs", doPrint=True)
+				U.restartMyself(reason="restarting due to new device specs")
 			elif ret == 3: 
 				U.checkParametersFile("parameters-DEFAULT-clock")
 				time.sleep(20) # wait for some time for good parameters
-				U.restartMyself(param=" bad parameters read", reason="",doPrint=True)
+				U.restartMyself(param=" bad parameters read", reason="")
 		
 		if loopC % 3 ==0: # every 3 secs read parameters file 
 			setLightfromSensor()
@@ -1279,7 +1280,7 @@ while True:
 			doReadParameters = True
 
 			if clockMode.find("setClock") >-1:
-				U.toLog(-1," resetting clock mode to RUN") 
+				U.logger.log(30," resetting clock mode to RUN") 
 				startNEOPIXEL()
 
 		### test for shutdown
@@ -1332,10 +1333,10 @@ while True:
 		#print "setC",GPIO.input(gpiopinSET["setC"])
 			
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10.)
 		if unicode(e).find("string indices must be integers") >-1:
-			U.toLog(-1,"clockDict: "+unicode(clockDict)+"<<" )
-			U.toLog(-1,"inp: "+ unicode(inp) +"<<")
+			U.logger.log(30,"clockDict: "+unicode(clockDict)+"<<" )
+			U.logger.log(30,"inp: "+ unicode(inp) +"<<")
 			U.restartMyself(reason=" string error")
 sys.exit(0)

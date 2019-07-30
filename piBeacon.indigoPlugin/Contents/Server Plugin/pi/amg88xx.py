@@ -171,7 +171,7 @@ class AMG88xx_class(object):
 			self._fpsc.FPS = AMG88xx_FPS_10
 			self.bus.write_byte_data(self.i2c_addr,AMG88xx_FPSC, self._fpsc.get())
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 	def readU16(self, reg, little_endian=True):
@@ -341,7 +341,7 @@ class AMG88xx_class(object):
 
 			return buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 
 		
@@ -395,11 +395,11 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, "amg88xx is not in parameters = not enabled, stopping amg88xx.py" )
+			U.logger.log(30, "amg88xx is not in parameters = not enabled, stopping amg88xx.py" )
 			exit()
 			
 
-		U.toLog(1, "amg88xx reading new parameter file" )
+		U.logger.log(0, "amg88xx reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -448,7 +448,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if amg88xxsensor[devId] =="":
 					return
-			U.toLog(-1," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
+			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
 					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
 				
 		deldevID={}		   
@@ -464,7 +464,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -474,7 +474,7 @@ def startSensor(devId,i2cAddress):
 	global sensors,sensor
 	global startTime
 	global amg88xxsensor, oldPixels
-	U.toLog(-1,"==== Start amg88xx ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(30,"==== Start amg88xx ===== @ i2c= " +unicode(i2cAddress))
 	startTime =time.time()
 
 
@@ -485,7 +485,7 @@ def startSensor(devId,i2cAddress):
 		amg88xxsensor[devId]  =	 AMG88xx_class(address=i2cAdd)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		amg88xxsensor[devId] =""
 	time.sleep(.1)
 
@@ -523,10 +523,10 @@ def getValues(devId):
 				"MinimumPixel":			( "%7.1f"%( minV				) ).strip(), 
 				"temp":					( "%7.1f"%( average				) ).strip(),
 				"rawData":				json.dumps(oldPixels[devId]).replace(" ","")}
-		U.toLog(2, unicode(ret)) 
+		U.logger.log(0, unicode(ret)) 
 		badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	U.muxTCA9548Areset()
@@ -576,6 +576,8 @@ amg88xxsensor					={}
 deltaX				  = {}
 displayEnable				= 0
 myPID		= str(os.getpid())
+U.setLogging()
+
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
 
@@ -621,7 +623,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -630,7 +632,7 @@ while True:
 					continue
 				elif values["temp"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
 					deltaN =0
@@ -668,7 +670,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

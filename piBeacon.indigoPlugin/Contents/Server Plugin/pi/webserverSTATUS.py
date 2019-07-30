@@ -38,14 +38,21 @@ class GetHandler(BaseHTTPRequestHandler):
 			data = json.loads(ddd)
 			f.close()
 		except	Exception, e:
-			print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+"   bad sensor data", data
+			U.logger.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+"   html data", data)
 			return 
 		#print "webserverSTATUS", data
 		x('<!DOCTYPE html>')
 		x('<html>')
-		x(	'<head style="background-color:rgb(50, 50,50);"> </head>')
-		x(	'<body style="background-color:rgb(50, 50,50); color:rgb(150, 150,150); font-family:Courier;">')
-		x(		'<b>'+data[0]+'</b><br>')
+		x('<style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>')
+		x('<meta http-equiv="Pragma" content="no-cache">')
+		x('<meta http-equiv="Expires" content="-1″>')
+		x('<meta http-equiv="CACHE-CONTROL" content="NO-CACHE">')
+		x('<meta http-equiv="refresh" content="30"">')
+		x('<head style="background-color:rgb(0, 50,50);"> ')
+		x('   <style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>')
+		x('</head>')
+		x('<body style="background-color:rgb(30, 0,30); color:rgb(150, 150,150); font-family:Courier;">')
+		x(	'<b>'+data[0]+'</b><br>')
 		for nn in range(1,len(data)):
 			x(	data[nn] +'<br>')
 		x(	'</body>')
@@ -53,18 +60,18 @@ class GetHandler(BaseHTTPRequestHandler):
  
 global pid, dataFile
 G.program= "webserverSTATUS"
+U.setLogging()
 
 dataFile	= G.homeDir+"temp/showOnWebServer"
-port 		= 80
 try:
-	port     = int(sys.argv[1])
-	dataFile = sys.argv[2]
-except: pass
+	ipNumber	= sys.argv[1]
+	port		= int(sys.argv[2])
+	dataFile	= sys.argv[3]
+except: 
+	U.logger.log(50,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
+	exit()
+U.logger.log(50,"Starting web server with IP#:{}:{}  dataFile file:{}".format(ipNumber, port, dataFile))
 
-
-f=open( G.homeDir+"ipAddress","r")
-ipNumber = f.read()
-f.close()
 pid =  os.getpid()
 
 U.killOldPgm(str(pid),"webserverSTATUS.py")
@@ -72,5 +79,5 @@ time.sleep(0.5)
 
 
 server = HTTPServer(('', port), GetHandler)
-print "Starting web server, access at "+ipNumber+":"+str(port)
+U.logger.log(30,"Starting web server, access at {}:{}".format(ipNumber,port))
 server.serve_forever()

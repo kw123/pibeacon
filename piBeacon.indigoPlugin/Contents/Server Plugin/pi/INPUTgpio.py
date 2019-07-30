@@ -49,7 +49,7 @@ def readParams():
 			sList+=sensor
 			
 		if "INPUTgpio" not in sList:
-			U.toLog(-1,"INPUTgpio not in sensorlist", doPrint =True) 
+			U.logger.log(30,"INPUTgpio not in sensorlist") 
 			exit()
 		else:
 			if oldSensors != {}: # this is {}  at startup.. dont do anything 
@@ -61,12 +61,12 @@ def readParams():
 						for devId in sensors[sensor]:
 							if devId  not in oldSensors[sensor]:
 								restart=True
-								U.toLog(-1, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	)
+								U.logger.log(30, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	)
 								break
 							if sensors[sensor][devId]["INPUTS"] != oldSensors[sensor][devId]["INPUTS"]:
 								restart=True
-								U.toLog(-1, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	 )
-								U.toLog(-1, "old sensor def:" + unicode(oldSensors[sensor][devId]["INPUTS"]) )
+								U.logger.log(30, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	 )
+								U.logger.log(30, "old sensor def:" + unicode(oldSensors[sensor][devId]["INPUTS"]) )
 								break
 					if restart: break
 				
@@ -77,16 +77,16 @@ def readParams():
 
 def setupSensors():
 
-		U.toLog(-1, "starting setup sensors",doPrint=True)
+		U.logger.log(30, "starting setup sensors")
 
 		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		return True
@@ -145,7 +145,7 @@ def getINPUTgpio(all,sens):
 					INPUTlastvalue[gpioPIN]=dd
 					##print d,new
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return d,new
 
 
@@ -179,8 +179,8 @@ def startGPIO():
 						GPIO.setup(gpioPIN, GPIO.IN)
 		return
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
-		U.toLog(-1,"startGPIO: "+ unicode(sensors),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,"startGPIO: "+ unicode(sensors))
 	return
 
 
@@ -204,6 +204,8 @@ INPUTcount		  = [0 for i in range(100)]
 #####################  init parameters that are read from file 
 
 myPID		= str(os.getpid())
+U.setLogging()
+
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
 
 #  Possible answers are 0 = Compute Module, 1 = Rev 1, 2 = Rev 2, 3 = Model B+/A+
@@ -214,7 +216,7 @@ sensors			  = {}
 sList			  = ""
 loopCount		  = 0
 
-U.toLog(-1, "starting "+G.program+" program",doPrint=True)
+U.logger.log(30, "starting "+G.program+" program")
 
 readParams()
 startGPIO()
@@ -224,7 +226,7 @@ INPUTcount = U.readINPUTcount()
 for i in range(100):
 	if not setupSensors(): 
 		time.sleep(10)
-		if i%50==0: U.toLog(-1,"sensor libs not installed, need to wait until done",doPrint=True)
+		if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
 	else:
 		break	 
 		
@@ -242,7 +244,7 @@ lastData		= {}
 #print "shortWait",shortWait	 
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," sensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," sensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -301,7 +303,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

@@ -218,7 +218,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -260,7 +260,7 @@ def readParams():
 
 
 			if devId not in INAsensor:
-				U.toLog(-1,"==== Start "+G.program+" ====== @ i2c= " +unicode(i2cAddress)+";	shuntResistor= "+ str(shuntResistor))
+				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= " +unicode(i2cAddress)+";	shuntResistor= "+ str(shuntResistor))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				INAsensor[devId] = INA3221(i2cAddress=i2cAdd,shunt_resistor=shuntResistor)
 				U.muxTCA9548Areset()
@@ -276,7 +276,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -301,8 +301,8 @@ def getValues(devId):
 			return data
 		except	Exception, e:
 			if badSensor >2 and badSensor < 5: 
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.toLog(-1, u"Current>>" + unicode(Current)+"<<")
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"Current>>" + unicode(Current)+"<<")
 			badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -381,7 +381,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["Current0"]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					lastCurrent[devId] =-100.
 					continue
@@ -395,7 +395,7 @@ while True:
 					if not ok: continue
 
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					#print values
 					data["sensors"][sensor][devId] = values
 					current=[0,0,0]
@@ -428,6 +428,6 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

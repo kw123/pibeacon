@@ -55,7 +55,7 @@ def readParams():
    
  
         if sensor not in sensors:
-            U.toLog(-1, "40xx Distance  is not in parameters = not enabled, stopping vl6180xDistance.py" )
+            U.logger.log(30, "40xx Distance  is not in parameters = not enabled, stopping vl6180xDistance.py" )
             exit()
             
  
@@ -129,18 +129,18 @@ def readParams():
             #print sensorChanged, sensorActive, distanceMax
             if sensorChanged == 1:
                 if not sensorActive:
-                    U.toLog(-1,"==== Start ranging =====")
+                    U.logger.log(30,"==== Start ranging =====")
                     tof = VCNL40xx(address=0x13,maxCurrent=maxCurrent)
             sensorActive = True
             
             
         if sensorChanged == -1:
-            U.toLog(-1, "==== stop  ranging =====")
+            U.logger.log(30, "==== stop  ranging =====")
             exit()
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -253,7 +253,7 @@ class VCNL40xx():
             return   distance, luminance, data
             #return self._device.readU16BE(VCNL40xx_AMBIENTDATA)
         except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         return "","",[]
 
 
@@ -295,8 +295,8 @@ def readSensor():
             time.sleep(0.02)
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"distance>>" + unicode(distance)+"<<")
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
     return distance  , luminance     
 
 
@@ -338,6 +338,8 @@ output                      = {}
 badSensor                   = 0
 sensorActive                = False
 loopSleep                   = 0.1
+
+U.setLogging()
 
 myPID       = str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -382,7 +384,7 @@ while True:
                 data["sensors"][sensor] = {devId:{}}
 
                 if distance =="badSensor":
-                    U.toLog(-1," bad sensor")
+                    U.logger.log(30," bad sensor")
                     data["sensors"][sensor][devId]["distance"]="badSensor"
                     U.sendURL(data)
                     lastDist[devId] =-100.
@@ -418,7 +420,7 @@ while True:
                 if displayEnable =="1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - G.lastAliveSend >10. or quick):
                     lastDisplay = tt
                     DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-                    U.toLog(1, unicode(dist)+"  "+unicode(deltaDist) )   
+                    U.logger.log(10, unicode(dist)+"  "+unicode(deltaDist) )   
                     #print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
         quick = False
         loopCount +=1
@@ -436,7 +438,7 @@ while True:
         time.sleep(1)
         #print "end of loop", loopCount
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)
         

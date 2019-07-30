@@ -41,7 +41,7 @@ def getDATAdht(DHTpin,Type):
 		try:
 			h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 			if unicode(h) == "None" or unicode(t) == "None":
-				U.toLog(-1, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again", doPrint=True )
+				U.logger.log(30, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again" )
 				time.sleep(1)
 				h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 			#f h is not None and t is not None:
@@ -50,8 +50,8 @@ def getDATAdht(DHTpin,Type):
 			return ("%.2f"%float(t)).strip(),("%3d"%float(h)).strip()
 			#else: return "" ,""  
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u" pin: "+ str(DHTpin)+" return	 value: t="+ unicode(t)+"; h=" + unicode(h)	 )
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u" pin: "+ str(DHTpin)+" return	 value: t="+ unicode(t)+"; h=" + unicode(h)	 )
 		return "",""
 
 
@@ -78,7 +78,7 @@ def getDHT(sensor,data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if sensor in data and data[sensor]== {}: del data[sensor]
 	return data
@@ -98,7 +98,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 			data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return data 
 
 
@@ -184,10 +184,11 @@ enableTXpinsAsGpio	= "0"
 quick				= False
 output				= {}
 
-readParams()
+U.setLogging()
 
+readParams()
 if U.getIPNumber() > 0:
-	U.toLog(-1," getsensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," getsensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -198,7 +199,7 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == 1: 
 	if U.getIPNumber() > 0:
-		U.toLog(-1," no ip number working, giving up", doPrint=True )
+		U.logger.log(30," no ip number working, giving up")
 		time.sleep(10)
 		exit()
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -246,7 +247,7 @@ while True:
 							changed= 5
 							break
 						try:
-							U.toLog(1,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]), doPrint=True )
+							U.logger.log(10,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]))
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx
@@ -262,10 +263,10 @@ while True:
 			lastMsg = tt
 			lastData=copy.copy(data)
 			try:
-				#U.toLog(2, u"sending url: "+unicode(data))
+				#U.logger.log(10, u"sending url: "+unicode(data))
 				U.sendURL({"sensors":data})
 			except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+				U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			time.sleep(0.05)
 
 		quick = U.checkNowFile(G.program)				 
@@ -290,6 +291,6 @@ while True:
 				lastRead = tt
 				U.checkIfAliveNeedsToBeSend()
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

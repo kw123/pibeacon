@@ -348,7 +348,7 @@ class MPU9255:
 		try:
 			self.bus			= smbus.SMBus(self.busNumber)
 		except Exception, e:
-			U.toLog(-1,'couldn\'t open bus: {0}'.format(e))
+			U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
 			return 
 			
 		self.address	 = MPU9255_DEFAULT_ADDRESS
@@ -413,11 +413,11 @@ class MPU9255:
 def startSENSOR(devId, i2cAddress):
 	global theSENSORdict
 	try:
-		U.toLog(-1,"==== Start mpu9255 ===== @ i2c= " +unicode(i2cAddress)+"  devId=" +unicode(devId))
+		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= " +unicode(i2cAddress)+"  devId=" +unicode(devId))
 		theSENSORdict[devId] = MPU9255(i2cAddress=i2cAddress)
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -446,7 +446,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, "BNO055 is not in parameters = not enabled, stopping ina219.py" )
+			U.logger.log(30, "BNO055 is not in parameters = not enabled, stopping ina219.py" )
 			exit()
 			
 				
@@ -474,7 +474,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -491,10 +491,10 @@ def getValues(devId):
 		data["EULER"] = fillWithItems(EULER,["heading","roll","pitch"],2)
 		data["temp"] = temp
 		for xx in data:
-			U.toLog(2, (xx).ljust(11)+" "+unicode(data[xx]))
+			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -519,6 +519,8 @@ sensors						= {}
 sensor						= G.program
 quick						= False
 theSENSORdict				 ={}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -577,7 +579,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 

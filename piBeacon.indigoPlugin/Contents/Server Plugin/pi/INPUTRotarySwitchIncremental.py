@@ -130,16 +130,16 @@ def readParams():
 #################################
 def setupGPIOsystem():
 
-	U.toLog(-1, "starting setup GPIOsystem",doPrint=True)
+	U.logger.log(30, "starting setup GPIOsystem")
 
 	ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 	if len(ret[1]) > 0:
-		U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+		U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 		return False
 
 	ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 	if len(ret[1]) > 0:
-		U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+		U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 		return False
 
 	return True
@@ -233,7 +233,7 @@ def workQueue():
 				if threadDict["stopThread"]: return 
 			time.sleep(0.2)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
 
 
@@ -247,7 +247,7 @@ def startGPIO(devId):
 	try:
 		pinsToDevid[INPUTS[devId]["pinA"]] = devId
 		pinsToDevid[INPUTS[devId]["pinB"]] = devId
-		U.toLog(-1, "pinsToDevid "+unicode(pinsToDevid), doPrint=True)
+		U.logger.log(30, "pinsToDevid "+unicode(pinsToDevid))
 
 		if useWhichGPIO == "pig":
 			if PIGPIO == "":
@@ -255,11 +255,11 @@ def startGPIO(devId):
 				import threading 
 				import Queue
 				if not U.pgmStillRunning("pigpiod"): 	
-					U.toLog(-1, "starting pigpiod", doPrint=True)
+					U.logger.log(30, "starting pigpiod")
 					os.system("sudo pigpiod &")
 					time.sleep(0.5)
 					if not U.pgmStillRunning("pigpiod"): 	
-						U.toLog(-1, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888", doPrint=True)
+						U.logger.log(30, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
 						time.sleep(20)
 						U.restartMyself(reason="pigpiod not running")
 						exit(0)
@@ -272,7 +272,7 @@ def startGPIO(devId):
 			if devId not in threadDict:
 				threadDict[devId] ={ "pinA":"",  "pinB":"" }
 
-			U.toLog(-1, "PIGPIO setup for devId"+str(devId)+"  "+ str(INPUTS[devId]), doPrint=True)
+			U.logger.log(30, "PIGPIO setup for devId"+str(devId)+"  "+ str(INPUTS[devId]))
 			PIGPIO.set_mode( INPUTS[devId]["pinA"], pigpio.INPUT)
 			PIGPIO.set_pull_up_down( INPUTS[devId]["pinA"], pigpio.PUD_UP )
 			PIGPIO.set_mode( INPUTS[devId]["pinB"], pigpio.INPUT)
@@ -283,7 +283,7 @@ def startGPIO(devId):
 			return
 
 		elif useWhichGPIO == "rpi":
-			U.toLog(-1, "GPIO  setting up gpio "+str(devId)+"  "+ str(INPUTS[devId]), doPrint=True)
+			U.logger.log(30, "GPIO  setting up gpio "+str(devId)+"  "+ str(INPUTS[devId]))
 			GPIO.setup( INPUTS[devId]["pinA"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 			GPIO.setup( INPUTS[devId]["pinB"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 			if useThreads: 
@@ -306,8 +306,8 @@ def startGPIO(devId):
 
 		return
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
-		U.toLog(-1,"start "+ G.program+ "  "+ unicode(sensors), doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,"start "+ G.program+ "  "+ unicode(sensors))
 	return
 
 
@@ -376,7 +376,7 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 			executePinChange(devIDUsed, pin, stateA, stateB, tt)
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 			return 
 
@@ -453,7 +453,7 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 			IP["pinALastValue"] = stateA
 			IP["pinBLastValue"] = stateB
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
 
 
@@ -523,6 +523,7 @@ newData				= False
 ###################### constants #################
 
 GPIO.setmode(GPIO.BCM)
+U.setLogging()
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
@@ -532,13 +533,13 @@ piVersion = GPIO.RPI_REVISION
 
 sensor			  = G.program
 
-U.toLog(-1, "starting "+G.program+" program",doPrint=True)
+U.logger.log(30, "starting "+G.program+" program")
 
 # check if everything is installed
 for i in range(100):
 	if not setupGPIOsystem(): 
 		time.sleep(10)
-		if i%50==0: U.toLog(-1,G.program+"===>  GPIO sensor libs not installed, need to wait until done",doPrint=True)
+		if i%50==0: U.logger.log(30,G.program+"===>  GPIO sensor libs not installed, need to wait until done")
 	else:
 		break	 
 
@@ -556,7 +557,7 @@ G.lastAliveSend		= time.time()
 #print "shortWait",shortWait	 
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," sensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," sensors no ip number  exiting ")
 	time.sleep(10)
 	stopProgram()
 
@@ -607,7 +608,7 @@ while True:
 
 		newData = False
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 stopProgram()

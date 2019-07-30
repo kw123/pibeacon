@@ -67,10 +67,10 @@ def stopSensors(launchCmd):
 			# do your init here
 			U.killOldPgm(myPID, launchCmd)
 			## add any init code here for address # addr
-			U.toLog(-1, u"stopping	" + unicode(launchCmd) )
+			U.logger.log(30, u"stopping	" + unicode(launchCmd) )
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"launchCmd used: " + unicode(launchCmd) )
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"launchCmd used: " + unicode(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
@@ -80,10 +80,10 @@ def startSensors(launchCmd):
 			# do your init here
 			os.system(launchCmd+" &")
 			## add any init code here for address # addr
-			U.toLog(-1, u"starting	" + unicode(launchCmd) )
+			U.logger.log(30, u"starting	" + unicode(launchCmd) )
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"launchCmd used: " + unicode(launchCmd) )
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"launchCmd used: " + unicode(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
@@ -96,8 +96,8 @@ def checkIfRunning(check):
 			else: 
 				return "not checked"
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"checking used: " + unicode(check) )
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"checking used: " + unicode(check) )
 
 
 # ===========================================================================
@@ -122,6 +122,8 @@ sensorList		  = [] # list of sensor, we are looking for "mysensors"
 launchCommand	  = {}	# this is teh command we will launch
 launchCheck		  = {}	# this is teh ps -ef string that will check if command is running
 sensor			  = G.program
+U.setLogging()
+
 readParams()		   # get parameters send from indigo
 
 if U.getIPNumber() > 0:
@@ -166,7 +168,7 @@ while True:	 # loop for ever
 				U.echoLastAlive(G.program)
 
 		except	Exception, e :
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 		time.sleep(sensorRefreshSecs) # sleep the requested amount
 		readParams()  # check if we have new parameetrs

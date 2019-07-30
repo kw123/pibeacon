@@ -68,6 +68,7 @@ lastRead			= 0
 ####################  OUTPUT gios   ...allrpi	  only rpi2 and rpi0--
 OUTPUTlastvalue	  = ["-1" for i in range(100)]
 #####################  init parameters that are read from file 
+U.setLogging()
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
@@ -78,7 +79,7 @@ output			  = {}
 sList			  = ""
 loopCount		  = 0
 
-U.toLog(-1, "starting "+G.program+" program",doPrint=True)
+U.logger.log(30, "starting "+G.program+" program")
 
 readParams()
 
@@ -92,7 +93,7 @@ lastData		= {}
 #print "shortWait",shortWait	 
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," output no ip number  exiting ", doPrint =True)
+	U.logger.log(30," output no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -141,7 +142,7 @@ while True:
 		loopCount+=1
 				
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

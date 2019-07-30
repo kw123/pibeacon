@@ -66,7 +66,7 @@ class mhz_class:
 			self.parse(self.receive())
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
 
 #################################		 
@@ -78,7 +78,7 @@ class mhz_class:
 				self.send(self.amplification[str(r)])
 				return
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #################################		 
 	def calibrate(self):
@@ -87,7 +87,7 @@ class mhz_class:
 			self.parse(self.receive())
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
 
 
@@ -164,11 +164,11 @@ def readParams():
 		 
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
-		U.toLog(-1, G.program+" reading new parameter file" )
+		U.logger.log(30, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -252,7 +252,7 @@ def readParams():
 				startSensor(devId, calibrationPin)
 				if mhz19sensor[devId] =="":
 					return
-			U.toLog(-1," new parameters read:  minSendDelta:"+unicode(minSendDelta)+
+			U.logger.log(30," new parameters read:  minSendDelta:"+unicode(minSendDelta)+
 					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"  restart:"+str(restart))
 				
 		deldevID={}		   
@@ -267,7 +267,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -279,7 +279,7 @@ def startSensor(devId,calibrationPin):
 	global sensors,sensor
 	global startTime
 	global mhz19sensor, amplification
-	U.toLog(-1,"==== Start "+G.program+" ===== ")
+	U.logger.log(30,"==== Start "+G.program+" ===== ")
 	startTime =time.time()
 	try:
 		sP = U.getSerialDEV()	  
@@ -293,7 +293,7 @@ def startSensor(devId,calibrationPin):
 		calibrateSensor(devId)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		mhz19sensor[devId] =""
 	return
 
@@ -309,7 +309,7 @@ def restartSensor():
 		GPIO.output(calibrationPin, True)
 		time.sleep(0.1)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	time.sleep(.1)
 
 
@@ -330,7 +330,7 @@ def calibrateSensor(devId):
 		#print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
 	except	Exception, e:
 		print "co2", co2
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	time.sleep(.1)
 
 
@@ -356,11 +356,11 @@ def getValues(devId,nMeasurements=5):
 			co2 =  mhz19sensor[devId].co2
 			try: rawData =	mhz19sensor[devId].raw
 			except: pass
-			U.toLog(1, " co2 raw: %d" %co2 )
+			U.logger.log(10, " co2 raw: %d" %co2 )
 			if co2 ==-1: 
 				ii -= addIfBad	# onetime only 
 				addIfBad = 0
-				U.toLog(-1, u"bad data read ")
+				U.logger.log(30, u"bad data read ")
 
 				continue
 			raw += co2
@@ -383,10 +383,10 @@ def getValues(devId,nMeasurements=5):
 			   ,"CO2calibration":( round(CO2normal[devId],1) ) 
 			   ,"rawData":		 ( rawData				   ) 
 			   ,"raw":			 ( round(raw,1)			   ) }
-		U.toLog(1, unicode(ret)) 
+		U.logger.log(10, unicode(ret)) 
 		badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
  
@@ -433,6 +433,8 @@ sensorActive				= False
 rawOld						= ""
 mhz19sensor					={}
 deltaX						= {}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -492,7 +494,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -501,9 +503,9 @@ while True:
 					continue
 				elif values["CO2"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					if values["raw"]  < 300:
-						U.restartMyself(reason=" sensor value below 300ppm, need to restart to get sensors reset, waiting 2 minute ",doPrint="False")
+						U.restartMyself(reason=" sensor value below 300ppm, need to restart to get sensors reset, waiting 2 minute ",doPrint=False)
 						time.sleep(120.)
 					
 					data["sensors"][sensor][devId] = values
@@ -563,7 +565,7 @@ while True:
 				lastRead = time.time()
 
 		if U.checkNewCalibration(G.program) or needCalibration :
-			U.toLog(-1, u"set CO2 calibration")
+			U.logger.log(30, u"set CO2 calibration")
 			if sensor in sensors:
 				for devId in sensors[sensor]:
 					calibrateSensor(devId)
@@ -578,7 +580,7 @@ while True:
 			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

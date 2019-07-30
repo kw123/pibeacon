@@ -114,16 +114,16 @@ def readParams():
 #################################
 def setupGPIOsystem():
 
-	U.toLog(-1, "starting setup GPIOsystem",doPrint=True)
+	U.logger.log(30, "starting setup GPIOsystem")
 
 	ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 	if len(ret[1]) > 0:
-		U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+		U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 		return False
 
 	ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 	if len(ret[1]) > 0:
-		U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+		U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 		return False
 
 	return True
@@ -158,7 +158,7 @@ def getINPUTgpio(devId):
 			elif INPUTS[devId]["codeType"].find("bourns8Bit")>-1:	value = burnsTableToInt(value)
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return {"INPUT":value}
 
 
@@ -236,8 +236,8 @@ def startGPIO(devId):
 				GPIO.output(INPUTS[devId]["pinO"][n], 1)
 		return
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
-		U.toLog(-1,"start "+ G.program+ "  "+ unicode(sensors), doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,"start "+ G.program+ "  "+ unicode(sensors))
 	return
 
 
@@ -273,6 +273,8 @@ for ii in range(len(burns8Bit)):
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
 
@@ -281,13 +283,13 @@ piVersion = GPIO.RPI_REVISION
 
 sensor			  = G.program
 
-U.toLog(-1, "starting "+G.program+" program",doPrint=True)
+U.logger.log(30, "starting "+G.program+" program")
 
 # check if everything is installed
 for i in range(100):
 	if not setupGPIOsystem(): 
 		time.sleep(10)
-		if i%50==0: U.toLog(-1,"sensor libs not installed, need to wait until done",doPrint=True)
+		if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
 	else:
 		break	 
 		
@@ -303,7 +305,7 @@ G.lastAliveSend		= time.time()
 #print "shortWait",shortWait	 
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," sensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," sensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -344,7 +346,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

@@ -53,7 +53,7 @@ def readParams():
    
  
         if sensor not in sensors:
-            U.toLog(-1, "vl6180xDistance is not in parameters = not enabled, stopping vl6180xDistance.py" )
+            U.logger.log(30, "vl6180xDistance is not in parameters = not enabled, stopping vl6180xDistance.py" )
             exit()
             
  
@@ -121,16 +121,16 @@ def readParams():
                 if "i2cAddress" in sensors[sensor][devId]: i2cAddress= int(sensors[sensor][devId]["i2cAddress"])
                 else: i2cAddress = 0x29
                 tof = vl6180x(address=i2cAddress)
-                U.toLog(-1,"==== Start ranging =====")
+                U.logger.log(30,"==== Start ranging =====")
                 #startSensor(0)
 
         if sensorUp == -1:
-            U.toLog(-1, "==== stop  ranging =====")
+            U.logger.log(30, "==== stop  ranging =====")
             exit()
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -284,10 +284,10 @@ class vl6180x:
 
 
         if self.get_register(self.__VL6180X_SYSTEM_FRESH_OUT_OF_RESET) == 1:
-            U.toLog(0,"ToF sensor is ready.")
+            U.logger.log(10,"ToF sensor is ready.")
             self.ready = True
         else:
-            U.toLog(-1,"ToF sensor reset failure.")
+            U.logger.log(30,"ToF sensor reset failure.")
             self.ready = False
 
         # Required by datasheet
@@ -322,37 +322,37 @@ class vl6180x:
         self.set_register(0x01ac, 0x3e)
         self.set_register(0x01a7, 0x1f)
         self.set_register(0x0030, 0x00)
-        U.toLog(2,"Register settings:")
-        U.toLog(2,"0x0207 - %x" % self.get_register(0x0207))
-        U.toLog(2,"0x0208 - %x" % self.get_register(0x0208))
-        U.toLog(2,"0x0096 - %x" % self.get_register(0x0096))
-        U.toLog(2,"0x0097 - %x" % self.get_register(0x0097))
-        U.toLog(2,"0x00e3 - %x" % self.get_register(0x00e3))
-        U.toLog(2,"0x00e4 - %x" % self.get_register(0x00e4))
-        U.toLog(2,"0x00e5 - %x" % self.get_register(0x00e5))
-        U.toLog(2,"0x00e6 - %x" % self.get_register(0x00e6))
-        U.toLog(2,"0x00e7 - %x" % self.get_register(0x00e7))
-        U.toLog(2,"0x00f5 - %x" % self.get_register(0x00f5))
-        U.toLog(2,"0x00d9 - %x" % self.get_register(0x00d9))
-        U.toLog(2,"0x00db - %x" % self.get_register(0x00db))
-        U.toLog(2,"0x00dc - %x" % self.get_register(0x00dc))
-        U.toLog(2,"0x00dd - %x" % self.get_register(0x00dd))
-        U.toLog(2,"0x009f - %x" % self.get_register(0x009f))
-        U.toLog(2,"0x00a3 - %x" % self.get_register(0x00a3))
-        U.toLog(2,"0x00b7 - %x" % self.get_register(0x00b7))
-        U.toLog(2,"0x00bb - %x" % self.get_register(0x00bb))
-        U.toLog(2,"0x00b2 - %x" % self.get_register(0x00b2))
-        U.toLog(2,"0x00ca - %x" % self.get_register(0x00ca))
-        U.toLog(2,"0x0198 - %x" % self.get_register(0x0198))
-        U.toLog(2,"0x01b0 - %x" % self.get_register(0x01b0))
-        U.toLog(2,"0x01ad - %x" % self.get_register(0x01ad))
-        U.toLog(2,"0x00ff - %x" % self.get_register(0x00ff))
-        U.toLog(2,"0x0100 - %x" % self.get_register(0x0100))
-        U.toLog(2,"0x0199 - %x" % self.get_register(0x0199))
-        U.toLog(2,"0x01a6 - %x" % self.get_register(0x01a6))
-        U.toLog(2,"0x01ac - %x" % self.get_register(0x01ac))
-        U.toLog(2,"0x01a7 - %x" % self.get_register(0x01a7))
-        U.toLog(2,"0x0030 - %x" % self.get_register(0x0030))
+        U.logger.log(10,"Register settings:")
+        U.logger.log(10,"0x0207 - %x" % self.get_register(0x0207))
+        U.logger.log(10,"0x0208 - %x" % self.get_register(0x0208))
+        U.logger.log(10,"0x0096 - %x" % self.get_register(0x0096))
+        U.logger.log(10,"0x0097 - %x" % self.get_register(0x0097))
+        U.logger.log(10,"0x00e3 - %x" % self.get_register(0x00e3))
+        U.logger.log(10,"0x00e4 - %x" % self.get_register(0x00e4))
+        U.logger.log(10,"0x00e5 - %x" % self.get_register(0x00e5))
+        U.logger.log(10,"0x00e6 - %x" % self.get_register(0x00e6))
+        U.logger.log(10,"0x00e7 - %x" % self.get_register(0x00e7))
+        U.logger.log(10,"0x00f5 - %x" % self.get_register(0x00f5))
+        U.logger.log(10,"0x00d9 - %x" % self.get_register(0x00d9))
+        U.logger.log(10,"0x00db - %x" % self.get_register(0x00db))
+        U.logger.log(10,"0x00dc - %x" % self.get_register(0x00dc))
+        U.logger.log(10,"0x00dd - %x" % self.get_register(0x00dd))
+        U.logger.log(10,"0x009f - %x" % self.get_register(0x009f))
+        U.logger.log(10,"0x00a3 - %x" % self.get_register(0x00a3))
+        U.logger.log(10,"0x00b7 - %x" % self.get_register(0x00b7))
+        U.logger.log(10,"0x00bb - %x" % self.get_register(0x00bb))
+        U.logger.log(10,"0x00b2 - %x" % self.get_register(0x00b2))
+        U.logger.log(10,"0x00ca - %x" % self.get_register(0x00ca))
+        U.logger.log(10,"0x0198 - %x" % self.get_register(0x0198))
+        U.logger.log(10,"0x01b0 - %x" % self.get_register(0x01b0))
+        U.logger.log(10,"0x01ad - %x" % self.get_register(0x01ad))
+        U.logger.log(10,"0x00ff - %x" % self.get_register(0x00ff))
+        U.logger.log(10,"0x0100 - %x" % self.get_register(0x0100))
+        U.logger.log(10,"0x0199 - %x" % self.get_register(0x0199))
+        U.logger.log(10,"0x01a6 - %x" % self.get_register(0x01a6))
+        U.logger.log(10,"0x01ac - %x" % self.get_register(0x01ac))
+        U.logger.log(10,"0x01a7 - %x" % self.get_register(0x01a7))
+        U.logger.log(10,"0x0030 - %x" % self.get_register(0x0030))
 
     def default_settings(self):
         # Recommended settings from datasheet
@@ -395,22 +395,22 @@ class vl6180x:
         self.set_register(      self.__VL6180X_SYSALS_ANALOGUE_GAIN, 0x40)
         self.set_register(      self.__VL6180X_FIRMWARE_RESULT_SCALER, 0x01)
 
-        U.toLog(2,"Default settings:")
-        U.toLog(2,"SYSTEM_MODE_GPIO1 - %x" %                   self.get_register(      self.__VL6180X_SYSTEM_MODE_GPIO1))
-        U.toLog(2,"READOUT_AVERAGING_SAMPLE_PERIOD - %x" %     self.get_register(      self.__VL6180X_READOUT_AVERAGING_SAMPLE_PERIOD))
-        U.toLog(2,"SYSALS_ANALOGUE_GAIN - %x" %                self.get_register(      self.__VL6180X_SYSALS_ANALOGUE_GAIN))
-        U.toLog(2,"SYSRANGE_VHV_REPEAT_RATE - %x" %            self.get_register(      self.__VL6180X_SYSRANGE_VHV_REPEAT_RATE))
-        U.toLog(2,"SYSALS_INTEGRATION_PERIOD - %x" %           self.get_register(      self.__VL6180X_SYSALS_INTEGRATION_PERIOD))
-        U.toLog(2,"SYSRANGE_VHV_RECALIBRATE - %x" %            self.get_register      (self.__VL6180X_SYSRANGE_VHV_RECALIBRATE))
-        U.toLog(2,"SYSRANGE_INTERMEASUREMENT_PERIOD - %x" %    self.get_register(      self.__VL6180X_SYSRANGE_INTERMEASUREMENT_PERIOD))
-        U.toLog(2,"SYSALS_INTERMEASUREMENT_PERIOD - %x" %      self.get_register(      self.__VL6180X_SYSALS_INTERMEASUREMENT_PERIOD))
-        U.toLog(2,"SYSTEM_INTERRUPT_CONFIG_GPIO - %x" %        self.get_register(      self.__VL6180X_SYSTEM_INTERRUPT_CONFIG_GPIO))
-        U.toLog(2,"SYSRANGE_MAX_CONVERGENCE_TIME - %x" %       self.get_register(      self.__VL6180X_SYSRANGE_MAX_CONVERGENCE_TIME))
-        U.toLog(2,"SYSRANGE_RANGE_CHECK_ENABLES - %x" %        self.get_register(      self.__VL6180X_SYSRANGE_RANGE_CHECK_ENABLES))
-        #U.toLog(2,"SYSRANGE_EARLY_CONVERGENCE_ESTIMATE - %x" % self.get_register_16bit(self.__VL6180X_SYSRANGE_EARLY_CONVERGENCE_ESTIMATE))
-        #U.toLog(2,"SYSALS_INTEGRATION_PERIOD - %x" %           self.get_register_16bit(self.__VL6180X_SYSALS_INTEGRATION_PERIOD))
-        U.toLog(2,"SYSALS_ANALOGUE_GAIN - %x" %                self.get_register(      self.__VL6180X_SYSALS_ANALOGUE_GAIN))
-        U.toLog(2,"FIRMWARE_RESULT_SCALER - %x" %              self.get_register(      self.__VL6180X_FIRMWARE_RESULT_SCALER))
+        U.logger.log(10,"Default settings:")
+        U.logger.log(10,"SYSTEM_MODE_GPIO1 - %x" %                   self.get_register(      self.__VL6180X_SYSTEM_MODE_GPIO1))
+        U.logger.log(10,"READOUT_AVERAGING_SAMPLE_PERIOD - %x" %     self.get_register(      self.__VL6180X_READOUT_AVERAGING_SAMPLE_PERIOD))
+        U.logger.log(10,"SYSALS_ANALOGUE_GAIN - %x" %                self.get_register(      self.__VL6180X_SYSALS_ANALOGUE_GAIN))
+        U.logger.log(10,"SYSRANGE_VHV_REPEAT_RATE - %x" %            self.get_register(      self.__VL6180X_SYSRANGE_VHV_REPEAT_RATE))
+        U.logger.log(10,"SYSALS_INTEGRATION_PERIOD - %x" %           self.get_register(      self.__VL6180X_SYSALS_INTEGRATION_PERIOD))
+        U.logger.log(10,"SYSRANGE_VHV_RECALIBRATE - %x" %            self.get_register      (self.__VL6180X_SYSRANGE_VHV_RECALIBRATE))
+        U.logger.log(10,"SYSRANGE_INTERMEASUREMENT_PERIOD - %x" %    self.get_register(      self.__VL6180X_SYSRANGE_INTERMEASUREMENT_PERIOD))
+        U.logger.log(10,"SYSALS_INTERMEASUREMENT_PERIOD - %x" %      self.get_register(      self.__VL6180X_SYSALS_INTERMEASUREMENT_PERIOD))
+        U.logger.log(10,"SYSTEM_INTERRUPT_CONFIG_GPIO - %x" %        self.get_register(      self.__VL6180X_SYSTEM_INTERRUPT_CONFIG_GPIO))
+        U.logger.log(10,"SYSRANGE_MAX_CONVERGENCE_TIME - %x" %       self.get_register(      self.__VL6180X_SYSRANGE_MAX_CONVERGENCE_TIME))
+        U.logger.log(10,"SYSRANGE_RANGE_CHECK_ENABLES - %x" %        self.get_register(      self.__VL6180X_SYSRANGE_RANGE_CHECK_ENABLES))
+        #U.logger.log(10,"SYSRANGE_EARLY_CONVERGENCE_ESTIMATE - %x" % self.get_register_16bit(self.__VL6180X_SYSRANGE_EARLY_CONVERGENCE_ESTIMATE))
+        #U.logger.log(10,"SYSALS_INTEGRATION_PERIOD - %x" %           self.get_register_16bit(self.__VL6180X_SYSALS_INTEGRATION_PERIOD))
+        U.logger.log(10,"SYSALS_ANALOGUE_GAIN - %x" %                self.get_register(      self.__VL6180X_SYSALS_ANALOGUE_GAIN))
+        U.logger.log(10,"FIRMWARE_RESULT_SCALER - %x" %              self.get_register(      self.__VL6180X_FIRMWARE_RESULT_SCALER))
 
     def get_identification(self):
 
@@ -441,11 +441,11 @@ class vl6180x:
             self.set_register(self.__VL6180X_SYSRANGE_START, 0x01)
             time.sleep(0.05)
             distance = self.get_register(self.__VL6180X_RESULT_RANGE_VAL)
-            U.toLog(2, "Range status: " +unicode(self.get_register(self.__VL6180X_RESULT_RANGE_STATUS) & 0xF1)+";  distance="  +unicode(distance)+" mm")
+            U.logger.log(10, "Range status: " +unicode(self.get_register(self.__VL6180X_RESULT_RANGE_STATUS) & 0xF1)+";  distance="  +unicode(distance)+" mm")
             self.set_register(self.__VL6180X_SYSTEM_INTERRUPT_CLEAR, 0x07)
             return distance
         except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         return -1
 
     def get_ambient_light(self, lastGain):
@@ -471,7 +471,7 @@ class vl6180x:
                     newG = self.gainList[gL]
                     self.set_register(self.__VL6180X_SYSALS_INTEGRATION_PERIOD, iPeriod &0xff)
                     if newG not in self.ALS_GAIN_ACTUAL:
-                       U.toLog(-1,"Invalid gain setting:"+unicode(newG)+"  Setting to 20.  " , unicode( self.ALS_GAIN_ACTUAL))
+                       U.logger.log(30,"Invalid gain setting:"+unicode(newG)+"  Setting to 20.  " , unicode( self.ALS_GAIN_ACTUAL))
                     als_gain_actual = self.ALS_GAIN_ACTUAL.setdefault(newG, 20)
 
                     reg = self.ALS_GAIN_REG.setdefault(newG, self.__ALS_GAIN_20)
@@ -490,10 +490,10 @@ class vl6180x:
                         wTime+=0.05
                         convReady = self.get_register(self.__VL6180X_RESULT_ALS_STATUS)
                         if convReady & 0xF1 ==1:
-                            U.toLog(2, "ALS status:  ok")
+                            U.logger.log(10, "ALS status:  ok")
                             break
                         else:
-                            U.toLog(3, "ALS status:  busy: "+ unicode(convReady))
+                            U.logger.log(10, "ALS status:  busy: "+ unicode(convReady))
                     # read ALS
                     als_raw = self.get_register_16bit(self.__VL6180X_RESULT_ALS_VAL)  ## is 0x0050
                     # clear ineterrupts
@@ -541,7 +541,7 @@ class vl6180x:
             #print " ret:",als_calculated,als_raw, lastGain
             return als_calculated,  lastGain
         except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         return 0,0
         
     def get_register(self, register_address):
@@ -605,8 +605,8 @@ def getDistance():
 
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"distance>>" + unicode(distance)+"<<")
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
     return ""        
 
 
@@ -626,8 +626,8 @@ def getLight():
 
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"lux>>" + unicode(lux)+"<<")
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"lux>>" + unicode(lux)+"<<")
     return ""        
 
 
@@ -668,6 +668,7 @@ badSensor                   = 0
 sensorActive                = False
 loopSleep                   = 0.1
 gain                        = [5,1]
+U.setLogging()
 
 myPID       = str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -713,7 +714,7 @@ while True:
                 data["sensors"][sensor] = {devId:{}}
                 if distance =="badSensor":
                     first=True
-                    U.toLog(-1," bad sensor")
+                    U.logger.log(30," bad sensor")
                     data["sensors"][sensor][devId]["distance"]="badSensor"
                     U.sendURL(data)
                     lastDist[devId] =-100.
@@ -749,7 +750,7 @@ while True:
                 if displayEnable =="1" and  ( (deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - lastDisplay >10. or  quick):
                     lastDisplay = tt
                     DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-                    U.toLog(1, unicode(dist)+"  "+unicode(deltaDist) )   
+                    U.logger.log(10, unicode(dist)+"  "+unicode(deltaDist) )   
                     #print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
         loopCount +=1
 
@@ -766,6 +767,6 @@ while True:
             time.sleep(loopSleep)
         
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

@@ -52,7 +52,7 @@ def readParams():
 		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 
 		if sensor not in sensors:
-			U.toLog(0,	"no "+ G.program+" sensor defined, exiting",doPrint=True)
+			U.logger.log(10,	"no "+ G.program+" sensor defined, exiting")
 			exit()
 
 		sens= sensors[sensor]
@@ -225,29 +225,29 @@ def readParams():
 			if gpio in GPIOdict: del GPIOdict[gpio]
 		
 		if not oneFound:
-			U.toLog(0,	"no	 gpios setup, exiting",doPrint=True)
+			U.logger.log(10,	"no	 gpios setup, exiting")
 			exit()
 		if	restart:
-			U.toLog(0,	"gpios edge channel deleted, need to restart",doPrint=True)
-			U.restartMyself(param="", reason=" new definitions",doPrint=True)
+			U.logger.log(10,	"gpios edge channel deleted, need to restart")
+			U.restartMyself(param="", reason=" new definitions")
 			
-		U.toLog(0,	"GPIOdict: " +unicode(GPIOdict),doPrint=True)
+		U.logger.log(10,	"GPIOdict: " +unicode(GPIOdict))
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				
 
 def setupSensors():
 
-		U.toLog(0, "starting setup GPIOs ",doPrint=True)
+		U.logger.log(10, "starting setup GPIOs ")
 
 		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.toLog(-1, "starting GPIO: return error "+ ret[0]+"\n"+ret[1],doPrint=True)
+			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		return True
@@ -272,7 +272,7 @@ def fillGPIOdict(gpio,risingOrFalling):
 		ggg["count"]+=1
 		INPUTcount[int(gpio)]+=1
 		ggg["lastSignal"] = tt
-		U.toLog(2, risingOrFalling+" edge on %d2"%gpio+" gpio,	count: %d"% ggg["count"]+", timest: %6.1f"%tt+", lastSendC: %6.1f"%ggg["lastsendCount"]+", minSendDelta: %d"%ggg["minSendDelta"])
+		U.logger.log(10, risingOrFalling+" edge on %d2"%gpio+" gpio,	count: %d"% ggg["count"]+", timest: %6.1f"%tt+", lastSendC: %6.1f"%ggg["lastsendCount"]+", minSendDelta: %d"%ggg["minSendDelta"])
 		countChanged = True
 
 	###############	 this EVENTtype requires a minBurstsinTimeWindowToTrigger  in timeWindowForBursts to trigger ###
@@ -284,18 +284,18 @@ def fillGPIOdict(gpio,risingOrFalling):
 			ii = ll - kk -1
 			if tt-bbb[ii][0] > ggg["timeWindowForBursts"]: 
 				del bbb[ii]
-		U.toLog(2, "BURST: "+str(ll)+"	"+str(tt)+"	 "+ str(bbb)+"	"+str(ggg["timeWindowForBursts"] ))
+		U.logger.log(10, "BURST: "+str(ll)+"	"+str(tt)+"	 "+ str(bbb)+"	"+str(ggg["timeWindowForBursts"] ))
 		ll	=len(bbb)
 		if ll == 0	or	tt - bbb[-1][0]	 < ggg["deadTimeBurst"]: 
 			bbb.append([tt,1])
-			U.toLog(2, "BURST:	in window "+str(ggg["timeWindowForBursts"]))
+			U.logger.log(10, "BURST:	in window "+str(ggg["timeWindowForBursts"]))
 			ll	+=1
 			delupto = -1
 			for kk in range(ll):
 					ii = ll - kk -1
 					bbb[ii][1]+=1
 					if bbb[ii][1] >= ggg["minBurstsinTimeWindowToTrigger"]:
-						U.toLog(2, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpio+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
+						U.logger.log(10, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpio+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
 						burst	= tt
 						delupto = ii-1
 						break
@@ -308,11 +308,11 @@ def fillGPIOdict(gpio,risingOrFalling):
 	lEVENTtt=0
 	bbb =  longEVENT[gpio]
 	if ggg["timeWindowForLongEvents"] > 0:
-		U.toLog(2, "longEVENT(1): "+str(ll)+"  "+str(tt)+";	  timeWindowForLongEvents: "+str(ggg["timeWindowForLongEvents"])+"	secs" )
+		U.logger.log(10, "longEVENT(1): "+str(ll)+"  "+str(tt)+";	  timeWindowForLongEvents: "+str(ggg["timeWindowForLongEvents"])+"	secs" )
 		ll	=len(bbb)
 		if True: 
 			bbb.append([tt,tt+ggg["pulseEveryXXsecsLongEvents"]])
-			U.toLog(2, "contEVENT(2):  in window ;	 N events="+ unicode(ll) )
+			U.logger.log(10, "contEVENT(2):  in window ;	 N events="+ unicode(ll) )
 			ll	   += 1
 			delupto = -1
 			for kk in range(ll):
@@ -321,10 +321,10 @@ def fillGPIOdict(gpio,risingOrFalling):
 					delta0 = tt - bbb[ii][0]
 					if delta1 > 0. and delupto == -1: 
 						delupto = ii-1
-						U.toLog(2, "longEVENT(3) rejected  ")
+						U.logger.log(10, "longEVENT(3) rejected  ")
 						continue
 					if delta0 >= ggg["timeWindowForLongEvents"]:
-						U.toLog(2, "longEVENT(4) triggered ")
+						U.logger.log(10, "longEVENT(4) triggered ")
 						lEVENTtt   = tt
 						delupto	   = ii-1
 					bbb[ii][1]	= tt+ggg["pulseEveryXXsecsLongEvents"]
@@ -347,7 +347,7 @@ def fillGPIOdict(gpio,risingOrFalling):
 			cEVENTtt = tt
 		#  or just conti nue old c event = just update contEVENT not need to send data 
 		contEVENT[gpio] =  tt
-		U.toLog(2, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
+		U.logger.log(10, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
 
 	
 	data = {"sensors":{sensor:{ggg["devId"]:{}}}}
@@ -424,6 +424,7 @@ if not setupSensors():
 	print " gpio are not setup"
 	exit()
 
+U.setLogging()
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
@@ -433,7 +434,7 @@ sensor			  = G.program
 sensors			  ={}
 loopCount		  = 0
 
-U.toLog(-1, "starting "+G.program+" program",doPrint=True)
+U.logger.log(30, "starting "+G.program+" program")
 
 readParams()
 INPUTcount = U.readINPUTcount()
@@ -444,7 +445,7 @@ INPUTcount = U.readINPUTcount()
 for i in range(100):
 	if not setupSensors(): 
 		time.sleep(10)
-		if i%50==0: U.toLog(-1,"sensor libs not installed, need to wait until done",doPrint=True)
+		if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
 	else:
 		break	 
 		
@@ -454,7 +455,7 @@ G.lastAliveSend		= time.time()
 
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," sensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," sensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -487,7 +488,7 @@ while True:
 						lastRead = time.time()
 
 				if restart:
-					U.restartMyself(param="", reason=" new definitions",doPrint=True)
+					U.restartMyself(param="", reason=" new definitions")
 
 			if loopCount%100==0:
 					U.echoLastAlive(G.program)
@@ -504,7 +505,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

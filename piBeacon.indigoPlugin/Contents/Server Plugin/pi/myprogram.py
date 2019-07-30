@@ -47,7 +47,7 @@ def getMyprogram(sensor, data):
             else:
                 data= incrementBadSensor(devId,sensor,data)
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data
 
@@ -65,7 +65,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return data 
 
 
@@ -126,7 +126,7 @@ def checkIfAliveNeedsToBeSend():
         if time.time() - G.lastAliveSend> 330:  # do we have to send alive signal to plugin?
             U.sendURL(sendAlive=True )
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return
 
 
@@ -158,10 +158,11 @@ output              = {}
 readParams()
 
 if U.getIPNumber() > 0:
-    U.toLog(-1," myprogram no ip number  exiting ", doPrint =True)
+    U.logger.log(30," myprogram no ip number  exiting ")
     time.sleep(10)
     exit()
 
+U.setLogging()
 
 myPID       = str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -234,10 +235,10 @@ while True:
             lastMsg = tt
             lastData=copy.copy(data)
             try:
-                #U.toLog(2, u"sending url: "+unicode(data))
+                #U.logger.log(10, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
-                U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+                U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -262,6 +263,6 @@ while True:
                 lastRead = tt
                 checkIfAliveNeedsToBeSend()
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

@@ -171,7 +171,7 @@ class THESENSORCLASS:
 		elif accel_range == self.ACCEL_RANGE_16G:
 			accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_16G
 		else:
-			U.toLog(-1,"Unkown range - accel_scale_modifier set to self.ACCEL_SCALE_MODIFIER_2G")
+			U.logger.log(30,"Unkown range - accel_scale_modifier set to self.ACCEL_SCALE_MODIFIER_2G")
 			accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_2G
 
 		x = x / accel_scale_modifier
@@ -241,7 +241,7 @@ class THESENSORCLASS:
 		elif gyro_range == self.GYRO_RANGE_2000DEG:
 			gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_2000DEG
 		else:
-			U.toLog(-1,"Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
+			U.logger.log(30,"Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
 			gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_250DEG
 
 		x = (x / gyro_scale_modifier)
@@ -282,7 +282,7 @@ def readParams():
 		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program )
 			exit()
 			
 		for devId in sensors[sensor]:
@@ -302,16 +302,16 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #################################
 def startSENSOR(devId, i2cAddress):
 	global theSENSORdict
 	try:
-		U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId))
+		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId))
 		theSENSORdict[devId] = THESENSORCLASS(i2cAddress=i2cAddress)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -325,10 +325,10 @@ def getValues(devId):
 		data["GYR"]		 = theSENSORdict[devId].get_gyro_data()
 		#print data
 		for xx in data:
-			U.toLog(2, (xx).ljust(7)+" "+unicode(data[xx]))
+			U.logger.log(10, (xx).ljust(7)+" "+unicode(data[xx]))
 		return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return {"ACC":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -356,6 +356,8 @@ output						= {}
 sensorActive				= False
 rawOld						= ""
 theSENSORdict					={}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -393,10 +395,10 @@ while True:
 		loopCount +=1
 		quick = U.checkNowFile(G.program)				 
 		if U.checkNewCalibration(G.program):
-			U.toLog(-1, u"starting new calibration in 5 sec for 1 minute.. move sensor around")
+			U.logger.log(30, u"starting new calibration in 5 sec for 1 minute.. move sensor around")
 			time.sleep(5)
 			theSENSORdict[devId].calibrate(force=True,calibTime=60)
-			U.toLog(-1, u"finished	new calibration")
+			U.logger.log(30, u"finished	new calibration")
 			
 		U.echoLastAlive(G.program)
 
@@ -408,6 +410,6 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

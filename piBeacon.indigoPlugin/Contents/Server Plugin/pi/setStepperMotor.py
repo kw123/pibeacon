@@ -69,7 +69,7 @@ def readParams():
 		if "output"					in inp:	 output=			 			   (inp["output"])
 		#### G.debug = 2 
 		if G.program not in output:
-			U.toLog(-1, G.program+ " is not in parameters = not enabled, stopping "+ G.program+".py" )
+			U.logger.log(30, G.program+ " is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
 
 
@@ -209,7 +209,7 @@ def readParams():
 
 	except	Exception, e:
 		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
 		return 3
 
@@ -570,7 +570,7 @@ def checkForNewImput():
 			print "adding new commands",devId, stopMoveNOW[devId], repeat,actionQueue[devId].qsize() , actions
 
 		except Exception, e:
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e),doPrint=True)
+			U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 	return 
    
@@ -626,10 +626,11 @@ nStepsInSequence	= {}
 
 imputFileName = G.homeDir+"temp/"+G.program+".inp"
 
+U.setLogging()
 
 myPID	=   str(os.getpid())
 readParams()
-U.toLog(0, G.program+"  command :" + unicode(sys.argv))
+U.logger.log(10, G.program+"  command :" + unicode(sys.argv))
 
 
 
@@ -650,7 +651,7 @@ if "startAtDateTime" in command:
 	try:
 		delayStart = max(0,U.calcStartTime(command,"startAtDateTime")-time.time())
 		if delayStart > 0:
-			U.toLog(2, "delayStart delayed by: "+ str(delayStart))
+			U.logger.log(10, "delayStart delayed by: "+ str(delayStart))
 			time.sleep(delayStart)
 	except:
 		pass
@@ -661,7 +662,7 @@ U.echoLastAlive(G.program)
 
 
 if readParams() ==3:
-		U.toLog(-1," parameters not defined", doPrint=True)
+		U.logger.log(30," parameters not defined")
 		time.sleep(20)
 		exit()
 	

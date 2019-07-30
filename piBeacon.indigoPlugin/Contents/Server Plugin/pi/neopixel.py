@@ -314,7 +314,7 @@ def set_pixel(x, y, r, g, b):
 		if index is not None:
 			ws2812.setPixelColorRGB(index, r, g, b)
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def get_pixel(x, y):
 	"""Get the RGB value of a single pixel
@@ -370,7 +370,7 @@ def show():
 		"""Update UnicornHat with the contents of the display buffer"""
 		ws2812.show()
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -472,15 +472,15 @@ class draw():
 					self.PIXELS[max(0,min(self.maxY1,y))][x]=applyIntensity(pos[4:7])
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"pos " + unicode(pos))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"pos " + unicode(pos))
 
 	def point(self,pos):
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] =applyIntensity(pos[2:5])
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"pos " + unicode(pos))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"pos " + unicode(pos))
 		return 
 
 	def pixelImage(self,pos,pixs):
@@ -505,7 +505,7 @@ class draw():
 				for x in range(len(pos[0])):
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pos[y][x])
 		else:		 
-			U.toLog(-1,u" error type:"+cType+" pos:"+ unicode(pos) )
+			U.logger.log(30,u" error type:"+cType+" pos:"+ unicode(pos) )
 		return
 		
 	def points(self,pos):
@@ -525,9 +525,9 @@ class draw():
 					x= pos[kk][1]
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))]= applyIntensity(pos[kk][2:5])
 			else:		 
-				U.toLog(-1,u" error type:"+cType+" pos:"+ unicode(pos) )
+				U.logger.log(30,u" error type:"+cType+" pos:"+ unicode(pos) )
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 	def rotateCenter(self,phi=math.pi/2.):
@@ -568,7 +568,7 @@ class draw():
 		return
 		
 	def printPIXELS(self, calledFrom=""):
-		U.toLog(3,"pixels "+ calledFrom +" "+ unicode(len(self.PIXELS))+"  "+ unicode(self.PIXELS)[0:50]+"	<<<<" )
+		U.logger.log(10,"pixels "+ calledFrom +" "+ unicode(len(self.PIXELS))+"  "+ unicode(self.PIXELS)[0:50]+"	<<<<" )
 		return
 
 	def show(self,rotate = 0, rotateSeconds=0,speedOfChange=0):
@@ -581,7 +581,7 @@ class draw():
 			for y in range(0,self.maxY):
 					for x in range(0,self.maxX):
 						#if type(self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))][0]) !="int": 
-						#	 U.toLog(-1, u"error in show,  RGB not int") 
+						#	 U.logger.log(30, u"error in show,  RGB not int") 
 						#	 continue 
 						index = get_index_from_xy(x, y)
 						#print x,y,index , self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))]
@@ -646,8 +646,8 @@ class draw():
 				
 				
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1," pixel len:"+ unicode(len(self.PIXELS))+"  "+ unicode(self.PIXELS)[0:100])
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30," pixel len:"+ unicode(len(self.PIXELS))+"  "+ unicode(self.PIXELS)[0:100])
 			
 	def clear(self,RGB):
 		global LED_COUNT
@@ -706,7 +706,7 @@ def readParams(pgmType="neopixel"):
 					if "PWMchannel"	 in ddd:
 						try:	PWMchannel		 = int(ddd["PWMchannel"])
 						except: pass
-					U.toLog(1, " new params "+
+					U.logger.log(10, " new params "+
 					  "	 devType="		   + unicode(devType)	  +
 					  "	 signalPin="	   + unicode(signalPin)	 +
 					  "	 OrderOfMatrix="   + unicode(OrderOfMatrix)	 +
@@ -716,26 +716,26 @@ def readParams(pgmType="neopixel"):
 					  "	 frequency="	   + unicode(frequency)+
 					  "	 flipDisplay="	   + unicode(flipDisplay))
 					if lastdevType !="" and ( frequency != lastfrequency):	
-						U.toLog(-1, " new frequency="+unicode(frequency)+" new="+unicode(lastfrequency))
+						U.logger.log(30, " new frequency="+unicode(frequency)+" new="+unicode(lastfrequency))
 						retCode = 1
 					if lastdevType !="" and ( DMAchannel != lastDMAchannel):  
-						U.toLog(-1, " new DMAchannel="+unicode(DMAchannel)+" new="+unicode(lastDMAchannel))
+						U.logger.log(30, " new DMAchannel="+unicode(DMAchannel)+" new="+unicode(lastDMAchannel))
 						retCode = 1
 					if lastdevType !="" and ( PWMchannel != lastPWMchannel):  
-						U.toLog(-1, " new PWMchannel="+unicode(PWMchannel)+" new="+unicode(lastPWMchannel))
+						U.logger.log(30, " new PWMchannel="+unicode(PWMchannel)+" new="+unicode(lastPWMchannel))
 						retCode = 1
 					if lastdevType !="" and ( signalPin != lastsignalPin):	
-						U.toLog(-1, " new signalPin="+unicode(signalPin)+" new="+unicode(lastsignalPin))
+						U.logger.log(30, " new signalPin="+unicode(signalPin)+" new="+unicode(lastsignalPin))
 						retCode = 1
 					if lastdevType !="" and ( devType != lastdevType ):	 
-						U.toLog(-1, " new devType="+unicode(lastdevType)+" new="+unicode(devType))
+						U.logger.log(30, " new devType="+unicode(lastdevType)+" new="+unicode(devType))
 						retCode = 1
 					if lastdevType !="" and ( OrderOfMatrix != lastOrderOfMatrix):	
-						U.toLog(-1, " new OrderOfMatrix="+unicode(OrderOfMatrix)+" new="+unicode(lastOrderOfMatrix))
+						U.logger.log(30, " new OrderOfMatrix="+unicode(OrderOfMatrix)+" new="+unicode(lastOrderOfMatrix))
 						retCode = 1
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return	retCode
 					   
 def readNewInput():
@@ -765,7 +765,7 @@ def saveLastCommands(items):
 		f.write(json.dumps(items))	
 		f.close()
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def readLastCommands():
 	try:
@@ -775,7 +775,7 @@ def readLastCommands():
 			f.close()
 			return json.loads(xxx)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return []
 
 def deleteLastCommands():
@@ -829,9 +829,10 @@ except: pass
 
 OrderOfMatrix	= "lrrl"
 inpRaw			= ""
+U.setLogging()
 
 readParams(pgmType=pgmType)
-U.toLog(-1, u"===========	(re) started neopixel  ===============================================")
+U.logger.log(30, u"===========	(re) started neopixel  ===============================================")
 
 
 LED_CHANNEL	   = PWMchannel
@@ -894,7 +895,7 @@ while True:
 
 		for item in items:
 		
-			U.toLog(1, "item:"+unicode(item ))
+			U.logger.log(10, "item:"+unicode(item ))
 			#print item
 			try:
 				if len(item) < 1: continue
@@ -902,13 +903,13 @@ while True:
 					data = json.loads(item)
 				except	Exception, e:
 					if loop >0:
-						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-						U.toLog(-1,unicode(item)[0:100])
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30,unicode(item)[0:100])
 					data = item
 				#print json.dumps(data,sort_keys=True, indent=2)
 			except	Exception, e:
-				U.toLog(-1,"bad input "+ unicode(item) )
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30,"bad input "+ unicode(item) )
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 
 			restoreAfterBoot = False
@@ -916,7 +917,7 @@ while True:
 				try: 
 					restoreAfterBoot = unicode(data["restoreAfterBoot"]).lower() 
 					if restoreAfterBoot == "true" or  restoreAfterBoot == "1" :
-						U.toLog(1, " do a restore after reboot:" +unicode(restoreAfterBoot))
+						U.logger.log(10, " do a restore after reboot:" +unicode(restoreAfterBoot))
 						saveLastCommands(items)
 					else:
 						deleteLastCommands()
@@ -928,7 +929,7 @@ while True:
 					if resetInitial !=[] and resetInitial !="":
 						try:resetInitial= json.loads(resetInitial)
 						except: pass
-						U.toLog(1, " resetting initial:" +unicode(resetInitial))
+						U.logger.log(10, " resetting initial:" +unicode(resetInitial))
 						image.resetImage(resetInitial)
 						image.show()
 				except: pass
@@ -981,7 +982,7 @@ while True:
 					for cmd in data["command"]:
 						try:
 								tt= time.time()
-								#U.toLog(1, "cmd:"+ unicode(cmd) )
+								#U.logger.log(10, "cmd:"+ unicode(cmd) )
 								if "type" not in cmd: continue
 								cType = cmd["type"]
 								if cType == "" or cType == "0":	 continue
@@ -993,7 +994,7 @@ while True:
 									reset =cmd["reset"]
 									if reset !=[]:
 										try:		image.resetImage(reset)
-										except:		U.toLog(-1, " reset error :" +unicode(reset))
+										except:		U.logger.log(30, " reset error :" +unicode(reset))
 
 
 								if loopCount%100000 ==0:
@@ -1011,7 +1012,7 @@ while True:
 										except: pass
 								
 								if cType == "NOP" :
-										U.toLog(2,u"skipping display ..	 NOP")
+										U.logger.log(10,u"skipping display ..	 NOP")
 										continue
 
 								rotate=0
@@ -1038,7 +1039,7 @@ while True:
 
 
 							
-								#U.toLog(2,u"type:"+cType+" pos:"+ unicode(pos)[0:20] )
+								#U.logger.log(10,u"type:"+cType+" pos:"+ unicode(pos)[0:20] )
 								if cType == "line":
 									image.line(pos)
 							
@@ -1050,7 +1051,7 @@ while True:
 									image.point(pos)
 					
 								elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:
-										U.toLog(2,u"type:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"])
+										U.logger.log(10,u"type:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"])
 										pass
 
 								elif cType == "matrix":
@@ -1157,8 +1158,8 @@ while True:
 															ll = lin[ii][2:]
 															lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
 											except	Exception, e:
-												U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-												U.toLog(-1, aa +"  "+ unicode(pos[aa]))
+												U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+												U.logger.log(30, aa +"  "+ unicode(pos[aa]))
 									for ii in range(len(lin)):
 										lin[ii] =  [0,lin[ii][1], min(255,max(lin[ii][2],0)),min(255,max(lin[ii][3],0)),min(255,max(lin[ii][4],0)) ]
 											
@@ -1166,7 +1167,7 @@ while True:
 									image.points(lin)
 
 								if "display" not in cmd or cmd["display"] != "wait": 
-									U.toLog(2, u"displaying	 "+ cmd["type"] )
+									U.logger.log(10, u"displaying	 "+ cmd["type"] )
 									tt3 = time.time()
 									image.show(rotate=rotate, rotateSeconds=rotateSeconds, speedOfChange=speedOfChange)
 								if cType == "clock":
@@ -1195,8 +1196,8 @@ while True:
 								if checkIfnewInput(): break
 								
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							#U.toLog(-1, unicode(cmd))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							#U.logger.log(30, unicode(cmd))
 					if checkIfnewInput(): break
 					if cType == "clock": 
 						time.sleep(min(0.1, max(0,time.time()- lastClock)))
@@ -1207,7 +1208,7 @@ while True:
 			if checkIfnewInput():
 				items=readNewInput()
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				
 		if loop %20 ==0:
 			if readParams(pgmType=pgmType) ==1:
@@ -1218,7 +1219,7 @@ while True:
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		items=[]
 
 

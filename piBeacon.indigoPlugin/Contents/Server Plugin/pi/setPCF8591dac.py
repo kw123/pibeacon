@@ -27,37 +27,38 @@ def readParams():
         if u"debugRPI"          in inp:  G.debug=             int(inp["debugRPI"]["debugRPIOUTPUT"])
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
          
 
 ######### main ######
+U.setLogging()
 
 myPID       = str(os.getpid())
 readParams()
-U.toLog(1, "setPCF8591  command :" + unicode(sys.argv))
+U.logger.log(10, "setPCF8591  command :" + unicode(sys.argv))
 
 command = json.loads(sys.argv[1])
 
 if "i2cAddress" in command:
     i2cAddress= int(command["i2cAddress"])
 else:
-    U.toLog(-1, "setPCF8591dac bad command " + command + "  i2cAddress not included")
+    U.logger.log(30, "setPCF8591dac bad command " + command + "  i2cAddress not included")
     exit(1)
     
 U.killOldPgm(myPID,"setPCF8591dac.py", param1='"i2cAddress": "' + str(i2cAddress) + '"')# del old instances of myself if they are still running
 
-U.toLog(2, "startAtDateTime"+ str(command["startAtDateTime"]))
-U.toLog(2, "time.time()    "+ str(time.time()))
+U.logger.log(10, "startAtDateTime"+ str(command["startAtDateTime"]))
+U.logger.log(10, "time.time()    "+ str(time.time()))
 
 
 if "startAtDateTime" in command:
     try:
         delayStart = max(0,U.calcStartTime(command,"startAtDateTime")-time.time())
         if delayStart > 0:
-            U.toLog(2, "delayStart delayed by: "+ str(delayStart))
+            U.logger.log(10, "delayStart delayed by: "+ str(delayStart))
             time.sleep(delayStart)
     except  Exception, e:
-        U.toLog(-1,  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30,  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 bus = smbus.SMBus(1)
@@ -87,21 +88,21 @@ try:
     else:                       
                                 bits = 0
                                 analogValue = 0
-    U.toLog(1, "cmd: "+str(cmd)+"  up:"+str(values["pulseUp"])+"  down:"+str(values["pulseDown"])+"  nPulses:"+str(values["nPulses"])+"  volts:"+str(values["analogValue"]))
+    U.logger.log(10, "cmd: "+str(cmd)+"  up:"+str(values["pulseUp"])+"  down:"+str(values["pulseDown"])+"  nPulses:"+str(values["nPulses"])+"  volts:"+str(values["analogValue"]))
 
     
     if cmd == "analogWrite":
-        #U.toLog(2, "analogWrite:"+str(analogValue))
+        #U.logger.log(10, "analogWrite:"+str(analogValue))
         bus.write_byte_data(int(i2cAddress),0x40, bits)
 
     elif cmd == "pulseUp":
-        #U.toLog(2, "pulse UP:"+str(pulseUp)+"  bits:"+str(bits))
+        #U.logger.log(10, "pulse UP:"+str(pulseUp)+"  bits:"+str(bits))
         bus.write_byte_data(int(i2cAddress),0x40, bits)
         time.sleep(pulseUp)
         bus.write_byte_data(int(i2cAddress),0x40, 0)
 
     elif cmd == "pulseDown":
-        #U.toLog(2, "pulse down:"+str(pulseDown)+"  bits:"+str(bits))
+        #U.logger.log(10, "pulse down:"+str(pulseDown)+"  bits:"+str(bits))
         bus.write_byte_data(int(i2cAddress),0x40, 0)
         time.sleep(pulseUp)
         bus.write_byte_data(int(i2cAddress),0x40, bits)
@@ -110,7 +111,7 @@ try:
         nn=0
         while nn< nPulses:
             nn+=1
-            #U.toLog(2, "continuousUpDown: up:"+str(pulseUp)+"  down:"+str(pulseDown)+"  bits:"+str(bits))
+            #U.logger.log(10, "continuousUpDown: up:"+str(pulseUp)+"  down:"+str(pulseDown)+"  bits:"+str(bits))
             bus.write_byte_data(int(i2cAddress),0x40, bits)
             time.sleep(pulseUp)
             bus.write_byte_data(int(i2cAddress),0x40, 0)
@@ -120,4 +121,4 @@ try:
             
 
 except  Exception, e:
-    U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

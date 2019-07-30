@@ -296,7 +296,7 @@ class VEML6070:
 			self.set_integration_time(integrationTime&0x03)
 			self.disable()
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def set_integration_time(self, integrationTime):
 		try:
@@ -305,7 +305,7 @@ class VEML6070:
 			# constant offset determined experimentally to allow sensor to readjust
 			time.sleep(0.2)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def get_integration_time(self):
 		return self.integration_time
@@ -446,7 +446,7 @@ class BME280:
 			self._device.write8(self.BME280_REGISTER_CONTROL, 0x3F)
 			self.t_fine = 0.0
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		
 
 	def _load_calibration(self):
@@ -654,17 +654,17 @@ class BMP085:
 		self.cal_MB = self._device.readS16BE(self.BMP085_CAL_MB)	 # INT16
 		self.cal_MC = self._device.readS16BE(self.BMP085_CAL_MC)	 # INT16
 		self.cal_MD = self._device.readS16BE(self.BMP085_CAL_MD)	 # INT16
-		U.toLog(3,'AC1 = {0:6d}'.format(self.cal_AC1))
-		U.toLog(3,'AC2 = {0:6d}'.format(self.cal_AC2))
-		U.toLog(3,'AC3 = {0:6d}'.format(self.cal_AC3))
-		U.toLog(3,'AC4 = {0:6d}'.format(self.cal_AC4))
-		U.toLog(3,'AC5 = {0:6d}'.format(self.cal_AC5))
-		U.toLog(3,'AC6 = {0:6d}'.format(self.cal_AC6))
-		U.toLog(3,'B1 = {0:6d}'.format(self.cal_B1))
-		U.toLog(3,'B2 = {0:6d}'.format(self.cal_B2))
-		U.toLog(3,'MB = {0:6d}'.format(self.cal_MB))
-		U.toLog(3,'MC = {0:6d}'.format(self.cal_MC))
-		U.toLog(3,'MD = {0:6d}'.format(self.cal_MD))
+		U.logger.log(10,'AC1 = {0:6d}'.format(self.cal_AC1))
+		U.logger.log(10,'AC2 = {0:6d}'.format(self.cal_AC2))
+		U.logger.log(10,'AC3 = {0:6d}'.format(self.cal_AC3))
+		U.logger.log(10,'AC4 = {0:6d}'.format(self.cal_AC4))
+		U.logger.log(10,'AC5 = {0:6d}'.format(self.cal_AC5))
+		U.logger.log(10,'AC6 = {0:6d}'.format(self.cal_AC6))
+		U.logger.log(10,'B1 = {0:6d}'.format(self.cal_B1))
+		U.logger.log(10,'B2 = {0:6d}'.format(self.cal_B2))
+		U.logger.log(10,'MB = {0:6d}'.format(self.cal_MB))
+		U.logger.log(10,'MC = {0:6d}'.format(self.cal_MC))
+		U.logger.log(10,'MD = {0:6d}'.format(self.cal_MD))
 
 	def _load_datasheet_calibration(self):
 		# Set calibration from values in the datasheet example.	 Useful for debugging the
@@ -686,7 +686,7 @@ class BMP085:
 		self._device.write8(self.BMP085_CONTROL, self.BMP085_READTEMPCMD)
 		time.sleep(0.005)  # Wait 5ms
 		raw = self._device.readU16BE(self.BMP085_TEMPDATA)
-		U.toLog(3,'Raw temp 0x{0:X} ({1})'.format(raw & 0xFFFF, raw))
+		U.logger.log(10,'Raw temp 0x{0:X} ({1})'.format(raw & 0xFFFF, raw))
 		return raw
 
 	def read_raw_pressure(self):
@@ -704,7 +704,7 @@ class BMP085:
 		lsb = self._device.readU8(self.BMP085_PRESSUREDATA+1)
 		xlsb = self._device.readU8(self.BMP085_PRESSUREDATA+2)
 		raw = ((msb << 16) + (lsb << 8) + xlsb) >> (8 - self._mode)
-		U.toLog(3,'Raw pressure 0x{0:04X} ({1})'.format(raw & 0xFFFF, raw))
+		U.logger.log(10,'Raw pressure 0x{0:04X} ({1})'.format(raw & 0xFFFF, raw))
 		return raw
 
 	def read_temperature(self):
@@ -717,7 +717,7 @@ class BMP085:
 		X2 = (self.cal_MC << 11) // (X1 + self.cal_MD)
 		B5 = X1 + X2
 		temp = ((B5 + 8) >> 4) / 10.0
-		U.toLog(3,'Calibrated temperature {0} C'.format(temp))
+		U.logger.log(10,'Calibrated temperature {0} C'.format(temp))
 		return temp
 
 	def read_pressure(self):
@@ -732,22 +732,22 @@ class BMP085:
 		X1 = ((UT - self.cal_AC6) * self.cal_AC5) >> 15
 		X2 = (self.cal_MC << 11) // (X1 + self.cal_MD)
 		B5 = X1 + X2
-		U.toLog(3,'B5 = {0}'.format(B5))
+		U.logger.log(10,'B5 = {0}'.format(B5))
 		# Pressure Calculations
 		B6 = B5 - 4000
-		U.toLog(3,'B6 = {0}'.format(B6))
+		U.logger.log(10,'B6 = {0}'.format(B6))
 		X1 = (self.cal_B2 * (B6 * B6) >> 12) >> 11
 		X2 = (self.cal_AC2 * B6) >> 11
 		X3 = X1 + X2
 		B3 = (((self.cal_AC1 * 4 + X3) << self._mode) + 2) // 4
-		U.toLog(3,'B3 = {0}'.format(B3))
+		U.logger.log(10,'B3 = {0}'.format(B3))
 		X1 = (self.cal_AC3 * B6) >> 13
 		X2 = (self.cal_B1 * ((B6 * B6) >> 12)) >> 16
 		X3 = ((X1 + X2) + 2) >> 2
 		B4 = (self.cal_AC4 * (X3 + 32768)) >> 15
-		U.toLog(3,'B4 = {0}'.format(B4))
+		U.logger.log(10,'B4 = {0}'.format(B4))
 		B7 = (UP - B3) * (50000 >> self._mode)
-		U.toLog(3,'B7 = {0}'.format(B7))
+		U.logger.log(10,'B7 = {0}'.format(B7))
 		if B7 < 0x80000000:
 			p = (B7 * 2) // B4
 		else:
@@ -756,7 +756,7 @@ class BMP085:
 		X1 = (X1 * 3038) >> 16
 		X2 = (-7357 * p) >> 16
 		p = p + ((X1 + X2 + 3791) >> 4)
-		U.toLog(3,'Pressure {0} Pa'.format(p))
+		U.logger.log(10,'Pressure {0} Pa'.format(p))
 		return p
 
 	def read_altitude(self, sealevel_pa=101325.0):
@@ -764,7 +764,7 @@ class BMP085:
 		# Calculation taken straight from section 3.6 of the datasheet.
 		pressure = float(self.read_pressure())
 		altitude = 44330.0 * (1.0 - pow(pressure / sealevel_pa, (1.0/5.255)))
-		U.toLog(3,'Altitude {0} m'.format(altitude))
+		U.logger.log(10,'Altitude {0} m'.format(altitude))
 		return altitude
 
 	def read_sealevel_pressure(self, altitude_m=0.0):
@@ -772,7 +772,7 @@ class BMP085:
 		meters. Returns a value in Pascals."""
 		pressure = float(self.read_pressure())
 		p0 = pressure / pow(1.0 - altitude_m/44330.0, 5.255)
-		U.toLog(3,'Sealevel pressure {0} Pa'.format(p0))
+		U.logger.log(10,'Sealevel pressure {0} Pa'.format(p0))
 		return p0
 
 
@@ -928,7 +928,7 @@ class ADS1x15:
 			# any function that accepts a pga value must update this.
 			self.pga = 6144
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -1012,7 +1012,7 @@ class ADS1x15:
 				#print val, result
 				return val
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -1138,7 +1138,7 @@ class OPT3001:
 			self.simpleRW.write(self.setHihLimit)
 			time.sleep(0.8)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def readLux(self):
 		try:
@@ -1161,7 +1161,7 @@ class OPT3001:
 				if (exp > 11 or lux > 83865.60) and nn < 10: continue  #out of bounce?
 				return lux
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			self.simpleRW.write(self.readStartSingle)
 			self.simpleRW.write(self.setLowLimit)
 			self.simpleRW.write(self.setHihLimit)
@@ -1426,7 +1426,7 @@ class SHT21:
 			temp -= 46.85
 			return temp
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 		
 
@@ -1445,7 +1445,7 @@ class SHT21:
 			hum -= 6
 			return min(hum,100.)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 		
 
@@ -1528,7 +1528,7 @@ class AM2320:
 				raise CommunicationError("AM2320 CRC error.")
 			return buf_str[2:-2]
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "	"
 
 	def _am_crc16(self, buf):
@@ -1565,8 +1565,8 @@ class AM2320:
 			t = struct.unpack('>H', raw_data[-2:])[0] / 10.0
 			h = struct.unpack('>H', raw_data[-4:2])[0] / 10.0
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.toLog(-1, u"return  value: t="+ unicode(t)+"; h="+ unicode(h)	 )
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"return  value: t="+ unicode(t)+"; h="+ unicode(h)	 )
 		return t,h
 
 
@@ -1639,15 +1639,15 @@ class MCP9808:
 		# Check manufacturer and device ID match expected values.
 		mid = self._device.readU16BE(self.MCP9808_REG_MANUF_ID)
 		did = self._device.readU16BE(self.MCP9808_REG_DEVICE_ID)
-		U.toLog(3,'Read manufacturer ID: {0:04X}'.format(mid))
-		U.toLog(3,'Read device ID: {0:04X}'.format(did))
+		U.logger.log(10,'Read manufacturer ID: {0:04X}'.format(mid))
+		U.logger.log(10,'Read device ID: {0:04X}'.format(did))
 		return mid == 0x0054 and did == 0x0400
 
 	def readTempC(self):
 		"""Read sensor and return its value in degrees celsius."""
 		# Read temperature register value.
 		t = self._device.readU16BE(self.MCP9808_REG_AMBIENT_TEMP)
-		U.toLog(3,'Raw ambient temp register value: 0x{0:04X}'.format(t & 0xFFFF))
+		U.logger.log(10,'Raw ambient temp register value: 0x{0:04X}'.format(t & 0xFFFF))
 		# Scale and convert to signed value.
 		temp = (t & 0x0FFF) / 16.0
 		if t & 0x1000:
@@ -1819,7 +1819,7 @@ class VEML6030:
 			#print A,W
 			return	A,W
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -1978,7 +1978,7 @@ class VEML7700:
 			##print A,W
 			return	A,W
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -2096,7 +2096,7 @@ class VEML6075:
 			return max(UVIA,0.), max(UVIB,0)
 
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -2740,7 +2740,7 @@ class VEML6040:
 			self.maxResult = 20000
 			self.itLast	   = 1
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 		
@@ -2817,7 +2817,7 @@ class VEML6040:
 			W= sorted(W_DATA_LUX)[1]
 			return	[R, G, B, W]
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -2860,7 +2860,7 @@ def startT5403(i2c=0):
 	c6 = uint16Toint16(c6)
 	c7 = uint16Toint16(c7)
 	c8 = uint16Toint16(c8)
-	U.toLog(1, u"enabled T5403")
+	U.logger.log(0, u"enabled T5403")
 
 def uint16Toint16(data):
 		if data > 32767:
@@ -2918,7 +2918,7 @@ def getT5403(sensor, data):
 			s = (((( c5 * temp_raw) >> 15) * temp_raw) >> 19) + c3 + (( c4 * temp_raw) >> 17)
 			o = (((( c8 * temp_raw) >> 15) * temp_raw) >> 4) + (( c7 * temp_raw) >> 3) + (c6 * 0x4000)
 			press= (s * pressure_raw + o) >> 14
-			#U.toLog(5, u" temp press "+ str(temp_raw)+ " "+ str(pressure_raw))
+			#U.logger.log(10, u" temp press "+ str(temp_raw)+ " "+ str(pressure_raw))
 			t = temp_actual
 			p = press
 
@@ -2937,8 +2937,8 @@ def getT5403(sensor, data):
 				data= incrementBadSensor(devId,sensor,data)
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u" sensor bad T5403 @ "+ unicode(sensorT5403i))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u" sensor bad T5403 @ "+ unicode(sensorT5403i))
 			
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -2974,8 +2974,8 @@ def getBMP(sensor, data):
 				if p < 0: 
 					raise ValueError("bad return value, pressure < 0") 
 			except	Exception, e:
-					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.toLog(-1, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
+					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(30, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t!="":
@@ -2994,7 +2994,7 @@ def getBMP(sensor, data):
 			else:
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3033,8 +3033,8 @@ def getBME(sensor, data,BMP=False):
 				if not BMP:
 					h = sensorBME280[devId].read_humidity()
 			except	Exception, e:
-					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.toLog(-1, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
+					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(30, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t!="":
@@ -3067,7 +3067,7 @@ def getBME(sensor, data,BMP=False):
 			else:
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3115,9 +3115,9 @@ def getSHT21(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3157,9 +3157,9 @@ def getLM75A(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3206,9 +3206,9 @@ def getAM2320(sensor, data):
 					else:
 						data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3245,7 +3245,7 @@ def getMCP9808(sensor, data):
 				data= incrementBadSensor(devId,sensor,data)
 		if sensor in data and data[sensor]=={}: del data[sensor]
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3297,7 +3297,7 @@ def getTCS34725(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	return data
 
@@ -3350,7 +3350,7 @@ def getMS5803(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3393,7 +3393,7 @@ def getADC121(sensor, data):
 				print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	return data
 
@@ -3433,7 +3433,7 @@ def getOPT3001(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3468,14 +3468,14 @@ def getVEML7700(sensor, data):
 					data[sensor][devId]["ambient"]		= round(ambient,2)
 					data[sensor][devId]["white"]		= round(white,2)
 					putValText(sensors[sensor][devId],[ambient],["lux"])
-					U.toLog(2, u"VEML7700: "+ unicode(data[sensor][devId]))
+					U.logger.log(10, u"VEML7700: "+ unicode(data[sensor][devId]))
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3508,13 +3508,13 @@ def getVEML6030(sensor, data):
 					data[sensor][devId]["ambient"]		= round(ambient,2)
 					data[sensor][devId]["white"]		= round(white,2)
 					putValText(sensors[sensor][devId],[ambient],["lux"])
-					U.toLog(2, u"VEML6030: "+ unicode(data[sensor][devId]))
+					U.logger.log(10, u"VEML6030: "+ unicode(data[sensor][devId]))
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3554,10 +3554,10 @@ def getVEML6040(sensor, data):
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3598,7 +3598,7 @@ def getTMP102(sensor, data):
 			else:	 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3640,7 +3640,7 @@ def getIS1145(sensor, data):
 			except:
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		data= incrementBadSensor(devId,sensor,data)
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3682,10 +3682,10 @@ def getVEML6075(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 			except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3722,7 +3722,7 @@ def getTSL2561(sensor, data):
 				data= incrementBadSensor(devId,sensor,data)
 		if sensor in data and data[sensor]=={}: del data[sensor]
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3780,7 +3780,7 @@ def getADS1x15(sensor, data):
 
 	except	Exception, e:
 		data= incrementBadSensor(devId,sensor,data)
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3838,7 +3838,7 @@ def getVEML6070(sensor, data):
 			except:
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3883,7 +3883,7 @@ def getPCF8591(sensor, data):
 			else:
 					data[sensor][devId]["INPUT_0"]	= v[input]
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		data= incrementBadSensor(devId,sensor,data)
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3937,7 +3937,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 			data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return data 
 
 
@@ -4439,17 +4439,17 @@ def doDisplay():
 			f=open(G.homeDir+"temp/display.inp",wmode); f.write(json.dumps(out)+"\n"); f.close()
 		except:
 			try:
-				U.toLog(-1,"retry to write to display.inp", doPrint=True )
+				U.logger.log(30,"retry to write to display")
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","w"); f.write(json.dumps(out)+"\n"); f.close()
 			except	Exception, e:
-				U.toLog(-1,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True )
+				U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				if unicode(e).find("No space left on device") >-1:
 					os.system("rm "+G.homeDir+"temp/* ")
 		return 
 	except	Exception, e:
-		U.toLog(-1,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True )
-		U.toLog(-1,unicode(sValues), doPrint=True )
+		U.logger.log(30,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,unicode(sValues))
 
 
 
@@ -4521,10 +4521,12 @@ authentication		= "digest"
 quick				= False
 output				= {}
 
+U.setLogging()
+
 readParams()
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," getsensors no ip number  exiting ", doPrint =True)
+	U.logger.log(30," getsensors no ip number  exiting ",)
 	time.sleep(10)
 	exit()
 
@@ -4535,7 +4537,7 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == 1: 
 	if U.getIPNumber() > 0:
-		U.toLog(-1,"no ip number working, giving up", doPrint = True )
+		U.logger.log(30,"no ip number working, giving up")
 		time.sleep(10)
 		exit()
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -4633,7 +4635,7 @@ while True:
 			try:
 				U.sendURL({"sensors":data})
 			except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+				U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			time.sleep(0.05)
 
 		quick = U.checkNowFile(G.program)				 
@@ -4658,6 +4660,6 @@ while True:
 				lastRead = tt
 				U.checkIfAliveNeedsToBeSend()
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

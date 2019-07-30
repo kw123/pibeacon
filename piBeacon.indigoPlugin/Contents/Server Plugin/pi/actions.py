@@ -16,7 +16,7 @@ import	json
 
 sys.path.append(os.getcwd())
 print sys.path
-from	piBeaconUtils import *
+import	piBeaconUtils as U
 import	piBeaconGlobals as G
 
 
@@ -40,7 +40,7 @@ def doActions():
 
 ### actions: [{1},{2},{3}]
 		except	Exception, e:
-			U.toLog(-1," in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True )
+			U.logger.log(30," in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
 
 
 #################################
@@ -61,8 +61,10 @@ myPID		= str(os.getpid())
 
 killOldPgm(myPID,"actions.py")# old old instances of myself if they are still running
 
+U.setLogging()
+
 loopCount		  = 0
-toLog(G.debug,-1, "starting action program")
+U.logger.log(30, "starting action program")
 readParams()
 # check if everything is installed
 
@@ -92,7 +94,7 @@ while True:
 
 		time.sleep(0.1)
 	except	Exception, e:
-		toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
 

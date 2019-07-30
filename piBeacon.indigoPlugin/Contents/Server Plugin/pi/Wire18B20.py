@@ -39,11 +39,11 @@ def get18B20(sensor, data):
             for line in devs:
                 if len(line) < 5: continue
                 if line.find("28-")==-1: continue  # should be something like: "28-800000035de5"
-                U.toLog(2,"wire18B20 return data1 "+ unicode(line))
+                U.logger.log(10,"wire18B20 return data1 "+ unicode(line))
                 if not os.path.isfile("/sys/bus/w1/devices/"+line+"/w1_slave"): continue
                 oneWirecmd="cat  /sys/bus/w1/devices/"+line+"/w1_slave"
                 dataW= subprocess.Popen(oneWirecmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
-                U.toLog(2,"wire18B20 return data2 "+ unicode(dataW))
+                U.logger.log(10,"wire18B20 return data2 "+ unicode(dataW))
                 ##59 01 ff ff 7f ff ff ff 82 : crc=82 YES
                 ##59 01 ff ff 7f ff ff ff 82 t=21562
                 #print data
@@ -56,8 +56,8 @@ def get18B20(sensor, data):
                             ##ret[line] = ("%.2f"%(float(t1[1])/1000.)).strip()
             tempList= ret # {"28-800000035de5": 21.6, ...}  
         except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"return  value: data="+ unicode(data))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"return  value: data="+ unicode(data))
             tempList = {} 
 
         devId0 = sensors[sensor].keys()[0] # get any key 
@@ -99,7 +99,7 @@ def get18B20(sensor, data):
                 data= incrementBadSensor(devId0,sensor,data,text="badSensor, no info")
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
 
@@ -119,7 +119,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return data 
 
 
@@ -212,11 +212,12 @@ enableSPIpinsAsGpio = "0"
 authentication      = "digest"
 quick               = False
 output              = {}
+U.setLogging()
 
 readParams()
 
 if U.getIPNumber() > 0:
-    U.toLog(-1," getsensors no ip number  exiting ", doPrint =True)
+    U.logger.log(30," getsensors no ip number  exiting ")
     time.sleep(10)
     exit()
 
@@ -227,7 +228,7 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == 1: 
     if U.getIPNumber() > 0:
-        U.toLog(-1,"no ip number working, giving up", doPrint = True)
+        U.logger.log(30,"no ip number working, giving up")
         time.sleep(10)
         exit()
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -303,10 +304,10 @@ while True:
             lastMsg = tt
             lastData=copy.copy(data)
             try:
-                #U.toLog(2, u"sending url: "+unicode(data))
+                #U.logger.log(10, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
-                U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+                U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -331,6 +332,6 @@ while True:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

@@ -144,8 +144,8 @@ class thisSensorClass:
 				print "---------------------------------------"
 			return acumValues
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
-		U.toLog(-1, " bad read, ..	receivedCharacters"+ str(len(receivedCharacters))+":"+str(":".join("{:02x}".format(ord(c)) for c in receivedCharacters)), doPrint=True)
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, " bad read, ..	receivedCharacters"+ str(len(receivedCharacters))+":"+str(":".join("{:02x}".format(ord(c)) for c in receivedCharacters)))
 		return "badSensor"
 
 
@@ -187,11 +187,11 @@ def readParams():
 
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping BME680.py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping BME680.py" )
 			exit()
 			
 
-		U.toLog(1, G.program+" reading new parameter file" )
+		U.logger.log(10, G.program+" reading new parameter file" )
 
 
  
@@ -239,7 +239,7 @@ def readParams():
 				startSensor(devId)
 				if thisSensor[devId] =="":
 					return
-			U.toLog(-1," new parameters read: minSendDelta:"+unicode(minSendDelta)+"   deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
+			U.logger.log(10," new parameters read: minSendDelta:"+unicode(minSendDelta)+"   deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
 				
 		deldevID={}		   
 		for devId in thisSensor:
@@ -252,8 +252,8 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),doPrint=True)
-		U.toLog(-1,str(sensors[sensor]) )
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,str(sensors[sensor]) )
 		
 
 
@@ -262,7 +262,7 @@ def startSensor(devId):
 	global sensors,sensor
 	global startTime
 	global thisSensor, firstValue
-	U.toLog(-1,"==== Start "+G.program+" ===== ")
+	U.logger.log(30,"==== Start "+G.program+" ===== ")
 	startTime =time.time()
  
 	try:
@@ -270,7 +270,7 @@ def startSensor(devId):
 		thisSensor[devId]  = thisSensorClass(serialPort = sP)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		thisSensor[devId] =""
 	return
 
@@ -299,11 +299,11 @@ def getValues(devId):
 					"particles_25um":	retData[9], 
 					"particles_50um":	retData[10], 
 					"particles_100um":	retData[11]	 }
-			U.toLog(2, unicode(data)) 
+			U.logger.log(10, unicode(data)) 
 			badSensor = 0
 			return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	badSensor+=1
 	if badSensor >3: return "badSensor"
 	return ""
@@ -317,7 +317,7 @@ def resetSensor(devId =""):
 			pin = int(pin)
 			if pin > 26:  continue 
 			if pin < 2:	  continue	
-			U.toLog(-1, u"resetting pmAirquality device")
+			U.logger.log(10, u"resetting pmAirquality device")
 			GPIO.setup(pin, GPIO.OUT)
 			GPIO.output(pin, True)
 			time.sleep(0.1)
@@ -360,6 +360,8 @@ rawOld						= ""
 thisSensor					= {}
 deltaX						= {}
 displayEnable				= 0
+U.setLogging()
+
 myPID						= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -406,7 +408,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 						resetSensor(devId=devId)
 					else:
@@ -424,7 +426,7 @@ while True:
 							deltaN= max(deltaN,abs(delta) / max (0.5,(current+lastValues2[devId][xx])/2.))
 							lastValues[devId][xx] = current
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				else:
 					continue
 				if sensorWasBad or (   ( deltaN > deltaX[devId] ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
@@ -458,7 +460,7 @@ while True:
 				time.sleep(5.)
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 		

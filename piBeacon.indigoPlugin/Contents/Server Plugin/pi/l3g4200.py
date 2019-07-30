@@ -42,7 +42,7 @@ class THESENSORCLASS:
 			self.L3G4200SetCalibration()
 
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 	def L3G4200SetCalibration(self):
@@ -141,14 +141,14 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program )
 			exit()
 
 		for devId in sensors[sensor]:
 			U.getMAGReadParameters(sensors[sensor][devId],devId)
 
 			if devId not in theSENSORdict:
-				U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(G.i2cAddress))
+				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(G.i2cAddress))
 				theSENSORdict[devId] = THESENSORCLASS(i2cAddress=G.i2cAddress)
 				
 		deldevID={}		   
@@ -162,7 +162,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -178,12 +178,12 @@ def getValues(devId):
 				continue
 			temp = theSENSORdict[devId].getTemp() - G.offsetTemp[devId]
 			data = {"GYR":{"x":x, "y":y, "z":z},"temp":temp}
-			U.toLog (2, unicode(data))
+			U.logger.log(10, unicode(data))
 			badSensor = 0
 			return data
 		except	Exception, e:
 			if badSensor > 2 and badSensor < 5: 
-				U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) +"  "+ unicode(badSensor))
+				U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) +"  "+ unicode(badSensor))
 			badSensor+=1
 	if badSensor >3: return "badSensor"
 	return{"GYR":{"x":"", "y":"", "z":""},"temp":"" }	
@@ -210,6 +210,8 @@ sensor						= G.program
 quick						= False
 rawOld						= ""
 theSENSORdict				= {}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -257,6 +259,6 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

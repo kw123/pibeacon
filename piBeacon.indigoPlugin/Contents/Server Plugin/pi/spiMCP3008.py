@@ -46,8 +46,8 @@ def startMCP3008(devId):
                         spi1.open(0,1)
                     #print spiAdd, spi0,spi1    
         except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"spi channel used: "+ unicode(spiAdd)+";    dev= "+unicode(devId))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"spi channel used: "+ unicode(spiAdd)+";    dev= "+unicode(devId))
 
 def getMCP3008(sensor, data):
     global sensorMCP3008, MCP3008Started
@@ -96,7 +96,7 @@ def getMCP3008(sensor, data):
                 data[sensor][devId]["INPUT_0"]  =v
                 if devId in badSensors: del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         data= incrementBadSensor(sensor,data)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
@@ -117,7 +117,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return data 
 
 
@@ -222,6 +222,7 @@ enableSPIpinsAsGpio = "0"
 authentication      = "digest"
 quick               = False
 output              = {}
+U.setLogging()
 
 readParams()
 if enableSPIpinsAsGpio=="0" and ( "spiMCP3008" in sensors or "spiMCP3008-1" in sensors):
@@ -234,7 +235,7 @@ if enableSPIpinsAsGpio=="0" and "spiMCP3008-1" in sensors:
         startMCP3008(devId)
 
 if U.getIPNumber() > 0:
-    U.toLog(-1," getsensors no ip number  exiting ", doPrint =True)
+    U.logger.log(30," getsensors no ip number  exiting ")
     time.sleep(10)
     exit()
 
@@ -311,10 +312,10 @@ while True:
             lastMsg = tt
             lastData=copy.copy(data)
             try:
-                #U.toLog(2, u"sending url: "+unicode(data))
+                #U.logger.log(10, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
             except  Exception, e:
-                U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+                U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -339,6 +340,6 @@ while True:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

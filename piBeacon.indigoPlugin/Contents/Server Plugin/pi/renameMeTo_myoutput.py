@@ -32,6 +32,7 @@ def readParams():
 # Main
 # ===========================================================================
 
+U.setLogging()
 
 try:
         readParams()
@@ -39,7 +40,7 @@ try:
         myPID = str(os.getpid())
         U.killOldPgm(myPID,"myoutput.py")# kill  old instances of myself if they are still running
 
-        U.toLog(-1, "myoutput  received text :"+unicode(sys.argv))
+        U.logger.log(30, "myoutput  received text :"+unicode(sys.argv))
         print "myoutput  received text :"+unicode(sys.argv)
 
         # rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
@@ -61,7 +62,7 @@ try:
 
 
 except  Exception, e:
-        U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
         print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
 
 exit(0)

@@ -19,10 +19,10 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 coil=[]
-coil.append(26) # red
-coil.append(19) # yellow
-coil.append(13) # grey
-coil.append(6) # green
+coil.append(21) # red
+coil.append(20) # yellow
+coil.append(16) # grey
+coil.append(12) # green
 
 colPWM ={}
 

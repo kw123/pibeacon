@@ -47,7 +47,7 @@ def readParams():
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])
 
 			if "BLEconnect" not in sensorList:
-				U.toLog(-1, u" no iphoneBLE definitions supplied (1) stopping")
+				U.logger.log(30, u" no iphoneBLE definitions supplied (1) stopping")
 				exit()
 			if "sensors"				in inp:	 sensors=					  (inp["sensors"]["BLEconnect"])
 			macListNew={}
@@ -79,13 +79,13 @@ def readParams():
 				del macList[thisMAC]
 
 			if len(macList)	   == 0:
-				U.toLog(-1, u" no BLEconnect definitions supplied stopping")
+				U.logger.log(30, u" no BLEconnect definitions supplied stopping")
 				exit()
 
 			return True
 			
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e),permanentLog=True)
+			U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
 		return False
 
 def tryToConnect(MAC,BLEtimeout,devId):
@@ -133,8 +133,8 @@ def tryToConnect(MAC,BLEtimeout,devId):
 			hci_sock.close()
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
-	U.toLog(2, MAC + "	"+unicode(ret))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.logger.log(0, MAC + "	"+unicode(ret))
 	#print	MAC + "	 "+unicode(ret)
 	return ret
 
@@ -174,6 +174,7 @@ except:
 
 
 myPID			= str(os.getpid())
+U.setLogging()
 if onlyThisMAC =="":
 	U.killOldPgm(myPID,G.program+".py")# kill  old instances of myself if they are still running
 else:
@@ -181,7 +182,7 @@ else:
 
 loopCount		  = 0
 sensorRefreshSecs = 90
-U.toLog(-1, "starting BLEconnect program ")
+U.logger.log(30, "starting BLEconnect program ")
 readParams()
 
 time.sleep(1)  # give HCITOOL time to start
@@ -193,7 +194,7 @@ lastData			= {}
 lastRead			= -1
 
 if U.getIPNumber() > 0:
-	U.toLog(-1," no ip number ", doPrint=True)
+	U.logger.log(30," no ip number ")
 	time.sleep(10)
 	exit()
 
@@ -222,12 +223,12 @@ time.sleep(1)
 HCIs = U.whichHCI()
 useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
 if BLEid <0:
-	U.toLog(1, "BLEconnect: NO BLE STACK UP ")
+	U.logger.log(0, "BLEconnect: NO BLE STACK UP ")
 	sys.exit(1)
 
 
 
-U.toLog(-1, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"], doPrint =True)
+U.logger.log(30, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
 
 while True:
 
@@ -241,7 +242,7 @@ while True:
 			lastRead=tt
 
 		if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
-			U.toLog(-1, "requested a restart of BLE stack due to no signal for "+str(int(tt-lastSignal))+" seconds")
+			U.logger.log(30, "requested a restart of BLE stack due to no signal for "+str(int(tt-lastSignal))+" seconds")
 			os.system("echo xx > "+G.homeDir+"temp/BLErestart") # signal that we need to restart BLE
 			lastSignal = time.time() +30
 			restartCount +=1

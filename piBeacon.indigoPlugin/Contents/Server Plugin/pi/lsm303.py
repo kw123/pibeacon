@@ -95,7 +95,7 @@ class THESENSORCLASS():
 			self.set_mag_gain(magGain=int(magGain))
 
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 	def set_acc_gain(self,accelerationGain=1):
@@ -153,7 +153,7 @@ class THESENSORCLASS():
 			return (accel, mag)
 
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		
 
 
@@ -165,11 +165,11 @@ def startSENSOR(devId, i2cAddress):
 		if G.magGain =="":			G.magGain		   = 0
 		G.accelerationGain = int(G.accelerationGain)
 		G.magGain		   = int(G.magGain)
-		U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId)+"  accelerationGain="+unicode(G.accelerationGain)+"	 magGain="+unicode(G.magGain))
+		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId)+"  accelerationGain="+unicode(G.accelerationGain)+"	 magGain="+unicode(G.magGain))
 		theSENSORdict[devId] = THESENSORCLASS(accelerationGain=G.accelerationGain,magGain=G.magGain) 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -198,7 +198,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+"is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(30, G.program+"is not in parameters = not enabled, stopping "+G.program )
 			exit()
 			
 				
@@ -222,7 +222,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -242,10 +242,10 @@ def getValues(devId):
 		data["MAG"]	  = fillWithItems(MAG,["x","y","z"],2)
 		data["EULER"] = fillWithItems(EULER,["heading","roll","pitch"],2)
 		for xx in data:
-			U.toLog(2, (xx).ljust(11)+" "+unicode(data[xx]))
+			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -272,6 +272,8 @@ sensor						= G.program
 quick						= False
 rawOld						= ""
 theSENSORdict				= {}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -330,7 +332,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 

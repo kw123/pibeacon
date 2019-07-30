@@ -529,7 +529,7 @@ def incrementBadSensor(devId,sensor,data):
 			data[sensor][devId]["badSensor"]=True
 			badSensors[devId] =0
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return data 
 
 
@@ -565,13 +565,13 @@ def readParams():
 		if "tempUnits"			 in inp:  tempUnits=			  (inp["tempUnits"])
 
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program )
 			exit()
 			
 		sensorChanged = doWeNeedToStartSensor(sensors,sensorsOld,sensor)
 			
 		if sensorChanged == -1:
-			U.toLog(-1, "==== stop	"+G.program+ " sensorChanged==-1 =====")
+			U.logger.log(30, "==== stop	"+G.program+ " sensorChanged==-1 =====")
 			exit()
 
 		U.getGlobalParams(inp)
@@ -588,7 +588,7 @@ def readParams():
 			
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -724,7 +724,7 @@ def getMLX90614(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if sensor in data["sensors"] and data["sensors"][sensor]=={}: del data["sensors"][sensor]
 		U.muxTCA9548Areset()
 		return data
@@ -761,6 +761,7 @@ output						= {}
 badSensors					= {}
 sensorActive				= False
 loopSleep					= 0.1
+U.setLogging()
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -803,7 +804,7 @@ while True:
 				if sensor not in data["sensors"]:
 					if tt-lastMsgBad < 20: continue
 					lastMsgBad = tt
-					U.toLog(-1," bad sensor")
+					U.logger.log(30," bad sensor")
 					data["sensors"]={sensor:{devId:{"temp":"badSensor"}}}
 					U.sendURL(data)
 					lastValue[devId] ={}
@@ -836,7 +837,7 @@ while True:
 		time.sleep(0.3)
 		#print "end of loop", loopCount
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 		

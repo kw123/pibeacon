@@ -22,7 +22,7 @@ def setVoltage(bytes, persist=False):
 		else:
 			bus.write_i2c_block_data(i2cAddress, 0x40, bytes)
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 ###########
 def readParams():
@@ -32,20 +32,21 @@ def readParams():
 	try:
 		if u"debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIOUTPUT"])
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 ######### main ######
+U.setLogging()
 
 myPID		= str(os.getpid())
 readParams()
-U.toLog(1, "setmcp4725	command :" + unicode(sys.argv))
+U.logger.log(10, "setmcp4725	command :" + unicode(sys.argv))
 
 command = json.loads(sys.argv[1])
 
 if "i2cAddress" in command:
 	i2cAddress= int(command["i2cAddress"])
 else:
-	U.toLog(-1, "setmcp4725 bad command " + command + "	 i2cAddress not included")
+	U.logger.log(30, "setmcp4725 bad command " + command + "	 i2cAddress not included")
 	exit(1)
 	
 if "startAtDateTime" in command:
@@ -58,7 +59,7 @@ if "startAtDateTime" in command:
 
 U.killOldPgm(myPID,"setmcp4725.py", param1='"i2cAddress": "' + str(i2cAddress) + '"')# del old instances of myself if they are still running
 
-U.toLog(0, "setmcp4725	command " + unicode(command) )
+U.logger.log(10, "setmcp4725	command " + unicode(command) )
 
 bus = smbus.SMBus(1)
 
@@ -75,15 +76,15 @@ if "cmd" in command:
 	if cmd =="disable":
 		exit()
 else:
-	U.toLog(-1, "setmcp4725	 no cmd given " + unicode(command) )
+	U.logger.log(30, "setmcp4725	 no cmd given " + unicode(command) )
 	exit()
-U.toLog(1, "setmcp4725	cmd " + unicode(cmd) )
+U.logger.log(10, "setmcp4725	cmd " + unicode(cmd) )
 
 if "values" in command:
 	values =  command["values"]
 if values =="":
 	exit()
-U.toLog(-1, "setmcp4725	 values " + unicode(values) )
+U.logger.log(30, "setmcp4725	 values " + unicode(values) )
 
 if "analogValue" in values:
 	analogValue = int(float(values["analogValue"])/3300 * 4096)
@@ -105,7 +106,7 @@ if cmd =="analogWrite":
 	try:
 		setVoltage(bytes,persist=False)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 
 if cmd =="continuousUpDown":
@@ -118,7 +119,7 @@ if cmd =="continuousUpDown":
 			setVoltage([0,0],persist=False)
 			time.sleep(pulseDown)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 	
 if cmd =="pulseUp":
@@ -127,7 +128,7 @@ if cmd =="pulseUp":
 		time.sleep(pulseUp)
 		setVoltage([0,0],persist=False)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 	
 if cmd =="pulseDown":
@@ -136,10 +137,10 @@ if cmd =="pulseDown":
 		time.sleep(pulseDown)
 		setVoltage(bytes,persist=False)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit()
 	
-U.toLog(-1, u"cmd not implemented: "+cmd)
+U.logger.log(30, u"cmd not implemented: "+cmd)
 
 
 

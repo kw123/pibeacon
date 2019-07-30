@@ -116,17 +116,17 @@ def getSHT21(i2c=0):
             h =("%3d"%sensorSHT21[str(i2cAdd)].read_humidity()).strip()
             return t,h
         except  Exception, e:
-                U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-                U.toLog(-1, u"return  value: t="+ unicode(t)+";  h="+ unicode(h)  )
-                U.toLog(-1, u"i2c address used: "+ unicode(i2cAdd) )
+                U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+                U.logger.log(30, u"return  value: t="+ unicode(t)+";  h="+ unicode(h)  )
+                U.logger.log(30, u"i2c address used: "+ unicode(i2cAdd) )
         return "",""    
 
 
 
 
 ####################### main start ###############
+U.setLogging()
 
-readParams()
 
 # ===========================================================================
 # Main, should wong ok as is
@@ -138,13 +138,13 @@ readParams()
 
 
 readParams()           # get parameters send from indigo
-U.toLog(-1,"input params: " +unicode(sys.argv))
+U.logger.log(30,"input params: " +unicode(sys.argv))
    
 try:
     params = sys.argv[1]
     params = json.loads(params)
 except  Exception, e :
-    U.toLog (-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+    U.logger.log(30,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
     params ={"devId":"","freeParameter":""}
 deviceID      = params["devId"]
 freeParameter = params["freeParameter"]
@@ -159,7 +159,7 @@ h=33
 returnMessage = {"INPUT_0":t,"INPUT_1":h,"INPUT_2":55,"INPUT_3":10,"INPUT_9":"abc"}
 sys.stdout.write(json.dumps(returnMessage))
 
-# you find the logoutput in /var/log/myprogram.log, if U.toLog(1 > debug setting 
-U.toLog(1, u"returning message:"+ json.dumps(returnMessage))
+# you find the logoutput in /var/log/myprogram.log, if U.logger.log(30,
+U.logger.log(10, u"returning message:"+ json.dumps(returnMessage))
     
 sys.exit(0)        

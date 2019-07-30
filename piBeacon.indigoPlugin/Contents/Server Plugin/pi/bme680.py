@@ -425,7 +425,7 @@ class BME680(BME680Data):
 
 		self.chip_id = self._get_regs(CHIP_ID_ADDR, 1)
 		if self.chip_id != CHIP_ID:
-			U.toLog(-1,"BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id), doPrint=True )
+			U.logger.log(30,"BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id))
 			raise ValueError 
 
 		self.soft_reset()
@@ -822,11 +822,11 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, "BME680 is not in parameters = not enabled, stopping BME680.py" )
+			U.logger.log(30, "BME680 is not in parameters = not enabled, stopping BME680.py" )
 			exit()
 			
 
-		U.toLog(1, "BME680 reading new parameter file" )
+		U.logger.log(10, "BME680 reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -902,7 +902,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if BMEsensor[devId] =="":
 					return
-			U.toLog(-1," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
+			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
 					   ";  deltaX:"+unicode(deltaX[devId])+";  calibrateIfgt:"+unicode(calibrateIfgt)+
 					   ";  setCalibration:"+unicode(setCalibration) +";	 sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
 				
@@ -919,8 +919,8 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
-		U.toLog(-1, unicode(sensors[sensor]), doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, unicode(sensors[sensor]))
 		
 
 
@@ -936,13 +936,13 @@ def startSensor(devId,i2cAddress):
 
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-	U.toLog(-1, "starting with ic2= "+ str(i2cAdd), doPrint=True )
+	U.logger.log(30, "starting with ic2= "+ str(i2cAdd))
 	
 	try:
 		BMEsensor[devId]  = BME680(i2c_addr=i2cAdd)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		BMEsensor[devId] =""
 		U.muxTCA9548Areset()
 		return
@@ -960,12 +960,12 @@ def startSensor(devId,i2cAddress):
 	BMEsensor[devId].set_filter(FILTER_SIZE_3)
 	BMEsensor[devId].set_gas_status(ENABLE_GAS_MEAS)
 
-	U.toLog(-1,"\n\nInitial reading:")
+	U.logger.log(30,"\n\nInitial reading:")
 	for name in dir(BMEsensor[devId].data):
 		value = getattr(BMEsensor[devId].data, name)
 
 		if not name.startswith('_'):
-			U.toLog(-1,"{}: {}".format(name, value))
+			U.logger.log(30,"{}: {}".format(name, value))
 
 	BMEsensor[devId].set_gas_heater_temperature(320)
 	BMEsensor[devId].set_gas_heater_duration(150)
@@ -1001,10 +1001,10 @@ def getValues(devId):
 				
 			if startTime >0 and heatSt > 0 and time.time() - startTime > 25 :  # wait at least 25secs and heat ok
 					gasBurnIn.append(float(gas))
-					if len(gasBurnIn)  > 2: U.toLog(2, "gasBurnIn: "+unicode(gasBurnIn)+ ", delta: "+ unicode(abs(gasBurnIn[-1]-gasBurnIn[-2])/max(1,(gasBurnIn[-1]+gasBurnIn[-2])))  )
+					if len(gasBurnIn)  > 2: U.logger.log(10, "gasBurnIn: "+unicode(gasBurnIn)+ ", delta: "+ unicode(abs(gasBurnIn[-1]-gasBurnIn[-2])/max(1,(gasBurnIn[-1]+gasBurnIn[-2])))  )
 					if len(gasBurnIn)  > 6 and abs(gasBurnIn[-1]-gasBurnIn[-2])/max(1,(gasBurnIn[-1]+gasBurnIn[-2])) < 0.0005: # wait for 13+ cycles, last measurements must be stable
 						gasBaseLine = sum(gasBurnIn[-4:])/(4.) # take last 4  measurements 
-						U.toLog(-1," calibrated: after "+ str(int(time.time()-startTime))+" sec;  nof samples:"+str(len(gasBurnIn)) +"	baseline:"+str(gasBaseLine)+"  heatStatus:"+str(heatSt) )
+						U.logger.log(30," calibrated: after "+ str(int(time.time()-startTime))+" sec;  nof samples:"+str(len(gasBurnIn)) +"	baseline:"+str(gasBaseLine)+"  heatStatus:"+str(heatSt) )
 						startTime = 0
 						# save new calibration data to file 
 						f = open(G.homeDir+"bme680.Calibration","w")
@@ -1013,7 +1013,7 @@ def getValues(devId):
 					
 			if startTime ==0 : 
 				if gas > gasBaseLine*(calibrateIfgt/100.) and not firstValue and setCalibration == 0: #recalibrate over x %	 higher than previous calibartion (=100% clean air) 
-					U.toLog(-1,"re calibrated: due to shift high in baseline new value:"+str(gas)+";  oldbaseLine: "+str(gasBaseLine) )
+					U.logger.log(30,"re calibrated: due to shift high in baseline new value:"+str(gas)+";  oldbaseLine: "+str(gasBaseLine) )
 					gasScore	= "calibrating"
 					startSensor(devId, int(sensors[sensor][devId]["i2cAddress"]) )
 				else:
@@ -1032,11 +1032,11 @@ def getValues(devId):
 					"GasResistance":gas, 
 					"GasBaseline":	gasBaseLine, 
 					"AirQuality":	gasScore}
-			U.toLog(2, unicode(data)) 
+			U.logger.log(10, unicode(data)) 
 			badSensor = 0
 			return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	badSensor+=1
 	if badSensor >3: return "badSensor"
 	return ""
@@ -1081,6 +1081,7 @@ BMEsensor					={}
 deltaX				  = {}
 displayEnable				= 0
 myPID		= str(os.getpid())
+U.setLogging()
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
 
@@ -1129,7 +1130,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -1138,7 +1139,7 @@ while True:
 					continue
 				elif values["temp"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
 					deltaN =0
@@ -1181,7 +1182,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep )
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
 		

@@ -56,7 +56,7 @@ def readParams():
    
  
         if sensor not in sensors:
-            U.toLog(-1, "ultrasound is not in parameters = not enabled, stopping ultrasoundDistance.py" )
+            U.logger.log(30, "ultrasound is not in parameters = not enabled, stopping ultrasoundDistance.py" )
             exit()
             
  
@@ -115,7 +115,7 @@ def readParams():
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 #################################
@@ -167,7 +167,7 @@ def getultrasoundDistance(devId):
         #print "res= ",result 
         return  ("%7.2f"%(result * 17000.)).strip() # 17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
     except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
     return ""        
  
  
@@ -208,6 +208,8 @@ mode                        = 0
 display                     = "0"
 output                      = {}
 delta                       = 0
+U.setLogging()
+
 readParams()
 
 myPID       = str(os.getpid())
@@ -243,7 +245,7 @@ while True:
                 dist =getultrasoundDistance(devId)
                 if dist =="badSensor":
                     first=True
-                    U.toLog(-1," bad sensor, sleeping for 10 secs")
+                    U.logger.log(30," bad sensor, sleeping for 10 secs")
                     data0={}
                     data0[sensor]={}
                     data0[sensor][devId]={}
@@ -303,6 +305,6 @@ while True:
                 if n > max(abs(sensorRefreshSecs), 1)*2: break
         #print "end of loop", loopCount
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

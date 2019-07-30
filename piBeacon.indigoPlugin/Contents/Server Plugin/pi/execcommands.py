@@ -53,13 +53,13 @@ def setGPIO(command):
 	if "cmd" in command:
 		cmd= command["cmd"]
 		if cmd not in allowedCommands:
-			U.toLog(-1, "setGPIO pid=%d, bad command %s  allowed only: %s" %(myPID,unicode(command) ,unicode(allowedCommands))  )
+			U.logger.log(30, "setGPIO pid=%d, bad command %s  allowed only: %s" %(myPID,unicode(command) ,unicode(allowedCommands))  )
 			exit(1)
 
 	if "pin" in command:
 		pin= int(command["pin"])
 	else:
-			U.toLog(-1, "setGPIO pid=%d, pin not included,  bad command %s"%(myPID,unicode(command)) )
+			U.logger.log(30, "setGPIO pid=%d, pin not included,  bad command %s"%(myPID,unicode(command)) )
 			exit(1)
 
 
@@ -84,7 +84,7 @@ def setGPIO(command):
 		if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 		else:						bits = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		exit(0)
 
 	inverseGPIO = False
@@ -121,7 +121,7 @@ def setGPIO(command):
 				value = PWM*(100-bits)	# duty cycle on xx hz
 			else:
 				value =   PWM*bits	 # duty cycle on xxx hz 
-			U.toLog(1, "setGPIO analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
+			U.logger.log(10, "setGPIO analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
 			if value >1.:
 				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 			else:
@@ -164,7 +164,7 @@ def setGPIO(command):
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return 
 
@@ -176,12 +176,12 @@ def execCMDS(data):
 			try:
 				next = json.loads(data)
 			except	Exception, e:
-					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.toLog(-1," bad command: json failed  %s"%unicode(data))
+					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(30," bad command: json failed  %s"%unicode(data))
 
 			#print next
 			#print "next command: "+unicode(next)
-			U.toLog(0,"next command: "+unicode(data))
+			U.logger.log(10,"next command: "+unicode(data))
 			cmd= next["command"]
 
 			for cc in next:
@@ -216,7 +216,7 @@ def execCMDS(data):
 							os.system("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" )
 						os.system("sudo chown -R  pi  "+G.homeDir)
 					except	Exception, e:
-						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 
 
@@ -230,30 +230,30 @@ def execCMDS(data):
 					
 					cmd = "sudo hciconfig "
 					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					U.toLog(1, unicode(dataW))
+					U.logger.log(10, unicode(dataW))
 					data   = {"BLEreport":{}}
 					data["BLEreport"]["hciconfig"]			  = dataW
 					cmd = "sudo hciconfig hci0 down; sudo hciconfig hci0 up ; sudo timeout -s SIGINT 15s hcitool lescan "
 					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					U.toLog(1, unicode(dataW))
+					U.logger.log(10, unicode(dataW))
 					data["BLEreport"]["hcitool lescan"]		  = dataW
 					cmd = "sudo timeout -s SIGINT 25s hcitool scan "
 					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					U.toLog(1, unicode(dataW)) 
+					U.logger.log(10, unicode(dataW)) 
 					data["BLEreport"]["hcitool scan"]		  = dataW
-					U.toLog(1, unicode(data))
+					U.logger.log(10, unicode(data))
 					U.sendURL(data,squeeze=False)
 					time.sleep(2)
 					os.system("sudo reboot")
 					exit()
 				except	Exception, e:
-						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 
 
 
 			if "device" not in next:
-				U.toLog(-1," bad cmd no device given "+unicode(next))
+				U.logger.log(30," bad cmd no device given "+unicode(next))
 				continue
 				
 			device=next["device"]
@@ -266,7 +266,7 @@ def execCMDS(data):
 						f.write(cmdOut+"\n")
 						f.close()
 					except	Exception, e:
-						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 			
 			if device.lower()=="output-display":
@@ -283,7 +283,7 @@ def execCMDS(data):
 						f.write(cmdOut+"\n")
 						f.close()
 					except	Exception, e:
-						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 
 
@@ -302,14 +302,14 @@ def execCMDS(data):
 							f.write(cmdOut+"\n")
 							f.close()
 					except	Exception, e:
-						U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 
 
 
 
 			if cmd not in allowedCommands:
-				U.toLog(-1," bad cmd not in allowed commands "+unicode(next))
+				U.logger.log(30," bad cmd not in allowed commands "+unicode(next))
 				continue
 
 
@@ -383,9 +383,9 @@ def execCMDS(data):
 								if str(int(i2cAddress)+1000) in execcommands:
 									del execcommands[str(int(i2cAddress)+1000)]
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId })
-							U.toLog(1,json.dumps(next))
+							U.logger.log(10,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setmcp4725.py '"+ cmdJ+"'  &"
-							U.toLog(1," cmd= %s"%cmdOut)
+							U.logger.log(10," cmd= %s"%cmdOut)
 							os.system(cmdOut)
 							if restoreAfterBoot == "1":
 								execcommands[str(int(i2cAddress)+1000)] = next
@@ -394,7 +394,7 @@ def execCMDS(data):
 								except:pass
 
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						continue
 
 			if device=="setPCF8591dac":
@@ -404,9 +404,9 @@ def execCMDS(data):
 								del execcommands[str(int(i2cAddress)+1000)]
 								continue
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId})
-							U.toLog(1,json.dumps(next))
+							U.logger.log(10,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setPCF8591dac.py '"+ cmdJ+"'  &"
-							U.toLog(1," cmd= %s"%cmdOut)
+							U.logger.log(10," cmd= %s"%cmdOut)
 							os.system(cmdOut)
 							if restoreAfterBoot == "1":
 								execcommands[str(int(i2cAddress)+1000)] = next
@@ -415,7 +415,7 @@ def execCMDS(data):
 								except:pass
 
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						continue
 
 
@@ -424,8 +424,8 @@ def execCMDS(data):
 							pinI = int(next["pin"])
 							pin = str(pinI)
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							U.toLog(-1,"bad pin "+unicode(next))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30,"bad pin "+unicode(next))
 							continue
 						#print "pin ok"
 						if "values" in next: values= next["values"]
@@ -446,10 +446,10 @@ def execCMDS(data):
 						cmdJD = json.dumps(cmdJ)
 						if externalGPIO:
 							cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJD+"' &"
-							U.toLog(1,"cmd= %s"%cmdOut)
+							U.logger.log(10,"cmd= %s"%cmdOut)
 							os.system(cmdOut)
 						else:
-							U.toLog(1, "setGPIO curr_pid=%d,  command :%s" %(myPID,cmdJD) )
+							U.logger.log(10, "setGPIO curr_pid=%d,  command :%s" %(myPID,cmdJD) )
 							setGPIO(cmdJ)
 						continue
 
@@ -457,10 +457,10 @@ def execCMDS(data):
 						try:
 							text   = next["text"]
 							cmdOut= "/usr/bin/python "+G.homeDir+"myoutput.py "+text+"	&"
-							U.toLog(1,"cmd= %s"%cmdOut)
+							U.logger.log(10,"cmd= %s"%cmdOut)
 							os.system(cmdOut)
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						continue
 
 			if device=="playSound":
@@ -471,15 +471,15 @@ def execCMDS(data):
 							elif cmd  == "aplay":
 								cmdOut = json.dumps({"player":"aplay","file":G.homeDir+"soundfiles/"+next["soundFile"]})
 							else:
-								U.toLog(-1, u"bad command : player not right =" + cmd)
+								U.logger.log(30, u"bad command : player not right =" + cmd)
 							if cmdOut != "":
-								U.toLog(1,"cmd= %s"%cmdOut)
+								U.logger.log(10,"cmd= %s"%cmdOut)
 								os.system("/usr/bin/python playsound.py '"+cmdOut+"' &" )
 						except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						continue
 
-			U.toLog(-1,"bad device number/number: "+device)
+			U.logger.log(30,"bad device number/number: "+device)
 	f=open(G.homeDir+"execcommands.current","w")
 	f.write(json.dumps(execcommands))
 	f.close()
@@ -496,13 +496,15 @@ def readParams():
 		if u"GPIOpwm"				in inp:	 PWM=				  int(inp["GPIOpwm"])
 		U.getGlobalParams(inp)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		 
 
 if True: #__name__ == "__main__":
 	global execcommands, PWM, myPID
 	PWM = 100
 	myPID		= int(os.getpid())
+	U.setLogging()
+
 
 	G.debug = 1
 	readParams()

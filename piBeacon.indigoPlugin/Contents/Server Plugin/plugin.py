@@ -7324,17 +7324,21 @@ class Plugin(indigo.PluginBase):
 				if u"pixelMenulist" in props0 and props0[u"pixelMenulist"] !="":
 					 position = props0[u"pixelMenulist"]
 					 if position.find(u"*") >-1:
-						position='[u"*","*"]'
+						position='["*","*"]'
 				else:
-					position = u"["
-					for ii in range(100):
-						mmm = "pixelMenu"+unicode(ii)
-						if	mmm not in props0 or props0[mmm] ==u"":		 continue
-						if len(props0[mmm].split(u",")) !=2:			continue
-						position += u"["+props0[mmm]+"],"
-					position  = position.strip(u",") +"]"
-				position = json.loads(position)
-
+					try:
+							position = u"["
+							for ii in range(100):
+								mmm = "pixelMenu{}".format(ii)
+								if	mmm not in props0 or props0[mmm] ==u"":		continue
+								if len(props0[mmm].split(u",")) !=2:			continue
+								position += u"[{}],".format(props0[mmm])
+							position  = position.strip(u",") +u"]"
+						position = json.loads(position)
+					except Exception, e:
+						self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.indiLOG.log(40,"position data: ".format(position))
+						position=[]
 				chList =[]
 
 
@@ -14332,13 +14336,6 @@ class Plugin(indigo.PluginBase):
 						if typeId.find(u"sunDial") >-1:
 								theDict={}
 								theDict[u"timeZone"] 			= propsOut[u"timeZone"]
-								theDict[u"speed"]				= propsOut[u"speed"]
-								theDict[u"intensityMult"]		= propsOut[u"intensityMult"]
-								theDict[u"intensityMax"]		= propsOut[u"intensityMax"]
-								theDict[u"intensityMin"]		= propsOut[u"intensityMin"]
-								theDict[u"amPM1224"]			= propsOut[u"amPM1224"]
-								theDict[u"sunDialOffset"]		= propsOut[u"sunDialOffset"]
-								theDict[u"offSetOfPosition"]	= propsOut[u"offSetOfPosition"]
 
 		
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)

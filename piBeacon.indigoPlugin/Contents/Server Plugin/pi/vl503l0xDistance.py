@@ -68,7 +68,7 @@ def readParams():
    
  
         if sensor not in sensors:
-            U.toLog(-1, "vlx503l0xDistance is not in parameters = not enabled, stopping vlx503l0xDistance.py" )
+            U.logger.log(30, "vlx503l0xDistance is not in parameters = not enabled, stopping vlx503l0xDistance.py" )
             exit()
             
  
@@ -141,22 +141,22 @@ def readParams():
 
         if sensorUp == 1:
             if not sensorActive:
-                U.toLog(-1,"==== Start ranging =====; mode= "+unicode(accuracyDistanceModes[acuracyDistanceMode]))
+                U.logger.log(30,"==== Start ranging =====; mode= "+unicode(accuracyDistanceModes[acuracyDistanceMode]))
                 startSensor(acuracyDistanceMode)
 
             elif acuracyDistanceMode != acuracyDistanceModeOld:
-                U.toLog(-1, "==== re-Start ranging =====; mode= "+unicode(accuracyDistanceModes[acuracyDistanceMode]))
+                U.logger.log(30, "==== re-Start ranging =====; mode= "+unicode(accuracyDistanceModes[acuracyDistanceMode]))
                 tof.stop_ranging()
                 startSensor(acuracyDistanceMode)
                 
         if sensorUp == -1:
             tof.stop_ranging()
-            U.toLog(-1, "==== stop  ranging =====")
+            U.logger.log(30, "==== stop  ranging =====")
             exit()
 
 
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def startSensor(mode):
@@ -167,7 +167,7 @@ def startSensor(mode):
             retCode = tof.start_ranging(mode= mode)
             if retCode != 25: 
                 time.sleep(5)
-                U.toLog(-1, " retcode wrong: "+ unicode(retCode)+"  trying again #"+unicode(ii) )
+                U.logger.log(30, " retcode wrong: "+ unicode(retCode)+"  trying again #"+unicode(ii) )
             else:
                 ok=True
                 timing = tof.get_timing()/1000000.00 # uS --> in seconds
@@ -175,11 +175,11 @@ def startSensor(mode):
                 acuracyDistanceModeOld = mode
         if not ok:
                 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, " retcode "+unicode(retCode)+" wrong, giving up after tries:"+unicode(ii) 
-                U.toLog(-1, "==== ranging retcode wrong: "+unicode(retCode)+"  giving up after tries:"+unicode(ii) )
+                U.logger.log(30, "==== ranging retcode wrong: "+unicode(retCode)+"  giving up after tries:"+unicode(ii) )
                 exit()
-        U.toLog(-1, "==== ranging started ok ====")
+        U.logger.log(30, "==== ranging started ok ====")
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 #################################
@@ -319,8 +319,8 @@ def getDistance():
 
         if badSensor >3: return "badSensor"
     except  Exception, e:
-            U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-            U.toLog(-1, u"distance>>" + unicode(distance)+"<<")
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
     return ""        
 
 
@@ -368,6 +368,7 @@ output                      = {}
 badSensor                   = 0
 sensorActive                = False
 timing =1
+U.setLogging()
 
 myPID       = str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -421,7 +422,7 @@ while True:
                 dist =getDistance()
                 if dist =="badSensor":
                     first=True
-                    U.toLog(-1," bad sensor, sleeping for 10 secs")
+                    U.logger.log(30," bad sensor, sleeping for 10 secs")
                     data0={}
                     data0[sensor]={}
                     data0[sensor][devId]={}
@@ -450,7 +451,7 @@ while True:
                 if displayEnable =="1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - lastDisplay >10. or quick):
                     lastDisplay = tt
                     DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-                    U.toLog(1, unicode(dist)+"  "+unicode(deltaDist) )   
+                    U.logger.log(10, unicode(dist)+"  "+unicode(deltaDist) )   
                     #print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
 
         loopCount +=1
@@ -470,6 +471,6 @@ while True:
             time.sleep(loopSleep)
         #print "end of loop", loopCount
     except  Exception, e:
-        U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
 sys.exit(0)

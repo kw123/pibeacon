@@ -46,7 +46,7 @@ class si7021:
 			temp = ( (r1 * 256 + r2) * 175.72 / 65536.0) - 46.85 
 			return temp,hum
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return "",""
  # ===========================================================================
 # read params
@@ -83,7 +83,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -117,7 +117,7 @@ def readParams():
 
 				
 			if devId not in SI7021sensor:
-				U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				SI7021sensor[devId] = si7021(i2cAddress=i2cAdd)
 				U.muxTCA9548Areset()
@@ -133,7 +133,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -156,8 +156,8 @@ def getValues(devId):
 		return data
 	except	Exception, e:
 		if badSensor >2 and badSensor < 5: 
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, u"temp>>{}<<".format(temp) )
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"temp>>{}<<".format(temp) )
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -195,6 +195,8 @@ loopSleep					= 0.5
 rawOld						= ""
 SI7021sensor				={}
 deltaX						= {}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -236,13 +238,13 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["Current"]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					lastValue[devId] =-100.
 					continue
 				elif values["temp"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
 					current = float(values["temp"])
@@ -273,6 +275,6 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

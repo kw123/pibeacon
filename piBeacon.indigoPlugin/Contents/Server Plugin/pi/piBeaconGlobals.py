@@ -14,7 +14,7 @@ homeDir0			= "/home/pi/"
 #logDir				= "/run/user/1000/pibeacon/"
 logDir				= "/var/log/"
 program				= "undefined"
-debug				= 1
+debug				= 0
 ipAddress			= ""
 passwordOfServer	= ""
 userIdOfServer		= ""
@@ -83,10 +83,11 @@ eth0PacketsOld		= ""
 packetsTime			= 0
 packetsTimeOld		= 0
 rebootIfNoMessages	= 4
-
-BeaconUseHCINo		="-1"
-BLEconnectUseHCINo	="-1"
-last_masterStart	=""
+sunDialActive		= ""
+BeaconUseHCINo		= "-1"
+BLEconnectUseHCINo	= "-1"
+last_masterStart	= ""
+wifiID				= ""
 
 ACTIONS={"LS":"ls",
 		 "REBOOT":		   "sudo reboot",
@@ -162,6 +163,9 @@ specialSensorList =[ 	"amg88xx",
 parameterFileList  =[	"patterns",
 						"beacon_parameters",
 						"parameters"]
+	
+loggerSet 		   = False
+global logging, logger
 
 timeZones =[]
 for ii in range(-12,13):

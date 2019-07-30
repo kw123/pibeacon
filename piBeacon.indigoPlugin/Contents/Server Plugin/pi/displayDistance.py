@@ -258,7 +258,7 @@ def displayDistance(dist,sensor,sensors, output,distanceUnits):
 		return 
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return
 	
@@ -292,5 +292,5 @@ def formatNumber(ddd, data,distanceUnits):
 				   dist0 = ("%8.2f"%(dist)).replace(" ","")
  
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return dist1, dist, dist0, ud

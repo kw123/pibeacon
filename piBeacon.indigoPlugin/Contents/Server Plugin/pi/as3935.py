@@ -45,7 +45,7 @@ class RPi_AS3935:
 			else:
 				raise Exception("Value of TUN_CAP must be between 0 and 15")
 
-		U.toLog(-1, "setting cap param to %d  =	 %d	 pF" %( tun_cap, tun_cap*8),doPrint=True)
+		U.logger.log(30, "setting cap param to %d  =	 %d	 pF" %( tun_cap, tun_cap*8))
 		self.set_byte(0x3D, 0x96)
 		time.sleep(0.002)
 		registers = self.read_data()
@@ -106,7 +106,7 @@ class RPi_AS3935:
 		Actual voltage levels used in the sensor are located in Table 16
 		of the data sheet.
 		"""
-		U.toLog(-1, "setting noise floor to %d" %( max(noisefloor,self.minNoiseFloor)), doPrint=True) 
+		U.logger.log(30, "setting noise floor to %d" %( max(noisefloor,self.minNoiseFloor))) 
 		if noisefloor <= self.minNoiseFloor: return self.minNoiseFloor
 		registers = self.read_data()
 		if registers ==[]: return 0
@@ -125,7 +125,7 @@ class RPi_AS3935:
 		if floor == -1: return -1
 		if floor > min_noise:
 			floor = floor - 1
-			U.toLog(-1,	 "lowering noise floor to %d"% floor, doPrint=True) 
+			U.logger.log(30,	 "lowering noise floor to %d"% floor) 
 			self.set_noise_floor(floor)
 		return floor
 
@@ -138,7 +138,7 @@ class RPi_AS3935:
 		if floor ==-1: return -1
 		if floor < max_noise:
 			floor = floor + 1
-			U.toLog(-1, "raising noise floor to %d" % floor, doPrint=True) 
+			U.logger.log(30, "raising noise floor to %d" % floor) 
 			self.set_noise_floor(floor)
 		return floor
 
@@ -159,7 +159,7 @@ class RPi_AS3935:
 		interrupt is raised.
 		Valid values are 1, 5, 9, and 16, any other raises an exception.
 		"""
-		U.toLog(-1, "set min strikes to	 %d" % min_strikes, doPrint=True) 
+		U.logger.log(30, "set min strikes to	 %d" % min_strikes) 
 		ms = 0
 		if	 min_strikes == 1:	  ms = 0
 		elif min_strikes == 5:	  ms = 1
@@ -188,7 +188,7 @@ class RPi_AS3935:
 	def set_indoors(self, indoors):
 		"""Set whether or not the sensor should use an indoor configuration.
 		"""
-		U.toLog(-1, "setting indoor %d "% indoors,	doPrint=True) 
+		U.logger.log(30, "setting indoor %d "% indoors) 
 		registers = self.read_data()
 		if registers == []: return 
 
@@ -244,7 +244,7 @@ class RPi_AS3935:
 	def read_data(self):
 		try:	ret = self.i2cbus.read_i2c_block_data(self.address, 0x00)
 		except: ret=[]
-		U.toLog(2, unicode(ret), doPrint = False)
+		U.logger.log(10, unicode(ret))
 		return ret
 		
 # ===========================================================================
@@ -283,11 +283,11 @@ def readParams():
 		 
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
-		U.toLog(-1, G.program+" reading new parameter file" )
+		U.logger.log(30, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -380,12 +380,12 @@ def readParams():
 				startSensor(devId )
 				if as3935sensor[devId] =="":
 					return
-				U.toLog(-1,"new parameters read: \n  i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+";"+
+				U.logger.log(30,"new parameters read: \n  i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+";"+
 						"  interruptGPIO:"+unicode(interruptGPIO)+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"\n"+
 						"  minStrikes:"+unicode(minStrikes)		 +";  calibrationDynamic:"+unicode(calibrationDynamic) +"  inside:"+str(inside)+";"+
 						"  tuneCapacitor:"+unicode(tuneCapacitor)+ " = "+CapValue[tuneCapacitor]+"pF;"+
 						"  minNoiseFloor:"+unicode(minNoiseFloor)			+"	noiseFloor:"+str(noiseFloor)+"\n"+
-						"  restart:"+str(restart),doPrint=True)
+						"  restart:"+str(restart))
 				
 		deldevID={}		   
 		for devId in as3935sensor:
@@ -399,8 +399,8 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		U.toLog(-1,unicode(sensors[sensor]), doPrint=True ) 
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,unicode(sensors[sensor]) ) 
 		
 
 
@@ -412,7 +412,7 @@ def startSensor(devId):
 	global as3935sensor 
 	global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO, noiseFlorSet,calibrationDynamic, noiseFloor, CapValue
 	
-	U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress),doPrint=True)
+	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
 	startTime =time.time()
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
@@ -429,7 +429,7 @@ def startSensor(devId):
 		else: badSensor = False
 						
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		data={"sensors":{sensor:{devId:{"eventType":"badsensor"}}}}
 		badSensor = True
 	if badSensor:
@@ -447,7 +447,7 @@ def startSensor(devId):
 
 	GPIO.setup(interruptGPIO, GPIO.IN)
 	GPIO.add_event_detect(interruptGPIO, GPIO.RISING, callback=handle_interrupt)
-	U.toLog(-1, "end of event setup", doPrint=True )
+	U.logger.log(30, "end of event setup" )
 	return 
 
 #################################
@@ -495,16 +495,16 @@ def handle_interrupt(channel):
 				restartNeededCounter =0
 
 			elif reason == 255:
-				U.toLog(0, "read error", doPrint=True)
+				U.logger.log(10, "read error")
 				restartNeededCounter +=1
 				continue
 
 			elif reason == 0:
-				U.toLog(0, "nothing read, skipping event ", doPrint=True)
+				U.logger.log(10, "nothing read, skipping event ")
 				continue
 
 			else:
-				U.toLog(0, "unknown read error, reason: "+unicode(reason), doPrint=True)
+				U.logger.log(10, "unknown read error, reason: "+unicode(reason))
 				restartNeededCounter +=1
 				continue
 
@@ -515,7 +515,7 @@ def handle_interrupt(channel):
 
 
 			data["sensors"][sensor][devId]=msg
-			U.toLog(1,	" sending:"+ unicode(data), doPrint=False)
+			U.logger.log(10,	" sending:"+ unicode(data))
 			U.sendURL(data,squeeze=False)
 			msg["lastEvent"] = lastEvent
 			msg["lastTime"]	 = lastTime
@@ -566,6 +566,8 @@ sensor						= G.program
 quick						= False
 i2cAddress					=""
 reStartReq					= False
+
+U.setLogging()
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running

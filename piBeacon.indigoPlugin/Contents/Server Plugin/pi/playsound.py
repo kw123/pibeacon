@@ -14,6 +14,8 @@ logDir  = "/var/log/"
 import  sys, os, subprocess, copy
 import  time,datetime
 import  json
+import	piBeaconUtils	as U
+import	piBeaconGlobals as G
 
 def killOldPgm(myPID,pgmToKill):
         global debug
@@ -26,17 +28,11 @@ def killOldPgm(myPID,pgmToKill):
                 line=line.split()
                 pid=int(line[1])
                 if pid == int(myPID): continue
-                toLog(-1, "killing "+pgmToKill)
+                U.logger.log(30, "killing "+pgmToKill)
                 os.system("kill -9 "+str(pid))
         except Exception, e:
-            toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-def toLog(lvl,msg):
-        global debug
-        if lvl<debug :
-            f=open(logDir+"playsound.log","a")
-            f.write(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+msg+"\n")
-            f.close()
 def readParams():
         global debug
         f=open(homeDir+"parameters","r")
@@ -46,6 +42,7 @@ def readParams():
         if u"debugRPI"          in inp:  debug=             int(inp["debugRPI"]["debugRPIOUTPUT"])
 
 ######### main  ########
+U.setLogging()
 
 readParams()
 
@@ -58,10 +55,10 @@ try:
 
     killOldPgm(myPID, "playsound.py")  # old old instances of myself if they are still running
     cmdOut= cmd["player"]+ " "+homeDir+"soundfiles/"++ cmd["file"] +" &"
-    toLog(1, cmdOut)
+    U.logger.log(10, cmdOut)
     os.system(cmdOut)
 except  Exception, e:
-    toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
         
 sys.exit(0)        

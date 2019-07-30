@@ -180,7 +180,7 @@ class Adafruit_AS726x(object):
 
 		except	Exception, e:
 			print u"init in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-			U.toLog(-1, u"init in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"init in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		return
 
 
@@ -261,7 +261,7 @@ class Adafruit_AS726x(object):
 			return
 		except	Exception, e:
 			print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-			U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 	def set_Integration_time(self, val):
 		if not 2.8 <= val <= 714:
@@ -447,7 +447,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -512,7 +512,7 @@ def readParams():
 
 
 			if devId not in as726xsensor:
-				U.toLog(-1,"==== Start "+G.program+" ====== @ i2c= " +unicode(i2cAddress) )
+				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= " +unicode(i2cAddress) )
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				as726xsensor[devId] = Adafruit_AS726x(i2cAddress=i2cAdd)
 				as726xsensor[devId].set_Conversion_mode(as726xsensor[devId].MODE_2)
@@ -533,7 +533,7 @@ def readParams():
 			pass
 
 	except	Exception, e:
-		U.toLog(-1, u"readParams in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"readParams in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 
 def setLED(devId,value):
 	global sensor, sensors,	 as726xsensor
@@ -546,7 +546,7 @@ def setLED(devId,value):
 			as726xsensor[devId].enable_driver_led(True)
 		U.muxTCA9548Areset()
 	except	Exception, e:
-		U.toLog(-1, u"setLED in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"setLED in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 	return 
 
 
@@ -575,8 +575,8 @@ def getValues(devId):
 
 	except	Exception, e:
 		if badSensor >-1 and badSensor < 5000: 
-			U.toLog(-1, u"getValues in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-			U.toLog(-1, unicode(data) )
+			U.logger.log(30, u"getValues in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, unicode(data) )
 						
 		badSensor+=1
 	if badSensor >3: 
@@ -627,6 +627,7 @@ rawOld						= ""
 as726xsensor				= {}
 deltaX						= {}
 myPID						= str(os.getpid())
+U.setLogging()
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 formatStr = {"blue":"9.4f","green":"9.4f","yellow":"9.4f","orange":"9.4f","red":"9.4f","violet":"9.4f","temp":"9.1f","LEDcurrent":"9.1f"}
 
@@ -705,7 +706,7 @@ while True:
 						continue
 
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 
 					values["LEDcurrent"]  =LEDmALast
 
@@ -767,6 +768,6 @@ while True:
 			U.restartMyself(reason="badsensor")
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

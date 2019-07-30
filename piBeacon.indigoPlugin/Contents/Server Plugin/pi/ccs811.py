@@ -129,7 +129,7 @@ class ccs811_class(object):
 				#check that the HW id is correct
 			tp =  self.readU8(CCS811_HW_ID)	 
 			tpOk = "ok" if tp== 0x81 else "error" 
-			U.toLog(2, "-- id code	  %x  =	  %s "% (tp, tpOk)	)
+			U.logger.log(10, "-- id code	  %x  =	  %s "% (tp, tpOk)	)
 
 			#try to start the app
 			self.writeList(CCS811_BOOTLOADER_APP_START, [])
@@ -138,11 +138,11 @@ class ccs811_class(object):
 
 			tp = self.checkError()
 			tpOk = "ok" if tp==1 else "error" 
-			U.toLog(2, "-- error code %x  =	  %s "% (tp, tpOk)	)
+			U.logger.log(10, "-- error code %x  =	  %s "% (tp, tpOk)	)
 
 			tp =  self._status.FW_MODE	
 			tpOk = "ok" if tp== 1 else "error" 
-			U.toLog(2, "-- mode code  %x  =	  %s "% (tp, tpOk)	)
+			U.logger.log(10, "-- mode code  %x  =	  %s "% (tp, tpOk)	)
 
 			time.sleep(1)
 		
@@ -151,7 +151,7 @@ class ccs811_class(object):
 			#default to read every second
 			self.setDriveMode(mode)
 		except	Exception, e:
-			U.toLog(-1, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		
 
 
@@ -199,7 +199,7 @@ class ccs811_class(object):
 				else:
 					return 0
 		except	Exception, e:
-			U.toLog(-1, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return	0		
 
 
@@ -281,26 +281,26 @@ class ccs811_class(object):
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
 		except	Exception, e:
-			U.toLog(-1, u"writeList	 in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"writeList	 in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def readList(self, command,	 length):
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
 		except	Exception, e:
-			U.toLog(-1, u"readList	in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"readList	in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return []
 
 	def readU8(self, reg):
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
 		except	Exception, e:
-			U.toLog(-1, u"readU8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"readU8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 0
 	def write8(self, reg,value):
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
 		except	Exception, e:
-			U.toLog(-1, u"write8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"write8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -339,11 +339,11 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
-		U.toLog(-1, G.program+" reading new parameter file" )
+		U.logger.log(30, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -392,7 +392,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if ccs811sensor[devId] =="":
 					return
-			U.toLog(-1," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
+			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
 					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
 				
 		deldevID={}		   
@@ -407,7 +407,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -418,7 +418,7 @@ def startSensor(devId,i2cAddress):
 	global sensors,sensor
 	global startTime
 	global ccs811sensor
-	U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
 	startTime =time.time()
 
 
@@ -440,7 +440,7 @@ def startSensor(devId,i2cAddress):
 		except: pass
 				
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		ccs811sensor[devId]	  =""
 	time.sleep(.1)
 
@@ -485,24 +485,24 @@ def getValues(devId):
 
 						## check if bad data, if jumped too much rewuest a re-read 
 						if co2 > 8200  or co2 == 0 :
-							U.toLog(2, "data read out of bounce	 CO2: %d"%(co2))
+							U.logger.log(10, "data read out of bounce	 CO2: %d"%(co2))
 							time.sleep(0.5)
 							continue
 						if	voc > 1200:
-							U.toLog(2, "data read out of bounce	 VOC: %d"%(voc))
+							U.logger.log(10, "data read out of bounce	 VOC: %d"%(voc))
 							time.sleep(0.5)
 							continue
 
 
 
 						if lastCO2 !=-100 and (abs(co2 -lastCO2) > 50 or co2 > 450)	  and countCO2 < 2:
-							U.toLog(2, "data read jump			 CO2: %d"%co2 )
+							U.logger.log(10, "data read jump			 CO2: %d"%co2 )
 							countCO2 +=1
 							time.sleep(0.5)
 							continue
 
 						if lastVOC !=-100 and (abs(voc -lastVOC) > 100	or voc > 100) and countVOC < 2:
-							U.toLog(2, "data read jump			 VOC: %d"%voc )
+							U.logger.log(10, "data read jump			 VOC: %d"%voc )
 							countVOC +=1
 							time.sleep(0.5)
 							continue
@@ -512,12 +512,12 @@ def getValues(devId):
 							if newVOC ==-1:
 								newVOC = voc
 								newCO2 = co2
-								U.toLog(2, "CO2: %d" %co2+ "ppm; TVOC: %d ppb"% voc+ "; temp: %4.1f" %temp +"  first ok read" )
+								U.logger.log(10, "CO2: %d" %co2+ "ppm; TVOC: %d ppb"% voc+ "; temp: %4.1f" %temp +"  first ok read" )
 								time.sleep(0.5)
 								continue
 
 							if abs(newVOC-voc) > 10 or abs(newCO2-co2) > 10:
-								U.toLog(2, "CO2: %d" %co2+ "ppm; TVOC: %d ppb"% voc+ "; temp: %4.1f" %temp +"  re-read not the same " )
+								U.logger.log(10, "CO2: %d" %co2+ "ppm; TVOC: %d ppb"% voc+ "; temp: %4.1f" %temp +"  re-read not the same " )
 								newVOC = voc
 								newCO2 = co2
 								time.sleep(0.5)
@@ -526,10 +526,10 @@ def getValues(devId):
 							voc = (voc+newVOC)/2
 							break
 					else:
-						U.toLog(0, "ERROR data not ready!")
+						U.logger.log(10, "ERROR data not ready!")
 						co2 = ccs811sensor[devId].geteCO2()
 						voc = ccs811sensor[devId].getTVOC()
-						U.toLog(2, "CO2: %d" %co2+ "ppm, TVOC: %d"% voc+ " temp: %4.1f" %temp  )
+						U.logger.log(10, "CO2: %d" %co2+ "ppm, TVOC: %d"% voc+ " temp: %4.1f" %temp  )
 						try:ccs811sensor[devId].start()
 						except: pass
 						time.sleep(0.5)
@@ -547,11 +547,11 @@ def getValues(devId):
 			time.sleep(0.2)
 
 		if goodData:
-			U.toLog(2, "n:"+str(n)+" CO2: %d" %CO2+ "ppm; TVOC: %d ppb"% VOC+ "; temp: %4.1f" %TEMP	 +"	 accepted")
+			U.logger.log(10, "n:"+str(n)+" CO2: %d" %CO2+ "ppm; TVOC: %d ppb"% VOC+ "; temp: %4.1f" %TEMP	 +"	 accepted")
 			ret	 = {"CO2":		   ( "%d"%( CO2			 ) ).strip(), 
 					"VOC":		   ( "%d"%( VOC			 ) ).strip(),
 					"temp":		   ( "%4.1f"%( TEMP		 ) ).strip()}
-			U.toLog(3, unicode(ret)) 
+			U.logger.log(10, unicode(ret)) 
 			badSensor = 0
 			goodData  = True
 			countCO2  = 0
@@ -560,7 +560,7 @@ def getValues(devId):
 			lastVOC	  = VOC
 			lastTemp  = TEMP
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		ccs811sensor[devId].start()
@@ -617,6 +617,7 @@ ccs811sensor				   ={}
 deltaX				  = {}
 displayEnable				= 0
 myPID		= str(os.getpid())
+U.setLogging()
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
 
@@ -662,7 +663,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -672,7 +673,7 @@ while True:
 					continue
 				elif values["CO2"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
 					deltaN =0
@@ -711,7 +712,7 @@ while True:
 			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  

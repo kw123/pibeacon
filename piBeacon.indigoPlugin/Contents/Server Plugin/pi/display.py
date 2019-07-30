@@ -29,6 +29,7 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "display"
+U.setLogging()
 
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
@@ -60,7 +61,7 @@ class LCD1602():
 			self.clear()			# Clear Screen
 			self.openlight()		# Enable the backlight
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 			
 
@@ -90,7 +91,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def send_data(self,data):
 		try:
@@ -110,7 +111,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), doPrint=True)
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 	def clear(self):
@@ -157,7 +158,7 @@ class bigScreen :
 		# http://www.karoltomala.com/blog/?p=679
 		disp_no = os.getenv("DISPLAY")
 		if disp_no:
-			U.toLog(-1, "I'm running under X display = {0}".format(disp_no))
+			U.logger.log(30, "I'm running under X display = {0}".format(disp_no))
 		
 		# Check which frame buffer drivers are available
 		# Start with fbcon since directfb hangs with composite output
@@ -170,10 +171,10 @@ class bigScreen :
 			try:
 				self.pygame.display.init()
 			except self.pygame.error:
-				U.toLog(-1, u"Driver: {0} failed.".format(driver))
+				U.logger.log(30, u"Driver: {0} failed.".format(driver))
 				continue
 			found = True
-			U.toLog(-1, u"found" +unicode(driver)  )		 
+			U.logger.log(30, u"found" +unicode(driver)  )		 
 			break
 	
 		if not found:
@@ -182,9 +183,9 @@ class bigScreen :
 		bigScreenSize = (self.pygame.display.Info().current_w, self.pygame.display.Info().current_h)
 
 			
-		U.toLog(-1, u"Framebuffer size: %d x %d" % (bigScreenSize[0], bigScreenSize[1]))
+		U.logger.log(30, u"Framebuffer size: %d x %d" % (bigScreenSize[0], bigScreenSize[1]))
 		self.screen = self.pygame.display.set_mode(bigScreenSize, self.pygame.FULLSCREEN)
-		U.toLog(-1, u"got screen object" )
+		U.logger.log(30, u"got screen object" )
 
 		# Clear the screen to start
 		self.screen.fill((0, 0, 0))		   
@@ -321,8 +322,8 @@ class SSD1351:
 			#self.Clear() # Blank the screen.
 			return
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.toLog(-1, u"SPI likely not enabled")
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
 		self.spi = spidev.SpiDev()
@@ -537,8 +538,8 @@ class st7735:
 			#self.Clear() # Blank the screen.
 			return
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.toLog(-1, u"SPI likely not enabled")
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
 		self.spi = spidev.SpiDev()
@@ -961,7 +962,7 @@ def analogClockInit(intensity, intensityDevice, inParms={}):
 			## show first pic
 			analogClockShow()
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		
 		return 
 		
@@ -1017,7 +1018,7 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 			 
 
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 
@@ -1056,7 +1057,7 @@ def analogClockdrNumbers(angle,number,hand):
 			
 			draw.text(pos, unicode(number), font=fontx[fontF], fill=(int(255.*intensity),int(255.*intensity),int(255.*intensity)))
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
@@ -1139,7 +1140,7 @@ def analogClockdrTheLine(angle,hand,ss=0):
 
 
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -1148,7 +1149,7 @@ def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 		try:
 			draw.ellipse( (x0 - widthX , y0 - widthY , x0 + widthX , y0 + widthY ), fill=fill, outline=outline)
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 ################### ###################	  analogClock  ############################################### END
@@ -1175,7 +1176,7 @@ def digitalClockInit(intensity, intensityDevice, inParms={}):
 					digitalClockParams[pp] = copy.copy(inParms[pp])
 			digitalClockShow()
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 		
 	
@@ -1195,7 +1196,7 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 			 
 
 		except	Exception, e:
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
 
 
@@ -1372,9 +1373,9 @@ def updateDevice(outputDev,matrix):
 		fontDir= G.homeDir+"fonts/"
 
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			if unicode(e).find("fontDir") > 0:
-				U.toLog(-1," display device not properly setup.. display device interface (eg SPI ...) not properly setup..", doPrint=True)
+				U.logger.log(30," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
 			exit()
 
 	return fontDir,xmin,xmax,ymin,ymax,matrix,outputDev
@@ -1410,7 +1411,7 @@ def getScrollPages(data):
 			except: pass
 		return scrollPages, scrollDelay, scrollDelayBetweenPages, scrollxy
 	except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 def setScrollPages(scrollxy,scrollPages):
 	global maxPages
@@ -1459,12 +1460,12 @@ def mkfont(cmd):
 			try:
 				fontF = font+fontw
 				if	 font.lower().find(".pil")>-1:
-					U.toLog(2,fontDir+font)
+					U.logger.log(10,fontDir+font)
 					fontx[fontF] = ImageFont.load(fontDir+font)
 				elif  font.lower().find(".ttf")>-1:
 					fontx[fontF] = ImageFont.truetype(fontDir+font, int(fontw))
 			except	Exception, e:
-					U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		else:
 			fontF = font+fontw
 	return fontF
@@ -1503,7 +1504,7 @@ newRead		= True
 lastRead	= 0
 
 
-U.toLog(-1,"starting display",doPrint=True )
+U.logger.log(30,"starting display")
 
 ####################SSD1351 pins
 PIN_CS	= 19	#  GPIO
@@ -1571,7 +1572,7 @@ imageDefined = False
 TextForLCD=[" "," "]
 TextPosForLCD =[0,0]
 
-U.toLog(-1,"looping over input",doPrint=True )
+U.logger.log(30,"looping over input" )
 
 loopCount			= 0
 lastAnalog			= time.time()
@@ -1583,22 +1584,22 @@ while True:
 	try:
 		for item in items:
 		
-			U.toLog(1, "item:"+item )
+			U.logger.log(10, "item:"+item )
 			try:
 				if len(item) < 10: continue
 				data		= json.loads(item)
 				#print json.dumps(data,sort_keys=True, indent=2)
 			except	Exception, e:
-				U.toLog(-1,"bad input "+ unicode(item) )
-				U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30,"bad input "+ unicode(item) )
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
-				U.toLog(-1, " restarting due to new device type, old="+devTypeLast+" new="+"devType", doPrint=True)
+				U.logger.log(30, " restarting due to new device type, old="+devTypeLast+" new="+"devType")
 				time.sleep(0.2)
 				os.system("/usr/bin/python "+G.homeDir+"display.py &")
 			if i2cAddress != lasti2cAddress :  # restart  myself if new device type
-				U.toLog(-1, " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress, doPrint=True)
+				U.logger.log(30, " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress)
 				time.sleep(0.2)
 				os.system("/usr/bin/python "+G.homeDir+"display.py &")
 
@@ -1687,7 +1688,7 @@ while True:
 				for cmd in data["command"]:
 					try:
 						
-						U.toLog(1, unicode(cmd) )
+						U.logger.log(10, unicode(cmd) )
 						if "type" not in cmd: continue
 						cType = cmd["type"]
 						if cType == "" or cType == "0":	 continue
@@ -1780,7 +1781,7 @@ while True:
 								maxPages		= 1
 
 						if cType == "NOP" :
-								U.toLog(2,u"skipping display ..	 NOP")
+								U.logger.log(10,u"skipping display ..	 NOP")
 								continue
 
 						npage+=1
@@ -1817,13 +1818,13 @@ while True:
 											TextForLCD[1]	= cmd["text"]
 									else:
 										fontF =	 mkfont(cmd)
-										U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fontF:" + unicode(fontF)+" fill:" + unicode(fill))
+										U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fontF:" + unicode(fontF)+" fill:" + unicode(fill))
 										draw.text(pos, cmd["text"], font=fontx[fontF], fill=fill)
 
 
 						elif cType == "dateString":	 ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								theText = datetime.datetime.now().strftime(cmd["text"])
 								fontF =	 mkfont(cmd)
 								draw.text(pos, theText, font=fontx[fontF], fill=fill)
@@ -1831,12 +1832,12 @@ while True:
 
 						elif cType == "line":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								draw.line(pos,fill=fill,width=width)
 
 						elif cType == "dot":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								if isinstance(width,int):
 									dotWRadius( pos[0], pos[1],	 fill, width,	 width,	  outline=None)
 								else:
@@ -1845,7 +1846,7 @@ while True:
 
 						elif cType == "vBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								draw.line([pos[0]+width/2,pos[1]	   ,pos[0]+width/2,pos[1]+pos[3]]	,fill=fill,width=1)
 								draw.line([pos[0]-width/2,pos[1]	   ,pos[0]-width/2,pos[1]+pos[3]]	,fill=fill,width=1)
 								draw.line([pos[0]-width/2,pos[1]+pos[3],pos[0]+width/2,pos[1]+pos[3]]	,fill=fill,width=1)
@@ -1854,14 +1855,14 @@ while True:
 				
 						elif cType == "vBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								pos =[pos[0],pos[1],pos[0],pos[1]+pos[2]]
 								draw.line(pos,fill=fill,width=width)
 
 
 						elif cType == "hBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:	"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								#print u"cType:	 "+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill)
 								pos =[pos[0],pos[1],pos[0]+pos[2],pos[1]]
 								draw.line(pos,fill=fill,width=width)
@@ -1869,7 +1870,7 @@ while True:
 				
 						elif cType == "hBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								draw.line([pos[0],		  pos[1]-width/2 ,pos[0]+pos[3] ,pos[1]-width/2]   ,fill=fill,width=1)
 								draw.line([pos[0],		  pos[1]+width/2 ,pos[0]+pos[3] ,pos[1]+width/2]   ,fill=fill,width=1)
 								draw.line([pos[0]+pos[3], pos[1]-width/2 ,pos[0]+pos[3] ,pos[1]+width/2]   ,fill=fill,width=1)
@@ -1878,7 +1879,7 @@ while True:
 
 						elif cType == "hist":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
 								x0= pos[0]
 								y0= pos[1]
 								ymax = pos[2]
@@ -1891,10 +1892,10 @@ while True:
  
 						elif cType == "point":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
 								if isinstance(pos[0], list):
 									for p in pos:
-										U.toLog(2, unicode(cmd))
+										U.logger.log(10, unicode(cmd))
 										draw.point(p,fill=fill)
 								else:		 
 									draw.point(pos,fill=fill)
@@ -1902,26 +1903,26 @@ while True:
 
 						elif cType == "ellipse":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
 								draw.ellipse(pos,fill=fill)
 
 
 						elif cType == "rectangle":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
 								draw.rectangle(pos, fill=fill)
 
 
 						elif cType == "triangle":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
 								draw.polygon( [(pos[0], pos[1]),(pos[2], pos[3]),(pos[4], pos[5])], fill = fill )
 
 
 					
 						elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.toLog(2,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fill:" + unicode(fill))
 								imData = Image.open("/home/pi/pibeacon/displayfiles/"+cmd["text"])
 								if devType.lower().find("rgbmatrix")== -1 and devType.lower() not in ["ssd1351"]: 
 									out = imData.convert("1")
@@ -1971,7 +1972,7 @@ while True:
 									fontF =	 mkfont({"font":"8x13.pil","width":"0"})
 									draw.text((dx,dy+10)	, HM+":"+sec	 , font=fontx[fontF], fill=fill)
 
-								U.toLog(2,u"cType:"+cType+" fill:" + unicode(fill)+" font"+str(fontF)+" at:"+str(dx)+" "+ str(dy))
+								U.logger.log(10,u"cType:"+cType+" fill:" + unicode(fill)+" font"+str(fontF)+" at:"+str(dx)+" "+ str(dy))
 
 							elif cType == "date" : ###########################################################################
 								if devType.lower()	== "ssd1351": 
@@ -2035,7 +2036,7 @@ while True:
 
 						if "display" not in cmd or cmd["display"] != "wait":  ###########################################################################
 
-							U.toLog(2, u"displaying	 "+ cmd["type"]+ "	 scrollxy:"+scrollxy+"	 delay:"+str(scrollDelay))
+							U.logger.log(10, u"displaying	 "+ cmd["type"]+ "	 scrollxy:"+scrollxy+"	 delay:"+str(scrollDelay))
 							
 							if flipDisplay =="1":
 								imData = imData.transpose(PIL.Image.ROTATE_180)
@@ -2254,8 +2255,8 @@ while True:
 
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
 					except	Exception, e:
-							U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							U.toLog(-1, unicode(cmd))
+							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30, unicode(cmd))
 
 				newRead = False
 				if os.path.isfile(G.homeDir+"temp/display.inp"): break
@@ -2288,8 +2289,8 @@ while True:
 		loop +=1 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		items=[]
 
-U.toLog(-1, " exiting display", doPrint=True) 	
+U.logger.log(30, " exiting display") 	
 sys.exit(0)		   

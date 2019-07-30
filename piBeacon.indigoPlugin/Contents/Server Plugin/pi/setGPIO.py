@@ -28,12 +28,13 @@ devType = "OUTPUTgpio"
 ####################### main start ###############
 PWM = 100
 
+U.setLogging()
 
 myPID = str(os.getpid())
 
 try:	command = json.loads(sys.argv[1])
 except: 
-	U.toLog(-1, "setGPIO  bad json:" + unicode(sys.argv))
+	U.logger.log(30, "setGPIO  bad json:" + unicode(sys.argv))
 	exit()
 
 
@@ -43,8 +44,9 @@ U.getIPNumber()
 
 try:	G.debug= command["debug"]
 except: G.debug = 1
-G.debug = 3
-U.toLog(0, "setGPIO  command :" + unicode(sys.argv))
+U.setLogLevel()
+
+U.logger.log(10, "setGPIO  command :" + unicode(sys.argv))
 try:	PWM= command["PWM"]
 except: pass
 
@@ -52,13 +54,13 @@ except: pass
 if "cmd" in command:
 	cmd= command["cmd"]
 	if cmd not in allowedCommands:
-		U.toLog(-1, G.program +" bad command " + command + "  allowed:" + unicode(allowedCommands))
+		U.logger.log(30, G.program +" bad command " + command + "  allowed:" + unicode(allowedCommands))
 		exit(1)
 
 if "pin" in command:
 	pin= int(command["pin"])
 else:
-		U.toLog(-1, G.program +" bad command " + command + "  pin not included")
+		U.logger.log(30, G.program +" bad command " + command + "  pin not included")
 		exit(1)
 
 
@@ -85,7 +87,7 @@ try:
 	if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 	else:						bits = 0
 except	Exception, e:
-	U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	exit(0)
 
 inverseGPIO = False
@@ -126,7 +128,7 @@ try:
 			value = PWM*(100-bits)	# duty cycle on xx hz
 		else:
 			value =   PWM*bits	 # duty cycle on xxx hz 
-		U.toLog(1, G.program +" analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
+		U.logger.log(10, G.program +" analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
 		if value >1.:
 			U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 		else:
@@ -169,6 +171,6 @@ try:
 
 
 except	Exception, e:
-	U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 exit(0)

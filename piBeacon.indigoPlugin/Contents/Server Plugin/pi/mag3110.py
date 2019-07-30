@@ -29,7 +29,7 @@ class THESENSORCLASS():
 			try:
 				self.bus			= smbus.SMBus(self.busNumber)
 			except Exception, e:
-				U.toLog(-1,'couldn\'t open bus: {0}'.format(e))
+				U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
 				return 
 			
 			self.enableCalibration	 = enableCalibration
@@ -53,7 +53,7 @@ class THESENSORCLASS():
 				self.calibrations= U.loadCalibration(self.calibrationFile)
 				U.magCalibrate(self, force = False,calibTime=5)
 		except Exception ,e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return
 
 
@@ -63,9 +63,9 @@ class THESENSORCLASS():
 			# disregared
 			#pylint: disable=unused-variable
 			byte = self.bus.read_byte_data(self.address, 1)
-			U.toLog(1,'Found compass at {0}'.format(self.address))
+			U.logger.log(10,'Found compass at {0}'.format(self.address))
 		except Exception ,e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return False
 
 		#warm up the compass
@@ -76,7 +76,7 @@ class THESENSORCLASS():
 		try:
 			self.bus.write_byte_data(self.address, register, data)
 		except Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return False
 
 		# System operation
@@ -89,7 +89,7 @@ class THESENSORCLASS():
 		try:
 			self.bus.write_byte_data(self.address, register, data)
 		except Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return False
 		return True
 
@@ -110,7 +110,7 @@ class THESENSORCLASS():
 			else:			temp += self.offsetTemp
 
 		except Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return [0,0,0,0],-1000
 
 		return [x,y,z],temp
@@ -148,7 +148,7 @@ def readParams():
 		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 				
 		for devId in sensors[sensor]:
@@ -160,13 +160,13 @@ def readParams():
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #################################
 def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declination, magResolution,enableCalibration):
 	global theSENSORdict
 	try:
-		U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId))
+		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId))
 		if magOffset == [0,0,0]:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination,magOffset=magOffset, offsetTemp =offsetTemp)
 			if enableCalibration:
@@ -174,7 +174,7 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 		else:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination, offsetTemp =offsetTemp)
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -194,12 +194,12 @@ def getValues(devId):
 		data["MAG"]	  = fillWithItems(magCorr,			  ["x","y","z"],2,mult=1.)
 		data["EULER"] = fillWithItems(EULER,["heading","roll","pitch"],2)
 		#print data
-		U.toLog(2, "raw".ljust(11)+" "+unicode(raw))
+		U.logger.log(10, "raw".ljust(11)+" "+unicode(raw))
 		for xx in data:
-			U.toLog(2, (xx).ljust(11)+" "+unicode(data[xx]))
+			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
@@ -223,6 +223,8 @@ sensors						= {}
 sensor						= G.program
 quick						= False
 theSENSORdict				 ={}
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -262,11 +264,11 @@ while True:
 		loopCount +=1
 		quick = U.checkNowFile(G.program)				 
 		if U.checkNewCalibration(G.program):
-			U.toLog(-1, u"starting new calibration in 5 sec for 1 minute.. move sensor around")
+			U.logger.log(30, u"starting new calibration in 5 sec for 1 minute.. move sensor around")
 			time.sleep(5)
 			for devId in theSENSORdict:
 				U.magCalibrate(theSENSORdict[devId], force = False,calibTime=30)
-			U.toLog(-1, u"finished	new calibration")
+			U.logger.log(30, u"finished	new calibration")
 			
 		U.echoLastAlive(G.program)
 
@@ -278,6 +280,6 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)

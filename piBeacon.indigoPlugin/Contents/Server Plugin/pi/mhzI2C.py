@@ -73,7 +73,7 @@ class mhz16_class:
 			time.sleep(0.1)
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
  
 	def measure(self):
@@ -83,7 +83,7 @@ class mhz16_class:
 			self.parse(self.receive())
 			return
 		except	Exception, e:
-			U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.co2 = -1
  
 	def parse(self, response):
@@ -134,7 +134,7 @@ class mhz16_class:
 					time.sleep(0.004)
 					errcountMAX -= 1
 					if errcountMAX == 0: 
-						U.toLog(0, u"receive read_register too may tries stopping read,	 has error='%s'" % ( e))
+						U.logger.log(10, u"receive read_register too may tries stopping read,	 has error='%s'" % ( e))
 						return buf
 					continue
 					
@@ -149,7 +149,7 @@ class mhz16_class:
 				
 			return buf
 		except	Exception, e:
-			U.toLog(-1, u"receive in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"receive in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return []
 
 
@@ -189,11 +189,11 @@ def readParams():
 		 
  
 		if sensor not in sensors:
-			U.toLog(-1, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
-		U.toLog(-1, G.program+" reading new parameter file" )
+		U.logger.log(30, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -263,7 +263,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if mhz16sensor[devId] =="":
 					return
-			U.toLog(-1," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
+			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
 					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"  restart:"+str(restart))
 				
 		deldevID={}		   
@@ -278,7 +278,7 @@ def readParams():
 
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		print sensors[sensor]
 		
 
@@ -290,7 +290,7 @@ def startSensor(devId,i2cAddress):
 	global startTime
 	global mhz16sensor 
 	
-	U.toLog(-1,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
 	startTime =time.time()
 
 
@@ -303,7 +303,7 @@ def startSensor(devId,i2cAddress):
 		mhz16sensor[devId].start()
 						
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		mhz16sensor[devId]	 =""
 	time.sleep(.1)
 
@@ -334,7 +334,7 @@ def calibrateSensor(devId):
 		 #print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
 	except	Exception, e:
 		print "ret =", ret
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	time.sleep(.1)
 
 
@@ -361,11 +361,11 @@ def getValues(devId,nMeasurements=5):
 			ii+=1
 			mhz16sensor[devId].measure()
 			co2 =  mhz16sensor[devId].co2
-			U.toLog(1, " co2 raw: %d" %co2 )
+			U.logger.log(10, " co2 raw: %d" %co2 )
 			if co2 ==-1: 
 				ii -= addIfBad	# onetime only 
 				addIfBad = 0
-				U.toLog(-1, u"bad data read ")
+				U.logger.log(30, u"bad data read ")
 
 				continue
 			raw += co2
@@ -387,10 +387,10 @@ def getValues(devId,nMeasurements=5):
 			   ,"CO2offset":	 ( round(CO2offset[devId],1)	  )
 			   ,"CO2calibration":( round(CO2normal[devId],1) ) 
 			   ,"raw":			 ( round(raw,1)			   ) }
-		U.toLog(1, unicode(ret)) 
+		U.logger.log(10, unicode(ret)) 
 		badSensor = 0
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		mhz16sensor[devId].start()
@@ -440,6 +440,8 @@ rawOld						= ""
 mhz16sensor					={}
 deltaX						= {}
 displayEnable				= 0
+U.setLogging()
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
@@ -498,7 +500,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.toLog(-1," bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -507,7 +509,7 @@ while True:
 					continue
 				elif values["CO2"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
-						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint="False")
+						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
 					needCalibration	 = False
@@ -566,7 +568,7 @@ while True:
 				lastRead = time.time()
 
 		if U.checkNewCalibration(G.program) or needCalibration :
-			U.toLog(-1, u"set CO2 calibration")
+			U.logger.log(30, u"set CO2 calibration")
 			if sensor in sensors:
 				for devId in sensors[sensor]:
 					calibrateSensor(devId)
@@ -581,7 +583,7 @@ while True:
 			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 	except	Exception, e:
-		U.toLog(-1, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 sys.exit(0)
  
