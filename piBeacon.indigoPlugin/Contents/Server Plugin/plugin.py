@@ -7327,13 +7327,13 @@ class Plugin(indigo.PluginBase):
 						position='["*","*"]'
 				else:
 					try:
-							position = u"["
-							for ii in range(100):
-								mmm = "pixelMenu{}".format(ii)
-								if	mmm not in props0 or props0[mmm] ==u"":		continue
-								if len(props0[mmm].split(u",")) !=2:			continue
-								position += u"[{}],".format(props0[mmm])
-							position  = position.strip(u",") +u"]"
+						position = u"["
+						for ii in range(100):
+							mmm = "pixelMenu{}".format(ii)
+							if	mmm not in props0 or props0[mmm] ==u"":		continue
+							if len(props0[mmm].split(u",")) !=2:			continue
+							position += u"[{}],".format(props0[mmm])
+						position  = position.strip(u",") +u"]"
 						position = json.loads(position)
 					except Exception, e:
 						self.indiLOG.log(40,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

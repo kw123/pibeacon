@@ -1,4 +1,4 @@
-Added features / changes in v7.107.299 @ 2019-07-30
+Added features / changes in v7.107.300 @ 2019-07-30
 ===================================================
 
 1. fixed error: line 7336 has error=No JSON object could be decoded
