@@ -1,4 +1,4 @@
-Added features / changes in v7.108.301 @ 2019-08-24
+Added features / changes in v7.108.302 @ 2019-08-24
 ===================================================
 
 1. various little fixes 
