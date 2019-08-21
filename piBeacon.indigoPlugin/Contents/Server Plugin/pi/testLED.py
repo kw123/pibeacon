@@ -5,19 +5,22 @@
 import pigpio, time
 
 PIGPIO = pigpio.pi()
-print "enter pwmRange eg 8000" 
-pwmRange = int(input())
-print "enter freq eg 1000" 
-freq = int(input())
+print "enter pwmRange,freq eg 8000,100" 
+inp = input()
+if len(inp) !=2: exit()
+pwmRange = int(inp[0])
+freq 	 = int(inp[1])
 
-for pin in [26,19,13]:
-			PIGPIO.set_PWM_frequency(pin, freq)
-			PIGPIO.set_PWM_range(pin, pwmRange)
-			PIGPIO.set_PWM_dutycycle(pin, 0)
 pins = [26,19,13]
+for pin in pins:
+	PIGPIO.set_PWM_frequency(pin, freq)
+	PIGPIO.set_PWM_range(pin, pwmRange)
+	PIGPIO.set_PWM_dutycycle(pin, 0)
 
 while True:
+	print "enter r,b,g" 
 	rgb = input()
+	if len(rgb) != 3: continue
 	print rgb
 	for p in range(3):
-				PIGPIO.set_PWM_dutycycle( pins[p], int(pwmRange*float(rgb[p])/100.) )
+		PIGPIO.set_PWM_dutycycle( pins[p], int(rgb[p]) )

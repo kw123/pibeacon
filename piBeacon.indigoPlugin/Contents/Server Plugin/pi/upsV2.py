@@ -100,7 +100,7 @@ def shutdownSignalFromUPS(channel):
 		print("detect LOW bat capacity::: system back up")
 		return
 	print "shutting down"
-	#U.doReboot(10, "shutdown by UPS signal battery capacity", cmd="sudo sync; wait 2; sudo shutdown now")
+	#U.doReboot(tt=10, text="shutdown by UPS signal battery capacity", cmd="sudo sync; wait 2; sudo shutdown now")
 	
 
 

@@ -83,7 +83,7 @@ eth0PacketsOld		= ""
 packetsTime			= 0
 packetsTimeOld		= 0
 rebootIfNoMessages	= 4
-sunDialActive		= ""
+sundialActive		= ""
 BeaconUseHCINo		= "-1"
 BLEconnectUseHCINo	= "-1"
 last_masterStart	= ""
@@ -121,7 +121,7 @@ specialOutputList=[		"display",
 						"spiMCP3008",
 						"setTEA5767",
 						"neopixel",
-						"sunDial",
+						"sundial",
 						"setStepperMotor",
 						"neopixelClock",
 						"OUTPUTgpio"]
@@ -173,7 +173,8 @@ for ii in range(-12,13):
 		timeZones.append("/Etc/GMT+" +str(abs(ii)))
 	else:
 		timeZones.append("/Etc/GMT-"+str(ii))
-		
+
+timeZone		 = "99 none"
 timeZones[12+12] = "Pacific/Auckland"
 timeZones[11+12] = "Pacific/Pohnpei"
 timeZones[10+12] = "Australia/Melbourne"

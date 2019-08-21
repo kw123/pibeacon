@@ -4,17 +4,10 @@ import sys, os, subprocess
 import time
 import datetime
 import json
+import logging
+import logging.handlers
+global logging, logger
   
-
-def toLog(text, force=False):
-	global logfileName, logLevel, printON
-	if not logLevel and not force: return 
-
-	l=open(logfileName,"a")
-	l.write("update-MAC-Rejects: " + text+"\n")
-	l.close()
-	if printON:
-		print text
 
 ####### main pgm / loop ############
 #################################
@@ -57,7 +50,7 @@ def readRejects():
 			f.close()
 			nExistingMacs = len(rejectExisting)
 	except:
-		toLog("in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
+		logger.log(20,in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
 		pass
 	
 #################################
@@ -68,15 +61,15 @@ def writeRejects():
 		r=r.replace(" ","")
 		## pi#;9637500; UUID; ff4c000c0e00b60bbd8008f77d53-28183-15529;  71:21:38:7D:33:DA
 		#print r
-		toLog("Macs: " +r)
+		logger.log(20,Macs: " +r)
 		items   = r.split(";")
 		rPi	 = items[0]
 		try:
 			items[1]=float(items[1])
 			timeSt  = time.strftime('%Y-%m-%d %H:%M:%S',  time.localtime(items[1]))
 		except  Exception, e:
-			toLog("in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
-			toLog(items[1], force=True)
+			logger.log(20,in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
+			logger.log(20,items[1])
 			#exit()
 		reason  = items[2]
 		uuid	= items[3]
@@ -96,7 +89,7 @@ def writeRejects():
 				rejectExisting[mac]["rPi"] = rejectExisting[mac]["rPi"].strip(",")
 				rejectExisting[mac]["count"]+=1
 			except  Exception, e:
-				toLog("in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
+				logger.log(20,in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
 
 	
 	#print  rejectExisting   
@@ -117,20 +110,20 @@ def writeRejects():
 			out+= ',"rPi":"'	+rejectExisting[mac]["rPi"]+'"'
 			out+=  '},'
 			out0.append(out)
-			toLog(out)
+			logger.log(20,"\n"+out)
 		except: 
-			toLog("error for "+ mac, force=True)
-			toLog(unicode(rejectExisting[mac]), force=True )
+			logger.log(20,error for "+ mac, force=True)
+			logger.log(20,(unicode(rejectExisting[mac]))
 	lastDate.sort()	 
 	nRejects = len(out0)
 	out1=[]
 	#print lastDate
 	for ii in range(len(lastDate)):
 		out1.append(out0[lastDate[ii][1]])
-		toLog(unicode(lastDate[ii])+"  "+unicode(out0[lastDate[ii][1]]) )
+		logger.log(20,+"{} {}".format(lastDate[ii], out0[lastDate[ii][1]]) )
 	
 	if nRejects>0:
-		toLog("nunber of macs rejected: %d"%nRejects) 
+		logger.log(20,nunber of macs rejected: %d"%nRejects) 
 		out1[n-1]=out1[n-1].strip(",")
 		f=open(dataDir+"rejectedByPi.json","w")
 		f.write("{")
@@ -155,15 +148,23 @@ pluginDir		= sys.argv[0].split("updateRejects.py")[0]
 indigoDir		= pluginDir.split("Plugins/")[0]
 dataDir 		= indigoDir+"Preferences/Plugins/com.karlwachs.piBeacon/rejected/"
 logfileName 	= indigoDir+"Logs/com.karlwachs.piBeacon/plugin.log"
-
 ### logfile setup
 try: logLevel = sys.argv[1]=="1"
 except: logLevel = False
 
+logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
+logger = logging.getLogger(__name__)
+#
+if not logLevel:
+	logger.setLevel(logging.ERROR)
+else:
+	logger.setLevel(logging.DEBUG)
+
+
 	
-toLog("========= start    @ "+unicode(datetime.datetime.now())+"  =========== " )
+logger.log(20,========= start    @ "+unicode(datetime.datetime.now())+"  =========== " )
 readRejects()
 writeRejects()
 
-toLog("========= finished @ "+unicode(datetime.datetime.now())+"; read %d files from RPIs, ;  MACs in reject list before %d,  after: %d"%(nFiles, nExistingMacs, nRejects))
+logger.log(20,========= finished @ "+unicode(datetime.datetime.now())+"; read %d files from RPIs, ;  MACs in reject list before %d,  after: %d"%(nFiles, nExistingMacs, nRejects))
 sys.exit(0)		

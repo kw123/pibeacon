@@ -23,48 +23,27 @@ GPIO.setwarnings(False)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "sunDial"
+G.program = "sundial"
+
+global sundialVersion
+sundialVersion			= 15.5
 
 
 
 ######### constants #################
 
-ALLCHARACTERS = (		 "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
-				 "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-				 "1","2","3","4","5","6","7","8","9","0",
-				 ".",",","/","=","-","!","@","#","$","%","^","&","*","_","+",":",";","<",">","(",")","[","]","{","}")
-charCommandsW=[]
-for ii in range(len(ALLCHARACTERS)):
-	charCommandsW.append([" "+ALLCHARACTERS[ii],		"addChar('"+ALLCHARACTERS[ii]+"')"])
-	charCommandsW.append(["  ..delete last Char",	"deleteLastChar()"])
-	charCommandsW.append(["  ..save and exit",		"doSaveMenu(setMenuParam)"])
-charCommandsW.append([" exit submenu",				"doMenueExit(setMenuParam)"] )
-
-charCommandsS=[]
-for ii in range(len(ALLCHARACTERS)):
-	charCommandsS.append([" "+ALLCHARACTERS[ii],	"addChar('"+ALLCHARACTERS[ii]+"')"])
-	charCommandsS.append(["  ..delete last Char",	"deleteLastChar()"])
-	charCommandsS.append(["  ..save and exit",		"doSaveMenu(setMenuParam)"])
-charCommandsS.append([" exit submenu",				"doMenueExit(setMenuParam)"] )
-
-
 ##               top option               selection, command
 MENUSTRUCTURE =[[],[]]
 MENUSTRUCTURE[0]=[	
 					[" Info @ http:",			"setMenuParam=''"],
-					[" 12 or 24 clock",			"setMenuParam=''"],
-					[" mode light vs shadow",	"setMenuParam=''"],
 					[" light ON/off",			"setMenuParam=''"],
 					[" light off",				"setMenuParam=''"],
-					[" set position",			"setMenuParam=''"],
+					[" 12 or 24 clock",			"setMenuParam=''"],
+					[" mode light/shadow",		"setMenuParam=''"],
 					[" demo speed",				"setMenuParam=''"],
-					[" reset",					"setMenuParam=''"],
-					[" restart",				"setMenuParam=''"],
+					[" network",				"setMenuParam=''"],
 					[" light intensity",		"setMenuParam=''"],
-					[" light max",				"setMenuParam=''"],
-					[" light min",				"setMenuParam=''"],
-					[" light Sens max",			"setMenuParam=''"],
-					[" light Sens min",			"setMenuParam=''"],
+					[" restart",				"setMenuParam=''"],
 					[" adhoc Wifi",				"setMenuParam=''"],
 				]
 #					[" WiFi SID",				"setMenuParam='WiFissidString'"],
@@ -72,20 +51,15 @@ MENUSTRUCTURE[0]=[
 #				]
 #                         [menu text          ,  function to call ],  [ , ],  [ , ]   ..
 MENUSTRUCTURE[1]=[	
-					[	[" http:ip#",""], 										[" update..", ""											],	[" ip#:8010",""]												],
-					[	[" 12",   				"set1224(12)"],					[" 24", 					"set1224(24)"					],																	], 
-					[	[" normal SunDial",		"setSunMode('normal shadow')"],	[" Sun straight down",	"setSunMode('light straight down')"	],																	],
+					[	[" http:ip#",""], 										[" setup..", ""											],	[" ip#:8010",""]													],
 					[	[" always on",   		"setLightOff(0,0)"],			[" off",   					"setLightOff(0,24)"				],																	], 
 					[	[" 0-6",   				"setLightOff(0,6)"],			[" 23-6",   				"setLightOff(23,6)"				],	[" 0-7",   "setLightOff(0,7)"], [" 23-7", 	"setLightOff(23,7)"]], 
-					[	[" set to correct position", "setOffset()"], 			[" then press and hold ", 	"setOffset()"					],	[" SELECT for 2secs ", 	"setOffset()"]							],
+					[	[" normal sundial",		"setSunMode('normal')"],		[" Sun straight down",	"setSunMode('down')"	],																				],
+					[	[" 12",   				"set1224(12)"],					[" 24", 					"set1224(24)"					],																	], 
 					[	[" normal", "setSpeed(1)"],								[" demo speed slow",		"setSpeed(55)"					],	[" demo speed fast", "setSpeed(400)"], 							],
-					[	[" clock reset",		"doReset()"], 																																					],
-					[	[" system", 			"doRestart()"],																																					], 
+					[	[" WiFi restart", 		"doRestartWiFi()"],				[" ETH restart", 		"doRestartETH()"],																						], 
 					[	[" increase",   		"increaseLEDSlope()"],			[" decrease", 	"decreaseLEDSlope()"						],																	], 
-					[	[" increase",   		"increaseLEDmax()"],			[" decrease", 	"decreaseLEDmax()"							],																	], 
-					[	[" increase",   		"increaseLEDmin()"],			[" decrease", 	"decreaseLEDmin()"							],																	], 
-					[	[" increase",   		"increaselightSensMax()"],		[" decrease", 	"decreaselightSensMax()"					],																	], 
-					[	[" increase",   		"increaselightSensMin()"],		[" decrease", 	"decreaselightSensMin()"					],																	], 
+					[	[" restart", 			"doRestartMaster()"],			[" reboot sys", 		"doRebootPi()"],					[" shutdown",		"doHaltPi()"], 								], 
 					[	[" start",   			"setAdhocWiFi('start')"],		[" stop",		"setAdhocWiFi('stop')"						],																	], 
 				]
 
@@ -432,7 +406,7 @@ def displayComposeMenu(useLevel, area, subArea, nLines):
 
 		lines =[]
 		top   = MENUSTRUCTURE[0]
-		U.logger.log(20,"useLev:{}, aerea:{}, subA:{}, nLines:{}, top[area][0]:s{}".format(useLevel, area, subArea, nLines, top[area][0]) )
+		U.logger.log(10,"useLev:{}, aerea:{}, subA:{}, nLines:{}, top[area][0]:s{}".format(useLevel, area, subArea, nLines, top[area][0]) )
 
 		displayClear(prio=time.time()+100)
 		if useLevel== 0:
@@ -457,7 +431,7 @@ def displayComposeMenu(useLevel, area, subArea, nLines):
 					end   = min(subArea+nLines-2, len(short2) )
 				displayDrawLine( top[area][0][0:20]+" ==>" , iLine=0, nLines=nLines, prio=time.time()+100, )
 				nn=0
-				U.logger.log(20, "start:{},  end:{},  setMenuParam:{},  str:{}".format(start, end, setMenuParam, charString) )
+				U.logger.log(10, "start:{},  end:{},  setMenuParam:{},  str:{}".format(start, end, setMenuParam, charString) )
 				for ii in range(start, end):
 					nn+=1
 					if ii == subArea:
@@ -491,9 +465,9 @@ def displayDoShowImage():
 
 # ------------------    ------------------ 
 def displayShowStandardStatus(force=False):
-	global overallStatus, totalStepsDone, maxStepsUsed, sensorDict, amPM1224
+	global overallStatus, totalStepsDone, maxStepsUsed, sensorDict, amPM1224, sundialVersion
 	try:
-		displayDrawLines(["St:{}; Clk:{}".format(overallStatus, amPM1224), "@ Pos.: {}/{}".format(totalStepsDone,maxStepsUsed),  "IP#:{}".format(G.ipAddress),  "Wifi:{};".format(getWifiInfo(longShort=1)),   datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+		displayDrawLines(["St:{}; Clk:{}; V:{:.1f}".format(overallStatus, amPM1224, sundialVersion), "@ Pos.: {}/{}".format(totalStepsDone,maxStepsUsed),  "IP#:{}".format(G.ipAddress),  "Wifi:{};".format(getWifiInfo(longShort=1)),   datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 		updatewebserverStatus("normal")
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -530,53 +504,76 @@ def getWifiInfo(longShort=0):
 # ------------------    ------------------ 
 def updatewebserverStatus(status):
 	global amPM1224
-	global lightSensorValue, lightSensNorm, intensityRGB
-	global numberOfStepsCableAllows, stepsIn360, maxStepsUsed, totalStepsDone, offsetOfPosition, zeroPosition
-	global leftBoundaryOfCable, rightBoundaryOfCable, numberOfStepsCableAllows
+	global lightSensorValue, lightSensNorm, lightSensNormDefault, intensityRGB
+	global numberOfStepsCableAllows, stepsIn360, maxStepsUsed, totalStepsDone, offsetOfPositionCount, zeroPositionCount
+	global leftBoundaryOfCableCount, rightBoundaryOfCableCount, numberOfStepsCableAllows
 	global sensorDict
 	global intensityMax, intensityMin, intensitySlope
+	global timeShift
+	global sundialVersion
+	global currentRGBValue
+	global times, rgb
 
 	try: 
 		statusData		= []
-
-		statusData.append( "SunDial Current status" )
-		statusData.append( "update-time..... = {}".format(datetime.datetime.now().strftime(u"%H:%M:%S")) )
-		statusData.append( "IP-Number....... = {}".format(G.ipAddress))
-		statusData.append( 'set params at... = click on: <a href="http://{}:8010" style="color:rgb(255,255,255)">{}:8010 </a>'.format(G.ipAddress,G.ipAddress))
-		statusData.append( "WiFi enabled.... = {} - id={}".format(getWifiInfo(longShort=1), G.wifiID) )
-		statusData.append( "opStatus........ = {}".format(status ) )
-		statusData.append( " ")
-		statusData.append( "12/24 mode...... = {}".format(amPM1224) )
-		statusData.append( "shadow/SUN mode. = {}".format(lightShadowVsDown) )
-		statusData.append( " ")
-		statusData.append( "intensity....... = slope:{:.2f}, Min:{:.4f}, Max:{:.1f}".format(intensitySlope, intensityMin, intensityMax)  )
-		statusData.append( "norm RGB........ = {:.0f}, {:.0f}, {:.0f}".format(intensityRGB[0]*100, intensityRGB[1]*100, intensityRGB[2]*100)  )
-		statusData.append( "multiply RGB.... = {:.0f}, {:.0f}, {:.0f}".format(multiplyRGB[0]*100, multiplyRGB[1]*100, multiplyRGB[2]*100)  )
-		statusData.append( "Light CurrVal... = {:.3f} sensor value".format(lightSensorValue) )
-		statusData.append( "Light SensNorm.. = {} (light = sensValue/norm)".format(lightSensNorm) )
-		statusData.append( "Light Max....... = {} Sensor range".format(lightSensMax) )
-		statusData.append( "Light Min....... = {} Sensor range".format(lightSensMin) )
 		cc = timeToColor(secSinceMidnit)
-		statusData.append( "currentColor.... = R:{:.1f}, G:{:.1f}, B:{:.1f}".format(cc[0]*100, cc[1]*100, cc[2]*100) )
+		tz = U.getTZ()
+		out1  = ""
+		out2 = ""
+		out3 = ""
+		out4 = ""
+		for h in range(24):
+			rgbc = timeToColor(h*3600)
+			if    h < 6:	out1 += "{:03d},{:03d},{:03d} ".format(int(rgbc[0]*100), int(rgbc[1]*100), int(rgbc[2]*100) ) 
+			elif  h < 12:	out2 += "{:03d},{:03d},{:03d} ".format(int(rgbc[0]*100), int(rgbc[1]*100), int(rgbc[2]*100) ) 
+			elif  h < 18:	out3 += "{:03d},{:03d},{:03d} ".format(int(rgbc[0]*100), int(rgbc[1]*100), int(rgbc[2]*100) ) 
+			else:			out4 += "{:03d},{:03d},{:03d} ".format(int(rgbc[0]*100), int(rgbc[1]*100), int(rgbc[2]*100) ) 
+		statusData.append( "sundial Current status" )
+		statusData.append( "update-time........... ={}  TZ: {}".format(datetime.datetime.now().strftime(u"%H:%M:%S"), tz) )
+		statusData.append( "IP-Number............. ={}".format(G.ipAddress))
+		statusData.append( 'to set parameters..... =click on: <a href="http://{}:8010" style="color:rgb(255,255,255)">{}:8010 </a>'.format(G.ipAddress,G.ipAddress))
+		statusData.append( "WiFi enabled.......... ={} - id={}".format(getWifiInfo(longShort=1), G.wifiID) )
+		statusData.append( "opStatus.............. ={}".format(status) )
+		statusData.append( "version............... ={:.1f}".format(sundialVersion) )
+		statusData.append( "12/24 mode............ ={}".format(amPM1224) )
+		statusData.append( "shadow/SUN mode....... ={}".format(lightShadowVsDown) )
 		statusData.append( " ")
-		statusData.append( "Steps max Cable. = {}".format(numberOfStepsCableAllows ) )
-		statusData.append( "Steps in 360.... = {}".format(stepsIn360 ) )
-		statusData.append( "maxStepsUsed.... = {} from 0 to 24/12".format(maxStepsUsed) )
-		statusData.append( "at Step Now..... = {}".format(totalStepsDone) )
-		statusData.append( "offset.......... = {}".format(offsetOfPosition) )
-		statusData.append( "zeroPosition.... = {}".format(zeroPosition) )
-		statusData.append( "leftBoundary.... = {}".format(leftBoundaryOfCable) )
-		statusData.append( "rightBoundary... = {}".format(rightBoundaryOfCable) )
-		statusData.append( "delta Boundary.. = {}".format(numberOfStepsCableAllows) )
+		statusData.append( "LED:")
+		statusData.append( "Current output........ =R:{:.1f}, G:{:.1f}, B:{:.1f}".format(int(currentRGBValue[0]*100),int(currentRGBValue[1]*100),int(currentRGBValue[2]*100))  )
+		statusData.append( "Slope; [range]........ ={:.2f};  [{:.4f} ... {:.1f}]".format(intensitySlope, intensityMin, intensityMax  ) )
+		statusData.append( "RGB multiplier set @.. =R:{:.2f}, G:{:.2f}, B:{:.2f} - 100=normal".format(multiplyRGB[0]*100, multiplyRGB[1]*100, multiplyRGB[2]*100)  )
+		statusData.append( "RGB weight factors.... =R:{:.0f}, G:{:.0f}, B:{:.0f} - for white light".format(intensityRGB[0]*100, intensityRGB[1]*100, intensityRGB[2]*100)  )
+		statusData.append( "Color (RGB) / day")
+		statusData.append( "current..RGB-Color.... ={:03d},{:03d},{:03d}".format(int(cc[0]*100), int(cc[1]*100), int(cc[2]*100) ) )
+		statusData.append( "early morning...00..05 ={}".format(out1.strip()) )
+		statusData.append( "morning.........06..11 ={}".format(out2.strip()) )
+		statusData.append( "afternoon.......12..17 ={}".format(out3.strip()) )
+		statusData.append( "evening.........18..23 ={}".format(out4.strip()) )
+		statusData.append( "Light Sensor:")
+		statusData.append( "Current value......... ={:.3f}".format(lightSensorValue) )
+		statusData.append( "Slope; [range]........ ={:.2f};  [{:.3f} ... {:.1f}]".format(lightSensNormDefault/lightSensNorm, lightSensMin, lightSensMax) )
 		statusData.append( " ")
-		statusData.append( "Sensor 0........ = {}".format(sensorDict["sensor"][0]["clicked"]) )
-		statusData.append( "Sensor 12....... = {}".format(sensorDict["sensor"][1]["clicked"]) )
-		statusData.append( "Sensor 0 marksR. = {}".format(unicode(sensorDict["sensor"][0]["right"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
-		statusData.append( "Sensor 0 marksL. = {}".format(unicode(sensorDict["sensor"][0]["left"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
-		statusData.append( "Sensor 12 marksR.= {}".format(unicode(sensorDict["sensor"][1]["right"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
-		statusData.append( "Sensor 12 marksL.= {}".format(unicode(sensorDict["sensor"][1]["left"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
-		statusData.append( "Sensor LineChk1. = {}".format(sensorDict["sensor"][2]["clicked"]) )
-		statusData.append( "Sensor LineChk2. = {}".format(sensorDict["sensor"][3]["clicked"]) )
+		statusData.append( "Mechanical Hardware:")
+		statusData.append( "Max steps Cable allows ={}".format(numberOfStepsCableAllows ) )
+		statusData.append( "Steps in 360.......... ={}".format(stepsIn360 ) )
+		statusData.append( "Max Steps Used........ ={} from 0 to 24/12".format(maxStepsUsed) )
+		statusData.append( "At Step Now........... ={}".format(totalStepsDone) )
+		statusData.append( "Zero Position (HH=0)@. ={}".format(zeroPositionCount) )
+		statusData.append( "offset HH=0 - offset.. ={}".format(offsetOfPositionCount) )
+		statusData.append( "leftBoundary.......... ={}".format(leftBoundaryOfCableCount) )
+		statusData.append( "rightBoundary......... ={}".format(rightBoundaryOfCableCount) )
+		statusData.append( "delta Boundary........ ={}".format(numberOfStepsCableAllows) )
+		statusData.append( " ")
+		statusData.append( "Debug info:")
+		statusData.append( "Sensor 0.............. ={}".format(sensorDict["sensor"][0]["clicked"]) )
+		statusData.append( "Sensor 12............. ={}".format(sensorDict["sensor"][1]["clicked"]) )
+		statusData.append( "Sensor 0 marksR....... ={}".format(unicode(sensorDict["sensor"][0]["right"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+		statusData.append( "Sensor 0 marksL....... ={}".format(unicode(sensorDict["sensor"][0]["left"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+		statusData.append( "Sensor 12 marksR...... ={}".format(unicode(sensorDict["sensor"][1]["right"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+		statusData.append( "Sensor 12 marksL...... ={}".format(unicode(sensorDict["sensor"][1]["left"]).replace("[","").replace("]","").replace(" ","").replace("-1","-")) )
+		statusData.append( "Sensor LineChk1....... ={}".format(sensorDict["sensor"][2]["clicked"]) )
+		statusData.append( "Sensor LineChk2....... ={}".format(sensorDict["sensor"][3]["clicked"]) )
+		statusData.append( "timeShift............. ={:.0f} (Hours, for testing only)".format(timeShift/3600) )
 
 		U.logger.log(10, u"web status update:{}".format(statusData) )
 
@@ -589,51 +586,63 @@ def removebracketsetc(data):
 
 
 def readCommand():
-	global lastPosition, gpiopinNumbers, zeroPosition, rememberPostionInCommand, offsetOfPosition, totalStepsDone, amPM1224, lightShadowVsDown, secSinceMidnit0, stepsIn360
+	global lastPositionCount, gpiopinNumbers, zeroPositionCount, rememberPostionInCommand, offsetOfPositionCount, totalStepsDone, amPM1224, lightShadowVsDown, secSinceMidnit0, stepsIn360
 	global timeShift, intensitySlope, multiplyRGB
+	global lightSensNorm, lightSensNormDefault
+	global lastMove, updateDownloadEnable
+	retCode = False
 	try:
-		if not os.path.isfile(G.homeDir+"temp/sundial.cmd"): return 
+		if not os.path.isfile(G.homeDir+"temp/sundial.cmd"): return  retCode
 
 		f=open(G.homeDir+"temp/sundial.cmd","r")
 		cmds = f.read().strip()
 		f.close()
 		os.system("rm  "+ G.homeDir+"temp/sundial.cmd > /dev/null 2>&1 ")
 
-		if len(cmds) < 2: return 
-		rememberPostionInCommand  = lastPosition
+		if len(cmds) < 2: return retCode
+		rememberPostionInCommand  = lastPositionCount
 		cmds = cmds.lower().replace(" ","").strip(";")
 	### cmds: =["go0","getBoundaries","doLR","RGB:"]
 		U.logger.log(20, u"cmds: >>{}<<".format(cmds))
 
+		restCount = 0
 		cmds = cmds.split(";")
 		for cmd in cmds:
 			cmd =cmd.strip()
 
-			if cmd.find("start") > -1:
-				nSteps = totalStepsDone
-				if nSteps < 0: 	dir =-1
-				else:			dir = 1
-				U.logger.log(20, u"go to 0: = -totalStepsDone:{}".format(totalStepsDone))
-				move( abs(nSteps),  dir)
 
-			elif cmd.find("zero") > -1:
-				nSteps = lastPosition-zeroPosition
-				if nSteps < 0: 	dir =-1
-				else:			dir = 1
-				U.logger.log(20, u"go to 0: = -zeroPosition:{} ; nSteps:{}; totsteps:{}".format(zeroPosition,nSteps,totalStepsDone))
+			if cmd.find("zero") > -1:
+				nSteps = lastPositionCount-zeroPositionCount
+				if nSteps < 0: 	direction =-1
+				else:			direction = 1
+				U.logger.log(10, u"go to 0: = -zeroPositionCount:{} ; nSteps:{}; totsteps:{}".format(zeroPositionCount,nSteps,totalStepsDone) )
 				totalStepsDone += nSteps
-				move( abs(nSteps),  dir)
+				move( abs(nSteps),  direction)
 
-			elif cmd.find("lightSensNorm") > -1:
+			elif cmd.find("lightsensor") > -1:
 				cmd = cmd.split(":")
 				if len(cmd) != 2: continue
 				try:    cmd = float(cmd[1])
-				except: continue
-				if cmd < 1000: continue
-				U.logger.log(20, u"adjusting light sensor normalization factor:{} from: ".format(lightSensNorm),cmd)
-				lightSensNorm = cmd
+				except:			continue
+				if cmd < 0.01:	continue
+				if cmd > 100: 	continue
+				U.logger.log(10, u"adjusting light sensor normalization factor to to: {:.2f}; was: {:.2f}".format(cmd, lightSensNormDefault/lightSensNorm) )
+				lightSensNorm = lightSensNormDefault * cmd
+				saveParameters(force=True)
 
-			elif cmd.find("hh:") > -1:
+			elif cmd.find("lightoff") > -1:
+				cmd = cmd.split(":")
+				if len(cmd) != 2: continue
+				try:  cmd = cmd[1].split(",")
+				except:			  continue
+				if len(cmd) != 2: continue
+				try: 
+					setLightOff(int(cmd[0]),int(cmd[1]))
+				except: continue
+				setColor(force=True)
+				saveParameters(force=True)
+
+			elif cmd.find("gohh:") > -1:
 				cmd = cmd.split(":")
 				if len(cmd) != 2: continue
 				try:    cmd = float(cmd[1])
@@ -642,178 +651,214 @@ def readCommand():
 				if amPM1224 ==12: 	hh *=2
 				hh %= 24
 				nSteps = int(float(hh * maxStepsUsed) /24) - totalStepsDone
-				if nSteps < 0: 	dir =-1
-				else:			dir = 1
-				U.logger.log(20, u"go to hour={} = steps:{} from :{}".format(hh, nSteps, totalStepsDone))
+				if nSteps < 0: 	direction =-1
+				else:			direction = 1
+				U.logger.log(10, u"go to hour={} = steps:{} from :{}".format(hh, nSteps, totalStepsDone))
 				totalStepsDone += nSteps
-				move( abs(nSteps),  dir)
+				move( abs(nSteps),  direction)
 
-			elif cmd.find("now") > -1:
+			elif cmd.find("gonow") > -1:
 				nSteps = int(maxStepsUsed * float(secSinceMidnit )/(24*3600)) - totalStepsDone
-				if nSteps < 0: 	dir =-1
-				else:			dir = 1
-				U.logger.log(20, u"go to now: sec={:.0f} = steps:{} ..  from :{}".format(secSinceMidnit, nSteps, totalStepsDone))
+				if nSteps < 0: 	direction =-1
+				else:			direction = 1
+				U.logger.log(10, u"go to now: sec={:.0f} = steps:{} ..  from :{}".format(secSinceMidnit, nSteps, totalStepsDone))
 				totalStepsDone += nSteps
-				move( abs(nSteps),  dir)
+				move( abs(nSteps),  direction)
 
 			elif cmd.find("steps:") >-1:
 				cmd =cmd.split(":")
 				if len(cmd) != 2: continue
 				nSteps = int(cmd[1])
-				if nSteps < 0: 	dir =-1
-				else:			dir = 1
-				U.logger.log(20, u"make steps: {} direction: {}, tot steps:{}".format(nSteps, dir, totalStepsDone))
+				if nSteps < 0: 	direction =-1
+				else:			direction = 1
+				U.logger.log(10, u"make steps: {} directionection: {}, tot steps:{}".format(nSteps, direction, totalStepsDone))
 				totalStepsDone += nSteps
-				move( abs(nSteps),  dir)
+				move( abs(nSteps),  direction)
 
-			elif cmd.find("timesshift:")> -1:
-				cmd = cmd.split(":")
-				if len(cmd) != 2: continue
-				try:    cmd = float(cmd[1])
-				except: continue
-				timeShift = float(cmd)*3600
-				U.logger.log(20, u"time shift  hours:{}".format(cmd[1]))
-
-			elif cmd.find("offsetArm:") >-1:
+			elif cmd.find("offsetarm:") >-1:
 				cmd =cmd.split(":")
 				if len(cmd) != 2: continue
-				try:    cmd = int(cmd[1])
+				try:    off = int(cmd[1])
 				except: continue
-				if abs (cmd) > 1000: continue
-				U.logger.log(20, u"setting arm offset to {}  from:{}".format(offsetOfPosition, cmd))
-				offsetOfPosition = cmd
+				if abs (off) > 500: continue
+				if off == 0: 		continue
+				U.logger.log(10, u"setting arm offset from {}  by:{}".format(offsetOfPositionCount, off))
+				if off > 0:		move(abs(off), 1)
+				if off < 0:		move(abs(off),-1)
+				offsetOfPositionCount += off
+				getOffset()
 				saveParameters(force=True)
-				stopLoop = False
-				U.restartMyself(reason="with new position offset")
 
 			elif cmd.find("calibrate:") >-1:
 				cmd =cmd.split(":")
 				if len(cmd) != 2: continue
-				if cmd[1] == "currenttime":
+				if cmd[1] in ["now","n","ct"]:
 					tt = int(secSinceMidnit)
 				else:
 					tt = int(float(cmd[1])*3600)
-				rememberPos 	= lastPosition
+				stopLoop = True
+				rememberPos 	= lastPositionCount
 				hh = int(tt/3600)
-				U.logger.log(20, "setting offset .. w tt secs:{} = {:2d}:{:2d}, current ..  steps:{}; zero:{}, offset:{} .. doing LR".format(tt, hh, int(tt-hh*3600)/60, totalStepsDone, zeroPosition, offsetOfPosition))
+				U.logger.log(20, "setting offset .. w tt secs:{} = {:2d}:{:2d}, current ..  steps:{}; zero:{}, offset:{} .. doing LR".format(tt, hh, int(tt-hh*3600)/60, totalStepsDone, zeroPositionCount, offsetOfPositionCount))
 				# this will move back to zero.. new zero will have the number of steps to 0 from correct postion
 				findLeftRight()
-				stepsBackToZero = rememberPos - zeroPosition 
+				stepsBackToZero = rememberPos - zeroPositionCount 
 				stepsShouldbe   =  int(   (float(tt * maxStepsUsed)) /(24.*3600)  )
-				offsetOfPosition = int( stepsBackToZero -  stepsShouldbe ) 
-				if 	offsetOfPosition   > stepsIn360: offsetOfPosition -= stepsIn360
-				elif -offsetOfPosition > stepsIn360: offsetOfPosition += stepsIn360
-				U.logger.log(20, "after left right, new zero:{}, stepsBackToZero:{}, stepsShouldbe:{}, new offset:{}".format(zeroPosition, stepsBackToZero, stepsShouldbe, offsetOfPosition))
-				charString = "set off: {}".format(offsetOfPosition)
+				offsetOfPositionCount = int( stepsBackToZero -  stepsShouldbe ) 
+				if 	offsetOfPositionCount   > stepsIn360: offsetOfPositionCount -= stepsIn360
+				elif -offsetOfPositionCount > stepsIn360: offsetOfPositionCount += stepsIn360
+				U.logger.log(20, "after left right, new zero:{}, stepsBackToZero:{}, stepsShouldbe:{}, new offset:{}".format(zeroPositionCount, stepsBackToZero, stepsShouldbe, offsetOfPositionCount))
+				charString = "set off: {}".format(offsetOfPositionCount)
 				displayComposeMenu0()
 				time.sleep(2)
-				saveParameters(force=True)
 				stopLoop = False
+				saveParameters(force=True)
 				U.restartMyself(reason="with new position offset")
 
 			elif cmd =="getboundaries":
-				U.logger.log(20, u"force boundaries of cables:")
-				findBoundariesOfCable(force=True)
+				U.logger.log(10, u"force boundaries of cables:")
+				findBoundariesOfCabl(trigger="command")
+				saveParameters(force=True)
 				U.restartMyself(reason="after find boundaries", doPrint= True)
 
-			elif cmd in ["leftrightcalibration", "dolr"]:
-				U.logger.log(20, u"force LR:")
-				findLeftRight()
-				getOffset()
+			elif cmd in ["leftrightcalib", "dolr"]:
+				U.logger.log(10, u"force LR:")
+				saveParameters(force=True)
+				U.restartMyself(reason="web  command for L/R", doPrint= True)
 
 			elif cmd =="restart":
-				U.logger.log(20, u"restart sundial:")
-				U.restartMyself(reason="manual command", doPrint= True)
-				time.sleep(20)
+				U.logger.log(20, u"web restart requested")
+				doRestartMaster( button=False)
 
 			elif cmd =="reset":
-				U.logger.log(20, u"resetting parameters:")
-				os.system("rm  "+ G.homeDir+"sunDial.parameters > /dev/null 2>&1 ")
-				os.system("rm  "+ G.homeDir+"temp/sunDial.positions ")
-				U.restartMyself(reason="reset request", doPrint= True)
+				resetCount +=1
+				if restCount == 2: # must be submitted twice
+					doReset(button=False)
+				saveParameters(force=True)
+				
+			elif cmd == "shutdown":
+				U.logger.log(20, u"web shutdown requested")
+				doShutdownPi(button=False)
+				
+			elif cmd == "halt":
+				U.logger.log(20, u"web halt requested")
+				doHaltPi(button=False)
+
+			elif cmd =="reboot":
+				U.logger.log(20, u"web: reboot requested")
+				saveParameters(force=True)
+				U.doReboot(tt=0, text="web reboot  requested",   cmd="sudo killall python;sudo killall pigpiod;sudo sync;wait 2;sudo reboot now;wait 2;sudo reboot -f")
 				time.sleep(20)
 
-			elif cmd.find("shutdown") >-1:
-				U.logger.log(30, u"shutdown sundial")
-				doSunDialShutdown()
-				U.doReboot(20, "shutdown  requested", cmd="sudo sync; wait 2; sudo shutdown now")
 
 			elif cmd.find("led:") >-1:
 				cmd =cmd.split(":")
 				if len(cmd) != 2: continue
-				RGB = cmd[1].split(",")
-				if cmd[1] == "up":
-					intensitySlope *=1.5
-				elif cmd[1] == "down":
-					intensitySlope /=1.5
-				elif cmd[1] == "off":
+				cmd = cmd[1]
+				RGB = cmd.split(",")
+				if cmd == "up":
+					intensitySlope *=2.
+				elif cmd == "down":
+					intensitySlope /=2.
+				elif cmd == "off":
 					lightOffBetweenHours[0] = 0
 					lightOffBetweenHours[1] = 24
-					U.logger.log(20, u"set LED off")
-					setColor(force=True)
-				elif cmd[1] == "on":
+					U.logger.log(10, u"set LED off")
+				elif cmd == "on":
 					lightOffBetweenHours[0] = 0
 					lightOffBetweenHours[1] = 0
-					U.logger.log(20, u"set LED ON")
-					setColor(force=True)
+					U.logger.log(10, u"set LED ON")
 				elif len(RGB) == 3:
-					U.logger.log(20, u"set LED RGBmultiplier to {}".format(RGB) )
+					U.logger.log(10, u"set LED RGBmultiplier to {}".format(RGB) )
 					for RGBNumber in range(len(gpiopinNumbers["pin_rgbLED"])):
 						multiplyRGB[RGBNumber] = float(RGB[RGBNumber])/100.
-					setColor(force=True)
 				else:
-					intensitySlope = float(cmd[1])
-					intensitySlope = min(500.,max(intensitySlope, 0.1))
+					intensitySlope = float(cmd)
+					intensitySlope = min(500.,max(intensitySlope, 0.01))
 					setColor(force=True)
-					U.logger.log(20, u"set LED multiplier to:{}".format(intensitySlope) )
+					U.logger.log(10, u"set LED multiplier to:{}".format(intensitySlope) )
+				setColor(force=True)
+				saveParameters(force=True)
+
 
 			elif cmd.find("sleep:") >-1:
 				cmd =cmd.split(":")
 				if len(cmd) != 2: continue
 				sleepTime = float(cmd[1])
-				U.logger.log(20, u"sleep for {}".format(sleepTime) )
+				U.logger.log(10, u"sleep for {}".format(sleepTime) )
 				time.sleep(sleepTime)
 
-			elif cmd.find("mode") >-1:
+			elif cmd.find("mode:") >-1:
 				cmd =cmd.split(":")
 				if len(cmd) != 2: continue
-				if "shadow" in lightShadowVsDown and "shadow" in cmd[1]:	continue
-				if "light"  in lightShadowVsDown and "light"  in cmd[1]:	 continue
-				if amPM1224 == 12 				 and cmd[1] =="12": 		continue
-				if amPM1224 == 24				 and cmd[1] =="24": 		continue
-				if "shadow" in cmd[1]: 
-					lightShadowVsDown = "normal shadow"
-					charString = u"set {}".format(lightShadowVsDown)
-					displayComposeMenu0()
-					saveParameters(force=True)
-					U.logger.log(20, u"set light to  {}".format(lightShadowVsDown))
-					time.sleep(2)
-					U.restartMyself(reason=" new sun setting")
-				elif "shadow" in cmd[1]: 
-					llightShadowVsDown = "light straight down"
-					charString = u"set {}".format(lightShadowVsDown)
-					displayComposeMenu0()
-					saveParameters(force=True)
-					U.logger.log(20, u"set light to  {}".format(lightShadowVsDown))
-					time.sleep(2)
-					U.restartMyself(reason=" new sun setting")
-				else:
-					cmd = int(cmd[1])
-					if amPM1224 == cmd: 
-						U.logger.log(20, u"set AMPM:{}  no change from :{} ".format(cmd, amPM1224))
-						continue
-					charString = u"set to AMPM {}".format(cmd)
-					amPM1224 = cmd
-					displayComposeMenu0()
-					saveParameters(force=True)
-					U.logger.log(20, u"set AMPM {} ".format(cmd))
-					time.sleep(2)
+				cmd = cmd[1]
+				try: 
+					int(cmd)
+					set1224(cmd, 		button=False)
+				except:
+					setSunMode(cmd, 	button=False)
+				retCode = True
+				saveParameters(force=True)
+	
+			elif cmd.find("speed:") > -1:
+				cmd = cmd.split(":")
+				if len(cmd) != 2: continue
+				setSpeed(cmd[1], button=False)
+				retCode = True
+	
+			elif cmd.find("autoupdate:") > -1:
+				cmd = cmd.split(":")
+				if len(cmd) != 2: continue
+				updateDownloadEnable["sundial"] =   cmd[1].find("e") == 0
+				U.writeJson(G.homeDir+"updateDownloadEnable", updateDownloadEnable, sort_keys=True, indent=2)
+
+			elif cmd.find("timeshift:")> -1:
+				cmd = cmd.split(":")
+				if len(cmd) != 2: continue
+				try:    hh = min(24, max(-24, float(cmd[1])))
+				except: continue
+				U.logger.log(10, u"time shift  hours:{:.0f}".format(hh))
+				timeShift = float(hh)*3600
+				setwaitParams()
+				getTime()
+				lastMove = 0
+				saveParameters(force=True)
+				testIfMove()
+				retCode = True
 
 			else:
-				U.logger.log(20, u"cmds avail: \nrestart;reset;off;goStart;goNow;goZero;goHH:hh;goSteps:nn;\ntimeshift:hh;getBoundaries;leftrightcalibration;\nLED:on/off/up/down/x/r,g,b;lightSensNorm:xx;sleep:secs;mode:shadow/light/12/24;\ncalibrate:currrentTime/1/2/..24  no spaces, use ; between cmds" )
+				U.logger.log(10, u"cmds avail - no spaces\n"+
+								"-restart........: (soft) restarts the clock\n"+
+								"-reset..........: resets the params, req. offset calibration\n"+
+								"-reboot.........: power cycle the clock\n"+
+								"-shutdown.......: power down the clock - shutdown\n"+
+								"-halt...........: power down the clock - halt\n"+
+								"-goZero ........: go to 0 postion\n"+
+								"-goNow..........: go to current time\n"+
+								"-goHH:hh........: go to hour:0-24\n"+
+								"-goSteps:x......: go x steps (0-800) forward/backwards\n"+
+								"-speed:x........: set demo speed, eg x= 1=normal, 50, 100 ..\n"+
+								"-LED:on/off.....: switches LED on/off\n"+
+								"-LED:up/down....: increase / decrease LED intensity */ 1.5\n"+
+								"-LED:x..........: set LED intensity to 0-100; 1 = normal\n"+
+								"-LED:r,g,b......: set LED RGB values to 0-100,0-100,0-100; 100= normal\n"+
+								"-lightoff:x,y...: set LED off between hours [x,y]\n"+
+								"-lightSensor:x..: set light sensor sensitivity to 0.1-10; 1 = normal\n"+
+								"-sleep:x........: stop any move for x secs\n"+
+								"-mode:N/D.......: set mode to Normal, or light straight Down\n"+
+								"-mode:12/24.....: sets mode to 12 hour or 24 hour mode\n"+
+								"-getBoundaries..: find absolute boundaries, turns multiple times left then right to find cable boundaries, then goes to middle\n"+
+								"-offsetArm:x....: set offset to x (-400..+400); set offset steps between magsensor =0 and time=0 Hours\n"+
+								"-calibrate:N/hh.: first move arm to pos. Now or hour=hh, then Submit\n"+
+								"-timeshift:hh...: change time by hh hours -- just for for testing\n"+
+								"upper/lower case fine, command concatenation with ';', \n"+
+								"eg:   LED:50;goHH:10;sleep:5;goNow .. sets LED to high, goes to hour = 10, waits 5 secs and goes back to current time")
+
+		saveParameters(force=True)
+	
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return 
+	return retCode
 		
 
 # ########################################
@@ -822,60 +867,58 @@ def readCommand():
 
 # ------------------    ------------------ 
 def boundarySensorEventGPIO(pin):
-	global inFixBoundaryMode, currentlyMoving, limitSensorTriggered, lastPosition, findBoundaryMode, sensorDict
+	global boundaryMode, currentlyMoving, limitSensorTriggered, lastPositionCount, sensorDict
 	global lastEventOfPin
 
 	try:
-		execboundarySensorEvent(pin)
+		execboundarySensEvnt(pin)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
 
 # ------------------    ------------------ 
 def boundarySensorEventPIG(pin, level, tick):
-	global inFixBoundaryMode, currentlyMoving, limitSensorTriggered, lastPosition, findBoundaryMode, sensorDict
+	global boundaryMode, currentlyMoving, limitSensorTriggered, lastPositionCount, sensorDict
 
 	try:
-		execboundarySensorEvent(pin)
+		execboundarySensEvnt(pin)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return
 
 # ------------------    ------------------ 
-def execboundarySensorEvent(pin):
-	global inFixBoundaryMode, currentlyMoving, limitSensorTriggered, lastPosition, findBoundaryMode, sensorDict
+def execboundarySensEvnt(pin):
+	global boundaryMode, currentlyMoving, limitSensorTriggered, lastPositionCount, sensorDict
 	global lastEventOfPin
 
 	try:		
 		sensNumber = sensorDict["gpioToSensNumber"][pin]
-		U.logger.log(20, "pin:{}, delta time:{:.2f}".format(pin, time.time() - lastEventOfPin[pin] ))
+		U.logger.log(10, "pin:{}, delta time:{:.2f}".format(pin, time.time() - lastEventOfPin[pin] ))
 		if time.time() - lastEventOfPin[pin] < 0.5: 
 			return 
 		lastEventOfPin[pin] = time.time()
 
 		getSensors()
-		U.logger.log(20, "limitSensorTriggered sens#:{};  pin#{}, name:{}, timeSinceLastMove:{:.2f},   limitSensorTriggered:{}, inFixBoundaryMode:{}, sensSt2:{}, sensSt3:{}".format(sensNumber, pin, pinsToName[pin],time.time() - currentlyMoving,limitSensorTriggered,inFixBoundaryMode,sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"] ))
+		U.logger.log(20, "limitSensorTriggered sens#:{};  pin#{}, name:{}, timeSinceLastMove:{:.2f},   limitSensorTriggered:{}, boundaryMode:{}, sensSt2:{}, sensSt3:{}".format(sensNumber, pin, pinsToName[pin],time.time() - currentlyMoving,limitSensorTriggered,boundaryMode,sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"] ))
 
 		if time.time() - currentlyMoving < 0.1:
 			U.logger.log(20, "limitSensorTriggered .. currently moving, ignored, continue ")
 			return 
 
-		if inFixBoundaryMode !=0: 
-			return # alread in fix mode
-		if findBoundaryMode: 
-			U.logger.log(20, "limitSensorTriggered .. currently in find cable boundaries, ignored, continue ")
+		if boundaryMode !=0: 
+			U.logger.log(20, "limitSensorTriggered .. currently in find/fix cable boundaries, ignored, continue ")
 			return 
 
 		if (sensorDict["sensor"][2]["status"] == 1 or sensNumber ==2) and limitSensorTriggered != 1:	
 			limitSensorTriggered = 1
 			savePositions()
-			saveFixBoundaryMode(set=1)
+			saveBoundaryMode(set=1)
 			U.restartMyself(reason="entering fixmode, trigger of left boundary", doPrint= True)
 		if (sensorDict["sensor"][3]["status"] == 1 or sensNumber ==3) and limitSensorTriggered != -1:
 			limitSensorTriggered = -1
 			savePositions()
-			saveFixBoundaryMode(set=-1)
+			saveBoundaryMode(set=-1)
 			U.restartMyself(reason="entering fixmode, trigger of right boundary", doPrint= True)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -900,12 +943,12 @@ def buttonPressedEventGPIO(pin):
 	global lastEventOfPin
 	try:
 		if pin not in pinsToName: 			return 
-		U.logger.log(20, "pin:{}, delta time:{:.2f}".format(pin, time.time() - lastEventOfPin[pin] ))
+		U.logger.log(10, "pin:{}, delta time:{:.2f}".format(pin, time.time() - lastEventOfPin[pin] ))
 		if time.time() - lastEventOfPin[pin] < 0.5: 
 			return 
 		lastEventOfPin[pin] = time.time()
 		val = getPinValue(pinsToName[pin], ON=0)
-		U.logger.log(20, "pin:{}  {}, val:{}, displ<enLevActive:{},  displayMenuAreaActive:{}, displayMenuSubAreaActive:{}".format(pin, pinsToName[pin], val, displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive) )
+		U.logger.log(10, "pin:{}  {}, val:{}, displ<enLevActive:{},  displayMenuAreaActive:{}, displayMenuSubAreaActive:{}".format(pin, pinsToName[pin], val, displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive) )
 		execbuttonPressedEvent(pin)
 
 	except Exception, e:
@@ -967,7 +1010,7 @@ def execbuttonPressedEvent(pin):
 
 			elif displayMenuLevelActive  == 1:
 				cmd = MENUSTRUCTURE[0][displayMenuAreaActive][1]
-				U.logger.log(20, "action0:>{}<<".format(cmd) )
+				U.logger.log(10, "action0:>{}<<".format(cmd) )
 				exec(cmd) 
 
 			if displayMenuLevelActive > 0:
@@ -1015,7 +1058,7 @@ def execbuttonPressedEvent(pin):
 			displayMenuSubAreaActive 	= -1
 
 			if displayMenuLevelActive 	< 0:
-				U.logger.log(20, "setting to normal display")
+				U.logger.log(10, "setting to normal display")
 				displayPriority 		= 0
 				displayMenuLevelActive 	= -1
 				displayShowStandardStatus(force=True)
@@ -1033,21 +1076,21 @@ def doAction():
 	global setMenuParam
 
 	try:
-		U.logger.log(20, "(1) displayMenuLevelActive: {};  displayMenuAreaActive:{}; subArea:{}".format(displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive))
+		U.logger.log(10, "(1) displayMenuLevelActive: {};  displayMenuAreaActive:{}; subArea:{}".format(displayMenuLevelActive, displayMenuAreaActive, displayMenuSubAreaActive))
 
 		if displayMenuAreaActive < 0: return 
 
 		if displayMenuLevelActive == 0:
 			displayComposeMenu0()
 			cmd = MENUSTRUCTURE[0][displayMenuAreaActive][1]
-			U.logger.log(20, "action0:>>{}<<".format(cmd) )
+			U.logger.log(10, "action0:>>{}<<".format(cmd) )
 			exec(cmd) 
 
 		elif displayMenuLevelActive == 1:
 			if displayMenuSubAreaActive < 0: return 
 			displayComposeMenu0()
 			cmd = MENUSTRUCTURE[1][displayMenuAreaActive][displayMenuSubAreaActive][1]
-			U.logger.log(20, "action0:>>{}<<".format(cmd) )
+			U.logger.log(10, "action0:>>{}<<".format(cmd) )
 			exec(cmd) 
 			if displayMenuLevelActive == 0:
 				displayComposeMenu0()
@@ -1063,7 +1106,7 @@ def doMenueExit(param):
 	global amPM1224
 
 	try:
-		U.logger.log(20, "(1) {}".format(param))
+		U.logger.log(10, "(1) {}".format(param))
 
 		displayMenuLevelActive -=1
 
@@ -1073,13 +1116,13 @@ def doMenueExit(param):
 			displayShowStandardStatus(force=True)
 
 		if param == "off":
-				doSunDialShutdown()
-				U.doReboot(20, "shutdown pin pressed", cmd="sudo sync; wait 2; sudo shutdown now")
+				dosundialShutdown()
+				U.doReboot(tt=20, text="shutdown pin pressed", cmd="sudo sync; wait 2; sudo shutdown now;wait 2;sudo shutdown -f")
 		if param == "reset":
 				writeBackParams({})
 				U.restartMyself(reason=" reset requested")
 		if param == "restart":
-				doSunDialShutdown()
+				dosundialShutdown()
 				U.restartMyself(reason=" restart requested")
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1087,26 +1130,11 @@ def doMenueExit(param):
 
 
 # ------------------    ------------------ 
-def addChar(c):
-	global charString, WiFissidString, WiFiPassString, setMenuParam
-	charString +=c
-	U.logger.log(20, "addChar charString %s   %s" %(c, charString))
-	return 
-
-# ------------------    ------------------ 
-def deleteLastChar():
-	global charString, WiFissidString, WiFiPassString, setMenuParam
-	U.logger.log(20, "deleteLastChar")
-	if len(charString)>0: charString = charString[0:-1]
-	U.logger.log(20, "deleteLastChar charString %s" %charString)
-	return 
-
-# ------------------    ------------------ 
 def doSaveMenu(param):
 	global charString, WiFissidString, WiFiPassString, setMenuParam
 
 	try:
-		U.logger.log(20, " into doSaveMenu %s" %param)
+		U.logger.log(10, " into doSaveMenu %s" %param)
 		if param == "": return
 		if param == setMenuParam:
 			if   setMenuParam == "WiFissidString":
@@ -1122,13 +1150,13 @@ def doSaveMenu(param):
 # ------------------    ------------------
 def doSetWiFiParams():
 	global charString, WiFissidString, WiFiPassString, setMenuParam
-	U.logger.log(20, "into doSetWiFiParams WiFissidString: %s    WiFiPassString: %s"%(WiFissidString,WiFiPassString))
+	U.logger.log(10, "into doSetWiFiParams WiFissidString: %s    WiFiPassString: %s"%(WiFissidString,WiFiPassString))
 	return
 
 # ------------------    ------------------ 
 def powerOff():
-	U.logger.log(20, "into powerOff")
-	#U.doReboot(1.," shut down at " +str(datetime.datetime.now())+"   button pressed",cmd="shutdown -h now ")
+	U.logger.log(10, "into powerOff")
+	#U.doReboot(tt=1., text="   button pressed", cmd="shutdown -h now ")
 	return 
 
 
@@ -1141,23 +1169,23 @@ def changeValueButtonInput(nameString, name, maxV, minV, start, maxDelta, increa
 	global charString
 	try:
 		time.sleep(0.1)
-		U.logger.log(20, "(1) name:{} pin V:{}, val:{}, max:{}, min:{}, delta{}, maxD:{}, up/Dn:{} ".format(nameString, getPinValue("pin_Select",ON=0, doPrint=True), name, maxV, minV, start, maxDelta, increasDecrease))
+		U.logger.log(10, "(1) name:{} pin V:{}, val:{}, max:{}, min:{}, delta{}, maxD:{}, up/Dn:{} ".format(nameString, getPinValue("pin_Select",ON=0, doPrint=True), name, maxV, minV, start, maxDelta, increasDecrease))
 		delta = start
 		name = min(maxV, max(minV, name+delta) )
 		time.sleep(0.1)
 		charString = "val = {}".format(name)
 		displayComposeMenu0()
-		for ii in range(40):
+		for ii in range(50):
 			if getPinValue("pin_Select", ON=0)==0: break
-			U.logger.log(20, "pin_Select still pressed val:{}".format(name) )
+			U.logger.log(10, "pin_Select still pressed val:{}".format(name) )
 			delta = min(maxDelta, delta*1.5)
 			name = max(minV, min(maxV, name+delta*increasDecrease) )
 			setColor(force=True)
-			charString = "val = {}".format(name)
+			charString = "val = {:.2f}".format(name)
 			displayComposeMenu0()
 			time.sleep(0.3)
-		U.logger.log(20, "exit  new:{}".format(name))
-		time.sleep(2)
+		U.logger.log(10, "exit  new:{}".format(name))
+		saveParameters()
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	charString =""
@@ -1165,10 +1193,10 @@ def changeValueButtonInput(nameString, name, maxV, minV, start, maxDelta, increa
 #------------------    ------------------ 
 def increaseLEDSlope():
 	global intensitySlope
-	intensitySlope = changeValueButtonInput("increaseLEDSlope", intensitySlope, 5., 0.1, 0.02, 0.2, 1)
+	intensitySlope = changeValueButtonInput("increaseLEDSlope", intensitySlope, 500., 0.1, 0.2, 5, 1)
 def decreaseLEDSlope():
 	global intensitySlope
-	intensitySlope = changeValueButtonInput("decreaseLEDSlope", intensitySlope, 5., 0.1, 0.01, 0.1, -1)
+	intensitySlope = changeValueButtonInput("decreaseLEDSlope", intensitySlope, 500., 0.1, 0.1, 5, -1)
 # ------------------    ------------------ 
 def increaseLEDmax():
 	global intensityMax
@@ -1178,11 +1206,11 @@ def decreaseLEDmax():
 	intensityMax = changeValueButtonInput("decreaseLEDmax", intensityMax, 1., 0.2, 0.01, 0.05, -1)
 # ------------------    ------------------ 
 def increaseLEDmin():
-	global intensityMin
-	intensityMin = increaseValue("increaseLEDmin", intensityMin, 0.2, 0.001, 0.01, 0.05, 1)
+	global intensityMin, ledCutoff
+	intensityMin = increaseValue("increaseLEDmin", intensityMin, 0.2, ledCutoff, 0.01, 0.05, 1)
 def decreaseLEDmin():
-	global intensityMin
-	intensityMin = changeValueButtonInput("decreaseLEDmin", intensityMin, 0.2, 0.001, 0.01, 0.05, -1)
+	global intensityMin, ledCutoff
+	intensityMin = changeValueButtonInput("decreaseLEDmin", intensityMin, 0.2, ledCutoff, 0.01, 0.05, -1)
 # ------------------    ------------------ 
 def increaselightSensMax():
 	global lightSensMax
@@ -1204,8 +1232,9 @@ def decreaselightSensMin():
 
 def setLightOff(off, on):
 	global lightOffBetweenHours
-	U.logger.log(20, "setting lights off at: {}; on at:{}".format(off,on))
-	lightOffBetweenHours =[off,on]
+	U.logger.log(10, "setting lights off at: {}; on at:{}".format(off,on))
+	lightOffBetweenHours =[int(off),int(on)]
+	setColor(force=True)
 	return 
 
 
@@ -1213,26 +1242,27 @@ def setLightOff(off, on):
 # ------------------    ------------------ 
 def setAdhocWiFi(setTo):
 	global webAdhoc
+	global charString
 	try:
 		if webAdhoc == setTo: 
-			U.logger.log(20, "change wifi not done, already set to {}".format(setTo))
+			U.logger.log(10, "change wifi not done, already set to {}".format(setTo))
 			return
 		time.sleep(2)
 		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
+			U.logger.log(10, "select not pressed for > 2secs")
 			return
 
 		webAdhoc = setTo
 		if webAdhoc =="start":
 			charString = "rebooting to wifiAdhoc"
 			displayComposeMenu0()
-			time.sleep(3)
+			time.sleep(1)
 			U.setStartAdhocWiFi()
 
 		if webAdhoc =="stop":
 			charString = "switching back to normal wifi"
 			displayComposeMenu0()
-			time.sleep(3)
+			time.sleep(1)
 			U.setStopAdhocWiFi()
 
 	except Exception, e:
@@ -1240,25 +1270,41 @@ def setAdhocWiFi(setTo):
 	return 
 
 
+
 # ------------------    ------------------ 
-def setSunMode(setTo):
-	global lightShadowVsDown
+def doRestartWiFi():
 	global charString
 	try:
-		if lightShadowVsDown == setTo: 
-			U.logger.log(20, "change light mode not changed alread set to {}".format(setTo))
-			return
-		time.sleep(2)
+		time.sleep(2)	
 		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
+			U.logger.log(10, "select not pressed for > 2secs")
 			return
-		lightShadowVsDown = setTo #  = (24*60*60)/2 #  = 1/2 day
-		charString = "set to: {}".format(setTo)
+		U.logger.log(10, "restart WiFi requested")
+		charString = "executing restart"
 		displayComposeMenu0()
-		saveParameters(force=True)
-		time.sleep(3)
-		U.logger.log(20, "change light mode to {}".format(lightShadowVsDown))
-		U.restartMyself(reason=" setSunModetoNormal")
+		U.stopWiFi()
+		U.startWiFi()
+		time.sleep(5)
+		U.restartMaster(reason="WiFi network restart")
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+# ------------------    ------------------ 
+def doRestartETH():
+	global charString
+	try:
+		time.sleep(2)	
+		if getPinValue("pin_Select", ON=0) == 0: 
+			U.logger.log(10, "select not pressed for > 2secs")
+			return
+		U.logger.log(20, "restart ETHERNET requested")
+		charString = "executing restart"
+		displayComposeMenu0()
+		U.stopEth()
+		U.startEth()
+		time.sleep(5)
+		U.restartMaster(reason="ETH network restart")
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
@@ -1266,60 +1312,119 @@ def setSunMode(setTo):
 
 
 # ------------------    ------------------ 
-def doRestart():
+def doShutdownPi(button=True):
+	global charString
 	try:
-		U.logger.log(20, " ")
-		time.sleep(2)	
-		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
-			return
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
+		U.logger.log(50, u"shutdown  requested")
+		charString = "executing shutdown"
+		displayComposeMenu0()
+		time.sleep(2)
+		saveParameters()
+		U.doReboot(tt=1,cmd="sudo killall pythom;sudo sync;sudo sleep 9;sudo shutdown now", text="button requested")
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+# ------------------    ------------------ 
+def doHaltPi(button=True):
+	global charString
+	try:
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
+		U.logger.log(50, u"shutdown halt requested")
+		charString = "executing shutdown"
+		displayComposeMenu0()
+		time.sleep(2)
+		saveParameters()
+		U.doReboot(tt=1,cmd="sudo killall pythom;sudo sync;sudo sleep 9;sudo halt", text="button requested")
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+# ------------------    ------------------ 
+def doRebootPi(button=True):
+	global charString
+	try:
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
+		U.logger.log(20, "reboot requested")
+		charString = "executing reboot"
+		displayComposeMenu0()
+		time.sleep(2)
+		saveParameters()
+		U.doReboot(tt=1, text="button requested")
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+# ------------------    ------------------ 
+def doRestartMaster(button=True):
+	global charString
+	try:
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
 		U.logger.log(20, "restart requested")
 		charString = "executing restart"
 		displayComposeMenu0()
 		time.sleep(2)
-		saveParameters()
-		#U.restartMyself(reason=" restart requested")
+		saveParameters(force=True)
+		U.restartMaster(reason="botton/web command", doPrint= True)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
 
+
 # ------------------    ------------------ 
-def doReset():
+def doReset(button=True):
+	global charString
 	try:
-		U.logger.log(20, "into doReset")
-		time.sleep(2)	
-		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
-			return
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
 		U.logger.log(20, "reset requested")
-		os.system("rm  "+ G.homeDir+"sunDial.parameters > /dev/null 2>&1 ")
-		os.system("rm  "+ G.homeDir+"temp/sunDial.positions ")
+		os.system("rm  "+ G.homeDir+"sundial.parameters > /dev/null 2>&1 ")
+		os.system("rm  "+ G.homeDir+"temp/sundial.positions ")
 		charString = "executing reset"
 		displayComposeMenu0()
-		time.sleep(20)
-		#U.restartMyself(reason=" restart requested")
+		time.sleep(1)
+		U.restartMaster(reason="reset command", doPrint= True)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
 
 # ------------------    ------------------ 
 def setOffset():
-	global lastPosition, zeroPosition, offsetOfPosition, stopLoop
+	global lastPositionCount, zeroPositionCount, offsetOfPositionCount, stopLoop
 	global charString
 	try:
-		U.logger.log(20, "(1) last zero:{}".format(zeroPosition))
+		U.logger.log(10, "(1) last zero:{}".format(zeroPositionCount))
 		time.sleep(2)	
 		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
+			U.logger.log(10, "select not pressed for > 2secs")
 			return
 		stopLoop = True
-		rememberZero = zeroPosition
+		rememberZero = zeroPositionCount
 		# this will kove back to zero.. new zero will have the numebr of steps to 0 fromcorrect postion
 		U.logger.log(20, "(2) doing left right ")
 		findLeftRight()
-		offsetOfPosition = rememberZero - zeroPosition
-		U.logger.log(20, "(2) after left right, new zero:{}, offset:{}".format(zeroPosition, offsetOfPosition))
-		charString = "set to: {}".format(offsetOfPosition)
+		offsetOfPositionCount = rememberZero - zeroPositionCount
+		U.logger.log(20, "(2) after left right, new zero:{}, offset:{}".format(zeroPositionCount, offsetOfPositionCount))
+		charString = "set to: {}".format(offsetOfPositionCount)
 		displayComposeMenu0()
 		time.sleep(2)
 		saveParameters(force=True)
@@ -1328,49 +1433,88 @@ def setOffset():
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
-	return 
 
 # ------------------    ------------------ 
-def set1224(setTo):
+def set1224(setTo, button=True):
 	global amPM1224
 	global charString
 	try:
 		if amPM1224 == int(setTo): 
-			U.logger.log(20, "set 12/24 not changed, stay at{}".format(setTo))
+			U.logger.log(10, "set 12/24 not changed, stay at{}".format(setTo))
 			return 
-		time.sleep(2)	
-		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
-			return
-		U.logger.log(20, "set to hour clock:{}".format(setTo))
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
+		U.logger.log(20, "set to clock mode:{}".format(setTo))
 		amPM1224 = int(setTo)
 		charString = "set to: {}".format(setTo)
 		displayComposeMenu0()
+		setwaitParams()
+		getTime()
+		lastMove = 0
 		saveParameters(force=True)
-		time.sleep(2)
-		U.restartMyself(reason=" new AM pm setting")
+		testIfMove()
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
 
+
 # ------------------    ------------------ 
-def setSpeed(setTo):
+def setSunMode(setTo, button=True):
+	global lightShadowVsDown
+	global charString
+	try:
+		if button:
+			time.sleep(2)
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2secs")
+				return
+		if setTo in ["normal","n"]: setTo = "normal"; direction = 1
+		elif setTo in ["down","d"]: setTo = "down";   direction =-1
+		else: return 
+		if lightShadowVsDown == setTo:
+			U.logger.log(10, "already in {} mode, no change".format(lightShadowVsDown))
+			return 
+
+		lightShadowVsDown = setTo
+		charString = "set to: {}".format(lightShadowVsDown)
+		displayComposeMenu0()
+		U.logger.log(20, "change light mode to {}".format(lightShadowVsDown))
+		move(stepsIn360/2,  direction )
+		setwaitParams()
+		getTime()
+		lastMove = 0
+		saveParameters(force=True)
+		testIfMove()
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+
+#------------------    ------------------ 
+def setSpeed(setTo, button=True):
 	global speed, speedDemoStart
 	global charString
 	try:
-		setTo = int(setTo) 
+		U.logger.log(10, "entering w setTo:{}, button:{}, curr speed:{}".format(setTo, button, speed))
+		setTo = min(3600, max(1, int(setTo) ))
 		if speed == setTo: return 
 		if speedDemoStart < 2 and setTo < 2: return 
-		time.sleep(2)	
-		if getPinValue("pin_Select", ON=0) == 0: 
-			U.logger.log(20, "select not pressed for > 2secs")
-			return
+		if button:
+			time.sleep(2)	
+			if getPinValue("pin_Select", ON=0) == 0: 
+				U.logger.log(10, "select not pressed for > 2 secs")
+				return
 		speedDemoStart = time.time()
-		if setTo > 0: U.logger.log(20, "set speed to ")
+		if setTo > 0: U.logger.log(10, "set speed to {}".format(setTo))
 		charString = "set to: {}".format(setTo)
 		displayComposeMenu0()
-		time.sleep(2)
-		U.restartMyself(reason="setting speed to", param= str(setTo))
+		speed = setTo
+		setwaitParams()
+		getTime()
+		testIfRewind(force=True)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
@@ -1383,9 +1527,9 @@ def setSpeed(setTo):
 # ------------------    ------------------ 
 def writeBackParams(data):
 	U.logger.log(10, "data:{}".format(data))
-	U.writeJson(G.homeDir+"sunDial.parameters", data, sort_keys=True, indent=2)
+	U.writeJson(G.homeDir+"sundial.parameters", data, sort_keys=True, indent=2)
 	U.logger.log(10, "data written")
-	data,raw  = U.readJson(G.homeDir+"sunDial.parameters")
+	data,raw  = U.readJson(G.homeDir+"sundial.parameters")
 	U.logger.log(10, "data read back:{}".format(data))
 
 
@@ -1394,91 +1538,157 @@ def writeBackParams(data):
 
 # ------------------    ------------------ 
 def savePositions():
-	global lastPosition, zeroPosition, maxStepsUsed
-	data = {"lastPosition":lastPosition,"zeroPosition":zeroPosition,"maxStepsUsed":maxStepsUsed}
-	U.writeJson(G.homeDir+"temp/sunDial.positions", data)
+	global lastPositionCount, zeroPositionCount, maxStepsUsed
+	data = {"lastPositionCount":lastPositionCount,"zeroPositionCount":zeroPositionCount,"maxStepsUsed":maxStepsUsed}
+	U.writeJson(G.homeDir+"temp/sundial.positions", data)
 
 # ------------------    ------------------ 
 def getPositions():
-	global lastPosition, zeroPosition, maxStepsUsed, offsetOfPosition
-	lastPosition = 0
-	zeroPosition = 999999999
+	global lastPositionCount, zeroPositionCount, maxStepsUsed, offsetOfPositionCount
+	lastPositionCount = 0
+	zeroPositionCount = 999999999
 	
-	data,raw  = U.readJson(G.homeDir+"temp/sunDial.positions")
+	data,raw  = U.readJson(G.homeDir+"temp/sundial.positions")
 	if data !={}: 
-		try: lastPosition = int(data["lastPosition"])
+		try: lastPositionCount = int(data["lastPositionCount"])
 		except: pass
-		try: zeroPosition = int(data["zeroPosition"])
+		try: zeroPositionCount = int(data["zeroPositionCount"])
 		except: pass
-		try: maxStepsUsed =int( data["maxStepsUsed"])
-		except: pass
-		try: offsetOfPosition =int( data["offsetOfPosition"])
+		try: maxStepsUsed 	   = int( data["maxStepsUsed"])
 		except: pass
 
 
 # ------------------    ------------------ 
 def resetBoundariesOfCable():
-	sunDialParameters["leftBoundaryOfCable"] = 0
-	sunDialParameters["findBoundaryMode"] = 0
-	sunDialParameters["numberOfStepsCableAllows"] = 0
+	global leftBoundaryOfCableCount, findAbsoluteBoundaryMode, numberOfStepsCableAllows
+	leftBoundaryOfCableCount = 0
+	findAbsoluteBoundaryMode = 0
+	numberOfStepsCableAllows = 0
 	saveParameters(force=True)
 
 # ------------------    ------------------ 
-def findBoundariesOfCable(force=False):
-	global  findBoundaryMode, rightBoundaryOfCable, leftBoundaryOfCable, limitSensorTriggered, stepsIn360, numberOfStepsCableAllows
+def findBoundariesOfCabl(trigger="command"):
+	global boundaryMode, rightBoundaryOfCableCount, leftBoundaryOfCableCount, limitSensorTriggered, stepsIn360, numberOfStepsCableAllows, numberOfStepsCableAllowsMax
+	global lastPositionCount
 
 	try:
-		if not force:
-			findBoundaryMode = False
-			if numberOfStepsCableAllows != 0: return 
+		foundEnd				= False
+		boundarysteps			= [1,0]
+		leftRight    			= [0,0]
+		dirText 				= ["right","left"]
+		command					= trigger
+		stopIfBS 				= {-1:[True,False], 1:[False, True]}
+		direction 				=  1
 
-		findBoundaryMode = True
 		limitSensorTriggered = 0
-		U.logger.log(20,"finding boundaries of cable,  right then left....")
+		maxSteps = 6000		
+		trySteps = 200
+		backstep = 20
+		triesSteps = 300
+		ntries   = maxSteps/ 90
+		
+		U.logger.log(10,"dir:{}; first:{} then:{}, trigger:{}, boundaryMode:{}".format(direction, dirText[boundarysteps[0]], dirText[boundarysteps[1]], trigger, boundaryMode) )
+		boundaryMode = trigger
 		for ii in range(3):
-			U.logger.log(20,"finding boundaries, first right")
+			U.logger.log(10,"{}".format(dirText[boundarysteps[0]]))
 			resetSensors()
-			rightBoundaryOfCable = move( 10,   -1, fast=False, updateSequence=False, stopIfBoundarySensor=[False,True])
+			#wiggle forward and backwards, just in case
+			U.logger.log(10,"{}, doing steps: {}, dir:{}, stop if BS:{}".format(dirText[boundarysteps[0]], trySteps, direction,stopIfBS[direction]))
+			stepsTaken0, sensFired = move( trySteps,   direction, fast=False, updateSequence=False, stopIfMagSensor=[True,True], stopIfBoundarySensor=stopIfBS[direction])
 			resetSensors()
-			rightBoundaryOfCable = move( 9000,  1, fast=False, updateSequence=False, stopIfBoundarySensor=[False,True])
-			U.logger.log(20,"finding boundaries, first found at:{}".format(rightBoundaryOfCable))
-			if abs(rightBoundaryOfCable) > 5000: 
-				os.system("rm  "+ G.homeDir+"sunDial.parameters ")
-				os.system("rm  "+ G.homeDir+"temp/sunDial.positions ")
-				U.restartMyself(reason="reset request", doPrint= True)
-				time.sleep(10)
+			if abs(stepsTaken0) == trySteps:
+				time.sleep(0.1)
+				U.logger.log(10,"moving {} did  not work, moving back {}; try again steps/200:{}".format(dirText[boundarysteps[0]], backstep, stepsTaken0))
+				move( backstep,   -direction, fast=False, updateSequence=False, stopIfMagSensor=[True,True], stopIfBoundarySensor=stopIfBS[-direction])
+				time.sleep(0.1)
 				continue
 			resetSensors()
-			limitSensorTriggered = 0
-			U.logger.log(20,"right found:{};   finding boundaries, now left".format(rightBoundaryOfCable))
-			leftBoundaryOfCable = move( 10,    1, fast=False, updateSequence=False, stopIfBoundarySensor=[True,False])
-			if abs(rightBoundaryOfCable - leftBoundaryOfCable) > 5000: 
-				os.system("rm  "+ G.homeDir+"sunDial.parameters  ")
-				os.system("rm  "+ G.homeDir+"temp/sunDial.positions ")
-				U.restartMyself(reason="reset request", doPrint= True)
-				time.sleep(10)
-				continue
-			resetSensors()
-			leftBoundaryOfCable = move( 6000, -1, fast=True, updateSequence=False, stopIfBoundarySensor=[True,False])
-			U.logger.log(20,"finding boundaries, left found at:{}".format(leftBoundaryOfCable))
-			resetSensors()
-			limitSensorTriggered = 0
-			numberOfStepsCableAllows = abs(rightBoundaryOfCable - leftBoundaryOfCable)
-			if numberOfStepsCableAllows > stepsIn360 *2: break
-			U.logger.log(20,"finding boundaries  not finished, left:{};  right:{};  delta:{} to small, try again".format(leftBoundaryOfCable, rightBoundaryOfCable, numberOfStepsCableAllows))
 
-		U.logger.log(20,"finding boundaries finished, left:{};  right:{};  delta:{}".format(leftBoundaryOfCable, rightBoundaryOfCable, numberOfStepsCableAllows))
+			U.logger.log(10,"{}, doing steps: {}, dir:{}, stop if BS:{}".format(dirText[boundarysteps[0]],maxSteps,direction,stopIfBS[direction]))
+
+			stepsTaken1 = 0
+			foundEnd = False
+			for ii in range(ntries):
+				temp, sensFired = move( triesSteps,  direction, fast=True, force=30, updateSequence=False, stopIfMagSensor=[True,True], stopIfBoundarySensor=stopIfBS[direction])
+				if abs(temp) == triesSteps:
+					break
+				stepsTaken1 += abs(temp)
+				if sensFired in [2, 3]:
+					foundEnd = True
+					break
+			if not foundEnd: continue
+			resetSensors()
+			if trigger != "command": 
+				nsteps =  int(   2.7 * stepsIn360  )
+				U.logger.log(10,"{}, doing steps to middle : {}, dir:{}, stop if BS:{}".format(dirText[boundarysteps[1]], nsteps,-direction,stopIfBS[-direction]))
+				move( nsteps, -direction, fast=True, stopIfBoundarySensor=stopIfBS[-direction])
+				resetSensors()
+				saveBoundaryMode(set=0, tt=time.time())
+				U.logger.log(10,"finished")
+				return 
+
+			leftRight[0] = lastPositionCount
+			time.sleep(0.1)
+			U.logger.log(20,"{}, first found at pos:{} steps to boundary:{}".format(dirText[boundarysteps[0]],lastPositionCount, stepsTaken1))
+
+			limitSensorTriggered = 0
+			U.logger.log(20,"first found:{};   finding boundaries, now {}".format(leftRight[0], dirText[boundarysteps[1]]))
+			U.logger.log(20,"{}, doing steps: {}, dir:{}, stop if BS:{}".format(dirText[boundarysteps[1]], backstep, direction,stopIfBS[direction]))
+			stepsTaken0, sensFired = move( trySteps,   -direction, fast=False, updateSequence=False, stopIfMagSensor=[True,True], stopIfBoundarySensor=stopIfBS[-direction])
+			resetSensors()
+			if abs(stepsTaken0) == trySteps:
+				time.sleep(0.1)
+				U.logger.log(20,"moving {} did  not work, moving back {}; try again steps/200:{}".format(dirText[boundarysteps[0]], backstep, stepsTaken0))
+				move( backstep,   direction, fast=False, updateSequence=False, stopIfMagSensor=[True,True], stopIfBoundarySensor=stopIfBS[direction])
+				time.sleep(0.1)
+				resetSensors()
+				continue
+
+			U.logger.log(20,"{}, doing steps: {}, dir:{}, stop if BS:{}".format(dirText[boundarysteps[1]], maxSteps, -direction, stopIfBS[-direction]))
+			stepsTaken1 = 0
+			foundEnd= False
+			for ii in range(ntries):
+				temp, sensFired = move( triesSteps,  -direction, fast=True, force=30, updateSequence=False, stopIfMagSensor=[True,True], stopIfBoundarySensor=stopIfBS[-direction])
+				if abs(temp) == triesSteps:
+					break
+				stepsTaken1 += abs(temp)
+				if sensFired in [2, 3]: 
+					foundEnd = True
+					break
+			if not foundEnd: continue
+			resetSensors()
+			leftRight[1] = lastPositionCount
+			U.logger.log(20,"{}, found at:{}, steps taken:{}".format(dirText[boundarysteps[1]], lastPositionCount, stepsTaken1))
+
+			rightBoundaryOfCableCount = leftRight[0]
+			leftBoundaryOfCableCount  = leftRight[1]
+
+			limitSensorTriggered = 0
+			temp = abs(rightBoundaryOfCableCount - leftBoundaryOfCableCount)
+			if temp > numberOfStepsCableAllowsMax or  temp < stepsIn360 *2: 
+				U.logger.log(20," not finished, left:{};  right:{};  delta:{} to small, try again".format(leftBoundaryOfCableCount, rightBoundaryOfCableCount, temp))
+				continue
+			numberOfStepsCableAllows = temp 
+			break
+		time.sleep(0.1)
+		if not foundEnd:
+			U.logger.log(20,"NOT finished, try to restart")
+			boundaryMode = trigger
+			resetBoundariesOfCable()
+			U.restartMyself(reason="boundary not found, resetting params")
+			time.sleep(5)
+
+		U.logger.log(20,"finished, left:{};  right:{};  delta:{}".format(leftBoundaryOfCableCount, rightBoundaryOfCableCount, numberOfStepsCableAllows))
 		saveParameters()
-		U.logger.log(20,"finding boundaries moving right to ~ middle between left and right boundaries: {} steps, current step count:{}".format(int(numberOfStepsCableAllows*.6) -20, lastPosition))
-		U.logger.log(20,"... before move call")
+		nsteps =  int( min(numberOfStepsCableAllowsMax * 0.6, max(  3 * stepsIn360,  numberOfStepsCableAllows- 2 * stepsIn360 ) ) )
+		U.logger.log(20,"moving right to ~ middle between left and right boundaries: {} steps, current step count:{}".format(nsteps, lastPositionCount))
 		limitSensorTriggered = 0
 		resetSensors()
-		retCode = move( int(numberOfStepsCableAllows*.6) -20, 1, stopIfBoundarySensor=[False,True])
-		U.logger.log(20,"... after move current step count:{}, retCode={} ".format(lastPosition, retCode))
+		move( nsteps, 1, stopIfBoundarySensor=[False,True])
 		resetSensors()
 		limitSensorTriggered = 0
-		saveFixBoundaryMode(set=0)
-		findBoundaryMode = False
+		boundaryMode = 0
+		saveBoundaryMode(set=0, tt=time.time())
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
@@ -1499,129 +1709,172 @@ def resetSensors():
 # ------------------    ------------------ 
 def saveParameters(force = False):
 	global amPM1224, intensitySlope, intensityMax, intensityMin, lightSensMin, lightSensMax , lightSensNorm
-	global timeZone, offsetOfPosition 
-	global rightBoundaryOfCable, leftBoundaryOfCable, numberOfStepsCableAllows
-	global lightShadowVsDown, inFixBoundaryMode, lastFixBoundaryMode
+	global offsetOfPositionCount 
+	global rightBoundaryOfCableCount, leftBoundaryOfCableCount, numberOfStepsCableAllows
+	global lightShadowVsDown, boundaryMode, lastBoundaryMode
 	global lightOffBetweenHours
 	global lastsaveParameters, multiplyRGB
-	global sunDialParameters
+	global sundialParameters
 
 	if time.time() - lastsaveParameters < 100 and not force: return 
 	lastsaveParameters = time.time()
 	try:
 		anyChange = 0
 		anyChange += upINP("lightOffBetweenHours",		lightOffBetweenHours			) 
-		anyChange += upINP("amPM1224",				amPM1224			) 
-		anyChange += upINP("intensityMult",			intensitySlope	)
-		anyChange += upINP("intensityMax",			intensityMax	) 
-		anyChange += upINP("intensityMin",			intensityMin	)
-		anyChange += upINP("lightSensMin",			lightSensMin	) 
-		anyChange += upINP("lightSensMax",			lightSensMax	) 
-		anyChange += upINP("lightSensNorm",			lightSensNorm	) 
-		anyChange += upINP("multiplyRGB",			multiplyRGB	) 
-		anyChange += upINP("timeZone",				timeZone,			) 
-		anyChange += upINP("offsetOfPosition",		offsetOfPosition	) 
-		anyChange += upINP("rightBoundaryOfCable",	rightBoundaryOfCable	) 
-		anyChange += upINP("leftBoundaryOfCable",	leftBoundaryOfCable	) 
+		anyChange += upINP("amPM1224",					amPM1224			) 
+		anyChange += upINP("intensitySlope",			intensitySlope	)
+		anyChange += upINP("intensityMax",				intensityMax	) 
+		anyChange += upINP("intensityMin",				intensityMin	)
+		anyChange += upINP("lightSensMin",				lightSensMin	) 
+		anyChange += upINP("lightSensMax",				lightSensMax	) 
+		anyChange += upINP("lightSensNorm",				lightSensNorm	) 
+		anyChange += upINP("multiplyRGB",				multiplyRGB	,index=3) 
+		anyChange += upINP("offsetOfPositionCount",		offsetOfPositionCount	) 
+		anyChange += upINP("rightBoundaryOfCableCount",	rightBoundaryOfCableCount	) 
+		anyChange += upINP("leftBoundaryOfCableCount",	leftBoundaryOfCableCount	) 
 		anyChange += upINP("numberOfStepsCableAllows",	numberOfStepsCableAllows	) 
-		anyChange += upINP("lightShadowVsDown",		lightShadowVsDown		) 
-		anyChange += upINP("inFixBoundaryMode",		inFixBoundaryMode		) 
-		anyChange += upINP("lastFixBoundaryMode",	lastFixBoundaryMode		) 
+		anyChange += upINP("lightShadowVsDown",			lightShadowVsDown		) 
+		anyChange += upINP("boundaryMode",				boundaryMode		) 
+		anyChange += upINP("lastBoundaryMode",			lastBoundaryMode		) 
 		if anyChange >0 or force:
-			writeBackParams(sunDialParameters)
-			U.logger.log(10, u"anyChange:{} writing params:{}".format(anyChange, sunDialParameters))
+			writeBackParams(sundialParameters)
+			U.logger.log(20, u"anyChange:{} writing params:{}".format(anyChange, sundialParameters))
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
 
 # ------------------    ------------------ 
-def saveFixBoundaryMode(set=999, tt=-1):
-	global lastFixBoundaryMode, inFixBoundaryMode
+def saveBoundaryMode(set=999, tt=-1):
+	global lastBoundaryMode, boundaryMode
 	if set != 999: 
-		inFixBoundaryMode = set
-	if tt == -1:
-		sunDialParameters["inFixBoundaryMode"]   = inFixBoundaryMode
-		sunDialParameters["lastFixBoundaryMode"] = lastFixBoundaryMode
-	else:
-		sunDialParameters["inFixBoundaryMode"]   = inFixBoundaryMode
-		sunDialParameters["lastFixBoundaryMode"] = tt
+		boundaryMode = set
+	if tt !=-1:
+		lastBoundaryMode = tt
 	saveParameters(force=True)
 
 # ------------------    ------------------ 
-def	upINP(parm, value):
-	global sunDialParameters
-	if parm not in sunDialParameters or sunDialParameters[parm] != value:
-		#print "sundial updating", parm, value
-		sunDialParameters[parm] = value
-		return 1
-	return 0
+def	upINP(parm, value,index=-1):
+	global sundialParameters
+	retcode = 0
+	if index >= 0:
+		if parm not in sundialParameters:
+			sundialParameters
+			sundialParameters[parm]=[]
+			for ii in range(index):
+				sundialParameters[parm].append(value[ii])
+			retcode = 1
+		for ii in range(index):
+			if sundialParameters[parm][ii] != value[ii]:
+				sundialParameters[parm][ii] = value[ii]
+				retcode = 1
+	else:
+		if parm not in sundialParameters or sundialParameters[parm] != value:
+			sundialParameters[parm] = value
+			retcode = 1
+	return retcode
 
 # ------------------    ------------------ 
 def getParameters():
-	global amPM1224, intensitySlope, intensityMax, intensityMin, lightSensMin, lightSensMax , lightSensNorm
-	global timeZone, offsetOfPosition 
-	global rightBoundaryOfCable, leftBoundaryOfCable, numberOfStepsCableAllows
+	global amPM1224, intensitySlope, intensityMax, intensityMin, lightSensMin, lightSensMax , lightSensNorm, lightSensNormDefault, ledCutoff
+	global offsetOfPositionCount 
+	global rightBoundaryOfCableCount, leftBoundaryOfCableCount, numberOfStepsCableAllows, numberOfStepsCableAllowsMax
 	global lightOffBetweenHours
-	global lightShadowVsDown, inFixBoundaryMode, lastFixBoundaryMode
-	global sunDialParameters, multiplyRGB
+	global lightShadowVsDown, boundaryMode, lastBoundaryMode
+	global sundialParameters, multiplyRGB
 
 	try:
-		data,raw  = U.readJson(G.homeDir+"sunDial.parameters")
-		U.logger.log(20, u" data:{}".format(data))
-		
-		sunDialParameters = data
-		try: lightOffBetweenHours		= data["lightOffBetweenHours"]
-		except: lightOffBetweenHours	= [0,0]
+		data,raw  = U.readJson(G.homeDir+"sundial.parameters")
+		U.logger.log(10, u" data:{}".format(data))
 
-		try: amPM1224 					= data["amPM1224"]
-		except: amPM1224				= 24
+		sundialList={"lightOffBetweenHours":[0,0],"amPM1224":24,"intensitySlope":1.,"intensityMax":1.,"intensityMin":ledCutoff,"multiplyRGB":[1,1,1],
+					"lightSensMin": 0.001,"lightSensMax":1.,"lightSensNorm":lightSensNormDefault,
+					"offsetOfPositionCount":0,"rightBoundaryOfCableCount":0,"leftBoundaryOfCableCount":0,"numberOfStepsCableAllows":0,
+					"lightShadowVsDown":"normal shadow","lastBoundaryMode":0,"boundaryMode":0}
 
-		try: intensitySlope 			= data["intensitySlope"]
-		except: intensitySlope			= 1.
+		sundialParameters = {}		
+		for item in sundialList:
 
-		try: intensityMax				= min(data["intensityMax"],1.0)
-		except: intensityMax			= 1.
+			if item == "lightOffBetweenHours":
+					try: lightOffBetweenHours		= data["lightOffBetweenHours"]
+					except: lightOffBetweenHours	= sundialList[item]
+					sundialParameters[item]			= lightOffBetweenHours
 
-		try: intensityMin				= max(data["intensityMin"], 0.004)
-		except:	intensityMin			= 0.004
+			elif item == "amPM1224":
+					try: amPM1224 					= data["amPM1224"]
+					except: amPM1224				= sundialList[item]
+					sundialParameters[item]			= amPM1224
 
-		try: multiplyRGB				= data["multiplyRGB"]
-		except:	multiplyRGB				= [1,1,1]
+			elif item == "intensitySlope":
+					try: intensitySlope 			= data["intensitySlope"]
+					except: intensitySlope			= sundialList[item]
+					sundialParameters[item]			= intensitySlope
 
-		try: lightSensMin				= max(data["lightSensMin"],0.001)
-		except: lightSensMin			= 0.001
+			elif item == "intensityMax":
+					try: intensityMax				= min(data["intensityMax"],1.0)
+					except: intensityMax			= sundialList[item]
+					sundialParameters[item]			= intensityMax
 
-		try: lightSensMax				= min(data["lightSensMax"], 1.0 )
-		except: lightSensMax			= 1.0
+			elif item == "intensityMin":
+					try: intensityMin				= max(data["intensityMin"], ledCutoff)
+					except:	intensityMin			= sundialList[item] ## range of 400
+					sundialParameters[item]			= intensityMin
 
-		try: lightSensNorm				= data["lightSensNorm"]
-		except: lightSensNorm			= 12000
+			elif item == "multiplyRGB":
+					try: multiplyRGB				= data["multiplyRGB"]
+					except:	multiplyRGB				= sundialList[item]
+					sundialParameters[item]			= multiplyRGB
 
-		try: timeZone					= data["timeZone"]
-		except: timeZone				= "6 /US/Central"
+			elif item == "lightSensMin":
+					try: lightSensMin				= max(data["lightSensMin"],0.001)
+					except: lightSensMin			= sundialList[item]
+					sundialParameters[item]			= lightSensMin
 
-		try: offsetOfPosition			= data["offsetOfPosition"]
-		except: offsetOfPosition		= 0
+			elif item == "lightSensMax":
+					try: lightSensMax				= min(data["lightSensMax"], 1.0 )
+					except: lightSensMax			= sundialList[item]
+					sundialParameters[item]			= lightSensMax
 
-		try: rightBoundaryOfCable		= data["rightBoundaryOfCable"]
-		except: rightBoundaryOfCable	= 0
+			elif item == "lightSensNorm":
+					try: lightSensNorm				= data["lightSensNorm"]
+					except: lightSensNorm			= sundialList[item]
+					sundialParameters[item]			= lightSensNorm
 
-		try: leftBoundaryOfCable		= data["leftBoundaryOfCable"]
-		except: leftBoundaryOfCable		= 0
+			elif item == "offsetOfPositionCount":
+					try: offsetOfPositionCount		= data["offsetOfPositionCount"]
+					except: offsetOfPositionCount	= sundialList[item]
+					sundialParameters[item]			= offsetOfPositionCount
 
-		try: numberOfStepsCableAllows	= data["numberOfStepsCableAllows"]
-		except: numberOfStepsCableAllows= 0
+			elif item == "rightBoundaryOfCableCount":
+					try: rightBoundaryOfCableCount	= data["rightBoundaryOfCableCount"]
+					except: rightBoundaryOfCableCount= sundialList[item]
+					sundialParameters[item]			= rightBoundaryOfCableCount
 
-		try: lightShadowVsDown			= data["lightShadowVsDown"]
-		except: lightShadowVsDown		= "normal shadow"
+			elif item == "leftBoundaryOfCableCount":
+					try: leftBoundaryOfCableCount	= data["leftBoundaryOfCableCount"]
+					except: leftBoundaryOfCableCount= sundialList[item]
+					sundialParameters[item]			= leftBoundaryOfCableCount
 
-		try: lastFixBoundaryMode		= data["lastFixBoundaryMode"]
-		except: lastFixBoundaryMode		= 0
+			elif item == "numberOfStepsCableAllows":
+					try: numberOfStepsCableAllows	= min(data["numberOfStepsCableAllows"], numberOfStepsCableAllowsMax)
+					except: numberOfStepsCableAllows= sundialList[item]
+					sundialParameters[item]			= numberOfStepsCableAllows
 
-		try: inFixBoundaryMode			= data["inFixBoundaryMode"]
-		except: inFixBoundaryMode		= 0
-		changeTimeZone(int(timeZone.split(" ")[0]))
-		U.logger.log(20, u" inFixBoundaryMode:{}".format(inFixBoundaryMode))
+			elif item == "lightShadowVsDown":
+					try: lightShadowVsDown			= data["lightShadowVsDown"]
+					except: lightShadowVsDown		= sundialList[item]
+					sundialParameters[item]			= lightShadowVsDown
+
+			elif item == "lastBoundaryMode":
+					try: lastBoundaryMode			= data["lastBoundaryMode"]
+					except: lastBoundaryMode		= sundialList[item]
+					sundialParameters[item]			= lastBoundaryMode
+
+			elif item == "boundaryMode":
+					try: boundaryMode				= data["boundaryMode"]
+					except: boundaryMode			= sundialList[item]
+					sundialParameters[item]			= boundaryMode
+
+		U.logger.log(10, u" boundaryMode:{}".format(boundaryMode))
 	
 		saveParameters(force=True)
 	except Exception, e:
@@ -1646,13 +1899,14 @@ def dummy(a):
 # ------------------    ------------------ 
 def readParams():
 	global sensor, output, inpRaw, inp, useRTC
-	global lastCl, timeZone, currTZ
+	global lastCl
 	global oldRaw, lastRead
 	global doReadParameters
 	global clockDictLast, clockDict
 	global buttonDict, sensorDict
 	global pinsToName, anyInputChange
 	global startWebServerSTATUS, startWebServerINPUT
+	global updateDownloadEnable
 
 	try:
 
@@ -1683,97 +1937,26 @@ def readParams():
 		if G.program not in output:
 			U.logger.log(30, G.program+ " is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
+		
+		for devId in output["sundial"]:
+			U.logger.log(10, "output{}".format(output["sundial"][devId]) )
+			current, temp = U.readJson(G.homeDir+"updateDownloadEnable")
+			if "sundial" in current:
+				updateDownloadEnable["sundial"] = current["sundial"]
+			else:
+				updateDownloadEnable["sundial"] = output["sundial"][devId][0]["updateDownloadEnable"] == "1"
 
-		anyInputChange = False
-		clock = output[G.program]
-		for devId in  clock:
-			clockDict		= clock[devId][0]
-			if clockDictLast == clockDict: continue
-			clockDictLast 	= clockDict
-
-
-			#print clockDict
-			if "timeZone"	 in clockDict:	
-				if len(clockDict["timeZone"]) > 5 and timeZone !=	(clockDict["timeZone"]):
-					changed 	= max(2, changed)  
-					timeZone 	= (clockDict["timeZone"])
-					tznew  		= int(timeZone.split(" ")[0])
-					changeTimeZone(tznew)
-
-			clockDict["timeZone"] = str(currTZ)+" "+ timeZones[currTZ+12]
-			
-	 		break
-		return -changed - anyInputChange
-
+		return -changed 
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
 		return 3
 
 
-# ------------------    ------------------ 
-def changeTimeZone(tznew):
-	global timeZone, timeZones, currTZ
-	try:
-		if tznew != currTZ and False:
-			U.logger.log(30, u"changing timezone from "+str(currTZ)+"  "+timeZones[currTZ+12]+" to "+str(tznew)+"  "+timeZones[tznew+12])
-			os.system("sudo cp /usr/share/zoneinfo/"+timeZones[tznew+12]+" /etc/localtime")
-			currTZ = tznew
-	
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return	
 # ########################################
 # #########    basic setup funtions  #####
 # ########################################
 # ------------------    ------------------ 
-def setupTimeZones():
-	global timeZone, timeZones, currTZ
-	try:
-		timeZone = ""
-		timeZones =[]
-		for ii in range(-12,13):
-			if ii<0:
-				timeZones.append("/Etc/GMT+" +str(abs(ii)))
-			else:
-				timeZones.append("/Etc/GMT-"+str(ii))
-		
-		timeZones[12+12]  = "Pacific/Auckland"
-		timeZones[11+12]  = "Pacific/Pohnpei"
-		timeZones[10+12]  = "Australia/Melbourne"
-		timeZones[9+12]	  = "Asia/Tokyo"
-		timeZones[8+12]	  = "Asia/Shanghai"
-		timeZones[7+12]	  = "Asia/Saigon"
-		timeZones[6+12]	  = "Asia/Dacca"
-		timeZones[5+12]	  = "Asia/Karachi"
-		timeZones[4+12]	  = "Asia/Dubai"
-		timeZones[3+12]	  = "/Europe/Moscow"
-		timeZones[2+12]	  = "/Europe/Helsinki"
-		timeZones[1+12]	  = "/Europe/Berlin"
-		timeZones[0+12]	  = "/Europe/London"
-		timeZones[-1+12]  = "Atlantic/Cape_Verde"
-		timeZones[-2+12]  = "Atlantic/South_Georgia"
-		timeZones[-3+12]  = "America/Buenos_Aires"
-		timeZones[-4+12]  = "America/Puerto_Rico"
-		timeZones[-5+12]  = "/US/Eastern"
-		timeZones[-6+12]  = "/US/Central"
-		timeZones[-7+12]  = "/US/Mountain"
-		timeZones[-8+12]  = "/US/Pacific"
-		timeZones[-9+12]  = "/US/Alaska"
-		timeZones[-10+12] = "Pacific/Honolulu"
-		timeZones[-11+12] = "US/Samoa"
-		#print "timeZones:", timeZones
-
-		#delta to UTC:
-		JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
-		JanDelta = int(subprocess.Popen("date -d '1 Jan' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
-		NowDelta = int(subprocess.Popen("date  +%z "		   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
-
-		currTZ = JanDelta
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return	
-
 
 # ------------------    ------------------ 
 def defineMotorType():
@@ -1799,7 +1982,7 @@ def defineMotorType():
 				SeqCoils.append([1, 0, 0, 1])
 				SeqCoils.append([1, 0, 1, 0])
 			elif motorType.find("-2") >-1:
-				U.logger.log(20, "motorType = "+unicode(motorType))
+				U.logger.log(10, "motorType = "+unicode(motorType))
 				SeqCoils.append([0, 0, 0, 0])  # off
 
 				SeqCoils.append([0, 1, 1, 0])
@@ -1833,7 +2016,7 @@ def defineMotorType():
 
 # ------------------    ------------------ 
 def setgpiopinNumbers():
-	global gpiopinNumbers, motorType, sensorDict, buttonDict, PIGPIO, pwmRange, lastEventOfPin
+	global gpiopinNumbers, motorType, sensorDict, buttonDict, PIGPIO, pwmRange, pwmFreq, lastEventOfPin, ledCutoff
 	### GPIO pins ########
 
 	try:
@@ -1898,18 +2081,21 @@ def setgpiopinNumbers():
 		U.logger.log(10, unicode(buttonDict))
 
 		if not U.pgmStillRunning("pigpiod"): 	
-			U.logger.log(30, "starting pigpiod")
-			os.system("sudo pigpiod -s 4 &")
+			U.logger.log(10, "starting pigpiod")
+			os.system("sudo pigpiod -s 2 &")
 			time.sleep(0.5)
 			if not U.pgmStillRunning("pigpiod"): 	
-				U.logger.log(30, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
+				U.logger.log(30, "restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
 				time.sleep(20)
-				doSunDialShutdown()
+				dosundialShutdown()
 				U.restartMyself(reason="pigpiod not running")
 				exit(0)
 
 		PIGPIO = pigpio.pi()
-		pwmRange = 1000
+		pwmRange  = 40000
+		pwmFreq   = 40
+		ledCutoff = 20./float(pwmRange)
+		# this gives a range   0.0005
 
 
 		defineGPIOout(gpiopinNumbers["pin_CoilA1"])
@@ -2014,13 +2200,13 @@ def defineGPIOin(pinName, event=0, pull=1, evpgm="button"):
 
 
 # ------------------    ------------------ 
-def defineGPIOout(pin, pwm = 0,freq =1000):
-	global PIGPIO, pwmRange, colPWM
+def defineGPIOout(pin, pwm = 0):
+	global PIGPIO, pwmRange, colPWM, pwmFreq
 	#print "defineGPIOout", pin, pwm, freq
 	try:
 		PIGPIO.set_mode(pin, pigpio.OUTPUT)
 		if pwm !=0:
-			PIGPIO.set_PWM_frequency(pin, pwmRange)
+			PIGPIO.set_PWM_frequency(pin, pwmFreq)
 			PIGPIO.set_PWM_range(pin, pwmRange)
 			PIGPIO.set_PWM_dutycycle(pin, 0)
 	except Exception, e:
@@ -2036,7 +2222,7 @@ def defineGPIOout(pin, pwm = 0,freq =1000):
 
 # ------------------    ------------------ 
 def setGPIOValue(pin,val,amplitude =-1):
-	global PIGPIO, pwmRange
+	global PIGPIO, pwmRange, pwmFreq
 	try:
 		pin = int(pin)
 		if amplitude == -1:
@@ -2071,7 +2257,7 @@ def getPinValueGPIO(pinName, pin=-1, ON=1, doPrint=False):
 
 		ret = GPIO.input(pin)
 		if  doPrint: 
-			U.logger.log(20, u" pin:{} #:{} ON:{},  value:{}".format(pinName, pin, ON, ret) )
+			U.logger.log(10, u" pin:{} #:{} ON:{},  value:{}".format(pinName, pin, ON, ret) )
 		if ON == 0: 
 			if ret == 0:	ret = 1
 			else:       	ret = 0
@@ -2100,7 +2286,7 @@ def getPinValue(pinName, pin=-1, ON = 1, doPrint=False):
 
 		ret = PIGPIO.read(pin)
 		if  doPrint: 
-			U.logger.log(20, u" pin:{} #:{} ON:{} sens:{}".format(pinName, pin, ON, ret) )
+			U.logger.log(10, u" pin:{} #:{} ON:{} sens:{}".format(pinName, pin, ON, ret) )
 		if ON == 0: 
 			if ret == 0:	ret = 1
 			else:       	ret = 0
@@ -2157,16 +2343,16 @@ def move(steps, direction, stayOn=0.01, force = 0, stopIfMagSensor=[False,False]
 	global PIGPIO
 	global currentSequenceNo
 	global totalStepsDone
-	global inFixBoundaryMode
+	global boundaryMode, lastBoundaryMode
 	global currentlyMoving
-	global lastPosition, rightBoundaryOfCable, leftBoundaryOfCable, findBoundaryMode
+	global lastPositionCount, rightBoundaryOfCableCount, leftBoundaryOfCableCount
 
-	if doPrint: U.logger.log(20, "into move") 
-	iSteps= 0
+	if doPrint: U.logger.log(10, "into move") 
+	actualStepsTakeninMove= 0
 	try:
 		stayOn = max(minStayOn,stayOn)
 		lStep = lastStep
-		if doPrint: U.logger.log(20, "steps:{} direction:{}, stayOn:{:.3f}, force:{}, stopIfMagSensor:{}, updateSequence:{}, inFixBoundaryMode:{}".format(steps,  direction, stayOn, force, stopIfMagSensor, updateSequence, inFixBoundaryMode) )
+		if doPrint: U.logger.log(10, "steps:{} direction:{}, stayOn:{:.3f}, force:{}, stopIfMagSensor:{}, updateSequence:{}, boundaryMode:{}".format(steps,  direction, stayOn, force, stopIfMagSensor, updateSequence, boundaryMode) )
 		steps = abs(int(steps))
 
 		getSensors()
@@ -2176,54 +2362,67 @@ def move(steps, direction, stayOn=0.01, force = 0, stopIfMagSensor=[False,False]
 			currentlyMoving = time.time()
 
 			if updateSequence: 
-				 determineSequenceNo(totalStepsDone+iSteps)
+				 determineSequenceNo(totalStepsDone+actualStepsTakeninMove)
 
-			if findBoundaryMode:
-					if doPrint: U.logger.log(20, "finB.  dir: {}, 3:{}, 2:{}, lastPosition:{}, iSteps:{}".format(direction, sensorDict["sensor"][3]["status"], sensorDict["sensor"][2]["status"], lastPosition, iSteps ) )
-					if direction ==  1  and sensorDict["sensor"][3]["status"] == 1: 
-						if doPrint: U.logger.log(20, "returning, touching sensor 3") 
-						return lastPosition
-					if direction ==  -1 and sensorDict["sensor"][2]["status"] == 1: 
-						if doPrint: U.logger.log(20, "returning, touching sensor 2" ) 		
-						return lastPosition
-
-			else:
-				if (sensorDict["sensor"][2]["status"] == 1 or sensorDict["sensor"][3]["status"] == 1 ) and inFixBoundaryMode==0:
-					if sensorDict["sensor"][2]["status"] == 1:	
-						saveFixBoundaryMode(set=1)
-					if sensorDict["sensor"][3]["status"] == 1:	
-						saveFixBoundaryMode(set=-1)
-					U.logger.log(20, "fixing (1) starting due to: cap switch sens: {};   switch sensor:{}".format(sensorDict["sensor"][2]["status"], sensorDict["sensor"][3]["status"]))
+				
+			if boundaryMode == 0:
+				if sensorDict["sensor"][2]["status"] == 1:	
+					saveBoundaryMode(set=1)
+					savePositions()
+					U.logger.log(10, "fixing (1) starting due to: sw  switch sens: {};   switch sensor:{}".format(sensorDict["sensor"][2]["status"], sensorDict["sensor"][3]["status"]))
+					U.restartMyself(reason="need to fix boundaries #1 left:{}, right{}".format(sensorDict["sensor"][2]["status"], sensorDict["sensor"][3]["status"]), delay=5)
+				if sensorDict["sensor"][3]["status"] == 1:	
+					saveBoundaryMode(set=-1)
+					savePositions()
+					U.logger.log(10, "fixing (2) starting due to: cap switch sens: {};   switch sensor:{}".format(sensorDict["sensor"][2]["status"], sensorDict["sensor"][3]["status"]))
 					U.restartMyself(reason="need to fix boundaries #1 left:{}, right{}".format(sensorDict["sensor"][2]["status"], sensorDict["sensor"][3]["status"]), delay=5)
 
-				if inFixBoundaryMode  !=0 and ( (sensorDict["sensor"][2]["status"] == 1  and stopIfBoundarySensor[0])  or  (sensorDict["sensor"][3]["status"] == 1  and stopIfBoundarySensor[1]) ):
-					U.logger.log(20, "move  return due fix!=0  sens2=T, stopifB0=T sens3=T or stopIfB1=T: direction%d, inFixBoundaryMode:%d" %(direction,inFixBoundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]))
-					return iSteps
+			if sensorDict["sensor"][2]["status"] == 1 and stopIfBoundarySensor[0]:
+				U.logger.log(10, "return sens2=T, stopifB0=T actualStepsTakeninMove:{:3d}, requested:{:3d}; dir:{}, stopfMag:{}, stopIfBS:{}".format(actualStepsTakeninMove, steps, direction, stopIfMagSensor, stopIfBoundarySensor) )
+				savePositions()
+				return actualStepsTakeninMove, 2
+
+			if sensorDict["sensor"][3]["status"] == 1 and stopIfBoundarySensor[1]:
+				U.logger.log(10, "return sens3=T, stopifB1=T actualStepsTakeninMove:{:3d}, requested:{:3d}; dir:{}, stopfMag:{}, stopIfBS:{}".format(actualStepsTakeninMove, steps, direction, stopIfMagSensor, stopIfBoundarySensor) )
+				savePositions()
+				return actualStepsTakeninMove, 3
+
+			if sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0] and i >= force:
+				U.logger.log(10, "return sens0=T, stopifM0=T actualStepsTakeninMove:{:3d}, requested:{:3d}; dir:{}, stopfMag:{}, stopIfBS:{}".format(actualStepsTakeninMove, steps, direction, stopIfMagSensor, stopIfBoundarySensor) )
+				savePositions()
+				return actualStepsTakeninMove, 0
+
+			if sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1] and i >= force:
+				U.logger.log(10, "return sens1=T, stopifM1=T actualStepsTakeninMove:{:3d}, requested:{:3d}; dir:{}, stopfMag:{}, stopIfBS:{}".format(actualStepsTakeninMove, steps, direction, stopIfMagSensor, stopIfBoundarySensor) )
+				savePositions()
+				return actualStepsTakeninMove, 1
 
 
-				if not updateSequence or ( currentSequenceNo < 8 and sensorDict["sensor"][0] == 1 ):
-					if i >= force: 
-						if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0]: 
-							U.logger.log(20, "move  return due to: last0!=sens0, mag0=T, direction%d, inFixBoundaryMode:%d"%(direction, inFixBoundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]))
-							return iSteps
-						if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1]: 
-							U.logger.log(20, "move  return due to: last1!=sens1, mag1=T, direction%d, inFixBoundaryMode:%d"%(direction, inFixBoundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]))
-							return iSteps
+			if not updateSequence or ( currentSequenceNo < 8 and sensorDict["sensor"][0] == 1 ):
+				if i >= force: 
+					if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0]: 
+						U.logger.log(10, "move  return due to: last0!=sens0, mag0=T, direction{}, boundaryMode:{}".format(direction, boundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]))
+						return actualStepsTakeninMove, 0
+					if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1]: 
+						U.logger.log(10, "move  return due to: last1!=sens1, mag1=T, direction:{}, boundaryMode:{}".format(direction, boundaryMode)+" cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]))
+						return actualStepsTakeninMove, 1
 
-				if currentSequenceNo == 8 and sensorDict["sensor"][0] == 1:
-					if i >= force: 
-						if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0]: 
-							return iSteps
-						if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1]: 
-							return iSteps
+			if currentSequenceNo == 8 and sensorDict["sensor"][0] == 1:
+				if i >= force: 
+					if last0 != sensorDict["sensor"][0]["status"] and sensorDict["sensor"][0]["status"] == 1 and stopIfMagSensor[0]: 
+						savePositions()
+						return actualStepsTakeninMove, 0
+					if last1 != sensorDict["sensor"][1]["status"] and sensorDict["sensor"][1]["status"] == 1 and stopIfMagSensor[1]: 
+						savePositions()
+						return actualStepsTakeninMove, 1
 
 			last1 = sensorDict["sensor"][1]["status"]
 			last0 = sensorDict["sensor"][0]["status"]
+			resetSensors()
 
-			iSteps += 1
+			actualStepsTakeninMove += direction
 			lStep += direction
-			lastPosition += direction
-			savePositions()
+			lastPositionCount += direction
 
 			if   lStep >= len(SeqCoils):	lStep = 1
 			elif lStep <  1: 				lStep = len(SeqCoils)-1
@@ -2231,28 +2430,23 @@ def move(steps, direction, stayOn=0.01, force = 0, stopIfMagSensor=[False,False]
 			lastStep = lStep
 			if makeStep(lStep, only2=fast):
 				time.sleep(stayOn)
-			if doPrint: U.logger.log(20, "moved, now at:{}".format(lastPosition) )
+			if doPrint: U.logger.log(10, "moved, now at:{}".format(lastPositionCount) )
 			getSensors()
+		
+		savePositions()
+		resetSensors()
 
 	###			U.logger.log(40, " not sleeping")
 
-		getSensors()
-		if (sensorDict["sensor"][2]["status"] == 1 or sensorDict["sensor"][3]["status"]== 1) and inFixBoundaryMode ==0 and not findBoundaryMode:
-			if sensorDict["sensor"][2]["status"] == 1:	saveFixBoundaryMode(set=1)
-			if sensorDict["sensor"][3]["status"] == 1:	saveFixBoundaryMode(set=-1)
-			
-			U.logger.log(20, "fixing  (2) starting due to: cap switch sens: "+unicode(sensorDict["sensor"][2]["status"])+";   switch sensor:"+unicode(sensorDict["sensor"][3]["status"]))
-			doSunDialShutdown()
-			U.restartMyself(reason="need to fix boundaries #2", delay=5 )
 
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	#if speed < 100 or stayOn > 0.5: setOffset()
-	return iSteps
+	return actualStepsTakeninMove, -1
 
 # ------------------    ------------------ 
-def testIfMove( waitBetweenSteps, lastMove ):
+def testIfMove(force = False ):
 	global maxStepsUsed, startSteps
 	global speed
 	global t0
@@ -2261,7 +2455,9 @@ def testIfMove( waitBetweenSteps, lastMove ):
 	global hour, minute, second
 	global secSinceMidnit	
 	global PIGPIO
+	global waitBetweenSteps
 	global currentSequenceNo, inbetweenSequences
+	global lastMove
 
 	try:
 		lasttotalStepsDone = totalStepsDone
@@ -2275,7 +2471,7 @@ def testIfMove( waitBetweenSteps, lastMove ):
 			if nextStep <0:	direction = -1
 			else:			direction =  1
 
-			U.logger.log(20, "secSinMidn:{:.2f}; secseff:{:.2f}; {:02d}:{:02d}:{:02d}; dt:{:.5f} ; nstep:{}; tSteps:{}; curtSeqN:{};  inbSeq:{};  inFixM:{}; s2:{}, s3:{}; dir:{}".format(secSinceMidnit, secs, hour,minute,second, (time.time()-t0), nextStep, totalStepsDone, currentSequenceNo, inbetweenSequences, inFixBoundaryMode, sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"],  direction))
+			U.logger.log(20, "secSinMidn:{:.2f}; secseff:{:.2f}; {:02d}:{:02d}:{:02d}; dt:{:.5f} ; nstep:{}; tSteps:{}; curtSeqN:{};  inbSeq:{};  boundaryMode:{}; s2:{}, s3:{}; dir:{}".format(secSinceMidnit, secs, hour,minute,second, (time.time()-t0), nextStep, totalStepsDone, currentSequenceNo, inbetweenSequences, boundaryMode, sensorDict["sensor"][2]["status"],sensorDict["sensor"][3]["status"],  direction))
 
 			if nextStep != 0: 
 				if speed > 10 or nextStep >5: stayOn =0.01
@@ -2284,14 +2480,8 @@ def testIfMove( waitBetweenSteps, lastMove ):
 				else:					force = 0
 				#print "dir, nextStep", dir, nextStep
 				if currentSequenceNo < 7: force = int(maxStepsUsed*0.9)
-				steps = move(int(abs(nextStep)), direction, stayOn=stayOn, force=force, updateSequence=True)
+				move(int(abs(nextStep)), direction, stayOn=stayOn, force=force, updateSequence=True)
 				lastMove = time.time()
-
-
-				### no with offset!!
-				##if currentSequenceNo == 8 and sensorDict["sensor"][0]["status"] == 1:
-				##	nextStep =0
-
 				setColor()
 
 			totalStepsDone += nextStep
@@ -2301,7 +2491,7 @@ def testIfMove( waitBetweenSteps, lastMove ):
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-	return lastMove
+	return 
 
 
 # ------------------    ------------------ 
@@ -2329,37 +2519,50 @@ def determineSequenceNo(lSteps):
 		
 
 # ------------------    ------------------ 
-def testIfRewind( ):
+def testIfRewind(force= False):
 	global maxStepsUsed, startSteps
 	global t0
 	global printON
 	global totalStepsDone
 	global hour, minute, second
 	global secSinceMidnit	
-	global useoffsetOfPosition
-	global lastPosition, zeroPosition
+	global useoffsetOfPositionCount
+	global lastPositionCount, zeroPositionCount
 	global speed
 
 
 	try:
 
-		if  totalStepsDone >= maxStepsUsed or (speed > 1. and totalStepsDone >= maxStepsUsed-10): 
 
-			if useoffsetOfPosition >=0:			dir = 1
-			else:								dir = -1
+		if force:
+			move (totalStepsDone,-1,  force=30, stopIfMagSensor=[False,False] )
+			totalStepsDone = 0
 
-			if useoffsetOfPosition !=0:
-				move (useoffsetOfPosition, -dir,  force=30, stopIfMagSensor=[False,False] )
+		elif  totalStepsDone >= maxStepsUsed or (speed > 1. and totalStepsDone >= maxStepsUsed-10): 
 
-			U.logger.log(20, "rewind..   secSinceMidnit:{:.2f}; {:02d}:{:02d}:{:02d}; dt:{:.5f}; totSteps:{}".format(secSinceMidnit, hour,minute,second, (time.time()-t0), totalStepsDone))
-			move (maxStepsUsed,-1,  force=30, stopIfMagSensor=[False,True] )
-			move (maxStepsUsed,-1,  force=30, stopIfMagSensor=[True,False] )
-			move (maxStepsUsed,-1,  force=30, stopIfMagSensor=[True,False] )
-			if useoffsetOfPosition !=0:
-				if useoffsetOfPosition >=0:			dir = 1
-				else:								dir = -1
-				move (useoffsetOfPosition, dir,   force=30, stopIfMagSensor=[False,False] )
+			if useoffsetOfPositionCount >=0:		direction = +1
+			else:									direction = -1
 
+			if useoffsetOfPositionCount !=0:
+				steps0, sensFiredmove = move(useoffsetOfPositionCount, -direction,  force=30, stopIfMagSensor=[False,False] )
+				U.logger.log(10, "should be at full position = offset steps:{}".format(steps0))
+				time.sleep(5)
+
+			U.logger.log(10, "rewind..   secSinceMidnit:{:.2f}; {:02d}:{:02d}:{:02d}; dt:{:.5f}; totSteps:{}".format(secSinceMidnit, hour,minute,second, (time.time()-t0), totalStepsDone))
+			steps1, sensFiredmove = move (maxStepsUsed,-1,  force=30, stopIfMagSensor=[False,True] )
+			steps2, sensFiredmove = move (maxStepsUsed,-1,  force=30, stopIfMagSensor=[True,False] )
+			move (2,-1,  force=30, stopIfMagSensor=[False,False] )
+			#steps3, sensFiredmove = move (maxStepsUsed,-1,  force=30, stopIfMagSensor=[True,False] )
+			U.logger.log(10, "should be at offset position steps: {},{}, total:{}".format(steps1, steps2+2,  (steps1 + steps2 +2) ))
+			time.sleep(5)
+			if useoffsetOfPositionCount !=0:
+				steps4, sensFiredmove = move (useoffsetOfPositionCount+2, direction,   force=30, stopIfMagSensor=[False,False] )
+				U.logger.log(10, "should be at hh=0 position  steps:{}".format(steps4))
+				time.sleep(5)
+			speed = 1
+			setwaitParams()
+			getTime()
+		
 			totalStepsDone = 0
 			t0=time.time()
 		totalStepsDone = max(0, min(totalStepsDone, maxStepsUsed) )
@@ -2372,71 +2575,6 @@ def testIfRewind( ):
 
 
 # ------------------    ------------------ 
-def fastStart():
-	global maxStepsUsed,stepsIn360
-	global printON
-	global waitBetweenSteps, secondsTotalInDay 
-	global amPM1224
-	global whereIs12
-	global currentSequenceNo
-	global limitSensorTriggered
-	global lastPosition, zeroPosition, lastFixBoundaryMode
-	try:
-		if zeroPosition  > 9999: 
-			U.logger.log(20, "trying to do start, zeroPosition not defined:{}, need to do full calibration".format(zeroPosition))
-			return False
-
-		delta = lastPosition - zeroPosition
-		if abs(delta) > maxStepsUsed*1.2: return False
-		if time.time() - lastFixBoundaryMode  < 200: return False
-		return False
-
-		updatewebserverStatus(status="try fast start")
-
-		if delta < 0: 
-			direction = 1
-			nSteps = [abs(delta) + 8,-5,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-		else:
-			direction = -1
-			nSteps = [delta-4,1,1,1,1,1,1,1,1,1,1,1]
-	
-	
-		U.logger.log(20, "trying to do fast start  lastPosition:{}, zeroPosition:{}, move:{}, dir:{} ".format(lastPosition, zeroPosition, delta, direction) )
-		set = False
-		for nn in nSteps:
-			dd = direction * (nn/abs(nn))
-			steps = move( abs(nn) , dd, stopIfMagSensor=[False,False] )
-			getSensors()
-			U.logger.log(20, "fast start  result: after lastPosition:{}, zeroPosition:{}, move:{}, dir:{};  ==> sens0:{}".format(lastPosition, zeroPosition, abs(nn),dd, sensorDict["sensor"][0]["status"]) )
-			if  sensorDict["sensor"][0]["status"] == 1: 
-				set = True
-				if abs(lastPosition - zeroPosition) > 6: 
-					U.logger.log(20, "trying to do fast start start failed, zero has shifted to much: {}".format(lastPosition - zeroPosition))
-					return False
-				zeroPosition = lastPosition
-				savePositions()
-				break
-	
-		if not set:
-			U.logger.log(20, "trying to do fast start start failed, sensor0status !=1 ".format(sensorDict["sensor"][0]["status"] ))
-			return
-
-		if amPM1224 ==24:	waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
-		else: 				waitBetweenSteps 	= secondsTotalInHalfDay / maxStepsUsed 
-		waitBetweenSteps /=speed
-
-		currentSequenceNo = 0
-		zeroPosition = lastPosition
-		U.logger.log(20, "at position 0  ; waitBetweenSteps:{:.1f}; maxStepsUsed:{}; zeroPosition:{}".format(waitBetweenSteps, maxStepsUsed, zeroPosition))
-		displayDrawLines([" wait:{:.1f}".format(waitBetweenSteps)," nSteps:{}".format(maxStepsUsed)," zero:{}".format(zeroPosition), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
-		return True
-	except Exception, e:
-		U.logger.log(40, u"line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-
-	return False
-
-
-# ------------------    ------------------ 
 def findLeftRight():
 	global maxStepsUsed,stepsIn360
 	global printON
@@ -2445,7 +2583,7 @@ def findLeftRight():
 	global whereIs12
 	global currentSequenceNo
 	global limitSensorTriggered
-	global lastPosition, zeroPosition
+	global lastPositionCount, zeroPositionCount
 	
 	try:
 		limitSensorTriggered = 0
@@ -2460,64 +2598,73 @@ def findLeftRight():
 		getSensors()
 		#  sensorDict["pin_sensor0"]["status"]
 
-		U.logger.log(20, "starting left right ")
+		U.logger.log(10, "starting left right ")
 		displayDrawLines(["starting left right","determining limits", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
 		steps 		= 0 
 		stepsTotal	= 0
 		oneEights = int(stepsIn360 /8.)+10
-		pp = True
+		pp = False
 		if pp: printLrLog("0000 === ", steps, 0, short=True)
 		while True:
 			# THIS IS THE EASIEST SIMPLE CASE:
 			if sensorDict["sensor"][1]["status"] == 1: # 12 o-clock sensor on at start = we are in the middle, exit basic find
-				steps = move( oneEights*6  , -1, force=30, stopIfMagSensor=[True,False] )
+				steps, sensFired = move( oneEights*6  , -1, force=30, stopIfMagSensor=[True,False] )
+				stepsTotal +=steps
 				if pp: printLrLog("0100 === ", steps, -1, extra=" fist step done", short=True)
 				break
 
 			# THIS IS THE MOST DIFFICULT, SOMEWHERE CLOSE TO 0 OR 24:
 			elif sensorDict["sensor"][0]["status"] == 1:
 				#test if still on when moving right
-				steps = move( 10  , 1, force=11, stopIfMagSensor=[False,False] )
+				steps, sensFired = move( 10  , 1, force=11, stopIfMagSensor=[False,False] )
+				stepsTotal +=steps
 				if pp: printLrLog("0200 === ", steps, -1, short=True)
 
 				if sensorDict["sensor"][0]["status"] == 0:
-					steps = move( oneEights*8  , 1, force=6, stopIfMagSensor=[True,True] )
+					steps, sensFired = move( oneEights*8  , 1, force=6, stopIfMagSensor=[True,True] )
+					stepsTotal +=steps
 					if pp: printLrLog("0201 === ", steps, 1, short=True)
 
 					if sensorDict["sensor"][0]["status"] == 1:
-						steps = move( oneEights*10, -1, force=6, stopIfMagSensor=[False,True] )
-						if pp: printLrLog("0202 === ", steps, -1, short=True)
+						steps, sensFired = move( oneEights*10, -1, force=6, stopIfMagSensor=[False,True] )
+						stepsTotal +=steps
+					if pp: printLrLog("0202 === ", steps, -1, short=True)
 
 
 					if sensorDict["sensor"][1]["status"] == 1:
-						steps = move( oneEights*8  ,-1, force=6, stopIfMagSensor=[True,False] )
-						if pp: printLrLog("0203 === ", steps, -1, short=True)
-						break
+						steps, sensFired = move( oneEights*8  ,-1, force=6, stopIfMagSensor=[True,False] )
+						stepsTotal +=steps
+					if pp: printLrLog("0203 === ", steps, -1, short=True)
+					break
 
 
 				if sensorDict["sensor"][0]["status"] == 1:
-					steps = move( oneEights*8  , -1, force=6, stopIfMagSensor=[False,True] )
-					if pp: printLrLog("0210 === ", steps, -1, short=True)
+					steps, sensFired = move( oneEights*8  , -1, force=6, stopIfMagSensor=[False,True] )
+					stepsTotal +=steps
+				if pp: printLrLog("0210 === ", steps, -1, short=True)
 
 
 				if sensorDict["sensor"][1]["status"] == 0:
-					steps = move( oneEights*6 , 1, force=30, stopIfMagSensor=[True,True] )
+					steps, sensFired = move( oneEights*6 , 1, force=30, stopIfMagSensor=[True,True] )
+					stepsTotal +=steps
 					if pp: printLrLog(-3, "0211 === ", steps, -1, short=True)
 					if sensorDict["sensor"][1]["status"] == 1:
-						steps = move( oneEights*6 , -1, force=30, stopIfMagSensor=[True,False] )
+						steps, sensFired = move( oneEights*6 , -1, force=30, stopIfMagSensor=[True,False] )
 						if pp: printLrLog("0212 === ", steps, -1, short=True)
 						break
 
 					if sensorDict["sensor"][0]["status"] == 1:
-						steps = move( oneEights*6 , -1, force=30, stopIfMagSensor=[False,True] )
+						steps, sensFired = move( oneEights*6 , -1, force=30, stopIfMagSensor=[False,True] )
+						stepsTotal +=steps
 						if pp: printLrLog("0230 === ", steps, -1, short=True)
-						steps = move( oneEights*6 , -1, force=30, stopIfMagSensor=[True,False] )
+						steps, sensFired = move( oneEights*6 , -1, force=30, stopIfMagSensor=[True,False] )
 						break
 
 				if sensorDict["sensor"][1]["status"] == 1:
 					# found a midle, just continue to 0
-					steps = move( oneEights*6  , -1, force=30, stopIfMagSensor=[True,False] )
+					steps, sensFired = move( oneEights*6  , -1, force=30, stopIfMagSensor=[True,False] )
+					stepsTotal +=steps
 					if pp: printLrLog("0300 === ", steps, -1)
 					break
 				if pp: U.logger.log(50, "0400 === no if condition found")
@@ -2525,145 +2672,151 @@ def findLeftRight():
 
 			else:
 			
-				steps = move( 5  , 1, force=6, stopIfMagSensor=[True,False] )
+				steps, sensFired = move( 5  , 1, force=6, stopIfMagSensor=[True,False] )
+				stepsTotal +=steps
 				if pp: printLrLog("1000 === ", steps, -1, short=True)
 				if sensorDict["sensor"][1]["status"] == 0 and sensorDict["sensor"][1]["status"] == 0:
-					steps = move( oneEights*5  , 1, force=2, stopIfMagSensor=[True,True] )
+					steps, sensFired = move( oneEights*5  , 1, force=2, stopIfMagSensor=[True,True] )
+					stepsTotal +=steps
 					if pp: printLrLog("1100 === ", steps, 1, short=True)
 
 				if sensorDict["sensor"][1]["status"] == 1:
-					steps = move( oneEights*6 , -1, force=30, stopIfMagSensor=[True,False] )
+					steps, sensFired = move( oneEights*6 , -1, force=30, stopIfMagSensor=[True,False] )
+					stepsTotal +=steps
 					if pp: printLrLog("1200 === ", steps, -1, short=True)
 
 				if sensorDict["sensor"][0]["status"] == 1:
-					steps = move( oneEights*3 , -1, force=5, stopIfMagSensor=[True,True] )
+					steps, sensFired = move( oneEights*3 , -1, force=5, stopIfMagSensor=[True,True] )
+					stepsTotal +=steps
 					if pp: printLrLog("1300 === ", steps, -1, short=True)
 					if sensorDict["sensor"][0]["status"] == 1:
-						steps = move( oneEights*8 ,  -1, force=30, stopIfMagSensor=[False,True] )
+						steps, sensFired = move( oneEights*8 ,  -1, force=30, stopIfMagSensor=[False,True] )
+						stepsTotal +=steps
 						if pp: printLrLog("1310 === ", steps, -1, short=True)
-						steps = move( oneEights*8 , -1, force=30, stopIfMagSensor=[True,False] )
+						steps, sensFired = move( oneEights*8 , -1, force=30, stopIfMagSensor=[True,False] )
+						stepsTotal +=steps
 						if pp: printLrLog("1311 === ", steps, -1, short=True)
 						break
 						# done
 
 					elif sensorDict["sensor"][1]["status"] == 1:
-						steps = move( oneEights*8, -1, force=10, stopIfMagSensor=[True,False] )
+						steps, sensFired = move( oneEights*8, -1, force=10, stopIfMagSensor=[True,False] )
+						stepsTotal +=steps
 						if pp: printLrLog("1321 === ", steps, -1)
 						break
 						# done
 
 					elif sensorDict["sensor"][0]["status"] == 0:
-						steps = move( oneEights*8 , -1, force=30, stopIfMagSensor=[True,True] )
+						steps, sensFired = move( oneEights*8 , -1, force=30, stopIfMagSensor=[True,True] )
+						stepsTotal +=steps
 						if pp: printLrLog("1340 === ", steps, -1, short=True)
 						if sensorDict["sensor"][1]["status"] == 1:
-							steps = move(stayOn, oneEights*8 , -1, force=10, stopIfMagSensor=[False,True] )
+							steps, sensFired = move(stayOn, oneEights*8 , -1, force=10, stopIfMagSensor=[False,True] )
 							break
 
-						steps = move( oneEights*5 , -1, force=30, stopIfMagSensor=[True,False] )
+						steps, sensFired = move( oneEights*5 , -1, force=30, stopIfMagSensor=[True,False] )
+						stepsTotal +=steps
 						if pp: printLrLog("11341 === ", steps, -1, short=True)
 						break
 			U.logger.log(40, "============ no sensors found , try with fix boundaies to move the pole.")
 			displayDrawLines(["pole stuck?", " doing recovery", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 			#time.sleep(1)
-			findBoundariesOfCable(force=True)
+			findBoundariesOfCabl(trigger="command")
 			U.restartMyself(reason="no sensor found")
 			return 
 
 		if getLightSensorValue(force=True): setColor(force=True)
 
+
+
 		displayDrawLines(["confirming", " left-right limits", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
-		U.logger.log(20, "finding limits checking 6 left beyond limits, then right 360 + 1 magnet ")
-		time.sleep(0.1)
-		steps = move( oneEights*2,             -1, force=0, stopIfMagSensor=[False,False] )
-		time.sleep(0.1)
-		steps = move( oneEights*2,              1, force=0, stopIfMagSensor=[False,False])
-		U.logger.log(20, "finding limits ,  2 mags left and right, back at 0")
-		time.sleep(0.1)
+		U.logger.log(10, "at 0 mag; total steps done:{} ".format(stepsTotal))
 
+			
 
 		sensorDict["sensor"][0]["left"][0]  = 0
 		## now we are at start
 		## do full 360:
 		pp = False
-		U.logger.log(20, "finding limits, first turn right %d times"%len(sensorDict["sequence"]))
-		#time.sleep(5)
+		U.logger.log(10, "first turn right(+) {} steps".format(len(sensorDict["sequence"])) )
 		seqN       = 0
-		stepsTotal = 0
 		if  sensorDict["sensor"][0]["status"] == 1:
 			sensorDict["sensor"][0]["right"][0]  = 0
 		for nn in range(len(sensorDict["sequence"])-1): # move right (+1) 
-			steps = move( oneEights*6,  1, force=20, stopIfMagSensor=[True,True] )
+			steps, sensFired = move( oneEights*6,  1, force=40, stopIfMagSensor=[True,True] )
 			stepsTotal += steps
 			seqN +=1
 			if pp: printLrLog("right === ", nn, steps)
 			if  sensorDict["sensor"][1]["status"] == 1:
-				sensorDict["sensor"][1]["right"][seqN]  = stepsTotal
+				sensorDict["sensor"][1]["right"][seqN]  = abs(stepsTotal)
 			if  sensorDict["sensor"][0]["status"] == 1:
-				sensorDict["sensor"][0]["right"][seqN]  = stepsTotal
-			#time.sleep(2)
-		U.logger.log(20, "finding limits checking 2 right beyond limits, then back to 0 ")
-		time.sleep(0.1)
-		steps = move( oneEights*2,             1, force=0, stopIfMagSensor=[False,False], fast=False )
-		time.sleep(0.1)
-		steps = move( oneEights*2,            -1, force=0, stopIfMagSensor=[False,False], fast=False )
-		time.sleep(0.1)
+				sensorDict["sensor"][0]["right"][seqN]  = abs(stepsTotal)
+		U.logger.log(10, "right(+) finished, total steps:{}".format(stepsTotal))
 
-		rightLimit  = int(min(stepsIn360*1.04,max(stepsIn360*0.96,stepsTotal)))
-		displayDrawLines(["right limit set  confirming left limit", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
-		if pp: U.logger.log(20, "right limit set  confirming left limit ")
+		rightLimit  = int(min(stepsIn360*1.01,max(stepsIn360*0.995,stepsTotal)))
+		displayDrawLines(["right limit set,  confirming left limit", datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+		U.logger.log(10, "right limit set, now  confirming left(-) limit,  should be at max  total steps:{}".format(stepsTotal))
 		if getLightSensorValue(force=True): setColor(force=True)
 
-		stepsTotal = 0
-		seqN       = 8
-		U.logger.log(20, "finding limits, second turn left %d times"%len(sensorDict["sequence"]))
-		#time.sleep(5)
+		stepsTotal2 = 0
+		seqN        = 8
+		U.logger.log(10, "now turn left(-) {} steps".format(len(sensorDict["sequence"])) )
+		time.sleep(0.5)
 		if  sensorDict["sensor"][0]["status"] == 1:
 			sensorDict["sensor"][0]["left"][seqN] = rightLimit - 0
 		for nn in range(len(sensorDict["sequence"])-1):
-			steps = move( int(oneEights*2), -1, force=20, stopIfMagSensor=[True,True] )
-			stepsTotal += steps
+			steps, sensFired = move( int(oneEights*2), -1, force=40, stopIfMagSensor=[True,True] )
+			stepsTotal  += steps
+			stepsTotal2 += abs(steps)
 			seqN -=1
 			if pp: printLrLog("left  === ", nn, steps)
 			if  sensorDict["sensor"][1]["status"] == 1:
-				sensorDict["sensor"][1]["left"][seqN] = rightLimit - stepsTotal
+				sensorDict["sensor"][1]["left"][seqN] = rightLimit - stepsTotal2
 			if  sensorDict["sensor"][0]["status"] == 1:
-				sensorDict["sensor"][0]["left"][seqN] = rightLimit - stepsTotal
+				sensorDict["sensor"][0]["left"][seqN] = rightLimit - stepsTotal2
 			#time.sleep(2)
+		#steps, sensFired = move( 4, -1, force=4, stopIfMagSensor=[False,False] )
+		#stepsTotal  += steps
+		#stepsTotal2 += abs(steps)
 
-		leftLimit = stepsTotal
+		leftLimit = stepsTotal2
 	
 		if getLightSensorValue(force=True): setColor(force=True)
 
 
-		if pp: U.logger.log(20, unicode(sensorDict))
-		if abs(rightLimit + leftLimit) > stepsIn360*2:
+		if pp: U.logger.log(10, unicode(sensorDict))
+		if abs(rightLimit + leftLimit) > stepsIn360*2.01:
 			addToBlinkQueue(text=["S","O","S"])
 
 		time.sleep(0.1)
 
-		maxStepsUsed  = int(min(stepsIn360*1.09,max(stepsIn360*0.99,rightLimit)))
+		maxStepsUsed  = int(min(stepsIn360*1.01,max(stepsIn360*0.99,rightLimit)))
 
-		waitBetweenSteps 	= secondsTotalInDay / maxStepsUsed 
-		if amPM1224 ==12:	waitBetweenSteps 	/= 2
-		waitBetweenSteps /=speed
+		setwaitParams()
 
 		currentSequenceNo = 0
-		zeroPosition = lastPosition
-		U.logger.log(20, " at position 0  ; waitBetweenSteps:%1f; maxStepsUsed:%d"%(waitBetweenSteps,maxStepsUsed))
-		displayDrawLines(["wait:%.1f; nSteps:%d"%(waitBetweenSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
-		time.sleep(2)
+		zeroPositionCount = lastPositionCount
+		U.logger.log(20, "should be at position mag=0  ; waitBetweenSteps:{:.1f}; maxStepsUsed:{}, total steps:{}, zeromag@:{}".format(waitBetweenSteps,maxStepsUsed, stepsTotal, lastPositionCount))
+		displayDrawLines(["wait:{:.1f}; nSteps:{}".format(waitBetweenSteps,maxStepsUsed), datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+		time.sleep(1)
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	return 
 
-def printLrLog(lead,a,b, extra="", short=False):
+
+
+# ------------------    ------------------ 
+def printLrLog(lead, a, b, extra="", short=False):
 	global sensorDict
-	if short:
-		U.logger.log(10, lead+ "%d %d %s"%(a,b,extra))
-	else:
-		U.logger.log(10, lead+ "%d %d %s\n0 : %s\n12:%s"%(a,b,extra,unicode(sensorDict["sensor"][0]),unicode(sensorDict["sensor"][1])))
+	try:
+		if short:
+			U.logger.log(20, lead+ "%d %d %s"%(a,b,extra))
+		else:
+			U.logger.log(20, lead+ "%d %d %s\n0 : %s\n12:%s"%(a,b,extra,unicode(sensorDict["sensor"][0]),unicode(sensorDict["sensor"][1])))
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -2678,18 +2831,18 @@ def addToBlinkQueue(text =[], color=[1,1,1], stop = False, end=False, restore = 
 		if stop: 
 			stopBlink =True
 			time.sleep(1)
-			U.logger.log(20, " clear queue bf %d" % blinkThread["queue"].qsize())
+			U.logger.log(10, " clear queue bf %d" % blinkThread["queue"].qsize())
 			blinkThread["queue"].queue.clear()
-			U.logger.log(20, " clear queue af %d" % blinkThread["queue"].qsize())
+			U.logger.log(10, " clear queue af %d" % blinkThread["queue"].qsize())
 			stopBlink =True
 			return 
 
 		if end: 
 			stopBlink =True
 			time.sleep(1)
-			U.logger.log(20, " clear queue bf %d" % blinkThread["queue"].qsize())
+			U.logger.log(10, " clear queue bf %d" % blinkThread["queue"].qsize())
 			blinkThread["queue"].queue.clear()
-			U.logger.log(20, " clear queue af %d" % blinkThread["queue"].qsize())
+			U.logger.log(10, " clear queue af %d" % blinkThread["queue"].qsize())
 			blinkThread["thread"].join()
 			return 
 
@@ -2741,7 +2894,7 @@ def doBlink(action):
 # ------------------    ------------------ 
 def setColor( blink=0, color=[1.,1.,1.], force = False):
 	global colPWM, LastHourColorSet, secSinceMidnit,secSinceMidnit0, LastHourColorSetToRemember, timeAtlastColorChange
-	global gpiopinNumbers
+	global gpiopinNumbers, currentRGBValue
 
 	try:
 		lastC = LastHourColorSet
@@ -2764,7 +2917,8 @@ def setColor( blink=0, color=[1.,1.,1.], force = False):
 				cm = timeToColor(secSinceMidnit0)
 				for RGBNumber in range(len(gpiopinNumbers["pin_rgbLED"])):
 					pin = gpiopinNumbers["pin_rgbLED"][RGBNumber]
-					setGPIOValue( pin, 1, amplitude=getIntensity(cm[RGBNumber], color[RGBNumber], RGBNumber ) )	
+					currentRGBValue[RGBNumber] = getIntensity(cm[RGBNumber], color[RGBNumber], RGBNumber )
+					setGPIOValue( pin, 1, amplitude = currentRGBValue[RGBNumber] )	
 					#print "LED int: ", p, intens, lightSensorValue, " secs since last:", abs(secSinceMidnit-lastC)
 				timeAtlastColorChange = time.time()
 				LastHourColorSet = secSinceMidnit0
@@ -2781,20 +2935,20 @@ def getIntensity(Vin, colorFactor, RGBNumber):
 	global intensitySlope
 	global intensityMin, intensityMax
 	global intensityRGB, multiplyRGB
+	global ledCutoff
 	global hour
 
 	Vout = 0.3
 	try:
-		if lightShadowVsDown.find("normal") ==-1 : Vin *= 0.5
+		if lightShadowVsDown.find("normal") == -1 : Vin *= 0.5
 		if Vin ==0: return 0.
 		if lightOffBetweenHours !=[0,0]:
 			if ( (hour >= lightOffBetweenHours[0] and hour < lightOffBetweenHours[1]) or
 				 (hour >= lightOffBetweenHours[0] and lightOffBetweenHours[0] > lightOffBetweenHours[1]) or
 				 (hour <  lightOffBetweenHours[1] and lightOffBetweenHours[0] > lightOffBetweenHours[1])
-				) :
-				return 0
-		## between 0 and 1
-		Vout=  min( intensityMax, max( intensityMin, float(Vin) * colorFactor * intensitySlope *intensityRGB[RGBNumber] * lightSensorValue) * multiplyRGB[RGBNumber] 	)
+				) :	return 0.
+
+		Vout=  min( intensityMax, max( ledCutoff, intensityMin, float(Vin) * colorFactor * intensitySlope *intensityRGB[RGBNumber] * lightSensorValue) * multiplyRGB[RGBNumber] 	)
 		U.logger.log(10, u"Vout:{:.3f}, Vin:{:.3f}, RGB:{}, colorFactor:{},  intensityMax:{}, intensityMin:{},  intensitySlope:{}, lightSensorValue:{:.4f}".format(Vout, Vin, RGBNumber, colorFactor, intensityMax, intensityMin,  intensitySlope, lightSensorValue))
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -2840,25 +2994,28 @@ def blink(on, off, n, color):
 
 # ------------------    ------------------ 
 def settimeToColor():
-	global times, rgb, av
-	times = [   0, 		   4*60*60,	   8*60*60,		11*60*60,	  13*60*60,		 16*60*60,	20*60*60,	 24*60*60]
-	rgb   = [ [20,20,20], [20,20,20], [80,30,30], [80,80,100], [80,80,100], [100,100,100], [100,70,70], [100,70,70] ]
-	for ii in range(0, len(times)):
-		av = (rgb[ii][0]+rgb[ii][1]+rgb[ii][2])/3.
-		rgb[ii][0] /=av 
-		rgb[ii][1] /=av 
-		rgb[ii][2] /=av 
+	global timesBinsForRGB, rgbTime, av
+	timesBinsForRGB     = [   0, 		 	4*60*60,	   5*60*60,		7*60*60,	8*60*60,	  9*60*60,		10*60*60,	   11*60*60,	12*60*60,	14*60*60,		15*60*60,	  16*60*60,     18*60*60,  20*60*60,   21*60*60,    23*60*60, 	24*60*60]
+	rgbTime   			= [ [100,100,100], [100,90,90], [100,30,30], [100,50,50],  [100,70,70], [100,100,100], [100,100,100], [80,80,100], [60,60,100], [80,80,100],[100,100,100], [100,70,70], [100,30,30], [100,60,60], [100,90,90], [100,98,98], [100,100,100] ]
+	ll = len(timesBinsForRGB)
+	for ii in range(0, ll):
+		av = (rgbTime[ii][0]+rgbTime[ii][1]+rgbTime[ii][2])/3.
+		rgbTime[ii][0] /=av 
+		rgbTime[ii][1] /=av 
+		rgbTime[ii][2] /=av 
+	U.logger.log(20, u"rgb/ time {} ".format(rgbTime) )
 # ------------------    ------------------ 
 def timeToColor(tt):
-	global times, rgb, av
+	global timesBinsForRGB, rgbTime, av
 
 	try:
-		rgbout= rgb[0]
-		for ii in range(1, len(times)):
-			if tt > times[ii]: continue
-			dt = (tt-times[ii-1])/(times[ii]-times[ii-1]) 
+		rgbout= copy.copy(rgbTime[0])
+		if tt < 3600: return rgbout
+		for ii in range(1, len(timesBinsForRGB)):
+			if tt > timesBinsForRGB[ii]: continue
+			dt = (tt-timesBinsForRGB[ii-1])/(timesBinsForRGB[ii]-timesBinsForRGB[ii-1]) 
 			for rr in range(3):
-				rgbout[rr] = (dt * (rgb[ii][rr]-rgb[ii-1][rr]) + rgb[ii-1][rr])
+				rgbout[rr] = (dt * (rgbTime[ii][rr]-rgbTime[ii-1][rr]) + rgbTime[ii-1][rr])
 			break
 	except Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -2902,7 +3059,7 @@ def getLightSensorValue(force=False):
 		if (  abs(lightSensorValueRaw-lastlightSensorValue) / (max (0.005, lightSensorValueRaw+lastlightSensorValue))  ) < 0.05: return False
 		lightSensorValue = (lightSensorValueRaw*1 + lastlightSensorValue*9) / 10.
 		lastTimeLightSensorValue = tt0
-		U.logger.log(20, "lightSensorValue read:{:.0f}, raw:{:.3f};  new used:{:.4f};  last:{:.4f}; maxR:{:.1f}".format(lightSensorValueREAD, lightSensorValueRaw, lightSensorValue, lastlightSensorValue,  maxRange))
+		U.logger.log(10, "lightSensorValue read:{:.0f}, raw:{:.3f};  new used:{:.4f};  last:{:.4f}; maxR:{:.1f}".format(lightSensorValueREAD, lightSensorValueRaw, lightSensorValue, lastlightSensorValue,  maxRange))
 		lastlightSensorValue = lightSensorValue
 		return True
 	except Exception, e:
@@ -2918,16 +3075,16 @@ def getTime():
 	global speed, amPM1224
 	global hour, minute, second
 	global secSinceMidnit, secSinceMidnit0
-	global secForTestStart
+	global speedDemoStart
 	global timeShift
 
 	try:
 		if speed !=1.0:
-			secSinceMidnit = (time.time() - secForTestStart)*speed
+			secSinceMidnit = (time.time() - speedDemoStart)*speed
 		else:
 			today = datetime.date.today()
 			secSinceMidnit  = (time.time() - time.mktime(today.timetuple()))
-		secSinceMidnit -= timeShift
+		secSinceMidnit += timeShift
 		secSinceMidnit  = int(secSinceMidnit)
 
 		secSinceMidnit0 = secSinceMidnit
@@ -2944,6 +3101,18 @@ def getTime():
 
 		return 
 
+
+# ------------------    ------------------ 
+def setwaitParams():
+	global waitBetweenSteps, secondsTotalInDay, maxStepsUsed, amPM1224, speed
+	try:
+		waitBetweenSteps 	= secondsTotalInDay / maxStepsUsed 
+		if amPM1224 ==12:	waitBetweenSteps 	/= 2
+		waitBetweenSteps /=speed
+		sleepDefault = waitBetweenSteps/(5*speed)
+
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 #
 # ------------------    ------------------ 
@@ -2974,70 +3143,9 @@ def getSensors(doPrint=False):
 	return 
 			
 
+#
 # ------------------    ------------------ 
-def fixBoundaries():
-	global sensorDict
-	global stepsIn360
-	global inFixBoundaryMode
-	global limitSensorTriggered
-	global currentSequenceNo
-
-	try:
-		limitSensorTriggered = 0
-
-		sens = sensorDict["sensor"]
-		sens[2]["status"] = 0
-		sens[3]["status"] = 0
-		if inFixBoundaryMode == 0: return 
-
-
-		currentSequenceNo = 0
-		completTurns = 1.5
-		totStepsToFix = int( max( abs(leftBoundaryOfCable-rightBoundaryOfCable)*0.6, int(stepsIn360*completTurns)  ) )
-		turns = float(totStepsToFix/float(stepsIn360))
-
-		U.logger.log(20, "fixingBoundary 1, steps: {}; turns: {:.1f}*360; leftB: {}; rightB: {}; starting due to inFixBoundaryMode:{}; capS:{}; switchS:{}".format(totStepsToFix, turns, leftBoundaryOfCable, rightBoundaryOfCable, inFixBoundaryMode, sens[2]["status"], sens[3]["status"]))
-
-		if inFixBoundaryMode ==1:
-			stepsDone = move( totStepsToFix, 1,  force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True , stopIfBoundarySensor=[False,True])
-		else:
-			stepsDone = move( totStepsToFix, -1, force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True , stopIfBoundarySensor=[True,False])
-		U.logger.log(20, "fixingBoundary after 1, left-capS: {}; right-switchS: {}; stepsDone: {}".format(sens[2]["status"],sens[3]["status"],stepsDone))
-
-		if inFixBoundaryMode == -1:
-			if sens[2]["newValue"] == 1:
-				U.logger.log(20, "fixingBoundary 2; after  +1(right) {} direction steps forward".format(totStepsToFix))
-				sens[2]["status"] = 0
-				sens[3]["status"] = 0
-				stepsDone = move( totStepsToFix,  1, force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True, stopIfBoundarySensor=[False,True])
-				getSensors()
-				U.logger.log(20, "fixing  after 2.1: left-capS: {}; right-switchS: {}; stepsDone {}".format(sens[2]["status"], sens[3]["status"],stepsDone))
-		else:
-			if sens[3]["newValue"] == 1:
-				U.logger.log(20, "fixing  3; after  +1(lft) {} direction steps backwards".format(totStepsToFix) )
-				sens[2]["status"] = 0
-				sens[3]["status"] = 0
-				stepsDone = move( totStepsToFix, -1, force=0, stopIfMagSensor=[False,False],  updateSequence=False, fast=True, stopIfBoundarySensor=[True,False])
-				getSensors()
-				U.logger.log(20, "fixingBoundary  after 3.1, left-capS:%d; right-switchS: {}; stepsDone: {}".format(sens[2]["status"], sens[3]["status"], stepsDone))
-
-		if sens[2]["newValue"] == 0: sens[2]["status"] = 0
-		if sens[3]["newValue"] == 0: sens[3]["status"] = 0
-
-		if  sens[2]["status"]==0 and sens[3]["status"]==0: 
-			saveFixBoundaryMode(set=0, tt=time.time()-1000)
-			return 
-
-		if sens[2]["status"] == 1:	saveFixBoundaryMode(set=1, tt=time.time())
-		if sens[3]["status"] == 1:	saveFixBoundaryMode(set=-1, tt=time.time())
-		U.logger.log(20, "fixingBoundary end, redo due to: capS:{}; switchS:{}; stepsDone:{}".format(sens[2]["status"], sens[3]["status"], stepsDone))
-		U.restartMyself(reason="fix boundaries  failed", delay=5)
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-
-
-# ------------------    ------------------ 
-def doSunDialShutdown():
+def dosundialShutdown():
 	U.logger.log(40, " setting shutdown params ")
 	try: displayClear(show=True, force=True)
 	except: pass
@@ -3070,41 +3178,88 @@ def checkNumberOfRestarts():
 
 # ------------------    ------------------ 
 def getOffset():
-	global useoffsetOfPosition, offsetOfPosition, lightShadowVsDown, stepsIn360, totalStepsDone, lasttotalStepsDone
+	global useoffsetOfPositionCount, offsetOfPositionCount, lightShadowVsDown, stepsIn360, totalStepsDone, lasttotalStepsDone
 	try:
-		useoffsetOfPosition = int(offsetOfPosition)
-		if lightShadowVsDown.find("normal") ==-1:
-			 useoffsetOfPosition += stepsIn360/2
-		if useoffsetOfPosition !=0:
+		useoffsetOfPositionCount = int(offsetOfPositionCount)
+		if lightShadowVsDown.find("normal") == -1:
+			 useoffsetOfPositionCount += stepsIn360/2
+		if useoffsetOfPositionCount !=0:
 			# bring between -800 and 800 
-			if   useoffsetOfPosition > stepsIn360: 	useoffsetOfPosition -= stepsIn360
-			if 	-useoffsetOfPosition > stepsIn360:	useoffsetOfPosition += stepsIn360
-			if 	-useoffsetOfPosition > stepsIn360:	useoffsetOfPosition += stepsIn360
+			if   useoffsetOfPositionCount > stepsIn360:	useoffsetOfPositionCount -= stepsIn360
+			if 	-useoffsetOfPositionCount > stepsIn360:	useoffsetOfPositionCount += stepsIn360
+			if 	-useoffsetOfPositionCount > stepsIn360:	useoffsetOfPositionCount += stepsIn360
 			#bring between -400.. 400 eg 700 --> -100  ; -700--> 100
-			if    useoffsetOfPosition > stepsIn360/2: 	useoffsetOfPosition -= stepsIn360
-			elif -useoffsetOfPosition > stepsIn360/2:	useoffsetOfPosition += stepsIn360
+			if    useoffsetOfPositionCount > stepsIn360/2: 	useoffsetOfPositionCount -= stepsIn360
+			elif -useoffsetOfPositionCount > stepsIn360/2:	useoffsetOfPositionCount += stepsIn360
+		U.logger.log(10, " useoffsetOfPositionCount:{}, offsetOfPositionCount:{}".format(useoffsetOfPositionCount,offsetOfPositionCount))
 
-			if useoffsetOfPosition >=0:			dir = 1
-			else:								dir = -1
-			U.logger.log(30, "moving  to useoffsetOfPosition:{}, offsetOfPosition:{}, dir:{}".format(useoffsetOfPosition,offsetOfPosition , dir))
-			move(abs(useoffsetOfPosition), dir)
-			U.logger.log(30, "at new Offset")
-			time.sleep(2)
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+# ------------------    ------------------ 
+def moveOffset():
+	global useoffsetOfPositionCount, offsetOfPositionCount, lightShadowVsDown, stepsIn360, totalStepsDone, lasttotalStepsDone
+	try:
+		if useoffsetOfPositionCount !=0:
+			if useoffsetOfPositionCount > 0: direction  = +1	
+			if useoffsetOfPositionCount < 0: direction  = -1	
+			U.logger.log(10, "moving  to useoffsetOfPositionCount:{}, offsetOfPositionCount:{}, dir:{}".format(useoffsetOfPositionCount,offsetOfPositionCount , direction))
+			move(abs(useoffsetOfPositionCount), direction)
+			U.logger.log(10, "at Offset")
+			time.sleep(0.5)
 		totalStepsDone 		= 0
 		lasttotalStepsDone	= 0
 
 	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+"   bad sensor data")
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
+# ------------------    ------------------ 
+def wiggleArm():
+
+	try:
+		U.logger.log(10, u"wiggling arm to losen it: 5 steps l/r/l/r")
+		move( 5,   1,  force=5, updateSequence=False, stopIfMagSensor=[False,False], stopIfBoundarySensor=[False,False])
+		time.sleep(0.2)
+		move( 5,  -1,  force=5, updateSequence=False, stopIfMagSensor=[False,False], stopIfBoundarySensor=[False,False])
+		time.sleep(0.2)
+		move( 5,   1,  force=5, updateSequence=False, stopIfMagSensor=[False,False], stopIfBoundarySensor=[False,False])
+		time.sleep(0.2)
+		move( 5,  -1,  force=5, updateSequence=False, stopIfMagSensor=[False,False], stopIfBoundarySensor=[False,False])
+
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
-def execSunDial(reqSpeed):
+# ------------------    ------------------ 
+def getFTPupdate():
+	global lastUpdateCheck, lastUpdatecheckDay
+	global sundialVersion
+	global updateDownloadEnable
+
+	try:
+		if not updateDownloadEnable["sundial"]: return 
+		if time.time()- lastUpdateCheck < 100:	return 
+		lastUpdateCheck = time.time()
+		now = datetime.datetime.now()
+		day = now.day
+		if day == lastUpdatecheckDay: 			return 
+		lastUpdatecheckDay = day
+		if not os.path.isdir(G.homeDir+"install"):
+			os.system("mkdir  "+G.homeDir+"install")
+		if not os.path.isdir(G.homeDir+"old"):
+			os.system("mkdir  "+G.homeDir+"old")
+		os.system("sudo /usr/bin/python {}getnewVersion.pyo {:.1f} {}.py  {} &".format(G.homeDir, sundialVersion, G.program, G.myPiNumber))
+
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+
+def execsundial(reqSpeed):
 
 	global clockDict, clockLightSet, useRTC
 	global sensor, output, inpRaw
-	global oldRaw,	lastRead, inp
-	global timeZones, timeZone
+	global oldRaw, lastRead, inp
 	global doReadParameters
 	global networkIndicatorON
 	global lastStep, colPWM,  LastHourColorSet
@@ -3137,29 +3292,35 @@ def execSunDial(reqSpeed):
 	global pinsToName
 	global menuPosition
 	global lastExpireDisplay
-	global lightSensNorm
+	global lightSensNorm, lightSensNormDefault
 	global intensityRGB
-	global intensityMax, intensityMin, intensitySlope
-	global inFixBoundaryMode
+	global intensityMax, intensityMin, intensitySlope, ledCutoff
+	global boundaryMode
 	global currentlyMoving
 	global limitSensorTriggered
 	global lightShadowVsDown
 	global displayStarted
-	global offsetOfPosition, useoffsetOfPosition
-	global lastPosition, zeroPosition, rightBoundaryOfCable, leftLimit
-	global secForTestStart
-	global lastFixBoundaryMode
+	global offsetOfPositionCount, useoffsetOfPositionCount
+	global lastPositionCount, zeroPositionCount, rightBoundaryOfCableCount, leftLimit
+	global secForSpeedTestStart
+	global lastBoundaryMode
 	global lastsaveParameters
 	global stopLoop
-	global sunDialParameters
+	global sundialParameters
 	global eth0IP, wifi0IP
 	global secondsTotalInDay, secondsTotalInHalfDay
 	global LastHourColorSetToRemember
 	global hour, minute, second
 	global lightOffBetweenHours
-	global waitBetweenSteps
 	global startWebServerSTATUS, startWebServerINPUT
 	global timeShift, multiplyRGB
+	global numberOfStepsCableAllowsMax
+	global lastMove
+	global waitbetweenSteps
+	global lastUpdateCheck, lastUpdatecheckDay
+	global sundialVersion
+	global updateDownloadEnable
+	global currentRGBValue
 
 	morseCode= {"A":[0,1], 		"B":[1,0,0,0],	 "C":[1,0,1,0], "D":[1,0,0], 	"E":[0], 		"F":[0,0,1,0], 	"G":[1,1,0],	"H":[0,0,0,0], 	"I":[0,0],
 				"J":[0,1,1,1], 	"K":[1,0,1], 	"L":[0,1,0,0], 	"M":[1,1], 		"N":[1,0], 		"O":[1,1,1], 	"P":[0,1,1,0],	"Q":[1,1,0,1], 	"R":[0,1,0],
@@ -3169,20 +3330,26 @@ def execSunDial(reqSpeed):
 				"l":[1], # one long
 				"b":[0,0,0,1]}  # beethoven ddd DAAA
 
+	currentRGBValue			= [0,0,0]
+	updateDownloadEnable	= {"sundial":False}
+	lastUpdateCheck			= time.time()
+	lastUpdatecheckDay		= ""
+	numberOfStepsCableAllowsMax = 6000
 	startWebServerSTATUS	= ""
 	startWebServerINPUT		= ""
 	timeShift				= 0
 	lightOffBetweenHours	= [0,0]
-	sunDialParameters		= {}
+	sundialParameters		= {}
 	lastsaveParameters		= time.time()
-	lastFixBoundaryMode		= 0
-	useoffsetOfPosition		= 0
-	offsetOfPosition		= 0
+	lastBoundaryMode		= 0
+	boundaryMode			= 0
+	useoffsetOfPositionCount= 0
+	offsetOfPositionCount	= 0
 	lightShadowVsDown		="normal"
 	limitSensorTriggered	= 0
 	currentlyMoving			= time.time() + 10000.
-	inFixBoundaryMode		= 0
-	lightSensNorm			= 1000000
+	lightSensNormDefault	= 4000.
+	lightSensNorm			= lightSensNormDefault
 	lastExpireDisplay		= time.time()
 	menuPosition			= ["",""]
 	pinsToName				= {}
@@ -3198,7 +3365,7 @@ def execSunDial(reqSpeed):
 	buttonDict				= {}
 	sensorDict				= {}
 	timeAtlastColorChange	= 0
-	speedDemoStart			= -1
+	speedDemoStart			= 1
 
 	PIGPIO					= ""
 	pwmRange				= 0
@@ -3217,7 +3384,8 @@ def execSunDial(reqSpeed):
 	secondsTotalInHalfDay 	= 60.*60.*12
 	intensitySlope     		= 1.
 	intensityMax      		= 1.
-	intensityMin      		= 0.0045
+	ledCutoff				= 0.00001
+	intensityMin      		= ledCutoff
 
 	intensityRGB			= [.65,.85,1.] # rel RGB scale
 	multiplyRGB				= [1,1,1] # miultiply to RGB value
@@ -3252,14 +3420,13 @@ def execSunDial(reqSpeed):
 	whereIs12 				= {-1:-1, 1:-1, "average":-1, "active":False}
 	clockDictLast			= {}
 	LastHourColorSetToRemember =[]
-	secForTestStart 		= time.time()
-	lastPosition			= 0 
-	zeroPosition			= 0
+	lastPositionCount			= 0 
+	zeroPositionCount			= 0
 
 	U.setLogging()
 
 
-	U.logger.log(30, "====== starting ======")
+	U.logger.log(30, "====================== starting  ======  version: {:.1f}\n".format(sundialVersion))
 
 
 	try:
@@ -3293,23 +3460,21 @@ def execSunDial(reqSpeed):
 
 		setgpiopinNumbers()
 
-		setupTimeZones()
-		#print "current tz:", currTZ,JulDelta,JanDelta,NowDelta, timeZones[currTZ+12], timeZones
 
 		getParameters()
 
 
 		if readParams() ==3:
 			U.logger.log(40, " parameters not defined")
-			U.checkParametersFile("parameters-DEFAULT-sunDial", force = True)
+			U.checkParametersFile("parameters-DEFAULT-sundial", force = True)
 			time.sleep(20)
-			doSunDialShutdown()
+			dosundialShutdown()
 			U.restartMyself(reason=" bad parameters read", doPrint = True)
 
 		U.getIPNumber() 
 		eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
-
-		setMotorOFF()
+		U.setStartwebserverSTATUS()
+		U.setStartwebserverINPUT()
 
 		getPositions()
 
@@ -3317,7 +3482,6 @@ def execSunDial(reqSpeed):
 
 		U.echoLastAlive(G.program)
 
-		#U.logger.log(30, "gpiopinNumbers:"+unicode(gpiopinNumbers))
 
 		settimeToColor()
 
@@ -3332,46 +3496,28 @@ def execSunDial(reqSpeed):
 		getLightSensorValue(force=True)
 		setColor(force=True)
 
-		U.setStartwebserverSTATUS()
-		U.setStartwebserverINPUT()
 		updatewebserverStatus(status="starting")
 		# for display on clock show info web site and change wifi and country settings
-		MENUSTRUCTURE[1][0][0][0] ="{}:{}".format(G.ipAddress,startWebServerSTATUS)
-		MENUSTRUCTURE[1][0][2][0] ="{}:{}".format(G.ipAddress,startWebServerINPUT)
+		if len(G.ipAddress) > 7:
+			MENUSTRUCTURE[1][0][0][0] ="{}:{}".format(G.ipAddress,startWebServerSTATUS)
+			MENUSTRUCTURE[1][0][2][0] ="{}:{}".format(G.ipAddress,startWebServerINPUT)
+		else:
+			MENUSTRUCTURE[1][0][0][0] ="no network"
+			MENUSTRUCTURE[1][0][2][0] ="no setup"
 
-		findBoundariesOfCable()
 
-
-		## check if out of boundary, if yes: fix it 
-		boundariesWhereFixed = False
-		if inFixBoundaryMode != 0:
-			updatewebserverStatus(status="fixing boundaries")
-			delta = time.time()-lastFixBoundaryMode
-			U.logger.log(30, "in FIX boundary mode, last one {:.0f} sec ago".format(delta))
-			if delta < 60: 
-				resetBoundariesOfCable()
-				saveFixBoundaryMode(tt=time.time())
-				U.restartMyself(reason=" fix boundary twice in a minute") 
-			displayDrawLines(["Status:     ","in FIX boundary mode",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
-			addToBlinkQueue(text=["s","o","s"])
-			fixBoundaries()
-			boundariesWhereFixed = True
-			saveFixBoundaryMode(set=0,tt=time.time() )
+		### this needs fixing!!  
+		updatewebserverStatus(status="setting boundary")
+		wiggleArm()
+		displayDrawLines(["Status:     ","setting boundary",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
+		findBoundariesOfCabl(trigger=1)
 	
 		U.echoLastAlive(G.program)
 
 
-		#addToBlinkQueue(text = ["S","T","A","R","T"][1,1,1],)
-		#time.sleep(3)
-
 		displayDrawLines(["Status:     finding",".. L/R  Stop-Limits",  datetime.datetime.now().strftime("%a, %Y-%m-%d %H:%M")])
 
-		waitBetweenSteps 	= secondsTotalInDay     / maxStepsUsed 
-
-
-		if boundariesWhereFixed or not fastStart():
-			## here we find mag sensor 0/12 or A/B limits:
-			findLeftRight()
+		findLeftRight()
 
 		U.echoLastAlive(G.program)
 
@@ -3381,47 +3527,49 @@ def execSunDial(reqSpeed):
 		sleepDefault = waitBetweenSteps/(5*speed)
 
 
-		U.logger.log(30, "\n=========clock starting at zero postion, parameters:\nspeed:{:.1f}, totalStepsDone:{}, sleepDefault:{:.1f},\nwaitBetweenSteps:{:.2f},  amPM1224:{}, secSinceMidnit:{:.1f}, secSinceMidnit0:{:.1f}, zero@{}\nintensity Min:{}, Max:{}, Slope:{}, lightSNorm:{}, LightMin:{}, lightMax:{}, RGB:{} "
-						 .format(speed, totalStepsDone, sleepDefault, waitBetweenSteps, amPM1224, secSinceMidnit,secSinceMidnit0, zeroPosition,intensityMin,intensityMax, intensitySlope, lightSensNorm, lightSensMin, lightSensMax, intensityRGB))
-		time.sleep(2)
-
-
+		U.logger.log(20, "\n=========clock starting at zero position, parameters:\nspeed:{:.1f}, totalStepsDone:{}, sleepDefault:{:.1f},\nwaitBetweenSteps:{:.2f},  amPM1224:{}, secSinceMidnit:{:.1f}, secSinceMidnit0:{:.1f}, zero@{}\nintensity Min:{}, Max:{}, Slope:{}, lightSNorm:{}, LightMin:{}, lightMax:{}, RGB:{} "
+						 .format(speed, totalStepsDone, sleepDefault, waitBetweenSteps, amPM1224, secSinceMidnit,secSinceMidnit0, zeroPositionCount,intensityMin,intensityMax, intensitySlope, lightSensNorm, lightSensMin, lightSensMax, intensityRGB))
+		time.sleep(0.1)
 
 		getOffset()
+		moveOffset()
 
 		nextStep = 1
 
 
-		U.logger.log(30, "eth0IP:%s:, wifi0IP:%s:, G.eth0Enabled:%s, G.wifiEnabled:%s"%(eth0IP, wifi0IP, unicode(G.eth0Enabled), unicode(G.wifiEnabled)))
+		U.logger.log(20, "eth0IP:%s:, wifi0IP:%s:, G.eth0Enabled:%s, G.wifiEnabled:%s"%(eth0IP, wifi0IP, unicode(G.eth0Enabled), unicode(G.wifiEnabled)))
 
 		displayShowStandardStatus(force=True)
 
 		expireDisplay = 50
 		lastExpireDisplay = time.time()
-		inFixBoundaryMode =0
+		boundaryMode =0
 
 		lastMove = time.time() - waitBetweenSteps
 		totalStepsDone = 0
 		stopLoop = False
 		saveParameters(force = True)
 		while True:
-				while stopLoop:
+				for iii in range(50):
+					if not stopLoop: break
 					sleep(3)
+
+				getFTPupdate()
+			
 				saveParameters()
 
 				if speedDemoStart > 1 and time.time() - speedDemoStart > 300:
 					U.restartMyself(reason=" resetting speed to normal after 300 secs", doPrint = True)
 
 				if limitSensorTriggered != 0:
-			
 					U.restartMyself(reason="entering fixmode,  trigger of boundaries", doPrint = True)
 
 				getTime()
 
 				##  here we move
-				lastMove = testIfMove( waitBetweenSteps, lastMove )
+				setwaitParams()
+				testIfMove()
 				##  
-
 				nextMove = lastMove + waitBetweenSteps
 				testIfRewind()
 				sleep =  sleepDefault
@@ -3431,14 +3579,14 @@ def execSunDial(reqSpeed):
 				startSleep = time.time()
 				sleep = nextMove - startSleep
 				endSleep = startSleep + sleep
-				minSleep = max(0.1, min(0.2, sleep))
+				minSleep = 0.2
 				ii = 1000
 				lastDisplay = time.time()
 				#print "	sleep ", sleep," nextMove", nextMove,"minSleep",minSleep,"tt", time.time()
 				U.echoLastAlive(G.program)
 
 				while ii > 0:
-					readCommand()
+					if readCommand(): break
 					if getLightSensorValue():
 						setColor(force=True)
 					elif (  abs(lightSensorValueRaw - lightSensorValue) / (max(0.005, lightSensorValueRaw + lightSensorValue))  ) > 0.05:
@@ -3446,7 +3594,7 @@ def execSunDial(reqSpeed):
 							lightSensorValue = (lightSensorValueRaw*1 + lightSensorValue*9) / 10.
 							lastlightSensorValue = lightSensorValue
 							setColor(force=True)
-					if ii % 30 == 0:
+					if ii % 100 == 0:
 						U.echoLastAlive(G.program)
 					ii -= 1
 					time.sleep(minSleep)
@@ -3455,7 +3603,7 @@ def execSunDial(reqSpeed):
 					if U.checkifRebooting(): 
 						displayShowShutDownMessage()
 						time.sleep(3)
-						doSunDialShutdown()
+						dosundialShutdown()
 						time.sleep(1)
 						exit()
 
@@ -3494,7 +3642,7 @@ def execSunDial(reqSpeed):
 try:   	reqSpeed = float(sys.argv[1])
 except:	reqSpeed = 1.
 
-execSunDial(reqSpeed)
+execsundial(reqSpeed)
 exit()
 	
 

@@ -15,25 +15,19 @@ import datetime
 import json
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import logging
+import logging.handlers
+global logging, logger
 
+
+
+#
 #################################
 #################################
    
 
-def toLog(text, force=False):
-	global logfileName, logLevel, printON
-	if not logLevel and not force: return 
-
-	l=open(logfileName,"a")
-	l.write( ( "{} plotPosition  {} \n".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),text )).encode("utf8") )
-	l.close()
-	if printON:
-		print text
-
 ####### main pgm / loop ############
-global logfileName, logLevel, printON
 
-printON = False
 
 
 pluginDir		  = sys.argv[0].split("makeBeaconPositionPlots.py")[0]
@@ -49,25 +43,31 @@ f.close()
 logLevel = plotData["logLevel"]
 logfileName=plotData["logFile"]
 
+
+logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
+logger = logging.getLogger(__name__)
+#
+if not logLevel:
+	logger.setLevel(logging.ERROR)
+else:
+	logger.setLevel(logging.DEBUG)
+
 try:
-	if printON:  print logLevel, logfileName
-
-
 	# print start to logfile 
-	toLog("========= start @ {}  =========== ".format(datetime.datetime.now()) )
+	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	tStart= time.time()
 
-	toLog("imageYscale        :"+unicode(plotData["Yscale"]) )
-	toLog("imageXscale        :"+unicode(plotData["Xscale"]) )
-	toLog("imageDotsY         :"+unicode(plotData["dotsY"]) )
-	toLog("imageText          :"+unicode(plotData["Text"]) )
-	toLog("imageTextColor     :"+unicode(plotData["TextColor"]) )
-	toLog("imageTextPos       :"+unicode(plotData["TextPos"]) )
-	toLog("imageTextRotation  :"+unicode(plotData["TextRotation"]) )
-	toLog("distanceUnits      :"+unicode(plotData["distanceUnits"]) )
-	toLog("imageOutfile       :"+unicode(plotData["Outfile"]) )
-	toLog("compressImage      :"+unicode(plotData["compress"]) )
-	toLog("Zlevels            :"+unicode(plotData["Zlevels"]) )
+	logger.log(20,"imageYscale        :"+unicode(plotData["Yscale"]) )
+	logger.log(20,"imageXscale        :"+unicode(plotData["Xscale"]) )
+	logger.log(20,"imageDotsY         :"+unicode(plotData["dotsY"]) )
+	logger.log(20,"imageText          :"+unicode(plotData["Text"]) )
+	logger.log(20,"imageTextColor     :"+unicode(plotData["TextColor"]) )
+	logger.log(20,"imageTextPos       :"+unicode(plotData["TextPos"]) )
+	logger.log(20,"imageTextRotation  :"+unicode(plotData["TextRotation"]) )
+	logger.log(20,"distanceUnits      :"+unicode(plotData["distanceUnits"]) )
+	logger.log(20,"imageOutfile       :"+unicode(plotData["Outfile"]) )
+	logger.log(20,"compressImage      :"+unicode(plotData["compress"]) )
+	logger.log(20,"Zlevels            :"+unicode(plotData["Zlevels"]) )
 
 
 
@@ -84,9 +84,9 @@ try:
 
 
 	textOffY = 4 *Yscale/ dotsY  # move 4 points 
-	toLog("textOffY	        :"+unicode(textOffY) )
+	logger.log(20,"textOffY          :{}".format(textOffY) )
 	textOffX = 5 *Xscale/ dotsX  # move 4 points 
-	toLog("textOffX	        :"+unicode(textOffX) )
+	logger.log(20,"textOffX          :{}".format(textOffX) )
 
 	imageOutfile			= plotData["Outfile"]
 	if imageOutfile =="":
@@ -95,14 +95,14 @@ try:
 
 	TransparentBackground = "0.0"
 
-	toLog("beacon data:")
+	logger.log(20,"beacon data:")
 	for mac in plotData["mac"]:
-		toLog(mac+"  "+unicode(plotData["mac"][mac]) )
+		logger.log(20,mac+"  {}".format(plotData["mac"][mac]) )
 
 
 
 	#
-	toLog("time used {:4.2f} --   setup fig, ax".format((time.time()-tStart)) )
+	logger.log(20,"time used {:4.2f} --   setup fig, ax".format((time.time()-tStart)) )
 	plt.figure()
 	fig = plt.gcf()
 	ax = fig.add_axes([0, 0, 1, 1], frameon=False)
@@ -132,11 +132,11 @@ try:
 			backGFile = p+"background.png"
 			ok = True
 	if ok: 
-		toLog("time used {:4.2f} --   loading background image file: '{}'".format( (time.time()-tStart),backGFile ) )
+		logger.log(20,"time used {:4.2f} --   loading background image file: '{}'".format( (time.time()-tStart),backGFile ) )
 		img = plt.imread(backGFile)
 		ax.imshow(img, extent=[0., Xscale, 0., Yscale])
 	else:
-		toLog("time used     --   background image file not loaded, not found --  background.png  not in {} and not in {}".format(imageOutfile, piPositionsDir) )
+		logger.log(20,"time used     --   background image file not loaded, not found --  background.png  not in {} and not in {}".format(imageOutfile, piPositionsDir) )
 
 	  
 
@@ -144,7 +144,7 @@ try:
 	# 
 	imageText				= plotData["Text"]
 	if imageText != "": 
-		toLog("time used {:4.2f} --   adding  text".format((time.time()-tStart)) )
+		logger.log(20,"time used {:4.2f} --   adding  text".format((time.time()-tStart)) )
 		imageTextColor		= plotData["TextColor"]
 		imageTextSize		= int(plotData["TextSize"])
 		imageTextPos		= plotData["TextPos"].split(",")
@@ -157,7 +157,7 @@ try:
 
 	piColor = "#00FF00"
   
-	toLog("time used {:4.2f} --   now loop though the beacons and add them".format((time.time()-tStart)) )
+	logger.log(20,"time used {:4.2f} --   now loop though the beacons and add them".format((time.time()-tStart)) )
 	for mac in plotData["mac"]: # get the next beacon
 		try:
 				this  = plotData["mac"][mac]
@@ -206,7 +206,7 @@ try:
 					if this["status"] == u"up":
 						edgecolor= "#000000"
 				
-					toLog(this["name"].ljust(26)+"  "+ this["nickName"].ljust(6) +"  color:"+ color.ljust(7)+ "  edgecolor:"+ edgecolor.ljust(7) +" symbol:"+ symbol.ljust(11)+" type:"+ Dtype.ljust(8) +" distanceToRPI:%5.1f"%distanceToRPI+"  hatch:" +hatch.ljust(2) +"  status:"+ this["status"])
+					logger.log(20,"{}  {} color:{} edgecolor:{} symbol:{} type:{} distanceToRPI:{:5.1f}  hatch:{}  status:{}".format(this["name"].ljust(26) , this["nickName"].ljust(6), color.ljust(7), edgecolor.ljust(7), symbol.ljust(11), Dtype.ljust(8), distanceToRPI, hatch.ljust(2),this["status"]) )
 
 					if   Dtype == "circle":
 							circle = plt.Circle([pos[0],pos[1]], distanceToRPI, fc=color, ec=edgecolor,alpha=alpha,hatch=hatch)
@@ -224,18 +224,17 @@ try:
 				if this["nickName"] !="":
 					if symbol =="text": 
 						ax.text(pos[0] ,pos[1] ,this["nickName"], color=this["textColor"] ,size="x-small")
-						toLog(this["name"].ljust(26)+"  "+ this["nickName"].ljust(6) +"  color:"+ color.ljust(7)  +"  status:"+ this["status"]+"  use nickname text, no symbol")
+						logger.log(20,"{}  {}  color:{}  status:{} edgecolor:{}".format(this["name"].ljust(26), this["nickName"].ljust(6), color.ljust(7), this["status"]) )
 					else:
 						ax.text(pos[0]+ textOffX ,pos[1]- textOffY ,this["nickName"], color=this["textColor"] ,size="x-small")
 
 		except  Exception, e:
-			toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e),  force=True )
-
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
 	try:
 		if plotData["ShowCaption"] != "0":
 			textDeltaX = 6  *Xscale / dotsX  # move 8 points 
 			textDeltaY = 5  *Yscale / dotsY  # move 12 points 
-			toLog("Caption: text offset x= %.2f"%textDeltaX+";   y=%.2f"%textDeltaY )
+			logger.log(20,"Caption: text offset x= {:.2f};   y={:.2f}".format(textDeltaX, textDeltaY) )
 			if plotData["ShowCaption"]=="1": y = Yscale - textDeltaY
 			else:							 y = textDeltaY 
 
@@ -258,15 +257,14 @@ try:
 				ax.text(textDeltaX*35,y,"RPIs" ,size=imageTextSize-3)
 
 	except  Exception, e:
-			toLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
 
 
 	# 
-	toLog("time used {:4.2f} --   making the plot:".format((time.time()-tStart)))
+	logger.log(20,"time used {:4.2f} --   making the plot:".format((time.time()-tStart)))
 	try: 	plt.savefig((piPositionsDir+"beaconPositions.png").encode('utf8'))	# this does not work ==>   ,bbox_inches = 'tight', pad_inches = 0)
 	except  Exception, e:
-			toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e),  force=True )
-
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
 
 	try:	pngSize = os.path.getsize((piPositionsDir+"beaconPositions.png").encode('utf8'))/1024.
 	except: pnGsize = 0
@@ -274,30 +272,30 @@ try:
 
 	try:
 		if plotData["compress"] :
-			toLog("time used {:4.2f} --   compressing the png file ".format((time.time()-tStart)))
+			logger.log(20,"time used {:4.2f} --   compressing the png file ".format((time.time()-tStart)))
 			cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+piPositionsDir+"beaconPositions.png"+"'"
 			ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
 			try:	compSize = os.path.getsize((piPositionsDir+"beaconPositions.xxx").encode('utf8'))/1024.
 			except: compSize = 0
 			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
 			os.rename((piPositionsDir+"beaconPositions.xxx").encode('utf8'),(piPositionsDir+"beaconPositions.png").encode('utf8') )
-			toLog("time used {:4.2f}  --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
+			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 	except  Exception, e:
-			toLog(u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e), force=True )
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
 	
 	try:
 		if imageOutfile != piPositionsDir+"beaconPositions.png":
-			toLog("time used {:4.2f} --   moving file to destination: '{}'".format((time.time()-tStart), imageOutfile) )
+			logger.log(20,"time used {:4.2f} --   moving file to destination: '{}'".format((time.time()-tStart), imageOutfile) )
 			if os.path.isfile((imageOutfile).encode('utf8')): os.remove((imageOutfile).encode('utf8'))
 			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')):
 				os.rename((piPositionsDir+"beaconPositions.png").encode('utf8'),(imageOutfile).encode('utf8') )
 				if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
 	except  Exception, e:
-			toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e), force=True )
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e))
 
-	toLog("time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
+	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 except  Exception, e:
-	toLog(u"in Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e), force=True )
+	logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e))
 
 sys.exit(0)

@@ -4,6 +4,7 @@ import os
 import time
 import subprocess
 
+
 #set GPIOs if requested BEFOR master.py runs just onece after boot 
 os.system("/usr/bin/python /home/pi/pibeacon/doGPIOatStartup.py & ")
 
@@ -37,7 +38,8 @@ os.system("rm  /home/pi/BLEconnect.py > /dev/null 2>&1 ")
 os.system("rm  /home/pi/batteryLevelPosition > /dev/null 2>&1 ")
 os.system("rm  /home/pi/alive.ultrasoundDistance > /dev/null 2>&1 ")
 os.system("rm  /home/pi/alive.sensors > /dev/null 2>&1 ")
-os.system("rm  /home/pi/alive.beaconloop > /dev/null 2>&1 ")
+os.system("rm  /home/pi/alive.sensors > /dev/null 2>&1 ")
+os.system("rm  /home/pi/sundial.py > /dev/null 2>&1 ")
 os.system("rm  /home/pi/offsetUUID > /dev/null 2>&1 ")
 os.system("rm  /home/pi/interfaces > /dev/null 2>&1 ")
 os.system("rm  /home/pi/interface.py > /dev/null 2>&1 ")
@@ -81,6 +83,24 @@ os.system("rm  /home/pi/pibeacon/beacon_ignoreUUID >	 /dev/null 2>&1")
 os.system("rm  /home/pi/pibeacon/beacon_minSignalCutoff >  /dev/null 2>&1")	
 os.system("rm  /home/pi/pibeacon/beacon_onlyTheseMAC >  /dev/null 2>&1")	 
 os.system("rm  /home/pi/pibeacon/beacon_signalDelta >  /dev/null 2>&1")
+os.system("rm -r /home/pi/pibeacon/logs                   >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/iPhoneBLE.py             >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/rejects.*                >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/logfile                  >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/logfile-1                >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/call-log                 >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/alive                    >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/master.log               >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/interface                >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/logfile                  >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/beaconloop               >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/errlog                   >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/getsensorvalues.py       >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/receiveGPIOcommands.py   >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/rennameMeTo_myoutput.py  >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/renameMyTo_mysensors.py  >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/INPUTRotata*             >/dev/null 2>&1")
+os.system("rm  /home/pi/pibeacon/INPUTRotateSwitchGrey.py >/dev/null 2>&1")
 
 time.sleep(50)
 ret = subprocess.Popen("ps -ef | grep master.py | grep -v grep", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]

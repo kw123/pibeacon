@@ -4525,21 +4525,16 @@ U.setLogging()
 
 readParams()
 
-if U.getIPNumber() > 0:
-	U.logger.log(30," getsensors no ip number  exiting ",)
-	time.sleep(10)
-	exit()
-
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
 NSleep= int(sensorRefreshSecs)
-if G.networkType  in G.useNetwork and U.getNetwork() == 1: 
+if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
 	if U.getIPNumber() > 0:
 		U.logger.log(30,"no ip number working, giving up")
 		time.sleep(10)
-		exit()
+
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
 
 

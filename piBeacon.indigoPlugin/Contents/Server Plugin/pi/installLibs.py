@@ -294,7 +294,7 @@ def doRead():
 	return inp, inRaw
 
 		
-def doReboot(tt,text,cmd=""):
+def doReboot(tt=1,text="",cmd=""):
 	global rebootCommand
 	U.logger.log(30,text)
 	print " rebooting / shutdown ", text
@@ -363,9 +363,9 @@ for ii in range(1,len(test)):
 if test[0] < 4.0 or	 doU:
 	U.logger.log(30, "==== tested installed version, doing upgrades")
 	if setupLibs(arguments):		
-		doReboot(2.,"==== will reboot now to activate sensor settings")
+		doReboot(tt=2., text="==== will reboot now to activate sensor settings")
 	if upgradeOpSys !="":
-		doReboot(2.,"==== will reboot now to activate new op-sys installs")
+		doReboot(tt=2., text="==== will reboot now to activate new op-sys installs")
 
 else:
 		U.logger.log(30,	 "==== libraries seem to be setup, no need for action")

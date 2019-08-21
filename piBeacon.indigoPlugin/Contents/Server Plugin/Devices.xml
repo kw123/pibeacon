@@ -481,11 +481,20 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sleep 2;sudo reboot" >
+			<Field id="ifNetworkChanges"   type="menu" defaultValue="restartMaster" >
+				<Label>...when network changes:</Label>
+				<List>
+					<Option value="doNothing" 	  > donothing</Option>
+					<Option value="restartMaster" > restart master</Option>
+					<Option value="reboot"        > reboot</Option>
+				</List>
+			</Field>
+
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall python;sudo sync;sleep 4; sudo reboot -f" >
 				<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
-					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
+					<Option value="sudo killall -9 python; sleep 4;sudo reboot" > sudo killall -9 python;sudo sync;sudo sleep 4;sudo reboot  .. default</Option>
+					<Option value="sudo killall -9 python; sudo sync;sleep 4; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 4; sudo reboot -f ..  in case the default hangs</Option>
 				</List>
 			</Field>
 
@@ -551,13 +560,37 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="40"    >40C = 104F</Option>
 					<Option value="45"    >45C = 113F</Option>
 					<Option value="50"    >50C = 122</Option>
-					<Option value="55"    >55C = 131F</Option>
-					<Option value="60"    >60C = 140F</Option>
+					<Option value="55"    >55C = 131F .. normal RPI-3 internal temp</Option>
+					<Option value="58"    >58C = 136F .. </Option>
+					<Option value="60"    >60C = 140F .. normal RPI-3 internal temp</Option>
+					<Option value="62"    >62C = 144F</Option>
 					<Option value="65"    >65C = 149F</Option>
+					<Option value="67"    >67C = 153F</Option>
 					<Option value="70"    >70C = 158F</Option>
 					<Option value="75"    >75C = 167F</Option>
 					<Option value="80"    >75C = 167F</Option>
 					<Option value="85"    >75C = 167F</Option>
+				</List>
+			 </Field>
+			<Field id="fanTempOffAtTempValue"	type="menu" defaultValue="4" tooltip="stop fan if temp is LT on temp -xx C" visibleBindingId="fanEnable" visibleBindingValue="0,1">	
+				<Label>.. Stop fan if temp &lt; Temp ON - xx:</Label>
+				<List>
+					<Option value="0"    >0C  = 0F</Option>
+					<Option value="1"    >1C  = 2F</Option>
+					<Option value="2"    >2C  = 4F</Option>
+					<Option value="3"    >3C  = 6F</Option>
+					<Option value="4"    >4C  = 8F</Option>
+					<Option value="5"    >5C  = 9F</Option>
+					<Option value="6"    >6C  = 11F</Option>
+					<Option value="7"    >7C  = 13F</Option>
+					<Option value="8"    >8C  = 15F</Option>
+					<Option value="9"    >9C  = 16F</Option>
+					<Option value="10"   >10C = 18F</Option>
+					<Option value="12"   >12C = 22F</Option>
+					<Option value="15"   >15C = 27F</Option>
+					<Option value="20"   >20C = 36F</Option>
+					<Option value="30"   >30C = 54F</Option>
+					<Option value="99"   >keep on once started</Option>
 				</List>
 			 </Field>
 
@@ -619,6 +652,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<List>
 					<Option value="ds1307" > DS1307</Option>
 					<Option value="ds3231" > DS3231</Option>
+					<Option value="manual" > install HW clock yourself</Option>
 					<Option value="0"      > no HW clock</Option>
 				</List>
 			</Field>
@@ -639,6 +673,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
+			<Field id="timeZone"   type="menu" defaultValue="99 -" tooltip="this timezone will  be active for this  PI" >
+			<Label>select the timezone for this RPI:</Label>
+					<List class="self" filter="" method="filterTimezones" dynamicReload="false"/>
+			</Field>
+
 			<Field id="labelemptybroadcasts" type="label" > <Label></Label></Field>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
 				<Label>...send broadcasts to other plugins for status up/x changes:...</Label>
@@ -649,7 +688,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</Field>
 
 
-			<Field id="sep-041" type="separator"/>
 			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info ">
 				<Label>== start web server on RPi @ ip#:80 to show status:</Label>
 				<List>
@@ -711,6 +749,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="label6"               type="label"  > 
 				<Label>EXPERTS ONLY!!---------------- </Label>
 			</Field>
+
 
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
 				<Label>... Ignore state of this beacon:</Label>
@@ -1404,11 +1443,20 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python; sleep 2;sudo reboot" >
+			<Field id="ifNetworkChanges"   type="menu" defaultValue="restartMaster" >
+				<Label>...when network changes:</Label>
+				<List>
+					<Option value="doNothing" 	  > donothing</Option>
+					<Option value="restartMaster" > restart master</Option>
+					<Option value="reboot"        > reboot</Option>
+				</List>
+			</Field>
+
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall python;sudo sync;sleep 4; sudo reboot -f" >
 				<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall -9 python; sleep 2;sudo reboot" > sudo killall -9 python; sleep 2;sudo reboot  .. default</Option>
-					<Option value="sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f" >sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f ..  in case the default hangs</Option>
+					<Option value="sudo killall python;sleep 4;sudo reboot" > sudo killall  python;sleep 4;sudo reboot  .. default</Option>
+					<Option value="sudo killall python;sudo sync;sleep 4; sudo reboot -f" >sudo killall  python;sudo sync;sleep 4; sudo reboot -f ..  in case the default hangs</Option>
 				</List>
 			</Field>
 
@@ -1472,9 +1520,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="40"    >40C = 104F</Option>
 					<Option value="45"    >45C = 113F</Option>
 					<Option value="50"    >50C = 122</Option>
-					<Option value="55"    >55C = 131F</Option>
-					<Option value="60"    >60C = 140F</Option>
+					<Option value="55"    >55C = 131F .. normal RPI-3 internal temp</Option>
+					<Option value="58"    >58C = 136F .. </Option>
+					<Option value="60"    >60C = 140F .. normal RPI-3 internal temp</Option>
+					<Option value="62"    >62C = 144F</Option>
 					<Option value="65"    >65C = 149F</Option>
+					<Option value="67"    >67C = 153F</Option>
 					<Option value="70"    >70C = 158F</Option>
 					<Option value="75"    >75C = 167F</Option>
 				</List>
@@ -1494,10 +1545,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="9"    >9C  = 16F</Option>
 					<Option value="10"   >10C = 18F</Option>
 					<Option value="12"   >12C = 22F</Option>
-					<Option value="15"   >15C = 27</Option>
+					<Option value="15"   >15C = 27F</Option>
 					<Option value="20"   >20C = 36F</Option>
 					<Option value="30"   >30C = 54F</Option>
-					<Option value="99"    >keep on once started</Option>
+					<Option value="99"   >keep on once started</Option>
 				</List>
 			 </Field>
 
@@ -1559,6 +1610,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<List>
 					<Option value="ds1307" > DS1307</Option>
 					<Option value="ds3231" > DS3231</Option>
+					<Option value="manual" > install HW clock yourself</Option>
 					<Option value="0"      > no HW clock</Option>
 				</List>
 			</Field>
@@ -1579,6 +1631,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
+			<Field id="timeZone"   type="menu" defaultValue="99 -" tooltip="this timezone will  be active for this  PI" >
+			<Label>select the timezone for this RPI:</Label>
+					<List class="self" filter="" method="filterTimezones" dynamicReload="false"/>
+			</Field>
 
 			<Field id="bluetoothONoff"   type="menu" defaultValue="on" tooltip="eg to reduce load, used command: sudo rfkill (un)block bluetooth ">
 				<Label> ... enable / disable bluetooth drivers:</Label>
@@ -1596,7 +1652,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="sep-031" type="separator"/>
 			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock">
 				<Label>== Enable RPI to run independently from Indigo for some special apps:</Label>
 				<List>
@@ -1605,8 +1660,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-
-			<Field id="sep-041" type="separator"/>
 			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info ">
 				<Label>== start web server on RPi @ ip#:80 to show status:</Label>
 				<List>
@@ -15843,12 +15896,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			<Field id="OrderOfMatrix" type="menu"  defaultValue="lrrl" hidden = "yes"><List><Option value="lrrl" >  </Option>	</List>  </Field>
             
 
-			<Field id="timeZone"   type="menu" defaultValue="6-/US/Central" tooltip="this timezone will also be active for the whole PI" visibleBindingId="expertMode" visibleBindingValue="true" >
-			<Label>select the timezone for this clock:</Label>
-					<List class="self" filter="" method="filterTimezones" dynamicReload="false"/>
-			</Field>
-
-
 			<Field id="signalPin" type="menu"     defaultValue="18"  visibleBindingId="expertMode" visibleBindingValue="true"> 
 			<Label>GPIO pin for signal:</Label>
 			<List>
@@ -16261,8 +16308,8 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 
 
-	<Device type="custom" id="sunDial">
-	<Name>OUTPUT-sunDial-Clock</Name>
+	<Device type="custom" id="sundial">
+	<Name>OUTPUT-sundial-Clock</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -16278,11 +16325,14 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Label>select rPi-server to which the device is connect to:</Label> 
 			</Field>
             
- 
-			<Field id="timeZone"   type="menu" defaultValue="6-/US/Central" tooltip="this timezone will also be active for the whole PI" >
-			<Label>select the timezone for this clock:</Label>
-					<List class="self" filter="" method="filterTimezones" dynamicReload="false"/>
+			<Field id="updateDownloadEnable"   type="menu" defaultValue="0" tooltip="allow direct downloads from KW server" >
+				<Label>enable auto update of RPI files:</Label> 
+				<List>
+					<Option value= "0">no</Option>
+					<Option value= "1"> yes</Option>
+				</List>
 			</Field>
+ 
 
 		</ConfigUI>
 

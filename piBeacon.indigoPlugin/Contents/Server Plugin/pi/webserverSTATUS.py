@@ -51,7 +51,7 @@ class GetHandler(BaseHTTPRequestHandler):
 		x('<head style="background-color:rgb(0, 50,50);"> ')
 		x('   <style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>')
 		x('</head>')
-		x('<body style="background-color:rgb(30, 0,30); color:rgb(150, 150,150); font-family:Courier;">')
+		x('<body style="background-color:rgb(30, 0,30); color:rgb(0, 255,0); font-family:Courier;">')
 		x(	'<b>'+data[0]+'</b><br>')
 		for nn in range(1,len(data)):
 			x(	data[nn] +'<br>')
@@ -68,9 +68,9 @@ try:
 	port		= int(sys.argv[2])
 	dataFile	= sys.argv[3]
 except: 
-	U.logger.log(50,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
+	U.logger.log(30,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
 	exit()
-U.logger.log(50,"Starting web server with IP#:{}:{}  dataFile file:{}".format(ipNumber, port, dataFile))
+U.logger.log(20,"Starting web server with IP#:{}:{}  dataFile file:{}".format(ipNumber, port, dataFile))
 
 pid =  os.getpid()
 

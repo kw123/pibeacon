@@ -18,22 +18,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 import matplotlib.cm as cm
+import logging.handlers
+global logging, logger
 
 
 #################################
-#################################
-def toLog(text):
-	global logfileName, logLevel, printON
-	if not logLevel: return 
-
-	l=open(logfileName,"a")
-	l.write( ( "{} AMG88          {} \n".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),text )).encode("utf8") )
-	l.close() 
-	if printON:
-		print text
    
 ####### main pgm / loop ############
-global logfileName, logLevel, printON
 
 tStart			  = time.time()
 pluginDir		  = sys.argv[0].split("makeCamera")[0]
@@ -49,10 +40,19 @@ imageFileDynamic  = imageParams["dynamic"]
 colorBar		  = imageParams["colorBar"].split(",") 
 compress		  = imageParams["compress"]	 =="1"
 
+logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
+logger = logging.getLogger(__name__)
+#
+if not logLevel:
+	logger.setLevel(logging.ERROR)
+else:
+	logger.setLevel(logging.DEBUG)
+
+
 # for debugging
 printON			  = False
 
-toLog("========= start @ {}  =========== ".format(datetime.datetime.now()) )
+logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 
 imageType = "dynamic"
 if "," in imageFileDynamic:
@@ -63,14 +63,14 @@ else:
 	if imageFileDynamic >0:
 		imageType= "dynamicWindow"
 	
-toLog("imageFile:           {}.png".format(imageOutfile) )
-toLog("Dynamic:             {}".format(imageFileDynamic) )
-toLog("imageType:           {}".format(imageType) )
-toLog("colorBar:            {}".format(colorBar) )
-toLog("numberOfPixels in x: {} ".format(numberOfPixels) )
-toLog("data:")
+logger.log(20,"imageFile:           {}.png".format(imageOutfile) )
+logger.log(20,"Dynamic:             {}".format(imageFileDynamic) )
+logger.log(20,"imageType:           {}".format(imageType) )
+logger.log(20,"colorBar:            {}".format(colorBar) )
+logger.log(20,"numberOfPixels in x: {} ".format(numberOfPixels) )
+logger.log(20,"data:")
 for kk in range(len(data)):
-	toLog( "{}".format(data[kk]).replace(" ","") )
+	logger.log(20, "{}".format(data[kk]).replace(" ","") )
 
 pixelsIndata = len(data)
 pltDpi = 256
@@ -88,7 +88,7 @@ elif imageType == "dynamicWindow":
 		
 	vmid = (mm-ma) /2. +mm
 	norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-	toLog( "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+	logger.log(20, "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
 cur_axes = plt.gca()
@@ -117,7 +117,7 @@ try:	pngSize = os.path.getsize((ifname).encode('utf8'))/1024.
 except: pnGsize = 0
 
 # compress file
-toLog( "file sizes: original file: {:5.1f}[KB]".format(pngSize) )
+logger.log(20, "file sizes: original file: {:5.1f}[KB]".format(pngSize) )
 if compress:
 	tt1= time.time()
 	cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+ifname+"'"
@@ -126,8 +126,8 @@ if compress:
 	except: compSize = 0
 	if os.path.isfile((ifname).encode('utf8')): os.remove((ifname).encode('utf8'))
 	os.rename((imageOutfile+".xxx").encode('utf8'),(imageOutfile+".png").encode('utf8') )
-	toLog( "          compressed file: {:5.1f}[KB];  time used {:4.2f}".format(compSize, (time.time()-tt1)) )
+	logger.log(20, "          compressed file: {:5.1f}[KB];  time used {:4.2f}".format(compSize, (time.time()-tt1)) )
 
-toLog("time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
+logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 sys.exit(0)
