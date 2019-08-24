@@ -1,4 +1,4 @@
-Added features / changes in v7.109.302 @ 2019-08-24
+Added features / changes in v7.109.303 @ 2019-08-24
 ===================================================
 
 1. added sensor Geiger counter support
