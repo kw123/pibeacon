@@ -379,6 +379,7 @@ def readNewParams(force=0):
 		time.sleep(1)
 
 		setACTIVEorKILL("INPUTgpio","INPUTgpio.py","")
+		setACTIVEorKILL("INPUTpulse","INPUTpulse.py","INPUTpulse")
 		setACTIVEorKILL("INPUTtouch","INPUTtouch.py","INPUTtouch")
 		setACTIVEorKILL("INPUTtouch16","INPUTtouch16.py","INPUTtouch16")
 		setACTIVEorKILL("INPUTRotarySwitchAbsolute","INPUTRotarySwitchAbsolute.py","INPUTRotarySwitchAbsolute")

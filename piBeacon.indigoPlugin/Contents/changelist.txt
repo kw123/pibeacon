@@ -1,3 +1,25 @@
+Added features / changes in v7.109.302 @ 2019-08-24
+===================================================
+
+1. added sensor Geiger counter support
+   use INPUT pulse sensor as input
+   set deadtime and bounce time to 0
+   you need to make sure that the RPI does not get 5V to GPIO.
+   tested w  Portable Handle Geiger Counter 0.01 μSv/h DIY Kit Nuclear Radiation Detector With Miller GM Tube Gamma Beta Ray Suit for Arduino
+   https://www.amazon.com/Portable-Counter-Nuclear-Radiation-Detector/dp/B0749KGY81/ref=sr_1_5?keywords=gamma+ray+detector&qid=1566533293&s=gateway&sr=8-5
+    standard cheap china detector.
+    with this detecor you need to bridge the P100 pins and use the headset output through a voltage devider (2x 4.7K Ohm) as GPIO input
+    The detector can be connected to +5V/ground from the RPi as power source.
+    As the signals are ~ 0.5 mSec wide a faster RPI (3 and higher) is recommended
+    in normal circumstance you should see ~ 1 count per second. w a radioactive source like:
+    Geiger Counter Radioactive Source Thorium Lantern Mantles  you should see ~ 10 counts/second
+    These detectors do not detect alpha particles. Mostly muons and some elctrons / gamma rays from cosmic particles  (muon) decays
+
+2. improved INPUTpulse sensor. now shows
+   counts per minute [cpm], frequency = counts per second [cps]
+   improved handling of fast and short pulses
+
+
 Added features / changes in v7.108.302 @ 2019-08-24
 ===================================================
 

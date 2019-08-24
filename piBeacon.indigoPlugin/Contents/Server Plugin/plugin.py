@@ -3749,7 +3749,7 @@ class Plugin(indigo.PluginBase):
 						self.rPiRestartCommand[pi] += "vcnl4010Distance,"
 
 				if "INPUTpulse" == typeId :
-					pinMappings = "gpio="+valuesDict[u"gpio"]+ "," +valuesDict[u"risingOrFalling"]+ " Edge, u" +valuesDict[u"deadTime"]+ "secs deadTime"
+					pinMappings = "gpio="+valuesDict[u"gpio"]+ "," +valuesDict[u"risingOrFalling"]+ " Edge, " +valuesDict[u"deadTime"]+ "secs deadTime"
 					valuesDict[u"description"] = pinMappings
 
 				self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
@@ -11951,31 +11951,57 @@ class Plugin(indigo.PluginBase):
  
 ####-------------------------------------------------------------------------####
 	def updatePULSE(self,dev,data,whichKeysToDisplay):
-		if self.decideMyLog(u"SensorData"): self.indiLOG.log(10, "updatePULSE "+unicode(data) )
-		try:
+		if self.decideMyLog(u"SensorData"): self.indiLOG.log(10, "updatePULSE {}".format(data))
+		props = dev.pluginProps
+		try:	
+			dd = datetime.datetime.now().strftime(_defaultDateStampFormat) 
+			countList = [(0,0),(0,0)] # is list of last counts up to 1 minutes, then pop out last
+			if "countList" in props: countList= json.loads(props["countList"])
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			if u"count" in data and unicode(dev.states[u"count"]) != unicode(data[u"count"]) :
-				try:	cOld = float(dev.states[u"count"])
-				except: cOld =0
-				try:	tOld = float(dev.states[u"lastCountSecs"])
-				except: tOld = time.time()-1
-				dT =  max(time.time()- tOld,1.)
-				freq = max(0,(float(data[u"count"]) - cOld) / dT)
-				self.setStatusCol( dev, u"count", data[u"count"], unicode(data[u"count"]), whichKeysToDisplay, "","", decimalPlaces = "" )
-				self.setStatusCol( dev, u"frequency", freq, (u"%.3f"%freq), whichKeysToDisplay, "","", decimalPlaces = 3 )
-				self.addToStatesUpdateDict(unicode(dev.id),"lastCountSecs",(u"%.1f"%time.time()))
+				cOld = float(dev.states[u"count"])
+
+				countList.append((time.time(),data[u"count"]))
+				if len(countList) >2:
+					dT =  max( countList[-1][0]- countList[-2][0],1.)
+					freq = max(0,(float(data[u"count"]) - cOld) / dT)
+				else:
+					freq = 0
+				ll = len(countList)
+				if ll >2:
+					for ii in range(ll):
+						if len(countList) <=2: break
+						if countList[0][0] < countList[-1][0] -60: countList.pop(0)
+						#self.indiLOG.log(10, "updatePULSE after time pop countList:{}".format(countList) )
+				ll = len(countList)
+				if ll >2:
+					for ii in range(ll):
+						#self.indiLOG.log(10, "updatePULSE bf count pop countList:{}".format(countList) )
+						if len(countList) <=2: break
+						if countList[0][1] >  countList[-1][1]: countList.pop(0)
+						else: break
+				self.setStatusCol( dev, u"count", data[u"count"], "{:.0f}[c]".format(data[u"count"]), whichKeysToDisplay, "","", decimalPlaces = "" )
+				if cOld <= data[u"count"]: 
+					countsPerMinute = 60 * ( countList[-1][1] - countList[0][1] ) /  max(1., ( countList[-1][0]  - countList[0][0]) )
+					#self.indiLOG.log(10, "updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data, time.time(), ( countList[-1][1] - countList[0][1] ), (countList[-1][0]  - countList[0][0]) , len(countList),  countList ) )
+					self.setStatusCol( dev, u"frequency", freq, u"{:.3f}[cps]".format(freq), whichKeysToDisplay, "","", decimalPlaces = 3 )
+					self.setStatusCol( dev, u"countsPerMinute", countsPerMinute, "{:.0f}[cpm]".format(countsPerMinute), whichKeysToDisplay, "","", decimalPlaces = 0 )
+					self.addToStatesUpdateDict(unicode(dev.id),"lastCountTime",dd)
+				props["countList"] = json.dumps(countList)
+				dev.replacePluginPropsOnServer(props)
+			else:
+				pass
 
 			if u"burst" in data and data[u"burst"] !=0 and data[u"burst"] !="":
-					self.addToStatesUpdateDict(unicode(dev.id),"lastBurstSecs",(u"%.1f"%time.time()))
-
-			if u"longEvent" in data and data[u"longEvent"] !=0 and data[u"longEvent"] !="":
-					self.addToStatesUpdateDict(unicode(dev.id),"lastLongEventSecs",(u"%.1f"%time.time()))
+					self.addToStatesUpdateDict(unicode(dev.id),"lastBurstTime",dd )
 
 			if u"continuous" in data and data[u"continuous"] !="":
 					if data[u"continuous"] > 0: 
-						self.addToStatesUpdateDict(unicode(dev.id),"lastContinuousEventSecs",(u"%.1f"%time.time()))
+						self.addToStatesUpdateDict(unicode(dev.id),"lastContinuousEventTime",dd )
+						self.addToStatesUpdateDict(unicode(dev.id),"lastContinuousEventStopTime","")
 					else: 
-						self.addToStatesUpdateDict(unicode(dev.id),"lastContinuousEventSecsStop",(u"%.1f"%time.time()))
+						if dev.states["lastContinuousEventStopTime"] == "":
+							self.addToStatesUpdateDict(unicode(dev.id),"lastContinuousEventStopTime",dd)
 
 		except Exception, e:
 			if len(unicode(e)) > 5 :
@@ -14202,6 +14228,8 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"deltaProximity")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"enableGesture")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"interruptGPIO")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"actionPulseBurst")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"actionPulseContinuous")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"actionLEFT")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"actionRIGHT")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"actionUP")
@@ -14246,9 +14274,7 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"minBurstsinTimeWindowToTrigger")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"inpType")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"bounceTime")
-							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeWindowForLongEvents")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeWindowForContinuousEvents")
-							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"pulseEveryXXsecsLongEvents")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"mac")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"type")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"updateIndigoTiming")

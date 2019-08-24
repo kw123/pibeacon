@@ -1013,7 +1013,7 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 			except:
 				os.system("rm "+G.homeDir+"timezone.set")
 
-		logger.log(30, u" iTZ:{},  iTZC:{}, newTZ:{},  summer:{},  winter:{},  currTZ:{}, deltaSW:{}, storediTZ:{}, storediTZr:{}, setNewStored:{},  setNewStoredC:{}, force:{}".format(iTZ, iTZC, newTZ, summer, winter, currTZ, deltaSW, storediTZ, storediTZr, setNewStored, setNewStoredC, force))
+		logger.log(10, u" iTZ:{},  iTZC:{}, newTZ:{},  summer:{},  winter:{},  currTZ:{}, deltaSW:{}, storediTZ:{}, storediTZr:{}, setNewStored:{},  setNewStoredC:{}, force:{}".format(iTZ, iTZC, newTZ, summer, winter, currTZ, deltaSW, storediTZ, storediTZr, setNewStored, setNewStoredC, force))
 
 		setNew = iTZ
 		if setNewStored < 30: setNew = setNewStored
