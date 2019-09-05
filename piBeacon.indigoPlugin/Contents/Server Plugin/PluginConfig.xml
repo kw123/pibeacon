@@ -662,64 +662,33 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
     <Field id="infoLabel97" type="label">  <Label>debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
 
-    <Field id="debugRPICALL"   type = "menu" defaultValue = "0"  >
-        <Label>Debug...                   ... (1) master level:</Label>
+    <Field id="debugRPI"   type = "menu" defaultValue = "-1"  >
+        <Label>Debug...which RPI:</Label>
         <List>
-            <Option value="3"   >get data +</Option>
-            <Option value="2"   >reboot restart etc +</Option>
-            <Option value="1"   >http, ping, .. to server</Option>
-            <Option value="0"   >min</Option>
+            <Option value="-1" >off</Option>
+			<Option value="0"  >0</Option>
+			<Option value="1"  >1</Option>
+			<Option value="2"  >2</Option>
+			<Option value="3"  >3</Option>
+			<Option value="4"  >4</Option>
+			<Option value="5"  >5</Option>
+			<Option value="6"  >6</Option>
+			<Option value="7"  >7</Option>
+			<Option value="8"  >8</Option>
+			<Option value="9"  >9</Option>
+			<Option value="10" >10</Option>
+			<Option value="11" >11</Option>
+			<Option value="12" >12</Option>
+			<Option value="13" >13</Option>
+			<Option value="14" >14</Option>
+			<Option value="15" >15</Option>
+			<Option value="16" >16</Option>
+			<Option value="17" >17</Option>
+			<Option value="18" >18</Option>
+			<Option value="19" >19</Option>
         </List>
     </Field>
-
-    <Field id="debugRPIBEACON"   type = "menu" defaultValue = "0"   >
-        <Label>    ... (2) beacon PGM level:</Label>
-        <List>
-            <Option value="3"   >details +</Option>
-            <Option value="2"   >get data +</Option>
-            <Option value="1"   >http to server</Option>
-            <Option value="0"   >min</Option>
-        </List>
-    </Field>
-
-    <Field id="debugRPISENSOR"   type = "menu" defaultValue = "0"  >
-        <Label>    ... (3) sensor PGM level:</Label>
-        <List>
-            <Option value="3"   >details +</Option>
-            <Option value="2"   >get data +</Option>
-            <Option value="1"   >http to server</Option>
-            <Option value="0"   >min</Option>
-        </List>
-    </Field>
-
-    <Field id="debugRPIOUTPUT"   type = "menu" defaultValue = "0"  >
-        <Label>     ... (4) output PGM level:</Label>
-        <List>
-            <Option value="3"   >details +</Option>
-            <Option value="2"   >get data +</Option>
-            <Option value="0"   >min</Option>
-        </List>
-    </Field>
-
-    <Field id="debugRPIBLE"   type = "menu" defaultValue = "0"  >
-        <Label>    ... (5) BLE PGM level:</Label>
-        <List>
-            <Option value="3"   >get data details +</Option>
-            <Option value="2"   >get data +</Option>
-            <Option value="1"   >http to server</Option>
-            <Option value="0"   >min</Option>
-        </List>
-    </Field>
-
-    <Field id="debugRPImystuff"   type = "menu" defaultValue = "0"  >
-        <Label>    ... (6) myprogram.py...   PGM level:</Label>
-        <List>
-            <Option value="3"   >get data details +</Option>
-            <Option value="2"   >get data</Option>
-            <Option value="0"   >min</Option>
-        </List>
-    </Field>
-     
+   
     <Field id="infoLabel99" type="label"> <Label>debug level for plugin:</Label>  </Field>
         
     <Field    id="debugLogic"         type="checkbox"  defaultValue="false"       tooltip=""> <Label> Debug...                   ... (1) Logic:</Label>  </Field>

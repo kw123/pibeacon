@@ -19,7 +19,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "as3935"
-G.debug = 0
 
 
 class RPi_AS3935:
@@ -279,7 +278,6 @@ def readParams():
 		  
 		if "sensorList"			in inp:	 sensorList=			 (inp["sensorList"])
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 		 
  
 		if sensor not in sensors:
@@ -557,7 +555,6 @@ lastMeasurement				= time.time()
 oldRaw						= ""
 lastRead					= 0
 minSendDelta				= 5.
-G.debug						= 2
 loopCount					= 0
 sensorRefreshSecs			= 91
 sensorList					= []
@@ -627,5 +624,7 @@ while True:
 		os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
 
 
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 
 

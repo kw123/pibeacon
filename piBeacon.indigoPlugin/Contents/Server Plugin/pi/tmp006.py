@@ -12,7 +12,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "tmp006"
-G.debug = 0
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
 #
@@ -369,7 +368,7 @@ def readParams():
 		  
 		if "sensorList"			in inp:	 sensorList=			 (inp["sensorList"])
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
 		
  
 		if sensor not in sensors:
@@ -471,7 +470,6 @@ oldRaw						=""
 lastRead					= 0
 
 minSendDelta				= 5.
-G.debug						= 5
 loopCount					= 0
 sensorRefreshSecs			= 60
 NSleep						= 100
@@ -569,4 +567,6 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)

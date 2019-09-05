@@ -11,8 +11,10 @@ if len(inp) !=2: exit()
 pwmRange = int(inp[0])
 freq 	 = int(inp[1])
 
-pins = [26,19,13]
+pins = [22,19,13]
 for pin in pins:
+	PIGPIO.set_mode(pin, pigpio.OUTPUT)
+	PIGPIO.set_PWM_frequency(pin, freq)
 	PIGPIO.set_PWM_frequency(pin, freq)
 	PIGPIO.set_PWM_range(pin, pwmRange)
 	PIGPIO.set_PWM_dutycycle(pin, 0)

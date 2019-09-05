@@ -51,7 +51,6 @@ def readParams():
 		oldRaw	   = inpRaw
 		U.getGlobalParams(inp)
 		 
-		if "debugRPI"				in inp:	 G.debug=		  int(inp["debugRPI"]["debugRPIOUTPUT"])
 		if "useRTC"					in inp:	 useRTC=			 (inp["useRTC"])
 		if "output"					in inp:	 output=			 (inp["output"])
 		if "minLightNotOff"			in inp:	 minLightNotOff=  int(inp["minLightNotOff"])

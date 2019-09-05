@@ -1230,7 +1230,6 @@ def readParams():
 		lastRead	= ttt
 		newRead		= True
 			
-		if u"debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIOUTPUT"])
 		if "output"				in inp:	 
 			output=				  (inp["output"])
 			if "display" in output:

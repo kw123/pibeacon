@@ -37,7 +37,6 @@ def readParams():
         oldRaw     = inpRaw
 
         U.getGlobalParams(inp)
-        if u"debugRPI"          in inp:  G.debug=              int(inp["debugRPI"]["debugRPIOUTPUT"])
 
 
         device = "setTEA5767"

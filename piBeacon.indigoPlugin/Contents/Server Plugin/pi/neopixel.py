@@ -678,7 +678,6 @@ def readParams(pgmType="neopixel"):
 		lastDMAchannel			= DMAchannel
 		lastfrequency			= frequency
 		
-		if u"debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIOUTPUT"])
 		if "output"				in inp:	 
 			output=				  (inp["output"])
 			if pgmType in output:

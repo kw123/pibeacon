@@ -57,7 +57,6 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp : sensors =				(inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 		if oldSensors == sensors: return 
 
 		restart = False
@@ -612,3 +611,5 @@ while True:
 		time.sleep(5.)
 
 stopProgram()
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass

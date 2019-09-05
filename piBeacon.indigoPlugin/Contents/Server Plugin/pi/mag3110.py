@@ -15,7 +15,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "mag3110"
-G.debug = 0
 
 
 # result in micro Tesla per bit
@@ -145,7 +144,7 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
  
 		if sensor not in sensors:
 			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
@@ -216,7 +215,6 @@ global oldRaw,	lastRead
 oldRaw					= ""
 lastRead				= 0
 
-G.debug						= 5
 loopCount					= 0
 NSleep						= 100
 sensors						= {}
@@ -282,4 +280,6 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)

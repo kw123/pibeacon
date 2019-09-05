@@ -11,7 +11,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "l3g4200"
-G.debug = 0
 
 
 # ===========================================================================
@@ -137,7 +136,7 @@ def readParams():
 		U.getGlobalParams(inp)
 		  
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
 		
  
 		if sensor not in sensors:
@@ -202,7 +201,6 @@ oldRaw					= ""
 lastRead				= 0
 
 badSensor					= 0
-G.debug						= 5
 loopCount					= 0
 NSleep						= 100
 sensors						= {}
@@ -261,4 +259,6 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)

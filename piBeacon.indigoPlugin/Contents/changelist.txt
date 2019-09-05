@@ -1,4 +1,42 @@
-Added features / changes in v7.109.303 @ 2019-08-24
+Added features / changes in v7.109.305 @ 2019-09-05
+===================================================
+
+1.  added test if python-serial is installed in master.py
+
+2.  change the check if userid/password is setup 
+
+3. change bug level setup for rpi, now select which PRI to debug, not which area.
+
+4. fixed several smal formatting bugs 
+
+5. Option to enable setting wifi supplicant info on your RPI w/o terminal and keyboard attached to the RPI
+    at FIRST launch of new SSD, before any connection to RPI is made.
+    At start Master.py checks if GPIO#26 (lower left pins) is low = bridge grnd to GPIO#26
+    An adhoc wifi server: "clock"  ip# 192.168.1.254 is started
+    Connect laptop to that wifi server w safari  @ 192.168.1.254:8010 
+         there you can set SSID and passwd of your home network (also timezone)
+    Or you can ssh pi@192.168.1.254 pwd = pibeacon and manually configure files in commandline mode
+    FIRST:  select "clock" wifi
+            you must attach to that wifi in network prefs / advanced / tcpip:  
+            set your dhcp to manual and assign an IPv4 #(eg 192.168.1.5)
+            set subnetmask to 255.255.255.0; router 192.168.1.254
+            click ok  ... apply
+    This is helpfull for a RPI-0W. You can then set your wifi sidd and password and the RPI-0W will connect to your home wifi network after reboot
+    ==> this is only an option with a new SSD image > 2019-09-xx
+
+
+
+Added features / changes in v7.109.304 @ 2019-08-24
+===================================================
+
+1. Now all sending RPI-> indigo is in independed threads. 
+   This has the advatange that the sensor programs do not have to wait
+   until the sending is finished, but can continue to eg count pulse etc.
+
+2. improved the management of the pulse sensor on when to send updates.
+
+
+Added features / changes in v7.109.302 @ 2019-08-24
 ===================================================
 
 1. added sensor Geiger counter support

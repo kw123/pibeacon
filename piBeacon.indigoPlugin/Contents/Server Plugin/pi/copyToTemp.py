@@ -14,10 +14,10 @@ sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import piBeaconUtils as U
 U.setLogging()
+G.program 		= "copyToTemp"
 
 
 if __name__ == "__main__":
-	G.program 		= "copyToTemp"
 	timeLastFile	= 0
 	myPID			= str(os.getpid())
 	U.killOldPgm(myPID, G.program+".py")

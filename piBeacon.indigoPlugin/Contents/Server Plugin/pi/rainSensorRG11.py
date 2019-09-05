@@ -44,7 +44,7 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp : sensors =				(inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
 
 		if sensor not in sensors:
 			U.logger.log(30,	"no "+ G.program+" sensor defined, exiting")
@@ -599,12 +599,13 @@ U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are sti
 GPIO.setwarnings(False)
 
 # check if everything is installed
-for i in range(100):
-	if not setupSensors(): 
-		time.sleep(10)
-		if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
-	else:
-		break	 
+if False:
+	for i in range(100):
+		if not setupSensors(): 
+			time.sleep(10)
+			if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
+		else:
+			break	 
 if U.getIPNumber() > 0:
 	U.logger.log(30," sensors no ip number  exiting ")
 	time.sleep(10)
@@ -678,5 +679,7 @@ while True:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 
 sys.exit(0)

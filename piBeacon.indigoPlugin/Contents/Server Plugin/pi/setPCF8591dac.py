@@ -13,7 +13,6 @@ sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
 G.program = "setPCF8591dac"
-
 devType = "i2cPCF8591dac"
 
 ###########
@@ -23,11 +22,7 @@ def readParams():
     global allowedGPIOoutputPins
     inp,inpRaw = U.doRead()
     if inp == "": return
-    try:
-        if u"debugRPI"          in inp:  G.debug=             int(inp["debugRPI"]["debugRPIOUTPUT"])
-
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.getGlobalParams(inp)
          
 
 ######### main ######

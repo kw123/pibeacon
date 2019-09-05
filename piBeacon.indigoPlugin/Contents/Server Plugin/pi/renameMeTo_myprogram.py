@@ -27,10 +27,7 @@ G.program = "myprogram"
 def readParams():
     inp,inpRaw = U.doRead()
     if inp == "": return
-    try:
-        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPImystuff"])
-    except:
-        pass
+	U.getGlobalParams(inp)
 
 
 ### example how to read sensor and send it back to getsensorvalues

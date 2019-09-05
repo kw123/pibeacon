@@ -49,7 +49,6 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp : sensors =				(inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 
 		if sensor not in sensors:
 			U.logger.log(10,	"no "+ G.program+" sensor defined, exiting")
@@ -60,16 +59,16 @@ def readParams():
 		found ={str(ii):{"RISING":0,"FALLING":0,"BOTH":0 } for ii in range(100)}
 		for devId in sens:
 			sss= sens[devId]
-			if "gpio"							not in sss: continue
-			if "deadTime"						not in sss: continue
-			if "risingOrFalling"				not in sss: continue
-			if "minSendDelta"					not in sss: continue
-			if "bounceTime"						not in sss: continue
-			if "deadTimeBurst"					not in sss: continue
-			if "inpType"						not in sss: continue
-			if "timeWindowForBursts"			not in sss: continue
-			if "timeWindowForContinuousEvents"	not in sss: continue
-			if "minBurstsinTimeWindowToTrigger" not in sss: continue
+			if "gpio"									not in sss: continue
+			if "deadTime"								not in sss: continue
+			if "risingOrFalling"						not in sss: continue
+			if "minSendDelta"							not in sss: continue
+			if "bounceTime"								not in sss: continue
+			if "deadTimeBurst"							not in sss: continue
+			if "inpType"								not in sss: continue
+			if "timeWindowForBursts"					not in sss: continue
+			if "timeWindowForContinuousEvents"			not in sss: continue
+			if "minEventsinTimeWindowToTriggerBursts" 	not in sss: continue
 
 			gpio						= sss["gpio"]
 			risingOrFalling				= sss["risingOrFalling"]
@@ -90,8 +89,8 @@ def readParams():
 			try:	timeWindowForBursts = int(sss["timeWindowForBursts"])
 			except: timeWindowForBursts = -1
 
-			try:	minBurstsinTimeWindowToTrigger = int(sss["minBurstsinTimeWindowToTrigger"])
-			except: minBurstsinTimeWindowToTrigger = -1
+			try:	minEventsinTimeWindowToTriggerBursts = int(sss["minEventsinTimeWindowToTriggerBursts"])
+			except: minEventsinTimeWindowToTriggerBursts = -1
 
 			try:	timeWindowForContinuousEvents = float(sss["timeWindowForContinuousEvents"])
 			except: timeWindowForContinuousEvents = -1
@@ -112,12 +111,13 @@ def readParams():
 					GPIOdict[gpio]["deadTimeBurst"]							= deadTimeBurst
 					GPIOdict[gpio]["devId"]									= devId
 					GPIOdict[gpio]["minSendDelta"]							= minSendDelta
-					GPIOdict[gpio]["minBurstsinTimeWindowToTrigger"]		= minBurstsinTimeWindowToTrigger
+					GPIOdict[gpio]["minEventsinTimeWindowToTriggerBursts"]	= minEventsinTimeWindowToTriggerBursts
 					GPIOdict[gpio]["timeWindowForBursts"]					= timeWindowForBursts
 					GPIOdict[gpio]["timeWindowForContinuousEvents"]			= timeWindowForContinuousEvents
 					GPIOdict[gpio]["lastsendBurst"]							= 0
 					GPIOdict[gpio]["lastsendCount"]							= 0
 					GPIOdict[gpio]["lastsendContinuousEvent"]				= 0
+					GPIOdict[gpio]["lastsendContinuousEventEND"]			= 0
 					if inpType != GPIOdict[gpio]["inpType"]:
 						if	 inpType == "open":
 							GPIO.setup(int(gpio), GPIO.IN)
@@ -139,11 +139,12 @@ def readParams():
 								  "risingOrFalling":				risingOrFalling,
 								  "timeWindowForBursts":			timeWindowForBursts,
 								  "timeWindowForContinuousEvents":	timeWindowForContinuousEvents,
-								  "minBurstsinTimeWindowToTrigger": minBurstsinTimeWindowToTrigger,
+								  "minEventsinTimeWindowToTriggerBursts": minEventsinTimeWindowToTriggerBursts,
 								  "lastSignal":						0,
 								  "lastsendCount":					0,
 								  "lastsendBurst":					0,
 								  "lastsendContinuousEvent":		0,
+								  "lastsendContinuousEventEND":		0,
 								  "count":							0 }
 				print  GPIOdict				  
 				if	 inpType == "open":
@@ -180,11 +181,12 @@ def readParams():
 								  "risingOrFalling":				risingOrFalling,
 								  "timeWindowForBursts":			timeWindowForBursts,
 								  "timeWindowForContinuousEvents":	timeWindowForContinuousEvents,
-								  "minBurstsinTimeWindowToTrigger": minBurstsinTimeWindowToTrigger,
+								  "minEventsinTimeWindowToTriggerBursts": minEventsinTimeWindowToTriggerBursts,
 								  "lastSignal":						0,
 								  "lastsendCount":					0,
 								  "lastsendBurst":					0,
 								  "lastsendContinuousEvent":		0,
+								  "lastsendContinuousEventEND":		0,
 								  "count":							0 }
 				print  ""				
 				if	 inpType == "open":
@@ -237,21 +239,6 @@ def readParams():
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				
 
-def setupSensors():
-
-		U.logger.log(10, "starting setup GPIOs ")
-
-		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if len(ret[1]) > 0:
-			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
-			return False
-
-		ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if len(ret[1]) > 0:
-			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
-			return False
-
-		return True
  
  
 def FALLING(gpio):	
@@ -269,7 +256,7 @@ def fillGPIOdict(gpio,risingOrFalling):
 	ggg = GPIOdict[str(gpio)]
 	tt= time.time()
 	countChanged = False
-	#U.logger.log(30,"{} edge on gpio: {}".format(risingOrFalling, gpio))
+	U.logger.log(10,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
 	if tt- ggg["lastSignal"] > ggg["deadTime"]:	 
 		ggg["count"]+=1
 		INPUTcount[int(gpio)]+=1
@@ -277,16 +264,16 @@ def fillGPIOdict(gpio,risingOrFalling):
 		U.logger.log(10,"{} edge on gpio: {},	count: {}  timest: {:6.1f}, lastSendC: {:6.1f}, minSendDelta:{}".format(risingOrFalling, gpio, ggg["count"], tt, ggg["lastsendCount"], ggg["minSendDelta"]))
 		countChanged = True
 
-	###############	 this EVENTtype requires a minBurstsinTimeWindowToTrigger  in timeWindowForBursts to trigger ###
+	###############	 this EVENTtype requires a minEventsinTimeWindowToTriggerBursts  in timeWindowForBursts to trigger ###
 	burst=0
 	bbb =  BURSTS[gpio]
-	if ggg["minBurstsinTimeWindowToTrigger"] > 0:
+	if ggg["minEventsinTimeWindowToTriggerBursts"] > 0:
 		ll	=len(bbb)
 		for kk in range(ll):
 			ii = ll - kk -1
 			if tt-bbb[ii][0] > ggg["timeWindowForBursts"]: 
 				del bbb[ii]
-		U.logger.log(20, "BURST: "+str(ll)+""+str(tt)+"	 "+ str(bbb)+" "+str(ggg["timeWindowForBursts"] ))
+		U.logger.log(10, "BURST: "+str(ll)+""+str(tt)+"	 "+ str(bbb)+" "+str(ggg["timeWindowForBursts"] ))
 		ll	=len(bbb)
 		if ll == 0	or (tt - bbb[-1][0]  > ggg["deadTimeBurst"]): 
 			bbb.append([tt,1])
@@ -296,7 +283,7 @@ def fillGPIOdict(gpio,risingOrFalling):
 			for kk in range(ll):
 					ii = ll - kk -1
 					bbb[ii][1]+=1
-					if bbb[ii][1] >= ggg["minBurstsinTimeWindowToTrigger"]:
+					if bbb[ii][1] >= ggg["minEventsinTimeWindowToTriggerBursts"]:
 						U.logger.log(10, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpio+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
 						burst	= tt
 						delupto = ii-1
@@ -305,7 +292,7 @@ def fillGPIOdict(gpio,risingOrFalling):
 			if delupto >0:
 				for kk in range(delupto):
 					del bbb[delupto - kk -1]
-
+	if burst ==0:  ggg["lastsendBurst"] = 0
 
 
 	###############	 this EVENTtype requires a pulse to start the CONT event, will extend event if new pulse arrives before timeWindowForContinuousEvents is over  ###
@@ -313,12 +300,13 @@ def fillGPIOdict(gpio,risingOrFalling):
 	if ggg["timeWindowForContinuousEvents"] > 0:
 		if contEVENT[gpio] == -1 or contEVENT[gpio] == 0:  # new event 
 			cEVENTtt = tt
-		elif  contEVENT[gpio] > 0 and tt - contEVENT[gpio]	> ggg["timeWindowForContinuousEvents"]:
+		elif  contEVENT[gpio] > 0 and tt - contEVENT[gpio] > ggg["timeWindowForContinuousEvents"]:
 			# was expired send off then send ON 
-			data = {"sensors":{sensor:{ggg["devId"]:{}}}}
-			data["sensors"][sensor][ggg["devId"]]["continuous"]		 = -1
-			ggg["lastsendContinuousEvent"] = tt-20000
-			cEVENTtt = tt
+			if (tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]): 
+				data = {"sensors":{sensor:{ggg["devId"]:{}}}}
+				data["sensors"][sensor][ggg["devId"]]["continuous"]		 = -1
+				ggg["lastsendContinuousEventEND"] = tt
+				ggg["lastsendContinuousEvent"] = 0
 		#  or just conti nue old c event = just update contEVENT not need to send data 
 		contEVENT[gpio] =  tt
 		U.logger.log(10, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
@@ -326,7 +314,7 @@ def fillGPIOdict(gpio,risingOrFalling):
 	
 	data = {"sensors":{sensor:{ggg["devId"]:{}}}}
 
-	if (tt - ggg["lastsendBurst"] > ggg["minSendDelta"]) and  burst > 0 :  
+	if (tt - ggg["lastsendBurst"] > ggg["minSendDelta"]) and burst > 0 :  
 			data["sensors"][sensor][ggg["devId"]]["burst"]		= int(burst)
 			data["sensors"][sensor][ggg["devId"]]["count"]		= ggg["count"]
 			ggg["lastsendBurst"] = tt
@@ -334,10 +322,11 @@ def fillGPIOdict(gpio,risingOrFalling):
 			if burst >0:
 				lastGPIO= U.doActions(data["sensors"],lastGPIO, sensors, sensor,theAction="PulseBurst")
 
-	if (tt - ggg["lastsendContinuousEvent"] > ggg["minSendDelta"]) and	cEVENTtt > 0 :	
+	if (tt - ggg["lastsendContinuousEvent"] > ggg["minSendDelta"]) and cEVENTtt > 0 :	
 			data["sensors"][sensor][ggg["devId"]]["continuous"]		 = int(cEVENTtt)
 			data["sensors"][sensor][ggg["devId"]]["count"]			 = ggg["count"]
 			ggg["lastsendContinuousEvent"] = tt
+			ggg["lastsendContinuousEventEND"] = 0
 			ggg["lastsendCount"] = tt
 			if cEVENTtt >0:
 				lastGPIO= U.doActions(data["sensors"],lastGPIO, sensors, sensor,theAction="PulseContinuous")
@@ -359,11 +348,14 @@ def resetContinuousEvents():
 			igpio= int(gpio)
 			if	contEVENT[igpio] > 0:
 				if	tt - contEVENT[igpio]  > ggg["timeWindowForContinuousEvents"]:
-					contEVENT[igpio] =	-1
-					# was expired send off then send ON 
-					data = {"sensors":{sensor:{ggg["devId"]:{}}}}
-					data["sensors"][sensor][ggg["devId"]]["continuous"] = -1
-					U.sendURL(data,wait=False)
+					if (tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]): 
+						contEVENT[igpio] =	-1
+						# was expired send off then send ON 
+						data = {"sensors":{sensor:{ggg["devId"]:{}}}}
+						data["sensors"][sensor][ggg["devId"]]["continuous"] = -1
+						U.sendURL(data,wait=False)
+						ggg["lastsendContinuousEventEND"] = tt
+						ggg["lastsendContinuousEvent"] = 0
 
   
 def execMain():
@@ -383,8 +375,6 @@ def execMain():
 	BURSTS			  = [[]	  for i in range(50)]
 	contEVENT		  = [0	  for i in range(50)]
 	lastGPIO		  = [""	  for ii in range(50)]
-	#i2c pins:		  = gpio14 &15
-	# 1 wire		  = gpio4
 	oldParams		  = ""
 	GPIOdict		  = {}
 	restart			  = False
@@ -393,10 +383,6 @@ def execMain():
 
 	U.setLogging()
 
-
-	if not setupSensors():
-		print " gpio are not setup"
-		exit()
 
 
 	myPID		= str(os.getpid())
@@ -413,14 +399,6 @@ def execMain():
 
 
 
-	# check if everything is installed
-	for i in range(100):
-		if not setupSensors(): 
-			time.sleep(10)
-			if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
-		else:
-			break	 
-		
 
 	G.lastAliveSend		= time.time()
 	# set alive file at startup
@@ -464,7 +442,7 @@ def execMain():
 					if restart:
 						U.restartMyself(param="", reason=" new definitions")
 
-				if time.time() - lastEcho  > 300:
+				if time.time() - lastEcho  > 180:
 						lastEcho = time.time()
 						U.echoLastAlive(G.program)
 			
@@ -487,4 +465,7 @@ def execMain():
 			time.sleep(5.)
 
 execMain()
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
+
 sys.exit(0)

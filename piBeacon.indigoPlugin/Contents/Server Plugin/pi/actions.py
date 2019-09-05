@@ -29,7 +29,6 @@ def readParams():
 		if inpRaw == oldParams: return
 		oldParams = inpRaw
 
-		if u"debugACTION"		in inp:	 G.debug =		 int(inp["debugRPI"]["debugACTION"])
 		if "actions"			in inp : actions =			(inp["actions"])
 
 
@@ -52,7 +51,6 @@ global oldParams,actions
 
 
 ###################### constants #################
-G.debug			   = 1
 G.program = "actions"
 
 oldParams		 = ""

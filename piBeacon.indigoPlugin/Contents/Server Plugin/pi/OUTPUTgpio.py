@@ -38,7 +38,6 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "output"			in inp : output =				(inp["output"])
-		if "debugRPI"		in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIOUTPUT"])
 
 
 		restart = False
@@ -145,5 +144,7 @@ while True:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 
 sys.exit(0)

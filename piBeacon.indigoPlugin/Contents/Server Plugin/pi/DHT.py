@@ -136,7 +136,6 @@ def readParams():
 
 
 		U.getGlobalParams(inp)
-		if "debugRPI"			  in inp:  G.debug=				int(inp["debugRPI"]["debugRPISENSOR"])
 		if "output"				  in inp: output=				   (inp["output"])
 		if "tempUnits"			  in inp: tempUnits=			   (inp["tempUnits"])
 		if "pressureUnits"		  in inp: pressureUnits=		   (inp["pressureUnits"])

@@ -301,7 +301,6 @@ def readParams(init):
 	global acceptNewiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalCutoff, acceptJunkBeacons
 	global oldRaw,	lastRead
 	if init:
-		G.debug			  = 2
 		collectMsgs		= 10  # in parse loop collect how many messages max	  ========	all max are an "OR" : if one hits it stops
 		sendAfterSeconds= 60  # collect for xx seconds then send msg
 		loopMaxCallBLE	= 900 # max loop count	in main pgm to collect msgs
@@ -328,7 +327,6 @@ def readParams(init):
 			sys.exit(3)
 		U.getGlobalParams(inp)
 
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIBEACON"])
 		if "rebootSeconds"		in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
 		if "enableRebootCheck"	in inp:	 enableRebootCheck=		 (inp["enableRebootCheck"])
 		if "sendAfterSeconds"	in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
@@ -745,7 +743,6 @@ acceptJunkBeacons	= False
 oldRaw					= ""
 lastRead				= 0
 minSignalCutoff		= {}
-G.debug				= 2
 acceptNewiBeacons	= -999
 enableiBeacons		= "1"
 G.authentication	= "digest"
@@ -1065,7 +1062,6 @@ try:
 				U.restartMyself(param="", reason="bad BLE (2),restart")
 			if restartCount > 1:
 				U.logger.log(30, " restarting BLE stack due to no messages "+G.program)
-				G.debug = 0
 				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)
 				maxLoopCount = 6000
 		else:
@@ -1076,6 +1072,8 @@ except	Exception, e:
 	U.logger.log(30, "  exiting loop due to error\n restarting "+G.program)
 	time.sleep(20)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 
 U.logger.log(30,"end of beaconloop.py ") 
 sys.exit(0)		   

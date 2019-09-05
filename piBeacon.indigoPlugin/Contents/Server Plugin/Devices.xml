@@ -600,6 +600,18 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			 </Field>
 
 
+			<Field id="labelPIGPIO"              type="label"> <Label></Label></Field>
+			<Field id="labelPIGPIOfirst"         type="label"> 
+				<Label>== use GPIO or PIGPIO for "PWM" outputs:...</Label>
+			</Field>
+			<Field id="typeForPWM"   type="menu" defaultValue="GPIO">
+				<Label>..set GPIO or PIGIO active on THIS RPI:</Label>
+				<List>
+					<Option value="GPIO"     >GPIO</Option>
+					<Option value="PIGPIO"   >PIGPIO uses more CPU, more stable= no flickring of LED </Option>
+				</List>
+			</Field>
+
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
 			<Field id="labelGPIOfirst"               type="label"> 
 				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
@@ -11217,10 +11229,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</List>
 			</Field>
 
-			<Field id="minBurstsinTimeWindowToTrigger" type="menu"     defaultValue="4" hidden="no" > 
+			<Field id="minEventsinTimeWindowToTriggerBursts" type="menu"     defaultValue="-1" hidden="no" > 
 			<Label>min number of pulses in time window to trigger BURST event:</Label>
 			<List>
-				<Option value="x"  > off, do not use </Option>
+				<Option value="-1"  > off, do not use </Option>
 				<Option value="1"  > 1  events </Option>
 				<Option value="2"  > 2  events </Option>
 				<Option value="3"  > 3  events </Option>
@@ -11235,7 +11247,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
             
 
-			<Field id="timeWindowForBursts" type="menu"     defaultValue="4" hidden="no"  visibleBindingId="minBurstsinTimeWindowToTrigger"    visibleBindingValue="0.2,0.5,1,2,3,4,6,8,10,12,15,20"> 
+			<Field id="timeWindowForBursts" type="menu"     defaultValue="4" hidden="no"  visibleBindingId="minEventsinTimeWindowToTriggerBursts"    visibleBindingValue="1,2,3,4,6,8,10,12,15,20"> 
 			<Label>time window for pulses to trigger Burst event:</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
@@ -11254,7 +11266,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 		<Field id="infoLabelCONT" type="label"> 			<Label>==CONTINUOUS event setup:  -------------</Label> </Field>
-			<Field id="timeWindowForContinuousEvents" type="menu"     defaultValue="4" hidden="no" tooltip="at least one event in time window to keep event alive"> 
+			<Field id="timeWindowForContinuousEvents" type="menu"     defaultValue="-1" hidden="no" tooltip="at least one event in time window to keep event alive"> 
 			<Label>time window for pulses to keep continuousEvent alive:</Label>
 			<List>
 				<Option value="0.1" > 0.1 secs</Option>
@@ -11274,6 +11286,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="12"  > 12  secs</Option>
 				<Option value="15"  > 15  secs</Option>
 				<Option value="20"  > 20  secs</Option>
+				<Option value="-1"  > off</Option>
 			</List>
 			</Field>
              
@@ -11304,8 +11317,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
 			<List>
 				<Option value="count"              >count</Option>
-				<Option value="frequency"          >frequency</Option>
-				<Option value="countsPerMinute"     >countsPerMinute</Option>
+				<Option value="countsPerSecond"    >countsPerSecond = frequency</Option>
+				<Option value="countsPerMinute"    >countsPerMinute</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
 			</Field>
@@ -11359,10 +11372,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>count</TriggerLabel>
 				<ControlPageLabel>count</ControlPageLabel>
 			</State>
-			<State id="frequency">
+			<State id="countsPerSecond">
 				<ValueType>String</ValueType>
-				<TriggerLabel>frequency</TriggerLabel>
-				<ControlPageLabel>frequency</ControlPageLabel>
+				<TriggerLabel>countsPerSecond</TriggerLabel>
+				<ControlPageLabel>countsPerSecond</ControlPageLabel>
 			</State>
 			<State id="countsPerMinute">
 				<ValueType>String</ValueType>

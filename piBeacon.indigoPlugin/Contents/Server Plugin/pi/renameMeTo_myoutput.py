@@ -23,10 +23,7 @@ G.program = "myoutput"
 def readParams():
     inp,inpRaw = U.doRead()
     if inp == "": return
-    try:
-            if u"debugRPI"          in inp:  debug=             int(inp["debugRPI"]["debugRPImystuff"])
-    except:
-        pass
+	U.getGlobalParams(inp)
 
 # ===========================================================================
 # Main

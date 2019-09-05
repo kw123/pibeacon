@@ -14,8 +14,10 @@ import sys, os, subprocess, copy
 import time,datetime
 import json
 import RPi.GPIO as GPIO
-import serial
-
+try:
+	import serial
+except:
+	os.system("sudo apt-get install python-serial")
 sys.path.append(os.getcwd())
 import	piBeaconGlobals as G
 import	piBeaconUtils	as U
@@ -92,6 +94,7 @@ def readNewParams(force=0):
 	global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime
 	global ifNetworkChanges
+	global typeForPWM
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -128,7 +131,6 @@ def readNewParams(force=0):
 			U.restartMyself(reason="new hci-BLEconnect defs, need to restart master", doPrint =True)
 		BLEconnectUseHCINoOld = copy.copy(G.BLEconnectUseHCINo)
 
-		if "debugRPI"						in inp:	 G.debug=						int(inp["debugRPI"]["debugRPICALL"])
 		if u"BLEserial"						in inp:	 BLEserial =					   (inp["BLEserial"])
 		if u"enableRebootCheck"				in inp:	 enableRebootCheck=				   (inp["enableRebootCheck"])
 		if u"batteryMinPinActiveTimeForShutdown" in inp: batteryMinPinActiveTimeForShutdown= float(inp["batteryMinPinActiveTimeForShutdown"])
@@ -151,6 +153,22 @@ def readNewParams(force=0):
 		if u"startWebServerINPUT" 			in inp:	 startWebServerINPUT= 			  int(inp["startWebServerINPUT"])
 		if u"fanEnable" 					in inp:	 fanEnable= 					     (inp["fanEnable"])
 		if u"ifNetworkChanges" 				in inp:	 ifNetworkChanges= 		     	(inp["ifNetworkChanges"]) 
+
+		if u"typeForPWM" 				in inp:	 
+			if typeForPWM != inp["typeForPWM"] and inp["typeForPWM"] == "PIGPIO":
+				typeForPWM = 	inp["typeForPWM"]
+				if not U.pgmStillRunning("pigpiod"): 	
+					U.logger.log(10, "starting pigpiod")
+					os.system("sudo pigpiod -s 2 &")
+					time.sleep(0.5)
+					if not U.pgmStillRunning("pigpiod"): 	
+						U.logger.log(30, "restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
+						time.sleep(20)
+						dosundialShutdown()
+						U.restartMyself(reason="pigpiod not running")
+						exit(0)
+
+
 
 		if fanEnable == "0" or fanEnable == "1":
 			
@@ -494,7 +512,7 @@ def doWeNeedToStartTouch(sensors,sensorsOld):
 ####################      #########################
 def checkifActive(sensorName, pyName, active):
 	if active:
-		checkIfPGMisRunning(pyName,force=True, checkAliveFile=sensorName )
+		checkIfPGMisRunning(pyName, force=True, checkAliveFile=sensorName )
 		checkIfAliveFileOK(sensorName)
 	else:
 		U.killOldPgm(1,pyName)
@@ -510,7 +528,7 @@ def installLibs():
 	
 ####################      #########################
 def startProgam(pgm, params="", reason=""):
-	U.logger.log(10, ">>>> starting "+pgm+" "+reason	  )
+	U.logger.log(20, ">>>> starting "+pgm+" "+reason	  )
 	os.system("/usr/bin/python "+G.homeDir+pgm+" "+params+" &")
 
 
@@ -620,7 +638,7 @@ def checkIfNeopixelIsRunning(pgm= "neopixel"):
 
 
 ####################      #########################
-def checkIfPGMisRunning(pgmToStart,force=False,checkAliveFile="", parameters=""):
+def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters=""):
 	tt = time.time()
 	if tt-G.tStart< 15 and not force: return
 	try:
@@ -717,7 +735,7 @@ def checkIfAliveFileOK(sensor,force=""):
 					#print " alive file for ", sensor, " not found"
 					##os.system("ls -l "+G.homeDir+"temp/")
 					lastUpdate=0
-					try:f.close()
+					try: f.close()
 					except: pass
 
 		except	Exception, e:
@@ -1123,7 +1141,7 @@ def delayAndWatchDog():
 
 				### print "master: shutdown pin #%d;  secs pressed:%.1f"%(shutdownInputPin,tt - lastshutdownInputPinTime )
 				if tt - G.tStart > 10  and tt - lastshutdownInputPinTime > 3:
-					 U.doReboot(tt=10,  text="... shutdown by button/pin", cmd="sudo killall python; sudo sync;wait 9;sudo halt")
+					U.doReboot(tt=10,  text="... shutdown by button/pin", cmd="sudo killall python; sudo sync;wait 9;sudo halt")
 
 			if xx%5 ==1 and False:
 				if	os.path.isfile("/run/nologin"):
@@ -1358,7 +1376,6 @@ def fixRcLocal(sleepTime):
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
-	return
 
 
 
@@ -1437,8 +1454,9 @@ def execMaster():
 		global sundial
 		global masterVersion
 		global ifNetworkChanges
+		global typeForPWM
 
-
+		typeForPWM				= "GPIO"
 		ifNetworkChanges  		= "doNothing"
 		masterVersion			= 11.3
 		sundial					= ""
@@ -1474,7 +1492,6 @@ def execMaster():
 		oldRaw					= ""
 		lastRead				= 0
 		bluetoothONoff			= "on"
-		G.debug					= 5
 		rebootHour				= -1  # defualt : do  not reboot
 		rebooted				= True
 		useRamDiskForLogfiles	= "0"
@@ -1515,8 +1532,7 @@ def execMaster():
 
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
-		G.debug = 0
-
+		
 
 		U.setLogging()
 
@@ -1626,40 +1642,38 @@ def execMaster():
 
 
 
-		if configured == "": 
-				for ii in range(500):
-					if G.userIdOfServer	 == "xxstartxx":
-						if ii >498:
-							startProgam("master.py", params="", reason="..not configured yet")
-							exit(0)
-						time.sleep(1)
-						readNewParams()
-					else:
-						break
 
-
-		if configured == "": 
+		if configured == "" and G.userIdOfServer == "xxstartxx": 
 			if G.networkType  in G.useNetwork and G.wifiType =="normal":
 				adhoc    	 = True
 				wifiWaiting  = True
-				for ii in range(500):
-					if G.userIdOfServer	 == "xxstartxx":
-						if adhoc and adhocWifiStarted < 0: 
-							U.logger.log(30," launching at start startAdhocWifi " )
-							U.startAdhocWifi()
-							U.startwebserverINPUT(startWebServerINPUT)
-						if wifiWaiting: 
-							if U.checkwebserverINPUT():
-								wifiWaiting= False
-						adhoc = False
-						U.logger.log(30, " master not configured yet, lets wait for new config files")
-						if ii >498:
-							startProgam("master.py", params="", reason="..not configured yet")
-							exit(0)
-						time.sleep(1)
-						readNewParams()
-					else:
-						break
+				GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+				if GPIO.input(26) == 0 and G.userIdOfServer	 == "xxstartxx":
+						## start adhoc wifi
+						for ii in range(500):
+							if G.userIdOfServer	 == "xxstartxx":
+								if adhoc and adhocWifiStarted < 0: 
+									U.logger.log(30," launching at start startAdhocWifi " )
+									U.startAdhocWifi()
+									U.startwebserverINPUT(startWebServerINPUT)
+							if wifiWaiting: 
+								if U.checkwebserverINPUT():
+									wifiWaiting= False
+									time.sleep(10)
+									break
+
+				if G.userIdOfServer	 == "xxstartxx":
+						for ii in range(500):
+							if G.userIdOfServer	 == "xxstartxx":
+								U.logger.log(30, " master not configured yet, lets wait for new config files")
+								if ii >498:
+									startProgam("master.py", params="", reason="..not configured yet")
+									exit(0)
+								time.sleep(1)
+								readNewParams()
+							else:
+								break
+						U.stopAdhocWifi(setwifi="dhcp")
 
 
 
@@ -2053,6 +2067,8 @@ def execMaster():
 
 
 execMaster()
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 U.logger.log(30, u"exit at end of master")	
 time.sleep(10)
 sys.exit(0)		   

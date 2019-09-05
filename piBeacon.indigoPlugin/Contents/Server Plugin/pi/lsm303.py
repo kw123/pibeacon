@@ -15,7 +15,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "lsm303"
-G.debug = 2
 
 # The MIT License (MIT)
 #
@@ -191,7 +190,7 @@ def readParams():
 		sensorsOld= copy.copy(sensors)
 
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
 
 		U.getGlobalParams(inp)
 		
@@ -264,7 +263,6 @@ lastRead				= 0
 
 
 
-G.debug						= 5
 loopCount					= 0
 NSleep						= 100
 sensors						= {}
@@ -334,5 +332,7 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
-sys.exit(0)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
+ys.exit(0)
 

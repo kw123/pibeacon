@@ -41,7 +41,6 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp : sensors =				(inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 
 		restart = False
 		sList = ""
@@ -74,22 +73,6 @@ def readParams():
 			U.restartMyself(reason="new parameters")
 
 
-
-def setupSensors():
-
-		U.logger.log(30, "starting setup sensors")
-
-		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if len(ret[1]) > 0:
-			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
-			return False
-
-		ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if len(ret[1]) > 0:
-			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
-			return False
-
-		return True
  
 	   
 def getINPUTgpio(all,sens):
@@ -222,13 +205,6 @@ readParams()
 startGPIO()
 INPUTcount = U.readINPUTcount()
 
-# check if everything is installed
-for i in range(100):
-	if not setupSensors(): 
-		time.sleep(10)
-		if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
-	else:
-		break	 
 		
 
 
@@ -306,5 +282,7 @@ while True:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
 
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 
 sys.exit(0)

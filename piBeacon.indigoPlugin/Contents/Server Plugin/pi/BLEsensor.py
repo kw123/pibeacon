@@ -210,7 +210,6 @@ def readParams(init):
 	global BLEsensorMACs
 	global oldRaw,	lastRead, sensor
 	if init:
-		G.debug			  = 2
 		G.ipOfServer	  =""
 		G.passwordOfServer=""
 		G.userIdOfServer  =""
@@ -226,7 +225,6 @@ def readParams(init):
 	try:
 		U.getGlobalParams(inp)
 
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPIBEACON"])
 		if "rebootSeconds"		in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
 		if "enableRebootCheck"	in inp:	 enableRebootCheck=		 (inp["enableRebootCheck"])
 		if "sendAfterSeconds"	in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
@@ -382,7 +380,6 @@ global myBLEmac, BLEsensorMACs
 global oldRaw,	lastRead, sensor
 oldRaw					= ""
 lastRead				= 0
-G.debug				= 2
 G.authentication	= "digest"
 # get params
 myBLEmac			= ""
@@ -530,5 +527,7 @@ except	Exception, e:
 	U.logger.log(30, "  exiting loop due to error\n")
 
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEcsensor end of "+G.program	 
-sys.exit(0)
+stry: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
+ys.exit(0)
 

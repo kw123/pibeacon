@@ -12,7 +12,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "bno055"
-G.debug = 0
 
 
 
@@ -726,7 +725,6 @@ def readParams():
 		
 		U.getGlobalParams(inp)
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
 		
  
 		if sensor not in sensors:
@@ -859,7 +857,6 @@ resetPin					= -1
 badSelfTest					= 0
 lastWriteCalibration		= 0
 CALlast						= 0
-G.debug						= 5
 loopCount					= 0
 NSleep						= 100
 sensors						= {}
@@ -927,4 +924,6 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
-sys.exit(0)
+stry: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
+ys.exit(0)

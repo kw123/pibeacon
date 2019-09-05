@@ -18,7 +18,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "mhzSERIAL"
-G.debug = 0
 
 #################################		 
 #################################		 
@@ -160,7 +159,7 @@ def readParams():
 		  
 		if "sensorList"			in inp:	 sensorList=			 (inp["sensorList"])
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
 		 
  
 		if sensor not in sensors:
@@ -418,7 +417,6 @@ lastMeasurement				= time.time()
 oldRaw						= ""
 lastRead					= 0
 minSendDelta				= 5.
-G.debug						= 5
 loopCount					= 0
 sensorRefreshSecs			= 91
 NSleep						= 100
@@ -582,6 +580,8 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)
  
 

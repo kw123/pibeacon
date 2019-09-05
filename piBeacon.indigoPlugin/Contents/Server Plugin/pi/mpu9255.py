@@ -15,7 +15,6 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "mpu9255"
-G.debug = 2
 
 MPU9255_DEFAULT_ADDRESS			=0x68
 MPU9255_ALT_DEFAULT_ADDRESS		=0xD2	
@@ -442,7 +441,7 @@ def readParams():
 	   
 		U.getGlobalParams(inp)
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-		if "debugRPI"			in inp:	 G.debug=			  int(inp["debugRPI"]["debugRPISENSOR"])
+
 		
  
 		if sensor not in sensors:
@@ -512,7 +511,6 @@ global oldRaw,	lastRead
 oldRaw					= ""
 lastRead				= 0
 
-G.debug						= 5
 loopCount					= 0
 NSleep						= 100
 sensors						= {}
@@ -581,5 +579,7 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)
 

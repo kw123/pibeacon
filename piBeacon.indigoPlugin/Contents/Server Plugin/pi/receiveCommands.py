@@ -135,17 +135,8 @@ def readParams():
 	global	output, useLocalTime, myPiNumber, inp
 	inp,inpRaw = U.doRead()
 	if inp == "": return
-	try:
-		f=open(G.homeDir+"parameters","r")
-		try:	inp =json.loads(f.read())
-		except: return
-		f.close()
-		U.getGlobalParams(inp)
-		if u"debugRPI"			in inp:	 G.debug=			int(inp["debugRPI"]["debugRPIOUTPUT"])
-		if u"output"			in inp:	 output=				inp["output"]
-
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.getGlobalParams(inp)
+	if u"output"			in inp:	 output=				inp["output"]
 		 
 	try:
 		if os.path.isfile(G.homeDir+"temp/networkOFF"):
@@ -167,7 +158,6 @@ if __name__ == "__main__":
 	U.killOldPgm(myPID,G.program+".py")# del old instances of myself if they are still running
 
 	time.sleep(0.5)
-	
 	
 	readParams()
 

@@ -14,7 +14,6 @@ sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
 G.program = "vl6180xDistance"
-G.debug = 0
 import  displayDistance as DISP
 
 # ===========================================================================
@@ -46,7 +45,6 @@ def readParams():
           
         if "sensorList"         in inp:  sensorList=             (inp["sensorList"])
         if "sensors"            in inp:  sensors =               (inp["sensors"])
-        if "debugRPI"           in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
         if "distanceUnits"      in inp:  distanceUnits=          (inp["distanceUnits"])
         
         if "output"             in inp:  output=                 (inp["output"])
@@ -651,7 +649,6 @@ actionLongDistanceLimit     = 20.
 actionDistanceOld           = 0
 distanceUnits               = "1.0"
 gain                        = 20
-G.debug                     = 5
 first                       = False
 loopCount                   = 0
 sensorRefreshSecs           = 60
@@ -769,4 +766,6 @@ while True:
     except  Exception, e:
         U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)

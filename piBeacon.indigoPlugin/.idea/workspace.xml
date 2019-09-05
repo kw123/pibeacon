@@ -6,18 +6,42 @@
   <component name="ChangeListManager">
     <list default="true" id="fb412742-e1ff-4b9f-8a1d-f1372d90d57e" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf>
+      <file leaf-file-name="master.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/master.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="440">
+              <caret line="1678" column="29" lean-forward="false" selection-start-line="1678" selection-start-column="29" selection-end-line="1678" selection-end-column="29" />
+              <folding>
+                <element signature="e#245#277#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="plugin.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/plugin.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="60">
+              <caret line="10235" column="15" lean-forward="true" selection-start-line="10235" selection-start-column="15" selection-end-line="10235" selection-end-column="15" />
+              <folding>
+                <element signature="e#132#141#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>MAJ</find>
-      <find>tolog(</find>
       <find>cleanupOldFiles</find>
       <find>toLog(</find>
       <find>kill</find>
@@ -46,10 +70,13 @@
       <find>U.toLog(-1,</find>
       <find>intensityMaxNorm</find>
       <find>updateParams</find>
+      <find>gpioPIN</find>
+      <find>MSGs/min</find>
     </findStrings>
     <replaceStrings>
       <replace>fmtOn=</replace>
       <replace>stopIfMagSensor=</replace>
+      <replace>.format</replace>
     </replaceStrings>
   </component>
   <component name="IdeDocumentHistory">
@@ -73,7 +100,6 @@
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/INPUTtouch.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/neopixelClock.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/neopixel.py" />
-        <option value="$PROJECT_DIR$/Contents/Server Plugin/plugin.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/copyToTemp.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/ina219.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/mhzI2C.py" />
@@ -84,24 +110,36 @@
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/amg88xx.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/as726x.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/as3935.py" />
-        <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/master.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/setStepperMotor.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/sunDial.py" />
         <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/beaconloop.py" />
+        <option value="$PROJECT_DIR$/Contents/Server Plugin/pi/master.py" />
+        <option value="$PROJECT_DIR$/Contents/Server Plugin/plugin.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="187" />
-    <option name="y" value="119" />
-    <option name="width" value="1603" />
+    <option name="x" value="86" />
+    <option name="y" value="23" />
+    <option name="width" value="2944" />
     <option name="height" value="1000" />
   </component>
   <component name="ProjectView">
-    <navigator currentView="Scope" currentSubView="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope" proportions="" version="1">
+    <navigator currentView="ProjectPane" proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource />
+      <sortByType />
+      <manualOrder />
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="Scope">
         <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
           <expand>
@@ -149,6 +187,13 @@
               <item name="Contents" type="462c0819:PsiDirectoryNode" />
               <item name="Server Plugin" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="piBeacon.indigoPlugin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="piBeacon.indigoPlugin" type="462c0819:PsiDirectoryNode" />
+              <item name="Contents" type="462c0819:PsiDirectoryNode" />
+              <item name="Server Plugin" type="462c0819:PsiDirectoryNode" />
+              <item name="pi" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
@@ -162,7 +207,7 @@
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Python" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -177,6 +222,25 @@
     </option>
   </component>
   <component name="RunManager">
+    <configuration name="plugin" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Contents/Server Plugin" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="piBeacon.indigoPlugin" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Contents/Server Plugin/plugin.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+    </configuration>
     <configuration default="true" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
       <option name="PORT" value="5678" />
       <option name="HOST" value="localhost" />
@@ -189,33 +253,9 @@
       <option name="SUSPEND_AFTER_CONNECT" value="false" />
       <method v="2" />
     </configuration>
-    <configuration name="plugin" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="piBeacon.indigoPlugin" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Contents/Server Plugin" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Contents/Server Plugin/plugin.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.plugin" />
-      </list>
-    </recent_temporary>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false">
+    <option name="remove_strategy" value="false" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -250,35 +290,38 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="187" y="119" width="1603" height="1000" extended-state="0" />
+    <frame x="86" y="23" width="2944" height="1000" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.23254324" />
-      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.32929516" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32929516" />
-      <window_info anchor="bottom" id="Cvs" order="3" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
-      <window_info anchor="bottom" id="Debug" order="5" weight="0.39977974" />
-      <window_info anchor="bottom" id="TODO" order="6" weight="0.32929516" />
-      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Version Control" order="8" />
-      <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Inspection Results" order="10" sideWeight="0.49967968" weight="0.32929516" />
-      <window_info anchor="bottom" id="Terminal" order="11" weight="0.32929516" />
-      <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.5003203" side_tool="true" weight="0.32929516" />
-      <window_info anchor="bottom" id="Python Console" order="13" weight="0.32929516" />
-      <window_info anchor="bottom" id="Concurrent Activities Diagram" order="14" weight="0.32929516" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="SciView" order="3" />
-      <window_info anchor="right" id="Database" order="4" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.08552857" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32993197" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32993197" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32993197" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32993197" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32993197" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager />
+    <watches-manager />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/piBeacon_indigoPlugin$plugin.coverage" NAME="plugin Coverage Results" MODIFIED="1557593556559" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Contents/Server Plugin" />
@@ -287,80 +330,77 @@
     <entry file="file://$PROJECT_DIR$/Contents/Info.plist">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
-          <caret line="5" column="21" selection-start-line="5" selection-start-column="21" selection-end-line="5" selection-end-column="21" />
+          <caret line="5" column="21" lean-forward="false" selection-start-line="5" selection-start-column="21" selection-end-line="5" selection-end-column="21" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/piBeaconGlobals.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1260">
-          <caret line="84" column="12" selection-start-line="84" selection-end-line="84" selection-end-column="12" />
+          <caret line="84" column="12" lean-forward="false" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="12" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/MAC2Vendor.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="435">
-          <caret line="33" column="8" selection-start-line="33" selection-start-column="8" selection-end-line="33" selection-end-column="8" />
+          <caret line="33" column="8" lean-forward="false" selection-start-line="33" selection-start-column="8" selection-end-line="33" selection-end-column="8" />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/PluginConfig.xml">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/BLEsensor.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="827">
-          <caret line="160" column="38" selection-start-line="160" selection-start-column="38" selection-end-line="160" selection-end-column="38" />
+          <caret line="160" column="38" lean-forward="false" selection-start-line="160" selection-start-column="38" selection-end-line="160" selection-end-column="38" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/makeCameraPlot.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="831">
-          <caret line="86" column="4" selection-start-line="86" selection-start-column="4" selection-end-line="86" selection-end-column="4" />
+          <caret line="86" column="4" lean-forward="false" selection-start-line="86" selection-start-column="4" selection-end-line="86" selection-end-column="4" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/updateRejects.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="32">
-          <caret line="5" selection-start-line="5" selection-end-line="5" />
+          <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/bme680.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="126">
-          <caret line="777" column="30" selection-start-line="777" selection-start-column="30" selection-end-line="777" selection-end-column="30" />
+          <caret line="777" column="30" lean-forward="false" selection-start-line="777" selection-start-column="30" selection-end-line="777" selection-end-column="30" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/execcommands.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6345">
-          <caret line="502" column="11" selection-start-line="502" selection-start-column="11" selection-end-line="502" selection-end-column="11" />
+          <caret line="502" column="11" lean-forward="false" selection-start-line="502" selection-start-column="11" selection-end-line="502" selection-end-column="11" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/simplei2csensors.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="204">
-          <caret line="4596" column="50" selection-start-line="4596" selection-start-column="50" selection-end-line="4596" selection-end-column="50" />
+          <caret line="4596" column="50" lean-forward="false" selection-start-line="4596" selection-start-column="50" selection-end-line="4596" selection-end-column="50" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/display.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="353">
-          <caret line="325" lean-forward="true" selection-start-line="325" selection-end-line="325" />
+          <caret line="325" column="0" lean-forward="true" selection-start-line="325" selection-start-column="0" selection-end-line="325" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/DHT.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
-          <caret line="248" column="34" selection-start-line="248" selection-start-column="34" selection-end-line="248" selection-end-column="34" />
+          <caret line="248" column="34" lean-forward="false" selection-start-line="248" selection-start-column="34" selection-end-line="248" selection-end-column="34" />
         </state>
       </provider>
     </entry>
@@ -378,51 +418,45 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/webserverSTATUS.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/webserverINPUT.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/Wire18B20.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1014">
-          <caret line="283" column="27" selection-start-line="283" selection-start-column="27" selection-end-line="283" selection-end-column="27" />
+          <caret line="283" column="27" lean-forward="false" selection-start-line="283" selection-start-column="27" selection-end-line="283" selection-end-column="27" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/si7021.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="147">
-          <caret line="144" column="11" selection-start-line="144" selection-start-column="11" selection-end-line="144" selection-end-column="11" />
+          <caret line="144" column="11" lean-forward="false" selection-start-line="144" selection-start-column="11" selection-end-line="144" selection-end-column="11" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/changelist.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
-          <caret line="11" selection-end-line="11" />
+          <caret line="11" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/INPUTgpio.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="557">
-          <caret line="54" column="77" selection-start-line="54" selection-start-column="77" selection-end-line="54" selection-end-column="77" />
+          <caret line="54" column="77" lean-forward="false" selection-start-line="54" selection-start-column="77" selection-end-line="54" selection-end-column="77" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/INPUTtouch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="301">
-          <caret line="479" column="36" selection-start-line="479" selection-start-column="36" selection-end-line="479" selection-end-column="36" />
+          <caret line="479" column="36" lean-forward="false" selection-start-line="479" selection-start-column="36" selection-end-line="479" selection-end-column="36" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/installLibs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
-          <caret line="287" column="24" selection-start-line="287" selection-start-column="24" selection-end-line="287" selection-end-column="24" />
+          <caret line="287" column="24" lean-forward="false" selection-start-line="287" selection-start-column="24" selection-end-line="287" selection-end-column="24" />
         </state>
       </provider>
     </entry>
@@ -436,21 +470,21 @@
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/OUTPUTgpio.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-894">
-          <caret line="37" selection-start-line="37" selection-end-line="37" />
+          <caret line="37" column="0" lean-forward="false" selection-start-line="37" selection-start-column="0" selection-end-line="37" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/neopixel.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2118">
-          <caret line="976" column="52" selection-start-line="975" selection-start-column="32" selection-end-line="976" selection-end-column="52" />
+          <caret line="976" column="52" lean-forward="false" selection-start-line="975" selection-start-column="32" selection-end-line="976" selection-end-column="52" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/neopixelClock.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="277">
-          <caret line="1154" column="7" selection-start-line="1154" selection-start-column="3" selection-end-line="1154" selection-end-column="7" />
+          <caret line="1154" column="7" lean-forward="false" selection-start-line="1154" selection-start-column="3" selection-end-line="1154" selection-end-column="7" />
         </state>
       </provider>
     </entry>
@@ -464,13 +498,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/convert.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-233" />
+        <state relative-caret-position="-233">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="25325">
-          <caret line="1751" selection-start-line="1751" selection-end-line="1751" />
+          <caret line="1751" column="0" lean-forward="false" selection-start-line="1751" selection-start-column="0" selection-end-line="1751" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -484,7 +520,9 @@
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/lineRead5.py" />
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/lsm303.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3" />
+        <state relative-caret-position="-3">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/mhzSERIAL.py">
@@ -504,7 +542,7 @@
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/rainSensorRG11.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="22">
-          <caret line="119" column="23" selection-start-line="119" selection-start-column="23" selection-end-line="119" selection-end-column="23" />
+          <caret line="119" column="23" lean-forward="false" selection-start-line="119" selection-start-column="23" selection-end-line="119" selection-end-column="23" />
         </state>
       </provider>
     </entry>
@@ -522,37 +560,31 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/setmcp4725.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/setPCF8591dac.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="286">
-          <caret line="46" column="70" selection-start-line="46" selection-start-column="70" selection-end-line="46" selection-end-column="70" />
+          <caret line="46" column="70" lean-forward="false" selection-start-line="46" selection-start-column="70" selection-end-line="46" selection-end-column="70" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/sgp30.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="416">
-          <caret line="308" selection-start-line="308" selection-end-line="308" />
+          <caret line="308" column="0" lean-forward="false" selection-start-line="308" selection-start-column="0" selection-end-line="308" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/max31865.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="187">
-          <caret line="368" column="94" selection-start-line="368" selection-start-column="94" selection-end-line="368" selection-end-column="94" />
+          <caret line="368" column="94" lean-forward="false" selection-start-line="368" selection-start-column="94" selection-end-line="368" selection-end-column="94" />
         </state>
       </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/setTEA5767.py">
-      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/amg88xx.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="382">
-          <caret line="504" selection-start-line="504" selection-end-line="504" />
+          <caret line="504" column="0" lean-forward="false" selection-start-line="504" selection-start-column="0" selection-end-line="504" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -570,44 +602,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/master.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="1510" selection-start-line="1510" selection-end-line="1510" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/setStepperMotor.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="330">
           <caret line="22" column="11" lean-forward="true" selection-start-line="22" selection-start-column="11" selection-end-line="22" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/sunDial.py" />
+    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/beaconloop.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1313">
+          <caret line="672" column="9" lean-forward="false" selection-start-line="672" selection-start-column="9" selection-end-line="672" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/master.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="440">
+          <caret line="1678" column="29" lean-forward="false" selection-start-line="1678" selection-start-column="29" selection-end-line="1678" selection-end-column="29" />
           <folding>
-            <element signature="e#91#108#0" expanded="true" />
+            <element signature="e#245#277#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/plugin.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="24">
-          <caret line="45" column="19" selection-start-line="45" selection-start-column="19" selection-end-line="45" selection-end-column="19" />
+        <state relative-caret-position="60">
+          <caret line="10235" column="15" lean-forward="true" selection-start-line="10235" selection-start-column="15" selection-end-line="10235" selection-end-column="15" />
           <folding>
             <element signature="e#132#141#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/sunDial.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="894" column="26" lean-forward="true" selection-start-line="894" selection-start-column="26" selection-end-line="894" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/beaconloop.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1313">
-          <caret line="672" column="9" selection-start-line="672" selection-start-column="9" selection-end-line="672" selection-end-column="9" />
         </state>
       </provider>
     </entry>

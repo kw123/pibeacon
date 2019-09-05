@@ -30,6 +30,10 @@ send "\r"
 sleep 0.1
 expect "sftp>" {  send  "lcd '$indigoPath' \r" }
 expect "sftp>" {  send  "put callbeacon.py  /home/pi/callbeacon.py\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/soundfiles\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/fonts\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/displayfiles\r" }
 expect "sftp>" {  send  "put -r * /home/pi/pibeacon/ \r" }
 expect "sftp>" {  send  "lcd '$piPath//interfaceFiles' \r" }
 expect "sftp>" {  send  "put 'interfaces.$ipParms'  /home/pi/pibeacon/interfaces\r" }

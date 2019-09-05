@@ -9,7 +9,6 @@ import json
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "ccs811"
-G.debug = 0
 
 ############# oled import ####################################
 	
@@ -28,7 +27,7 @@ def readParams():
 		try:	inp =json.loads(f.read())
 		except: return
 		f.close()
-		if u"debugRPI"			in inp:	 debug=				int(inp["debugRPI"]["debugRPICALL"])
+		U.getGlobalParams(inp)
 
 ######### main	########
 
@@ -46,5 +45,7 @@ try:
 except	Exception, e:
 	U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 		
 sys.exit(0)		   

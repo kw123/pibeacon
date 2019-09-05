@@ -42,25 +42,20 @@ inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=0)
 U.getGlobalParams(inp)
 U.getIPNumber() 
 
-try:	G.debug= command["debug"]
-except: G.debug = 1
 U.setLogLevel()
 
 U.logger.log(10, "setGPIO  command :" + unicode(sys.argv))
-try:	PWM= command["PWM"]
-except: pass
-
 
 if "cmd" in command:
 	cmd= command["cmd"]
 	if cmd not in allowedCommands:
-		U.logger.log(30, G.program +" bad command " + command + "  allowed:" + unicode(allowedCommands))
+		U.logger.log(30," bad command " + command + "  allowed:" + unicode(allowedCommands))
 		exit(1)
 
 if "pin" in command:
 	pin= int(command["pin"])
 else:
-		U.logger.log(30, G.program +" bad command " + command + "  pin not included")
+		U.logger.log(30, " bad command " + command + "  pin not included")
 		exit(1)
 
 
@@ -103,6 +98,17 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
 
+try:	PWM = int(command["PWM"]) *100
+except: pass
+
+typeForPWM = "GPIO"
+if u"typeForPWM" in inp and inp["typeForPWM"] == "PIGPIO" and U.pgmStillRunning("pigpiod"):
+	import pigpio
+	PIGPIO = pigpio.pi()
+	pwmRange  = PWM
+	pwmFreq   = PWM
+	typeForPWM = "PIGPIO"
+
 try:
 	if cmd == "up":
 		GPIO.setup(pin, GPIO.OUT)
@@ -125,17 +131,27 @@ try:
 
 	elif cmd == "analogWrite":
 		if inverseGPIO:
-			value = PWM*(100-bits)	# duty cycle on xx hz
+			value = (100-bits)	# duty cycle on xx hz
 		else:
-			value =   PWM*bits	 # duty cycle on xxx hz 
-		U.logger.log(10, G.program +" analogwrite pin = " + str(pin) + " to duty cyle:  :" + unicode(value)+";  PWM="+ str(PWM))
-		if value >1.:
+			value =   bits	 # duty cycle on xxx hz 
+		U.logger.log(20, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM)
+
+		if value >0:
 			U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 		else:
 			U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
-		GPIO.setup(pin, GPIO.OUT)
-		p = GPIO.PWM(pin, PWM*100)	# 
-		p.start(int(value))	 # start the PWM with  the proper duty cycle
+
+		if typeForPWM == "PIGPIO": 	
+			PIGPIO.set_mode(pin, pigpio.OUTPUT)
+			PIGPIO.set_PWM_frequency(pin, pwmFreq)
+			PIGPIO.set_PWM_range(pin, pwmRange)
+			PIGPIO.set_PWM_dutycycle(pin, value )
+
+		else:
+			GPIO.setup(pin, GPIO.OUT)
+			p = GPIO.PWM(pin, PWM)	# 
+			p.start(int(value))	 # start the PWM with  the proper duty cycle
+
 		time.sleep(1000000000)	# we need to keep it alive otherwise it will stop  this is > 1000 days ~ 3 years
 
 

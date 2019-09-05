@@ -156,7 +156,6 @@ def readParams():
 
 
         U.getGlobalParams(inp)
-        if "debugRPI"             in inp:  G.debug=             int(inp["debugRPI"]["debugRPISENSOR"])
         if "enableSPIpinsAsGpio"  in inp: enableSPIpinsAsGpio=     (inp["enableSPIpinsAsGpio"])
         if "enableTXpinsAsGpio"   in inp: enableTXpinsAsGpio=      (inp["enableTXpinsAsGpio"])
         if "output"               in inp: output=                  (inp["output"])
@@ -342,4 +341,6 @@ while True:
     except  Exception, e:
         U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
         time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)

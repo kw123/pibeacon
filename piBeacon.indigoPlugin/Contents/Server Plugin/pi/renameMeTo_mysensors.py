@@ -28,7 +28,6 @@ def readParams():
         inp,inRaw = U.doRead()
 
         U.getGlobalParams(inp)
-        if u"debugRPI"          in inp:  G.debug=                    int(inp["debugRPI"]["debugRPImystuff"])
         if "sensors"            in inp:  sensors =                   (inp["sensors"])
 
         if G.program not in sensors: 

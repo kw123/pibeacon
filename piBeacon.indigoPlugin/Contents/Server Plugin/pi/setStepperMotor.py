@@ -65,7 +65,6 @@ def readParams():
 		 
 
 
-		if "debugRPI"				in inp:	 G.debug=		  				int(inp["debugRPI"]["debugRPIOUTPUT"])
 		if "output"					in inp:	 output=			 			   (inp["output"])
 		#### G.debug = 2 
 		if G.program not in output:

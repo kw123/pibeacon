@@ -42,7 +42,6 @@ def readParams():
 		try:
 
 			U.getGlobalParams(inp)
-			if "debugRPI"			in inp:	 G.debug=			 		   int(inp["debugRPI"]["debugRPIBLE"])
 			if "restartBLEifNoConnect"	in inp:	 restartBLEifNoConnect=		  (inp["restartBLEifNoConnect"])
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])
 
@@ -159,7 +158,6 @@ lastRead				= 0
 ####################  input gios   ...allrpi	  only rpi2 and rpi0--
 oldParams		  = ""
 #####################  init parameters that are read from file 
-G.debug				= 1
 sensorList			= "0"
 G.authentication	= "digest"
 restartBLEifNoConnect = True
@@ -334,5 +332,7 @@ while True:
 		#print "no answer sleep for " + str(iPhoneRefreshDownSecs)
 		U.echoLastAlive(G.program)
 		
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 		
 sys.exit(0)		   

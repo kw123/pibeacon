@@ -11,7 +11,6 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 import math
 G.program = "mlx90614"
-G.debug = 0
 
 
 #################################
@@ -560,7 +559,6 @@ def readParams():
 		  
 		  
 		if "sensors"			 in inp:  sensors =				  (inp["sensors"])
-		if "debugRPI"			 in inp:  G.debug=			   int(inp["debugRPI"]["debugRPISENSOR"])
 		if "output"				 in inp:  output=				  (inp["output"])
 		if "tempUnits"			 in inp:  tempUnits=			  (inp["tempUnits"])
 
@@ -744,7 +742,6 @@ lastRead				= 0
 		
 
 displayInfo					={}
-G.debug						= 5
 first						= False
 loopCount					= 0
 sensorRefreshSecs			= 60
@@ -839,6 +836,8 @@ while True:
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)
 		
 		

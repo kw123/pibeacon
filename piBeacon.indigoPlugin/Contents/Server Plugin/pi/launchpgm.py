@@ -28,7 +28,6 @@ def readParams():
 		inp,inRaw = U.doRead()
 
 		U.getGlobalParams(inp)
-		if u"debugRPI"			in inp:	 G.debug=					 int(inp["debugRPI"]["debugRPImystuff"])
 		if "sensors"			in inp:	 sensors =					 (inp["sensors"])
 
 		if G.program not in sensors: 
@@ -173,4 +172,6 @@ while True:	 # loop for ever
 		time.sleep(sensorRefreshSecs) # sleep the requested amount
 		readParams()  # check if we have new parameetrs
 
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
 sys.exit(0)		   

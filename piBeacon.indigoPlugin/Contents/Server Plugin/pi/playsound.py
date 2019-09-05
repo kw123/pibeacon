@@ -39,7 +39,7 @@ def readParams():
         try:    inp =json.loads(f.read())
         except: return
         f.close()
-        if u"debugRPI"          in inp:  debug=             int(inp["debugRPI"]["debugRPIOUTPUT"])
+		U.getGlobalParams(inp)
 
 ######### main  ########
 U.setLogging()
