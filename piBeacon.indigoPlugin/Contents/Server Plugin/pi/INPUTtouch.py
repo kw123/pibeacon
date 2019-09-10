@@ -544,7 +544,7 @@ devClass12i2c		=""
 
 INPUTlastvalue	  = ["-1" for i in range(100)]
 INPUTActive		  = {}
-INPUTcount		  = [0 for i in range(100)]
+INPUTcount		  = {}
 oldParams		  = ""
 sensBase		  = G.program
 INPUTtouchCountFilename =sensBase+"Count"

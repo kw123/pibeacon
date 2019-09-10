@@ -122,20 +122,16 @@
         </List>
    </Field>
 
-       <Field    id="rebootIfNoMessages"   type="menu" defaultValue="4" tooltip="if no ibeacon messages reboot">
-        <Label>reboot RPI if GT xx empty beacon messages (on RPI):</Label>
+       <Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
+        <Label>reboot RPI if GT x minutes w no iBeacon messages (on RPI):</Label>
         <List>
-            <Option value="1"   >reboot after 1 loop (~1min)</Option>
-            <Option value="2"   >reboot after 2 loops</Option>
-            <Option value="4"   >reboot after 4 loops</Option>
-            <Option value="6"   >reboot after 6 loops</Option>
-            <Option value="8"   >reboot after 8 loops</Option>
-            <Option value="12"  >reboot after 12 loops</Option>
-            <Option value="16"  >reboot after 16 loops</Option>
-            <Option value="9999999999"  >do NOT reboot, just wait </Option>
+            <Option value="60"    >reboot after 1 minute  w no ibeacon signal </Option>
+            <Option value="120"   >reboot after 2 minutes w no ibeacon signal </Option>
+            <Option value="240"   >reboot after 4 minutes w no ibeacon signal </Option>
+           <Option value="99999999999999"  >do NOT reboot, just wait </Option>
       </List>
    </Field>
-   <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="5" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
+   <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
         <Label>reboot RPI if GT xx empty beacon messages received (from plugin):</Label>
         <List>
             <Option value="999999999"  > disable </Option>
@@ -662,6 +658,20 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
     <Field id="infoLabel97" type="label">  <Label>debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
 
+
+
+    <Field id="maxSizeOfLogfileOnRPI"   type = "menu" defaultValue = "10000000" tooltip="a copy will be kept: pibeacon-1.log; if you use ramdisk, please use less than 21MB"  >
+        <Label>Debug...max pibeacon logfile size on RPI:</Label>
+        <List>
+            <Option value="5000000"  >5MB</Option>
+            <Option value="10000000" >10MB</Option>
+            <Option value="20000000" >20MB</Option>
+            <Option value="30000000" >30MB</Option>
+            <Option value="40000000" >40MB</Option>
+        </List>
+    </Field>
+   
+			
     <Field id="debugRPI"   type = "menu" defaultValue = "-1"  >
         <Label>Debug...which RPI:</Label>
         <List>

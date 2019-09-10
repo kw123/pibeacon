@@ -240,7 +240,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"INPUTRotarySwitchAbsolute","INPUTRotarySwitchIncremental",
 						 u"i2cADS1x15", u"i2cADS1x15-1", u"spiMCP3008", u"spiMCP3008-1","i2cADC121",
 						 u"i2cPCF8591", u"i2cPCF8591-1",											   # adc
-						 u"INPUTpulse",
+						 u"INPUTpulse", "INPUTcoincidence",
 						 u"mysensors", u"myprogram",
 						 u"BLEconnect"]
 _GlobalConst_i2cSensors				 = ["si7021","bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
@@ -3796,6 +3796,11 @@ class Plugin(indigo.PluginBase):
 				if "INPUTpulse" == typeId :
 					pinMappings = "gpio="+valuesDict[u"gpio"]+ "," +valuesDict[u"risingOrFalling"]+ " Edge, " +valuesDict[u"deadTime"]+ "secs deadTime"
 					valuesDict[u"description"] = pinMappings
+
+
+				if "INPUTcoincidence" == typeId :
+					theText = "coincidenceWindow = {} msecs".format(valuesDict[u"coincidenceTimeInterval"])
+					valuesDict[u"description"] = theText
 
 				self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 				self.updateNeeded += " fixConfig "
@@ -7556,12 +7561,24 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
+	def filerINPUTpulseDevices(self, valuesDict=None, filter="", typeId="", devId=""):
+			xList = [(-1,"do not use")]
+			for dev in indigo.devices.iter("props.isSensorDevice"):
+				if dev.deviceTypeId==  "INPUTpulse": 
+					xList.append((dev.id, dev.name))
+			return xList
+
+
+####-------------------------------------------------------------------------####
 	def filterINPUTdevices(self, valuesDict=None, filter="", typeId="", devId=""):
 			xList = []
 			for dev in indigo.devices.iter("props.isSensorDevice"):
 				if dev.deviceTypeId.find(u"INPUTgpio") == -1 and dev.deviceTypeId.find(u"INPUTtouch") == -1 and dev.deviceTypeId.find(u"INPUTpulse") == -1: continue
 				xList.append((dev.id, dev.name))
 			return xList
+
+
+
 
 ####-------------------------------------------------------------------------####
 	def filterOUTPUTdevicesACTION(self, valuesDict=None, filter="", typeId="",devId=""):
@@ -8363,6 +8380,7 @@ class Plugin(indigo.PluginBase):
 								except:
 									pass
 							if not found:
+									#self.indiLOG.log(30,"making new RPI: {};   ip: {}".format(pi, ipn))
 									indigo.device.create(
 										protocol		= indigo.kProtocol.Plugin,
 										address			= "00:00:00:00:pi:{:02d}".format(pi),
@@ -11467,7 +11485,7 @@ class Plugin(indigo.PluginBase):
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "INPUTpulse":
+					elif dev.deviceTypeId in ["INPUTpulse","INPUTcoincidence"]:
 						self.updatePULSE(dev,data,whichKeysToDisplay)
 						continue
 
@@ -11987,13 +12005,23 @@ class Plugin(indigo.PluginBase):
 		props = dev.pluginProps
 		try:	
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat) 
-			countList = [(0,0),(0,0)] # is list of last counts up to 1 minutes, then pop out last
+			countList = [(0,0),(0,0)] # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
 			if "countList" in props: countList= json.loads(props["countList"])
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			if u"count" in data:
-				cOld = float(dev.states[u"count"])
+				try: cOld = float(dev.states[u"count"])
+				except: cOld = 0
 
-				countList.append((time.time(),data[u"count"]))
+				## is there a count reset?, if yes remove old counts
+				ll = len(countList)
+				if ll >0:
+					for ii in range(ll):
+						if countList[0][1] >  cOld: countList.pop(0)
+						else: break
+
+
+				countList.append([time.time(),data[u"count"]])
+				ll = len(countList)
 				if len(countList) >2:
 					dT =  max( countList[-1][0]- countList[-2][0],1.)
 					countsPerSecond = max(0,(float(data[u"count"]) - cOld) / dT)
@@ -12002,22 +12030,45 @@ class Plugin(indigo.PluginBase):
 				ll = len(countList)
 				if ll >2:
 					for ii in range(ll):
-						if len(countList) <=2: break
-						if countList[0][0] < countList[-1][0] -60: countList.pop(0)
-						#self.indiLOG.log(10, "updatePULSE after time pop countList:{}".format(countList) )
-				ll = len(countList)
-				if ll >2:
-					for ii in range(ll):
 						#self.indiLOG.log(10, "updatePULSE bf count pop countList:{}".format(countList) )
 						if len(countList) <=2: break
 						if countList[0][1] >  countList[-1][1]: countList.pop(0)
 						else: break
+				ll = len(countList)
+				if ll >2:
+					for ii in range(ll):
+						if len(countList) <= 2: break
+						if countList[0][0] < countList[-1][0] -3600*24: countList.pop(0)
+						else: 				    break
+				ll = len(countList)
+				minPointer = ll -1
+				if ll > 1:
+					for ii in range(1, ll):
+							if countList[ll-ii][0] > countList[-1][0] -60:	minPointer = ll-ii
+							else:
+								if minPointer == ll-1:
+									minPointer = ll-ii
+								break
+				hourPointer = ll -1
+				if ll > 1:
+					for ii in range(1, ll):
+							if countList[ll-ii][0] > countList[-1][0] -60:	hourPointer = ll-ii
+							else:
+								if hourPointer == ll-1:
+									hourPointer = ll-ii
+								break
+ 
+				#self.indiLOG.log(20, "updatePULSE minPointer:{}; tt:{:.0f}; countList:{}".format(minPointer, time.time(), countList) )
 				self.setStatusCol( dev, u"count", data[u"count"], "{:.0f}[c]".format(data[u"count"]), whichKeysToDisplay, "","", decimalPlaces = "" )
 				if cOld <= data[u"count"]: 
-					countsPerMinute = 60 * ( countList[-1][1] - countList[0][1] ) /  max(1., ( countList[-1][0]  - countList[0][0]) )
+					countsPerMinute =   60.    * ( countList[minPointer][1]  - countList[0][1] ) /  max(1., ( countList[minPointer][0]  - countList[0][0]) )
+					countsPerHour   = 3600.    * ( countList[hourPointer][1] - countList[0][1] ) /  max(1., ( countList[hourPointer][0] - countList[0][0]) )
+					countsPerDay    = 3600.*24 * ( countList[-1][1]          - countList[0][1] ) /  max(1., ( countList[-1][0]          - countList[0][0]) )
 					#self.indiLOG.log(10, "updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data, time.time(), ( countList[-1][1] - countList[0][1] ), (countList[-1][0]  - countList[0][0]) , len(countList),  countList ) )
-					self.setStatusCol( dev, u"countsPerSecond", countsPerSecond, u"{:.2f}[cps]".format(countsPerSecond), whichKeysToDisplay, "","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerMinute", countsPerMinute, "{:.0f}[cpm]".format(countsPerMinute), whichKeysToDisplay, "","", decimalPlaces = 0 )
+					self.setStatusCol( dev, u"countsPerSecond", countsPerSecond, u"{:.2f}[c/s]".format(countsPerSecond), whichKeysToDisplay, "","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countsPerMinute", countsPerMinute, u"{:.2f}[c/m]".format(countsPerMinute), whichKeysToDisplay, "","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countsPerHour",   countsPerHour,   u"{:.1f}[c/h]".format(countsPerHour),   whichKeysToDisplay, "","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countsPerDay",    countsPerDay,  	 u"{:.1f}[c/d]".format(countsPerDay),    whichKeysToDisplay, "","", decimalPlaces = 2 )
 					if cOld != countList[-1][1]: self.addToStatesUpdateDict(unicode(dev.id),"lastCountTime",dd)
 				props["countList"] = json.dumps(countList)
 				self.deviceStopCommIgnore = time.time()
@@ -13060,7 +13111,7 @@ class Plugin(indigo.PluginBase):
 						pass
 
 				if newRPI != "found":
-					self.indiLOG.log(20, u"creating new pi 3-- " + unicode(fromPi) + "  " + unicode(piNReceived) + "    " + piMACSend)
+					self.indiLOG.log(20, u"creating new pi (3.)  -- fromPI: {};   piNR: {};   piMACSend: {};   ipAddress: {} " .format(fromPi, piNReceived, piMACSend, ipAddress) )
 					indigo.device.create(
 						protocol		= indigo.kProtocol.Plugin,
 						address			= piMACSend,
@@ -13930,7 +13981,8 @@ class Plugin(indigo.PluginBase):
 				out[u"deltaChangedSensor"]		  = self.RPI[piS][u"deltaChangedSensor"]
 				out[u"sensorRefreshSecs"]		  = float(self.RPI[piS][u"sensorRefreshSecs"])
 				out[u"sendFullUUID"]			  = self.sendFullUUID
-				out[u"rebootIfNoMessages"]		  = self.pluginPrefs.get(u"rebootIfNoMessages", 4)
+				out[u"rebootIfNoMessagesSeconds"]  = self.pluginPrefs.get(u"rebootIfNoMessagesSeconds", 999999999)
+				out[u"maxSizeOfLogfileOnRPI"]	  = int(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000))
 
 				try :
 					piDeviceExist=False
@@ -14319,7 +14371,11 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeWindowForContinuousEvents")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"mac")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"type")
-							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"updateIndigoTiming")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId0")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId1")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId2")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId3")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"coincidenceTimeInterval")
 
 							self.deviceStopCommIgnore = time.time()
 							dev.replacePluginPropsOnServer(props)
@@ -14436,6 +14492,8 @@ class Plugin(indigo.PluginBase):
 
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
 								if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10,	u" neoPixelClock: "+json.dumps(theDict))
+
+
 
 						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"clockLightSet")
 						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"minLightNotOff")
@@ -14957,6 +15015,7 @@ class Plugin(indigo.PluginBase):
 		self.myLog( text = u"data path used               {}" .format(self.indigoPreferencesPluginDir),  							mType= u"pi configuration")
 		self.myLog( text = u"debugLevel Indigo            {}-" .format(self.debugLevel),			   						    	mType= u"pi configuration")
 		self.myLog( text = u"debug which Pi#              {} " .format(self.debugRPI),											mType= u"pi configuration")
+		self.myLog( text = u"maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000)),	mType= u"pi configuration")
 		self.myLog( text = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),							   	mType= u"pi configuration")
 		self.myLog( text = u"myIp Number                  {}" .format(self.myIpNumber),											   	mType= u"pi configuration")
 		self.myLog( text = u"port# of indigoWebServer     {}" .format(self.portOfServer),									   		mType= u"pi configuration")

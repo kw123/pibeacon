@@ -1,3 +1,16 @@
+Added features / changes in v7.110.306 @ 2019-09-07
+===================================================
+
+1. added option for logfile size on rpi
+2. fixed no reboot if no ibeacon signal parameter on RPI, it was not active
+
+3. added INPUTcoincidence device:
+    eg using 2 .. 4 geiger counters you can set up a cosmic muon detector, by requiring simultaneous (within coincidence time window) events by all GPIOs
+    coincidence time of  INPUTpulses from different gpios trigger is 0.1 msec to several minutes.
+    this can be used to for FAST (msecs) detection of 2 events and up to several minutes
+
+
+
 Added features / changes in v7.109.305 @ 2019-09-05
 ===================================================
 

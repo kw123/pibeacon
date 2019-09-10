@@ -1229,6 +1229,8 @@ def readParams():
 		if inp		== "": return
 		lastRead	= ttt
 		newRead		= True
+
+		U.getGlobalParams(inp)
 			
 		if "output"				in inp:	 
 			output=				  (inp["output"])
@@ -1502,7 +1504,6 @@ global lastRead, newRead
 newRead		= True
 lastRead	= 0
 
-
 U.logger.log(30,"starting display")
 
 ####################SSD1351 pins
@@ -1536,6 +1537,7 @@ matrix			 = ""
 startAtDateTime	  =time.time()
 
 readParams()
+U.setLogLevel()
 
 lasti2cAddress	= i2cAddress
 devTypeLast		= devType 
@@ -2254,8 +2256,12 @@ while True:
 
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
 					except	Exception, e:
+						try:
 							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							U.logger.log(30, unicode(cmd))
+						except: # hard delete logfiles
+							os.system("sudo  chown -R pi:pi /var/log/*")
+							os.system("sudo echo "" >  /var/log/pibeacon.log")
 
 				newRead = False
 				if os.path.isfile(G.homeDir+"temp/display.inp"): break

@@ -31,9 +31,9 @@ def readParams():
 
 ######### main	########
 
-debug=0
 U.setLogging()
 readParams()
+U.setLogLevel()
 
 try:
 	myPID		= str(os.getpid())

@@ -33,7 +33,6 @@ import datetime
 import os
 
 
-allowedCommands = ["up", "down", "pulseUp", "pulseDown", "continuousUpDown", "analogWrite"]
 externalGPIO = False
 
 
@@ -330,7 +329,7 @@ def execCMDS(data):
 
 
 			if cmd not in allowedCommands:
-				U.logger.log(30," bad cmd not in allowed commands "+unicode(next))
+				U.logger.log(30," bad cmd not in allowed commands {} \n{}".format(cmd, allowedCommands))
 				continue
 
 

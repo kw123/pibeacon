@@ -68,7 +68,7 @@ class thisSensorClass:
 					receivedCharacters = self.ser.read(32)	# read up to 32 bytes
 
 					# debug printout 
-					if self.debugPrint > 1:	  print len(receivedCharacters), (":".join("{:02x}".format(ord(c)) for c in receivedCharacters))
+					if self.debugPrint > 1:	  U.logger.log(10,  (  ":".join("{:02x}".format(ord(c)) for c in receivedCharacters)   ) )
 
 					complePackage += receivedCharacters
 				
@@ -77,13 +77,13 @@ class thisSensorClass:
 						complePackage = complePackage[1:] # drop first byte if wrong
 
 					if len(complePackage) < 32:
-						if self.debugPrint >0:	 print "complePackage not complete (32 bytes): " , len(complePackage), " continue to read"
+						if self.debugPrint >0:	 U.logger.log(10, "complePackage not complete (32 bytes): {};  continue to read".format(len(complePackage) )  )
 						continue # to read
 				
 					frameLen = ord(complePackage[3])
 
 					if frameLen != 28:
-						if self.debugPrint >0:	 print "frameLength not correct (should be 28), is : ", frameLen, " try to read again"
+						if self.debugPrint >0:	 U.logger.log(10,  "frameLength not correct (should be 28), is :{} try to read again".format(len(frameLen)) )
 						complePackage = ""
 						continue
 
@@ -91,7 +91,8 @@ class thisSensorClass:
 					try:
 						theValues = struct.unpack(">HHHHHHHHHHHHHH", complePackage[4:32])
 					except Exception, e:
-						print  e, "unpacking error,	 len of package: ", len(complePackage)
+						U.logger.log(10, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(10,   "unpacking error	 len of package: {}".format(len(complePackage) ) )
 						complePackage = ""
 						continue
 
@@ -104,7 +105,7 @@ class thisSensorClass:
 	
 					# compare to send checksum
 					if check != theValues[-1]:
-						print "checksum not correct,  calculated:", check,", returned: ", theValues[-1]
+						U.logger.log(10, "checksum not correct,  calculated:{}, returned: {}".format(check, theValues[-1])  )
 						complePackage =""
 						continue
 						
@@ -116,7 +117,7 @@ class thisSensorClass:
 					break
 					
 				if not completeRead:
-					if self.debugPrint >0: print " not complete read, tried 3 times" 
+					if self.debugPrint >0: U.logger.log(10, " not complete read, tried 3 times" )
 			
 			if nGoodMeasurements == 0: return "badSensor"
 			
@@ -126,21 +127,21 @@ class thisSensorClass:
 			
 
 			if self.debugPrint	> 2: # debug print out 
-				print "---------------------------------------"
-				print "Concentration Units (standard)"
-				print "PM 1.0: %d\tPM2.5: %d\tPM10: %d" % (acumValues[0], acumValues[1], acumValues[2])
-				print "---------------------------------------"
-				print "Concentration Units (environmental)"
-				print "PM 1.0: %d\tPM2.5: %d\tPM10: %d" % (acumValues[3], acumValues[4], acumValues[5])
-				print "---------------------------------------"
-				print "Particle size		Count"
-				print " > 0.3um / 0.1L air:", acumValues[6]
-				print " > 0.5um / 0.1L air:", acumValues[7]
-				print " > 1.0um / 0.1L air:", acumValues[8]
-				print " > 2.5um / 0.1L air:", acumValues[9]
-				print " > 5.0um / 0.1L air:", acumValues[10]
-				print " > 10 um / 0.1L air:", acumValues[11]
-				print "---------------------------------------"
+				U.logger.log(10,  "---------------------------------------" )
+				U.logger.log(10,  "Concentration Units (standard)" )
+				U.logger.log(10,  "PM 1.0: %d\tPM2.5: %d\tPM10: %d" % (acumValues[0], acumValues[1], acumValues[2]) )
+				U.logger.log(10,  "---------------------------------------" )
+				U.logger.log(10,  "Concentration Units (environmental)" )
+				U.logger.log(10,  "PM 1.0: %d\tPM2.5: %d\tPM10: %d" % (acumValues[3], acumValues[4], acumValues[5]) )
+				U.logger.log(10,  "---------------------------------------" )
+				U.logger.log(10,  "Particle size		Count" )
+				U.logger.log(10,  " > 0.3um / 0.1L air:", acumValues[6] )
+				U.logger.log(10,  " > 0.5um / 0.1L air:", acumValues[7] )
+				U.logger.log(10,  " > 1.0um / 0.1L air:", acumValues[8] )
+				U.logger.log(10,  " > 2.5um / 0.1L air:", acumValues[9] )
+				U.logger.log(10,  " > 5.0um / 0.1L air:", acumValues[10] )
+				U.logger.log(10,  " > 10 um / 0.1L air:", acumValues[11] )
+				U.logger.log(10,  "---------------------------------------" )
 			return acumValues
 		except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

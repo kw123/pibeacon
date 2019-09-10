@@ -11080,6 +11080,212 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 
 
 
+	<Device type="sensor" id="INPUTcoincidence">
+	<Name>INPUT-coincidence- for PULSE sensors</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+
+			<Field id="infoLabelINPUT" type="label">
+			<Label>This sensor will count if 2 or more INPUTpulse sensors trigger within a coincidence time interval
+   the INPUTpulse devices must be on the same RPI
+   min time interval is 1mSec, max is 3 minutes. 
+   if you select 2 channels then both channels must fire in the specified time interval
+   if 4 channels are selected all 4 must fire in the same time interval</Label> 
+			</Field>
+            
+		<Field id="infoLabelRPI" type="label"> 				<Label>==RPI setup:  -----------------------------</Label> </Field>
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiI" dynamicReload="false"/>
+			<Label>select rPi-server to which the INPUTPulse devices are connected:</Label>
+			</Field>
+
+			<Field id="INPUTdevId0"   type="menu" defaultValue="-1" tooltip="selectINPUTpulse device for channel 0" >
+			<Label>Which INPUTpulse sensor for ch 0:</Label>
+			<List class="self" filter="" method="filerINPUTpulseDevices" dynamicReload="false"/>
+			</Field>
+
+			<Field id="INPUTdevId1"   type="menu" defaultValue="-1" tooltip="selectINPUTpulse device for channel 1" >
+			<Label>Which INPUTpulse sensor for ch 1:</Label>
+			<List class="self" filter="" method="filerINPUTpulseDevices" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="INPUTdevId2"   type="menu" defaultValue="-1" tooltip="selectINPUTpulse device for channel 2" >
+			<Label>Which INPUTpulse sensor for ch 2:</Label>
+			<List class="self" filter="" method="filerINPUTpulseDevices" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="INPUTdevId3"   type="menu" defaultValue="-1" tooltip="selectINPUTpulse device for channel 3" >
+			<Label>Which INPUTpulse sensor for ch 3:</Label>
+			<List class="self" filter="" method="filerINPUTpulseDevices" dynamicReload="false"/>
+			</Field>
+
+
+			<Field id="coincidenceTimeInterval" type="menu"     defaultValue="25" tooltip="the fastest reaction time for 2 geiger counetrs observed was 0.3 msec for cosmic muons">
+			<Label>time interval window for coincidence:</Label>
+			<List>
+				<Option value="0.1"       >0.1 mSec</Option>
+				<Option value="0.2"       >0.2 mSec</Option>
+				<Option value="0.3"       >0.3 mSec</Option>
+				<Option value="0.4"       >0.4 mSec</Option>
+				<Option value="0.5"       >0.5 mSec</Option>
+				<Option value="0.6"       >0.6 mSec</Option>
+				<Option value="0.7"       >0.7 mSec</Option>
+				<Option value="0.8"       >0.8 mSec</Option>
+				<Option value="0.9"       >0.9 mSec</Option>
+				<Option value="1"         >1 mSec</Option>
+				<Option value="2"         >2 mSec </Option>
+				<Option value="3"         >3 mSec </Option>
+				<Option value="5"         >5 mSec </Option>
+				<Option value="7"         >7 mSec</Option>
+				<Option value="10"        >10 mSec </Option>
+				<Option value="12"        >12 mSec</Option>
+				<Option value="15"        >15 mSec</Option>
+				<Option value="20"        >20 mSec  </Option>
+				<Option value="25"        >25 mSec</Option>
+				<Option value="30"        >30 mSec</Option>
+				<Option value="50"        >50 mSec</Option>
+				<Option value="70"        >70 mSec</Option>
+				<Option value="100"       >100 mSec </Option>
+				<Option value="200"       >200 mSec  </Option>
+				<Option value="300"       >300 mSec  </Option>
+				<Option value="500"       >500 mSec </Option>
+				<Option value="1000"      > 1   Sec </Option>
+				<Option value="2000"      > 2   Sec </Option>
+				<Option value="3000"      > 3   Sec </Option>
+				<Option value="4000"      > 4   Sec </Option>
+				<Option value="5000"      > 5   Sec </Option>
+				<Option value="6000"      > 6   Sec </Option>
+				<Option value="7000"      > 7   Sec </Option>
+				<Option value="8000"      > 8   Sec </Option>
+				<Option value="9000"      > 9   Sec </Option>
+				<Option value="10000"     > 10   Sec </Option>
+				<Option value="15000"     > 15   Sec </Option>
+				<Option value="20000"     > 20   Sec </Option>
+				<Option value="25000"     > 25   Sec </Option>
+				<Option value="30000"     > 30   Sec </Option>
+				<Option value="35000"     > 35   Sec </Option>
+				<Option value="40000"     > 40   Sec </Option>
+				<Option value="45000"     > 45   Sec </Option>
+				<Option value="50000"     > 50   Sec </Option>
+				<Option value="55000"     > 55   Sec </Option>
+				<Option value="60000"     > 60   Sec </Option>
+				<Option value="65000"     > 65   Sec </Option>
+				<Option value="70000"     > 70   Sec </Option>
+				<Option value="75000"     > 75   Sec </Option>
+				<Option value="80000"     > 80   Sec </Option>
+				<Option value="90000"     > 90   Sec </Option>
+				<Option value="100000"    > 100  Sec </Option>
+				<Option value="110000"    > 110  Sec </Option>
+				<Option value="120000"    > 2    Min </Option>
+				<Option value="150000"    > 2.5  Min </Option>
+				<Option value="180000"    > 3    Min </Option>
+				<Option value="2200000"   > 4    Min </Option>
+			</List>
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="collect info for min xx seconds before sending new data to indigo"> 
+			<Label>min secs between indigo updates:</Label>
+			<List>
+				<Option value="0.2" > 0.2 secs </Option>
+				<Option value="0.5" > 0.5 secs </Option>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+				<Option value="20"  > 20  secs</Option>
+				<Option value="30"  > 30  secs</Option>
+				<Option value="60"  > 60  secs</Option>
+			</List>
+			</Field>
+
+            
+			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
+			<List>
+				<Option value="count"              >count</Option>
+				<Option value="countsPerSecond"    >countsPerSecond = frequency</Option>
+				<Option value="countsPerMinute"    >countsPerMinute</Option>
+				<Option value="countsPerHour"      >countsPerHour</Option>
+				<Option value="countsPerDay"       >countsPerDay</Option>
+			</List>
+			<Label>State to display in the State Column:</Label>
+			</Field>
+
+			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
+					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
+			<Label>select the icon pair you like to use for down/up:</Label>
+			</Field>
+            
+			<Field id="infoLabelAction" type="label" >		<Label>==Enter local action executed directly on RPI: ---
+   for BURST, LONG, CONTINUOS events, you can use
+  -Any unix command eg "ping 192.168.1.1"
+  -Or  /usr/bin/curl --user userid:password -X PUT -d value="abc" http://ip#:servport/variables/xxx
+  -Or "sudo reboot" or "sudo shutdown -h now"-
+  -Or GPIO 18 on/off: "gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0"
+  -Or GPIO 18 toggle: "gpio -g mode 18 out;if (gpio -g read 18 | grep 1 ); then  gpio -g write 18 0; else gpio -g write 18 1 ;</Label>
+			</Field>
+			<Field id="actionPulseBurst"         type="textfield"     defaultValue="" hidden="no" > <Label>action if BurstEvent:</Label></Field>
+			<Field id="actionPulseContinuous"         type="textfield"     defaultValue="" hidden="no" > <Label>action if contEvent:</Label></Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="lastCountTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastCountTime</TriggerLabel>
+				<ControlPageLabel>lastCountTime</ControlPageLabel>
+			</State>
+			<State id="count">
+				<ValueType>String</ValueType>
+				<TriggerLabel>count</TriggerLabel>
+				<ControlPageLabel>count</ControlPageLabel>
+			</State>
+			<State id="countsPerSecond">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countsPerSecond</TriggerLabel>
+				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+			</State>
+			<State id="countsPerMinute">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countsPerMinute</TriggerLabel>
+				<ControlPageLabel>countsPerMinute</ControlPageLabel>
+			</State>
+			<State id="countsPerHour">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countsPerHour</TriggerLabel>
+				<ControlPageLabel>countsPerHour</ControlPageLabel>
+			</State>
+			<State id="countsPerDay">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countsPerDay</TriggerLabel>
+				<ControlPageLabel>countsPerDay</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
 	<Device type="sensor" id="INPUTpulse">
 	<Name>INPUT-pulse- GPIO sensor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -11319,6 +11525,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="count"              >count</Option>
 				<Option value="countsPerSecond"    >countsPerSecond = frequency</Option>
 				<Option value="countsPerMinute"    >countsPerMinute</Option>
+				<Option value="countsPerHour"      >countsPerHour</Option>
+				<Option value="countsPerDay"       >countsPerDay</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
 			</Field>
@@ -11381,6 +11589,16 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>countsPerMinute</TriggerLabel>
 				<ControlPageLabel>countsPerMinute</ControlPageLabel>
+			</State>
+			<State id="countsPerHour">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countsPerHour</TriggerLabel>
+				<ControlPageLabel>countsPerHour</ControlPageLabel>
+			</State>
+			<State id="countsPerDay">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countsPerDay</TriggerLabel>
+				<ControlPageLabel>countsPerDay</ControlPageLabel>
 			</State>
 		</States>
 	</Device>

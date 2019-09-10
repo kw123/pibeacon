@@ -61,7 +61,7 @@ def setLogging():
 #################################
 def setLogLevel():
 	global streamhandler, permLogHandler, logger 
-	logger.log(30, " setting debuglevel to {}".format(G.debug))
+	logger.log(10, " setting debuglevel to {}".format(G.debug))
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
 	else:
@@ -325,7 +325,7 @@ def getGlobalParams(inp):
 		if "BeaconUseHCINo"			in inp:	 G.BeaconUseHCINo=				(inp["BeaconUseHCINo"])
 		if "BLEconnectUseHCINo"		in inp:	 G.BLEconnectUseHCINo=			(inp["BLEconnectUseHCINo"])
 		try:
-			if "rebootIfNoMessages"	in inp:	 G.rebootIfNoMessages=	 int(inp["rebootIfNoMessages"])
+			if "rebootIfNoMessagesSeconds"	in inp:	 G.rebootIfNoMessagesSeconds=	 int(inp["rebootIfNoMessagesSeconds"])
 		except: pass
 
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
@@ -398,14 +398,14 @@ def doReboot(tt=1, text="", cmd=""):
 
 
 	if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
-		try: os.system("sudo killall pigpiod &")
+		try: os.system("sudo killall -9 pigpiod &")
 		except: pass
 		time.sleep(0.1)
 
 	if cmd =="":
 		os.system(doCmd+";sleep 2;sudo reboot -f")
 		time.sleep(20)
-		os.system("sudo killall python; sudo sync;sudo sleep 2; sudo reboot -f") 
+		os.system("sudo killall -9 python; sudo sync;sudo sleep 2; sudo reboot -f") 
 		os.system("sudo sync;sudo halt") 
 	else:
 		os.system(doCmd)
@@ -441,7 +441,7 @@ def sendRebootHTML(reason,reboot=True):
 	if reboot:
 	   doReboot(tt=3, text=reason)
 	else:
-	   doReboot(tt=3., text=reason, cmd="sudo killall python; sleep 1; shutdown -h now ")
+	   doReboot(tt=3., text=reason, cmd="sudo killall -9 python; sleep 1; shutdown -h now ")
 	
 	return
 
@@ -1523,7 +1523,7 @@ def execSend():
 			while not G.sendThread["queue"].empty():
 				try:
 					all 		= G.sendThread["queue"].get()
-					logger.log(10, G.program.ljust(20)+ u"  send queue receiving {}".format(all) )
+					logger.log(10, G.program.ljust(20)+ u"  send queue data {}".format(all) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
 					text 		= all["text"]
@@ -1596,7 +1596,7 @@ def execSend():
 
 					else:  ## do socket comm 
 						
-								sendMSG = False
+								MSGwasSend = False
 								for ii in range(3): # try max 3 times.
 									data0 = json.dumps(data, separators=(',',':'))
 									if squeeze: data0 = data0.replace(" ","")
@@ -1609,7 +1609,7 @@ def execSend():
 										time.sleep(0.1)
 										response = soc.recv(512)
 										if response.find("ok") >-1:
-											sendMSG =True
+											MSGwasSend =True
 											break
 										else:# try again
 											logger.log(10, G.program.ljust(20)+ u" Sending  again: send bytes: " + str(len(data0)) + " ret MSG>>"+  response+"<<")
@@ -1630,7 +1630,7 @@ def execSend():
 									if len(tz) < 2:	 tz = time.tzname[0]
 									data["ts"]			= {"time":round(time.time(),2),"tz":tz}
 
-								if sendMSG:
+								if MSGwasSend:
 											logger.log(10, G.program.ljust(20)+ u" msg: " + unicode(sendData)+"\n" )
 											os.system("echo '"+G.program+":  send -- "+data0+"' > "+ G.homeDir+"temp/messageSend")
 								else:
@@ -1787,6 +1787,7 @@ def writeJson(fName, data, sort_keys=False, indent=0):
 	##print "writing json to "+fName, out
 		f.write(out)
 		f.close()
+		#if fName.find("count") > -1:  print "write ", fName, data, out
 	except	Exception, e:
 		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
@@ -1818,11 +1819,9 @@ def checkresetCount(IPCin):
 		os.remove(G.homeDir + G.program+".reset")
 		if len(inp) < 3: 
 			return IPC
-		#print "checkresetCount doing reset", inp
+		logger.log(20, "{} checkresetCount doing reset of counters".format(G.program.ljust(20)))
 		for p in inpJ:
 			pin = int(p)
-			if pin > 99:  continue
-			if pin < 0:	  continue
 			IPC[pin] = 0
 			#print "checkresetCount pin=", pin
 		writeINPUTcount(IPC)
@@ -1833,21 +1832,22 @@ def checkresetCount(IPCin):
 	
 ######################################
 def readINPUTcount():
-		IPC = [0 for i in range(100)]
 		try:
 			IPC, ddd = readJson(G.homeDir+G.program+".count")
 		except:
 			pass
-		for p in range(100):
+		if type(IPC) != type({}): IPC = {}
+		out = {}
+		for p in range(30):
 			try:
-				int(IPC[p])
+				out[int(p)] = int(IPC[str(p)])
 			except:
-				IPC[p] =0
-				
-		if len(IPC) < 10:
-			IPC = [0 for i in range(100)]
-		writeINPUTcount(IPC)
-		return IPC
+				out[int(p)] = 0
+		for p in IPC:
+			if int(p) > 30: 
+				out[int(p)] = int(IPC[p])
+		writeINPUTcount(out)
+		return out
 
 
 ######################################
@@ -2564,7 +2564,7 @@ class simpleI2cReadWrite:
 		self.fr.close()
 		
 #################################
-def findString(string,file):
+def findString(string, file):
 	if string =="": return 0
 
 	try:
@@ -2586,9 +2586,9 @@ def findString(string,file):
 
 
 #################################
-def checkIfInFile(stringItems,file):
-	if stringItems =="" or stringItems ==[]: return 0
-	if stringItems[0] == "": return 0
+def checkIfInFile(stringItems, file):
+	if stringItems =="" or stringItems ==[]: return "error"
+	if stringItems[0] == "": return "error"
 	nItems		= len(stringItems)
 	try:
 		f=open(file,"r")
@@ -2605,17 +2605,17 @@ def checkIfInFile(stringItems,file):
 						if item == item2:
 							nFound +=1
 							break
-			if nFound == nItems: return 0
-		return 1
+			if nFound == nItems: return "found"
+		return "not found" # == not found
 	except	Exception, e:
 		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			os.system("sudo reboot")
-
+	return "error"
 
 
 #################################
-def uncommentOrAdd(string,file,before="",nLines=1):
+def uncommentOrAdd(string, file, before="", nLines=1):
 	if string =="": return 0
 
 	try:
@@ -2672,7 +2672,7 @@ def uncommentOrAdd(string,file,before="",nLines=1):
 
 
 #################################
-def removefromFile(string,file,nLines=1):
+def removefromFile(string, file, nLines=1):
 	if string =="": return 0
 	stringItems = string.split()
 	nItems		= len(stringItems)

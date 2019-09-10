@@ -81,13 +81,13 @@ wlan0PacketsOld		= ""
 eth0PacketsOld		= ""
 packetsTime			= 0
 packetsTimeOld		= 0
-rebootIfNoMessages	= 4
 sundialActive		= ""
 BeaconUseHCINo		= "-1"
 BLEconnectUseHCINo	= "-1"
 last_masterStart	= ""
 wifiID				= ""
 sendThread			= {}
+rebootIfNoMessagesSeconds = 99999999999
 
 ACTIONS={"LS":"ls",
 		 "REBOOT":		   "sudo reboot",

@@ -94,7 +94,7 @@ def readNewParams(force=0):
 	global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime
 	global ifNetworkChanges
-	global typeForPWM
+	global typeForPWM, maxSizeOfLogfileOnRPI
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -152,7 +152,8 @@ def readNewParams(force=0):
 		if u"startWebServerSTATUS" 			in inp:	 startWebServerSTATUS= 			  int(inp["startWebServerSTATUS"])
 		if u"startWebServerINPUT" 			in inp:	 startWebServerINPUT= 			  int(inp["startWebServerINPUT"])
 		if u"fanEnable" 					in inp:	 fanEnable= 					     (inp["fanEnable"])
-		if u"ifNetworkChanges" 				in inp:	 ifNetworkChanges= 		     	(inp["ifNetworkChanges"]) 
+		if u"ifNetworkChanges" 				in inp:	 ifNetworkChanges= 		     	     (inp["ifNetworkChanges"]) 
+		if u"maxSizeOfLogfileOnRPI" 		in inp:	 maxSizeOfLogfileOnRPI= 		 int(inp["maxSizeOfLogfileOnRPI"]) 
 
 		if u"typeForPWM" 				in inp:	 
 			if typeForPWM != inp["typeForPWM"] and inp["typeForPWM"] == "PIGPIO":
@@ -233,10 +234,11 @@ def readNewParams(force=0):
 		
 		if "output"				in inp:	 
 			output=				  (inp["output"])
+			U.logger.log(20, "output devices: {}".format(output))
 
 			for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","sundial","setStepperMotor"]:
 				if pp in output:
-						U.logger.log(10, "setting "+pp+" ON") 
+						U.logger.log(10, "setting Active {}".format(pp) ) 
 						if pp not in activePGM:
 							if pp =="display":
 								checkIfDisplayIsRunning()
@@ -258,7 +260,7 @@ def readNewParams(force=0):
 		for pp in xx:
 			pgm = xx[pp]
 			if sensorList.find(pp) >-1:
-					U.logger.log(10, "setting {} ON".format(pgm)) 
+					U.logger.log(10, "checking if Active: {}".format(pgm)) 
 					if pgm not in activePGM:
 						startProgam(pgm+".py", params="", reason="restarting {}..not running".format(pgm))
 					activePGM[pgm] =True
@@ -457,7 +459,7 @@ def shutdownSignalFromUPS(channel):
 		U.logger.log(30, "LOW battery capacity event cancelled ... UPS system back up")
 		return
 	print "shutting down"
-	U.doReboot(tt=10, text="shutdown by UPS signal battery capacity", cmd="sudo killall python; sudo sync;wait 4;sudo shutdown now;sudo wait 3;sudo halt")
+	U.doReboot(tt=10, text="shutdown by UPS signal battery capacity", cmd="sudo killall -9 python; sudo sync;wait 4;sudo shutdown now;sudo wait 3;sudo halt")
 
 def setACTIVEorKILL(tag,pgm,check,force=0):
 	global sensors, activePGMdict
@@ -616,7 +618,7 @@ def checkIfNeopixelIsRunning(pgm= "neopixel"):
 	if tt - lastcheckIfNeopixelIsRunning < 30: return 
 	lastcheckIfNeopixelIsRunning = tt
 	try:
-		U.logger.log(10, u"checking if  {} running".format(pgm))
+		U.logger.log(10, u"checking if running: {}".format(pgm))
 		if not U.pgmStillRunning(pgm+".py"):
 			U.logger.log(10, u"restarting  {}".format(pgm))
 			startProgam(pgm+".py", params="", reason="..not running ")
@@ -779,17 +781,9 @@ def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk 
 			if line.find("/var/log") > -1: # for temp disks
 				items = line.split()
 				try:
-					bytesAvailable = int(items[3])
+					kbytesAvailable = int(items[3])
 					usedPercent=int(items[4].strip("%"))
-					if	usedPercent > 90 or bytesAvailable < 4000 : retCode= 2 ## 90% or 4 Mbyte
-				except:
-					return 0
-			if line.find("/run/user/") > -1: # for temp disks
-				items = line.split()
-				try:
-					bytesAvailable = int(items[3])
-					usedPercent=int(items[4].strip("%"))
-					if	usedPercent > 90 or bytesAvailable < 4000 : retCode= 2 ## 90% or 4 Mbyte
+					if	usedPercent > 90 or kbytesAvailable < 4000 : retCode= 2 ## 90% or 4 Mbyte
 				except:
 					return 0
 
@@ -986,7 +980,7 @@ def checkIfShutDownVoltage():
 						U.logger.log(30, "UPS-V2 Vin is off and battery capacity {}%  below limit {}%.. checking countdown to 0: {}".format(batcap, batteryUPSshutdownAtxPercent, 5-shutdownSignalFromUPS_LastCount)) 
 						if shutdownSignalFromUPS_LastCount > 3:
 							U.logger.log(30, "UPS-V2.. rebooting after 4 wait / test".format(batteryUPSshutdownAtxPercent, batcap)) 
-							U.doReboot(tt=10,  text="UPS-V2 shutdown by UPS  battery capacity message", cmd="sudo killall python;sudo sync; wait 4;sudo shutdown now;sudo wait 3;sudo halt")
+							U.doReboot(tt=10,  text="UPS-V2 shutdown by UPS  battery capacity message", cmd="sudo killall -9 python;sudo sync; wait 4;sudo shutdown now;sudo wait 3;sudo halt")
 
 
 
@@ -1072,26 +1066,39 @@ def writeJson2(data, fileName, lastWriteBatteryStatus):
 
 ####################      #########################
 def checkLogfiles():
-	global useRamDiskForLogfiles
+	global maxSizeOfLogfileOnRPI
 	try:
-		if os.path.isfile(G.homeDir+"permanent.log") and	 os.path.getsize(G.homeDir+"permanent.log") > 20000:
-			os.system("rm "+G.homeDir+"permanent.log")	 
-	except: pass
+		if checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) != 0: 	 # (need 500Mbyte free or 80% max
+			os.system("sudo  chown -R pi:pi /var/log/*")
+			os.system("sudo echo "" >  /var/log/pibeacon.log")
+			files = subprocess.Popen("find /var/log -type f",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].split()
+			for f in files:
+				os.system("sudo echo "" >  {}".format(f) )
+			try: U.logger.log(30, "reset  logfiles  due to  limited disk space ")
+			except: pass
+		if checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) != 0: 	 # (need 500Mbyte free or 80% max
+			U.restartMyself(reason=" out of space ")
+			os.system("sudo killall -9 python; sleep 2;sudo reboot -f")
 
-	if not os.path.isfile(G.logDir+"piBeacon.log"): return 
-	nBytes = os.path.getsize(G.logDir+"piBeacon.log")
-	if nBytes > 30000000: # 30 mbytes
-		if  os.path.isfile(G.logDir+"piBeacon-1.log"):  
-			os.system("sudo rm "+G.logDir+"piBeacon-1.log ")
-		os.system("sudo mv "+G.logDir+"piBeacon.log "+G.logDir+"piBeacon-1.log ")
-		U.restartMyself(reason="new logfile")
+		try:
+			if os.path.isfile(G.homeDir+"permanent.log") and	 os.path.getsize(G.homeDir+"permanent.log") > 20000:
+				os.system("rm "+G.homeDir+"permanent.log")	 
+		except: pass
+
+		if not os.path.isfile(G.logDir+"pibeacon.log"): return 
+		nBytes = os.path.getsize(G.logDir+"pibeacon.log")
+		U.logger.log(10, "checking logfile size: {}".format(nBytes))
+		if nBytes > maxSizeOfLogfileOnRPI: # defualt 10 mBytes
+			if  os.path.isfile(G.logDir+"pibeacon-1.log"):  
+				os.system("sudo rm "+G.logDir+"pibeacon-1.log ")
+			os.system("sudo cp "+G.logDir+"pibeacon.log "+G.logDir+"pibeacon-1.log ")
+			os.system("sudo  chown -R pi:pi /var/log/*")
+			os.system("sudo echo "" >  /var/log/pibeacon.log")
+	except	Exception, e :
+		print u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		return
 
 
-	if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
-	U.logger.log(30, "delete logfiles  due to  limited disk space ")
-	os.system("sudo rm /var/log/*")
-	os.system("sudo rm "+G.logDir+"*")
-	if checkDiskSpace(maxUsedPercent=80,kbytesLeft=500000) == 0: return	 # (need 500Mbyte free or 80%
 	U.doRebootThroughRUNpinReset()
 
 
@@ -1104,20 +1111,26 @@ def checkRamDisk():
 	  
 		ramDiskActive = False
 		for line in lines:
-			if line.find("/var/log") == -1:continue
-			ramDiskActive = True
-			break
+			if line.find("/var/log") > -1: 
+				ramDiskActive = True
+				break
 			
-		if useRamDiskForLogfiles=="1" and not ramDiskActive: 
-			if	U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab") ==1:
+		if useRamDiskForLogfiles == "1" and not ramDiskActive: 
+			U.logger.log(30," ramdisk requested, but not active .. adding to /etc/fstab")
+			U.logger.log(30," ramdisk requested, checkIfInFile: {}, or {}".format(U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab"), U.checkIfInFile(["#tmpfs","/var/log"],"/etc/fstab") ))
+			if	U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab") == "not found" or U.checkIfInFile(["#tmpfs","/var/log"],"/etc/fstab") =="found":
+				U.removefromFile("/var/log","/etc/fstab")
 				U.uncommentOrAdd("tmpfs	  /var/log	  tmpfs	   defaults,noatime,nosuid,mode=0755,size=60m	 0 0","/etc/fstab")
-				U.logger.log(30," master need to reboot, added ram disk for /var/log ")
+				U.logger.log(30," master needs to reboot, added ram disk for /var/log ")
 				return True
-		if useRamDiskForLogfiles=="0" and ramDiskActive: 
-			if	U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab") ==1:
-				U.removefromFile("tmpfs /var/log","/etc/fstab")
-				U.logger.log(30," master need to reboot, removed ram disk for /var/log ")
-				return True
+
+		if useRamDiskForLogfiles == "0" and ramDiskActive: 
+			U.logger.log(30," ramdisk off, but  active .. removing from /etc/fstab")
+			U.logger.log(30," ramdisk requested, checkIfInFile: {}, or {}".format(U.checkIfInFile(["tmpfs","/var/log"],"/etc/fstab"), U.checkIfInFile(["#tmpfs","/var/log"],"/etc/fstab") ))
+			U.removefromFile("/var/log","/etc/fstab")
+			U.logger.log(30," master needs to reboot, removed ram disk for /var/log ")
+			return True
+
 		return False
 
 
@@ -1141,7 +1154,7 @@ def delayAndWatchDog():
 
 				### print "master: shutdown pin #%d;  secs pressed:%.1f"%(shutdownInputPin,tt - lastshutdownInputPinTime )
 				if tt - G.tStart > 10  and tt - lastshutdownInputPinTime > 3:
-					U.doReboot(tt=10,  text="... shutdown by button/pin", cmd="sudo killall python; sudo sync;wait 9;sudo halt")
+					U.doReboot(tt=10,  text="... shutdown by button/pin", cmd="sudo killall -9 python; sudo sync;wait 9;sudo halt")
 
 			if xx%5 ==1 and False:
 				if	os.path.isfile("/run/nologin"):
@@ -1454,8 +1467,10 @@ def execMaster():
 		global sundial
 		global masterVersion
 		global ifNetworkChanges
-		global typeForPWM
+		global typeForPWM, maxSizeOfLogfileOnRPI
 
+
+		maxSizeOfLogfileOnRPI	= 10000000
 		typeForPWM				= "GPIO"
 		ifNetworkChanges  		= "doNothing"
 		masterVersion			= 11.3
@@ -1783,9 +1798,9 @@ def execMaster():
 		# reset rights and ownership just in case
 		os.system("chmod a+r -R "+G.homeDir0+"*")
 		os.system("chmod a+x "+G.homeDir0+"callbeacon.py")
-
-		os.system("chmod a+w -R "+G.homeDir+"*")
 		os.system("chown -R pi:pi "+G.homeDir0+"*")
+
+		os.system("sudo  chown -R pi:pi /var/log/*")
 
 		#os.system("sudo chown -R  pi:pi	 /run/user/1000/pibeacon")
 		os.system("sudo chmod a+x  /lib/udev/hwclock-set")
@@ -1840,6 +1855,8 @@ def execMaster():
 		checkTempForFanOnOff(force = True)
 
 		while True:
+			if loopCount > 1000000000: loopCount = 0
+			loopCount += 1
 
 			if abs(tAtLoopSTart	 - time.time()) > 30:
 				if G.networkType.find("indigo") >-1 and G.wifiType =="normal":
@@ -1851,7 +1868,6 @@ def execMaster():
 
 			tAtLoopSTart =time.time()
 		
-			loopCount += 1
 			if loopCount == 3: 
 				checkFSCHECKfile()
 
@@ -1908,7 +1924,7 @@ def execMaster():
 					startBLEsensor()
 
 				for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","spiMCP3008","simplei2csensors","sundial","setStepperMotor"]:
-						U.logger.log(10, "setting {} ON".format(pp) ) 
+						U.logger.log(10, "checking if Active: {}".format(pp) ) 
 						if pp in activePGM:
 							if   pp =="display":
 								checkIfDisplayIsRunning()
@@ -2053,9 +2069,8 @@ def execMaster():
 
 
 
-				if loopCount %150 ==0: # check logfiles every 150*10=1200 seconds ~ 30 minutes
+				if loopCount %5 ==0: # check logfiles every 5*20=100 seconds 
 					checkLogfiles()
-					loopCount =0
 					## check if we have network back
 				
 				delayAndWatchDog()

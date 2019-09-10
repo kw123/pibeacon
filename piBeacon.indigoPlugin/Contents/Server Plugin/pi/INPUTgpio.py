@@ -181,7 +181,7 @@ lastRead			= 0
 
 ####################  input gios   ...allrpi	  only rpi2 and rpi0--
 INPUTlastvalue	  = ["-1" for i in range(100)]
-INPUTcount		  = [0 for i in range(100)]
+INPUTcount		  = {}
 #i2c pins:		  = gpio14 &15
 # 1 wire		  = gpio4
 #####################  init parameters that are read from file 

@@ -430,6 +430,10 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds
 	global myBLEmac, sendFullUUID
 	try:
+		if myBLEmac == "00:00:00:00:00:00":
+			time.sleep(2)
+			U.restartMyself(param="", reason="bad BLE  =00..00")
+
 		data=[]
 		for beaconMAC in beaconsNew:
 			if beaconMAC not in beacon_ExistingHistory: continue
@@ -1052,20 +1056,21 @@ try:
 
 		dt1 = int(time.time() - lastMSGwithData1)
 		dt2 = int(time.time() - lastMSGwithData2)
-		if dt1 > 90 or dt2 > 90:
-			G.debug = 10
-			maxLoopCount = 20
-			restartCount +=1
-			U.logger.log(30, u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount))
-			if dt2 > 400 :
-				time.sleep(20)
-				U.restartMyself(param="", reason="bad BLE (2),restart")
-			if restartCount > 1:
-				U.logger.log(30, " restarting BLE stack due to no messages "+G.program)
-				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)
-				maxLoopCount = 6000
-		else:
-			restartCount = 0
+		if dt1 > G.rebootIfNoMessagesSeconds:
+			if dt1 > 90 or dt2 > 90:
+				G.debug = 10
+				maxLoopCount = 20
+				restartCount +=1
+				U.logger.log(30, u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount))
+				if dt2 > 400 :
+					time.sleep(20)
+					U.restartMyself(param="", reason="bad BLE (2),restart")
+				if restartCount > 1:
+					U.logger.log(30, " restarting BLE stack due to no messages "+G.program)
+					sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)
+					maxLoopCount = 6000
+			else:
+				restartCount = 0
 
 except	Exception, e:
 	U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
