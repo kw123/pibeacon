@@ -457,11 +457,19 @@ try:
 				pkt = sock.recv(255)
 				errCount = 0
 			except	Exception, e:
+				for ii in range(30):
+					if os.path.isfile(G.homeDir+"temp/stopBLE"):
+						time.sleep(5)
+					else:
+						break
+				os.system("rm "+G.homeDir+"temp/stopBLE")
+				U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
+				time.sleep(1)
+				U.restartMyself(param="", reason="sock.recv error")
 				U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				errCount += 1
 				if errCount > 3:
 					break
-				pkt =[]
 
 			doP = False
 			if len(pkt) > 15: 
@@ -527,7 +535,7 @@ except	Exception, e:
 	U.logger.log(30, "  exiting loop due to error\n")
 
 print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" BLEcsensor end of "+G.program	 
-stry: 	G.sendThread["run"] = False; time.sleep(1)
+try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
 ys.exit(0)
 

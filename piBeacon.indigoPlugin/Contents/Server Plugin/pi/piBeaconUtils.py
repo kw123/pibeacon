@@ -61,7 +61,7 @@ def setLogging():
 #################################
 def setLogLevel():
 	global streamhandler, permLogHandler, logger 
-	logger.log(10, " setting debuglevel to {}".format(G.debug))
+	logger.log(10, "{:<20} setting debuglevel to {}".format(G.program, G.debug))
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
 	else:
@@ -80,7 +80,7 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			cmd+= " | grep " +param1
 		if param2 !="":
 			cmd+= " | grep " +param2
-		logger.log(10, u"{} trying to kill {}".format(G.program.ljust(20), cmd) )
+		logger.log(10, u"{:<20} trying to kill {}".format(G.program, cmd) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines=ret.split("\n")
@@ -90,17 +90,17 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			pid=int(items[1])
 			if pid == int(myPID): continue
 
-			logger.log(10, u"{}  killing {}  {}  {}".format(G.program.ljust(20), pgmToKill, param1, param2) )
+			logger.log(10, u"{:<20}  killing {}  {}  {}".format(G.program, pgmToKill, param1, param2) )
 			os.system("kill -9 "+str(pid))
 	except Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 #################################
 def restartMyself(param="", reason="", delay=1, doPrint= True):
 	if doPrint: 
-		logger.log(50, u"{} --- restarting --- {}  {}".format(G.program.ljust(20), param, reason) )
+		logger.log(50, u"{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
 	else:
-		logger.log(30, u"{} --- restarting --- {}  {}".format(G.program.ljust(20), param, reason) )
+		logger.log(30, u"{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
 
 	time.sleep(delay)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py "+ param+" &")
@@ -108,9 +108,9 @@ def restartMyself(param="", reason="", delay=1, doPrint= True):
 #################################
 def restartMaster( reason="", doPrint= True):
 	if doPrint: 
-		logger.log(50, u"{} --- restarting --- {}".format(G.program.ljust(20), reason) )
+		logger.log(50, u"{:<20} --- restarting --- {}".format(G.program, reason) )
 	else:
-		logger.log(30, u"{} --- restarting --- {}".format(G.program.ljust(20), reason) )
+		logger.log(30, u"{:<20} --- restarting --- {}".format(G.program, reason) )
 
 	os.system("/usr/bin/python "+G.homeDir+"master.py  &")
 
@@ -126,45 +126,6 @@ def setStopCondition(on=True):
 		os.system("sudo echo -n N > /sys/module/i2c_bcm2708/parameters/combined")
 	
 
-#################################################################
-######  this should not be called anymore .  .. deprecated ...###
-#################################################################
-def toLog(lvl, msg, doPrint = False, permanentLog=False):
-	if not G.loggerSet:
-		setLogging()
-
-	if lvl < G.debug:
-		try:
-			if G.program =="":
-				G.Program = "unknown"
-			if	not os.path.isdir(G.logDir):
-				return
-
-			f=open(G.logDir+"pibeacon.log","a")
-			f.write( (  "{} {} L:{:2d}= {} \n".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
-			f.close()
-			if permanentLog:
-				f=open(G.homeDir+"permanent.log","a")
-				f.write( (  "{} {} L:{:2d}= {} \n".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
-				f.close()
-
-				
-		except	Exception, e:
-			f.write( (  "{} {} L:{:2d}= {} \n".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
-			print ( ( "{} {} L:{:2d}= Line {} has error={}".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, lvl, sys.exc_traceback.tb_lineno, e ) ).encode("utf8") )
-			if unicode(e).find("No space left on device") >-1:
-				fixoutofdiskspace()
-			if unicode(e).find("Read-only file system:") >-1:
-				doReboot(tt=0)
-
-	if doPrint:
-			try:
-				print ( (  "{} {} L:{:2d}= {}".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program.ljust(15), lvl, msg) ).encode("utf8") )
-			except	Exception, e:
-				print ( ( "{} {} L:{:2d}= Line {} has error={}".format(datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),G.program, lvl, sys.exc_traceback.tb_lineno, e ) ).encode("utf8") )
-	return 
-#################################################################
-#################################################################
 #################################################################
 
 
@@ -183,7 +144,7 @@ def checkrclocalFile():
 	if replace:
 		os.system("sudo cp "+G.homeDir+"rc.local.default /etc/rc.local ")
 		os.system("sudo chmod a+x /etc/rc.local")
-		logger.log(30, G.program.ljust(20)+ u" replacing rc.local file" )
+		logger.log(30, u"{:<20}replacing rc.local file".format(G.program) )
 
 
 	return 
@@ -214,7 +175,7 @@ def pgmStillRunning(pgmToTest, verbose=False) :
 			#print "kill found"
 			return True
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	#print "ps	failed for "+pgmToTest
 	#os.system("ps -ef | grep python")
 	return False
@@ -264,7 +225,7 @@ def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=Fa
 		inp, inRaw = readJson(inFile)
 		if inp =={}:
 			if inFile == G.homeDir+"temp/parameters":
-				logger.log(20, G.program.ljust(20)+ u" doRead error empty file")
+				logger.log(20, u"{:<20} doRead error empty file".format(G.program))
 		if deleteAfterRead: os.remove(inFile)
 		if lastTimeStamp != "":
 			return "","error", t
@@ -325,7 +286,7 @@ def getGlobalParams(inp):
 		if "BeaconUseHCINo"			in inp:	 G.BeaconUseHCINo=				(inp["BeaconUseHCINo"])
 		if "BLEconnectUseHCINo"		in inp:	 G.BLEconnectUseHCINo=			(inp["BLEconnectUseHCINo"])
 		try:
-			if "rebootIfNoMessagesSeconds"	in inp:	 G.rebootIfNoMessagesSeconds=	 int(inp["rebootIfNoMessagesSeconds"])
+			if "rebootIfNoMessages"	in inp:	 G.rebootIfNoMessages=	 int(inp["rebootIfNoMessages"])
 		except: pass
 
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
@@ -364,7 +325,7 @@ def getGlobalParams(inp):
 				writeTZ(iTZ=tznew)
 
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	return 
 
@@ -528,7 +489,7 @@ def getIPNumber():
 			#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+G.program +"	 found IP number "+G.ipAddress
 			return 0
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	logger.log(30, G.program.ljust(20)+ u" no ip number defined")
 			
 	return 1
@@ -658,7 +619,7 @@ def getIPCONFIG():
 				G.wifiID = retwifiID.split(":")[1]
 
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	G.packetsTime = time.time()
 	return eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled
@@ -697,7 +658,7 @@ def startAdhocWifi():
 		time.sleep(2)
 		doReboot(tt=0)
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 #################################
@@ -728,7 +689,7 @@ def stopAdhocWifi(setwifi="manual"):
 #################################
 def startWiFi():
 	if G.wifiEth["wlan0"]["on"] == "dontChange": return 
-	logger.log(20, G.program.ljust(20)+ u" starting WiFi" )
+	logger.log(20, u"{:<20} starting WiFi".format(G.program) )
 	os.system("sudo rfkill unblock all")
 
 
@@ -745,7 +706,7 @@ def startWiFi():
 	ret += subprocess.Popen("sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 	ret += subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 	os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
-	logger.log(30, G.program.ljust(20)+ u" starting Wifi: {}".format(ret))
+	logger.log(30, u"{:<20} starting Wifi: {}".format(G.program, ret))
 	G.wifiEnabled = True
 
 	return
@@ -757,7 +718,7 @@ def startEth():
 	ret += subprocess.Popen("sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 	ret += subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 	os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
-	logger.log(30, G.program.ljust(20)+ u" starting ETH: {}".format(ret))
+	logger.log(30,  u"{:<20} starting ETH: {}".format(G.program, ret))
 	G.eth0Enabled = True
 	return
 
@@ -766,7 +727,7 @@ def stopWiFi():
 	if G.wifiEth["wlan0"]["on"] == "dontChange": return 
 	ret = subprocess.Popen("sudo rfkill unblock all"    ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 	ret += subprocess.Popen("sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	logger.log(30, G.program.ljust(20)+ u" stopping WiFi: {}".format(ret))
+	logger.log(30, u"{:<20} stopping WiFi: {}".formatG.program, (ret))
 	G.wifiEnabled = False
 	return
 #################################
@@ -774,7 +735,7 @@ def stopEth():
 	if G.wifiEth["eth0"]["on"] == "dontChange": return 
 	ret = subprocess.Popen("sudo rfkill unblock all"   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 	ret += subprocess.Popen("sudo ifconfig eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	logger.log(30, G.program.ljust(20)+ u" stopping ETH: {}".format(ret))
+	logger.log(30, u"{:<20} stopping ETH: {}".format(G.program, ret))
 	G.eth0Enabled = False
 	return
 
@@ -788,7 +749,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 			ip = useIP
 		if len(ip) > 8:
 			cmd = "sudo /usr/bin/python {}webserverINPUT.py  {} {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile, G.sundialActive)
-			logger.log(20, G.program.ljust(20)+ u" starting web server:{}".format(cmd) )
+			logger.log(20, u"{:<20} starting web server:{}".format( G.program, cmd) )
 			if os.path.isfile(outFile):
 				os.system('rm '+outFile)
 			os.system(cmd)
@@ -796,7 +757,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 			logger.log(20, G.program.ljust(20)+ u" starting web server INPUT.. error no ip number" )
 
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 #################################
@@ -814,7 +775,7 @@ def startwebserverSTATUS(port,useIP="", force=False):
 			ip = useIP
 		if len(ip) > 8:
 			cmd = "sudo /usr/bin/python {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
-			logger.log(20, G.program.ljust(20)+ u" starting web server:{}".format(cmd) )
+			logger.log(20, u"{}<20 starting web server:{}".format(G.program, cmd) )
 			if os.path.isfile(outFile):
 				os.system('rm '+outFile)
 			os.system(cmd)
@@ -823,7 +784,7 @@ def startwebserverSTATUS(port,useIP="", force=False):
 
 
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	return
 
@@ -949,13 +910,13 @@ def checkwebserverINPUT():
 							writeJson(G.homeDir+"timezone.set", {"timezone":data["timezone"]}, sort_keys=False, indent=0)
 						except: pass
 				except	Exception, e :
-					logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 			if makeNewSupplicantFile(data):
 				newFile = True
 			return newFile
 
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return newFile
 
 
@@ -981,7 +942,7 @@ def getTZ():
 			if line.lower().find("time zone:") > -1:
 				return line.split(":")[1]
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return ""
 ###############################
 def writeTZ( iTZ = 99, cTZ="",force=False ):
@@ -1045,9 +1006,9 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 						logger.log(30, G.program.ljust(20)+ u" changing timezone done")
 
 					else:
-						logger.log(30, G.program.ljust(20)+ u" error bad timezone:{}".foormat(G.timeZones[setNew+12]) )
+						logger.log(30, u"{:<20} error bad timezone:{}".foormat(G.program, G.timeZones[setNew+12]) )
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 
@@ -1111,7 +1072,7 @@ def makeNewSupplicantFile(data):
 			time.sleep(2)
 			doReboot(tt=0)
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return	True
 
 #
@@ -1180,7 +1141,7 @@ def getIPNumberMaster(quiet=False):
 						return retcode , changed
 
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	logger.log(30, G.program.ljust(20)+ u" U.getIPNumberMaster bad IP number ...  ipHostname >>{}<<  old from file ipAddressRead>>{}<< not in sync with ifconfig output: wlan0IP>>{}<<;	eth0IP>>{}<<".format(unicode(ipHostname), ipAddressRead, wlan0IP,eth0IP)  )
 	return 2, changed
@@ -1269,7 +1230,7 @@ def writeIPtoFile(ip,reason=""):
 	f=open(G.homeDir+"ipAddress","w")
 	f.write(G.ipAddress.strip(" ").strip("\n").strip(" "))
 	f.close()
-	logger.log(30, G.program.ljust(20)+ u"  writing ip number to file >>{}<<  reason:{}".format(G.ipAddress, reason))
+	logger.log(30,u"{:<20} writing ip number to file >>{}<<  reason:{}".format( G.program, G.ipAddress, reason))
 	return	
 
 
@@ -1284,17 +1245,17 @@ def testPing(ipIn=""):
 
 		if ipIn =="": ipToPing = G.ipOfServer
 		else:		  ipToPing = ipIn
-		logger.log(10, G.program.ljust(20)+ u" testPing input>>{}<< indigoIP>>{}<<".format(ipIn,G.ipOfServer) )
+		logger.log(10, u"{:<20} testPing input>>{}<< indigoIP>>{}<<".format(G.program, ipIn,G.ipOfServer) )
 		
 		# IPnumber setup?
 		ipi =  (ipToPing.strip()).split(".")
 		if len(ipi) !=4: 
-			logger.log(10, G.program.ljust(20)+ u" testPing bad ip number to ping >>{}<<".format(str(ipToPing)) )
+			logger.log(10, u"{:<20}  testPing bad ip number to ping >>{}<<".format(G.program,str(ipToPing)) )
 			return 1
 		for ii in ipi:
 			try: int(ii)
 			except: 
-				logger.log(30, G.program.ljust(20)+ u" testPing bad ip number for ping >>{}<<".format(str(ipToPing)) )
+				logger.log(30, u"{:<20}  testPing bad ip number for ping >>{}<<".format(G.program,str(ipToPing)) )
 				return 1
 		
 
@@ -1308,12 +1269,12 @@ def testPing(ipIn=""):
 		if ipIn !="":
 			return 1
 
-		logger.log(30, G.program.ljust(20)+ u" testPing can not connect to server: {}	ping code:{}".format(ipToPing,unicode(ret)) )
+		logger.log(30,u"{:<20} testPing can not connect to server: {}	ping code:{}".format( G.program, ipToPing,unicode(ret)) )
 			
 		return 2
 
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return 2
 
 
@@ -1406,7 +1367,7 @@ def geti2c():
 				i2cChannels.append("{}={}".format(channel,hex(channel)))
 		return i2cChannels
 	except	Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return ["i2c detect error"]
 
 
@@ -1511,7 +1472,7 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 
 			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait, "squeeze":squeeze, "escape":escape}) 
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return 
 
 
@@ -1523,7 +1484,7 @@ def execSend():
 			while not G.sendThread["queue"].empty():
 				try:
 					all 		= G.sendThread["queue"].get()
-					logger.log(10, G.program.ljust(20)+ u"  send queue data {}".format(all) )
+					logger.log(10, u"{:<20} send queue data {}".format(G.program, all) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
 					text 		= all["text"]
@@ -1618,7 +1579,7 @@ def execSend():
 											time.sleep(3.)
 
 									except	Exception, e:
-										logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+										logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 										try:	soc.shutdown(socket.SHUT_RDWR)
 										except: pass
 										try:	soc.close()
@@ -1646,13 +1607,13 @@ def execSend():
 
 				
 				except	Exception, e:
-					logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 				os.system("rm  "+ G.homeDir+"temp/sending > /dev/null 2>&1 ")
 				G.lastAliveSend = time.time()
 
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	return 
 		
@@ -1712,7 +1673,7 @@ def removeOutPutFromFutureCommands(pin, devType):
 				del execcommands[channel]
 			writeJson(G.homeDir+"execcommands.current",execcommands)
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 
@@ -1764,7 +1725,7 @@ def doFileCheck(xxx,extension):
 			return	True
 		return False
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 #################################
 def makeDATfile(sensor, data):
@@ -1787,9 +1748,8 @@ def writeJson(fName, data, sort_keys=False, indent=0):
 	##print "writing json to "+fName, out
 		f.write(out)
 		f.close()
-		#if fName.find("count") > -1:  print "write ", fName, data, out
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30,u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return 
@@ -1800,11 +1760,16 @@ def readJson(fName):
 	data ={}
 	ddd = ""
 	try:
+		if not os.path.isfile(fName): 
+			#logger.log(10,u"{:<20}  no fname:{}".format(G.program, fName))
+			return {},""
 		f=open(fName,"r")
 		ddd = f.read()
 		data = json.loads(ddd)
 		f.close()
-	except: return {},""
+	except	Exception, e:
+		logger.log(30,u"{:<20} Line {} has error={}, fname:{}, data:{}".format(G.program, sys.exc_traceback.tb_lineno, e, fName, ddd ))
+		return {}, ""
 	return data, ddd
 
 
@@ -1812,42 +1777,44 @@ def readJson(fName):
 def checkresetCount(IPCin):
 	IPC = copy.copy(IPCin)
 	try:
-		if not os.path.isfile(G.homeDir + G.program+".reset"): 
+		if not os.path.isfile(G.homeDir+"temp/"  + G.program+".reset"): 
 			#print "checkresetCount no file"
 			return IPC
-		inpJ, inp = readJson(G.homeDir + G.program+".reset")
-		os.remove(G.homeDir + G.program+".reset")
-		if len(inp) < 3: 
+		inpJ, inp = readJson(G.homeDir+"temp/" + G.program+".reset")
+		os.remove(G.homeDir+"temp/"  + G.program+".reset")
+		logger.log(10,"{} checkresetCount doing reset for {:<20}".format(G.program, inp ) )
+		if len(inp) < 2: 
 			return IPC
-		logger.log(20, "{} checkresetCount doing reset of counters".format(G.program.ljust(20)))
 		for p in inpJ:
-			pin = int(p)
-			IPC[pin] = 0
+			IPC[str(p)] = 0
 			#print "checkresetCount pin=", pin
 		writeINPUTcount(IPC)
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	#print "checkresetCount pin=", IPC[15:25]
 	return IPC
 	
 ######################################
 def readINPUTcount():
+		IPC={}
+		for ii in range(1,30):
+			IPC[str(ii)] = 0
 		try:
 			IPC, ddd = readJson(G.homeDir+G.program+".count")
 		except:
 			pass
-		if type(IPC) != type({}): IPC = {}
-		out = {}
-		for p in range(30):
-			try:
-				out[int(p)] = int(IPC[str(p)])
-			except:
-				out[int(p)] = 0
 		for p in IPC:
-			if int(p) > 30: 
-				out[int(p)] = int(IPC[p])
-		writeINPUTcount(out)
-		return out
+			try:
+				int(IPC[str(p)])
+			except:
+				IPC[str(p)] =0
+				
+		if len(IPC) < 10:
+			IPC={}
+			for ii in range(1,30):
+				IPC[str(ii)] = 0
+		writeINPUTcount(IPC)
+		return IPC
 
 
 ######################################
@@ -1899,7 +1866,7 @@ def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAct
 							
 						
 				except	Exception, e:
-					 logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					 logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 				
 				if	action !="": 
 					if "action"+action in sens and sens["action"+action] !="":
@@ -1917,7 +1884,7 @@ def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAct
 
 		############ local action  end #######
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return lastGPIO
 
 
@@ -1977,7 +1944,7 @@ def manageActions(action,waitTime=3,click="UP", aType="actionDoubleClick",devId=
 			return
 		
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 #################################
@@ -1989,7 +1956,7 @@ def checkIfrebootAction(action):
 			killOldPgm(-1,"display.py")
 			time.sleep(0.2)
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 
@@ -2049,7 +2016,7 @@ def sendi2cToPlugin(sensDict):
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
 
 	except Exception, e :
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return 
 
 #################################
@@ -2085,7 +2052,7 @@ def checkIfAliveNeedsToBeSend():
 		if time.time() - lastSend> 330:	 # do we have to send alive signal to plugin?
 			sendURL(sendAlive=True )
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 
@@ -2237,7 +2204,7 @@ def setOffsetFromCalibration(calib):
 			logger.log(20,'theClass.magOffset '+unicode(offset))
 			return offset
 		except	Exception, e:
-			logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		return [0,0,0]
 
 #################################
@@ -2517,7 +2484,7 @@ def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
 					old[devId]	= copy.copy(new)
    
 		except	Exception, e: 
-			logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 			retCode="exception"
 		if retCode =="ok":
 			makeDATfile(G.program, data)
@@ -2579,7 +2546,7 @@ def findString(string, file):
 				return 1
 		return 0
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return 3
@@ -2608,7 +2575,7 @@ def checkIfInFile(stringItems, file):
 			if nFound == nItems: return "found"
 		return "not found" # == not found
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			os.system("sudo reboot")
 	return "error"
@@ -2666,7 +2633,7 @@ def uncommentOrAdd(string, file, before="", nLines=1):
 			f.close()
 			return 1
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 
@@ -2705,7 +2672,7 @@ def removefromFile(string, file, nLines=1):
 			f.close()
 		return 0
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return 1	
@@ -2816,11 +2783,11 @@ def testDNS():
 	try:
 		ret = subprocess.Popen("cat /etc/resolv.conf | grep nameserver" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 		if ret.find("nameserver") == -1:
-			logger.log(30, G.program.ljust(20)+ u"  resolv.conf has no nameserverlisted")
+			logger.log(30, u"{:<20}  resolv.conf has no nameserverlisted".format(G.program))
 			return 1
 		ret = ret.split("\n")
 		if len(ret) ==0:
-			logger.log(30, G.program.ljust(20)+ u"  resolv.conf has no nameserverlisted")
+			logger.log(30, u"{:<20}  resolv.conf has no nameserverlisted".format(G.program))
 			return 1
 
 		for line in ret:
@@ -2829,14 +2796,14 @@ def testDNS():
 				ret =testPing(ipIn=ip[1]) 
 				if	ret ==0:
 					#print	" DNS server reachable at:"+ip[1]
-					logger.log(10, G.program.ljust(20)+ u"  DNS server reachable at:"+ip[1])
+					logger.log(10, u"{:<20}  DNS server reachable at:"+ip[1].format(G.program))
 					return 0
 				if ret ==-2:
-					logger.log(30, G.program.ljust(20)+ u" still waiting for installLibs to finish")
+					logger.log(30, u"{:<20} still waiting for installLibs to finish".format(G.program))
 					time.sleep(30)
 					return 1
 	except	Exception, e:
-		logger.log(30, G.program.ljust(20)+ u" Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return 1
 
 #################################

@@ -502,13 +502,13 @@ def getINPUTcapacitor(sensors,data,devType, NPads):
 					if sens[nn]["count"] !="off":
 						if sens[nn]["count"] == "up":
 							if INPUTlastvalue[gpioPIN] != "1" and dd == "1":
-								INPUTcount[gpioPIN]+=1
+								INPUTcount[str(gpioPIN)]+=1
 								new = True
 						else:
 							if INPUTlastvalue[gpioPIN] != "0" and dd == "0":
-								INPUTcount[gpioPIN] += 1
+								INPUTcount[str(gpioPIN)] += 1
 								new = True
-						d["INPUT_" + str(nn)] = INPUTcount[gpioPIN]
+						d["INPUT_" + str(nn)] = INPUTcount[str(gpioPIN)]
 
 					else:
 						d["INPUT_" + str(nn)] = dd

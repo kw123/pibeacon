@@ -4584,7 +4584,7 @@ while True:
 			if "i2cADS1x15-1"	in sensors: data = getADS1x15("i2cADS1x15-1",data)
 			if "i2cADC121"		in sensors: data = getADC121("i2cADC121",data)
 
-
+		U.logger.log(10, u"data:{}".format(data) )
 		doDisplay()
 
 		loopCount +=1
@@ -4623,7 +4623,7 @@ while True:
 							changed = 7
 							break
 		#print "changed? ", changed,	   tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor, data
-		if data !={} and (		changed >0 or	( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
+		if data !={} and ( changed >0 or	( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
 			lastMsg = tt
 			lastData=copy.copy(data)
 			try:

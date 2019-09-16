@@ -47,11 +47,11 @@ def getDATAdht(DHTpin,Type):
 			#f h is not None and t is not None:
 			#print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpin)
 #			# sensorDHT=""
-			return ("%.2f"%float(t)).strip(),("%3d"%float(h)).strip()
+			return float(t),float(h)
 			#else: return "" ,""  
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.logger.log(30, u" pin: "+ str(DHTpin)+" return	 value: t="+ unicode(t)+"; h=" + unicode(h)	 )
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u" pin: "+ str(DHTpin)+" return value: t="+ unicode(t)+"; h=" + unicode(h)	 )
 		return "",""
 
 
@@ -66,13 +66,13 @@ def getDHT(sensor,data):
 				t,h =getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
 				if t!="":
 					try:	
-						t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+						t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
 					except: pass
-					data[sensor][devId] = {"temp":str(t).strip(" ")}
+					data[sensor][devId] = {"temp":t}
 					if h!= "":
-						try:	h = str(float(h)  + float(sensors[sensor][devId]["offsetHum"]))
+						try:	h = float(h)  + float(sensors[sensor][devId]["offsetHum"])
 						except: pass
-						data[sensor][devId]["hum"]=str(h).strip(" ")
+						data[sensor][devId]["hum"]=h
 						if devId in badSensors: del badSensors[devId]
 					time.sleep(0.1)
 				else:

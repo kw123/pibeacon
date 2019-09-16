@@ -255,6 +255,7 @@ def readParams():
 				coincidence2[devIdC]["lastSend"] = 0
 				coincidence2[devIdC]["minSendDelta"] = float(sens[devIdC]["coincidenceTimeInterval"])
 				for ii in range(4):
+					if "INPUTdevId"+str(ii) not in sens[devIdC]: continue
 					devId = sens[devIdC]["INPUTdevId"+str(ii)]
 					if int(devId) < 1: continue
 					for gpio in GPIOdict:
@@ -324,7 +325,11 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 			delupto = -1
 			for kk in range(ll):
 					ii = ll - kk -1
-					bbb[ii][1]+=1
+					try:
+						bbb[ii][1]+=1
+					except:
+						U.logger.log(20, " burst  gpio:{}; bbb:{}; ll:{};  ii:{} ".format(gpio, bbb, ll, ii )  )
+						break
 					if bbb[ii][1] >= ggg["minEventsinTimeWindowToTriggerBursts"]:
 						U.logger.log(10, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpioINT+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
 						burst	= tt
@@ -394,13 +399,11 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 						out =""
 						for gp in coincidence[devIdC]["gpios"]:
 							out+= "{}: {:.5f}; ".format(gp, tt- coincidence[devIdC]["gpios"][gp] )
-						#print " add one", gpio, gpio2, INPUTcount[int(devIdC)] , time.time() -  GPIOdict[gpio2]["lastSignal"], coincidence[devIdC]["coincidenceTimeInterval"]
-						U.logger.log(20, "coincidenceTrigger  tt: {:.2f}; count:{};  GPIOS-dt: {}   window:{:.5f}".format(tt, INPUTcount[int(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"])  )
-						if (tt - coincidence[devIdC]["lastSend"] > coincidence[devIdC]["lastSend"]):	
-							coincidence[devIdC]["lastSend"] = tt
-							if "INPUTcoincidence" not in data["sensors"]: data["sensors"]["INPUTcoincidence"] = {}
-							if devIdC not in data["sensors"]["INPUTcoincidence"]: data["sensors"]["INPUTcoincidence"][devIdC] ={}
-							data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[int(devIdC)] 
+						coincidence[devIdC]["lastSend"] = tt
+						if "INPUTcoincidence" not in data["sensors"]: data["sensors"]["INPUTcoincidence"] = {}
+						if devIdC not in data["sensors"]["INPUTcoincidence"]: data["sensors"]["INPUTcoincidence"][devIdC] ={}
+						data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[int(devIdC)] 
+						U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[int(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
 	if data["sensors"][sensor][ggg["devId"]] !={} or "INPUTcoincidence" in data["sensors"]:
 			U.sendURL(data,wait=False)
 			U.writeINPUTcount(INPUTcount)

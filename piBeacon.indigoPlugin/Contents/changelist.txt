@@ -1,3 +1,43 @@
+Added features / changes in v7.111.311 @ 2019-09-16
+===================================================
+
+1. debug on rpi now logs individual ibeacon msgs as they come
+
+2.  added battery level querry for beacons, shown in dev.states["batteryLevel"] and in detaiuled device listing in indigo main window
+   Prep-steps::::::
+     you MUST first edit each ibeacon indigo device and set enable battery level .. and select either 
+     "randown" or plain com to iBeacons.   xy beacons use random,  NODA, iHere .. use plain comm.
+        you can try on the rpi with:
+        hciconfig hci0 down 
+        hciconfig hci0 up
+         for xy beacons:
+           /usr/bin/gatttool -b MAC#  -t random  --char-read --uuid=2A19
+         for iHere,  Noda .. 
+            /usr/bin/gatttool -b MAC#  --char-read --uuid=2A19
+         replace MAC# with eg 0C:F3:EE:00:66:15 = the mac # of your ibeacon connected to that RPI
+
+         the gatttool will return something like this (or an error message, can not connect)
+             handle: 0x002f 	 value: 64 
+            where 64 is the hex value, into integer = 100%
+        gatttool will conflict with the regular iBeacon message listening = during that time(..15 secs per ibeacon) no ibeacon messages will be received 
+        The RPI that is asked to get the battery level is the "closestRPI" to the iBeacon(see dev.state). When a beacon is not "up" it will not be querried and will keep its battery level unchanged
+
+      In order to check if your SSD is supporting gatttol do: ssh pi@... gatttool.. if its says not found you need to upgrade your ssd
+      error messages:
+       -- connect error: software caused connection abort (103)       == beaconloop might have restarted and the BLE stack was rebooted, ==> resubmit
+       -- connect error: transport endpoint is not connected (107)    == beacon is in state where it rejects requests ==> either ranom on/off or retry
+       -- connect error: function not implemented (38)                == beacon is in state where it rejects requests==> either random on/off or retry
+       -- connect error: timeout                                      == connection took longer that 15 seconds, terminated ==> retry
+
+    activate:
+       - Set option in ibeacon device edit to enable battery reading 
+       - A) in pibeacon menu select: "Get iBeacons parameters from rPi" for a one-time update
+       - B) create an indigo action group and select "Get iBeacons parameters from rPi ie battery levels"
+             then add a schedule ( eg every 6 hours ) to call that action group.
+
+    This is the first version, some fine tuning will be necessary.
+
+
 Added features / changes in v7.110.306 @ 2019-09-07
 ===================================================
 

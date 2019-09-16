@@ -3236,6 +3236,12 @@ Then there are actions in each set (steps/sleep)
         </ConfigUI>
      </Action>
 
+    <Action id="getiBeaconParameters">
+        <Name>Get iBeacons parameters from rPi ie battery levels</Name>
+               <CallbackMethod>getBeaconParametersCALLBACKaction</CallbackMethod>
+    </Action>
+
+
 
     <Action id="newCalibration">
         <Name>Calibration of sensors on  rPi sensors</Name>

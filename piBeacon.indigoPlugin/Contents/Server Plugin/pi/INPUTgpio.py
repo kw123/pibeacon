@@ -81,7 +81,7 @@ def getINPUTgpio(all,sens):
 		new=False
 		try:
 				for n in range(len(sens["INPUTS"])):
-					#print " n", n, sens[n]
+					#U.logger.log(10, u" n{}, sens:{}".format(n, sens[n])
 					if "gpio" not in sens["INPUTS"][n]: continue
 					if "lowHighAs" in  sens:
 						lowHighAs =	 sens["lowHighAs"]
@@ -98,14 +98,14 @@ def getINPUTgpio(all,sens):
 					if all:
 						if count !="off":
 							if count == "up":
-								if INPUTlastvalue[gpioPIN] != "1" and dd == "1":
-									INPUTcount[gpioPIN]+=1
+								if INPUTlastvalue[str(gpioPIN)] != "1" and dd == "1":
+									INPUTcount[str(gpioPIN)]+=1
 									new = True
 							else:
-								if INPUTlastvalue[gpioPIN] != "0" and dd == "0":
-									INPUTcount[gpioPIN] += 1
+								if INPUTlastvalue[str(gpioPIN)] != "0" and dd == "0":
+									INPUTcount[str(gpioPIN)] += 1
 									new = True
-							d["INPUT_" + str(n)] = INPUTcount[gpioPIN]
+							d["INPUT_" + str(n)] = INPUTcount[str(gpioPIN)]
 
 						else:
 							d["INPUT_" + str(n)] = dd
@@ -113,19 +113,19 @@ def getINPUTgpio(all,sens):
 					else:
 						if count != "off":
 							if count == "up":
-								if INPUTlastvalue[gpioPIN] != "1" and dd == "1":
-									INPUTcount[gpioPIN] += 1
-									d["INPUT_" + str(n)] = INPUTcount[gpioPIN]
+								if INPUTlastvalue[str(gpioPIN)] != "1" and dd == "1":
+									INPUTcount[str(gpioPIN)] += 1
+									d["INPUT_" + str(n)] = INPUTcount[str(gpioPIN)]
 									new = True
 							else:
-								if INPUTlastvalue[gpioPIN] != "0" and dd == "0":
-									INPUTcount[gpioPIN] += 1
-									d["INPUT_" + str(n)] = INPUTcount[gpioPIN]
+								if INPUTlastvalue[str(gpioPIN)] != "0" and dd == "0":
+									INPUTcount[str(gpioPIN)] += 1
+									d["INPUT_" + str(n)] = INPUTcount[str(gpioPIN)]
 									new = True
 						else:
-							 if INPUTlastvalue[gpioPIN] != dd:
+							 if INPUTlastvalue[str(gpioPIN)] != dd:
 								 d["INPUT_"+str(n)]=dd
-					INPUTlastvalue[gpioPIN]=dd
+					INPUTlastvalue[str(gpioPIN)]=dd
 					##print d,new
 		except	Exception, e:
 				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -151,7 +151,7 @@ def startGPIO():
 					type	= ss[nn]["inpType"]
 					count	= ss[nn]["count"]
 					if	 count =="off":
-						INPUTcount[gpioPIN] = 0
+						INPUTcount[str(gpioPIN)] = 0
 					if	 type == "open":
 						GPIO.setup(gpioPIN, GPIO.IN)
 					elif type == "high":
@@ -180,7 +180,9 @@ lastRead			= 0
 ###################### constants #################
 
 ####################  input gios   ...allrpi	  only rpi2 and rpi0--
-INPUTlastvalue	  = ["-1" for i in range(100)]
+INPUTlastvalue ={}
+for ii in range(30):
+	INPUTlastvalue[str(ii)] = "-1"
 INPUTcount		  = {}
 #i2c pins:		  = gpio14 &15
 # 1 wire		  = gpio4
@@ -253,6 +255,7 @@ while True:
 				if newAll: U.writeINPUTcount(INPUTcount)
 				if ddd != {}:
 					data0[sensor] = ddd
+		#U.logger.log(10, "data:{}".format(data))
 
 		if	data0 != {}:
 			#print " sensors", data0, lastData

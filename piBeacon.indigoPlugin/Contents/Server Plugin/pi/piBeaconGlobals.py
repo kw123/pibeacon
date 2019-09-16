@@ -88,6 +88,11 @@ last_masterStart	= ""
 wifiID				= ""
 sendThread			= {}
 rebootIfNoMessagesSeconds = 99999999999
+# 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
+
+import sys
+sys.path.append("/home/pi/.local/lib/python2.7/site-packages/")
+
 
 ACTIONS={"LS":"ls",
 		 "REBOOT":		   "sudo reboot",

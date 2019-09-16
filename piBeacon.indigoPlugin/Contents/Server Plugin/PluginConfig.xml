@@ -671,33 +671,10 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         </List>
     </Field>
    
-			
     <Field id="debugRPI"   type = "menu" defaultValue = "-1"  >
         <Label>Debug...which RPI:</Label>
-        <List>
-            <Option value="-1" >off</Option>
-			<Option value="0"  >0</Option>
-			<Option value="1"  >1</Option>
-			<Option value="2"  >2</Option>
-			<Option value="3"  >3</Option>
-			<Option value="4"  >4</Option>
-			<Option value="5"  >5</Option>
-			<Option value="6"  >6</Option>
-			<Option value="7"  >7</Option>
-			<Option value="8"  >8</Option>
-			<Option value="9"  >9</Option>
-			<Option value="10" >10</Option>
-			<Option value="11" >11</Option>
-			<Option value="12" >12</Option>
-			<Option value="13" >13</Option>
-			<Option value="14" >14</Option>
-			<Option value="15" >15</Option>
-			<Option value="16" >16</Option>
-			<Option value="17" >17</Option>
-			<Option value="18" >18</Option>
-			<Option value="19" >19</Option>
-        </List>
-    </Field>
+                <List class="self" filter="" method="filterPiC" dynamicReload="false"/>
+        </Field>
    
     <Field id="infoLabel99" type="label"> <Label>debug level for plugin:</Label>  </Field>
         

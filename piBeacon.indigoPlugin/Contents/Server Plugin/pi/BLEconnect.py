@@ -130,11 +130,19 @@ def tryToConnect(MAC,BLEtimeout,devId):
 			# Happens if connection fails (e.g. device is not in range)
 			bt_sock.close()
 			hci_sock.close()
+			for ii in range(30):
+				if os.path.isfile(G.homeDir+"temp/stopBLE"):
+					time.sleep(5)
+				else:
+					break
+			os.system("rm "+G.homeDir+"temp/stopBLE")
+			U.logger.log(50, u"in Line {} has error ... sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno))
+			time.sleep(1)
+			U.restartMyself(param="", reason="sock.recv error")
 
 	except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	U.logger.log(0, MAC + "	"+unicode(ret))
-	#print	MAC + "	 "+unicode(ret)
+	U.logger.log(10, "{}:  {}".format(MAC, ret))
 	return ret
 
 
@@ -146,191 +154,193 @@ def tryToConnect(MAC,BLEtimeout,devId):
 ####################################################################################################################################
 ####################################################################################################################################
 ####################################################################################################################################
+def execBLEconnect():
+	global sensorList,restartBLEifNoConnect
+	global macList,oldParams
+	global oldRaw,	lastRead
+	oldRaw					= ""
+	lastRead				= 0
 
-global sensorList,restartBLEifNoConnect
-global macList,oldParams
-global oldRaw,	lastRead
-oldRaw					= ""
-lastRead				= 0
+	###################### constants #################
 
-###################### constants #################
-
-####################  input gios   ...allrpi	  only rpi2 and rpi0--
-oldParams		  = ""
-#####################  init parameters that are read from file 
-sensorList			= "0"
-G.authentication	= "digest"
-restartBLEifNoConnect = True
-sensor				= G.program
-macList				={}
-waitMin				=2.
-oldRaw				= ""
-try:
-	onlyThisMAC	  = sys.argv[1]
-except:
-	onlyThisMAC = ""
-
-
-myPID			= str(os.getpid())
-U.setLogging()
-if onlyThisMAC =="":
-	U.killOldPgm(myPID,G.program+".py")# kill  old instances of myself if they are still running
-else:
-	U.killOldPgm(myPID, G.program+".py ",param1=onlyThisMAC)  # kill  old instances of myself if they are still running
-
-loopCount		  = 0
-sensorRefreshSecs = 90
-U.logger.log(30, "starting BLEconnect program ")
-readParams()
-
-time.sleep(1)  # give HCITOOL time to start
-
-shortWait			= 1.	# seconds  wait between loop
-lastEverything		= time.time()-10000. # -1000 do the whole thing initially
-lastAlive			= time.time()
-lastData			= {}
-lastRead			= -1
-
-if U.getIPNumber() > 0:
-	U.logger.log(30," no ip number ")
-	time.sleep(10)
-	exit()
+	####################  input gios   ...allrpi	  only rpi2 and rpi0--
+	oldParams		  = ""
+	#####################  init parameters that are read from file 
+	sensorList			= "0"
+	G.authentication	= "digest"
+	restartBLEifNoConnect = True
+	sensor				= G.program
+	macList				={}
+	waitMin				=2.
+	oldRaw				= ""
+	try:
+		onlyThisMAC	  = sys.argv[1]
+	except:
+		onlyThisMAC = ""
 
 
-G.tStart			= time.time() 
-lastMsg				={}
-#print iPhoneRefreshDownSecs
-#print iPhoneRefreshUpSecs
-startSeconds		= time.time()
-lastSignal			= time.time()
-restartCount		= 0
-nextTest			= 60
-nowTest				= 0
-nowP				= False
-oldRetry			= False
-eth0IP, wifi0IP, eth0Enabled, wifiEnabled = U.getIPCONFIG()
-##print eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
+	myPID			= str(os.getpid())
+	U.setLogging()
+	if onlyThisMAC =="":
+		U.killOldPgm(myPID,G.program+".py")# kill  old instances of myself if they are still running
+	else:
+		U.killOldPgm(myPID, G.program+".py ",param1=onlyThisMAC)  # kill  old instances of myself if they are still running
+
+	loopCount		  = 0
+	sensorRefreshSecs = 90
+	U.logger.log(30, "starting BLEconnect program ")
+	readParams()
+
+	time.sleep(1)  # give HCITOOL time to start
+
+	shortWait			= 1.	# seconds  wait between loop
+	lastEverything		= time.time()-10000. # -1000 do the whole thing initially
+	lastAlive			= time.time()
+	lastData			= {}
+	lastRead			= -1
+
+	if U.getIPNumber() > 0:
+		U.logger.log(30," no ip number ")
+		time.sleep(10)
+		exit()
 
 
-## give other ble functions time to finish
-time.sleep(1)
+	G.tStart			= time.time() 
+	lastMsg				={}
+	#print iPhoneRefreshDownSecs
+	#print iPhoneRefreshUpSecs
+	startSeconds		= time.time()
+	lastSignal			= time.time()
+	restartCount		= 0
+	nextTest			= 60
+	nowTest				= 0
+	nowP				= False
+	oldRetry			= False
+	eth0IP, wifi0IP, eth0Enabled, wifiEnabled = U.getIPCONFIG()
+	##print eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
 
 
-
-#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
-HCIs = U.whichHCI()
-useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
-if BLEid <0:
-	U.logger.log(0, "BLEconnect: NO BLE STACK UP ")
-	sys.exit(1)
+	## give other ble functions time to finish
+	time.sleep(1)
 
 
 
-U.logger.log(30, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
+	#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
+	HCIs = U.whichHCI()
+	useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
+	if BLEid <0:
+		U.logger.log(0, "BLEconnect: NO BLE STACK UP ")
+		sys.exit(1)
 
-while True:
 
-		tt= time.time()
-		if tt - nowTest > 15:
-			nowP	= False
-			nowTest = 0
-		if tt - lastRead > 4 :
-			newParameterFile = readParams()
-			eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
-			lastRead=tt
 
-		if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
-			U.logger.log(30, "requested a restart of BLE stack due to no signal for "+str(int(tt-lastSignal))+" seconds")
-			os.system("echo xx > "+G.homeDir+"temp/BLErestart") # signal that we need to restart BLE
-			lastSignal = time.time() +30
-			restartCount +=1
+	U.logger.log(30, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
 
-		nextTest = 300
+	while True:
 
-		for thisMAC in macList:
-			if onlyThisMAC !="" and onlyThisMAC != thisMAC: continue
-			if macList[thisMAC]["up"]:
-				nextTest = min(nextTest, macList[thisMAC]["lastTesttt"] + (macList[thisMAC]["iPhoneRefreshUpSecs"]*0.90)   -tt )
-			else:
-				nextTest = min(nextTest, macList[thisMAC]["lastTesttt"] + macList[thisMAC]["iPhoneRefreshDownSecs"] -tt - macList[thisMAC]["quickTest"] )
+			tt= time.time()
+			if tt - nowTest > 15:
+				nowP	= False
+				nowTest = 0
+			if tt - lastRead > 4 :
+				newParameterFile = readParams()
+				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
+				lastRead=tt
 
-			if True:
-				nT= max(int(nextTest),1)
-				fTest = nextTest / nT
-				#print "fTest",thisMAC, fTest
-				for ii in range(nT):
-					tt=time.time()
-					if fTest > 0:
-						time.sleep(fTest)  # print "time to sleep "+datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"], macList[thisMAC]["quickTest"], nextTest
-					#if thisMAC == "54:9F:13:3F:95:26":
-						#print thisMAC, onlyThisMAC, nowP, tt, nowTest, tt-nowTest
-					if not nowP and tt-nowTest > 20.:
-						quick = U.checkNowFile(sensor)				  
-						if quick:
-							for ml in macList :
+			if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
+				U.logger.log(30, "requested a restart of BLE stack due to no signal for "+str(int(tt-lastSignal))+" seconds")
+				os.system("echo xx > "+G.homeDir+"temp/BLErestart") # signal that we need to restart BLE
+				lastSignal = time.time() +30
+				restartCount +=1
+
+			nextTest = 300
+
+			for thisMAC in macList:
+				if onlyThisMAC !="" and onlyThisMAC != thisMAC: continue
+				if macList[thisMAC]["up"]:
+					nextTest = min(nextTest, macList[thisMAC]["lastTesttt"] + (macList[thisMAC]["iPhoneRefreshUpSecs"]*0.90)   -tt )
+				else:
+					nextTest = min(nextTest, macList[thisMAC]["lastTesttt"] + macList[thisMAC]["iPhoneRefreshDownSecs"] -tt - macList[thisMAC]["quickTest"] )
+
+				if True:
+					nT= max(int(nextTest),1)
+					fTest = nextTest / nT
+					#print "fTest",thisMAC, fTest
+					for ii in range(nT):
+						tt=time.time()
+						if fTest > 0:
+							time.sleep(fTest)  # print "time to sleep "+datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"], macList[thisMAC]["quickTest"], nextTest
+						#if thisMAC == "54:9F:13:3F:95:26":
+							#print thisMAC, onlyThisMAC, nowP, tt, nowTest, tt-nowTest
+						if not nowP and tt-nowTest > 20.:
+							quick = U.checkNowFile(sensor)				  
+							if quick:
+								for ml in macList :
+									if onlyThisMAC != "" and onlyThisMAC != ml: continue
+									macList[ml]["lastData"]	   = {"signal":-999,"txPower":-999}
+									macList[ml]["lastTesttt"]  = 0.
+									#macList[ml]["lastMsgtt"]  = 0.
+									macList[ml]["retryIfUPtemp"] = macList[ml]["retryIfUP"]
+									macList[ml]["retryIfUP"] = False
+									macList[ml]["up"]		 = False
+								nowTest = tt
+								nowP	= True
+								#print " received BLEconnect now,", thisMAC,onlyThisMAC, "setting nowTest",	 nowTest
+								break
+
+						if nowP and tt - nowTest > 5 and tt - nowTest < 10.:
+							for ml in macList:
 								if onlyThisMAC != "" and onlyThisMAC != ml: continue
-								macList[ml]["lastData"]	   = {"signal":-999,"txPower":-999}
-								macList[ml]["lastTesttt"]  = 0.
-								#macList[ml]["lastMsgtt"]  = 0.
-								macList[ml]["retryIfUPtemp"] = macList[ml]["retryIfUP"]
-								macList[ml]["retryIfUP"] = False
-								macList[ml]["up"]		 = False
-							nowTest = tt
-							nowP	= True
-							#print " received BLEconnect now,", thisMAC,onlyThisMAC, "setting nowTest",	 nowTest
-							break
-
-					if nowP and tt - nowTest > 5 and tt - nowTest < 10.:
-						for ml in macList:
-							if onlyThisMAC != "" and onlyThisMAC != ml: continue
-							nowTest = 0.
-							nowP	= False
-							#print "resetting  ", ml, onlyThisMAC, nowTest
-		for thisMAC in macList:
-			if onlyThisMAC !="" and onlyThisMAC != thisMAC: continue
-			tt = time.time()
-			#if nowP: print "nowP:	testing: "+thisMAC,macList[ml]["retryIfUP"], tt - macList[thisMAC]["lastTesttt"]
-			if macList[thisMAC]["up"]:
-				if tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshUpSecs"]*0.90:	  continue
-			elif tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshDownSecs"] - macList[thisMAC]["quickTest"]:	 continue
+								nowTest = 0.
+								nowP	= False
+								#print "resetting  ", ml, onlyThisMAC, nowTest
+			for thisMAC in macList:
+				if onlyThisMAC !="" and onlyThisMAC != thisMAC: continue
+				tt = time.time()
+				#if nowP: print "nowP:	testing: "+thisMAC,macList[ml]["retryIfUP"], tt - macList[thisMAC]["lastTesttt"]
+				if macList[thisMAC]["up"]:
+					if tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshUpSecs"]*0.90:	  continue
+				elif tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshDownSecs"] - macList[thisMAC]["quickTest"]:	 continue
 
 
-			data0 = tryToConnect(thisMAC,macList[thisMAC]["BLEtimeout"],BLEid)
-			#if nowP: print "nowP:	testing: "+thisMAC+"  "+ unicode(data0)
+				data0 = tryToConnect(thisMAC,macList[thisMAC]["BLEtimeout"],BLEid)
+				#if nowP: print "nowP:	testing: "+thisMAC+"  "+ unicode(data0)
 
-			#print	data0
-			macList[thisMAC]["lastTesttt"] =tt
+				#print	data0
+				macList[thisMAC]["lastTesttt"] =tt
 
-			if	data0 != {}:
-				if data0["signal"] !=-999:
-					macList[thisMAC]["up"] =True
-					lastSignal	 = time.time()
-					restartCount = 0
-					if os.path.isfile(G.homeDir + "temp/BLErestart"):
-						os.remove(G.homeDir + "temp/BLErestart")
+				if	data0 != {}:
+					if data0["signal"] !=-999:
+						macList[thisMAC]["up"] =True
+						lastSignal	 = time.time()
+						restartCount = 0
+						if os.path.isfile(G.homeDir + "temp/BLErestart"):
+							os.remove(G.homeDir + "temp/BLErestart")
+
+					else:
+						macList[thisMAC]["up"] =False
+
+					if data0["signal"]!=macList[thisMAC]["lastData"] or (tt-macList[thisMAC]["lastMsgtt"]) > (macList[thisMAC]["iPhoneRefreshUpSecs"]-1.): # send htlm message to indigo, if new data, or last msg too long ago
+						if macList[thisMAC]["lastData"] != -999 and not macList[thisMAC]["up"] and (tt-macList[thisMAC]["lastMsgtt"]) <	 macList[thisMAC]["iPhoneRefreshUpSecs"]+2.:
+							macList[thisMAC]["quickTest"] =macList[thisMAC]["iPhoneRefreshDownSecs"]/2.
+							continue
+						#print "sending "+thisMAC+" " + datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"] , macList[thisMAC]["quickTest"], data0
+						macList[thisMAC]["quickTest"] = 0.
+						#print "af -"+datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"], macList[thisMAC]["quickTest"], data0
+						macList[thisMAC]["lastMsgtt"]  = tt
+						macList[thisMAC]["lastData"] = data0["signal"]
+						data={}
+						data["sensors"]					= {"BLEconnect":{macList[thisMAC]["devId"]:{thisMAC:data0}}}
+						U.sendURL(data)
 
 				else:
-					macList[thisMAC]["up"] =False
+					macList[thisMAC]["up"] = False
 
-				if data0["signal"]!=macList[thisMAC]["lastData"] or (tt-macList[thisMAC]["lastMsgtt"]) > (macList[thisMAC]["iPhoneRefreshUpSecs"]-1.): # send htlm message to indigo, if new data, or last msg too long ago
-					if macList[thisMAC]["lastData"] != -999 and not macList[thisMAC]["up"] and (tt-macList[thisMAC]["lastMsgtt"]) <	 macList[thisMAC]["iPhoneRefreshUpSecs"]+2.:
-						macList[thisMAC]["quickTest"] =macList[thisMAC]["iPhoneRefreshDownSecs"]/2.
-						continue
-					#print "sending "+thisMAC+" " + datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"] , macList[thisMAC]["quickTest"], data0
-					macList[thisMAC]["quickTest"] = 0.
-					#print "af -"+datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"], macList[thisMAC]["quickTest"], data0
-					macList[thisMAC]["lastMsgtt"]  = tt
-					macList[thisMAC]["lastData"] = data0["signal"]
-					data={}
-					data["sensors"]					= {"BLEconnect":{macList[thisMAC]["devId"]:{thisMAC:data0}}}
-					U.sendURL(data)
+			loopCount+=1
+			#print "no answer sleep for " + str(iPhoneRefreshDownSecs)
+			U.echoLastAlive(G.program)
 
-			else:
-				macList[thisMAC]["up"] = False
-
-		loopCount+=1
-		#print "no answer sleep for " + str(iPhoneRefreshDownSecs)
-		U.echoLastAlive(G.program)
+execBLEconnect()
 		
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

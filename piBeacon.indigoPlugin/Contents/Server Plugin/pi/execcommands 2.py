@@ -35,62 +35,92 @@ import os
 
 externalGPIO = False
 
+ 
+def stopPexpect(child, reason):
+		U.logger.log(30,reason)
+		child.sendline("disconnect")
+		time.sleep(0.2)
+		child.sendline("disconnect")
+		time.sleep(0.2)
+		child.sendline("quit\r")
+		time.sleep(0.2)
+		child.terminate()
+
 def getBeaconParameters(devices):
 	global killMyselfAtEnd
-	try:	
-		devices = json.loads(devices)
+	try:
+		try: import pexpect
+		except:
+			os.system("sudo apt-get install pexpect")
+			try: import expect
+			except: 
+				U.logger.log(50,"importing pexpect did not work ")
+				return
+		
+		devices = devices.split(",")
 		if len(devices) ==0: return
 		os.system("echo getbeaconparameters  > "+G.homeDir+"temp/stopBLE")
-		ret = subprocess.Popen("/bin/hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
+		ret = subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
 		time.sleep(0.1)
-		ret = subprocess.Popen("/bin/hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
+		ret = subprocess.Popen("hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
 
 		U.logger.log(20,"get beacon parameters devices:{}".format(devices))
- 		timeoutSecs = 15
+ 
+		killMyselfAtEnd = True # kill myself after finish
+
 		data ={} 
-		for mac in devices:
-			if len(mac) < 10: continue
+		for dd in devices:
+			if len(dd) < 10: continue
 			try:
-				params		= devices[mac]
-				#U.logger.log(30,"params:{}".format(params))
+				gg		= dd.split("=")
+				if len(gg) != 2: continue
+				mac 	= gg[0]
+				params  = gg[1].strip("=")
 				state	= []
 				uuid	= []
-				random	= []
 				dType	= []
 
-				for xx in params:
+				for xx in params.split("="):
 					yy = xx.split("-")
-					if len(yy) != 4: continue
+					if len(yy) !=3: continue
 					uuid.append(yy[0])
-					if yy[1] == "randomON": random.append(" -t random ")
-					else:				    random.append(" ")
-					state.append(yy[2])
-					dType.append(yy[3])
-#					"2A19-randomON-batteryLevel-int"  > read battery level UUID=2A19 random ON  for eg XY beacons
-#					<"2A19-randomOff-batteryLevel-int" > read battery level UUID=2A19 random off for ed noda/aiko/iHere 
-
-				#U.logger.log(20,"{}:  state: {}; uuid:{}; random:{}; dType:{} ".format(mac, state, uuid, random, dType ) )
+					state.append(yy[1])
+					dType.append(yy[2])
 				if len(state) ==0: continue
+				child = pexpect.spawn("gatttool -I")
+ 
+				U.logger.log(30,"Connecting to {}".format(mac))
+				child.sendline("connect {0}".format(mac))
+				ret = child.expect(["Connection successful","Error:",pexpect.TIMEOUT], timeout=5)
+				if ret == 0:
+					U.logger.log(30,"Connected.., reading parameters")
+				elif ret == 1:
+					stopPexpect(child," not connected")
+					continue
+				elif ret == 3:
+					stopPexpect(child,"timeout")
+					continue
+				else:
+					stopPexpect(child,"timeout")
+					continue
+
 				for ll in range(len(state)):
-					cmd = "sudo /bin/hciconfig hci0 down"
-					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					cmd = "sudo /bin/hciconfig hci0 up; /usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -b {} {} --char-read --uuid={}".format(timeoutSecs, mac,random[ll], uuid[ll])
-					U.logger.log(20,"iBeacon: {};   command: {}  ".format(mac, cmd) )
-					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
-					U.logger.log(20,"... ret: {}  ".format(check) )
-					if check.find("connect error") >-1:	value = check
-					elif check.find("killed") >-1:		value = "timeout"
-					elif check.find("error") >-1: 		value = check
-					else: 
-						value = -2
-						ret2 = ret[0].split("value: ")
-						if len(ret2) == 2:  
-							try:
-								if dType[ll] == "int": value = int(ret2[1].strip(),16)
-								if dType[ll] == "str": value = str(ret2[1])
-							except:pass
-					U.logger.log(10,"{}:  return: {} {} {} ".format(mac, state[ll], ret[0], value) )
+				# get battery level
+					U.logger.log(30,"char-read-uuid {}, dType:{}".format(uuid[ll], dType[ll]) )
+					child.sendline("char-read-uuid {}".format(uuid[ll]) )
+					child.expect("handle: ", timeout=5)
+					child.expect("\r\n", timeout=5)
+
+					batpercent = -2
+					ret = child.before.strip()
+					ret2 = ret.split("value: ")
+					value = ""
+					if len(ret2) == 2:  
+						try:
+							if dType[ll] == "int": value = int(ret2[1].strip(),16)
+							if dType[ll] == "str": value = str(ret2[1])
+						except:pass
+					U.logger.log(30,"{}:  return: {} {} {} ".format(mac, state[ll], ret2, value) )
 					if "sensors" not in data: data["sensors"] = {}
 					if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
 					if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] ={}
@@ -99,17 +129,22 @@ def getBeaconParameters(devices):
 					if unicode(e).find("Timeout") ==-1:
 						U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					else:
-						U.logger.log(20, u"Line {} has timeout".format(sys.exc_traceback.tb_lineno))
+						U.logger.log(30, u"Line {} has timeout".format(sys.exc_traceback.tb_lineno))
+					stopPexpect(child, "exception")
 					time.sleep(1)
+			else:
+				stopPexpect(child, "end of dev")
 
 			
 	except Exception, e:
 			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.logger.log(30, u"disconnecting")
 
-	U.logger.log(20, u"sending data:{}".format(data))
+	U.logger.log(30, u"data:{}".format(data))
 	if data !={}:
-		U.sendURL(data, wait=False, squeeze=False)
+		U.sendURL(data, wait=False)
 
+	stopPexpect(child, "exit")
 	os.system("rm "+G.homeDir+"temp/stopBLE")
 	return
 
@@ -635,6 +670,5 @@ if True: #__name__ == "__main__":
 		
 	execCMDS(sys.argv[1])
 	time.sleep(0.5)
-	if killMyselfAtEnd: 
-		U.logger.log(20, u"exec cmd: killing myself at PID{}".format(myPID))
-		os.system(" sudo kill -9 "+str(myPID) )
+	U.logger.log(20, u"exec cmd: killing myself at PID{}".format(myPID))
+	if killMyselfAtEnd: os.system(" sudo kill -9 "+str(myPID) )
