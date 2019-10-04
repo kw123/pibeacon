@@ -34,9 +34,9 @@ U.logger.log(10, "setPCF8591  command :" + unicode(sys.argv))
 
 command = json.loads(sys.argv[1])
 
-if "i2cAddress" in command:
-    i2cAddress= int(command["i2cAddress"])
-else:
+i2cAddress = U.getI2cAddress(command, default ="")
+
+if i2cAddress=="":
     U.logger.log(30, "setPCF8591dac bad command " + command + "  i2cAddress not included")
     exit(1)
     

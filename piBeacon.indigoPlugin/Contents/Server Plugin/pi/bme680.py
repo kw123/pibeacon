@@ -873,11 +873,7 @@ def readParams():
 				setCalibration = 0	  
 				calibrateIfgt  = 110	
 			
-			try:
-				if "i2cAddress" in sensors[sensor][devId]: 
-					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
-			except:
-				i2cAddress = ""	   
+			i2cAddress = U.getI2cAddress(sensors[sensor][devId], default ="")
 
 			old = deltaX[devId]
 			try:
@@ -1013,7 +1009,7 @@ def getValues(devId):
 				if gas > gasBaseLine*(calibrateIfgt/100.) and not firstValue and setCalibration == 0: #recalibrate over x %	 higher than previous calibartion (=100% clean air) 
 					U.logger.log(30,"re calibrated: due to shift high in baseline new value:"+str(gas)+";  oldbaseLine: "+str(gasBaseLine) )
 					gasScore	= "calibrating"
-					startSensor(devId, int(sensors[sensor][devId]["i2cAddress"]) )
+					startSensor(devId, U.getI2cAddress(sensors[sensor][devId], default =0) )
 				else:
 					gasScore = ("%3d"%(int(gas/ gasBaseLine *100))).strip()
 			else:

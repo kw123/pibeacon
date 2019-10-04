@@ -40,11 +40,12 @@ U.logger.log(10, "setmcp4725	command :" + unicode(sys.argv))
 
 command = json.loads(sys.argv[1])
 
-if "i2cAddress" in command:
-	i2cAddress= int(command["i2cAddress"])
-else:
-	U.logger.log(30, "setmcp4725 bad command " + command + "	 i2cAddress not included")
-	exit(1)
+
+i2cAddress = U.getI2cAddress(command, default ="")
+
+if i2cAddress=="":
+    U.logger.log(30, "setmcp4725 bad command " + command + "  i2cAddress not included")
+    exit(1)
 	
 if "startAtDateTime" in command:
 	try:

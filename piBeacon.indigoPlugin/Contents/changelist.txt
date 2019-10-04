@@ -1,9 +1,25 @@
+Added features / changes in v7.112.312 @ 2019-10-03
+===================================================
+
+1. fixed situation when plugin deletes RPI, due to  MAC number =00:00:00:00:00:00 - bad data coming from RPI
+
+2. tuned IMPULSE sensor
+
+3. made # of digits for sensors consistent
+
+4. added several options for display device on RPI
+   - supports xwindows = can show composed (dynamic) images in window on rpi desktop
+   - added "thermometer" item to display, w options for labels, ticks etc
+   - added zoom factor for xwindows display.
+   - it will automatically start xwindows on rpi when indigo output device is an xwindows device type
+   - option in rpi device edit to start windows on RPI by rpi-master program 
+
 Added features / changes in v7.111.311 @ 2019-09-16
 ===================================================
 
 1. debug on rpi now logs individual ibeacon msgs as they come
 
-2.  added battery level querry for beacons, shown in dev.states["batteryLevel"] and in detaiuled device listing in indigo main window
+2.  added battery level querry for beacons, shown in dev.states["batteryLevel"] and in detailed device listing in indigo main window
    Prep-steps::::::
      you MUST first edit each ibeacon indigo device and set enable battery level .. and select either 
      "randown" or plain com to iBeacons.   xy beacons use random,  NODA, iHere .. use plain comm.

@@ -4,6 +4,7 @@ set authKeyOrPassword [lindex $argv 2 ]
 set ipNumber [lindex $argv 3 ] 
 set timeout [lindex $argv 4 ] 
 
+
 set timeout $timeout
 spawn ssh $userID@$ipNumber
 

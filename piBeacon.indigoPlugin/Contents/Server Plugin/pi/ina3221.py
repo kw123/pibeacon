@@ -230,11 +230,7 @@ def readParams():
 				sensorRefreshSecs = 100	   
 
 
-			try:
-				if "i2cAddress" in sensors[sensor][devId]: 
-					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
-			except:
-				i2cAddress = ""	   
+			i2cAddress = U.getI2cAddress(sensors[sensor][devId], default ="")
 
 			try:
 				if "deltaX" in sensors[sensor][devId]: 

@@ -740,6 +740,13 @@ def stopEth():
 	return
 
 #################################
+def stopDisplay():
+	os.system("echo stop > "+G.homeDir+"temp/display.inp")
+	return
+
+
+
+#################################
 def startwebserverINPUT(port, useIP="", force=False):
 	try:
 		if checkIfStartwebserverINPUT() and not force: return 
@@ -1153,70 +1160,73 @@ def setWlanEthONoff(wlan0IP, eth0IP):
 # G.wifiEth["wlan0"] ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 
 	changed	= False
-	if wlan0IP == "": 
-		if G.wifiEth["eth0"]["on"] in ["on","onIf","dontChange"] and eth0IP == "" and not G.eth0Enabled:
-			startEth()
-			time.sleep(10)
-			changed	= True
-			logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: eth0[on]: {}, eth0IP:/, eth0Enabled:F, wlan0IP:{}, eth0Packets:{}, wlan0Packets:{} .. starting eth0".format(G.wifiEth["eth0"]["on"], G.eth0Packets, G.wlan0Packets) ) 
-		
-	if G.switchedToWifi != 0 and time.time() - G.switchedToWifi < 100:
-		G.switchedToWifi =time.time() + 100.
-		# reset eth packet counters
-		if G.eth0Enabled:
-			##sudo rfkill unblock all ;sudo ifconfig eth0 down ;sudo modprobe -r e1000 ;sudo modprobe e1000 ;sudo ifconfig eth0 up
-			stopEth()
-			startEth()
+	try:
 		if wlan0IP == "": 
-			if not G.wifiEnabled:
-				startWiFi()
+			if G.wifiEth["eth0"]["on"] in ["on","onIf","dontChange"] and eth0IP == "" and not G.eth0Enabled:
+				startEth()
 				time.sleep(10)
-			changed	= True
-			logger.log(30, G.program.ljust(20)+ u" etWlanEthONoff  ip changed: switchedToWifi:T , wlan0IP:/, wifiEnabled:F starting WiFi".format(wlan0IP, G.eth0Packets, G.wlan0Packets) ) 
+				changed	= True
+				logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: eth0[on]: {}, eth0IP:/, eth0Enabled:F, wlan0IP:{}, eth0Packets:{}, wlan0Packets:{} .. starting eth0".format(G.wifiEth["eth0"]["on"], G.eth0Packets, G.wlan0Packets) ) 
+		
+		if G.switchedToWifi != 0 and time.time() - G.switchedToWifi < 100:
+			G.switchedToWifi =time.time() + 100.
+			# reset eth packet counters
+			if G.eth0Enabled:
+				##sudo rfkill unblock all ;sudo ifconfig eth0 down ;sudo modprobe -r e1000 ;sudo modprobe e1000 ;sudo ifconfig eth0 up
+				stopEth()
+				startEth()
+			if wlan0IP == "": 
+				if not G.wifiEnabled:
+					startWiFi()
+					time.sleep(10)
+				changed	= True
+				logger.log(30, G.program.ljust(20)+ u" etWlanEthONoff  ip changed: switchedToWifi:T , wlan0IP:/, wifiEnabled:F starting WiFi".format(wlan0IP, G.eth0Packets, G.wlan0Packets) ) 
 
-	# check if ethernet is back after 5 minutes
-	if G.switchedToWifi != 0 and time.time() - G.switchedToWifi > 300:
-		if eth0IP != "" and G.eth0Enabled:
-			if G.eth0Packets != G.eth0PaketsOld and (G.packetsTime- G.packetsTimeOld > 2.):
-				if testPing() != 0:
-					G.wifiEth	= copy.copy(G.wifiEthOld)
-					G.switchedToWifi = 0
-					if G.wifiEth["wlan0"]["on"]  in ["onIf","off"]:
-						stopWiFi()
-						time.sleep(2)
-					changed	= True
-					logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: resetting switchedToWifi, eth0 seems to be back(packet count);  wlan0[on]:{}, eth0IP:{}, G.eth0Enabled:T, stopWiFi".format(G.wifiEth["wlan0"]["on"],eth0IP) ) 
+		# check if ethernet is back after 5 minutes
+		if G.switchedToWifi != 0 and time.time() - G.switchedToWifi > 300:
+			if eth0IP != "" and G.eth0Enabled:
+				if G.eth0Packets != G.eth0PaketsOld and (G.packetsTime- G.packetsTimeOld > 2.):
+					if testPing() != 0:
+						G.wifiEth	= copy.copy(G.wifiEthOld)
+						G.switchedToWifi = 0
+						if G.wifiEth["wlan0"]["on"]  in ["onIf","off"]:
+							stopWiFi()
+							time.sleep(2)
+						changed	= True
+						logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: resetting switchedToWifi, eth0 seems to be back(packet count);  wlan0[on]:{}, eth0IP:{}, G.eth0Enabled:T, stopWiFi".format(G.wifiEth["wlan0"]["on"],eth0IP) ) 
 
-	if changed: 
-		time.sleep(2)
-		eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
-		logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  return: eth0IP:{}, wlan0IP:{}, eth0Enabled:{}, wifiEnabled:{}, eth0Packets:{},eth0PacketsOld:{}, wlan0Packets:{},  wlan0PacketsOld:{}".format(eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled, G.eth0Packets, G.wlan0Packets  ) ) 
-		return wlan0IP, eth0IP, True
+		if changed: 
+			time.sleep(2)
+			eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
+			logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  return: eth0IP:{}, wlan0IP:{}, eth0Enabled:{}, wifiEnabled:{}, eth0Packets:{},eth0PacketsOld:{}, wlan0Packets:{},  wlan0PacketsOld:{}".format(eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled, G.eth0Packets, G.wlan0Packets  ) ) 
+			return wlan0IP, eth0IP, True
 
 
-	if G.wifiEth["wlan0"]["on"] not in ["on","dontChange"] and wlan0IP != "" and G.wifiEnabled: 
-		if eth0IP !="":
-			logger.log(30, G.program.ljust(20)+ u" switching WiFi off")
-			stopWiFi()
+		if G.wifiEth["wlan0"]["on"] not in ["on","dontChange"] and wlan0IP != "" and G.wifiEnabled: 
+			if eth0IP !="":
+				logger.log(30, G.program.ljust(20)+ u" switching WiFi off")
+				stopWiFi()
+				changed = True
+				logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[wlan0][on] not in [on,dontChange] and wlan0IP:{}  and G.wifiEnabled, eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(wlan0IP, eth0IP, G.eth0Packets, G.wlan0Packets ) ) 
+
+
+		if G.wifiEth["eth0"]["on"] == "off" and eth0IP != "": 
+				logger.log(30, G.program.ljust(20)+ u" switching eth0 off")
+				logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[eth0][on] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(eth0IP, G.eth0Packets, G.wlan0Packets) ) 
+				stopEth()
+				changed = True
+
+		if  G.wifiEth["eth0"]["useIP"] == "off" and eth0IP !="":
+			logger.log(30, G.program.ljust(20)+ u" setting eth0 /")
+			logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[eth0][useIP] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(eth0IP, G.eth0Packets, G.wlan0Packets) ) 
 			changed = True
-			logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[wlan0][on] not in [on,dontChange] and wlan0IP:{}  and G.wifiEnabled, eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(wlan0IP, eth0IP, G.eth0Packets, G.wlan0Packets ) ) 
 
-
-	if G.wifiEth["eth0"]["on"] == "off" and eth0IP != "": 
-			logger.log(30, G.program.ljust(20)+ u" switching eth0 off")
-			logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[eth0][on] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(eth0IP, G.eth0Packets, G.wlan0Packets) ) 
-			stopEth()
+		if  G.wifiEth["wlan0"]["useIP"] == "off" and wlan0IP !="":
 			changed = True
+			logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[wlan0][useIP] ==off and  wlan0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(wlan0IP, G.eth0Packets, G.wlan0Packets) ) 
 
-	if  G.wifiEth["eth0"]["useIP"] == "off" and eth0IP !="":
-		logger.log(30, G.program.ljust(20)+ u" setting eth0 /")
-		logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[eth0][useIP] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(eth0IP, G.eth0Packets, G.wlan0Packets) ) 
-		changed = True
-
-	if  G.wifiEth["wlan0"]["useIP"] == "off" and wlan0IP !="":
-		changed = True
-		logger.log(30, G.program.ljust(20)+ u" setWlanEthONoff  ip changed: G.wifiEth[wlan0][useIP] ==off and  wlan0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(wlan0IP, G.eth0Packets, G.wlan0Packets) ) 
-
+	except	Exception, e :
+		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 
 	return wlan0IP,eth0IP, changed
@@ -1616,17 +1626,27 @@ def execSend():
 		logger.log(30, u"{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	return 
+
+
+######## un decode i2c ether from in or from hex
+def getI2cAddress(string,default =0):
+	try:
+		if "i2cAddress" in string:
+			if string["i2cAddress"].find("x") >-1:
+				i2cAddress = int(string["i2cAddress"],16)
+			else:
+				i2cAddress = int(string["i2cAddress"])
+		else:
+			i2cAddress =default
+		return  i2cAddress
+	except:
+		return default
 		
 ######## setup and use	multiplexer if requested
 def muxTCA9548A(sens,i2c=""):
 
 	if i2c == "":
-		if "i2cAddress" in sens:
-			i2c = int(sens["i2cAddress"])
-		else:
-			i2c = 0
-	else:
-		pass
+		i2c = getI2cAddress(sens, default=0)
 	
 	if G.enableMuxI2C == -1:		 
 						return	i2c
@@ -1648,6 +1668,8 @@ def muxTCA9548A(sens,i2c=""):
 	time.sleep(0.01)
 	
 	return i2c# G.enableMuxI2C+channel
+
+################################
 def muxTCA9548Areset():
 	if G.enableMuxBus !="":
 		G.enableMuxBus.write_byte(G.enableMuxI2C,0x0)
@@ -1740,12 +1762,13 @@ def makeDATfile(sensor, data):
 #################################
 def writeJson(fName, data, sort_keys=False, indent=0):
 	try:
-		f=open(fName,"w")
 		if indent != 0:
 			out = json.dumps(data,sort_keys=sort_keys, indent=indent)
 		else:	
 			out = json.dumps(data,sort_keys=sort_keys)
+		#logger.log(10, u" writeJson-in:{}\nout: {}".format(data, out) )
 	##print "writing json to "+fName, out
+		f=open(fName,"w")
 		f.write(out)
 		f.close()
 	except	Exception, e:
@@ -1761,12 +1784,13 @@ def readJson(fName):
 	ddd = ""
 	try:
 		if not os.path.isfile(fName): 
-			#logger.log(10,u"{:<20}  no fname:{}".format(G.program, fName))
+			logger.log(10,u"{:<20}  no fname:{}".format(G.program, fName))
 			return {},""
 		f=open(fName,"r")
 		ddd = f.read()
-		data = json.loads(ddd)
 		f.close()
+		data = json.loads(ddd)
+		logger.log(10, u" readJson-data:{}\nddd: {}".format(data, ddd) )
 	except	Exception, e:
 		logger.log(30,u"{:<20} Line {} has error={}, fname:{}, data:{}".format(G.program, sys.exc_traceback.tb_lineno, e, fName, ddd ))
 		return {}, ""
@@ -1801,6 +1825,7 @@ def readINPUTcount():
 			IPC[str(ii)] = 0
 		try:
 			IPC, ddd = readJson(G.homeDir+G.program+".count")
+			logger.log(10, u" readINPUTcount-0:{}\nddd: {}".format(IPC, ddd) )
 		except:
 			pass
 		for p in IPC:
@@ -1813,8 +1838,11 @@ def readINPUTcount():
 			IPC={}
 			for ii in range(1,30):
 				IPC[str(ii)] = 0
-		writeINPUTcount(IPC)
-		return IPC
+		out={}
+		for p in IPC:
+			out[int(p)] = IPC[p]
+		writeINPUTcount(out)
+		return out
 
 
 ######################################
@@ -1979,11 +2007,11 @@ def sendi2cToPlugin(sensDict):
 				ss = sens
 			ll = len(sensDict[sens])
 			if ll > 1:
-				sensList += str(ll)+" "+ss+"; "
+				sensList += str(ll)+" "+ss+", "
 			else:
-				sensList += ss+"; "
+				sensList += ss+", "
 
-		if len(sensList) > 0: sensList = sensList.strip(" ").strip(";")
+		if len(sensList) > 0: sensList = sensList.strip(" ").strip(",")
 		#																	remove trailing null chars;  \\ for escape  of \
 		rpiType	 = subprocess.Popen("cat /sys/firmware/devicetree/base/model | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		###print "rpiType1>>"+rpiType+"<<"
@@ -1994,15 +2022,15 @@ def sendi2cToPlugin(sensDict):
 		serN	 = subprocess.Popen("cat /sys/firmware/devicetree/base/serial-number | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		serN	 = (''.join(i for i in serN if ord(i)>1)).lstrip("0")
 		###print "serN>>"+serN+"<<"
-		rpiType +="; ser#"+serN
+		rpiType +=", ser#"+serN
 		#  --> Raspberry Pi 3 Model B Plus Rev 1.3/ ser#00000000dcfb216c
 
 		osInfo	 = subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
 		for line in osInfo:
 			if line .find("VERSION=") == 0:
 				os = line.split("=")[1].strip('"').strip(' ')
-		os += "; "+ subprocess.Popen("uname -r" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
-		os += "; "+ subprocess.Popen("uname -v" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
+		os += ", "+ subprocess.Popen("uname -r" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
+		os += ", "+ subprocess.Popen("uname -v" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
 
 		tempInfo = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		try:	temp = tempInfo.split("=")[1].split("'")[0]
@@ -2278,12 +2306,8 @@ def getEULER(v,theClass=""):
 #################################
 def getMAGReadParameters( sens,devId):
 		changed = ""
-		try:
-			G.i2cAddress = ""	 
-			if "i2cAddress" in sens: 
-				G.i2cAddress = int(sens["i2cAddress"])
-		except:
-			G.i2cAddress = ""	 
+
+		G.i2cAddress = getI2cAddress(sens,default="")	
 
 		try:
 			magOffsetX = 0

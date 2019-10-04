@@ -71,6 +71,15 @@
 				</List>
 			</Field>
 
+			<Field    id="startXonPi"   type="menu" defaultValue="leaveAlone">
+				 <List>
+					<Option value="start"    >start x windows if not started</Option>
+					<Option value="stop"     >stop x windows </Option>
+					<Option value="leaveAlone" >dont touch x windows</Option>
+				  </List>
+			<Label>start up x-windows with master:</Label>
+			</Field>
+
 
 			<Field id="label14"               type="label" > 
 				<Label>== iBeacon related:...</Label>
@@ -171,7 +180,9 @@
 			</Field>
 
 			<Field id="BLEHCILabel" type="label" > 
-				<Label>== Use which BLE adoptor for which task:...</Label>
+				<Label>== Use which BLE adoptor for which task:...
+         Only for SSD op-sys version &lt; BUSTER. 
+              With Buster only use ONE BLE device, use "let the RPI decide"</Label>
 			</Field>
 
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
@@ -1177,6 +1188,14 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
+			<Field    id="startXonPi"   type="menu" defaultValue="leaveAlone">
+				 <List>
+					<Option value="start"    >start x windows if not started</Option>
+					<Option value="stop"     >stop x windows </Option>
+					<Option value="leaveAlone" >dont touch x windows</Option>
+				  </List>
+			<Label>start up x-windows with master:</Label>
+			</Field>
 
 			<Field id="BLEHCILabel" type="label"   > 
 				<Label>== Use which BLE adoptor for BLE SENSOR (if used):</Label>
@@ -1994,8 +2013,8 @@ use eg to track someone moving around - going from one room to the next" >
 
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
-					<Option value="2A19-randomON-batteryLevel-int"  > read battery level w UUID=2A19 random ON  for eg XY beacons</Option>
-					<Option value="2A19-randomOff-batteryLevel-int" > read battery level w UUID=2A19 random off for eg noda/aiko/iHere</Option>
+					<Option value="2A19-randomON-batteryLevel-int"  > read battery level w UUID=2A19 random ON  for eg XY beacons, social retail,..</Option>
+					<Option value="2A19-public-batteryLevel-int"    > read battery level w UUID=2A19 public     for eg noda/aiko/iHere</Option>
 					<Option value="off"    				  >off</Option>
 				</List>
 				<Label>.... battery level:</Label>
@@ -2003,8 +2022,8 @@ use eg to track someone moving around - going from one room to the next" >
 
 			<Field id="txPowerlevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
-					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons</Option>
-					<Option value="2A07-randomOff-txPowerLevel-int" >read  tx power level w UUID=2A07 random ON  for eg noda/aiko/iHere</Option>
+					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons, social retail,..</Option>
+					<Option value="2A07-public-txPowerLevel-int" >read  tx power level w UUID=2A07 public     for eg noda/aiko/iHere</Option>
 					<Option value="off"      >off</Option>
 				</List>
 				<Label>.... TX power level info at UUID=xx.. not implemented yet:</Label>
@@ -5695,8 +5714,8 @@ It measures CO2 VOC
    
 
    
-	<Device type="sensor" id="mhzI2C">
-	<Name>INPUT-CO2-MH-Zxx-i2c</Name>
+	<Device type="sensor" id="mhzCO2">
+	<Name>INPUT-CO2-MH-Zxx</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -5711,9 +5730,9 @@ It measures CO2 VOC
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c-MH-Zxx CO2 VOC sensor on individual rPis.. 
-    sensor with serial to i2c converter 
+    sensor with serial port or serial to i2c converter 
     connect 5V, GND, SDA,SCL, 
-    set switch to i2c (right)
+    if i2c version  set switch to i2c (right)
     sel voltage bridge to 3.3V (left)
 It measures CO2 and temp using infraed light absorption 
 ====set baseline to fixed value of clean air====
@@ -5724,17 +5743,27 @@ It measures CO2 and temp using infraed light absorption
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="90"> <Label>i2c address of device:</Label>
-			<List>
-				<Option value="65"   >0x41 = 65  right, right </Option>
-				<Option value="67"   >0x43 = 67  left,  right </Option>
-				<Option value="75"   >0x4b = 75  right, left</Option>
-				<Option value="77"   >0x4d = 77  left,  left , default</Option>
-				<Option value="144"  >0x90 = 144 right, right  alternative settings</Option>
-				<Option value="146"  >0x92 = 146 left,  right </Option>
-				<Option value="152"  >0x98 = 152 right, left</Option>
-				<Option value="154"  >0x9A = 154 left,  left </Option>
-			</List>
+
+			<Field id="interfaceType" type="menu"     defaultValue="i2c"> 
+				<Label>i2c or serial version:</Label>
+				<List>
+					<Option value="i2c"    >i2c converted version</Option>
+					<Option value="serial" >serial port version</Option>
+				</List>
+			</Field>
+
+			<Field id="i2cAddress" type="menu"     defaultValue="77" visibleBindingId="interfaceType" visibleBindingValue="i2c"> 
+				<Label>i2c address of device:</Label>
+				<List>
+					<Option value="65"   >0x41 = 65  right, right </Option>
+					<Option value="67"   >0x43 = 67  left,  right </Option>
+					<Option value="75"   >0x4b = 75  right, left</Option>
+					<Option value="77"   >0x4d = 77  left,  left , default</Option>
+					<Option value="144"  >0x90 = 144 right, right  alternative settings</Option>
+					<Option value="146"  >0x92 = 146 left,  right </Option>
+					<Option value="152"  >0x98 = 152 right, left</Option>
+					<Option value="154"  >0x9A = 154 left,  left </Option>
+				</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
 			<Label>use TCA9548A multiplexer for this sensor:</Label> 
@@ -5871,170 +5900,6 @@ It measures CO2 and temp using infraed light absorption
 	</Device>
    
 
-   
-	<Device type="sensor" id="mhzSERIAL">
-	<Name>INPUT-CO2-MH-Zxx-serial</Name>
-	<UiDisplayStateId>status</UiDisplayStateId>
-		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
-
-
-			<Field id="infoLabel" type="label">
-			<Label>Setup serial-MH-Zxx CO2 VOC sensor on individual rPis.. 
-    sensor with serial to i2c converter 
-    connect 5V, GND, TX,RX, Calibration pin 
-It measures CO2 and temp using infraed light absorption 
-the MH-z19 has a range 400-1000/2000/3000/4000/5000 ppm
-the MH-Z16 has a range of 400-5000
-====set baseline to fixed value of clean air====
-  </Label>
-			</Field>
-
-			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-			<Label>select rPi-server to which the sensor is connect to:</Label> 
-			</Field>
-			<Field id="calibrationPin" type="menu"     defaultValue="18"> <Label>which GPIO is used to start calibration:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
-			</Field>
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="2" hidden="no"> 
-			<Label>read sensor every xx secs :</Label>
-			<List>
-				<Option value="2"   > 2   secs </Option>
-			</List>
-			</Field>
-			<Field id="minSendDelta" type="menu"     defaultValue="20" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
-			<List>
-				<Option value="20"  > 20  secs</Option>
-				<Option value="40"  > 40  secs</Option>
-				<Option value="60"  > 60  secs</Option>
-			</List>
-			</Field>
-			<Field id="deltaX" type="menu"     defaultValue="2" hidden="no" > 
-			<Label>delta value (%) to trigger indigo update:</Label>
-			<List>
-				<Option value="0.25" > 0.25 ~ 1ppm</Option>
-				<Option value="0.5"  > 0.5  ~2 ppm</Option>
-				<Option value="1"    > 1 ~ 4ppm</Option>
-				<Option value="2"    > 2 ~ 8ppm</Option>
-				<Option value="4"    > 4 ~ 16ppm</Option>
-				<Option value="8"    > 8 ~ 32ppm</Option>
-			</List>
-			</Field>
-			<Field id="sensitivity" type="menu"     defaultValue="medium" hidden="no"> 
-			<Label>sensitivity for auto re-calibration:</Label>
-			<List>
-				<Option value="small"   > sensitive to small  changes (recalib:  6 above,15 above) </Option>
-				<Option value="medium"  > sensitive to medium changes (recalib: 10 below,20 above)</Option>
-				<Option value="large"   > sensitive to large  changes (recalib: 20 below,50 above) </Option>
-			</List>
-			</Field>
-			<Field id="timeaboveCalibrationMAX"   type="menu" defaultValue="1200" tooltip="" >
-			<List>
-				<Option value="300"   > 5 </Option>
-				<Option value="600"   > 10 </Option>
-				<Option value="900"   > 15</Option>
-				<Option value="1200"  > 20 </Option>
-				<Option value="1800"  > 30 </Option>
-				<Option value="2100"  > 45 </Option>
-				<Option value="3600"  > 60 </Option>
-				<Option value="7200"  > 120 </Option>
-				<Option value="99999999"  > never </Option>
-			</List>
-			<Label>Re-calibrate if CO2 above(set by sensitivity)  Calibration point for xx minutes :</Label>
-			</Field>
-			<Field id="amplification"   type="menu" defaultValue="5000" tooltip="" >
-			<List>
-				<Option value="1000"   > 1000 ppm </Option>
-				<Option value="2000"   > 2000 ppm </Option>
-				<Option value="3000"   > 3000 ppm </Option>
-				<Option value="4000"   > 4000 ppm </Option>
-				<Option value="5000"   > 5000 ppm </Option>
-			</List>
-			<Label>max range / amplification (only for MH-Z19):</Label>
-			</Field>
-
-
-			<Field id="CO2normal"   type="textfield" defaultValue="410" tooltip="" >
-			<Label>normal CO2 level [ppm]:</Label>
-			</Field>
-
-
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			<Field id="displayS" type="menu"     defaultValue="CO2"  hidden="No"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="CO2"     >CO2</Option>
-			</List>
-			</Field>
-
-		</ConfigUI>
-		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-                
-			<State id="CO2">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2</TriggerLabel>
-				<ControlPageLabel>CO2</ControlPageLabel>
-			</State>
-			<State id="raw">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>raw</TriggerLabel>
-				<ControlPageLabel>raw</ControlPageLabel>
-			</State>
-			<State id="calibration">
-				<ValueType>String</ValueType>
-				<TriggerLabel>calibration</TriggerLabel>
-				<ControlPageLabel>calibration</ControlPageLabel>
-			</State>
-			<State id="CO2MaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2MaxToday</TriggerLabel>
-				<ControlPageLabel>CO2MaxToday</ControlPageLabel>
-			</State>
-			<State id="CO2MinToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2MinToday</TriggerLabel>
-				<ControlPageLabel>CO2MinToday</ControlPageLabel>
-			</State>
-			<State id="CO2MaxYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2MaxYesterday</TriggerLabel>
-				<ControlPageLabel>CO2MaxYesterday</ControlPageLabel>
-			</State>
-			<State id="CO2MinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2MinYesterday</TriggerLabel>
-				<ControlPageLabel>CO2MinYesterday</ControlPageLabel>
-			</State>
-			<State id="CO2calibration">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2calibration</TriggerLabel>
-				<ControlPageLabel>CO2calibration</ControlPageLabel>
-			</State>
-			<State id="CO2offset">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>CO2offset</TriggerLabel>
-				<ControlPageLabel>CO2offset</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-		</States>
-	</Device>
    
 
 
@@ -15535,6 +15400,47 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
+	<Device type="custom" id="OUTPUTxWindows">
+	<Name>OUTPUT-xWindows</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>            
+			<Field id="infoLabelINPUT" type="label">
+			<Label>Setup / start  x-windows GUI on individual rPis</Label>
+			</Field>
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok">
+			<Label>msg from plugin</Label>s
+			</Field>
+            
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiOUT" dynamicReload="true"/>
+			<Label>select rPi-server:</Label> 
+			</Field>
+
+
+			<Field id="xWindows" type="menu"   defaultValue="off"> 
+			<Label>gui on / off:</Label>
+				<List>
+					<Option value="ON"        >start regular gui (at startup)</Option>
+					<Option value="off"       >do not start (gui)</Option>
+				</List>
+			</Field>
+            
+            
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="yes"> </Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+ 		</States>
+	</Device>
+
+
+
 	<Device type="custom" id="display">
 	<Name>OUTPUT-Display</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -15564,8 +15470,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 					<Option value="RGBmatrix64x16" >RGB matrix  64x16</Option>
 					<Option value="RGBmatrix64x32" >RGB matrix  64x32</Option>
 					<Option value="RGBmatrix96x32" >RGB matrix  96x32 .. not tested</Option>
-					<Option value="screen"  >large screen connected to HDMI or direct connect</Option>
-					<Option value="LCD1602"  >LCD 2 lines 16 Characters</Option>
+					<Option value="screen"         >large screen connected to HDMI or direct connect</Option>
+					<Option value="screenXwindows" >using x-windows output</Option>
+					<Option value="LCD1602"        >LCD 2 lines 16 Characters</Option>
 				</List>
 			</Field>
 
@@ -15628,7 +15535,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
             
-			<Field id="flipDisplay" type="menu"     defaultValue="0" enableBindingId="devType" enableBindingValue="screen" visibleBindingId="devType" visibleBindingValue="screen"> 
+			<Field id="flipDisplay" type="menu"     defaultValue="0" enableBindingId="devType" enableBindingValue="screen" visibleBindingId="devType" visibleBindingValue="screen,screenXwindows"> 
 			<Label>flip display:</Label>
 				<List>
 					<Option value= "0"  >no</Option>
@@ -15636,7 +15543,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
 
-			<Field id="intensity"  type="menu" defaultValue="100" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="intensity"  type="menu" defaultValue="100" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<List>
 					<Option value= "100"       >100% bright</Option>
 					<Option value= "90"        > 90% </Option>
@@ -15652,13 +15559,47 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>dimm light (applied to RGB values):</Label>
 			</Field>
 
-			<Field id="infoLabelsensors" type="label" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen">
+			<Field id="lightSensorOnForDisplay" type="checkbox" defaultValue="false" hidden ="false">
+				<Label>=== Use light sensor to dim LED/ screen:</Label>
+			</Field>
+
+			<Field id="lightSensorForDisplay-DevId-type"  type="menu" defaultValue="-1" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+				<List class="self" filter="" method="filterLightSensorOnRpi" dynamicReload="false"/>
+				<Label>.. use which light sensor:</Label>
+			</Field>
+
+
+			<Field id="lightSensorSlopeForDisplay"  type="textfield" defaultValue="1.0" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+			<Label>.. light sensor sensitivity factor 0.1..10:</Label>
+			</Field>
+
+
+			<Field id="lightMinDimForDisplay"  type="menu" defaultValue="0.2" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+				<List>
+					<Option value= "0"       > 0 no minimum</Option>
+					<Option value= "0.02"    > 2%</Option>
+					<Option value= "0.05"    > 5%</Option>
+					<Option value= "0.1"     > 10%</Option>
+					<Option value= "0.2"     > 20%</Option>
+					<Option value= "0.3"     > 30%</Option>
+					<Option value= "0.4"     > 40%</Option>
+					<Option value= "0.5"     > 50%</Option>
+					<Option value= "0.6"     > 60%</Option>
+					<Option value= "0.7"     > 70% min light</Option>
+				</List>
+			<Label>.. minimum light level:</Label>
+			</Field>
+
+
+
+
+			<Field id="infoLabelsensors" type="label" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows">
 			<Label>Only for Sensors when they show data directly on local Display</Label> </Field>
 			<Field id="infoLabelsensors2" type="label">
 <Label>AnyText%%v:variableNameOrNumber%%AnyText or
 AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
-			<Field id="scrollxy" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen"> 
+			<Field id="scrollxy" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows"> 
 			<Label>scroll display:</Label> 
 				<List>
 					<Option value="0"     >No</Option>
@@ -15668,7 +15609,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 					<Option value="right" >right</Option>
 				</List>
 			</Field>
-			<Field id="scrollSpeed" type="menu"     defaultValue="med" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen"> 
+			<Field id="scrollSpeed" type="menu"     defaultValue="med" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows"> 
 			<Label>scroll/ page change display speed:</Label> 
 				<List>
 					<Option value="slow" >slow</Option>
@@ -15677,7 +15618,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				</List>
 			</Field>
 
-			<Field id="showDateTime" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen"> 
+			<Field id="showDateTime" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows"> 
 				<Label>Show page with date and time:</Label> 
 				<List>
 					<Option value="1"  >yes</Option>
@@ -15685,22 +15626,22 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				</List>
 			</Field>
 
-			<Field id="extraPage0Line0"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="extraPage0Line0"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<Label>Show extra page-1-line1:</Label>
 			</Field>
-			<Field id="extraPage0Line1"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="extraPage0Line1"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<Label>Show extra page-1-line2:</Label>
 			</Field>
-			<Field id="extraPage0Color"  type="textfield" defaultValue="255,255,255" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="extraPage0Color"  type="textfield" defaultValue="255,255,255" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<Label>Show extra page-1-Color::</Label>
 			</Field>
-			<Field id="extraPage1Line0"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="extraPage1Line0"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<Label>Show extra page-2-line1:</Label>
 			</Field>
-			<Field id="extraPage1Line1"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="extraPage1Line1"  type="textfield" defaultValue="" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<Label>Show extra page-2-line2:</Label>
 			</Field>
-			<Field id="extraPage1Color"  type="textfield" defaultValue="255,255,255" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen" >
+			<Field id="extraPage1Color"  type="textfield" defaultValue="255,255,255" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows" >
 				<Label>Show extra page-2-Color:</Label>
 			</Field>
 			<Field id="infoLabelsensors3" type="label"><Label>.              extra pages can be overwritten with an ExtraPageAction</Label> </Field>
@@ -16735,6 +16676,8 @@ States:
 
 
 
+	<Device type="sensor" id="mhzI2C">          <Name>mhz i2c  deprecated, use new definition device</Name>	</Device>
+	<Device type="sensor" id="mhzSERIAL">       <Name>mhz serial  deprecated, use new definition device</Name>	</Device>
 
 	<Device type="custom" id="OUTPUTgpio-4">	<Name>OUTPUT-GPIO-max-4-PINs - deprecated</Name>	</Device>
 	<Device type="custom" id="OUTPUTgpio-10">	<Name>OUTPUT-GPIO-max-10-PINs- deprecated</Name>	</Device>
@@ -16748,4 +16691,4 @@ States:
 	<Device type="sensor" id="mhz_SERIAL">		<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
 
     
-</Devices>
+</Devices>	

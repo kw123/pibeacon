@@ -2,10 +2,12 @@ set userID [lindex $argv 0 ]
 set password [lindex $argv 1 ] 
 set authKeyOrPassword [lindex $argv 2 ] 
 set ipNumber [lindex $argv 3 ] 
-set HCI [lindex $argv 4 ] 
+set timeout [lindex $argv 4 ] 
+set HCI [lindex $argv 5 ] 
+
 set collectTime 30 
 
-set timeout 5
+set timeout  $timeout 
 spawn ssh $userID@$ipNumber
 
 if {$authKeyOrPassword == "assword"} { 

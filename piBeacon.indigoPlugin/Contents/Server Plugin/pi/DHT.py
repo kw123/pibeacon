@@ -41,9 +41,10 @@ def getDATAdht(DHTpin,Type):
 		try:
 			h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 			if unicode(h) == "None" or unicode(t) == "None":
-				U.logger.log(30, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again" )
 				time.sleep(1)
 				h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
+				if unicode(h) == "None" or unicode(t) == "None":
+					U.logger.log(20, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again" )
 			#f h is not None and t is not None:
 			#print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpin)
 #			# sensorDHT=""
@@ -66,11 +67,11 @@ def getDHT(sensor,data):
 				t,h =getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
 				if t!="":
 					try:	
-						t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
+						t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),2)
 					except: pass
 					data[sensor][devId] = {"temp":t}
 					if h!= "":
-						try:	h = float(h)  + float(sensors[sensor][devId]["offsetHum"])
+						try:	h = round(float(h)  + float(sensors[sensor][devId]["offsetHum"]),2)
 						except: pass
 						data[sensor][devId]["hum"]=h
 						if devId in badSensors: del badSensors[devId]

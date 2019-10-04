@@ -202,11 +202,7 @@ def readParams():
 			if old != sensorRefreshSecs: restart = True
 
 			
-			try:
-				if "i2cAddress" in sensors[sensor][devId]: 
-					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
-			except:
-				i2cAddress = ""	   
+			i2cAddress = U.getI2cAddress(sensors[sensor][devId], default ="")
 
 			old = deltaX[devId]
 			try:
@@ -437,8 +433,9 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
 						U.sendURL(data)
+						U.logger.log(20," bad sensor, restarting")
+						time.sleep(10)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
 					lastValues2[devId] =copy.copy(lastValues0)
@@ -446,6 +443,7 @@ while True:
 					continue
 				elif values["CO2"] !="" :
 					if sensorWasBad: # sensor was bad, back up again, need to do a restart to set config 
+						time.sleep(10)
 						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values

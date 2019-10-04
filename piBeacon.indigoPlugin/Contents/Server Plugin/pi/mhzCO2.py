@@ -19,13 +19,13 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "mhzI2C"
+G.program = "mhzCO2"
 #simple bitfield object
 
 
 #H.yasuhiro,2017/1/17
 
-class mhz16_class:
+class mhz16_class_i2c:
 	ppm			= 0
 	 
 	IOCONTROL	= 0X0E << 3
@@ -151,6 +151,113 @@ class mhz16_class:
 			U.logger.log(30, u"receive in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return []
 
+class mhz_class_serial:
+	pass
+	
+#################################		 
+	def __init__(self,serialPort="/dev/serial0",sensorType = 2):
+	
+	
+		if sensorType ==1:
+			self.cmd_measure	   = [0xFF,0x01,0x9C,0x00,0x00,0x00,0x00,0x00,0x63]
+			self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+			self.beginData		   = 4 
+			self.commandByteReturn = self.cmd_measure[2]
+		else:
+			self.cmd_measure	   = [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
+			self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+#			 self.cmd_calibrateZero = [0xFF,0x87,0x87,0x00,0x00,0x00,0x00,0x00,0xF2]  # does not work 
+#			 self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+			self.beginData		   = 2 
+			self.commandByteReturn = self.cmd_measure[2]
+
+		self.amplification={ "1000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x03, 0xE8, 0x7B],
+							 "2000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x07, 0xD0, 0x8F],
+							 "3000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x0B, 0xB8, 0xA3],
+							 "5000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x13, 0x88, 0xCB]}
+	
+		print "mhz_class port: ", serialPort
+		self.port = serialPort
+		#print 'Trying port %s ' % self.port
+		self.co2 = -1
+		self.ser			= serial.Serial()
+		self.ser.port		= self.port 
+		self.ser.stopbits	= serial.STOPBITS_ONE
+		self.ser.bytesize	= serial.EIGHTBITS
+		self.ser.baudrate	= 9600
+		self.ser.timeout	= 2
+		self.ser.open()
+
+#################################		 
+	def measure(self):
+		try:
+			self.send(self.cmd_measure)
+			self.parse(self.receive())
+			return
+		except	Exception, e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		self.co2 = -1
+
+#################################		 
+	def setRange(self,range):
+		r = str(range)
+		try:
+			if r in self.amplification:
+				#print "setting range:"+ r+ "  "+unicode(self.amplification[str(r)])
+				self.send(self.amplification[str(r)])
+				return
+		except	Exception, e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+#################################		 
+	def calibrate(self):
+		try:
+			self.send(self.cmd_calibrateZero)
+			self.parse(self.receive())
+			return
+		except	Exception, e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		self.co2 = -1
+
+
+#################################		 
+	def send(self,cmd):
+		self.ser.write(cmd)
+
+#################################		 
+	def receive(self):			  
+		s = self.ser.read(9)
+		z=bytearray(s)
+		retV =[]
+		for x in z:
+			retV.append(x)
+		#print retV
+		return retV
+
+#################################		 
+	def parse(self, response):
+		checksum = 0
+		#print response
+
+		self.co2 = -1
+		self.raw = response
+		try: 
+			ll = len(response)
+		except	Exception, e:
+			print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+			return 
+		if ll != 9: return
+		for i in range (0, 9):
+			checksum += response[i]
+			
+		if response[0] == 0xFF:
+			if response[1] == self.commandByteReturn:
+				if checksum % 256 == 0xFF:
+					self.co2  = (response[self.beginData]<<8) + response[self.beginData+1]
+		#print self.co2, response, [hex(no) for no in response]
+		return 
+
+
 
 # ===========================================================================
 # read params
@@ -213,12 +320,19 @@ def readParams():
 				sensorRefreshSecs = 5	 
 			
 			old = i2cAddress
-			try:
-				if "i2cAddress" in sensors[sensor][devId]: 
-					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
-			except:
-				i2cAddress = ""	   
+			i2cAddress = U.getI2cAddress(sensors[sensor][devId],default="")
 			if old != i2cAddress: restart = True
+
+			try: old = interfaceType
+			except: old = ""; interfaceType ="i2c"
+			try:
+				if "interfaceType" in sensors[sensor][devId]: 
+					interfaceType= sensors[sensor][devId]["minSendDelta"]
+			except:
+				interfaceType = "i2c"
+			if old != interfaceType: restart = True
+
+
 
 			try:
 				if "deltaX" in sensors[sensor][devId]: 
@@ -259,7 +373,7 @@ def readParams():
 
 				
 			if devId not in mhz16sensor or	restart:
-				startSensor(devId, i2cAddress)
+				startSensor(devId, i2cAddress,interfaceType)
 				if mhz16sensor[devId] =="":
 					return
 			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
@@ -284,7 +398,7 @@ def readParams():
 
 
 #################################
-def startSensor(devId,i2cAddress):
+def startSensor(devId,i2cAddress,interfaceType):
 	global sensors, sensor
 	global startTime
 	global mhz16sensor 
@@ -296,10 +410,23 @@ def startSensor(devId,i2cAddress):
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
 	
 	try:
-		mhz16sensor[devId]	=  mhz16_class(address=i2cAdd, sensorType=2)
-			
-		time.sleep(1)
-		mhz16sensor[devId].start()
+		if interfaceType =="i2c":
+			mhz16sensor[devId]	=  mhz16_class_i2c(address=i2cAdd, sensorType=2)
+		else:
+			try:import serial
+			except: pass
+			sP = U.getSerialDEV()	  
+			GPIO.setwarnings(False)
+			GPIO.setmode(GPIO.BCM)
+			GPIO.setup(calibrationPin, GPIO.OUT)
+			restartSensor()
+		
+			mhz19sensor[devId]	= mhz_class(serialPort = sP)
+			mhz19sensor[devId].setRange(amplification)
+			calibrateSensor(devId)
+			mhz16sensor[devId]	=  mhz16_class_serial(address=i2cAdd, sensorType=2)
+			time.sleep(1)
+			mhz16sensor[devId].start()
 						
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -307,6 +434,24 @@ def startSensor(devId,i2cAddress):
 	time.sleep(.1)
 
 	U.muxTCA9548Areset()
+
+
+
+#################################
+def restartSensor():
+	global mhz19sensor, calibrationPin
+	try: 
+		GPIO.output(calibrationPin, False)
+		time.sleep(7)
+		GPIO.output(calibrationPin, True)
+		time.sleep(0.1)
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	time.sleep(.1)
+
+
+
+
 #################################
 def calibrateSensor(devId):
 	global sensors, sensor

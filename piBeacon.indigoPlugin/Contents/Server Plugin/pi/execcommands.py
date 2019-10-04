@@ -485,7 +485,7 @@ def execCMDS(data):
 
 			if device=="setMCP4725":
 						try:
-							i2cAddress=str(next["i2cAddress"])
+							i2cAddress = U.getI2cAddress(next, default =0)
 							if cmd =="disable" :
 								if str(int(i2cAddress)+1000) in execcommands:
 									del execcommands[str(int(i2cAddress)+1000)]
@@ -506,7 +506,7 @@ def execCMDS(data):
 
 			if device=="setPCF8591dac":
 						try:
-							i2cAddress=str(next["i2cAddress"])
+							i2cAddress = U.getI2cAddress(next, default =0)
 							if cmd =="disable" :
 								del execcommands[str(int(i2cAddress)+1000)]
 								continue
@@ -631,7 +631,7 @@ if True: #__name__ == "__main__":
 	else:
 		execcommands={}
 
-	U.logger.log(30, u"exec cmd: {}".format(sys.argv))
+	U.logger.log(10, u"exec cmd: {}".format(sys.argv))
 		
 	execCMDS(sys.argv[1])
 	time.sleep(0.5)

@@ -55,7 +55,7 @@ def readParams():
                                                    defFreq=            float(input["defFreq"])
                                                    frequency=          float(input["defFreq"])
                 if u"HLSI"              in input:  HLSI=                 int(input["HLSI"])
-                if u"i2cAddress"        in input:  i2cAddress=           int(input["i2cAddress"])
+                i2cAddress = U.getI2cAddress(input, default ="")
                 devIdFound = devId
                 break
 

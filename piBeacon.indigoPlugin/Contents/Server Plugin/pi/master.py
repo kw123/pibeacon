@@ -95,6 +95,7 @@ def readNewParams(force=0):
 	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime
 	global ifNetworkChanges
 	global typeForPWM, maxSizeOfLogfileOnRPI
+	global xWindows, startXonPi
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -154,6 +155,11 @@ def readNewParams(force=0):
 		if u"fanEnable" 					in inp:	 fanEnable= 					     (inp["fanEnable"])
 		if u"ifNetworkChanges" 				in inp:	 ifNetworkChanges= 		     	     (inp["ifNetworkChanges"]) 
 		if u"maxSizeOfLogfileOnRPI" 		in inp:	 maxSizeOfLogfileOnRPI= 		 int(inp["maxSizeOfLogfileOnRPI"]) 
+		if u"startXonPi" 					in inp:	 startXonPi= 		 				 (inp["startXonPi"]) 
+
+
+		setupX(action=startXonPi)
+
 
 		if u"typeForPWM" 				in inp:	 
 			if typeForPWM != inp["typeForPWM"] and inp["typeForPWM"] == "PIGPIO":
@@ -242,14 +248,27 @@ def readNewParams(force=0):
 						if pp not in activePGM:
 							if pp =="display":
 								checkIfDisplayIsRunning()
+								activePGM[pp] =True
 							elif pp =="neopixel":
 								checkIfNeopixelIsRunning(pgm= "neopixel")
+								activePGM[pp] =True
 							elif pp =="neopixelClock":
 								checkIfNeopixelIsRunning(pgm= "neopixelClock")
+								activePGM[pp] =True
 							else:
 								startProgam(pp+".py", params="", reason="restarting "+pp+"..not running")
-						if pp=="sundial": G.sundialActive = "/home/pi/pibeacon/temp/sundial.cmd"
-						activePGM[pp] =True
+								activePGM[pp] =True
+						if pp=="sundial": 
+							G.sundialActive = "/home/pi/pibeacon/temp/sundial.cmd"
+							activePGM[pp] =True
+						if pp == u"display":
+							for devId in output[pp]:
+								ddd = output[pp][devId][0]
+								if "screenXwindows" == ddd["devType"]:
+									setupX(action="start")
+								activePGM[pp] =True
+
+
 				else:
 					try: del activePGM[pp] 
 					except: pass
@@ -433,6 +452,46 @@ def readNewParams(force=0):
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
+
+####################      #########################
+def setupX(action="leaveAlone"):
+	try:
+		if action == "leaveAlone": return 
+		U.logger.log(30, "startX called:{}".format(action))
+		if action == "start": 	
+			if os.path.isfile(G.homeDir+"pygame.active"):
+				# need to reboot 
+				U.doReboot(tt=5., text="rebooting due to switch to xterminal from fulls screen pygame")
+				exit()
+			if not U.pgmStillRunning("startx"):
+				U.stopDisplay()
+				U.logger.log(30, "start GUI w sudo /usr/bin/startx, exiting master")
+				if U.checkIfInFile(["@lxterminal","/home/pi/pibeacon/startmaster.sh"],"/etc/xdg/lxsession/LXDE-pi/autostart") == "not found":
+					## add line 
+					##     @lxterminal -e "/home/pi/pibeacon/startmaster.sh"
+					## to  /etc/xdg/lxsession/LXDE-pi/autostart 
+
+					os.system("mkdir  /etc/xdg/lxsession")
+					os.system("mkdir  /etc/xdg/lxsession/LXDE-pi/")
+					os.system("cp "+G.homeDir+"autostart.forxwindows   /etc/xdg/lxsession/LXDE-pi/autostart")
+					os.system("sudo chmod +x /etc/xdg/lxsession/LXDE-pi/autostart")
+					os.system("sudo chown -R pi:pi /etc/xdg/lxsession/LXDE-pi/")
+
+				os.system("sudo /usr/bin/startx &") # this will relaunch master.py through autstart --> startmaster.sh
+				time.sleep(2)
+				if not U.pgmStillRunning("startx"):
+					os.system("sudo /usr/bin/startx &") # sometimes need to start twice
+				U.killOldPgm(-1,"callbeacon.py")
+				exit()
+			else:
+				U.logger.log(30, "startX already up, no action ")
+				
+		if action == "stop": 
+			U.stopDisplay()
+			U.killOldPgm(-1,"startx")
+
+	except	Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 ####################      #########################
@@ -1468,8 +1527,11 @@ def execMaster():
 		global masterVersion
 		global ifNetworkChanges
 		global typeForPWM, maxSizeOfLogfileOnRPI
+		global xWindows, startXonPi
 
 
+		xWindows				= ""
+		startXonPi				= "leaveAlone"
 		maxSizeOfLogfileOnRPI	= 10000000
 		typeForPWM				= "GPIO"
 		ifNetworkChanges  		= "doNothing"
@@ -1564,7 +1626,8 @@ def execMaster():
 		else:
 			os.system("mkdir  "+G.homeDir+"temp")
 			alreadyBooted = False
-		os.system("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp")
+		os.system("mount -t tmpfs -o size=1m tmpfs "+G.homeDir+"temp")
+
 
 
 		if cleanupOldFiles():
@@ -1577,19 +1640,22 @@ def execMaster():
 		G.last_masterStart = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+		U.stopDisplay()
 		for ff in G.programFiles:
 			if ff == G.program:
 				U.killOldPgm(myPID,G.program+".py")
 			else:
 				U.killOldPgm(-1, ff+".py")
 
-		for ff in G.specialOutputList:
-				U.killOldPgm(-1, ff+".py")
-
 		for ff in G.specialSensorList:
 				U.killOldPgm(-1, ff+".py")
 
+
 		for ff in ["webserverINPUT","webserverSTATUS"]:
+				U.killOldPgm(-1, ff+".py")
+
+		time.sleep(1)
+		for ff in G.specialOutputList:
 				U.killOldPgm(-1, ff+".py")
 
 		os.system("/usr/bin/python "+G.homeDir+"copyToTemp.py")
@@ -1853,6 +1919,7 @@ def execMaster():
 
 
 		checkTempForFanOnOff(force = True)
+		lastCheckAlive = time.time() -90
 
 		while True:
 			if loopCount > 1000000000: loopCount = 0
@@ -1886,7 +1953,7 @@ def execMaster():
 					if (unicode(subprocess.Popen("echo x > x" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate())).find("Read-only file system") > 0:
 						U.doReboot(tt=10., text=" reboot due to bad SSD, 'file system is read only'")				   
 						time.sleep(10)
-						os.system("reboot now")
+						os.system("sudo killall -9 python; reboot now")
 					os.system("rm x")
 			
 					os.system("sudo chown -R  pi:pi	 "+G.homeDir)
@@ -1923,27 +1990,29 @@ def execMaster():
 				if enableiBeacons == "0" and "BLEsensor" in sensors:
 					startBLEsensor()
 
-				for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","spiMCP3008","simplei2csensors","sundial","setStepperMotor"]:
-						U.logger.log(10, "checking if Active: {}".format(pp) ) 
-						if pp in activePGM:
-							if   pp =="display":
-								checkIfDisplayIsRunning()
-							elif pp =="neopixel":
-								checkIfNeopixelIsRunning(pgm= "neopixel")
-							elif pp =="neopixelClock":
-								checkIfNeopixelIsRunning(pgm= "neopixelClock")
-							elif pp =="sundial":
-								checkIfPGMisRunning(pp+".py", checkAliveFile="sundial")
-							else:
-								checkIfPGMisRunning(pp+".py")
+				if time.time() - lastCheckAlive > 100:
+					lastCheckAlive = time.time()
+					for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","spiMCP3008","simplei2csensors","sundial","setStepperMotor"]:
+							U.logger.log(10, "checking if Active: {}".format(pp) ) 
+							if pp in activePGM:
+								if   pp =="display":
+									checkIfDisplayIsRunning()
+								elif pp =="neopixel":
+									checkIfNeopixelIsRunning(pgm= "neopixel")
+								elif pp =="neopixelClock":
+									checkIfNeopixelIsRunning(pgm= "neopixelClock")
+								elif pp =="sundial":
+									checkIfPGMisRunning(pp+".py", checkAliveFile="sundial")
+								else:
+									checkIfPGMisRunning(pp+".py")
 			
 
-				for ss in G.specialSensorList:
-					if	(ss in sensors or ss in activePGM )and not (ss in activePGMdict): 
-						checkIfPGMisRunning(ss+".py",checkAliveFile=ss)
+					for ss in G.specialSensorList:
+						if	(ss in sensors or ss in activePGM )and not (ss in activePGMdict): 
+							checkIfPGMisRunning(ss+".py",checkAliveFile=ss)
 							   
-				for ss in activePGMdict:
-					checkIfPGMisRunning(activePGMdict[ss][0],checkAliveFile=activePGMdict[ss][1] )
+					for ss in activePGMdict:
+						checkIfPGMisRunning(activePGMdict[ss][0],checkAliveFile=activePGMdict[ss][1] )
 
 				checkIfPGMisRunning("copyToTemp.py")
 		

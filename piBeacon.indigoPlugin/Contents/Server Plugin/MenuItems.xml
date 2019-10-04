@@ -908,7 +908,15 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
 
     <MenuItem id="getBatteryLevels">
         <Name>Get iBeacons parameters from rPi</Name>
-               <CallbackMethod>getBeaconParametersCALLBACKmenu</CallbackMethod>
+        <ConfigUI>
+             <Field id="piServerNumber"   type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm " >
+                <Label>select rPi to use for query, use ALL for optimized distribution</Label>
+                <List class="self" filter="" method="filterPiBLE" dynamicReload="false"/>
+             </Field>
+             <Field  id="exec" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>getBeaconParametersCALLBACKmenu</CallbackMethod>
+             </Field>
+        </ConfigUI>
     </MenuItem>
 
 

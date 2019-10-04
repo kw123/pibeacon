@@ -1955,10 +1955,7 @@ def readParams():
 			else:
 				interruptGPIO  = 23
 
-			if "i2cAddress" in sensors[sensor][devid]:
-				i2cAddress		 = int(sensors[sensor][devid]["i2cAddress"])
-			else:
-				i2cAddress	 = 57
+			i2cAddress = U.getI2cAddress(sensors[sensor][devId], default =57)
  
 		sensorUp = doWeNeedToStartSensor(sensors,sensorsOld,sensor)
 		

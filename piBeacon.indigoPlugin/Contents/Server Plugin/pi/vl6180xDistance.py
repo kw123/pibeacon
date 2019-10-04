@@ -116,8 +116,7 @@ def readParams():
 
         if sensorUp == 1:
             if not sensorActive:
-                if "i2cAddress" in sensors[sensor][devId]: i2cAddress= int(sensors[sensor][devId]["i2cAddress"])
-                else: i2cAddress = 0x29
+                i2cAddress = U.getI2cAddress(sensors[sensor][devId], default =0x29)
                 tof = vl6180x(address=i2cAddress)
                 U.logger.log(30,"==== Start ranging =====")
                 #startSensor(0)

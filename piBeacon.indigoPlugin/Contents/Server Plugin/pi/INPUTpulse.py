@@ -130,7 +130,6 @@ def readParams():
 					GPIOdict[gpio]["inpType"]	 = inpType
 					continue 
 			elif gpio in GPIOdict and "risingOrFalling" not in GPIOdict[gpio]: # partial update
-				print "setting up ",risingOrFalling
 				GPIOdict[gpio]={
 								  "devId":							devId,
 								  "inpType":						inpType,
@@ -148,7 +147,6 @@ def readParams():
 								  "lastsendContinuousEvent":		0,
 								  "lastsendContinuousEventEND":		0,
 								  "count":							0 }
-				print  GPIOdict				  
 				if	 inpType == "open":
 					GPIO.setup(int(gpio), GPIO.IN)
 				elif inpType == "high":
@@ -214,10 +212,13 @@ def readParams():
 						GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH)  
 				GPIOdict[gpio]["inpType"]	 = inpType
 				
+		if gpio in GPIOdict: GPIOdict[gpio]["count"] = INPUTcount[int(gpio)]
+				
 		oneFound = False
 		restart=False
 		delGPIO={}
 		for gpio in GPIOdict:
+			GPIOdict[gpio]["count"] = INPUTcount[int(gpio)]
 			for risingOrFalling in["FALLING","RISING","BOTH"]:
 				if found[gpio][risingOrFalling]==1: 
 					oneFound = True
@@ -272,7 +273,7 @@ def readParams():
 			if devIdC not in coincidence2: delCoincidence[devIdC] = True
 		for devIdC in delCoincidence:
 			del coincidence[devIdC]
-		#print GPIOdict
+		U.logger.log(10,"GPIOdict: {}".format(GPIOdict) )
 		#print coincidence
 
 	except	Exception, e:
@@ -299,12 +300,12 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 	countChanged = False
 	U.logger.log(10,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
 	if tt- ggg["lastSignal"] > ggg["deadTime"]:	 
-		ggg["count"]+=1
 		if gpioINT not in INPUTcount: INPUTcount[gpioINT] = 0
 		INPUTcount[gpioINT]+=1
+		ggg["count"] = INPUTcount[gpioINT]
 		#print gpioINT, INPUTcount[gpioINT]
 		ggg["lastSignal"] = tt
-		U.logger.log(10,"{} edge on gpio: {},	count: {}  timest: {:6.1f}, lastSendC: {:6.1f}, minSendDelta:{}".format(risingOrFalling, gpio, ggg["count"], tt, ggg["lastsendCount"], ggg["minSendDelta"]))
+		U.logger.log(10,"{} edge on gpio: {},	count: {}  timest: {:6.1f}, lastSendC: {:6.1f}, minSendDelta:{}, count:{}".format(risingOrFalling, gpio, ggg["count"], tt, ggg["lastsendCount"], ggg["minSendDelta"], INPUTcount[gpioINT]))
 		countChanged = True
 
 	###############	 this EVENTtype requires a minEventsinTimeWindowToTriggerBursts  in timeWindowForBursts to trigger ###
@@ -341,6 +342,8 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 					del bbb[delupto - kk -1]
 	if burst ==0:  ggg["lastsendBurst"] = 0
 
+	data = {"sensors":{sensor:{ggg["devId"]:{}}}}
+
 
 	###############	 this EVENTtype requires a pulse to start the CONT event, will extend event if new pulse arrives before timeWindowForContinuousEvents is over  ###
 	cEVENTtt=0
@@ -350,7 +353,6 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 		elif  contEVENT[gpioINT] > 0 and tt - contEVENT[gpioINT] > ggg["timeWindowForContinuousEvents"]:
 			# was expired send off then send ON 
 			if (tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]): 
-				data = {"sensors":{sensor:{ggg["devId"]:{}}}}
 				data["sensors"][sensor][ggg["devId"]]["continuous"]		 = -1
 				ggg["lastsendContinuousEventEND"] = tt
 				ggg["lastsendContinuousEvent"] = 0
@@ -359,7 +361,6 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 		U.logger.log(10, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
 
 	
-	data = {"sensors":{sensor:{ggg["devId"]:{}}}}
 
 	if (tt - ggg["lastsendBurst"] > ggg["minSendDelta"]) and burst > 0 :  
 			data["sensors"][sensor][ggg["devId"]]["burst"]		= int(burst)
@@ -382,6 +383,7 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 			data ["sensors"][sensor][ggg["devId"]]["count"]		= ggg["count"]
 			ggg["lastsendCount"] = tt
 
+	if data == {"sensors":{sensor:{ggg["devId"]:{}}}}: data= {"sensors":{}}
 
 	if len(GPIOdict[gpio]["coincidence"]) > 0:
 			for devIdC in coincidence:
@@ -404,7 +406,7 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 						if devIdC not in data["sensors"]["INPUTcoincidence"]: data["sensors"]["INPUTcoincidence"][devIdC] ={}
 						data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[int(devIdC)] 
 						U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[int(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
-	if data["sensors"][sensor][ggg["devId"]] !={} or "INPUTcoincidence" in data["sensors"]:
+	if sensor in data["sensors"] or "INPUTcoincidence" in data["sensors"]:
 			U.sendURL(data,wait=False)
 			U.writeINPUTcount(INPUTcount)
 	#print 	INPUTcount			
@@ -468,6 +470,8 @@ def execMain():
 	U.logger.log(30, "starting "+G.program+" program")
 
 	INPUTcount = U.readINPUTcount()
+	U.logger.log(10, u" INPUTcount:{}".format(INPUTcount) )
+
 	readParams()
 
 
@@ -523,6 +527,7 @@ def execMain():
 							if "devId" not in GPIOdict[gpio]: continue	
 							devId = GPIOdict[gpio]["devId"]
 							data["sensors"][sensor][devId] = {"count": GPIOdict[gpio]["count"]}
+							U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
 							newData = True
 				for devIdC in coincidence:
 					if ((time.time() - coincidence[devIdC]["lastSend"] >  minSendDelta) and loopCount > 10 ) or countReset:
@@ -531,6 +536,7 @@ def execMain():
 						coincidence[devIdC]["lastSend"] = time.time()
 						newData = True
 				if newData:
+					U.logger.log(10, u"send data:{} ".format(data) )
 					U.sendURL(data,wait=False)
 					lastSend = time.time()
 					loopCount = 0

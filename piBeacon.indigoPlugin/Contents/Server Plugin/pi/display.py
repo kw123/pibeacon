@@ -139,7 +139,7 @@ class LCD1602():
 
 
 #### this is the magic: need to kill the child (actually this pid !!!) , 
-###	  otherwise its hanging, but not too early, let it finish staring up 
+###	  otherwise its hanging, but not too early, let it finish starting up 
 def doInterrupt():
 		time.sleep(2.)
 		os.kill(os.getpid(), signal.SIGTERM)
@@ -148,55 +148,90 @@ def doInterrupt():
 class bigScreen :
 	screen = None
 	
-	def __init__(self):
-		global bigScreenSize
+	def __init__(self,overwriteXmax=0,overwriteYmax=0, name="pibeacon display"):
+		global bigScreenSize, pygameInitialized
 		import pygame
 		self.pygame=pygame
-		
-		"Ininitializes a new pygame screen using the framebuffer"
+		if not pygameInitialized:
+			self.pygame.init()
+
+		try: 
+		##Ininitializes a new pygame screen using the framebuffer"
 		# Based on "Python GUI in Linux frame buffer"
 		# http://www.karoltomala.com/blog/?p=679
-		disp_no = os.getenv("DISPLAY")
-		if disp_no:
-			U.logger.log(30, "I'm running under X display = {0}".format(disp_no))
+			disp_no = os.getenv("DISPLAY")
+			if not pygameInitialized:
 		
-		# Check which frame buffer drivers are available
-		# Start with fbcon since directfb hangs with composite output
-		drivers = ['fbcon', 'directfb', 'svgalib']
-		found = False
-		for driver in drivers:
-			# Make sure that SDL_VIDEODRIVER is set
-			if not os.getenv('SDL_VIDEODRIVER'):
-				os.putenv('SDL_VIDEODRIVER', driver)
-			try:
-				self.pygame.display.init()
-			except self.pygame.error:
-				U.logger.log(30, u"Driver: {0} failed.".format(driver))
-				continue
-			found = True
-			U.logger.log(30, u"found" +unicode(driver)  )		 
-			break
+				# Check which frame buffer drivers are available
+				# Start with fbcon since directfb hangs with composite output
+				drivers = ['fbcon', 'directfb', 'svgalib']
+				found = ""
+				for driver in drivers:
+					# Make sure that SDL_VIDEODRIVER is set
+					if not os.getenv('SDL_VIDEODRIVER'):
+						os.putenv('SDL_VIDEODRIVER', driver)
+					try:
+						self.pygame.display.init()
+					except	Exception, e:
+						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"Driver: {0} failed.".format(driver))
+						continue
+					found = driver
+					break
 	
-		if not found:
-			raise Exception('No suitable video driver found!')
+				if found =="":
+					U.logger.log(30, u"bigscreen no driver out of :{};  found -- exiting".format(found) )
+					raise Exception('No suitable video driver found!')
+					return 
+				U.logger.log(20, u"found: {}".format(driver)  )		 
+				
 
-		bigScreenSize = (self.pygame.display.Info().current_w, self.pygame.display.Info().current_h)
+			pygameInitialized = True
 
-			
-		U.logger.log(30, u"Framebuffer size: %d x %d" % (bigScreenSize[0], bigScreenSize[1]))
-		self.screen = self.pygame.display.set_mode(bigScreenSize, self.pygame.FULLSCREEN)
-		U.logger.log(30, u"got screen object" )
+			## ge sizeList:  eg =  [(1680, 1050), (1440, 900), (1280, 1024), (1280, 960), (1152, 864), (1024, 768), (832, 624), (800, 600), (720, 400), (640, 480)]
+			sizeList = self.pygame.display.list_modes()
+			U.logger.log(20, u"screen sizeList:{}".format(sizeList) )
+			fullScreenSize =sizeList[0]  #self.pygame.display.Info().current_w, self.pygame.display.Info().current_h]
 
-		# Clear the screen to start
-		self.screen.fill((0, 0, 0))		   
-		# Initialise font support
-		self.pygame.font.init()
-		# Render the screen
-		self.pygame.display.update()
-		return 
+			U.logger.log(20, u"Framebuffer 1: fullsize:{} - oldSize:{};  overwrite x:{}; y:{}".format(fullScreenSize, bigScreenSize, overwriteXmax, overwriteYmax) )
+			if disp_no:
+				U.logger.log(20, "using X display = {0}".format(disp_no))
+				if overwriteXmax == 0 and overwriteYmax == 0:
+					bigScreenSize[0] = int(0.95*fullScreenSize[0])
+					bigScreenSize[1] = int(0.95*fullScreenSize[1])
+				else:
+					bigScreenSize[0] = min(int(overwriteXmax), fullScreenSize[0])
+					bigScreenSize[1] = min(int(overwriteYmax), fullScreenSize[1])
+				self.pygame.display.set_caption(name)
+				self.screen = self.pygame.display.set_mode(bigScreenSize)
+				U.logger.log(20, u"Framebuffer 2. size: {};  overwrite x:{}; y:{}".format(bigScreenSize, overwriteXmax, overwriteYmax) )
+			else:
+				os.system("echo fullScreen > "+G.homeDir+"pygame.active") # after this we can not do startx, need to reboot first
+				bigScreenSize = fullScreenSize
+				self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
+				U.logger.log(20, u"Framebuffer 2. size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
+
+			U.logger.log(20, u"got screen object" )
+
+			# Clear the screen to start
+			self.screen.fill((0, 0, 0))		   
+			# Initialise font support
+			self.pygame.font.init()
+			# Render the screen
+			self.pygame.display.update()
+		except	Exception, e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
 
 	def __del__(self):
 		"Destructor to make sure pygame shuts down, etc."
+		try: pass#  no good !!!   self.pygame.quit()
+		except: pass
+	
+	def delPy():
+		try:  self.pygame.quit()
+		except: pass
+
 	def clearScreen(self):
 		return
 
@@ -904,7 +939,7 @@ class const:
 
 
 ################### ###################	 analogClock  ############################################### START
-def analogClockInit(intensity, intensityDevice, inParms={}):
+def analogClockInit(inParms={}):
 		global analogClockParams, minStartForNegative
 		defparams = {"ticks12": {"start":0.9,  "end":1.0,  "width":6,  "fill":(150,150,150)}, ## ticks every 5 minutes
 					 "ticks4":	{"start":0.77, "end":1.0,  "width":6,  "fill":(150,150,150)}, ## ticks at 0,15,30,45
@@ -920,6 +955,7 @@ def analogClockInit(intensity, intensityDevice, inParms={}):
 					 "width":	 "28"
 							  }	 
 		minStartForNegative = 0.1
+		minIntValue   = 30 
 		try:
 			#print " into analogClock init2", inParms
 			## set clock parameters
@@ -940,23 +976,25 @@ def analogClockInit(intensity, intensityDevice, inParms={}):
 							analogClockParams[pp] = copy.copy(inParms[pp0])
 
 			for xx in ["hh","mm","ss"]:
-				analogClockParams[xx]["fill"]  = getFill("screen", analogClockParams[xx]["fill"], intensity, intensityDevice)
+				analogClockParams[xx]["fill"]  = getFill("screen", analogClockParams[xx]["fill"], minIntValue=minIntValue)
 			for xx in ["ticks4","ticks12","box"]:
-				analogClockParams[xx]["fill"]  = getFill("screen", analogClockParams[xx]["fill"], 1., 1.)
-			###	 print " into analogClockParams init2", analogClockParams
+				analogClockParams[xx]["fill"]  = getFill("screen", analogClockParams[xx]["fill"], minIntValue=minIntValue)
+			#print " into analogClockParams init2", analogClockParams
 				
 			analogClockParams["mode"]	=  unicode(analogClockParams["mode"]).split(",")
 			if len(analogClockParams["mode"]) !=3: 
 				analogClockParams["mode"]	=  unicode(defparams["mode"]).split(",")
 			
 			if defparams["radius"] != analogClockParams["radius"]:
-				scale = (  analogClockParams["radius"][0] / defparams["radius"][0] + analogClockParams["radius"][1] / defparams["radius"][1]  )*0.5
-				analogClockParams["hh"]["width"]		= (analogClockParams["hh"]["width"] * scale)
-				analogClockParams["mm"]["width"]		= (analogClockParams["mm"]["width"] * scale)
-				analogClockParams["ss"]["width"]		= (analogClockParams["ss"]["width"] * scale)
-				analogClockParams["ticks4"]["width"]	= (analogClockParams["ticks4"]["width"] * scale)
-				analogClockParams["ticks12"]["width"]	= (analogClockParams["ticks12"]["width"] * scale)
-			###	 print " into analogClockParams init3", analogClockParams
+				scale = (analogClockParams["radius"][0] / defparams["radius"][0] + analogClockParams["radius"][1] / defparams["radius"][1]  )*0.5
+				analogClockParams["hh"]["width"]		= zoomit(analogClockParams["hh"]["width"] * scale)
+				analogClockParams["mm"]["width"]		= zoomit(analogClockParams["mm"]["width"] * scale)
+				analogClockParams["ss"]["width"]		= zoomit(analogClockParams["ss"]["width"] * scale)
+				analogClockParams["ticks4"]["width"]	= zoomit(analogClockParams["ticks4"]["width"] * scale)
+				analogClockParams["ticks12"]["width"]	= zoomit(analogClockParams["ticks12"]["width"] * scale)
+			analogClockParams["position"]			= zoomit(analogClockParams["position"])
+			analogClockParams["radius"]				= zoomit(analogClockParams["radius"])
+			#print " into analogClockParams init3", analogClockParams
 
 			
 			## show first pic
@@ -969,7 +1007,7 @@ def analogClockInit(intensity, intensityDevice, inParms={}):
 	
 	
 def analogClockShow(hours=True, minutes=True, seconds=True):
-		global analogClockParams
+		global analogClockParams, minStartForNegative
 		try:		
 
 			R	   = analogClockParams["radius"]
@@ -1015,6 +1053,11 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 			if secs:
 				analogClockdrTheLine(float(3.14159*2./60.	 * s)		 , "ss",ss=s)
 
+			if  False and hours and analogClockParams["mode"][0].find("line") > -1:
+				R	   = analogClockParams["radius"]
+				C	   = analogClockParams["position"]
+				dotWRadius(C[0]	 , C[1] , analogClockParams["hh"]["fill"], 2 * analogClockParams["hh"]["width"] * R[0]/(R[0]+R[1]), 2 * W * R[1]/(R[0]+R[1]) ) # inner circle 
+
 			 
 
 		except	Exception, e:
@@ -1023,7 +1066,10 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 
 
 def analogClockdrNumbers(angle,number,hand):
-		global analogClockParams
+		global analogClockParams, minStartForNegative
+		global digitalClockParams
+		global multIntensity
+
 		global fontx
 		try:
 			da = 3.14159*0.5# rotate to 0 = top
@@ -1055,13 +1101,13 @@ def analogClockdrNumbers(angle,number,hand):
 			fontF =	 mkfont(analogClockParams)
 			#print "number", angle,pos,number
 			
-			draw.text(pos, unicode(number), font=fontx[fontF], fill=(int(255.*intensity),int(255.*intensity),int(255.*intensity)))
+			draw.text(pos, unicode(number), font=fontx[fontF], fill=(int(255.*multIntensity),int(255.*multIntensity),int(255.*multIntensity)))
 		except	Exception, e:
 				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
-		global analogClockParams
+		global analogClockParams, minStartForNegative
 		try:
 			mode   = analogClockParams["mode"]
 			Start  = analogClockParams[hand]["start"]
@@ -1102,7 +1148,7 @@ def analogClockdrTheLine(angle,hand,ss=0):
 
 				if mode[0].find("lineRound") >-1:
 					dotWRadius(	   P[2],   P[3] , fill,		(W*0.8) * R[0]/(R[0]+R[1]),		(W*0.8) * R[1]/(R[0]+R[1]) )  # add half circle at the end
-					if hand in ["hh","mm"]:
+					if hand in ["hh"]:
 						dotWRadius(C[0]	 , C[1] , fill, 2 * W * R[0]/(R[0]+R[1]), 2 * W * R[1]/(R[0]+R[1]) ) # inner circle 
 
 
@@ -1156,7 +1202,8 @@ def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 	
 
 ################### ###################	 digitalClock  ############################################### START
-def digitalClockInit(intensity, intensityDevice, inParms={}):
+def digitalClockInit(inParms={}):
+		global intensity, intensityDevice
 		global digitalClockParams, minStartForNegative
 		defparams = {"position":[0,0],													  ## top left corner
 					 "width":	40,														  ## font size 
@@ -1182,9 +1229,8 @@ def digitalClockInit(intensity, intensityDevice, inParms={}):
 	
 	
 def digitalClockShow(hours=True, minutes=True, seconds=True):
-		global digitalClockParams
-		try:		
-
+		global multIntensity
+		try:
 			P	   = digitalClockParams["position"]
 			fillD  = digitalClockParams["fill"]
 			format = digitalClockParams["format"]
@@ -1192,7 +1238,7 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 			nowST = datetime.datetime.now().strftime(format)
 			fontF =	 mkfont(digitalClockParams)
 
-			draw.text(P, nowST, font=fontx[fontF], fill=(int(fillD[0]*intensity),int(fillD[1]*intensity),int(fillD[2]*intensity)))
+			draw.text(P, nowST, font=fontx[fontF], fill=(int(fillD[0]*multIntensity),int(fillD[1]*multIntensity),int(fillD[2]*multIntensity)))
 			 
 
 		except	Exception, e:
@@ -1220,9 +1266,12 @@ def RGBto565array( image,invert=False):
 
 
 def readParams():
-		global i2cAddress, devType, font, intensityDevice,flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
+		global i2cAddress, devType, font, flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
 		global lastRead, newRead
-		
+		global useLightSensorType, useLightSensorDevId, lightSensorSlopeForDisplay, lightSensorOnForDisplay, lightMinDimForDisplay
+		global multIntensity, intensity, intensityDevice, lightSensorValue
+		global runLoop
+
 		newRead		= False
 		inp,inpRaw,ttt = U.doRead(lastTimeStamp=lastRead)
 		if ttt		== lastRead: return
@@ -1231,7 +1280,6 @@ def readParams():
 		newRead		= True
 
 		U.getGlobalParams(inp)
-			
 		if "output"				in inp:	 
 			output=				  (inp["output"])
 			if "display" in output:
@@ -1240,12 +1288,14 @@ def readParams():
 					if "devType"  not in ddd: continue
 					devType		= ddd["devType"]
 						
-					if "i2cAddress"	 in ddd: 
-						i2cAddress	= int(ddd["i2cAddress"])
+					i2cAddress = U.getI2cAddress(ddd, default=0)
+
+
 					if "font"	 in ddd: 
 						font	= ddd["font"]
 					if "intensity" in ddd:
 						intensityDevice	 = int(ddd["intensity"])/100.
+						multIntensity = intensity * intensityDevice * lightSensorValue
 					if "flipDisplay" in ddd:
 						flipDisplay	 =ddd["flipDisplay"]
 
@@ -1266,36 +1316,73 @@ def readParams():
 						except: pass
 
 
-					return		
+					if "lightSensorOnForDisplay" in ddd:
+						try:	
+							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
+						except	Exception, e:
+								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+					if "lightSensorForDisplay-DevId-type" in ddd:
+						try:	
+							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
+							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
+						except	Exception, e:
+								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+					if "lightSensorSlopeForDisplay" in ddd:
+						try:	
+							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
+						except	Exception, e:
+								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					if "lightMinDimForDisplay" in ddd:
+						try:	
+							lightMinDimForDisplay = max(0.0, min(1., float(ddd["lightMinDimForDisplay"]) ) )
+						except: pass
+
+			else:
+				runLoop = False
+
+		else:
+			runLoop = False
+		if not runLoop:
+			U.logger.log(30, u"exiting display, output dev display not defined")
+			try: outputDev.delPy()
+			except: pass
+			os.kill(os.getpid(), signal.SIGTERM)
+			sys.exit()
+		return		
 
 		
-def checkRGBcolor(inV,defColor,intensity,intensityDevice,RGBtype="RGB"):
+def checkRGBcolor(inV, defColor, RGBtype="RGB", minIntValue= 0):
+	global multIntensity
 	try:
 		inValue=str(inV)
 		if RGBtype == "RGB":
 			if inValue.count(",") == 2:
 				value= str(inValue).strip("[").strip("]").strip("(").strip(")").replace(" ","").split(",")
-				value[0]=int(float(value[0])*intensity*intensityDevice)
-				value[1]=int(float(value[1])*intensity*intensityDevice)
-				value[2]=int(float(value[2])*intensity*intensityDevice)
+				for ii in range(3):
+					value[ii]=int(float(value[ii])*multIntensity)
+					if value[ii] !=0: value[ii]=max(minIntValue,value[ii])
+				#U.logger.log(20, u"checkRGBcolor  inV:{}, value:{}".format inV, value))
 				return tuple(value)
 			elif inValue.count(",") == 0:
-					value =[0,0,0]
-					value[0]=int(float(inValue)*intensity*intensityDevice)
-					value[1]=int(float(inValue)*intensity*intensityDevice)
-					value[2]=int(float(inValue)*intensity*intensityDevice)
-					return tuple(value)
+				for ii in range(3):
+					value[ii]=int(float(inValue)*multIntensity)
+					if value[ii] !=0: value[ii]=max(minIntValue,value[ii])
+			return tuple(value)
 		else:
 			try:
-				return int(inValue)
+				retV = int(inValue) 
+				if retV != 0: retV = max(minIntValue, retV)
+				return retV
 			except:
 				return defColor
 	except	Exception, e:
 		return defColor
 
 
-def updateDevice(outputDev,matrix):
-	global	maxPages, i2cAddress,lasti2cAddress, devType,devTypeLast, font,intensityDevice,flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
+def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
+	global	maxPages, i2cAddress,lasti2cAddress, devType,devTypeLast, font, flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
 	global bigScreenSize
 	port		= 1
 
@@ -1357,14 +1444,21 @@ def updateDevice(outputDev,matrix):
 			ymax = 128
 			xmax = 160
 		elif devType.lower().find("screen")>-1:
+			if reset !="":
+				try: 
+					U.logger.log(20, u"resetting  screen output device")
+					##outputDev.delPy()
+				except: pass
+				outputDev = ""
+				if reset == "stop": return 
+
 			if outputDev == "":
 				os.putenv ( "SDL_VIDEODRIVER" , "fbcon" )
 				interrupter = threading.Thread(target=doInterrupt)
 				interrupter.start()
-				outputDev=bigScreen()
+				outputDev=bigScreen(overwriteXmax=overwriteXmax, overwriteYmax=overwriteYmax)
 				ymax = bigScreenSize[1]
 				xmax = bigScreenSize[0]
-				#print " devType x,y max:" , xmax, ymax
 				
 		elif devType.lower().find("lcd1602")>-1:
 			if outputDev == "":
@@ -1374,10 +1468,10 @@ def updateDevice(outputDev,matrix):
 		fontDir= G.homeDir+"fonts/"
 
 	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}, exiting".format(sys.exc_traceback.tb_lineno, e))
 			if unicode(e).find("fontDir") > 0:
 				U.logger.log(30," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
-			exit()
+			sys.exit()
 
 	return fontDir,xmin,xmax,ymin,ymax,matrix,outputDev
 
@@ -1454,7 +1548,7 @@ def mkfont(cmd):
 	 
 		fontw="0"
 		if "width" in cmd: 
-			try: fontw = str(int(cmd["width"]))
+			try: fontw = str(zoomit(cmd["width"]))
 			except: pass
 
 		if font+fontw not in fontx:
@@ -1471,19 +1565,20 @@ def mkfont(cmd):
 			fontF = font+fontw
 	return fontF
 
-def getFill(devType,fill,intensity,intensityDevice):
+def getFill(devType,fill,minIntValue = 0):
 		if devType.lower().find("rgbmatrix")> -1: 
-			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice)
+			fill = checkRGBcolor(str(fill),fill, minIntValue=minIntValue)
 		elif  devType.lower() in ["ssd1351"]: 
-			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice)
+			fill = checkRGBcolor(str(fill),fill, minIntValue=minIntValue)
 		elif  devType.lower().find("screen") >-1: 
-			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice)
+			fill = checkRGBcolor(str(fill),fill, minIntValue=minIntValue)
 		elif  devType.lower() in ["st7735"]: 
-			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice)
+			fill = checkRGBcolor(str(fill),fill, minIntValue=minIntValue)
 		elif  devType.lower() in ["sh1106","ssd1306"]: 
-			fill = checkRGBcolor(str(fill),fill,intensity,intensityDevice, RGBtype="1")
+			fill = checkRGBcolor(str(fill),fill, minIntValue=minIntValue, RGBtype="1")
 		return fill
 
+# ------------------    ------------------ 
 def onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 	if offTime0 == 0 and offTime1==0: 
 		#print cType, offTime0,onTime,offTime1,startRepeatTime,tti, True
@@ -1496,59 +1591,194 @@ def onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 		#print cType, offTime0,onTime,offTime1,startRepeatTime,tti, True
 		return True
 
+# ------------------    ------------------ 
+def getLightSensorValue(force=False):
+	global  lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
+	global lightSensMax, lightMinDimForDisplay, lightSensorOnForDisplay, intensity, useLightSensorType, useLightSensorDevId
+	global multIntensity, intensity, intensityDevice, lightSensorValue
+	try:
+		tt0 = time.time()
+		#U.logger.log(20, "lightSensorValue 1")
+		if not lightSensorOnForDisplay:		return False
+		if (tt0 - lastTimeLightSensorValue < 2) and not force:		return False
+		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"):	return False
+###{  "sensors": {    "i2cOPT3001": {      "393522233": {        "light": 40.96      }    }  },   "time": 1568991254.784975}
+		rr , raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
+		if rr == {}:
+			time.sleep(0.1)
+			rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
+		os.system("sudo rm "+G.homeDir+"temp/lightSensor.dat")
+		if rr == {} or "time" not in rr: 							return False
+		if "sensors" not in rr: 									return False
+		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
+		if useLightSensorType not in rr["sensors"]: 				return False
+		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
+		tt = float(rr["time"])
+		if tt == lastTimeLightSensorFile:						 	return False	
+
+		lightSensorValueREAD = -1
+		for devId in rr["sensors"][useLightSensorType]:
+			if devId == useLightSensorDevId:
+				lightSensorValueREAD = float(rr["sensors"][useLightSensorType][devId]["light"])
+				break
+		if lightSensorValueREAD ==-1 : return 
+		lastTimeLightSensorFile = tt
+
+		#U.logger.log(20, "lightSensorValue 2")
+		if   useLightSensorType == "i2cTSL2561":	maxRange = 2000.
+		elif useLightSensorType == "i2cOPT3001":	maxRange = 60.
+		elif useLightSensorType == "i2cVEML6030":	maxRange = 700.
+		elif useLightSensorType == "i2cIS1145":		maxRange = 2000.
+		else:										maxRange = 1000.
+
+		lightSensorValueRaw = lightSensorValueREAD/maxRange  *   lightSensorSlopeForDisplay
+		lightSensorValueRaw = max(lightMinDimForDisplay, lightSensorValueRaw)
+		if lightSensorValueRaw >= lightSensMax:
+			lightSensorValueRaw = 1.
+		# lightSensorValueRaw should be now between ~ 0.001 and ~1.
+		#if force:	
+		#	lightSensorValue = lightSensorValueRaw
+		#	return True
+		if (  abs(lightSensorValueRaw-lastlightSensorValue) / (max (0.005, lightSensorValueRaw+lastlightSensorValue))  ) < 0.05: return False
+		lightSensorValue = (lightSensorValueRaw*1 + lastlightSensorValue*3) / 4.
+		lastTimeLightSensorValue = tt0
+		U.logger.log(10, "lightSensorValue sl:{};  read:{:.0f}, raw:{:.3f};  new used:{:.4f};  last:{:.4f}; maxR:{:.1f}, inties:{}; {}; {}".format(lightSensorSlopeForDisplay, lightSensorValueREAD, lightSensorValueRaw, lightSensorValue, lastlightSensorValue,  maxRange, intensity, intensityDevice,  multIntensity) )
+		lastlightSensorValue = lightSensorValue
+		multIntensity = intensity * intensityDevice * lightSensorValue
+		return True
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return False
+
+# ------------------    ------------------ 
+def checkLightSensor():
+	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
+	global lightSensMax, lightMinDimForDisplay, lightSensorOnForDisplay
+	global multIntensity, intensity, intensityDevice, lightSensorValue
+	try:
+		
+			
+		if not lightSensorOnForDisplay : return 
+		if not getLightSensorValue(force=True):
+			if (  abs(lightSensorValueRaw - lightSensorValue) / (max(0.005, lightSensorValueRaw + lightSensorValue))  ) > 0.05:
+				U.logger.log(10, " step up down light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensity, intensityDevice,  multIntensity) )
+				lightSensorValue     = (lightSensorValueRaw*1 + lightSensorValue*3) / 4.
+				lastlightSensorValue = lightSensorValue
+				multIntensity = intensity * intensityDevice * lightSensorValue
+			else:
+				if lightSensorValue == lightSensorValueRaw: return 
+				lightSensorValue     = lightSensorValueRaw
+				multIntensity = intensity * intensityDevice * lightSensorValue
+				U.logger.log(10, " step up down light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensity, intensityDevice,  multIntensity) )
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+
+
+# ------------------    ------------------ 
+def zoomit(inVar):
+	global zoom
+	var = copy.copy(inVar)
+	try:
+		#U.logger.log(20, u"zoomit1 var:{}; type(var):{}".format(var, type(var)) )
+		if type(var) == type([]):
+			for ll in range(len(var)):
+				if var[ll] >0:
+					var[ll] = int(max(1.0,var[ll]*zoom))
+				else:
+					var[ll] = int(var[ll]*zoom)
+			#U.logger.log(20, u"zoomit2 var:{}; type(var):{} ".format(var, type(var)) )
+			return var
+		else:
+			if inVar > 0:
+				var = int(max(1.0,var*zoom))
+			else:
+				var = int(var*zoom)
+			return   var
+
+	except Exception, e:
+		U.logger.log(40, u"zoomitE var:{}; type(var):{} ".format(var, type(var)) )
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return inVar
 
 ######### main	########
-global	maxPages, i2cAddress,lasti2cAddress, devType,devTypeLast, font,intensityDevice,flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
+global maxPages, i2cAddress,lasti2cAddress, devType,devTypeLast, font, flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
 global fontx, bigScreenSize
 global lastRead, newRead
-newRead		= True
-lastRead	= 0
+global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
+global lightSensMax, lightMinDimForDisplay, lightSensorOnForDisplay
+global useLightSensorType, useLightSensorDevId
+global multIntensity, intensity, intensityDevice, lightSensorValue
+global bigScreenSize
+global zoom, runLoop, pygameInitialized
 
-U.logger.log(30,"starting display")
+pygameInitialized			= False
+
+runLoop 					= True
+	
+zoom 						= 1.0
+bigScreenSize				= [0,0]
+
+useLightSensorType 			= ""
+useLightSensorDevId 		= 0
+
+lightSensorValue			= 1.
+lastlightSensorValue 		= 0
+lastTimeLightSensorValue	= 0
+lastTimeLightSensorFile 	= 0
+lightSensorValueRaw 		= 1
+lightSensorSlopeForDisplay 			= 1.49
+lightSensMax  				= 1
+lightMinDimForDisplay  		= 0.3
+lightSensorOnForDisplay 	= False
+
+
+newRead						= True
+lastRead					= 0
+
 
 ####################SSD1351 pins
-PIN_CS	= 19	#  GPIO
-PIN_RST = 26	#  
-PIN_DC	= 25	#	 
-PIN_CE	= 1		# device number	 ok
+PIN_CS						= 19	#  GPIO
+PIN_RST 					= 26	#  
+PIN_DC						= 25	#	 
+PIN_CE						= 1		# device number	 ok
 
-lastAlive  = 0
-i2cAddress = 60
+lastAlive  					= 0
+i2cAddress 					= 60
 
 ######### scroll params
-scrollxy		 = ""
-lastScrollxy	 = ""
+scrollxy		 			= ""
+lastScrollxy	 			= ""
 
-lastscrollPages	 = 1
-scrollPages		 = 1
-maxPages		 = 9
-lastdevType		 = ""
-devType="yy"
+lastscrollPages	 			= 1
+scrollPages		 			= 1
+maxPages		 			= 9
+lastdevType					= ""
+devType						= "yy"
 
-font			 = "Red Alert"
-fontx			 = {"0": ImageFont.load_default()}
-intensityDevice	 = 1.
-flipDisplay		 = "0"
-intensity		 = 1.
-loop			 = 0
-lasti2cAddress	 = 0
-outputDev		 = ""
-matrix			 = ""
-startAtDateTime	  =time.time()
+font						= "Red Alert"
+fontx						= {"0": ImageFont.load_default()}
+intensityDevice	 			= 1.
+flipDisplay		 			= "0"
+intensity		 			= 1.
+loop			 			= 0
+lasti2cAddress	 			= 0
+outputDev		 			= ""
+matrix			 			= ""
+startAtDateTime	  			= time.time()
+fontDir 					= G.homeDir+"fonts"
 
 readParams()
+
+lasti2cAddress				= i2cAddress
+devTypeLast					= devType 
+items			 			= []
+myPID			 			= str(os.getpid())
+
 U.setLogLevel()
-
-lasti2cAddress	= i2cAddress
-devTypeLast		= devType 
-
-myPID			 = str(os.getpid())
+U.logger.log(30,"starting display")
 U.killOldPgm(myPID,G.program+".py")
-
 U.echoLastAlive(G.program)
-items			 = []
-
-fontDir = G.homeDir+"fonts"
 
 try:
 	if len(sys.argv[1]) > 10:
@@ -1568,24 +1798,21 @@ fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev,matrix)
 
 scrollPages, maxPagesY, maxPagesX, scrollxy, lastScrollxy, lastscrollPages=	 setScrollPages(scrollxy,scrollPages)
 
-imageDefined = False
+imageDefined 				= False
+TextForLCD					= [" "," "]
+TextPosForLCD 				= [0,0]
+loopCount					= 0
+lastAnalog					= time.time()
+lastDigital					= time.time()
+digitalclockInitialized		= ""
+analogclockInitialized		= ""
 
-TextForLCD=[" "," "]
-TextPosForLCD =[0,0]
+U.logger.log(20,"looping over input" )
 
-U.logger.log(30,"looping over input" )
-
-loopCount			= 0
-lastAnalog			= time.time()
-lastDigital			= time.time()
-digitalclockInitialized	   = ""
-analogclockInitialized	  = ""
-
-while True:
+while runLoop:
 	try:
+		lastPos =[]
 		for item in items:
-		
-			U.logger.log(10, "item:"+item )
 			try:
 				if len(item) < 10: continue
 				data		= json.loads(item)
@@ -1604,7 +1831,20 @@ while True:
 				time.sleep(0.2)
 				os.system("/usr/bin/python "+G.homeDir+"display.py &")
 
-						
+			try:
+				zoom = 1.
+				if "zoom" in data: 
+					zoom		 = float(data["zoom"])
+			except:pass
+
+
+			try:
+				intensity = 1.
+				if "intenstity" in data: 
+					intenstity		 = float(data["intenstity"])/100.
+			except:pass
+			multIntensity = intensity * intensityDevice * lightSensorValue
+					
 			resetInitial = ""
 			scrollPages, scrollDelay, scrollDelayBetweenPages, scrollxy = getScrollPages(data)
 
@@ -1615,46 +1855,71 @@ while True:
 				if devType.lower() in ["sh1106","ssd1306"]:
 					imData= Image.new('1',	 (xmax*maxPagesX, ymax*maxPagesY))
 					draw =ImageDraw.Draw(imData)
-					draw.rectangle( (0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=checkRGBcolor(resetInitial,0,1.,1., RGBtype=1) )
+					draw.rectangle( (0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=checkRGBcolor(resetInitial,0,RGBtype=1) )
 					outputDev.display(imData)
 
 				elif devType.lower() in ["ssd1351"]:
 					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 					draw =ImageDraw.Draw(imData)
-					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0),1.,1.) )
+					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
 					outputDev = SSD1351(PIN_DC, PIN_RST, PIN_CS,PIN_CE)
 					outputDev.EnableDisplay(True)
 
 				elif devType.lower() in ["st7735"]:
 					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 					draw =ImageDraw.Draw(imData)
-					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0),1.,1.) )
+					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
 					outputDev = st7735(PIN_DC, PIN_RST, PIN_CS,PIN_CE)
 					outputDev.EnableDisplay(True)
 
 				elif devType.lower().find("rgbmatrix")> -1: 
 					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 					draw =ImageDraw.Draw(imData)
-					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0),1.,1.) )
+					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
 					matrix.Fill(0,0,0) 
 					matrix.Clear()
 
-				elif devType.lower().find("screen")> -1: 
-					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
-					draw =ImageDraw.Draw(imData)
-					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0),1.,1.) )
+				#elif devType.lower().find("screen")> -1: 
+				#	imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
+				#	draw =ImageDraw.Draw(imData)
+				#	draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
 				elif devType.lower().find("lcd1602")> -1: 
 					outputDev.write(0, 0, '				   ')
 					outputDev.write(0, 1, '				   ')
 					TextPosForLCD		= [0,0]
 					TextForLCD			= [" "," "]
 					maxPages			= 1
+
+			xwindowSize =[0,0]
+			xwindows    ="off"
+			if devType.lower().find("screen")> -1: 
+				if "xwindows" in data: xwindows = data["xwindows"].lower()
+				if "xwindowSize" in data: 
+					try:
+						xwindowSize = (data["xwindowSize"]).split(",")
+						xwindowSize  = [int(xwindowSize[0]), int(xwindowSize[1])]
+					except: pass
+				U.logger.log(10, "=== 0 start new disp dev: = sizes:{} {}".format(xwindowSize, xwindows)  )
+				if 	xwindowSize != [0,0] and xwindows =="on":
+ 					U.logger.log(10, "=== 1 start new disp dev")
+
+				if resetInitial  !=""  or lastScrollxy != scrollxy or str(scrollPages) != str(lastscrollPages) or not imageDefined or (
+					(xwindowSize != [0,0] and (xwindowSize[0] != xmax or xwindowSize[1] != ymax) ) ):
+					scrollPages, maxPagesY, maxPagesX, scrollxy, lastScrollxy, lastscrollPages=	 setScrollPages(scrollxy,scrollPages)
+					if xwindows == "on" :
+						if int(xwindowSize[0]) != xmax or int(xwindowSize[1]) != ymax:
+							U.logger.log(10, "=== 3 start new disp dev: = size:{}".format(xwindowSize))
+							fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev, matrix, overwriteXmax=xwindowSize[0] , overwriteYmax=xwindowSize[1], reset = "reset" )
+							U.logger.log(10, "=== 3 start new disp dev: = sizes:{}; {}".format(xmax, ymax))
+
+ 					U.logger.log(10, "=== starting image ===")
+					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
+					draw =ImageDraw.Draw(imData)
+					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
+
 				imageDefined=True
 
-
-
-
-			
+	
 			repeat=1
 			try:
 				if "repeat" in data: repeat		 = int(data["repeat"])
@@ -1670,11 +1935,6 @@ while True:
 					pass
 
 			
-			intensity=1.
-			try:
-				if "intenstity" in data: intenstity		 = float(data["intenstity"])/100.
-			except:
-				pass
 							
 	
 			nnxx =0
@@ -1686,6 +1946,8 @@ while True:
 				ncmds = len(data["command"])
 				npage=-1
 				waited =False
+				checkLightSensor()
+				U.logger.log(10, "item:"+item )
 				for cmd in data["command"]:
 					try:
 						
@@ -1696,11 +1958,11 @@ while True:
 			
 						fill = 255
 						if devType.lower().find("rgbmatrix")> -1 or devType.lower() in ["ssd1351","st7735"]:   
-							fill=(int(100.*intensity*intensityDevice),int(100.*intensity*intensityDevice),int(100.*intensity*intensityDevice))
+							fill=(int(100.*multIntensity),int(100.*multIntensity),int(100.*multIntensity))
 
 						if "fill" in cmd: 
 							fill = cmd["fill"]
-						fill = getFill(devType,fill,intensity,intensityDevice)
+						fill = getFill(devType,fill)
 						
 						reset =""
 						if "reset" in cmd:
@@ -1748,7 +2010,7 @@ while True:
 							elif devType.lower() in ["ssd1351"]:
 								imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 								draw = ImageDraw.Draw(imData)
-								rr = checkRGBcolor(str(reset),(0,0,0),intensity,intensityDevice)
+								rr = checkRGBcolor(str(reset),(0,0,0))
 								draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=rr)
 								outputDev.restart0()
 								outputDev.EnableDisplay(True)
@@ -1756,7 +2018,7 @@ while True:
 							elif devType.lower() in ["st7735"]:
 								imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 								draw = ImageDraw.Draw(imData)
-								rr = checkRGBcolor(str(reset),(0,0,0),intensity,intensityDevice)
+								rr = checkRGBcolor(str(reset),(0,0,0))
 								draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=rr)
 								#outputDev.restart0()
 								#outputDev.EnableDisplay(True)
@@ -1765,13 +2027,13 @@ while True:
 							elif devType.lower().find("rgbmatrix")> -1: 
 								imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 								draw = ImageDraw.Draw(imData)
-								rr = checkRGBcolor(str(reset),(0,0,0),intensity,intensityDevice)
+								rr = checkRGBcolor(str(reset),(0,0,0))
 								draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=rr)
 							
 							elif devType.lower().find("screen")> -1: 
 								imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 								draw = ImageDraw.Draw(imData)
-								rr = checkRGBcolor(str(reset),(0,0,0),intensity,intensityDevice)
+								rr = checkRGBcolor(str(reset),(0,0,0))
 								draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill=rr)
 
 							elif devType.lower().find("lcd1602")> -1: 
@@ -1798,11 +2060,11 @@ while True:
 							if "," in unicode(cmd["width"]):
 								try:
 									w = unicode(cmd["width"]).strip("[").strip("]").split(",")
-									width = [int(w[0]),int(w[1])]
+									width = [zoomit(w[0]),zoomit(w[1])]
 								except: 
 									width =[1,1]
 							else:
-								try:	width = int(cmd["width"])
+								try:	width = int(zoomit(cmd["width"]))
 								except: pass
 
 						tti= int(time.time())
@@ -1819,8 +2081,9 @@ while True:
 											TextForLCD[1]	= cmd["text"]
 									else:
 										fontF =	 mkfont(cmd)
-										U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fontF:" + unicode(fontF)+" fill:" + unicode(fill))
-										draw.text(pos, cmd["text"], font=fontx[fontF], fill=fill)
+										#U.logger.log(20,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fontF:" + unicode(fontF)+" fill:" + unicode(fill))
+										#U.logger.log(20,u"text pos:{}, zomit:{} ".format(pos,zoomit(pos)) )
+										draw.text(zoomit(pos), cmd["text"], font=fontx[fontF], fill=fill)
 
 
 						elif cType == "dateString":	 ###########################################################################
@@ -1828,64 +2091,117 @@ while True:
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								theText = datetime.datetime.now().strftime(cmd["text"])
 								fontF =	 mkfont(cmd)
-								draw.text(pos, theText, font=fontx[fontF], fill=fill)
+								draw.text(zoomit(pos), theText, font=fontx[fontF], fill=fill)
 
 
 						elif cType == "line":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
-								draw.line(pos,fill=fill,width=width)
+								if type(pos[0]) == type([]) or type(pos[0]) == type(()):
+									for xx in pos:
+										draw.line(zoomit(xx),fill=fill,width=width)
+								else:		
+									draw.line(zoomit(pos),fill=fill,width=width)
 
 						elif cType == "dot":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								p = zoomit(pos)
 								if isinstance(width,int):
-									dotWRadius( pos[0], pos[1],	 fill, width,	 width,	  outline=None)
+									dotWRadius( p[0], p[1],	 fill, width,	 width,	  outline=None)
 								else:
-									dotWRadius( pos[0], pos[1],	 fill, width[0], width[1],outline=None)
-
-
-						elif cType == "vBarwBox":  ###########################################################################
-							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
-								draw.line([pos[0]+width/2,pos[1]	   ,pos[0]+width/2,pos[1]+pos[3]]	,fill=fill,width=1)
-								draw.line([pos[0]-width/2,pos[1]	   ,pos[0]-width/2,pos[1]+pos[3]]	,fill=fill,width=1)
-								draw.line([pos[0]-width/2,pos[1]+pos[3],pos[0]+width/2,pos[1]+pos[3]]	,fill=fill,width=1)
-								draw.line([pos[0],pos[1],pos[0],pos[1]+pos[2]],fill=fill,width=width)
+									dotWRadius( p[0], p[1],	 fill, width[0], width[1],outline=None)
 
 				
 						elif cType == "vBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
-								pos =[pos[0],pos[1],pos[0],pos[1]+pos[2]]
-								draw.line(pos,fill=fill,width=width)
+								p = zoomit(pos)
+								p =[p[0],p[1],p[0],p[1],p+p[2]]
+								draw.line(p,fill=fill,width=width)
 
 
 						elif cType == "hBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
 								#print u"cType:	 "+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill)
-								pos =[pos[0],pos[1],pos[0]+pos[2],pos[1]]
-								draw.line(pos,fill=fill,width=width)
+								p = zoomit(pos)
+								p =[p[0],p[1],p[0]+p[2],p[1]]
+								draw.line(p,fill=fill,width=width)
 
-				
+
+						elif cType == "vBarwBox":  ###########################################################################
+							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								p = zoomit(pos)
+								draw.line([p[0]+width/2,p[1]	   ,p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
+								draw.line([p[0]-width/2,p[1]	   ,p[0]-width/2,p[1]+p[3]]	,fill=fill,width=1)
+								draw.line([p[0]-width/2,p[1]+p[3],p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
+								lastPos = ["vBarwBox",copy.copy(p),width]
+								draw.line([p[0],p[1],p[0],p[1]+p[2]],fill=fill,width=width)
+
+
 						elif cType == "hBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
-								draw.line([pos[0],		  pos[1]-width/2 ,pos[0]+pos[3] ,pos[1]-width/2]   ,fill=fill,width=1)
-								draw.line([pos[0],		  pos[1]+width/2 ,pos[0]+pos[3] ,pos[1]+width/2]   ,fill=fill,width=1)
-								draw.line([pos[0]+pos[3], pos[1]-width/2 ,pos[0]+pos[3] ,pos[1]+width/2]   ,fill=fill,width=1)
-								pos =[pos[0],pos[1],pos[0]+pos[2],pos[1]]
-								draw.line(pos,fill=fill,width=width)
+								p = zoomit(pos)
+								draw.line([p[0],		  p[1]-width/2 ,p[0]+p[3] ,p[1]-width/2]   ,fill=fill,width=1)
+								draw.line([p[0],		  p[1]+width/2 ,p[0]+p[3] ,p[1]+width/2]   ,fill=fill,width=1)
+								draw.line([p[0]+p[3], p[1]-width/2 ,p[0]+p[3] ,p[1]+width/2]   ,fill=fill,width=1)
+								lastPos = ["hBarwBox",copy.copy(p),width]
+								p =[p[0],p[1],p[0]+p[2],p[1]]
+								draw.line(p,fill=fill,width=width)
+
+						elif cType == "labelsForPreviousObject":  ###########################################################################
+							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								if len(lastPos) ==3:
+									fontF 		= mkfont(cmd)
+									direction 	= lastPos[0]
+									frame 		= lastPos[1]
+									frameW 		= lastPos[2]
+									ll 			= len(frame)
+										
+									if 	len(pos) ==3:
+										lineWidth	= zoomit(pos[1])
+										pp 			= pos[2]
+										if direction == "vBarwBox":
+											if ll >0 and len(pp) >0:
+												x0 = int(frame[0]  - frameW/2)
+												y0 = frame[1] 
+												for tick in pp:
+													valueNumber = zoomit(tick[0])
+													valueText   = str(tick[1])
+													if pos[0].upper() =="R": LR = lineWidth +width
+													else:					 LR = -len(valueText)*width*0.6
+													line = (x0, y0-valueNumber, x0+frameW, y0-valueNumber)
+													draw.line(line ,fill=fill, width=lineWidth)
+													if tick[1] !="":
+														draw.text([int(x0+LR), int(y0-valueNumber-width/2)], valueText, font=fontx[fontF], fill=fill)
+										if direction == "hBarwBox":
+											if ll >0 and len(pp) >0:
+												y0 = int(frame[3] - frameW/2)
+												x0 = frame[0] 
+												for tick in pp:
+													valueNumber = zoomit(tick[0])
+													valueText   = str(tick[1])
+													if pos[0].upper() =="T": TB = -width*1.05
+													else:					 TB = lineWidth*1.5
+													line = (x0-valueNumber, y0 , x0-valueNumber, y0+frameW)
+													draw.line(line ,fill=fill, width=lineWidth)
+													if tick[1] !="":
+														draw.text((int(x0-valueNumber -len(valueText)*width/2), int(y0+TB)), valueText, font=fontx[fontF], fill=fill)
+
 
 						elif cType == "hist":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								p = zoomit(pos)
 								x0= pos[0]
 								y0= pos[1]
-								ymax = pos[2]
+								ymax = p[2]
 								w=	width
-								for ii in range(3,len(pos)):
+								for ii in range(3,len(p)):
 									draw.line([x0+w*(ii-3)+(ii-3)*2+2,y0-pos[ii]/2, x0+w*(ii-2)+(ii-3)*2+2,y0-pos[ii]/2]   ,fill=fill,width=pos[ii])
 								draw.line([x0,y0, x0+w*(len(pos)-1)+(len(pos)-2)*2,y0]	 ,fill=fill,width=1)
 								draw.line([x0,y0, x0,ymax]	 ,fill=fill,width=1)
@@ -1894,30 +2210,34 @@ while True:
 						elif cType == "point":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
-								if isinstance(pos[0], list):
-									for p in pos:
+								p = zoomit(pos)
+								if isinstance(p[0], list):
+									for x in p:
 										U.logger.log(10, unicode(cmd))
-										draw.point(p,fill=fill)
+										draw.point(x,fill=fill)
 								else:		 
-									draw.point(pos,fill=fill)
+									draw.point(p,fill=fill)
 
 
 						elif cType == "ellipse":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
-								draw.ellipse(pos,fill=fill)
+								draw.ellipse(zoomit(pos),fill=fill)
 
 
 						elif cType == "rectangle":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
-								draw.rectangle(pos, fill=fill)
+								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill)+" multIntensity:" + unicode(multIntensity))
+								draw.rectangle(zoomit(pos), fill=fill)
 
 
 						elif cType == "triangle":  ###########################################################################
+							# pos:[x0,y0,length,value], width =wdith, fill = color of thermomether, 
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
-								draw.polygon( [(pos[0], pos[1]),(pos[2], pos[3]),(pos[4], pos[5])], fill = fill )
+								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								p = zoomit(pos)
+								draw.polygon( [(p[0], p[1]),(p[2], p[3]),(p[4], p[5])], fill = fill )
+
 
 
 					
@@ -1925,13 +2245,14 @@ while True:
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fill:" + unicode(fill))
 								imData = Image.open("/home/pi/pibeacon/displayfiles/"+cmd["text"])
+								p = zoomit(pos)
 								if devType.lower().find("rgbmatrix")== -1 and devType.lower() not in ["ssd1351"]: 
 									out = imData.convert("1")
 									if fill ==0:
 										out = out.convert('L')
 										out = PIL.ImageOps.invert(out)
 										out = out.convert('1')
-									draw.bitmap(pos, out,fill=255)
+									draw.bitmap(p, out,fill=255)
 								else:
 									imData.load()
 
@@ -2006,9 +2327,9 @@ while True:
 						elif cType == "analogClock" and onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti)			  : ###########################################################################
 								if offTime0 ==0 and	 offTime1 ==0:	 secs = True
 								else:								 secs = False
-								if cmd != analogclockInitialized or newRead:
+								if True or cmd != analogclockInitialized or newRead:
 									analogclockInitialized = copy.copy(cmd)
-									analogClockInit(intensity, intensityDevice, inParms=cmd)
+									analogClockInit(inParms=cmd)
 									lastAnalog	   = int(time.time())
 								 
 								tt= time.time()
@@ -2023,7 +2344,7 @@ while True:
 								else:								 secs = False
 								if cmd != digitalclockInitialized or newRead:
 									digitalclockInitialized = copy.copy(cmd)
-									digitalClockInit(intensity, intensityDevice, inParms=cmd)
+									digitalClockInit(inParms=cmd)
 									lastDigital	   = int(time.time())
 								 
 								tt= time.time()
@@ -2271,16 +2592,23 @@ while True:
 		try:
 			if os.path.isfile(G.homeDir+"temp/display.inp"):
 				readParams()
-				if "i2cAddress" in data:
-					i2cAddress	= int(data["i2cAddress"])
+				i2cAddress = U.getI2cAddress(data, default ="")
 				if i2cAddress != lasti2cAddress:
 					lasti2cAddress = i2cAddress
 
 				f = open(G.homeDir+"temp/display.inp","r")
-				xxx= f.read()  
+				xxx= f.read().strip("\n") 
 				items=xxx.split("\n")
 				f.close()
 				os.remove(G.homeDir+"temp/display.inp")
+				if xxx == "stop":
+					try: outputDev.delPy()
+					except: pass
+					U.logger.log(30, " exiting - stop was requested ") 	
+					os.kill(os.getpid(), signal.SIGTERM)
+					runLoop = False
+					break
+
 				newRead = True
 		except:	 
 			items=[]
@@ -2297,5 +2625,5 @@ while True:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		items=[]
 
-U.logger.log(30, " exiting display") 	
+U.logger.log(30, " exiting display end of loop") 	
 sys.exit(0)		   

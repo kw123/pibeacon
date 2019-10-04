@@ -352,11 +352,7 @@ def readParams():
 
 			
 			old = i2cAddress
-			try:
-				if "i2cAddress" in sensors[sensor][devId]: 
-					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
-			except:
-				i2cAddress = ""	  
+			i2cAddress = U.getI2cAddress(sensors[sensor][devId], default ="")
 			if old != i2cAddress: restart = True
 
 

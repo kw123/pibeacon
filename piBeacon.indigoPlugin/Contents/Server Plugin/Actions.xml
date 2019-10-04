@@ -1229,10 +1229,26 @@ The action menu offers 70 elements, you can use python script for more elements-
    enable debug output devices and copy the example script and expand in indigo action script
     </Label> </Field>
             
-            <Field   id="OneTime" type="label"><Label>One time function exuted before elements.... </Label> </Field>
+            <Field   id="OneTime" type="label"><Label>One time function executed before elements.... </Label> </Field>
             <Field id="resetInitial"  type="textfield" default="0" >
                 <Label>reset display start;  to do nothing:bl, off:0, on:255:</Label>
             </Field>            
+
+            <Field   id="useXwindowsLabel" type="label"><Label>if display is xwindows inside display.... </Label> </Field>
+            <Field id="xwindows"  type="menu" default="no" >
+                <List>
+                     <Option value= "off" > x windows display not used</Option>
+                     <Option value= "ON" >use X windows display</Option>
+                  </List>
+                <Label>using x windows display?:</Label>
+            </Field>
+           <Field id="xwindowsSize"  type="textfield" default="0" visibleBindingId="xwindows"  visibleBindingValue="yes">
+                <Label>number of pixels X,Y (0=use max):</Label>
+            </Field> 
+           <Field id="zoom"  type="textfield" default="1.0">
+                <Label>zoom all elements(1=no change):</Label>
+            </Field> 
+
 
             <Field id="intensity"  type="menu" default="100" >
                 <List>
@@ -1510,44 +1526,44 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Field id="delayStartxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx0"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx0"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx0"  type="textfield" default="" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx0"  type="textfield" default="" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dotv">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx0"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx0"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext0"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext0"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx0"  type="textfield" default="255" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx0"  type="textfield" default="255" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx0"  type="textfield" default="0,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx0"  type="textfield" default="0,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x00" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x00" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx0"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x00" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx0"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x00" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx0"  visibleBindingValue="point">
@@ -1558,9 +1574,11 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x00" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx0"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x00" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx0"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
-            <Field id="displayxYAYx0"  type="menu" default="immediate" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx0"  type="menu" default="immediate" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -1580,47 +1598,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx1"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx1"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx1"  type="textfield" default="" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx1"  type="textfield" default="" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx1"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx1"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext1"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext1"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx1"  type="textfield" default="255" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx1"  type="textfield" default="255" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx1"  type="textfield" default="0,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx1"  type="textfield" default="0,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x01" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x01" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx1"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x01" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx1"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x01" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx1"  visibleBindingValue="point">
@@ -1631,10 +1649,12 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x01" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx1"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x01" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx1"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
-            <Field id="displayxYAYx1"  type="menu" default="immediate" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx1"  type="menu" default="immediate" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -1655,47 +1675,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx2"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx2"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx2"  type="textfield" default="" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx2"  type="textfield" default="" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx2"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx2"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext2"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext2"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx2"  type="textfield" default="255" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx2"  type="textfield" default="255" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx2"  type="textfield" default="0,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx2"  type="textfield" default="0,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x02" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x02" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx2"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x02" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx2"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x02" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx2"  visibleBindingValue="point">
@@ -1706,9 +1726,11 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x02" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx2"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x02" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx2"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
-            <Field id="displayxYAYx2"  type="menu" default="immediate" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx2"  type="menu" default="immediate" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -1728,47 +1750,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx3"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx3"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx3"  type="textfield" default="" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx3"  type="textfield" default="" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx3"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx3"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext3"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext3"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx3"  type="textfield" default="255" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx3"  type="textfield" default="255" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx3"  type="textfield" default="0,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx3"  type="textfield" default="0,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x03" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x03" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx3"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x03" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx3"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x03" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx3"  visibleBindingValue="point">
@@ -1779,10 +1801,12 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x03" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx3"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x03" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx3"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
-            <Field id="displayxYAYx3"  type="menu" default="immediate" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx3"  type="menu" default="immediate" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -1801,47 +1825,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx4"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx4"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx4"  type="textfield" default="" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx4"  type="textfield" default="" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx4"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx4"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext4"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext4"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx4"  type="textfield" default="255" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx4"  type="textfield" default="255" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx4"  type="textfield" default="0,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx4"  type="textfield" default="0,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x04" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x04" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx4"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x04" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx4"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x04" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx4"  visibleBindingValue="point">
@@ -1852,9 +1876,11 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x04" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx4"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x04" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx4"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
-            <Field id="displayxYAYx4"  type="menu" default="immediate" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx4"  type="menu" default="immediate" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -1873,47 +1899,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx5"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx5"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx5"  type="textfield" default="" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx5"  type="textfield" default="" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx5"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx5"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext5"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext5"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx5"  type="textfield" default="255" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx5"  type="textfield" default="255" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx5"  type="textfield" default="0,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx5"  type="textfield" default="0,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x05" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x05" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx5"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x05" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx5"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x05" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx5"  visibleBindingValue="point">
@@ -1924,10 +1950,12 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x05" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx5"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x05" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx5"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
-            <Field id="displayxYAYx5"  type="menu" default="immediate" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx5"  type="menu" default="immediate" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -1947,47 +1975,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx6"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx6"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx6"  type="textfield" default="" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx6"  type="textfield" default="" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx6"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx6"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext6"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext6"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx6"  type="textfield" default="255" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx6"  type="textfield" default="255" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx6"  type="textfield" default="0,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx6"  type="textfield" default="0,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x06" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x06" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx6"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x06" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx6"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x06" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx6"  visibleBindingValue="point">
@@ -1998,10 +2026,12 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x06" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx6"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x06" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx6"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
-            <Field id="displayxYAYx6"  type="menu" default="immediate" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx6"  type="menu" default="immediate" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -2021,47 +2051,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx7"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx7"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx7"  type="textfield" default="" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx7"  type="textfield" default="" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx7"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx7"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext7"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext7"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx7"  type="textfield" default="255" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx7"  type="textfield" default="255" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx7"  type="textfield" default="0,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx7"  type="textfield" default="0,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x07" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x07" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx7"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x07" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx7"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x07" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx7"  visibleBindingValue="point">
@@ -2072,10 +2102,12 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x07" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx7"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x07" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx7"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
-            <Field id="displayxYAYx7"  type="menu" default="immediate" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx7"  type="menu" default="immediate" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -2095,47 +2127,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx8"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx8"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx8"  type="textfield" default="" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx8"  type="textfield" default="" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx8"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx8"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext8"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext8"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx8"  type="textfield" default="255" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx8"  type="textfield" default="255" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx8"  type="textfield" default="0,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx8"  type="textfield" default="0,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x08" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x08" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx8"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x08" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx8"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x08" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx8"  visibleBindingValue="point">
@@ -2146,10 +2178,12 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x08" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx8"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x08" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx8"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
-            <Field id="displayxYAYx8"  type="menu" default="immediate" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx8"  type="menu" default="immediate" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -2169,47 +2203,47 @@ The action menu offers 70 elements, you can use python script for more elements-
                 <Label>text/image/format to show/use</Label>
             </Field>
 
-            <Field id="delayStartxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="delayStartxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>Delay above command by xx seconds:</Label>
             </Field>
-            <Field id="offONTimexYAYx9"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="offONTimexYAYx9"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>seconds off,on,off eg 5,3,2:</Label>
             </Field>
 
-            <Field id="resetxYAYx9"  type="textfield" default="" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="resetxYAYx9"  type="textfield" default="" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>bf display do nothing:"", blank:0, on:255:</Label>
             </Field>
 
-            <Field id="fontxYAYx9"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString">
+            <Field id="fontxYAYx9"  type="menu" default="Arial.ttf" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject">
                 <List class="self" filter="" method="filterDisplayFonts" dynamicReload="false"/>
                 <Label>select TTF font:</Label>
             </Field>
 
-            <Field id="widthxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot">
+            <Field id="widthxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
             <Label>enter size:</Label>
             </Field>
-            <Field id="wtext9"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString"> 
+            <Field id="wtext9"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
                     <Label>..fontsize(0-99)                                .</Label></Field>
             <Field id="wnoText9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="line,vBar,hBar,vBarwBox,hBarwBox,ellipse,hist"> 
                     <Label>..width/radius of line/bar/ellipse/                  .</Label></Field>
             <Field id="widthDot9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
                     <Label>..width r or x,y of dot                 .</Label></Field>
 
-            <Field id="fillxYAYx9"  type="textfield" default="255" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillxYAYx9"  type="textfield" default="255" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>enter light/dark or color:</Label>
             </Field>            
-            <Field id="fillLabel9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+            <Field id="fillLabel9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
                 <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
             </Field>            
 
-            <Field id="positionxYAYx9"  type="textfield" default="0,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot">
-                <Label> position:</Label>
+            <Field id="positionxYAYx9"  type="textfield" default="0,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+                <Label> position/params:</Label>
             </Field>
 
             <Field  id="pLabel0x09" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,image,dot">
             <Label>..Xs,Ys                               .</Label> </Field>
             <Field  id="pLabel1x09" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx9"  visibleBindingValue="vBar,hBar,vBarwBox,hBarwBox">
-            <Label>..Xst-center,Yst-center,Length       .</Label> </Field>
+            <Label>..Xst-center,Yst-center,(barL), boxL  .</Label> </Field>
             <Field  id="pLabel2x09" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx9"  visibleBindingValue="ellipse,line">
             <Label>..Xs,Ys,Xe,Ye                       . </Label> </Field>
             <Field  id="pLabel3x09" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx9"  visibleBindingValue="point">
@@ -2220,11 +2254,13 @@ The action menu offers 70 elements, you can use python script for more elements-
             <Label>..xS,yS,xE,yE</Label> </Field>            
             <Field  id="pLabel6x09" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx9"  visibleBindingValue="triangle">
             <Label>..x1,y1,x2,y2,x3,y3</Label> </Field>
+            <Field  id="pLabel7x09" type="label" alignText="right" fontSize="small" visibleBindingId="typexYAYx9"  visibleBindingValue="labelsForPreviousObject">
+            <Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
 
 
-            <Field id="displayxYAYx9"  type="menu" default="immediate" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot">
+            <Field id="displayxYAYx9"  type="menu" default="immediate" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
                      <List>
                      <Option value= "immediate" >immediate</Option>
                      <Option value= "wait" >wait  until all data created</Option>
@@ -3239,7 +3275,13 @@ Then there are actions in each set (steps/sleep)
     <Action id="getiBeaconParameters">
         <Name>Get iBeacons parameters from rPi ie battery levels</Name>
                <CallbackMethod>getBeaconParametersCALLBACKaction</CallbackMethod>
-    </Action>
+        <ConfigUI>
+              <Field id="piServerNumber"   type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm " >
+               <Label>select rPi to use for query, use ALL for optimized distribution</Label>
+                <List class="self" filter="" method="filterPiBLE" dynamicReload="false"/>
+             </Field>
+        </ConfigUI>
+   </Action>
 
 
 

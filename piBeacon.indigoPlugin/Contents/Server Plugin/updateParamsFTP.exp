@@ -5,12 +5,12 @@ set ipNumber [lindex $argv 3 ]
 set ipParms  [lindex $argv 4 ] 
 set piPath   [lindex $argv 5 ] 
 set indigoPath   [lindex $argv 6 ] 
-set timeOUT [lindex $argv 7 ] 
-
-set timeout $timeOUT
+set timeout [lindex $argv 7 ] 
 
 
-spawn sftp -o ConnectTimeout=$timeOUT $userID@$ipNumber
+set timeout $timeout
+
+spawn sftp -o ConnectTimeout=$timeout $userID@$ipNumber
  
 if {$authKeyOrPassword == "assword"} {  
     expect {
@@ -25,7 +25,7 @@ if {$authKeyOrPassword == "assword"} {
     }
 }
 expect "sftp>"
-set timeout $timeOUT
+set timeout $timeout
 send "\r"
 sleep .001
 expect "sftp" {  send  "cd /home/pi/pibeacon \r" }

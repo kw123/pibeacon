@@ -2965,12 +2965,14 @@ def getBMP(sensor, data):
 		data[sensor] ={}
 		for devId in sensors[sensor]:
 			i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+			t = ""
+			p = ""
 
 			if devId not in sensorBMP:
 				sensorBMP[devId]= BMP085(address=i2cAdd)
 			try:
-				t =float(sensorBMP[devId].read_temperature())
-				p =sensorBMP[devId].read_pressure()
+				t = round( float(sensorBMP[devId].read_temperature()) + float(sensors[sensor][devId]["offsetTemp"]) ,2)
+				p = round( sensorBMP[devId].read_pressure() + float(sensors[sensor][devId]["offsetPress"]), 1)
 				if p < 0: 
 					raise ValueError("bad return value, pressure < 0") 
 			except	Exception, e:
@@ -2978,21 +2980,20 @@ def getBMP(sensor, data):
 					U.logger.log(30, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
-			if t!="":
-				try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
-				except:	 pass
-				data[sensor][devId] = {"temp":round(t,1)}
+			if t == "":
+					data = incrementBadSensor(devId,sensor,data)
+					return data
+			else:
+				data[sensor][devId] = {"temp":t}
 
 				if p!="":
 					try:	p = float(p) + float(sensors[sensor][devId]["offsetPress"])
 					except: pass
-					data[sensor][devId]["press"]=round(p,1)
+					data[sensor][devId]["press"]=p
 				
 				if devId in badSensors: del badSensors[devId]
 				putValText(sensors[sensor][devId],[t,p],["temp","press"])
 				time.sleep(0.1)
-			else:
-				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -3022,41 +3023,39 @@ def getBME(sensor, data,BMP=False):
 		data[sensor] ={}
 		for devId in sensors[sensor]:
 			i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+			t = ""
+			h = ""
+			p = ""
 			
 			if devId not in sensorBME280:
 				sensorBME280[devId]= BME280(mode=4,address=i2cAdd)
 			try:
-				t =float(sensorBME280[devId].read_temperature())
-				p =sensorBME280[devId].read_pressure()
+				t = round( float(sensorBME280[devId].read_temperature()) + float(sensors[sensor][devId]["offsetTemp"]) ,2)
+				p = round( sensorBME280[devId].read_pressure() + float(sensors[sensor][devId]["offsetPress"]), 1)
 				if p < 0: 
 					raise ValueError("bad return value, pressure < 0") 
 				if not BMP:
-					h = sensorBME280[devId].read_humidity()
+					h = round( sensorBME280[devId].read_humidity() + float(sensors[sensor][devId]["offsetHum"]), 1)
 			except	Exception, e:
 					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					U.logger.log(30, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
-			if t!="":
-				try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
-				except:	 
+			if t== "":
 					data = incrementBadSensor(devId,sensor,data)
 					return data
-				data[sensor][devId] = {"temp":round(t,1)}
+			else:
+				data[sensor][devId] = {"temp":t}
 
 				if p!="":
 					try:	p = float(p) + float(sensors[sensor][devId]["offsetPress"])
 					except:	 
 						data = incrementBadSensor(devId,sensor,data)
 						return data
-					data[sensor][devId]["press"]=round(p,1)
+					data[sensor][devId]["press"]=p
 
 				if h!= "":
-					try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
-					except:	 
-						data = incrementBadSensor(devId,sensor,data)
-						return data
-					data[sensor][devId]["hum"]=round(h,1)
+					data[sensor][devId]["hum"]=h
 				
 				if devId in badSensors: del badSensors[devId]
 				if not BMP:
@@ -3064,8 +3063,6 @@ def getBME(sensor, data,BMP=False):
 				else:
 					putValText(sensors[sensor][devId],[t,p],["temp","press"])
 				time.sleep(0.1)
-			else:
-				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -3093,21 +3090,20 @@ def getSHT21(sensor, data):
 		try:
 			data[sensor] ={}
 			for devId in sensors[sensor]:
+				t =""
+				h = ""
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				if devId not in sensorSHT21:
 					sensorSHT21[devId]= SHT21(i2cAdd=i2cAdd)
-
-				t =("%.2f"%float(sensorSHT21[devId].read_temperature())).strip()
-				h =("%3d"%sensorSHT21[devId].read_humidity()).strip()
+				try: 
+					t = round( float(sensorSHT21[devId].read_temperature())+ float(sensors[sensor][devId]["offsetTemp"]), 2)
+					h = round( sensorSHT21[devId].read_humidity() + float(sensors[sensor][devId]["offsetHum"]), 1)
+				except: pass
 				if t!="":
-					try:	t = str(float(t) + float(sensors[sensor][devId]["offsetTemp"]))
-					except:	 pass
-					data[sensor][devId] = {"temp":round(t,1)}
+					data[sensor][devId] = {"temp":t}
 
 					if h!= "":
-						try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
-						except: pass
-						data[sensor][devId]["hum"]=round(h,1)
+						data[sensor][devId]["hum"]=h
 				
 					if devId in badSensors: del badSensors[devId]
 					putValText(sensors[sensor][devId],[t,h],["temp","hum"])
@@ -3142,15 +3138,16 @@ def getLM75A(sensor, data):
 		try:
 			data[sensor] ={}
 			for devId in sensors[sensor]:
+				t = ""
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				if devId not in sensorLM75A:
 					sensorLM75A[devId]= LM75A(i2cAdd=i2cAdd)
-				t =float(sensorLM75A[devId].read_temperature())
-				if t!="":
-					try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
-					except:	 pass
-					data[sensor][devId] = {"temp":round(t,1)}
-					
+				try:
+					t =float(sensorLM75A[devId].read_temperature())
+					t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),2)
+				except: pass
+				if t != "":
+					data[sensor][devId] = {"temp":t}
 					if devId in badSensors: del badSensors[devId]
 					putValText(sensors[sensor][devId],[t],["temp"])
 					time.sleep(0.1)
@@ -3182,23 +3179,27 @@ def getAM2320(sensor, data):
 
 		try:
 			sensor = "i2cAM2320"
-			if sensor in sensorList :
+			if sensor in sensorList:
+				t = ""
+				h = ""
 				data[sensor] ={}
 				for devId in sensors[sensor]:
 					i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 					i2c=sensors[sensor][devId]["i2cAddress"]
 					if devId not in sensorAM2320:
 						sensorAM2320[devId]= AM2320(i2cAdd=i2cAdd)
-					t,h =sensorAM2320[devId].read()
+					try: 
+						t,h =sensorAM2320[devId].read()
+						t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),2)
+						h = round(float(h) + float(sensors[sensor][devId]["offsetHum"]),1)
+					except: pass
 					if t!="":
-						try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
-						except:	 pass
-						data[sensor][devId] = {"temp":round(t,1)}
+						data[sensor][devId] = {"temp":t}
 
 						if h!= "":
 							try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
 							except: pass
-							data[sensor][devId]["hum"]=round(h,1)
+							data[sensor][devId]["hum"]=h
 						
 						if devId in badSensors: del badSensors[devId]
 						putValText(sensors[sensor][devId],[t,h],["temp","hum"])
@@ -3228,16 +3229,16 @@ def getMCP9808(sensor, data):
 		sensorMCP9808 = {}
 	try:
 		data[sensor] ={}
-		for devId in sensors[sensor] :
+		for devId in sensors[sensor]:
+			t= ""
 			i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 			if devId not in sensorMCP9808:
 				sensorMCP9808[devId] = MCP9808(int(i2cAdd))
 				sensorMCP9808[devId].begin()
-			t=sensorMCP9808[devId].readTempC()
+			try: t=round( sensorMCP9808[devId].readTempC() + float(sensors[sensor][devId]["offsetTemp"]), 2) 
+			except: pass
 			if t!="" :
-				try:   t = (float(t) + float(sensors[sensor][devId]["offsetTemp"]))
-				except: pass
-				data[sensor][devId] = {"temp":round(t,1)}
+				data[sensor][devId] = {"temp":t}
 				putValText(sensors[sensor][devId],[t],["temp"])
 				if devId in badSensors: del badSensors[devId]
 				time.sleep(0.1)
@@ -3282,7 +3283,7 @@ def getTCS34725(sensor, data):
 				colorTemp = sensorTCS[devId].calculateColorTemperature(rgb)
 				lux = sensorTCS[devId].calculateLux(rgb)
 				sensorTCS[devId].setInterrupt(True)
-				lux= float(lux)
+				lux= round(float(lux),2)
 				if lux>=0:
 					data[sensor][devId]={}
 					data[sensor][devId]["clear"]=rgb["c"]
@@ -3290,7 +3291,7 @@ def getTCS34725(sensor, data):
 					data[sensor][devId]["green"]=rgb["g"]
 					data[sensor][devId]["blue"] =rgb["b"]
 					data[sensor][devId]["colorTemp"] =colorTemp
-					data[sensor][devId]["lux"] =lux
+					data[sensor][devId]["lux"] = lux
 					putValText(sensors[sensor][devId],[lux],["lux"])
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
@@ -3320,6 +3321,8 @@ def getMS5803(sensor, data):
 		for devId in sensors[sensor] :
 			i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 			type   = sensors[sensor][devId]["type"]
+			temp  = ""
+			press = ""
 			try:
 					ii= MS5803Started
 					##U.setStopCondition(on=True)  # not needed
@@ -3332,17 +3335,19 @@ def getMS5803(sensor, data):
 						sensorMS5803[devId] = MS5803(address=i2cAdd,type=type)
 						time.sleep(1)
 
-				temp, press = sensorMS5803[devId].getData()
+				try:
+					t, p = sensorMS5803[devId].getData()
+					temp  = round(t+float(sensors[sensor][devId]["offsetTemp"]),2)
+					press = round(p+float(sensors[sensor][devId]["offsetPress"]),1)
+				except: pass
 
-				if temp >-90:
+				if temp != "" and temp >-90:
 					try:	temp +=	 float(sensors[sensor][devId]["offsetTemp"])
 					except: pass
 					data[sensor][devId]={}
-					data[sensor][devId]["temp"]= round(temp,1)
+					data[sensor][devId]["temp"] = temp
 					if press >-90:
-						try:	press +=  float(sensors[sensor][devId]["offsetPress"])
-						except: pass
-						data[sensor][devId]["press"]=press
+						data[sensor][devId]["press"] = press
 					if devId in badSensors: del badSensors[devId]
 
 				else:
@@ -3581,17 +3586,20 @@ def getTMP102(sensor, data):
 	try:
 		data[sensor] ={}
 		for devId in sensors[sensor] :
-			i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
-			if devId not in sensorTMP102:
-				sensorTMP102[devId] = smbus.SMBus(1)
-			tRaw =	sensorTMP102[devId].read_word_data(i2cAdd,0)
-			t = (((tRaw << 8) & 0xFF00) + (tRaw >> 8)>>4)
-			if t > 2047: t = t-4096
-			t= float(t)*0.0625
+			t =""
+			try:
+				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
+				if devId not in sensorTMP102:
+					sensorTMP102[devId] = smbus.SMBus(1)
+				tRaw =	sensorTMP102[devId].read_word_data(i2cAdd,0)
+				t = (((tRaw << 8) & 0xFF00) + (tRaw >> 8)>>4)
+				if t > 2047: t = t-4096
+				t = float(t)*0.0625
+			except: pass
 			if t!="":
-				try:	t = (float(t) + float(sensors[sensor][devId]["offsetTemp"]))
+				try:	t = round((float(t) + float(sensors[sensor][devId]["offsetTemp"])),2)
 				except: pass
-				data[sensor][devId]={"temp":round(t,1)}
+				data[sensor][devId]={"temp":t}
 				putValText(sensors[sensor][devId],[t],["temp"])
 				if devId in badSensors: del badSensors[devId]
 				time.sleep(0.1) 
@@ -3631,9 +3639,9 @@ def getIS1145(sensor, data):
 				v= float(v)
 				if v>=0:
 					data[sensor][devId]={}
-					data[sensor][devId]["visible"]	  =round(v,1)
-					data[sensor][devId]["UV"]		  =round(u,1)
-					data[sensor][devId]["IR"]		  =round(i,1)
+					data[sensor][devId]["visible"]	  =round(v,2)
+					data[sensor][devId]["UV"]		  =round(u,2)
+					data[sensor][devId]["IR"]		  =round(i,2)
 					putValText(sensors[sensor][devId],[v],["lux"])
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
@@ -3714,6 +3722,8 @@ def getTSL2561(sensor, data):
 			ret =  sensorTSL2561[devId].readLux(gain = 1)
 			if ret!="":
 				ret["lux"] = round(ret["lux"],2)
+				ret["ambient"] = round(ret["ambient"],2)
+				ret["IR"] = round(ret["IR"],2)
 				data[sensor][devId]=ret	 # this is ~ {'lux': 0, 'IR': 51755, 'ambient': 2424}
 				putValText(sensors[sensor][devId],[ret["ambient"]],["lux"])
 				if devId in badSensors: del badSensors[devId]
@@ -3770,7 +3780,7 @@ def getADS1x15(sensor, data):
 			v=[0,0,0,0]
 			data[sensor][devId]={}
 			for inp in range(4):
-				v[inp] = ("%4d"%sensorADS1x15[devId].readADCSingleEnded(channel=inp, pga=g, sps=250)).strip()
+				v[inp] = sensorADS1x15[devId].readADCSingleEnded(channel=inp, pga=g, sps=250)
 				if devId in badSensors: del badSensors[devId]
 			if sensor.find("-1") ==-1:
 				for inp in range(4):
@@ -3805,6 +3815,7 @@ def getVEML6070(sensor, data):
 	try:
 		data[sensor] ={}
 		for devId in sensors[sensor] :
+			uv =""
 			try:
 				try:
 					ii= VEML6070Started
@@ -3825,9 +3836,9 @@ def getVEML6070(sensor, data):
 					else: 
 						sensorVEML6070[devId]=VEML6070()
 						sensorVEML6070[devId].set_integration_time(2)
-				uv = ("%.1f"%sensorVEML6070[devId].get_uva_light_intensity()).strip()
+				try: uv =round(sensorVEML6070[devId].get_uva_light_intensity(),2)
+				except: pass
 				if uv !="":
-					uv= float(uv)
 					if uv >= 0:
 						data[sensor][devId]={}
 						data[sensor][devId]["UV"]=uv
@@ -3960,12 +3971,11 @@ def readParams():
 		global addNewOneWireSensors
 
 		rCode= False
-
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return rCode
 		if lastRead2 == lastRead: return rCode
 		lastRead  = lastRead2
-		if inpRaw == oldRaw: return 
+		if inpRaw == oldRaw: return rCode
 		oldRaw	   = inpRaw
 
 		oldSensor		  = sensorList
@@ -3990,14 +4000,14 @@ def readParams():
 
 
 		### any changes?
-		sensorUp = U.doWeNeedToStartSensor(sensors, sensorsOld, sensorType="i2c")
 		if outputOld != unicode(output): rCode=True
 		
 		
 				 
-		if sensorUp =={}:
+		if sensorList.find("i2c") ==-1:
 			if os.path.isfile(G.homeDir+"temp/simplei2csensors.dat"):
 				os.remove(G.homeDir+"temp/simplei2csensors.dat")
+			U.logger.log(20, u" exit, i2c sensors not defined" )
 			exit(0)
 
 		return rCode
@@ -4461,28 +4471,27 @@ def makeLightsensorFile(data):
 		ii=makeLightsensorFileTime
 	except:
 		makeLightsensorFileTime = 0
-	if time.time() - makeLightsensorFileTime < 5: return 
-	makeLightsensorFileTime = int(time.time())
-	out=""
-	for sensor in data:
-		for devId in data[sensor]:
-			if "ambient" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["ambient"]),"sensor":sensor,"time":time.time()})
-				break
-			if "white" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["white"]),"sensor":sensor,"time":time.time()})
-				break
-			if "visible" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["visible"]),"sensor":sensor,"time":time.time()})
-				break
-			if "lux" in data[sensor][devId]:
-				out = json.dumps({"light":float(data[sensor][devId]["lux"]),"sensor":sensor,"time":time.time()})
-				break
-	if len(out) > 0:  
-		f=open(G.homeDir+"temp/lightSensor.dat","w")
-		f.write(out)
-		f.close()
-
+	try:
+		dd = data
+		if time.time() - makeLightsensorFileTime < 5: return 
+		makeLightsensorFileTime = int(time.time())
+		out = {}
+		for sensor in dd:
+			for devId in dd[sensor]:
+				for lType in ["ambient","white","visible","visible","illuminance"]:
+					if lType not in dd[sensor][devId]: continue
+					if "sensors" not in out: 							out["sensors"] = {}
+					if sensor    not in out["sensors"]: 				out["sensors"][sensor] = {}
+					if devId     not in out["sensors"][sensor]:			out["sensors"][sensor][devId]={}
+					out["sensors"][sensor][devId]["light"] = float(data[sensor][devId][lType])
+					break
+		U.logger.log(10,"out:{}".format(out))
+		if len(out) > 0: 
+			out["time"] = time.time() 
+			U.writeJson(G.homeDir+"temp/lightSensor.dat", out, sort_keys=True, indent=2)
+	except	Exception, e:
+		U.logger.log(30,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
    
 #################################
 #################################
@@ -4623,7 +4632,7 @@ while True:
 							changed = 7
 							break
 		#print "changed? ", changed,	   tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor, data
-		if data !={} and ( changed >0 or	( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
+		if data !={} and ( changed >0 or( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
 			lastMsg = tt
 			lastData=copy.copy(data)
 			try:
@@ -4637,7 +4646,6 @@ while True:
 		U.makeDATfile(G.program, {"sensors":data})
 		makeLightsensorFile(data)
 		U.echoLastAlive(G.program)
-
 
 		tt= time.time()
 		NSleep = int(sensorRefreshSecs)*2
