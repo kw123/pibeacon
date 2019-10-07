@@ -702,15 +702,13 @@ class Plugin(indigo.PluginBase):
 				if self.pluginPrefs.get(u"debug"+d, False): self.debugLevel.append(d)
 
 
-			self.debugRPI=-1
-			self.debugRPI			 = int(self.pluginPrefs.get(u"debugRPI", -1))
+			try: self.debugRPI			 = int(self.pluginPrefs.get(u"debugRPI", -1))
+			except: self.debugRPI=-1
 		except Exception, e:
 			self.indiLOG.critical(u"--------------------------------------------------------------------------------------------------------------")
 			self.indiLOG.critical(u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
-			self.indiLOG.critical(u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
+			self.indiLOG.critical(u"Error in startup of plugin, plugin prefs are wrong ")
 			self.indiLOG.critical(u"--------------------------------------------------------------------------------------------------------------")
-			self.sleep(2000)
-			exit(1)
 		return
 
 

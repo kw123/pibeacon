@@ -1,3 +1,10 @@
+Added features / changes in v7.112.313 @ 2019-10-07
+===================================================
+
+1. bad plugin prefs error check at startup.
+
+
+
 Added features / changes in v7.112.312 @ 2019-10-03
 ===================================================
 
