@@ -319,13 +319,14 @@ class Plugin(indigo.PluginBase):
 		indigo.server.log(  u"plugin.py               {}".format(self.pathToPlugin))
 		indigo.server.log(  u"Plugin params           {}".format(self.indigoPreferencesPluginDir))
 
-		self.indiLOG.log( 0, "logger  enabled for     0 ==> TEST ONLY ")
-		self.indiLOG.log( 5, "logger  enabled for     THREADDEBUG    ==> TEST ONLY ")
-		self.indiLOG.log(10, "logger  enabled for     DEBUG          ==> TEST ONLY ")
-		self.indiLOG.log(20, "logger  enabled for     INFO           ==> TEST ONLY ")
-		self.indiLOG.log(30, "logger  enabled for     WARNING        ==> TEST ONLY ")
-		self.indiLOG.log(40, "logger  enabled for     ERROR          ==> TEST ONLY ")
-		self.indiLOG.log(50, "logger  enabled for     CRITICAL       ==> TEST ONLY ")
+		self.indiLOG.log( 0, "!!!!INFO ONLY!!!!  logger  enabled for   0             !!!!INFO ONLY!!!!")
+		self.indiLOG.log( 5, "!!!!INFO ONLY!!!!  logger  enabled for   THREADDEBUG   !!!!INFO ONLY!!!!")
+		self.indiLOG.log(10, "!!!!INFO ONLY!!!!  logger  enabled for   DEBUG         !!!!INFO ONLY!!!!")
+		self.indiLOG.log(20, "!!!!INFO ONLY!!!!  logger  enabled for   INFO          !!!!INFO ONLY!!!!")
+		self.indiLOG.log(30, "!!!!INFO ONLY!!!!  logger  enabled for   WARNING       !!!!INFO ONLY!!!!")
+		self.indiLOG.log(40, "!!!!INFO ONLY!!!!  logger  enabled for   ERROR         !!!!INFO ONLY!!!!")
+		self.indiLOG.log(50, "!!!!INFO ONLY!!!!  logger  enabled for   CRITICAL      !!!!INFO ONLY!!!!")
+
 		indigo.server.log(  u"check                   {}  <<<<    for detailed logging".format(self.PluginLogFile))
 		indigo.server.log(  u"Plugin short Name       {}".format(self.pluginShortName))
 		indigo.server.log(  u"my PID                  {}".format(self.myPID))	 
@@ -10301,7 +10302,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			if stateName not in _GlobalConst_fillMinMaxStates: return 
 			if stateName in dev.states and stateName+u"MaxToday" in dev.states:
-				if self.decideMyLog(u"SensorData"): self.indiLOG.log(10, u"fillMinMaxSensors "+dev.name+"  "+stateName+";  newV= "+unicode(value)+";  in dev.states= "+unicode(dev.states[stateName])+"  dec_pl="+ unicode(decimalPlaces) )
+				if self.decideMyLog(u"Special"): self.indiLOG.log(10, u"fillMinMaxSensors "+dev.name+"  "+stateName+";  newV= "+unicode(value)+";  in dev.states= "+unicode(dev.states[stateName])+"  dec_pl="+ unicode(decimalPlaces) )
 				val = float(value)
 				if val > float(dev.states[stateName+u"MaxToday"]):
 					self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MaxToday",	 val, decimalPlaces=decimalPlaces)
@@ -12341,7 +12342,7 @@ class Plugin(indigo.PluginBase):
 				else:	inputState = u"INPUT_" + unicode(ii+addToInputName)
 
 
-				if self.decideMyLog(u"SensorData"): self.indiLOG.log(30,"updateINPUT: " + dev.name+";  sensor: "+sensor+";  upState: "+ unicode(upState)+"; inputState: "+unicode(inputState)+ " data:"+unicode(data))
+				if self.decideMyLog(u"SensorData"): self.indiLOG.log(20,"updateINPUT: " + dev.name+";  sensor: "+sensor+";  upState: "+ unicode(upState)+"; inputState: "+unicode(inputState)+ " data:"+unicode(data))
 				if inputState in data:
 					ss, ssUI, unit = self.addmultOffsetUnit(data[inputState], props)
 					if dev.states[inputState] != ss:
@@ -12980,7 +12981,7 @@ class Plugin(indigo.PluginBase):
 					if state in dev.states and key in data :
 						if logScale !=u"1": self.setStatusCol(dev, state, round(float(data[key]),2),  formatN % (float(data[key]))+unit,                                         upState, "","",decimalPlaces=2 )
 						else:				self.setStatusCol(dev, state, round(float(data[key]),2), (formatN % math.log10(max(0.1,float(data[key]))) ).replace(u" ", u"")+unit, upState, "","",decimalPlaces=2 )
-						self.fillMinMaxSensors(dev,state,data[key],decimalPlaces=2)
+						#self.fillMinMaxSensors(dev,state,data[key],decimalPlaces=2)
 
 				if u"red" in data:
 					self.updateRGB( dev, data, upState, theType=theType)
@@ -14225,6 +14226,10 @@ class Plugin(indigo.PluginBase):
 						if u"timeZone" in props:
 							try:    out[u"timeZone"]  = props[u"timeZone"]
 							except: out[u"timeZone"]  = "99"
+
+						if u"clearHostsFile" in props:
+							try:    out[u"clearHostsFile"]  = props[u"clearHostsFile"]
+							except: out[u"clearHostsFile"]  = "0"
 
 						out[u"ifNetworkChanges"]  = "0"
 						if u"ifNetworkChanges" in props:

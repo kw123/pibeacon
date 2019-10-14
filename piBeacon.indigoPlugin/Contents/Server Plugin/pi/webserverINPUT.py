@@ -188,10 +188,10 @@ class GetHandler(BaseHTTPRequestHandler):
 						'<option value="offsetArm:8">8 click right</option>'+
 						'<option value="offsetArm:9">9 click right</option>'+
 						'<option value="offsetArm:10">10 click right</option>'+
-						'<option value="offsetArm:10">20 click right ~+38 minutes</option>'+
-						'<option value="offsetArm:10">50 click right</option>'+
-						'<option value="offsetArm:10">100 click right</option>'+
-						'<option value="offsetArm:10">200 click right ~ 1/4 turn</option>'+
+						'<option value="offsetArm:20">20 click right ~+38 minutes</option>'+
+						'<option value="offsetArm:50">50 click right</option>'+
+						'<option value="offsetArm:100">100 click right</option>'+
+						'<option value="offsetArm:200">200 click right ~ 1/4 turn</option>'+
 					'</select> <br>')
 
 			x(		'calibrate arm.......: <select name="calibrate">'+

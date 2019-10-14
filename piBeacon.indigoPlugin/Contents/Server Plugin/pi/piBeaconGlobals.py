@@ -67,6 +67,8 @@ expectedIPnumberOfRPI =""
 wifiType			="normal"
 eth0Enabled			= False
 wifiEnabled			= False
+eth0Active 			= False
+wifiActive 			= False
 wifiEth				= {"eth0":{"on":"dontChange", "useIP":"use"}, "wlan0":{"on":"dontChange", "useIP":"use"}}
 wifiEthOld			= {"eth0":{"on":"dontChange", "useIP":"use"}, "wlan0":{"on":"dontChange", "useIP":"use"}}
 shutDownPinOutput	= -1
@@ -88,6 +90,9 @@ last_masterStart	= ""
 wifiID				= ""
 sendThread			= {}
 rebootIfNoMessagesSeconds = 99999999999
+osVersion 			= 0
+ipOfRouter			= ""
+
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
 import sys

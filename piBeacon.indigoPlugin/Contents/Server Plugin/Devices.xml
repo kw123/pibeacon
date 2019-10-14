@@ -525,7 +525,17 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
 			</Field>
 
+			<Field id="clearHostsFile"   type="menu" defaultValue="0" tooltip="if you use the rpi to connect to other computers and need to reset the ssh key file">
+				<Label>...reset ssh known_hosts file after restart:</Label>
+				<List>
+					<Option value="0"  >do not touch file  </Option>
+					<Option value="1"  >reset file (delete)</Option>
+				</List>
+			</Field>
 
+			<Field id="sleepAfterBootLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
+				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
+			</Field>
 			<Field id="labelwebAdhoc0"               type="label" > 
 				<Label>== Webserver options:...</Label>
 			</Field>
@@ -738,31 +748,32 @@ The BLEconnect feature does work with the internal BLE chip</Label>
     if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
 			</Field>
 
-			<Field    id="eth0"   type="menu" defaultValue='{"on":"on", "useIP":"use"}' tooltip="">
+			<Field    id="eth0"   type="menu" defaultValue='{"on":"on",        "useIP":"use"}' tooltip="">
 				<Label>ethernet cable(eth0) active:</Label>
 				<List>
-							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
-							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
-							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
-							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
-							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
-							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
+							<Option value='{"on":"on",        "useIP":"use"}'		>ON,  use eth0 IP# default </Option>
+							<Option value='{"on":"on",        "useIP":"useIf"}'		>ON,  use eth0 IP# if wlan0 not used</Option>
+							<Option value='{"on":"on",        "useIP":"doNotUse"}'	>ON,  do not use eth0 IP# </Option>
+							<Option value='{"on":"onIf",      "useIP":"useIf"}'		>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
+							<Option value='{"on":"off",       "useIP":"doNotUse"}'	>off  </Option>
+							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , any change must be set by user, use eth0 IP</Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , any change must be set by user, use eth0 IP if wlan0 not used</Option>
+							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any change must be set by user, do not use eth0 IP#</Option>
 				</List> 
 			</Field>
 
-			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
+			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange","useIP":"use"}' tooltip="">
 				<Label>WiFi(wlan0) active:</Label>
 				<List>
-							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
-							<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
-							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
-				</List> 
+							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change ,  use wlan0 IP# </Option>
+							<Option value='{"on":"on",        "useIP":"use"}'		>ON,  use wlan0 IP# </Option>
+							<Option value='{"on":"on",        "useIP":"useIf"}'		>ON,  use wlan0 IP# if eth0 not used</Option>
+							<Option value='{"on":"on",        "useIP":"doNotUse"}'	>ON,  do not use wlan0 IP# </Option>
+							<Option value='{"on":"onIf",      "useIP":"useIf"}'		>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
+							<Option value='{"on":"off",       "useIP":"doNotUse"}'	>off  </Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , any change must be set by user, use wlan0 IP# if eth0 not used</Option>
+							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any chnage must be set by user, do not use wlan0 IP#</Option>
+						</List> 
 			</Field>
 
 
@@ -1507,6 +1518,15 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
 			</Field>
 
+			<Field id="clearHostsFile"   type="menu" defaultValue="0" tooltip="if you use the rpi to connect to other computers and need to reset the ssh key file">
+				<Label>...reset ssh known_hosts file after restart:</Label>
+				<List>
+					<Option value="0"  >do not touch file  </Option>
+					<Option value="1"  >reset file (delete)</Option>
+				</List>
+			</Field>
+
+
 
 			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
 				<Label>...which pin to use to start adhoc web server on RPI-#10:</Label>
@@ -1718,31 +1738,31 @@ The BLEconnect feature does work with the internal BLE chip</Label>
     if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
 			</Field>
 
-			<Field    id="eth0"   type="menu" defaultValue='{"on":"on", "useIP":"use"}' tooltip="">
+			<Field    id="eth0"   type="menu" defaultValue='{"on":"on",        "useIP":"use"}' tooltip="">
 				<Label>ethernet cable(eth0) active:</Label>
 				<List>
-							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
-							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
-							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
-							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
-							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
-							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
+							<Option value='{"on":"on",        "useIP":"use"}'		>ON,  use eth0 IP# default </Option>
+							<Option value='{"on":"on",        "useIP":"useIf"}'		>ON,  use eth0 IP# if wlan0 not used</Option>
+							<Option value='{"on":"on",        "useIP":"doNotUse"}'	>ON,  do not use eth0 IP# </Option>
+							<Option value='{"on":"onIf",      "useIP":"useIf"}'		>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
+							<Option value='{"on":"off",       "useIP":"doNotUse"}'	>off  </Option>
+							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , any change must be set by user, use eth0 IP</Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , any change must be set by user, use eth0 IP if wlan0 not used</Option>
+							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any change must be set by user, do not use eth0 IP#</Option>
 				</List> 
 			</Field>
 
-			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
+			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange","useIP":"use"}' tooltip="">
 				<Label>WiFi(wlan0) active:</Label>
 				<List>
-							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
-							<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
-							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"dontChange", "useIP":"doNotUse"}'	>do not change , must be set by user, do not use wlan0 IP#</Option>
+							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change ,  use wlan0 IP# </Option>
+							<Option value='{"on":"on",        "useIP":"use"}'		>ON,  use wlan0 IP# </Option>
+							<Option value='{"on":"on",        "useIP":"useIf"}'		>ON,  use wlan0 IP# if eth0 not used</Option>
+							<Option value='{"on":"on",        "useIP":"doNotUse"}'	>ON,  do not use wlan0 IP# </Option>
+							<Option value='{"on":"onIf",      "useIP":"useIf"}'		>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
+							<Option value='{"on":"off",       "useIP":"doNotUse"}'	>off  </Option>
+							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , any change must be set by user, use wlan0 IP# if eth0 not used</Option>
+							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any chnage must be set by user, do not use wlan0 IP#</Option>
 						</List> 
 			</Field>
 
@@ -15877,10 +15897,13 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 			</Field>
 
 			<Field id="signalPin" type="menu"     defaultValue="18" > 
-			<Label>GPIO pin for signal:</Label>
+			<Label>GPIO pin for PWM out:</Label>
 			<List>
 				<Option value="18"   >GPIO 18 = pin 12</Option>
 				<Option value="12"   >GPIO 12 = pin 32</Option>
+				<Option value="21"   >GPIO 21 = pin 40</Option>
+				<Option value="13"   >GPIO 13 = pin 33</Option>
+				<Option value="19"   >GPIO 19 = pin 35</Option>
 			</List>
 			</Field>
 
@@ -15917,7 +15940,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				</List>
 			<Label>PWM channel -- only for experts:</Label>
 			</Field>
-			<Field id="DMAchannel"  type="menu" defaultValue="5"  >
+			<Field id="DMAchannel"  type="menu" defaultValue="10"  >
 				<List>
 				<Option value= "0"   > 0</Option>
 				<Option value= "1"   > 1</Option>
@@ -15927,8 +15950,15 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "5"   > 5</Option>
 				<Option value= "6"   > 6</Option>
 				<Option value= "7"   > 7</Option>
+				<Option value= "8"   > 8</Option>
+				<Option value= "9"   > 9</Option>
+				<Option value= "10"  > 10</Option>
+				<Option value= "11"  > 11</Option>
+				<Option value= "12"  > 12</Option>
+				<Option value= "13"  > 13</Option>
+				<Option value= "14"  > 14</Option>
 				</List>
-			<Label>DMA channel -- only for experts:</Label>
+			<Label>DMA channel -- only for experts (depends on RPi, for rpi4 use 10 ):</Label>
 			</Field>
 
 
@@ -16057,10 +16087,13 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
             
 
 			<Field id="signalPin" type="menu"     defaultValue="18"  visibleBindingId="expertMode" visibleBindingValue="true"> 
-			<Label>GPIO pin for signal:</Label>
+			<Label>GPIO pin for PWM out:</Label>
 			<List>
 				<Option value="18"   >GPIO 18 = pin 12</Option>
 				<Option value="12"   >GPIO 12 = pin 32</Option>
+				<Option value="21"   >GPIO 21 = pin 40</Option>
+				<Option value="13"   >GPIO 13 = pin 33</Option>
+				<Option value="19"   >GPIO 19 = pin 35</Option>
 			</List>
 			</Field>
             

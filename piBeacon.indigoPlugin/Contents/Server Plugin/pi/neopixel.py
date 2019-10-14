@@ -141,10 +141,12 @@ class Adafruit_NeoPixel(object):
 			raise RuntimeError('ws2811_init failed with code {0}'.format(resp))
 		
 	def show(self):
-		"""Update the display with the data from the LED buffer."""
+		#print "Update the display with the data from the LED buffer."
 		resp = ws.ws2811_render(self._leds)
 		if resp != 0:
 			raise RuntimeError('ws2811_render failed with code {0}'.format(resp))
+		#print "Update the display with the data from the LED buffer. ... DONE"
+		
 
 	def setPixelColor(self, n, color):
 		"""Set LED at position n to the provided 24-bit color value (in RGB order).
@@ -365,13 +367,6 @@ def get_pixels():
 	return [[get_pixel(x, y) for x in range(width)] for y in range(height)]
 
 
-def show():
-	try:
-		"""Update UnicornHat with the contents of the display buffer"""
-		ws2812.show()
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-
 
 
 
@@ -591,8 +586,10 @@ class draw():
 			#print "\n",0,"-" ,(unicode(linearDATA)).strip(" ")
 			if rotate ==0:
 				if speedOfChange ==0:
+					#U.logger.log(30,"bf show LED_COUNT:{} ; linearDATA:{}".format(LED_COUNT, linearDATA) ) 
 					for index in range(LED_COUNT):
-						 ws2812.setPixelColorRGBlist(index,linearDATA[index] )
+						#U.logger.log(30,"index:{} ; linearDATA:{}".format(index, linearDATA[index]) ) 
+						ws2812.setPixelColorRGBlist(index,linearDATA[index] )
 					ws2812.show() 
 				else: 
 					steps		= speedOfChange/0.02 +1
@@ -715,22 +712,22 @@ def readParams(pgmType="neopixel"):
 					  "	 frequency="	   + unicode(frequency)+
 					  "	 flipDisplay="	   + unicode(flipDisplay))
 					if lastdevType !="" and ( frequency != lastfrequency):	
-						U.logger.log(30, " new frequency="+unicode(frequency)+" new="+unicode(lastfrequency))
+						U.logger.log(10, " new frequency="+unicode(frequency)+" new="+unicode(lastfrequency))
 						retCode = 1
 					if lastdevType !="" and ( DMAchannel != lastDMAchannel):  
-						U.logger.log(30, " new DMAchannel="+unicode(DMAchannel)+" new="+unicode(lastDMAchannel))
+						U.logger.log(10, " new DMAchannel="+unicode(DMAchannel)+" new="+unicode(lastDMAchannel))
 						retCode = 1
 					if lastdevType !="" and ( PWMchannel != lastPWMchannel):  
-						U.logger.log(30, " new PWMchannel="+unicode(PWMchannel)+" new="+unicode(lastPWMchannel))
+						U.logger.log(10, " new PWMchannel="+unicode(PWMchannel)+" new="+unicode(lastPWMchannel))
 						retCode = 1
 					if lastdevType !="" and ( signalPin != lastsignalPin):	
-						U.logger.log(30, " new signalPin="+unicode(signalPin)+" new="+unicode(lastsignalPin))
+						U.logger.log(10, " new signalPin="+unicode(signalPin)+" new="+unicode(lastsignalPin))
 						retCode = 1
 					if lastdevType !="" and ( devType != lastdevType ):	 
-						U.logger.log(30, " new devType="+unicode(lastdevType)+" new="+unicode(devType))
+						U.logger.log(10, " new devType="+unicode(lastdevType)+" new="+unicode(devType))
 						retCode = 1
 					if lastdevType !="" and ( OrderOfMatrix != lastOrderOfMatrix):	
-						U.logger.log(30, " new OrderOfMatrix="+unicode(OrderOfMatrix)+" new="+unicode(lastOrderOfMatrix))
+						U.logger.log(10, " new OrderOfMatrix="+unicode(OrderOfMatrix)+" new="+unicode(lastOrderOfMatrix))
 						retCode = 1
 
 	except	Exception, e:
@@ -928,7 +925,7 @@ while True:
 					if resetInitial !=[] and resetInitial !="":
 						try:resetInitial= json.loads(resetInitial)
 						except: pass
-						U.logger.log(10, " resetting initial:" +unicode(resetInitial))
+						U.logger.log(10, "resetting initial:".format(resetInitial))
 						image.resetImage(resetInitial)
 						image.show()
 				except: pass
@@ -1166,7 +1163,7 @@ while True:
 									image.points(lin)
 
 								if "display" not in cmd or cmd["display"] != "wait": 
-									U.logger.log(10, u"displaying	 "+ cmd["type"] )
+									U.logger.log(10, u"displaying	 {}".format(cmd["type"]) )
 									tt3 = time.time()
 									image.show(rotate=rotate, rotateSeconds=rotateSeconds, speedOfChange=speedOfChange)
 								if cType == "clock":

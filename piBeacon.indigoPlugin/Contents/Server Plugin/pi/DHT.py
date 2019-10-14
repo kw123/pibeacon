@@ -9,12 +9,12 @@
 ##
 
 import	sys, os, time, json, datetime,subprocess,copy
-import Adafruit_DHT
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "DHT"
+import Adafruit_DHT
 
 
 
@@ -41,14 +41,15 @@ def getDATAdht(DHTpin,Type):
 		try:
 			h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 			if unicode(h) == "None" or unicode(t) == "None":
-				time.sleep(1)
+				time.sleep(3), # min wait between read -s 2.0 secs, give it a little more..
 				h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
 				if unicode(h) == "None" or unicode(t) == "None":
 					U.logger.log(20, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again" )
 			#f h is not None and t is not None:
 			#print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpin)
 #			# sensorDHT=""
-			return float(t),float(h)
+			try: return float(t),float(h)
+			except: return "",""
 			#else: return "" ,""  
 		except	Exception, e:
 			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -64,14 +65,28 @@ def getDHT(sensor,data):
 		if sensor in sensors :
 			data[sensor]={}
 			for devId in sensors[sensor]:
-				t,h =getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
-				if t!="":
+				t =[-1000,-1000]; h=[-1000,-1000]
+				for ii in range(2):
+					t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
+					time.sleep(3)
+					if t[ii] =="":
+						t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
+						time.sleep(3)
+
+				if abs(t[0]-t[1]) > 3 or t[0] == -1000 or t[1] == -1000 or h[0] == -1000 or h[1] == -1000:
+					# bad result 
+					t = ""; h=""
+				else:
+					t = (t[0] + t[1] )/2.					
+					h = (h[0] + h[1] )/2.					
+
+				if t != "":
 					try:	
 						t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),2)
 					except: pass
 					data[sensor][devId] = {"temp":t}
-					if h!= "":
-						try:	h = round(float(h)  + float(sensors[sensor][devId]["offsetHum"]),2)
+					if h != "":
+						try:	h = round(float(h) + float(sensors[sensor][devId]["offsetHum"]),2)
 						except: pass
 						data[sensor][devId]["hum"]=h
 						if devId in badSensors: del badSensors[devId]
@@ -117,7 +132,6 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 def readParams():
 		global sensorList, sensors, sendToIndigoSecs,enableTXpinsAsGpio,enableSPIpinsAsGpio, sensorRefreshSecs
 		global output
-		global tempUnits, pressureUnits, distanceUnits
 		global oldRaw, lastRead
 		global clockLightSensor
 		global addNewOneWireSensors
@@ -138,8 +152,6 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "output"				  in inp: output=				   (inp["output"])
-		if "tempUnits"			  in inp: tempUnits=			   (inp["tempUnits"])
-		if "pressureUnits"		  in inp: pressureUnits=		   (inp["pressureUnits"])
 		if "sensors"			  in inp: sensors =				   (inp["sensors"])
 		if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
 
@@ -165,7 +177,6 @@ def readParams():
 			 
 global sensorList, sensors,badSensors
 global startDHT
-global tempUnits 
 global regularCycle
 global oldRaw, lastRead
 global	sensorRefreshSecs
@@ -175,7 +186,6 @@ sensorRefreshSecs	= 90
 oldRaw				= ""
 lastRead			= 0
 startDHT			= ""
-tempUnits			="Celsius"
 loopCount			= 0
 sensorList			= []
 sensors				= {}
@@ -247,7 +257,7 @@ while True:
 							changed= 5
 							break
 						try:
-							U.logger.log(10,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]))
+							U.logger.log(20,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]))
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx
@@ -276,7 +286,7 @@ while True:
 
 
 		tt= time.time()
-		NSleep = int(sensorRefreshSecs)*2
+		NSleep = max(2.5, int(sensorRefreshSecs)*2) 
 		if tt- lastregularCycle > sensorRefreshSecs:
 			regularCycle = True
 			lastregularCycle  = tt

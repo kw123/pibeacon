@@ -1012,7 +1012,7 @@ class ADS1x15:
 				#print val, result
 				return val
 		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -1138,7 +1138,7 @@ class OPT3001:
 			self.simpleRW.write(self.setHihLimit)
 			time.sleep(0.8)
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def readLux(self):
 		try:
@@ -1161,7 +1161,7 @@ class OPT3001:
 				if (exp > 11 or lux > 83865.60) and nn < 10: continue  #out of bounce?
 				return lux
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			self.simpleRW.write(self.readStartSingle)
 			self.simpleRW.write(self.setLowLimit)
 			self.simpleRW.write(self.setHihLimit)
@@ -1426,7 +1426,7 @@ class SHT21:
 			temp -= 46.85
 			return temp
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 		
 
@@ -1445,7 +1445,7 @@ class SHT21:
 			hum -= 6
 			return min(hum,100.)
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return ""
 		
 
@@ -1528,7 +1528,7 @@ class AM2320:
 				raise CommunicationError("AM2320 CRC error.")
 			return buf_str[2:-2]
 		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "	"
 
 	def _am_crc16(self, buf):
@@ -1565,8 +1565,8 @@ class AM2320:
 			t = struct.unpack('>H', raw_data[-2:])[0] / 10.0
 			h = struct.unpack('>H', raw_data[-4:2])[0] / 10.0
 		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.logger.log(30, u"return  value: t="+ unicode(t)+"; h="+ unicode(h)	 )
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"return  value: t="+ unicode(t)+"; h="+ unicode(h)	 )
 		return t,h
 
 
@@ -1819,7 +1819,7 @@ class VEML6030:
 			#print A,W
 			return	A,W
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -1978,7 +1978,7 @@ class VEML7700:
 			##print A,W
 			return	A,W
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -2096,7 +2096,7 @@ class VEML6075:
 			return max(UVIA,0.), max(UVIB,0)
 
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -2740,7 +2740,7 @@ class VEML6040:
 			self.maxResult = 20000
 			self.itLast	   = 1
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 		
@@ -2817,7 +2817,7 @@ class VEML6040:
 			W= sorted(W_DATA_LUX)[1]
 			return	[R, G, B, W]
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "",""
 
 
@@ -2937,8 +2937,8 @@ def getT5403(sensor, data):
 				data= incrementBadSensor(devId,sensor,data)
 
 	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.logger.log(30, u" sensor bad T5403 @ "+ unicode(sensorT5403i))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(2, u" sensor bad T5403 @ "+ unicode(sensorT5403i))
 			
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -2976,8 +2976,8 @@ def getBMP(sensor, data):
 				if p < 0: 
 					raise ValueError("bad return value, pressure < 0") 
 			except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.logger.log(30, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
+					U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(20, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t == "":
@@ -2995,7 +2995,7 @@ def getBMP(sensor, data):
 				putValText(sensors[sensor][devId],[t,p],["temp","press"])
 				time.sleep(0.1)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3037,8 +3037,8 @@ def getBME(sensor, data,BMP=False):
 				if not BMP:
 					h = round( sensorBME280[devId].read_humidity() + float(sensors[sensor][devId]["offsetHum"]), 1)
 			except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.logger.log(30, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
+					U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(20, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t== "":
@@ -3064,7 +3064,7 @@ def getBME(sensor, data,BMP=False):
 					putValText(sensors[sensor][devId],[t,p],["temp","press"])
 				time.sleep(0.1)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3111,9 +3111,9 @@ def getSHT21(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3154,9 +3154,9 @@ def getLM75A(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3207,9 +3207,9 @@ def getAM2320(sensor, data):
 					else:
 						data= incrementBadSensor(devId,sensor,data)
 		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3246,7 +3246,7 @@ def getMCP9808(sensor, data):
 				data= incrementBadSensor(devId,sensor,data)
 		if sensor in data and data[sensor]=={}: del data[sensor]
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3298,7 +3298,7 @@ def getTCS34725(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	return data
 
@@ -3355,7 +3355,7 @@ def getMS5803(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3398,7 +3398,7 @@ def getADC121(sensor, data):
 				print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	return data
 
@@ -3438,7 +3438,7 @@ def getOPT3001(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3477,10 +3477,10 @@ def getVEML7700(sensor, data):
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3519,7 +3519,7 @@ def getVEML6030(sensor, data):
 			except: 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3559,10 +3559,10 @@ def getVEML6040(sensor, data):
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3606,7 +3606,7 @@ def getTMP102(sensor, data):
 			else:	 
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3648,7 +3648,7 @@ def getIS1145(sensor, data):
 			except:
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		data= incrementBadSensor(devId,sensor,data)
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3690,10 +3690,10 @@ def getVEML6075(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3732,7 +3732,7 @@ def getTSL2561(sensor, data):
 				data= incrementBadSensor(devId,sensor,data)
 		if sensor in data and data[sensor]=={}: del data[sensor]
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3790,7 +3790,7 @@ def getADS1x15(sensor, data):
 
 	except	Exception, e:
 		data= incrementBadSensor(devId,sensor,data)
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data	   
@@ -3849,7 +3849,7 @@ def getVEML6070(sensor, data):
 			except:
 				data= incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
 	return data
@@ -3894,7 +3894,7 @@ def getPCF8591(sensor, data):
 			else:
 					data[sensor][devId]["INPUT_0"]	= v[input]
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		data= incrementBadSensor(devId,sensor,data)
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -3948,7 +3948,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 			data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
 	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return data 
 
 
@@ -4600,6 +4600,7 @@ while True:
 		
 		delta =-1
 		changed = 0
+		xxx = 0
 		if lastData=={}: 
 			changed = 1
 		else:
@@ -4620,18 +4621,16 @@ while True:
 							break
 						try:
 							#print dd, lastData[sens][dd], data[sens][dd]
-							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx)
+							xxx = U.testBad( data[sens][devid][devType], lastData[sens][devid][devType], xxx )
 
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx
 								break
 						except	Exception, e:
-							#print e
-							#print lastData[sens][dd]
-							#print data[sens][dd]
+							U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							changed = 7
 							break
-		#print "changed? ", changed,	   tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor, data
+		#U.logger.log(20, "changed:{},  tt-lastMsg:{}, G.sendToIndigoSecs:{} , tt-lastMsg:{}, G.deltaChangedSensor:{}, data:{}".format(changed, tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor,data)  )
 		if data !={} and ( changed >0 or( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
 			lastMsg = tt
 			lastData=copy.copy(data)

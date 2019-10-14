@@ -30,8 +30,6 @@ os.system("rm  /home/pi/pibeacon/*.pyc > /dev/null 2>&1 ")
 
 os.system("rm  /home/pi/pibeacon/pygame.active")
 
-
-
 ## call main program
 os.system("cd /home/pi/pibeacon; /usr/bin/python /home/pi/pibeacon/master.py & ")
 

@@ -1,3 +1,16 @@
+Added features / changes in v7.112.314 @ 2019-10-xx
+===================================================
+
+1. switched from ifconfig to ip xx for network info on rpi if os is > 7 (jessie)
+2. checking network connectivity now checking for router instead of dns server
+3. improved handling of frequencies of sensor updates 
+4. some smaller menu corrections
+5. upgraded neopixel libraries to support rpi4
+5. changed DHT temp+humidity sensor to check temp twice and build average (takes ~ 3 secs)
+
+ 
+
+
 Added features / changes in v7.112.313 @ 2019-10-07
 ===================================================
 

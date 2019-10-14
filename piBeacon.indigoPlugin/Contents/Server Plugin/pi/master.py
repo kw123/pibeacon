@@ -96,6 +96,7 @@ def readNewParams(force=0):
 	global ifNetworkChanges
 	global typeForPWM, maxSizeOfLogfileOnRPI
 	global xWindows, startXonPi
+	global clearHostsFile
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -156,6 +157,7 @@ def readNewParams(force=0):
 		if u"ifNetworkChanges" 				in inp:	 ifNetworkChanges= 		     	     (inp["ifNetworkChanges"]) 
 		if u"maxSizeOfLogfileOnRPI" 		in inp:	 maxSizeOfLogfileOnRPI= 		 int(inp["maxSizeOfLogfileOnRPI"]) 
 		if u"startXonPi" 					in inp:	 startXonPi= 		 				 (inp["startXonPi"]) 
+		if u"clearHostsFile" 				in inp:	 clearHostsFile= 		 			 (inp["clearHostsFile"]) =="1"
 
 
 		setupX(action=startXonPi)
@@ -1274,7 +1276,8 @@ def cycleWifi():
 	eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 	#print "master:	 is wifi enabled : "+str(G.wifiEnabled)
 	if G.wifiEnabled:
-		if U.getIPNumberMaster()> 0:
+		indigoServerOn, changed, connected = U.getIPNumberMaster()
+		if not connected:
 			#print "master:	 cycle wlan0"
 			os.system("sudo /sbin/ifconfig wlan0 down; sudo /sbin/ifconfig wlan0 up")  # cycle wlan
 	return
@@ -1490,7 +1493,7 @@ def tryRestartNetwork():
 			ret = subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 			logger.log(30, u"(re)starting network, response: {}".format(ret))
 			time.sleep(10)
-			retCode, changed = U.getIPNumberMaster()
+			indigoServerOn, changed, connected = U.getIPNumberMaster()
 			if G.ipAddress != "":
 				U.restartMyself(reason=" ip number is back on")
 	except	Exception, e :
@@ -1528,8 +1531,9 @@ def execMaster():
 		global ifNetworkChanges
 		global typeForPWM, maxSizeOfLogfileOnRPI
 		global xWindows, startXonPi
+		global clearHostsFile
 
-
+		clearHostsFile			= False
 		xWindows				= ""
 		startXonPi				= "leaveAlone"
 		maxSizeOfLogfileOnRPI	= 10000000
@@ -1614,7 +1618,10 @@ def execMaster():
 		U.setLogging()
 
 
-		U.logger.log(30,"========================= starting ======  version: {}\n".format(masterVersion))
+
+
+		ret = subprocess.Popen("//bin/cat /etc/os-release " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
+		U.logger.log(30,"========================= starting master  version: {}".format(masterVersion) )
 
 
 		# make dir for our logfiles if they do not exist
@@ -1664,6 +1671,10 @@ def execMaster():
 		readNewParams(force=2)
 		U.logger.log(30, "START.. indigoServer IP:>>{}<<".format(G.ipOfServer) )
 
+		if clearHostsFile: 
+			U.logger.log(30, "resetting file /home/pi/.ssh/known_hosts")
+			os.system("sudo rm /home/pi/.ssh/known_hosts")  
+
 		checkLogfiles()
 
 		time.sleep(1)
@@ -1686,34 +1697,36 @@ def execMaster():
 		if G.networkType  in G.useNetwork and G.wifiType =="normal":
 			for ii in range(5):
 				if ii > 3 :
-					U.logger.log(30, " master no ip number working, giving up, running w/o ip number, setting mode to clockMANUAL")
+					U.logger.log(30, "no ip number working, giving up, running w/o ip number, setting mode to clockMANUAL")
 					G.networkType="clockMANUAL"
 					break
 	
-				retCode, changed = U.getIPNumberMaster()
-				if retCode > 1 or G.ipAddress == "":
+				indigoServerOn, changed, connected = U.getIPNumberMaster()
+				if not indigoServerOn  or G.ipAddress == "":
 					U.setNetwork("off")
 					time.sleep(5)
-					U.logger.log(30, " master no ip number working, trying again, retcode="+ str(retCode))
+					U.logger.log(30, "no ip number working, trying again, indigoServerOn:{}, ip:{}".format(indigoServerOn, G.ipAddress))
 				else:
 					U.clearNetwork()
+					U.logger.log(30, "ip number found  ip:{}".format(G.ipAddress))
 					break
 
 		else:
 			if G.networkType.find("clock") > -1 and G.wifiType =="normal":
 				for ii in range(2):
 					if ii > 1:
-						U.logger.log(30, " master no ip number working, giving up, setting mode to clockMANUAL")
+						U.logger.log(30, "no ip number working, giving up, setting mode to clockMANUAL")
 						G.networkType="clockMANUAL"
 						break
 	
-					retCode, changed = U.getIPNumberMaster()
-					if retCode > 1 or G.ipAddress == "":
+					indigoServerOn, changed,connected = U.getIPNumberMaster()
+					if not indigoServerOn or G.ipAddress == "":
 						U.setNetwork("off")
 						time.sleep(5)
-						U.logger.log(30, " master no ip number working, trying again, retcode="+ str(retCode))
+						U.logger.log(30, "no ip number working, trying again, indigoServerOn:{}, ip:{}".format(indigoServerOn, G.ipAddress))
 					else:
 						U.clearNetwork()
+						U.logger.log(30, "ip number found  ip:{}".format( G.ipAddress))
 						break
 	
 		readNewParams(force = 1)
@@ -1785,7 +1798,7 @@ def execMaster():
 					time.sleep(7)
 					startProgam("master.py", params="", reason=".. failed to connect to indigo server")
 					exit(0)
-				if U.testPing() >0:
+				if U.testPing(G.ipOfServer) >0:
 					readNewParams()
 					if time.time() - G.ipConnection > 600.: # after 10 minutes 
 						if enableRebootCheck.find("rebootPing") >-1:
@@ -1799,7 +1812,7 @@ def execMaster():
 							G.wifiEth["eth0"]["on"]     = "onIf"
 							G.wifiEth["eth0"]["useIP"]  = "useIf"
 							G.switchedToWifi = time.time()
-							U.getIPNumberMaster()
+							indigoServerOn, changed, connected = U.getIPNumberMaster()
 				else: 
 					U.logger.log(30, "can ping indigo server at ip:>>{}<<".format(G.ipOfServer))
 					break
@@ -1905,8 +1918,8 @@ def execMaster():
 		startingnetworkype	  = G.networkType
 		restartCLock		  = time.time() +  999999999.
 
-		retCode, changed = U.getIPNumberMaster(quiet=False)
-		if retCode ==0 and G.ipAddress !="":
+		indigoServerOn, changed, connected = U.getIPNumberMaster()
+		if indigoServerOn  and G.ipAddress !="":
 			U.setNetwork("on")
 	
 		if changed: 
@@ -1961,7 +1974,7 @@ def execMaster():
 				#check if IP number has changed, or if we should switch off wlan0 if eth0 is present 
 				if loopCount%24 == 0: # every 2 minutes
 					oldIP = G.ipAddress
-					retCode, changed = U.getIPNumberMaster(quiet=True)
+					indigoServerOn, changed, connected = U.getIPNumberMaster()
 
 					if	G.ipAddress =="" and G.networkType !="clockMANUAL" :
 						U.doReboot(tt=10., text=" reboot due to no IP nummber")				   
@@ -1971,13 +1984,13 @@ def execMaster():
 					if changed: 
 						U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (loop)")
 
-					if retCode == 0 and G.ipAddress !="":
+					if indigoServerOn == 0 and G.ipAddress !="":
 						U.setNetwork("on")
 
 					if oldIP != G.ipAddress:
 						eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
-						if eth0IP == "" or wifi0IP == "": # avoid restart when both are active
-							U.restartMyself(reason="changed ip number,.. eth0IP: {};  wifi0IP: {};  oldIP: {};  G.ipAddress:{}".format(eth0IP, wifi0IP, oldIP, G.ipAddress) )
+						if eth0IP == "" or wifi0IP == "": # avoid restart none is active
+							U.restartMyself(reason="changed ip number,.. eth0IP: {};  wifi0IP: {};  oldIP: {};  G.ipAddress:{};  G.eth0Active:{};  G.wifiActive:{}".format(eth0IP, wifi0IP, oldIP, G.ipAddress,G.eth0Active,G.wlanActive) )
 
 
 		##########   check if pgms are running
@@ -2087,7 +2100,7 @@ def execMaster():
 						os.system("sudo /sbin/hwclock -w")
 
 					if (G.networkStatus).find("indigo") > -1 and (G.networkType).find("clock") ==-1:
-						if U.testPing()==2:				# if no ping gets return we assume we are not connected, this happens after powerfailure. the router comes aback after rpi and wifi has given up, need to restart
+						if U.testPing(G.ipOfServer)==2:				# if no ping gets return we assume we are not connected, this happens after powerfailure. the router comes aback after rpi and wifi has given up, need to restart
 							if time.time() - G.ipConnection > 600.: # after 10 minutes 
 								if enableRebootCheck.find("rebootPing") >-1:
 									U.sendURL(sendAlive="reboot")
@@ -2108,7 +2121,7 @@ def execMaster():
 							if G.networkType =="clockMANUAL"  and (time.time() - restartCLock)> 0  :
 								xx = G.networkType
 								G.networkType="x"
-								ipOK, changed = U.getIPNumberMaster(quiet=True)
+								indigoServerOn, changed, connected = U.getIPNumberMaster()
 								G.networkType = xx
 								#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
 
@@ -2130,7 +2143,7 @@ def execMaster():
 								ipOK, changed = U.getIPNumberMaster(quiet=False)
 								G.networkType = xx
 								U.logger.log(20, "network back on networkStatus:{}, ipOK:{}".format( G.networkStatus, ipOK) )
-								if ipOK == 0 and G.networkStatus.find("Inet") >-1:
+								if indigoServerOn == 0 and G.networkStatus.find("Inet") >-1:
 									if    ifNetworkChanges == "restartMaster":
 										U.restartMyself(reason="network back up")
 									elif  ifNetworkChanges == "reboot":

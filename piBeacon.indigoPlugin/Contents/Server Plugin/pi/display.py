@@ -1908,7 +1908,7 @@ while runLoop:
 					scrollPages, maxPagesY, maxPagesX, scrollxy, lastScrollxy, lastscrollPages=	 setScrollPages(scrollxy,scrollPages)
 					if xwindows == "on" :
 						if int(xwindowSize[0]) != xmax or int(xwindowSize[1]) != ymax:
-							U.logger.log(10, "=== 3 start new disp dev: = size:{}".format(xwindowSize))
+							U.logger.log(10, "=== 3 start new disp dev: = size:{};   old  x:{}; y:{}".format(xwindowSize, xmax, ymax))
 							fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev, matrix, overwriteXmax=xwindowSize[0] , overwriteYmax=xwindowSize[1], reset = "reset" )
 							U.logger.log(10, "=== 3 start new disp dev: = sizes:{}; {}".format(xmax, ymax))
 
