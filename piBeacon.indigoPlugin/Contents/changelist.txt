@@ -1,4 +1,18 @@
-Added features / changes in v7.112.314 @ 2019-10-xx
+Added features / changes in v7.112.317@ 2019-10-20
+===================================================
+
+1. fixed rpi device edit "Field ID sleepAfterBootLabel was already used. "
+
+
+
+Added features / changes in v7.112.316 @ 2019-10-20
+===================================================
+
+1. fixed GPIOINPUT device type
+2. catch error reading beacons w short message 
+
+ 
+Added features / changes in v7.112.314 @ 2019-10-13
 ===================================================
 
 1. switched from ifconfig to ip xx for network info on rpi if os is > 7 (jessie)

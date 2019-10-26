@@ -533,9 +533,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="sleepAfterBootLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
-				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
-			</Field>
 			<Field id="labelwebAdhoc0"               type="label" > 
 				<Label>== Webserver options:...</Label>
 			</Field>

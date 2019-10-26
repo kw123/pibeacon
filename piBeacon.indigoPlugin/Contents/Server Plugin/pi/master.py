@@ -51,8 +51,7 @@ def cleanupOldFiles():
 	os.system("rm	 {}INPUTRotata*             >/dev/null 2>&1".format(G.homeDir))
 	os.system("rm	 {}INPUTRotateSwitchGrey.py >/dev/null 2>&1".format(G.homeDir))
 
-	restart=False
-	return restart
+	return False
 
 
 
@@ -173,7 +172,6 @@ def readNewParams(force=0):
 					if not U.pgmStillRunning("pigpiod"): 	
 						U.logger.log(30, "restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
 						time.sleep(20)
-						dosundialShutdown()
 						U.restartMyself(reason="pigpiod not running")
 						exit(0)
 
@@ -549,25 +547,24 @@ def setACTIVEorKILL(tag,pgm,check,force=0):
 
 
 ####################      #########################
-def doWeNeedToStartTouch(sensors,sensorsOld):
+def doWeNeedToStartTouch(sensorsI, sensorsOld):
 	try:
-		for sensor in sensors:
 			for n in range(30):
-				sensor="INPUTtouch12-"+str(n)
-				if sensor not in sensors: continue
+				sensor = "INPUTtouch12-"+str(n)
+				if sensor not in sensorsI: continue
 				if sensor not in sensorsOld: return 1
-				for devId  in sensors[sensor]:
-					if "gpio" not in sensors[sensor][devId]: continue
+				for devId  in sensorsI[sensor]:
+					if "gpio" not in sensorsI[sensor][devId]: continue
 					if devId not in sensorsOld[sensor]: return 1
-					ss = sensors[sensor][devId]["gpio"]
+					ss = sensorsI[sensor][devId]["gpio"]
 					if ss not in sensorsOld[sensor][devId]: return 1
 					for nn in range(len(ss)):
 						if "gpio" not in ss[nn]: return 1
 				U.logger.log(10, "enabled sensor " +sensor)
-		return 0
+			return 0
 	except	Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		U.logger.log(30,"start INPUTtouch12: "+ unicode(sensors))
+		U.logger.log(30,"start INPUTtouch12: "+ unicode(sensorsI))
 	return 0
 
 
@@ -1116,9 +1113,9 @@ def checkIfShutDownVoltage():
 	return 
 
 ####################      #########################
-def writeJson2(data, fileName, lastWriteBatteryStatus):
+def writeJson2(data, fileName, lastWriteBatteryStatusI):
 	try:
-		if time.time() - lastWriteBatteryStatus < 20: return lastWriteBatteryStatus
+		if time.time() - lastWriteBatteryStatusI < 20: return lastWriteBatteryStatusI
 		U.writeJson(fileName, data, sort_keys=True, indent=0)
 	except: pass
 	return time.time()
@@ -1915,7 +1912,6 @@ def execMaster():
 
 
 		startingnetworkStatus = G.networkStatus
-		startingnetworkype	  = G.networkType
 		restartCLock		  = time.time() +  999999999.
 
 		indigoServerOn, changed, connected = U.getIPNumberMaster()

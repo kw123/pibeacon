@@ -1962,19 +1962,22 @@ def readINPUTcount():
 			logger.log(10, u" readINPUTcount-0:{}\nddd: {}".format(IPC, ddd) )
 		except:
 			pass
+		## check if change from list to dict
+		fix = False
 		for p in IPC:
 			try:
 				int(IPC[str(p)])
 			except:
-				IPC[str(p)] =0
-				
+				try: IPC[str(p)] =0
+				except: fix =True
+		if fix: IPC ={}	
 		if len(IPC) < 10:
 			IPC={}
 			for ii in range(1,30):
 				IPC[str(ii)] = 0
 		out={}
 		for p in IPC:
-			out[int(p)] = IPC[p]
+			out[str(p)] = IPC[p]
 		writeINPUTcount(out)
 		return out
 
