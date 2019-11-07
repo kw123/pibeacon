@@ -21,16 +21,17 @@ import Queue
 import cProfile
 import pstats
 import logging
-import MAC2Vendor
+
+import MACMAP.MAC2Vendor as M2Vclass
 #import pydevd_pycharm
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
 
 
 try:
-    # noinspection PyUnresolvedReferences
-    import indigo
+	# noinspection PyUnresolvedReferences
+	import indigo
 except ImportError:
-    pass
+	pass
 ################################################################################
 ##########  Static parameters, not changed in pgm
 ################################################################################
@@ -152,6 +153,7 @@ _GlobalConst_emptyRPISENSOR =	{
 
 _GlobalConst_allGPIOlist = [
 	  ("-1", "do not use")
+	, ("1",  "GPIO01 ")
 	, ("2",  "GPIO02 = pin # 3 -- I2C")
 	, ("3",  "GPIO03 = pin # 5 -- I2C")
 	, ("4",  "GPIO04 = pin # 7 -- ONE WIRE")
@@ -245,7 +247,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 _GlobalConst_lightSensors =["i2cVEML6075","i2cIS1145","i2cOPT3001","i2cTCS34725","i2cTSL2561","i2cVEML6070","i2cVEML6040","i2cVEML7700"]
 _GlobalConst_i2cSensors				 = ["si7021","bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
-_GlobalConst_allowedOUTPUT			= [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
+_GlobalConst_allowedOUTPUT			= [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTi2cRelay", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
 _GlobalConst_allowedpiSends			= [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
 
 
@@ -408,8 +410,7 @@ class Plugin(indigo.PluginBase):
 		self.waitForMAC2vendor = False
 		self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get(u"enableMACtoVENDORlookup","21"))
 		if self.enableMACtoVENDORlookup != "0":
-			thePath = self.indigoPreferencesPluginDir+"mac2Vendor/"
-			self.M2V = MAC2Vendor.MAP2Vendor( pathToMACFiles=self.indigoPreferencesPluginDir+"mac2Vendor/", refreshFromIeeAfterDays = self.enableMACtoVENDORlookup )
+			self.M2V =  M2Vclass.MAP2Vendor( pathToMACFiles=self.indigoPreferencesPluginDir+"mac2Vendor/", refreshFromIeeAfterDays = self.enableMACtoVENDORlookup, myLogger = self.indiLOG.log )
 			self.waitForMAC2vendor = self.M2V.makeFinalTable()
 
 	####-----------------	 ---------
@@ -428,7 +429,7 @@ class Plugin(indigo.PluginBase):
 			if not os.path.exists(self.indigoPreferencesPluginDir):
 				os.mkdir(self.indigoPreferencesPluginDir)
 			if not os.path.exists(self.indigoPreferencesPluginDir):
-				self.indiLOG.critical(u"error creating the plugin data dir did not work, can not create: {}".format(self.indigoPreferencesPluginDir) )
+				self.indiLOG.critical(u"error creating the plugin data dir did not work, can not create: {}".format(self.indigoPreferencesPluginDir)  )
 				self.sleep(1000)
 				exit()
 
@@ -497,7 +498,7 @@ class Plugin(indigo.PluginBase):
 
 					if (dev.deviceTypeId.lower()) =="rpi":
 						props[u"isRPIDevice"] = True
-						props[u"typeOfBeacon"] =u"rPI"
+						props[u"typeOfBeacon"] = u"rPI"
 						upd = True
 						if props[u"address"] in self.beacons:
 							self.beacons[props[u"address"]][u"typeOfBeacon"] = u"rPI"
@@ -561,7 +562,7 @@ class Plugin(indigo.PluginBase):
 					try:
 						beacon = props[u"address"]
 					except:
-						self.indiLOG.log(40,"device has no address: " + dev.name + u" " + unicode(dev.id) +
+						self.indiLOG.log(40, "device has no address: " + dev.name + u" " + unicode(dev.id) +
 							unicode(props) + u" " + unicode(dev.globalProps) + u" please delete and let the plugin create the devices")
 						continue
 
@@ -577,6 +578,24 @@ class Plugin(indigo.PluginBase):
 
 
 				if dev.deviceTypeId.find(u"OUTPUTgpio") > -1:
+					xxx = json.loads(props[u"deviceDefs"])
+					nn = len(xxx)
+					update=False
+					for n in range(nn):
+						if u"gpio" in xxx[n]:
+							if xxx[n][u"gpio"] == "-1":
+								del xxx[n]
+								continue
+							if	u"initialValue" not in xxx[n]:
+								xxx[n][u"initialValue"] ="-"
+								update=True
+					if update: 
+						props[u"deviceDefs"] = json.dumps(xxx)
+						self.deviceStopCommIgnore = time.time()
+						dev.replacePluginPropsOnServer(props)
+					###indigo.server.log(dev.name+" "+unicode(props))
+
+				if dev.deviceTypeId.find(u"OUTPUTi2cRelay") > -1:
 					xxx = json.loads(props[u"deviceDefs"])
 					nn = len(xxx)
 					update=False
@@ -839,7 +858,7 @@ class Plugin(indigo.PluginBase):
 				self.pressureUnits			= self.pluginPrefs.get(u"pressureUnits", u"hPascal")
 			except:
 				self.pressureUnits			= u"hPascal"
-
+ 
 			try:
 				self.saveValuesDictChanged	= False
 				self.saveValuesDict			= self.pluginPrefs.get(u"saveValuesDict", indigo.Dict())
@@ -1312,8 +1331,8 @@ class Plugin(indigo.PluginBase):
 		self.saveTcpipSocketStats()
 
 ####-------------------------------------------------------------------------####
-	def	saveTcpipSocketStats(self):
-		 self.writeJson(self.dataStats, fName=self.indigoPreferencesPluginDir + u"dataStats", fmtOn=True )
+	def saveTcpipSocketStats(self):
+		self.writeJson(self.dataStats, fName=self.indigoPreferencesPluginDir + u"dataStats", fmtOn=True )
 
 
 ####------================----------- CARS ------================-----------
@@ -3153,7 +3172,7 @@ class Plugin(indigo.PluginBase):
 							theDictList[0][u"newenableRebootCheck"]   = self.RPI[pi]["enableRebootCheck"]
 						if typeId =="rPI" and pi == "-1":
 								theDictList[0][u"newMACNumber"] = "00:00:00:00:pi:00"
-					except:
+					except Exception, e:
 						self.indiLOG.log(30,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 				return theDictList 
@@ -3597,13 +3616,14 @@ class Plugin(indigo.PluginBase):
 
 	 
 
-			if typeId.find(u"OUTPUTgpio-") > -1:
+			if typeId.find(u"OUTPUTgpio-") > -1 or typeId.find(u"OUTPUTi2cRelay") > -1:
+				self.indiLOG.log(20,"into validate relay")
 				update = 0
 				active = ""
 				pi = int(valuesDict[u"piServerNumber"])
 				piU = unicode(pi)
 				for pi0 in range(_GlobalConst_numberOfRPI):
-					if pi == pi0:														continue
+					if pi == pi0:												continue
 					piU0 = unicode(pi0)
 					if u"output" not in self.RPI[piU0]:							continue
 					if typeId not in self.RPI[piU0][u"output"]:					continue
@@ -3626,6 +3646,7 @@ class Plugin(indigo.PluginBase):
 					self.RPI[piU][u"output"][typeId][unicode(devId)] = []
 					update = 1
 				new = json.loads(valuesDict[u"deviceDefs"])
+				self.indiLOG.log(20,"deviceDefs:{}".format(valuesDict[u"deviceDefs"]))
 
 				try:
 					if len(new) != len(self.RPI[piU][u"output"][typeId][unicode(devId)]):
@@ -3641,7 +3662,8 @@ class Plugin(indigo.PluginBase):
 
 				self.RPI[piU][u"output"][typeId][unicode(devId)] = new
 
-				pinMappings ="(#,gpio,type,init)"
+				if typeId.find(u"OUTPUTi2cRelay") ==-1: pinMappings ="(#,gpio,type,init)"
+				else:									pinMappings ="(ch#,type,init)"
 				for n in range(len(new)):
 					if u"gpio" in new[n]:
 						pinMappings += "(u" + unicode(n) + ":" + new[n][u"gpio"]+"," + new[n][u"outType"] +"," +  new[n][u"initialValue"]  +");"
@@ -3678,10 +3700,10 @@ class Plugin(indigo.PluginBase):
 					piU = unicode(pi)
 					if u"piServerNumber" in props:
 						if pi != int(props[u"piServerNumber"]):
-							 self.updateNeeded += " fixConfig "
-							 self.rPiRestartCommand[pi] += "master,"
-							 self.rPiRestartCommand[int(props[u"piServerNumber"])] += "master,"
-							 self.setONErPiV(props[u"piServerNumber"],"piUpToDate",[u"updateParamsFTP"])
+							self.updateNeeded += " fixConfig "
+							self.rPiRestartCommand[pi] += "master,"
+							self.rPiRestartCommand[int(props[u"piServerNumber"])] += "master,"
+							self.setONErPiV(props[u"piServerNumber"],"piUpToDate",[u"updateParamsFTP"])
 
 					valuesDict[u"address"] = "PI-" + piU
 					if typeId not in self.RPI[piU][u"input"]:
@@ -4787,6 +4809,7 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict[u"pinMappings"] = pinMappings
 			valuesDict[u"deviceDefs"] = json.dumps(xxx)
+			self.indiLOG.log(10, u"len:{};  deviceDefs:{}".format(nChannels, valuesDict[u"deviceDefs"]))
 			return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -4935,11 +4958,11 @@ class Plugin(indigo.PluginBase):
 		if pi == 999:
 			for pi in range(_GlobalConst_numberOfRPI):
 				piU = unicode(pi)
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python;sleep 4 ;sudo halt &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall -9 python;sleep 4 ;sudo halt &"}])
 				self.indiLOG.log(20, u"hard shutdown of rpi  "+self.RPI[piU][u"ipNumberPi"] +";  "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		else:
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo killall python;sleep 4; sudo halt &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2 ;sudo killall -9 python;sleep 4; sudo halt &"}])
 				self.indiLOG.log(20, u"hard shutdown of rpi  "+self.RPI[piU][u"ipNumberPi"] +";  "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		return
@@ -4961,11 +4984,11 @@ class Plugin(indigo.PluginBase):
 		if pi == 999:
 			for pi in range(_GlobalConst_numberOfRPI):
 				piU = unicode(pi)
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python;sleep 4;sudo reboot -f &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall -9 python;sleep 4;sudo reboot -f &"}])
 				self.indiLOG.log(20, u"hard reboot of rpi	 "+self.RPI[piU][u"ipNumberPi"] +";   "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		else:
-				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall python;sleep 4;sudo reboot -f &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sync;sleep 2;sudo killall -9 python;sleep 4;sudo reboot -f &"}])
 				self.indiLOG.log(20, u"hard reboot of rpi	 "+self.RPI[piU][u"ipNumberPi"] +";   "+ json.dumps(out) )
 				self.presendtoRPI(pi,out)
 		return
@@ -4986,11 +5009,11 @@ class Plugin(indigo.PluginBase):
 		if pi == 999:
 			for pi in range(_GlobalConst_numberOfRPI):
 				piU = unicode(pi)
-				out= json.dumps([{u"command":"general","cmdLine":"sudo killall python;sleep 4; sudo reboot &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sudo killall -9 python;sleep 4; sudo reboot &"}])
 				self.indiLOG.log(20, u"regular reboot of rpi    {};  {}".format(self.RPI[piU][u"ipNumberPi"], json.dumps(out)) )
 				self.presendtoRPI(pi,out)
 		else:
-				out= json.dumps([{u"command":"general","cmdLine":"sudo killall python;sleep 4; sudo reboot &"}])
+				out= json.dumps([{u"command":"general","cmdLine":"sudo killall -9 python;sleep 4; sudo reboot &"}])
 				self.indiLOG.log(20, u"regular reboot of rpi    {};  {}".format(self.RPI[piU][u"ipNumberPi"], json.dumps(out)) )
 				self.presendtoRPI(pi,out)
 
@@ -6983,8 +7006,8 @@ class Plugin(indigo.PluginBase):
 				  (json.dumps({u"outputDev":vd[u"outputDev"],"device": typeId, "restoreAfterBoot": False, u"intensity":intensity,"repeat":repeat,"resetInitial":resetInitial})).strip(u"}").replace(u"false","False").replace(u"true","True")+"\n,\"command\":'"+json.dumps(cmds) +"'})"+"\n")
 				self.indiLOG.log(20, u"vd: "+unicode(vd))
 
-			chList =[{u"key":"OUTPUT","value": unicode(cmds).replace(u" ","")}]
-			chList.append({u"key":"status","value": round(maxRGB/2.55)})
+			chList =[{u"key":u"OUTPUT",u"value": unicode(cmds).replace(u" ","")}]
+			chList.append({u"key":u"status",u"value": round(maxRGB/2.55)})
 			self.execUpdateStatesList(dev,chList)
 			if lightON:
 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOn)
@@ -7498,9 +7521,9 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(20, "actionControlDimmerRelay neopixel-dimmer not enabled:{}".format(unicode(dev0.name)) )
 					return
 				###action = dev.deviceAction
-				if u"pixelMenulist" in props0 and props0[u"pixelMenulist"] !="":
-					 position = props0[u"pixelMenulist"]
-					 if position.find(u"*") >-1:
+				if u"pixelMenulist" in props0 and props0[u"pixelMenulist"] != "":
+					position = props0[u"pixelMenulist"]
+					if position.find(u"*") >-1:
 						position='["*","*"]'
 				else:
 					try:
@@ -7714,6 +7737,13 @@ class Plugin(indigo.PluginBase):
 			if dev.deviceTypeId.find(u"OUTPUTgpio") ==-1: continue
 			xList.append((dev.id,dev.name))
 		return xList
+####-------------------------------------------------------------------------####
+	def filterOUTPUTrelaydevicesACTION(self, valuesDict=None, filter="", typeId="",devId=""):
+		xList = []
+		for dev in indigo.devices.iter("props.isOutputDevice"):
+			if dev.deviceTypeId.find(u"OUTPUTi2cRelay") ==-1: continue
+			xList.append((dev.id,dev.name))
+		return xList
 
 ####-------------------------------------------------------------------------####
 	def filterOUTPUTchannelsACTION(self, valuesDict=None, filter="", typeId="", devId=""):
@@ -7805,6 +7835,8 @@ class Plugin(indigo.PluginBase):
 		props = dev.pluginProps
 		valuesDict[u"typeId"]	  = dev.deviceTypeId
 		valuesDict[u"devId"]	  = devId
+		if "i2cAddress" in props:
+			valuesDict[u"i2cAddress"]	  = props[u"i2cAddress"]
 		if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, "setPinCALLBACKmenu  valuesDict\n{}".format(valuesDict))
 		self.setPin(valuesDict)
 
@@ -7824,7 +7856,7 @@ class Plugin(indigo.PluginBase):
 							return	0
 						return	float(startAtDateTimeIN)
 					except: 
-						 return 0
+						return 0
 			else:
 				try:
 					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, "startAtDateTimeIN: doing datetime")
@@ -7869,7 +7901,7 @@ class Plugin(indigo.PluginBase):
 
 			startAtDateTime = 0
 			if u"startAtDateTime" in valuesDict:
-				  startAtDateTime = self.setDelay(startAtDateTimeIN=valuesDict[u"startAtDateTime"])
+				startAtDateTime = self.setDelay(startAtDateTimeIN=valuesDict[u"startAtDateTime"])
 
 			if u"restoreAfterBoot"	 in valuesDict:
 				restoreAfterBoot   = valuesDict[u"restoreAfterBoot"]
@@ -8017,9 +8049,9 @@ class Plugin(indigo.PluginBase):
 						out = cmd + "," + unicode(pulseDown)
 					elif cmd == "continuousUpDown":
 						out = cmd + "," + unicode(pulseUp) + "" + unicode(pulseUp) + "," + unicode(nPulses)
-					out = cmd + "," + unicode(analogValue)
-					out = cmd + "," + unicode(rampTime)
-					self.addToStatesUpdateDict(unicode(dev.id),"OUTPUT", out)
+					out += cmd + "," + unicode(analogValue)
+					out += cmd + "," + unicode(rampTime)
+					self.addToStatesUpdateDict(unicode(dev.id), "OUTPUT", out)
 				except Exception, e:
 					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					outN = 0
@@ -8036,7 +8068,7 @@ class Plugin(indigo.PluginBase):
 					line +="\n	,\"pulseDown\":\""+unicode(pulseDown)+"\""
 					line +="\n	,\"rampTime\":\""+unicode(rampTime)+"\""
 					line +="\n	,\"analogValue\":\""+unicode(analogValue)+"\"})\n"
-					line+= "##=======	end	   =====\n"
+					line += "##=======	end	   =====\n"
 					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, "\n"+line+"\n")
 				except:
 					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, u"sending command to rPi at " + ip + "; port: " + unicode(self.rPiCommandPORT) +
@@ -8048,7 +8080,10 @@ class Plugin(indigo.PluginBase):
 				self.executeUpdateStatesDict(onlyDevID = unicode(dev.id), calledFrom="setPin")
 				return
 
-			if typeId.find(u"OUTPUTgpio") > -1 :
+			if typeId.find(u"OUTPUTgpio") > -1 or typeId.find(u"OUTPUTi2cRelay") > -1:
+				i2cAddress = ""
+				if u"i2cAddress" in valuesDict:
+					i2cAddress = valuesDict[u"i2cAddress"]
 				if u"GPIOpin" in valuesDict:
 					GPIOpin = valuesDict[u"GPIOpin"]
 					deviceDefs = json.loads(valuesDict[u"deviceDefs"])
@@ -8111,6 +8146,17 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", True)
 						else:
 							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", False)
+				if typeId == "OUTPUTi2cRelay":
+					b = ""
+					if cmd == "up":
+						b = 100
+					elif cmd == "down":
+						b = 0
+					if b != "" and "onOffState" in dev.states:
+						if b >1:
+							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", True)
+						else:
+							self.addToStatesUpdateDict(unicode(dev.id),"onOffState", False)
 
 
 				try:
@@ -8123,9 +8169,9 @@ class Plugin(indigo.PluginBase):
 					elif cmd == "pulseDown":
 						out = cmd + "," + unicode(pulseDown)
 					elif cmd == "continuousUpDown":
-						out = cmd + "," + unicode(pulseUp) + "" + unicode(pulseUp) + "," + unicode(nPulses)
+						out = cmd + "," + unicode(pulseUp) + "," + unicode(pulseUp) + "," + unicode(nPulses)
 					elif cmd == "rampUp" or cmd == "rampDown" or cmd == "rampUpDown":
-						out = cmd + "," + unicode(pulseUp) + "" + unicode(pulseUp) + "," + unicode(nPulses)+ "," + unicode(rampTime)
+						out = cmd + "," + unicode(pulseUp) + "," + unicode(pulseUp) + "," + unicode(nPulses)+ "," + unicode(rampTime)
 					elif cmd == "analogWrite":
 						out = cmd + "," + unicode(analogValue)
 					outN = int(output)
@@ -8147,17 +8193,17 @@ class Plugin(indigo.PluginBase):
 					line +="\n	,\"pulseDown\":\""+unicode(pulseDown)+"\""
 					line +="\n	,\"rampTime\":\""+unicode(rampTime)+"\""
 					line +="\n	,\"analogValue\":\""+unicode(analogValue)+"\""
-					line +="\n	,\"analogValue\":\""+unicode(analogValue)+"\""
+					line +="\n	,\"i2cAddress\":\""+unicode(i2cAddress)+"\""
 					line +="\n	,\"GPIOpin\":\""+unicode(GPIOpin)+"\"})\n"
 					line+= "##=======  end  =====\n"
 					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, "\n"+line+"\n")
 				except:
 					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, u"sending command to rPi at " + ip + "; port: " + unicode(self.rPiCommandPORT) + " pin: " +
-							   unicode(GPIOpin) + "; GPIOpin: " + unicode(GPIOpin) + "/OUTPUT#" + unicode(outN) + "; cmd: " +
+							   unicode(GPIOpin) + "; GPIOpin: " + unicode(GPIOpin) + "OUTPUT#" + unicode(outN) + "i2cAddress" + unicode(i2cAddress) + "; cmd: " +
 							   unicode(cmd) + ";  pulseUp: " + unicode(pulseUp) + ";  pulseDown: " +
 							   unicode(pulseDown) + "; nPulses: " + unicode(nPulses) + "; analogValue: " + unicode(analogValue)+ "; rampTime: " + unicode(rampTime)+ ";  restoreAfterBoot: " + unicode(restoreAfterBoot)+ "; startAtDateTime: " + startAtDateTime)
 
-				self.sendGPIOCommand(ip, pi, typeId, cmd, GPIOpin=GPIOpin, pulseUp=pulseUp, pulseDown=pulseDown, nPulses=nPulses, analogValue=analogValue, rampTime=rampTime, restoreAfterBoot=restoreAfterBoot , startAtDateTime=startAtDateTime, inverseGPIO =inverseGPIO, devId=devId )
+				self.sendGPIOCommand(ip, pi, typeId, cmd, GPIOpin=GPIOpin, i2cAddress=i2cAddress, pulseUp=pulseUp, pulseDown=pulseDown, nPulses=nPulses, analogValue=analogValue, rampTime=rampTime, restoreAfterBoot=restoreAfterBoot , startAtDateTime=startAtDateTime, inverseGPIO =inverseGPIO, devId=devId )
 				self.executeUpdateStatesDict(onlyDevID= devIds, calledFrom="setPin END")
 				return
 
@@ -8270,6 +8316,8 @@ class Plugin(indigo.PluginBase):
 				return
 			valuesDict[u"deviceDefs"] = props[u"deviceDefs"]
 			valuesDict[u"piServerNumber"] = props[u"piServerNumber"]
+			if "i2cAddress" in props:
+				valuesDict[u"i2cAddress"] = props[u"i2cAddress"]
 
 
 		except:
@@ -9390,14 +9438,14 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def findAnyTaskPi(self, item):
 		for pi in range(_GlobalConst_numberOfRPI):
-		   if self.RPI[unicode(pi)][item] !=[]: 
-			return True
+			if self.RPI[unicode(pi)][item] !=[]:
+				return True
 		return False
 
 ####-------------------------------------------------------------------------####
 	def findTaskPi(self, item,findTask):
 		for pi in range(_GlobalConst_numberOfRPI):
-		   if findTask in self.RPI[unicode(pi)][item]:	return True
+			if findTask in self.RPI[unicode(pi)][item]:	return True
 		return False
 
 ####-------------------------------------------------------------------------####
@@ -11306,7 +11354,7 @@ class Plugin(indigo.PluginBase):
 			#if self.decideMyLog(u"Special"): self.indiLOG.log(10, u"output input  pi" + unicode(pi) + "; data " + unicode(outputs))
 
 			for output in outputs:
-				if output.find("OUTPUTgpio") == -1: continue
+				if output.find("OUTPUTgpio") == -1 and output.find("OUTPUTi2cRelay") == -1: continue
 
 				devUpdate = {}
 				for devIds in outputs[output]:
@@ -11347,7 +11395,7 @@ class Plugin(indigo.PluginBase):
 					else:
 						whichKeysToDisplay = ""
 
-					if output.find("OUTPUTgpio-1") > -1:
+					if output.find("OUTPUTgpio-1") > -1 or output.find("OUTPUTi2cRelay") > -1:
 						if self.decideMyLog(u"SensorData"): self.indiLOG.log(10, output+" received "+ uData)
 						self.OUTPUTgpio1(dev, props, data)
 						continue
@@ -11679,9 +11727,9 @@ class Plugin(indigo.PluginBase):
 					if sensor == "as3935":
 						try:
 							if data[u"eventType"]  == "no Action yet":
-								 self.addToStatesUpdateDict(unicode(dev.id),"eventType", "no Data") 
+								self.addToStatesUpdateDict(unicode(dev.id),"eventType", "no Data")
 							elif data[u"eventType"]	 == "no lightning today":
-								 self.addToStatesUpdateDict(unicode(dev.id),"eventType", "no lightning today") 
+								self.addToStatesUpdateDict(unicode(dev.id),"eventType", "no lightning today")
 							elif data[u"eventType"]	 == "measurement":
 								self.addToStatesUpdateDict(unicode(dev.id),"eventType", "measurement") 
 								if data[u"lightning"]  == "lightning detected":
@@ -11705,9 +11753,9 @@ class Plugin(indigo.PluginBase):
 										indigo.variable.updateValue("lightningEventDate",datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 								elif data[u"lightning"].find("Noise") == 0: 
-									 self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- sensitivity ") 
+									self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- sensitivity ")
 								elif data[u"lightning"].find("Disturber") == 0: 
-									 self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- Disturber event ") 
+									self.addToStatesUpdateDict(unicode(dev.id),"lightning", "calibrating,- Disturber event ")
 						except Exception, e:
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							self.indiLOG.log(40,unicode(props) +"\n"+ unicode(data))
@@ -11986,7 +12034,7 @@ class Plugin(indigo.PluginBase):
 				elif self.pressureUnits == "Torr":
 					p *= 0.00750063; pu = (u"%6d" % p + u" Torr") ;				  decimalPlaces =0
 				elif self.pressureUnits == "inches":
-					 p *= 0.000295299802; pu = (u"%6.2f" % p + u' "Hg') ;		  decimalPlaces =2
+					p *= 0.000295299802; pu = (u"%6.2f" % p + u' "Hg') ;		  decimalPlaces =2
 				elif self.pressureUnits == "PSI":
 					p *= 0.000145038; pu = (u"%6.2f" % p + u" PSI");			  decimalPlaces =2
 				elif self.pressureUnits == "hPascal":
@@ -12161,7 +12209,6 @@ class Plugin(indigo.PluginBase):
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat) 
 			countList = [(0,0),(0,0)] # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
 			if "countList" in props: countList= json.loads(props["countList"])
-			dd = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			if u"count" in data:
 				try: cOld = float(dev.states[u"count"])
 				except: cOld = 0
@@ -13973,6 +14020,14 @@ class Plugin(indigo.PluginBase):
 					elif cmd == "disable":
 						cmd1 = {u"device": typeId, u"command": cmd, u"pin": GPIOpin, u"devId": devId}
 
+				elif typeId.find(u"OUTPUTi2cRelay") >- 1:
+					if cmd == "up" or cmd == "down":
+						cmd1 = {u"device": typeId, u"command": cmd, u"pin": GPIOpin, u"restoreAfterBoot": restoreAfterBoot, u"startAtDateTime": startAtDateTime, u"inverseGPIO": inverseGPIO, u"devId": devId, "i2cAddress":i2cAddress}
+					elif cmd in[u"pulseUp","pulseDown","continuousUpDown"]:
+						cmd1 = {u"device": typeId, u"command": cmd, u"pin": GPIOpin, u"values": {"pulseUp":pulseUp,"pulseDown": pulseDown,"nPulses":nPulses}, u"restoreAfterBoot": restoreAfterBoot, u"startAtDateTime": startAtDateTime, u"inverseGPIO": inverseGPIO, u"devId": devId, "i2cAddress":i2cAddress}
+					elif cmd == "disable":
+						cmd1 = {u"device": typeId, u"command": cmd, u"pin": GPIOpin, u"devId": devId}
+
 				elif typeId.find(u"display") >- 1:
 					if cmd == "up" or cmd == "down":
 						cmd1 = {u"device": typeId, u"command": cmd,	 "restoreAfterBoot": restoreAfterBoot, u"devId": devId}
@@ -14603,7 +14658,7 @@ class Plugin(indigo.PluginBase):
 					if not devOut.enabled: continue
 					propsOut= devOut.pluginProps
 					if u"piServerNumber" in propsOut and propsOut[u"piServerNumber"] != unicode(pi): continue
-					if typeId.find(u"OUTPUTgpio") >-1:
+					if typeId.find(u"OUTPUTgpio") >-1 or typeId.find(u"OUTPUTi2cRelay") >-1:
 						if typeId in self.RPI[piS][u"output"]:
 							out[u"output"][typeId] = copy.deepcopy(self.RPI[piS][u"output"][typeId])
 					else:
@@ -14869,7 +14924,6 @@ class Plugin(indigo.PluginBase):
 		return
 ####-------------------------------------------------------------------------####
 	def testIfAlreadyInQ(self, next, pi):
-		found = False
 		currentQueue = list(self.rpiQueues["data"][pi].queue)
 		for q in currentQueue:
 			if q["pi"] == next["pi"] and q["fileToSend"] == next["fileToSend"]:
@@ -14953,8 +15007,8 @@ class Plugin(indigo.PluginBase):
 				try: 	self.rpiQueues["data"][piU].task_done()
 				except: pass
 				if addBack !=[]:
-					for next in addBack:
-						self.rpiQueues["data"][piU].put(next)
+					for nxt in addBack:
+						self.rpiQueues["data"][piU].put(nxt)
 				self.rpiQueues["reset"][piU] =False
 		except Exception, e:
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -15419,7 +15473,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def printTCPIPstats(self,all="yes"):
+	def printTCPIPstats(self, all="yes"):
 
 		############## tcpip stats 
 		if self.socketServer is not None or True:
@@ -15847,7 +15901,7 @@ class Plugin(indigo.PluginBase):
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+u"With_Status_Change",trigStatus)
 					except Exception, e:
-							self.indiLOG.log(40,u"status changed: "+ unicode(devnamechangedStat))
+							self.indiLOG.log(40,u"status changed: {}".format(devnamechangedStat))
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   + u" trying again")
 							time.sleep(0.5)
 							indigo.variable.updateValue(self.ibeaconNameDefault+u"With_Status_Change",trigStatus)
@@ -15858,7 +15912,7 @@ class Plugin(indigo.PluginBase):
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+u"With_ClosestRPI_Change",trigRPIchanged)
 					except Exception, e:
-							self.indiLOG.log(40,u"RPI   changed: "+ unicode(devnamechangedRPI))
+							self.indiLOG.log(40,u"RPI   changed: {}".format(devnamechangedRPI))
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   + u" trying again")
 							time.sleep(0.5)
 							indigo.variable.updateValue(self.ibeaconNameDefault+u"With_ClosestRPI_Change",trigRPIchanged)
@@ -16298,7 +16352,6 @@ class Plugin(indigo.PluginBase):
 
 				if errorType == u"bigErr":
 					if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
-					ts = datetime.datetime.now().strftime(u"%H:%M:%S")
 					f.write(u"==================================================================================\n")
 					f.write((ts+u" "+u" ".ljust(12)+u"-"+text+u"\n").encode(u"utf8"))
 					f.write(u"==================================================================================\n")
@@ -16392,9 +16445,9 @@ class Plugin(indigo.PluginBase):
 			stackReady	 = False
 			if self.decideMyLog(u"Socket"): self.indiLOG.log(10, u"starting tcpip socket listener, for RPI data, might take some time, using: ip#={} ;  port#= {}".format(myIpNumber, indigoInputPORT) )
 			tcpStart = time.time()
-			lsofCMD	 =u"/usr/sbin/lsof -i tcp:"+unicode(indigoInputPORT)
+			lsofCMD	 =u"/usr/sbin/lsof -i tcp:{}".format(indigoInputPORT)
 			ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			if self.decideMyLog(u"Socket"): self.indiLOG.log(10, u"lsof output:()".format(unicode(ret)) )
+			if self.decideMyLog(u"Socket"): self.indiLOG.log(10, u"lsof output:{}".format(ret) )
 			self.killHangingProcess(ret)
 			for ii in range(60):  #	 gives port busy for ~ 60 secs if restart, new start it is fine, error message continues even if it works -- indicator =ok: if lsof gives port number  
 				try:
@@ -16442,7 +16495,7 @@ class Plugin(indigo.PluginBase):
 			if len(test) ==2:
 				try: 
 					pidTokill = int((test[1].split())[1])
-					killcmd = "/bin/kill -9 "+unicode(pidTokill)
+					killcmd = "/bin/kill -9 {}".format(pidTokill)
 					if self.decideMyLog(u"Socket"): self.indiLOG.log(10, u"trying to kill hanging process with: {}".format(killcmd) )
 					os.system(killcmd)
 				except Exception, e:
@@ -16461,7 +16514,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			dataS =[]
 			tStart=time.time()
 			len0 = 0
-			name = "none"
+			piName = "none"
 			wrongIP = 0
 
 			if	not indigo.activePlugin.ipNumberOK(self.client_address[0]) : 
@@ -16502,36 +16555,36 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				self.request.close()
 				if e.find("timed out") ==-1: 
 					indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
-					indigo.activePlugin.handlesockReporting( self.client_address[0],len0,name,e[0:min(10,len(e))] )
+					indigo.activePlugin.handlesockReporting( self.client_address[0],len0,piName,e[0:min(10,len(e))] )
 				else:
-					indigo.activePlugin.handlesockReporting( self.client_address[0],len0,name,u"timeout" )
+					indigo.activePlugin.handlesockReporting( self.client_address[0],len0,piName,u"timeout" )
 				return
 			self.request.settimeout(1) 
 		   
 			try: 
-				## dataS =split message should look like:  len-TAG-name-TAG-data; -TAG- = x-6-a
+				## dataS =split message should look like:  len-TAG-piName-TAG-data; -TAG- = x-6-a
 				if len(dataS) !=3: # tag not found 
 					if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  x-6-a  tag not found: {} ... {}".format(data0[0:50], data0[-10:]) )
 					try: self.request.send(u"error-tag missing")
 					except: pass
 					self.request.send(u"error")
 					self.request.close()
-					indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"errTag" )
+					indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"errTag" )
 					return
 
 				expLength = int(dataS[0])
-				name	  = dataS[1]
+				piName	  = dataS[1]
 				lenData	  = len(dataS[2])
 
 
 				if expLength != lenData: # expected # of bytes not received
 					if lenData < expLength:
-						if indigo.activePlugin.decideMyLog(u"Socket"): indigo.indiLOG.log(30,u"TCPIP socket length of {..} data too short, exp:{};   actual:{};   name:; {}    ..    {}".format(dataS[0], unicode(lenData), name, dataS[2][0:50], data0[-10:]) )
-						try: self.request.send(u"error-lenDatawrong-"+unicode(lenData) )
+						if indigo.activePlugin.decideMyLog(u"Socket"): indigo.indiLOG.log(30,u"TCPIP socket length of {..} data too short, exp:{};   actual:{};   piName:; {}    ..    {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
+						try: self.request.send(u"error-lenDatawrong-{}".format(lenData) )
 						except: pass
 						self.request.send(u"error")
 						self.request.close()
-						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"tooShort" )
+						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"tooShort" )
 						return
 					else:
 						# check if we received a complete package + extra
@@ -16539,20 +16592,20 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 						try:
 							json.loads(package1)
 							dataS[2] = package1
-							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong -fixed- exp:{};  actual:{};  name:{}; {}     ..     {}".format(dataS[0], lenData, name, dataS[2][0:50], data0[-10:]) )
+							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong -fixed- exp:{};  actual:{};  piName:{}; {}     ..     {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
 						except:
-							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong exp:{};  actual:{};  name:{}; {}     ..     {}".format(dataS[0], lenData, name, dataS[2][0:50], data0[-10:]) )
-							try: self.request.send(u"error-lenDatawrong-"+unicode(lenData) )
+							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong exp:{};  actual:{};  piName:{}; {}     ..     {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
+							try: self.request.send(u"error-lenDatawrong-{}".format(lenData) )
 							except: pass
 							self.request.send(u"error")
 							self.request.close()
-							indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"tooLong" )
+							indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"tooLong" )
 							return
 
 			except Exception, e:
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket, len:{0:d} data: {1}  ..  {2}".format(len0, data0[0:50], data0[-10:]) )
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"unknown" )
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"unknown" )
 				self.request.send(u"error")
 				self.request.close()
 				return
@@ -16562,27 +16615,27 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			except Exception, e:
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  json error; len of data: {0:d}  {1}     time used: {2:5.1f}".format(len0, unicode(threading.currentThread()), time.time()-tStart )  )
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,data0[0:50]+u"  ..  {}".format(data0[-10:]) ) 
-				try: self.request.send(u"error-Json-"+unicode(lenData) )
+				try: self.request.send(u"error-Json-{}".format(lenData) )
 				except: pass
-				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"errJson" )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"errJson" )
 				self.request.send(u"error")
 				self.request.close()
 				return
 
-			if name.find(u"pi_IN_") != 0 : 
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  listener bad name {}".format(name) )
-				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"badName" )
+			if piName.find(u"pi_IN_") != 0 : 
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  listener bad piName {}".format(piName) )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"badpiName" )
 			else:
 				wrongIP -= 1
 				#### now update Indigo dev/ states 
-				indigo.activePlugin.addToDataQueue( name, dataJ,dataS[2] )
-				if wrongIP < 1: indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"ok",msg=data0 )
+				indigo.activePlugin.addToDataQueue( piName, dataJ,dataS[2] )
+				if wrongIP < 1: indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"ok",msg=data0 )
 
 			try:	
 				if wrongIP < 2: 
 					if indigo.activePlugin.decideMyLog(u"Socket"): 
-						indigo.activePlugin.myLog( text = u" sending ok to {} data: {}..{}".format(name.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
-					self.request.send(u"ok-"+unicode(lenData) )
+						indigo.activePlugin.indiLOG.log(20, u" sending ok to {} data: {}..{}".format(piName.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
+					self.request.send(u"ok-{}".format(lenData) )
 			except: pass
 			self.request.close()
 
@@ -16591,7 +16644,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 		except Exception, e:
 			if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket {}".format(data0[0:50]) ) 
-			indigo.activePlugin.handlesockReporting(self.client_address[0],len0,name,u"unknown" )
+			indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"unknown" )
 			self.request.close()
 		return
 ####-------------------------------------------------------------------------####

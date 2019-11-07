@@ -618,7 +618,7 @@ def getIPCONFIG():
 						txBytes[ii]   = lineItems[9]
 						txPackets[ii] = lineItems[10]
 
-			getIPofRouter()
+			G.ipOfRouter = getIPofRouter()
 
 			for ii in range(ind):
 				ddd = dev[ii]
@@ -769,15 +769,15 @@ def getIPofRouter():
 	for line in retRoute:
 		lineItems = line.split()
 		if lineItems[0] == "default" and isValidIP(lineItems[2]):
-			G.ipOfRouter = lineItems[2]
+			return  lineItems[2]
 			break
-
+	return ""
 
 ################################
 def whichWifi():
 	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
 	#print "whichWifi", ret 
-	if	ret.find("192.168.1.254") >-1:
+	if	ret.find("192.168.1.254") >-1: 
 		G.wifiType="adhoc"
 		return "adhoc"
 	G.wifiType="normal"
@@ -1133,15 +1133,15 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 		date -d '1 Jul' +%z  	-->		-0500
 		date +%z 				--> 	-0500
 		"""
-		summer = int(subprocess.Popen("date -d '1 Jul' +%z" ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r"))/100
-		winter = int(subprocess.Popen("date -d '1 Jan' +%z" ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r"))/100
-		currTZ  = int(subprocess.Popen("date  +'%z'" ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r"))/100
-		storediTZr, temp = readJson(G.homeDir+"timezone.set")
+		summerHH = int(subprocess.Popen("date -d '1 Jul' +%z" ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r"))/100
+		winterHH = int(subprocess.Popen("date -d '1 Jan' +%z" ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r"))/100
+		currTZHH  = int(subprocess.Popen("date  +'%z'" ,shell=True,stdout=subprocess.PIPE).communicate()[0].strip("\n").strip("\r"))/100
+		storediTZr, raw = readJson(G.homeDir+"timezone.set")
 
-		deltaSW 		=  winter - summer
-
+		deltaSW 		=  winterHH - summerHH
+		if currTZHH == winterHH: deltaSW = 0
 		iTZC 			= iTZ
-		currTZC 		= currTZ + deltaSW
+		currTZC 		= currTZHH + deltaSW
 		setNewStored 	= 99
 		setNewStoredC	= 99
 		storediTZ		= 99
@@ -1154,18 +1154,18 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 			except:
 				os.system("rm "+G.homeDir+"timezone.set")
 
-		logger.log(10, "cBY:"+G.program.ljust(20)+ u"  iTZ:{},  iTZC:{}, newTZ:{},  summer:{},  winter:{},  currTZ:{}, deltaSW:{}, storediTZ:{}, storediTZr:{}, setNewStored:{},  setNewStoredC:{}, force:{}".format(iTZ, iTZC, newTZ, summer, winter, currTZ, deltaSW, storediTZ, storediTZr, setNewStored, setNewStoredC, force))
+		logger.log(10, "cBY:"+G.program.ljust(20)+ u"  iTZ:{},  iTZC:{}, newTZ:{},  summerHH:{},  winterHH:{},  currTZHH:{}, currTZC:{}, deltaSW:{}, storediTZ:{}, storediTZr:{}, setNewStored:{},  setNewStoredC:{}, force:{}".format(iTZ, iTZC, newTZ, summerHH, winterHH, currTZHH, currTZC, deltaSW, storediTZ, storediTZr, setNewStored, setNewStoredC, force))
 
 		setNew = iTZ
 		if setNewStored < 30: setNew = setNewStored
 
 		G.timeZone = "{}  {}".format(setNew, G.timeZones[setNew+12])
 
-		if force  or  setNewStoredC != currTZC  or  iTZC  != currTZC:
+		if force  or  (setNewStoredC != 99 and setNewStoredC != currTZC)  or  int(iTZC) != int(currTZC):
 
 				
 			if  setNew < 30 and (setNew != currTZC or force):
-				logger.log(30, "cBY:"+G.program.ljust(20)+ u" changing timezone from: {}:{} to: {}:{}".format(currTZC,G.timeZones[currTZC+12], setNew, G.timeZones[setNew+12]) )
+				logger.log(20, "cBY:"+G.program.ljust(20)+ u" changing timezone from: {}:{} to: {}:{}".format(currTZC,G.timeZones[currTZC+12], setNew, G.timeZones[setNew+12]) )
 				if currTZ != iTZ:
 					logger.log(30, "cBY:"+G.program.ljust(20)+ u" changing timezone executing")
 					if os.path.isfile("/usr/share/zoneinfo/"+G.timeZones[setNew+12]):
@@ -1175,10 +1175,10 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 						# better just unlink and relink 
 						os.system("sudo rm /etc/localtime")
 						os.system("sudo ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(G.timeZones[setNew+12]) )
-						logger.log(30, "cBY:"+G.program.ljust(20)+ u" changing timezone done")
+						logger.log(20, "cBY:"+G.program.ljust(20)+ u" changing timezone done")
 
 					else:
-						logger.log(30, u"cBY:{:<20} error bad timezone:{}".foormat(G.program, G.timeZones[setNew+12]) )
+						logger.log(20, u"cBY:{:<20} error bad timezone:{}".foormat(G.program, G.timeZones[setNew+12]) )
 	except	Exception, e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
@@ -1295,7 +1295,8 @@ def getIPNumberMaster(quiet=False):
 				if testROUTER() == 0: 		connected	 = True
 				if testIndigoServer()== 0:	indigoServer = True
 
-		if connected:		
+		## added "connected or" in case router is not reachable, only indigo server
+		if connected or indigoServer:		
 			if  eth0IP !="" and G.eth0Active and (
 				 G.wifiEth["eth0"]["useIP"] in ["use","dontChange"] or 
 				(G.wifiEth["eth0"]["useIP"] in ["useIf"] and  wlan0IP =="") 
@@ -1915,20 +1916,20 @@ def writeJson(fName, data, sort_keys=False, indent=0):
 #################################
 def readJson(fName):
 	data ={}
-	ddd = ""
+	raw = ""
 	try:
 		if not os.path.isfile(fName): 
 			logger.log(10,u"cBY:{:<20}  no fname:{}".format(G.program, fName))
 			return {},""
 		f=open(fName,"r")
-		ddd = f.read()
+		raw = f.read()
 		f.close()
-		data = json.loads(ddd)
-		logger.log(10, u" readJson-data:{}\nddd: {}".format(data, ddd) )
+		data = json.loads(raw)
+		logger.log(10, u" readJson-data:{}\nddd: {}".format(data, raw) )
 	except	Exception, e:
-		logger.log(30,u"cBY:{:<20} Line {} has error={}, fname:{}, data:{}".format(G.program, sys.exc_traceback.tb_lineno, e, fName, ddd ))
+		logger.log(30,u"cBY:{:<20} Line {} has error={}, fname:{}, data:{}".format(G.program, sys.exc_traceback.tb_lineno, e, fName, raw ))
 		return {}, ""
-	return data, ddd
+	return data, raw
 
 
 #################################
@@ -1962,19 +1963,22 @@ def readINPUTcount():
 			logger.log(10, u" readINPUTcount-0:{}\nddd: {}".format(IPC, ddd) )
 		except:
 			pass
+		## check if change from list to dict
+		fix = False
 		for p in IPC:
 			try:
 				int(IPC[str(p)])
 			except:
-				IPC[str(p)] =0
-				
+				try: IPC[str(p)] =0
+				except: fix =True
+		if fix: IPC ={}	
 		if len(IPC) < 10:
 			IPC={}
 			for ii in range(1,30):
 				IPC[str(ii)] = 0
 		out={}
 		for p in IPC:
-			out[int(p)] = IPC[p]
+			out[str(p)] = IPC[p]
 		writeINPUTcount(out)
 		return out
 
@@ -2981,9 +2985,9 @@ def testPing(ipToPing):
 def testROUTER():
 	try:
 		if isValidIP(G.ipOfRouter):
-			getIPofRouter()
+			G.ipOfRouter = getIPofRouter()
 			if not isValidIP(G.ipOfRouter):
-				logger.log(30, u"cBY:{:<20} no router info".format(G.program))
+				logger.log(20, u"cBY:{:<20} no router info".format(G.program))
 				return 1
 
 			logger.log(10, u"cBY:{:<20} router info ip:>{}<".format(G.program,G.ipOfRouter))
@@ -2996,15 +3000,16 @@ def testROUTER():
 				logger.log(30, u"cBY:{:<20} still waiting for installLibs to finish".format(G.program))
 				time.sleep(30)
 				return 1
-			oldIP = G.ipOfRouter 
 			time.sleep(1)
-			getIPofRouter()
-			if oldIP != G.ipOfRouter and isValidIP(G.ipOfRouter):
+			newIP = getIPofRouter()
+			if newIP != G.ipOfRouter and isValidIP(newIP):
+				G.ipOfRouter = newIP
 				if	testPing(G.ipOfRouter)  ==0:
 					#print	" DNS server reachable at:"+ip[1]
 					logger.log(30, u"cBY:{:<20}  ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
 					return 0
-			return 1
+			logger.log(20, u"cBY:{:<20}  ROUTER server NOT reachable at:{}".format(G.program,G.ipOfRouter))
+			return 1					
 
 
 	except	Exception, e:

@@ -17,7 +17,14 @@ import json
 class MAP2Vendor:
 
     ########################################
-    def __init__(self, pathToMACFiles = "", refreshFromIeeAfterDays = 10):
+    def __init__(self, pathToMACFiles = "", refreshFromIeeAfterDays = 10, myLogger = "" ):
+
+        self.ML = myLogger
+        self.myLog( u"MAP2Vendor initializing")
+
+        self.minSizeOfFiles ={"mac2Vendor.json":700000, "oui":500000,"mam": 30000, "oui36":40000}
+
+        self.getFilesStatus = "init" 
 
         self.mac2VendorDict ={"6":{},"7":{},"9":{}}
 
@@ -27,67 +34,96 @@ class MAP2Vendor:
             self.filePath = pathToMACFiles
             if self.filePath[-1]!="/": self.filePath+="/"
             if not os.path.isdir(self.filePath):
-                os.mkdir(self.filePath)
+                os.system("mkdir "+self.filePath)
         else:
             self.filePath = self.MAChome+"indigo/mac2Vendor/"
             if not os.path.isdir(self.MAChome+"indigo"):
-                os.mkdir(self.MAChome+"indigo")
+                os.system("mkdir "+self.MAChome+"indigo")
             if not os.path.isdir(self.filePath):
-                os.mkdir(self.filePath)
+                os.system("mkdir "+self.filePath)
 
         self.refreshFromIeeAfterDays = refreshFromIeeAfterDays
 
         if not os.path.isdir(self.filePath):
-            os.mkdir(self.filePath)
+            os.system("mkdir "+self.filePath)
 
        
-        if not self.isFileCurrent(self.filePath+"mac2Vendor.json", 700000): 
+        if not self.isFileCurrent("mac2Vendor.json"): 
             self.getFiles()
             return
 
         self.makeFinalTable()
 
+
         return 
 
+    ########################################
+    def myLog( self, text ):
+        if self.ML == "": 
+            return 
+        elif self.ML == "print":
+            print text
+        else:
+            self.ML(20, text )
+
+        return 
 
     ########################################
     def getFiles(self):
 
-        if ( self.isFileCurrent(self.filePath+"oui",  500000) and 
-             self.isFileCurrent(self.filePath+"mam",   30000)  and
-             self.isFileCurrent(self.filePath+"oui36", 40000) ):  return
+        if ( self.isFileCurrent("oui")   and 
+             self.isFileCurrent("mam")   and
+             self.isFileCurrent("oui36") ):  
+             self.getFilesStatus = "finished" 
+             return
 
+        self.myLog( u"MAP2Vendor  downloading raw files, will take some minutes")
         cmd  =  "rm "+self.filePath+"oui ;"
         cmd +=  "rm "+self.filePath+"mam ;"
         cmd +=  "rm "+self.filePath+"oui36"
         os.system(cmd)
 
-        os.system("/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui/oui.csv      |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui' &")
-        os.system("/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui28/mam.csv    |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"mam' &")
-        os.system("/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui36/oui36.csv  |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui36' &")
-
+        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui/oui.csv      |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui' &";self.myLog(cmd);os.system(cmd)
+        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui28/mam.csv    |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"mam' &";self.myLog(cmd);os.system(cmd)
+        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui36/oui36.csv  |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui36' &";self.myLog(cmd);os.system(cmd)
+       
+        self.getFilesStatus = "submitted" 
 
         return 
 
     ########################################
-    def isFileCurrent(self,fileName,size):
-        if os.path.isfile(fileName)  and os.path.getsize(fileName) > size:
-            if  time.time() - os.path.getmtime(fileName) < self.refreshFromIeeAfterDays*24*60*60:
+    def isFileCurrent(self, fileName):
+        fn = self.filePath+fileName
+        if os.path.isfile(fn)  and os.path.getsize(fn) > self.minSizeOfFiles[fileName]:
+            if  time.time() - os.path.getmtime(fn) < self.refreshFromIeeAfterDays*24*60*60:
                 return True
         return False
 
     ########################################
     def makeFinalTable(self):
 
-        if self.isFileCurrent(self.filePath+"mac2Vendor.json", 700000):
+        if self.isFileCurrent("mac2Vendor.json"):
             f = open(self.filePath+"mac2Vendor.json","r")
-            self.mac2VendorDict = json.loads(f.read())
+            test = json.loads(f.read())
             f.close()
+            if "6" in test:
+                if len(test["6"]) < 10000:
+                    return False
+            else:
+                    return False
+
+            self.mac2VendorDict = test
+            self.myLog( u"MAP2Vendor initializing  finished, read from mac2Vendor.json file")
             return True
             
-        if not self.isFileCurrent(self.filePath+"oui",  500000): return False
-        if not self.isFileCurrent(self.filePath+"mam",   30000): return False
-        if not self.isFileCurrent(self.filePath+"oui36", 40000): return False
+        if not ( self.isFileCurrent("oui") or
+                 self.isFileCurrent("mam" )  or
+                 self.isFileCurrent("oui36") ):
+                if  self.getFilesStatus == "submitted"  :
+                    self.myLog( u"MAP2Vendor initializing  still waitinmg for download")
+                return False
+
+        self.getFilesStatus = "finished" 
 
         self.mac2VendorDict ={"6":{},"7":{},"9":{}}
 
@@ -103,7 +139,7 @@ class MAP2Vendor:
 
 
     ########################################
-    def importFile(self,fn,size):
+    def importFile(self, fn, size):
         f = open(self.filePath+fn,"r")
         dat = f.readlines()
         f.close()
@@ -115,6 +151,12 @@ class MAP2Vendor:
 
     ########################################
     def getVendorOfMAC(self,MAC):
+            if "6" not in self.mac2VendorDict: 
+                return ""
+            if len(self.mac2VendorDict["6"]) < 1000:
+                self.makeFinalTable()
+                return ""
+
             mac = MAC.replace(":","").upper()
             if mac[0:6] in self.mac2VendorDict["6"]:        # large  Vendor Space
                 return self.mac2VendorDict["6"][mac[0:6]]

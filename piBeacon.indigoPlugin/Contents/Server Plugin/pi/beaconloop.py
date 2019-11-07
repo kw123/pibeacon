@@ -953,9 +953,10 @@ def execbeaconloop():
 							beaconType = stringFromPacket(pkt[msgStart+4]).upper()  #  FF = iBeacon
 							beaconType += "-"+pType.upper() 
 							uuidstart2 = msgStart+8
-							lUUID = max( 1, min(ord(pkt[uuidstart2]), nBytesThisMSG - msgStart))
-							UUID2 = stringFromPacket(pkt[uuidstart2+1 :uuidstart2+1+lUUID])
-
+							try:
+								lUUID = max( 1, min(ord(pkt[uuidstart2]), nBytesThisMSG - msgStart))
+								UUID2 = stringFromPacket(pkt[uuidstart2+1 :uuidstart2+1+lUUID])
+							except: continue
 
 
 							if not acceptJunkBeacons:

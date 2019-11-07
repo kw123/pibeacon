@@ -1,4 +1,43 @@
-Added features / changes in v7.112.314 @ 2019-10-xx
+Added features / changes in v7.113.318 @ 2019-11-07
+===================================================
+
+1. added device type 52pi relay i2c HAT. This relay board has 4 relays, set through i2c, 
+   you can stack 4 of these boards w 16 total relays, no soldering needed
+   see: wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099 for details
+
+2. fixed some smaller items, menus etc
+
+3. added option to setup wifi through file on RPI SSD boot directory. 
+   this is the directory visible when you mount the SSD on a mac, it should also contain the file config.txt 
+   add a file: wifiInfo.json with the exact format:
+   {"SSID":"abc", "passCode":"def"}
+   the file name as well as keys and data are case sensitive.
+	   it will add:
+network={
+      ssid="abc"
+      psk="def"
+}
+   to /etc/wpa_supplicant/wpa_supplicant.conf. replace abc and def with your wifi setup.
+   the /boot/wifiInfo.json file will be removed once used.
+   ===> this allows to configure wifi at first start w/o connecting terminal and monitor and keyboard  
+
+
+
+Added features / changes in v7.112.311 @ 2019-10-20
+===================================================
+
+1. fixed rpi device edit "Field ID sleepAfterBootLabel was already used. "
+
+
+
+Added features / changes in v7.112.316 @ 2019-10-20
+===================================================
+
+1. fixed GPIOINPUT device type
+2. catch error reading beacons w short message 
+
+ 
+Added features / changes in v7.112.314 @ 2019-10-13
 ===================================================
 
 1. switched from ifconfig to ip xx for network info on rpi if os is > 7 (jessie)

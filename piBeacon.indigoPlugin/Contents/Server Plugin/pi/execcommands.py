@@ -115,6 +115,141 @@ def getBeaconParameters(devices):
 
 
 
+def OUTPUTi2cRelay(command):
+	global myPID
+	import smbus
+	try:
+		devType = "OUTPUTi2cRelay"
+
+		U.logger.log(10, "OUTPUTi2cRelay command:{}".format(command) )
+		if "cmd" in command:
+			cmd= command["cmd"]
+			if cmd not in allowedCommands:
+				U.logger.log(30, "OUTPUTi2cRelay pid=%d, bad command %s  allowed only: %s" %(myPID,unicode(command) ,unicode(allowedCommands))  )
+				exit(1)
+
+		if "pin" in command:
+			pin= int(command["pin"])
+		else:
+			U.logger.log(30, "setGPIO pid=%d, pin not included,  bad command %s"%(myPID,unicode(command)) )
+			exit(1)
+
+		DEVICE_BUS = 1
+		bus = smbus.SMBus(DEVICE_BUS)
+
+		i2cAddress = int(command["i2cAddress"])
+		pin = command["pin"]
+
+
+		delayStart = max(0,U.calcStartTime(command,"startAtDateTime")-time.time())
+		if delayStart > 0: 
+			time.sleep(delayStart)
+
+		if "values" in command:
+			values =  command["values"]
+		else: 
+			values =""
+	
+		try:
+			if "pulseUp" in values:		pulseUp = float(values["pulseUp"])
+			else:						pulseUp = 0
+			if "pulseDown" in values:	pulseDown = float(values["pulseDown"])
+			else:						pulseDown = 0
+			if "nPulses" in values:		nPulses = int(values["nPulses"])
+			else:						nPulses = 0
+		except	Exception, e:
+			U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			exit(0)
+
+		inverseGPIO = False
+		if "inverseGPIO" in command:
+			inverseGPIO = command["inverseGPIO"]
+
+		if "devId" in command:
+			devId = str(command["devId"])
+		else: devId = "0"
+
+
+		try:
+			if cmd == "up":
+				if inverseGPIO: 
+					bus.write_byte_data(i2cAddress, pin, 0x00)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+				else:
+					U.logger.log(30, "relay up {} {} {} ".format(i2cAddress, pin, 0xFF))
+					bus.write_byte_data(i2cAddress, pin, 0xFF)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+		
+
+			elif cmd == "down":
+				if inverseGPIO: 
+					bus.write_byte_data(i2cAddress, pin, 0xff)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				else:
+					U.logger.log(30, "relay down {} {} {} ".format(i2cAddress, pin, 0x00))
+					bus.write_byte_data(i2cAddress, pin, 0x00)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+
+			elif cmd == "pulseUp":
+				if inverseGPIO: 
+						bus.write_byte_data(i2cAddress, pin, 0x00)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+				else:			
+						bus.write_byte_data(i2cAddress, pin, 0xff)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				time.sleep(pulseUp)
+				if inverseGPIO: 
+						bus.write_byte_data(i2cAddress, pin, 0xff)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				else:			
+						bus.write_byte_data(i2cAddress, pin, 0x00)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+
+
+			elif cmd == "pulseDown":
+				if not inverseGPIO: 
+						bus.write_byte_data(i2cAddress, pin, 0x00)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+				else:			
+						bus.write_byte_data(i2cAddress, pin, 0xff)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				time.sleep(pulseDown)
+				if not inverseGPIO: 
+						bus.write_byte_data(i2cAddress, pin, 0xff)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				else:			
+						bus.write_byte_data(i2cAddress, pin, 0x00)
+						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+
+			elif cmd == "continuousUpDown":
+				for ii in range(nPulses):
+					if  inverseGPIO: 
+							bus.write_byte_data(i2cAddress, pin, 0x00)
+							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+					else:			
+							bus.write_byte_data(i2cAddress, pin, 0xff)
+							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+					time.sleep(pulseUp)
+					if inverseGPIO: 
+							bus.write_byte_data(i2cAddress, pin, 0xff)
+							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+					else:			
+							bus.write_byte_data(i2cAddress, pin, 0x00)
+							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+					time.sleep(pulseDown)
+
+			U.removeOutPutFromFutureCommands(pin, devType)
+			
+
+		except Exception, e:
+				U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+  	except Exception, e:
+			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+
+
+
+
 def setGPIO(command):
 	global PWM, myPID, typeForPWM
 	import RPi.GPIO as GPIO
@@ -233,29 +368,54 @@ def setGPIO(command):
 
 		elif cmd == "pulseUp":
 			GPIO.setup(pin, GPIO.OUT)
-			if inverseGPIO: GPIO.output(pin, False)
-			else:			GPIO.output(pin, True)
+			if inverseGPIO: 
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+			else:		
+				GPIO.output(pin, True)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 			time.sleep(pulseUp)
-			if inverseGPIO: GPIO.output(pin, True)
-			else:			GPIO.output(pin, False)
+			if not inverseGPIO: 
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+			else:		
+				GPIO.output(pin, True)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+
 
 
 		elif cmd == "pulseDown":
 			GPIO.setup(pin, GPIO.OUT)
-			if inverseGPIO: GPIO.output(pin, True)
-			else:			GPIO.output(pin, False)
+			if not inverseGPIO: 
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+			else:		
+				GPIO.output(pin, True)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 			time.sleep(pulseDown)
-			if inverseGPIO: GPIO.output(pin, False)
-			else:			GPIO.output(pin, True)
+			if  inverseGPIO: 
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+			else:		
+				GPIO.output(pin, True)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 
 		elif cmd == "continuousUpDown":
 			GPIO.setup(pin, GPIO.OUT)
 			for ii in range(nPulses):
-				if inverseGPIO:	  GPIO.output(pin, False)
-				else:			  GPIO.output(pin, True)
+				if inverseGPIO: 
+					GPIO.output(pin, False)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				else:		
+					GPIO.output(pin, True)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 				time.sleep(pulseUp)
-				if inverseGPIO:	  GPIO.output(pin, True)
-				else:			  GPIO.output(pin, False)
+				if not inverseGPIO: 
+					GPIO.output(pin, False)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				else:		
+					GPIO.output(pin, True)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 				time.sleep(pulseDown)
 
 		U.removeOutPutFromFutureCommands(pin, devType)
@@ -558,6 +718,36 @@ def execCMDS(data):
 						else:
 							U.logger.log(10, "setGPIO curr_pid=%d,  command :%s" %(myPID,cmdJD) )
 							setGPIO(cmdJ)
+						continue
+
+
+			if  device.find("OUTPUTi2cRelay")> -1:
+						try:
+							pinI = int(next["pin"])
+							pin = str(pinI)
+						except	Exception, e:
+							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30,"bad pin "+unicode(next))
+							continue
+						#print "pin ok"
+						if "values" in next: values= next["values"]
+						else:				 values={}
+   
+						if restoreAfterBoot == "1":
+							execcommands[str(pin)] = next
+						else:
+							try: del execcommands[str(pin)]
+							except: pass
+						if not externalGPIO:
+							#kill last execcommand for THIS pin, ps -ef grep string: eg '"pin": "12"'  with '' !!!
+							psefString = (json.dumps({"pin":str(pin)})).strip("{}")
+							U.killOldPgm(myPID,"execcommands.py ", param1="'"+psefString+"'")
+						if cmd =="disable":
+							continue
+						cmdJ= {"pin":pinI,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"i2cAddress":next["i2cAddress"], "devId":devId}
+						cmdJD = json.dumps(cmdJ)
+
+						OUTPUTi2cRelay(cmdJ)
 						continue
 
 			if device=="myoutput":

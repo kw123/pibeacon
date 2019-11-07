@@ -933,7 +933,7 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
             </Field>
 
-            <Field id="GPIOpin"   type="menu"  tooltip="select the OUTPUT state for which to pick the GPIO" >
+            <Field id="GPIOpin"   type="menu"  tooltip="select the OUTPUT state" >
                 <Label>pick GPIO-pin:</Label>
                     <List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true"/>
             </Field>
@@ -980,6 +980,62 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
 
         </ConfigUI>
     </MenuItem>         
+
+    <MenuItem id="OUTPUTi2cRelay">
+        <Name>Set i2c relay to HIGH-LOW ... </Name>
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterOUTPUTrelaydevicesACTION" />
+                <Label>select OUTP i2c relay device for channel = relay#:</Label>
+            </Field>
+            <Field  id="buttonDeviceID" type="button"	>
+                <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
+            </Field>
+
+            <Field id="GPIOpin"   type="menu"  tooltip="select the OUTPUT state" >
+                <Label>pick GPIO-pin:</Label>
+                    <List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true"/>
+            </Field>
+            <Field id="cmd"	type="menu" default="up"	 >
+                <List>
+                    <Option value= "down"             >LOW  = 0 </Option>
+                    <Option value= "up"               >HIGH = 1</Option>
+                    <Option value= "pulseUp"          >one pulse UP </Option>
+                    <Option value= "pulseDown"        >one pulse down </Option>
+                    <Option value= "continuousUpDown" >continuous pulses Up Down</Option>
+                </List>
+                <Label>set output of relay to</Label>
+            </Field>
+
+            <Field id="pulseUp"	visibleBindingId="cmd"	visibleBindingValue="pulseUp,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse UP in secs:</Label>
+            </Field>
+            <Field id="pulseDown"	visibleBindingId="cmd"	visibleBindingValue="pulseDown,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse down in secs:</Label>
+            </Field>
+            <Field id="nPulses"	visibleBindingId="cmd"	visibleBindingValue="continuousUpDown"  type="textfield" default="0"	>
+                <Label>number of pulses:</Label>
+            </Field>
+            <Field id="restoreAfterBoot"	visibleBindingId="cmd"	visibleBindingValue="down,up,pulseDown,pulseUp"  type="menu" default="0">
+                    <List>
+                     <Option value= "1"  >yes, set to above value</Option>
+                     <Option value= "0"  >no keep it inactive </Option>
+                </List>
+            <Label>After reboot set relay to(not implemented yet):</Label>
+            </Field>
+            <Field id="startAtDateTime"  type="textfield" default="0" >
+                <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+            </Field>
+
+
+            <Field  id="execsetPin" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>setPinCALLBACKmenu</CallbackMethod>
+            </Field>
+
+        </ConfigUI>
+    </MenuItem>         
+
+  <MenuItem id="d20r"> <Name>-------------manage output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
 
     <MenuItem id="setMCP4725">
         <Name>Set output voltage of DAC-MCP4725 to.. </Name>

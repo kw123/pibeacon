@@ -533,9 +533,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="sleepAfterBootLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
-				<Label>increase it if takes long to get an ip number eg wifi is slow</Label>
-			</Field>
 			<Field id="labelwebAdhoc0"               type="label" > 
 				<Label>== Webserver options:...</Label>
 			</Field>
@@ -14826,6 +14823,101 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
+	<Device type="relay" id="OUTPUTi2cRelay">
+	<Name>OUTPUT-Relay-i2c</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isOutputDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="infoLabelOUTPUT" type="label">
+			<Label>Setup OUTPUT i2c relay  on individual rPis
+   see: wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099 for details </Label>
+			</Field>
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+				<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
+				<Label>select rPi-server to which the OUTPUT is connect to:</Label>
+			</Field>
+			<Field  id="buttonPiNumber" type="button"    >
+				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONO</CallbackMethod>
+			</Field>
+			<Field id="piDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
+
+			<Field id="i2cAddress" type="menu"     defaultValue="16"> <Label>i2c address of device:</Label>
+			<List>
+				<Option value="16"   >0x10 = 16</Option>
+				<Option value="17"   >0x11 = 17</Option>
+				<Option value="18"   >0x12 = 18</Option>
+				<Option value="19"   >0x13 = 19</Option>
+			</List>
+			</Field>
+
+			<Field id="infoLabeTypeOfOUTPUT" type="label"  visibleBindingId="piDone"    visibleBindingValue="true" >
+			<Label>Type of input function for each of the pins:</Label>
+			</Field>
+
+			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select relay# for this INPUT channel/state" >
+				<Label>(2) select relay #:</Label>
+				<List>
+					<Option value="1"      >relay# 1 </Option>
+					<Option value="2"      >relay# 2 </Option>
+					<Option value="3"      >relay# 3</Option>
+					<Option value="4"      >relay# 4</Option>
+				</List>
+			</Field>
+			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
+				<Label> OUTPUT type:</Label>
+				<List>
+					<Option value="0"        >set OUTPUT normal </Option>
+					<Option value="1"        >set OUTPUT invers </Option>
+				</List>
+			</Field>
+			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
+				<Label> initial Value:</Label>
+				<List>
+					<Option value="down"      >set OUTPUT initially to low </Option>
+					<Option value="up"        >set OUTPUT initially to High </Option>
+					<Option value="-"         >do not set OUTPUT initially</Option>
+				</List>
+			</Field>
+			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+			<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
+			</Field>
+
+
+			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
+			<Field id="pinMappings" type="textfield"       defaultValue="" hidden="no" readonly="yes"> </Field>
+			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="actualGpioValue">
+				<ValueType>String</ValueType>
+				<TriggerLabel>actualGpioValue</TriggerLabel>
+				<ControlPageLabel>actualGpioValue</ControlPageLabel>
+			</State>
+			<State id="OUTPUT">
+				<ValueType>String</ValueType>
+				<TriggerLabel>OUTPUT</TriggerLabel>
+				<ControlPageLabel>OUTPUT</ControlPageLabel>
+			</State>
+			<State id="inverse">
+				<ValueType  boolType="YesNo" >Boolean</ValueType>
+				<TriggerLabel>inverse</TriggerLabel>
+				<ControlPageLabel>inverse</ControlPageLabel>
+			</State>
+			<State id="initial">
+				<ValueType>string</ValueType>
+				<TriggerLabel>initial</TriggerLabel>
+				<ControlPageLabel>initial</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
 	<Device type="relay" id="OUTPUTgpio-1-ONoff">
 	<Name>OUTPUT-GPIO-1-ON/off</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -14905,6 +14997,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</State>
 		</States>
 	</Device>
+
 
 
 	<Device type="dimmer" id="OUTPUTgpio-1">

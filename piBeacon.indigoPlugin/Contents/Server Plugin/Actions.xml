@@ -15,7 +15,7 @@
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
             </Field>
 
-            <Field id="GPIOpin"   type="menu" defaultValue="-1" tooltip="select the OUTPUT state for which to pick the GPIO" >
+            <Field id="GPIOpin"   type="menu" defaultValue="-1" tooltip="select the OUTPUT state " >
                 <Label>pick GPIO-pin:</Label>
                     <List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true"/>
             </Field>
@@ -50,6 +50,56 @@
                      <Option value= "0"  >no keep it inactive </Option>
                 </List>
             <Label>After reboot set pin to:</Label>
+            </Field>
+            <Field id="startAtDateTime"  type="textfield" default="0" >
+                <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+            </Field>
+        </ConfigUI>
+    </Action>
+
+   <Action id="setoutputi2cRelay">
+        <Name>Set i2c relay on rPi to HIGH-LOW ... </Name>
+            <CallbackMethod>setPinCALLBACKaction</CallbackMethod>
+
+        <ConfigUI>
+            <Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+                        <List class="self" filter="" method="filterOUTPUTrelaydevicesACTION" />
+                <Label>select OUTPUT device for relay#:</Label>
+            </Field>
+            <Field  id="buttonDeviceID" type="button"	>
+                <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
+            </Field>
+
+            <Field id="GPIOpin"   type="menu" defaultValue="-1" tooltip="select the OUTPUT state" >
+                <Label>pick relay# = channel:</Label>
+                    <List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true"/>
+            </Field>
+            <Field id="cmd"	type="menu" default="up"	 >
+                <List>
+                    <Option value= "down"             >LOW  = 0 </Option>
+                    <Option value= "up"               >HIGH = 1</Option>
+                    <Option value= "pulseUp"          >one pulse UP </Option>
+                    <Option value= "pulseDown"        >one pulse down </Option>
+                    <Option value= "continuousUpDown" >continuous pulses Up Down</Option>
+                </List>
+                <Label>set output of relay to</Label>
+            </Field>
+
+            <Field id="pulseUp"	visibleBindingId="cmd"	visibleBindingValue="pulseUp,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse UP in secs:</Label>
+            </Field>
+            <Field id="pulseDown"	visibleBindingId="cmd"	visibleBindingValue="pulseDown,continuousUpDown"  type="textfield" default="0"	>
+                <Label>set length of pulse down in secs:</Label>
+            </Field>
+            <Field id="nPulses"	visibleBindingId="cmd"	visibleBindingValue="continuousUpDown"  type="textfield" default="0"	>
+                <Label>number of pulses:</Label>
+            </Field>
+            <Field id="restoreAfterBoot"	visibleBindingId="cmd"	visibleBindingValue="down,up,pulseDown,pulseUp"  type="menu" default="0">
+                    <List>
+                     <Option value= "1"  >yes, set to above value</Option>
+                     <Option value= "0"  >no keep it inactive </Option>
+                </List>
+            <Label>After reboot set relay to(not implemented yet):</Label>
             </Field>
             <Field id="startAtDateTime"  type="textfield" default="0" >
                 <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>

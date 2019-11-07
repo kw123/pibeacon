@@ -24,55 +24,58 @@ import Adafruit_DHT
 # DHT
 # ===========================================================================
 
-def getDATAdht(DHTpin,Type):
-		global sensorDHT, startDHT
+def getDATAdht(DHTpinI,Type):
+		global sensorDHT, startDHT, lastRead
 		t,h="",""
 		try:
-			ii=startDHT[str(DHTpin)]
+			ii=startDHT[str(DHTpinI)]
 		except:
 			if startDHT =="":
 				startDHT={}
 				sensorDHT={}
-			startDHT[str(DHTpin)]  = 1
+			lastRead = 0
+			startDHT[str(DHTpinI)]  = 1
 			if Type.lower() == "11":		
-				sensorDHT[str(DHTpin)] = Adafruit_DHT.DHT11
+				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT11
 			else:	  
-				sensorDHT[str(DHTpin)] = Adafruit_DHT.DHT22
+				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT22
 		try:
-			h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
+			if time.time() - lastRead < 3.: time.sleep( max(0, min(3.1, 3.5 - (time.time() - lastRead )) ) )
+			h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
 			if unicode(h) == "None" or unicode(t) == "None":
-				time.sleep(3), # min wait between read -s 2.0 secs, give it a little more..
-				h,t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpin)], int(DHTpin))
+				time.sleep(3.) # min wait between read -s 2.0 secs, give it a little more..
+				h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
 				if unicode(h) == "None" or unicode(t) == "None":
-					U.logger.log(20, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpin)+" try again" )
+					U.logger.log(20, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpinI)+" try again" )
 			#f h is not None and t is not None:
-			#print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpin)
+			#print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpinI)
 #			# sensorDHT=""
+			lastRead = time.time() 
 			try: return float(t),float(h)
 			except: return "",""
 			#else: return "" ,""  
 		except	Exception, e:
 			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			U.logger.log(20, u" pin: "+ str(DHTpin)+" return value: t="+ unicode(t)+"; h=" + unicode(h)	 )
+			U.logger.log(20, u" pin: "+ str(DHTpinI)+" return value: t="+ unicode(t)+"; h=" + unicode(h) )
+		lastRead = time.time() 
 		return "",""
 
 
 
-def getDHT(sensor,data):
+def getDHT(sensor,dataI):
 	global badSensors
-	global sensors, sValues, displayInfo
+	global sensors
 	try:
 		if sensor in sensors :
-			data[sensor]={}
+			dataI[sensor]={}
 			for devId in sensors[sensor]:
 				t =[-1000,-1000]; h=[-1000,-1000]
 				for ii in range(2):
 					t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
-					time.sleep(3)
 					if t[ii] =="":
+						time.sleep(4)
 						t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
-						time.sleep(3)
-
+	
 				if abs(t[0]-t[1]) > 3 or t[0] == -1000 or t[1] == -1000 or h[0] == -1000 or h[1] == -1000:
 					# bad result 
 					t = ""; h=""
@@ -82,26 +85,26 @@ def getDHT(sensor,data):
 
 				if t != "":
 					try:	
-						t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),2)
+						t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),1)
 					except: pass
-					data[sensor][devId] = {"temp":t}
+					dataI[sensor][devId] = {"temp":t}
 					if h != "":
-						try:	h = round(float(h) + float(sensors[sensor][devId]["offsetHum"]),2)
+						try:	h = round(float(h) + float(sensors[sensor][devId]["offsetHum"]),1)
 						except: pass
-						data[sensor][devId]["hum"]=h
+						dataI[sensor][devId]["hum"]=h
 						if devId in badSensors: del badSensors[devId]
 					time.sleep(0.1)
 				else:
-					data= incrementBadSensor(devId,sensor,data)
+					dataI = incrementBadSensor(devId,sensor,data)
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-	if sensor in data and data[sensor]== {}: del data[sensor]
-	return data
+	if sensor in dataI and data[sensor]== {}: del dataI[sensor]
+	return dataI
 
 
 
-def incrementBadSensor(devId,sensor,data,text="badSensor"):
+def incrementBadSensor(devId,sensor,dataI,text="badSensor"):
 	global badSensors
 	try:
 		if devId not in badSensors:badSensors[devId] ={"count":0,"text":text}
@@ -109,13 +112,13 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 		badSensors[devId]["text"]  +=text
 		#print badSensors
 		if	badSensors[devId]["count"]	> 2:
-			if sensor not in data: data={sensor:{devId:{}}}
-			if devId not in data[sensor]: data[sensor][devId]={}
-			data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
+			if sensor not in dataI: dataI={sensor:{devId:{}}}
+			if devId not in dataI[sensor]: dataI[sensor][devId]={}
+			dataI[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return data 
+	return dataI
 
 
 		
@@ -130,11 +133,9 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 
 
 def readParams():
-		global sensorList, sensors, sendToIndigoSecs,enableTXpinsAsGpio,enableSPIpinsAsGpio, sensorRefreshSecs
+		global sensorList, sensors, enableTXpinsAsGpio, sensorRefreshSecs
 		global output
 		global oldRaw, lastRead
-		global clockLightSensor
-		global addNewOneWireSensors
 
 		rCode= False
 
@@ -286,7 +287,7 @@ while True:
 
 
 		tt= time.time()
-		NSleep = max(2.5, int(sensorRefreshSecs)*2) 
+		NSleep = max(3.5, int(sensorRefreshSecs)*2) 
 		if tt- lastregularCycle > sensorRefreshSecs:
 			regularCycle = True
 			lastregularCycle  = tt

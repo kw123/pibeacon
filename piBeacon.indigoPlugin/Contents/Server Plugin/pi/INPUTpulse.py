@@ -53,7 +53,7 @@ def readParams():
 		if "sensors"			in inp : sensors =				(inp["sensors"])
 
 		if sensor not in sensors:
-			U.logger.log(10,	"no "+ G.program+" sensor defined, exiting")
+			U.logger.log(20,	"no "+ G.program+" sensor defined, exiting")
 			exit()
 
 		sens= sensors[sensor]
@@ -71,7 +71,6 @@ def readParams():
 			if "timeWindowForBursts"					not in sss: continue
 			if "timeWindowForContinuousEvents"			not in sss: continue
 			if "minEventsinTimeWindowToTriggerBursts" 	not in sss: continue
-
 			gpio						= sss["gpio"]
 			risingOrFalling				= sss["risingOrFalling"]
 			inpType						= sss["inpType"]
@@ -212,14 +211,14 @@ def readParams():
 						GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH)  
 				GPIOdict[gpio]["inpType"]	 = inpType
 				
-		if gpio in GPIOdict: GPIOdict[gpio]["count"] = INPUTcount[int(gpio)]
 				
 		oneFound = False
 		restart=False
 		delGPIO={}
+		U.logger.log(10, "GPIOdict: " +unicode(GPIOdict))
 		for gpio in GPIOdict:
 			GPIOdict[gpio]["count"] = INPUTcount[int(gpio)]
-			for risingOrFalling in["FALLING","RISING","BOTH"]:
+			for risingOrFalling in ["FALLING","RISING","BOTH"]:
 				if found[gpio][risingOrFalling]==1: 
 					oneFound = True
 					continue
@@ -232,13 +231,12 @@ def readParams():
 			if gpio in GPIOdict: del GPIOdict[gpio]
 		
 		if not oneFound:
-			U.logger.log(10, "no gpios setup, exiting")
+			U.logger.log(20, "no gpios setup, exiting")
 			exit()
 		if	restart:
-			U.logger.log(10, "gpios edge channel deleted, need to restart")
+			U.logger.log(20, "gpios edge channel deleted, need to restart")
 			U.restartMyself(param="", reason=" new definitions")
 			
-		U.logger.log(10, "GPIOdict: " +unicode(GPIOdict))
 		sensorC = "INPUTcoincidence"
 		coincidence2 ={}
 		if sensorC in sensors:
