@@ -2,12 +2,3 @@ ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 country=US
 
-network={
-	ssid="2x"
-	psk="457654aA."
-}
-
-network={
-	ssid="DerDieDas"
-	psk="szepidovan"
-}

@@ -7919,6 +7919,281 @@ you can setup
 		</States>
 	</Device>
    
+  
+	<Device type="sensor" id="mlx90640">
+	<Name>INPUT-mlx90640-infraredCamera</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup i2c mlx90640 infrared camera sensor on individual rPis.. 
+    connect 3.3, GND,   SDA,SCL. or TX, RX 
+It measures - all temp values are converted to std temp (set in config)
+        -Average Temperature of pixels,
+        -MinimumPixel  = min Temperature val of all pixels,
+        -MaximumPixel  = max Temperature val of all pixels,
+        -Movement: delta pixel Temp to last measuremnt, large val indicates Movement: 
+                   100*sqrt(sum ((pixT-lastT)/(pixT+lastT))**2)/(32*32)
+        -Uniformity of pixel temperature, low value indicates Structure: 
+                   100/sqrt(sum ((pixT-aveT)/(pixT+aveT))**2)/(32*32)
+you can setup 
+        - number of measurement per second
+        - delta value to trigger sending update to indigo
+  </Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+			<Field id="i2cAddress" type="menu"     defaultValue="0"> <Label>i2c address of device:</Label>
+			<List>
+				<Option value="51"   >0x33 = 51  i2cAddress </Option>
+				<Option value="0"    >use serial port type device (use RX, TX pins) </Option>
+				<Option value="-1"   >use USB type device  </Option>
+			</List>
+			</Field>
+			<Field id="useMuxChannel" type="menu"     defaultValue="-1" visibleBindingId="i2cAddress" visibleBindingValue="51"> > 
+			<Label>use TCA9548A multiplexer for this sensor:</Label> 
+			<List>
+				<Option value="-1"    >off </Option>
+				<Option value="0"     >channel 0  </Option>
+				<Option value="1"     >channel 1  </Option>
+				<Option value="2"     >channel 2  </Option>
+				<Option value="3"     >channel 3  </Option>
+				<Option value="4"     >channel 4  </Option>
+				<Option value="5"     >channel 5  </Option>
+				<Option value="6"     >channel 6  </Option>
+				<Option value="7"     >channel 7  </Option>
+			</List>
+			</Field>
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
+			<Label>time between reading sensor:</Label>
+			<List>
+				<Option value="0.1" > 0.1   secs </Option>
+				<Option value="0.2" > 0.2   secs </Option>
+				<Option value="0.3" > 0.3   secs </Option>
+				<Option value="0.5" > 0.5   secs </Option>
+				<Option value="0.7" > 0.7   secs </Option>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+			</List>
+			</Field>
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+			<Label>min delta secs between indigo updates :</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+			</List>
+			</Field>
+			<Field id="deltaX" type="menu"     defaultValue="30" hidden="no" > 
+			<Label>delta value(temp...[%]) to trigger indigo update:</Label>
+			<List>
+				<Option value="1"    > any change</Option>
+				<Option value="5"    > 5	</Option>
+				<Option value="10"   > 10	</Option>
+				<Option value="15"   > 15	</Option>
+				<Option value="20"   > 20	</Option>
+				<Option value="25"   > 25	</Option>
+				<Option value="30"   > 30 (default)  </Option>
+				<Option value="40"   > 40	</Option>
+				<Option value="50"   > 50	</Option>
+				<Option value="70"   > 70	</Option>
+				<Option value="100"  > 100	</Option>
+				<Option value="150"  > 150	</Option>
+				<Option value="200"  > 200	</Option>
+			</List>
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"       >Temperature</Option>
+				<Option value="Uniformity"        >Uniformity</Option>
+				<Option value="Movement"          >Movement</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+			<Field id="imageFilesaveRawData" type="menu"     defaultValue="0"> 
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>save raw pixel data to device state:</Label> 
+			</Field>
+
+			<Field id="imageFileNumberOfDots" type="menu"     defaultValue="-" tooltip="this is NOT the number of pixel of the camera, but the number of pixels in one dimension on the image displayed. it is upscaled / interpolatedfrom nxn to mxm"> 
+			<List>
+				<Option value="-"   >off</Option>
+				<Option value="32"  >32</Option>
+				<Option value="64"  >64</Option>
+				<Option value="128" >128</Option>
+				<Option value="256" >256 this one looks ok</Option>
+				<Option value="512" >512</Option>
+				<Option value="1024">1024</Option>
+			</List>
+			<Label>number of pixels in Display one axis:</Label> 
+			</Field>
+			<Field id="imageFilelogLevel" type="menu"     defaultValue="0" visibleBindingId="imageFileNumberOfDots" visibleBindingValue="32,64,128,256,512,1024"> 
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>logLevel:</Label> 
+			</Field>
+			<Field id="imageFileCompress" type="menu"     defaultValue="0" visibleBindingId="imageFileNumberOfDots" visibleBindingValue="32,64,128,256,512,1024"> 
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>compress png file:</Label> 
+			</Field>
+			<Field id="imageFileName" type="textfield"     defaultValue=""  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="32,64,128,256,512,1024"> 
+			<Label>create png file from pixels, set filename (bl=no, in directory: Indigo 7.x/Preferences/Plugins/com.karlwachs.piBeacon/cameraImages/):</Label> 
+			</Field>
+			<Field id="imageFileDynamic" type="menu"     defaultValue="0"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="32,64,128,256,512,1024"> 
+			<List>
+				<Option value="0"      > dynamic</Option>
+				<Option value="1"    > +-1 C around midpoint </Option>
+				<Option value="2"    > +-2 C around midpoint</Option>
+				<Option value="3"    > +-4 C around midpoint</Option>
+				<Option value="5"    > +-5 C around midpoint</Option>
+				<Option value="6"    > +-6 C around midpoint</Option>
+				<Option value="8"    > +-8 C around midpoint</Option>
+				<Option value="10"   > +-10 C around midpoint</Option>
+				<Option value="0,20"   >  0-20 C</Option>
+				<Option value="0,30"   >  0-30 C</Option>
+				<Option value="0,40"   >  0-40 C</Option>
+				<Option value="10,30"  > 10-30 C</Option>
+				<Option value="15,20"  > 15-20 C</Option>
+				<Option value="15,25"  > 15-25 C</Option>
+				<Option value="20,25"  > 20-25 C</Option>
+				<Option value="20,30"  > 20-30 C</Option>
+				<Option value="20,40"  > 20-40 C</Option>
+			</List>
+			<Label>dynamic / fixed temp scale:</Label> 
+			</Field>
+			<Field id="imageFileColorBar" type="menu"     defaultValue="color,noBar"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024"> 
+			<List>
+				<Option value="color,noBar"   > color no bar </Option>
+				<Option value="grey,noBar"    > grey no bar</Option>
+				<Option value="color,bar"     > color w bar </Option>
+				<Option value="grey,bar"      > grey w bar </Option>
+			</List>
+			<Label>show color/grey wbar /wobar on the side:</Label> 
+			</Field>
+
+			<Field id="displayEnable" type="menu"     defaultValue="0" hidden = "yes"> 
+			<Label>use local display to show values:</Label> 
+			<List>
+				<Option value="0"  >No</Option>
+			</List>
+			</Field>
+			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
+			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="Movement">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Movement</TriggerLabel>
+				<ControlPageLabel>Movement</ControlPageLabel>
+			</State>
+			<State id="MovementAbs">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MovementAbs</TriggerLabel>
+				<ControlPageLabel>MovementAbs</ControlPageLabel>
+			</State>
+			<State id="Uniformity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Uniformity</TriggerLabel>
+				<ControlPageLabel>Uniformity</ControlPageLabel>
+			</State>
+			<State id="MaximumPixel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MaximumPixel</TriggerLabel>
+				<ControlPageLabel>MaximumPixel</ControlPageLabel>
+			</State>
+			<State id="MinimumPixel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MinimumPixel</TriggerLabel>
+				<ControlPageLabel>MinimumPixel</ControlPageLabel>
+			</State>
+			<State id="VerticalMovement">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VerticalMovement</TriggerLabel>
+				<ControlPageLabel>VerticalMovement</ControlPageLabel>
+			</State>
+			<State id="HorizontalMovement">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HorizontalMovement</TriggerLabel>
+				<ControlPageLabel>HorizontalMovement</ControlPageLabel>
+			</State>
+			<State id="rawData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>rawData</TriggerLabel>
+				<ControlPageLabel>rawData</ControlPageLabel>
+			</State>
+
+
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+   
 
 
 	<Device type="custom" id="l3g4200">

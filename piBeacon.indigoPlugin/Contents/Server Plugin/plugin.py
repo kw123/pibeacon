@@ -222,7 +222,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"tmp007",																   # temp rmote infrared
 						 u"max31865",																# platinum temp resistor 
 						 u"pmairquality",
-						 u"amg88xx",																# infrared camera
+						 u"amg88xx","mlx90640",													# infrared camera
 						 u"ccs811",																   # co2 voc 
 						 u"mhzCO2",																# co2 temp 
 						 u"rainSensorRG11",
@@ -245,7 +245,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"mysensors", u"myprogram",
 						 u"BLEconnect"]
 _GlobalConst_lightSensors =["i2cVEML6075","i2cIS1145","i2cOPT3001","i2cTCS34725","i2cTSL2561","i2cVEML6070","i2cVEML6040","i2cVEML7700"]
-_GlobalConst_i2cSensors				 = ["si7021","bme680","amg88xx","ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
+_GlobalConst_i2cSensors				 = ["si7021","bme680","amg88xx","mlx90640",	"ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935",u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960"]
 
 _GlobalConst_allowedOUTPUT			= [u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTi2cRelay", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
 _GlobalConst_allowedpiSends			= [u"updateParamsFTP", u"updateAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
@@ -2962,7 +2962,7 @@ class Plugin(indigo.PluginBase):
 				"i2cADS1x15-1", "i2cADS1x15"
 				"spiMCP3008-1", "spiMCP3008",
 				"i2cTCS34725", "as726x", "i2cOPT3001", "i2cVEML7700", "i2cVEML6030", "i2cVEML6040", "i2cVEML6070", "i2cVEML6075", "i2cTSL2561", 
-				"mlx90614", "amg88xx", 
+				"mlx90614", "amg88xx", "mlx90640",	
 				"vl503l0xDistance", "vcnl4010Distance", "vl6180xDistance", "apds9960", "ultrasoundDistance",
 				"INPUTpulse"]
 
@@ -11825,6 +11825,25 @@ class Plugin(indigo.PluginBase):
 										imageParams	  = json.dumps( {"logFile":self.PluginLogFile, "logLevel":props[u"imageFilelogLevel"],"compress":props[u"imageFileCompress"],"fileName":self.cameraImagesDir+props[u"imageFileName"],"numberOfDots":props[u"imageFileNumberOfDots"],"dynamic":props[u"imageFileDynamic"],"colorBar":props[u"imageFileColorBar"]} )
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "  
 										if props[u"imageFilelogLevel"] == "1": self.indiLOG.log(20,"AMG88 command:{}".format(cmd))
+										os.system(cmd)
+						except Exception, e:
+							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.indiLOG.log(40,unicode(props))
+							self.indiLOG.log(40,unicode(len(data[u"rawData"]))+"     "+data[u"rawData"])
+
+					if sensor == u"mlx90640" and u"rawData" in data :
+						try:
+							if ("imageFilesaveRawData" in props and props[u"imageFilesaveRawData"] =="1") or ("imageFileNumberOfDots" in props and props[u"imageFileNumberOfDots"] !="-"):
+								# exapnd to 8x8 matrix, data is in 4 byte packages *100
+								dataRaw = data[u"rawData"]
+
+								if "imageFilesaveRawData" in props and props[u"imageFilesaveRawData"] =="1" and False:
+										newStatus = self.setStatusCol( dev, u"rawData", dataRaw,"", whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = "")
+								if "imageFileNumberOfDots" in props and props[u"imageFileNumberOfDots"] !="-":
+									if "imageFileName" in props and len(props[u"imageFileName"])>1:
+										imageParams	  = json.dumps( {"logFile":self.PluginLogFile, "logLevel":props[u"imageFilelogLevel"],"compress":props[u"imageFileCompress"],"fileName":self.cameraImagesDir+props[u"imageFileName"],"numberOfDots":props[u"imageFileNumberOfDots"],"dynamic":props[u"imageFileDynamic"],"colorBar":props[u"imageFileColorBar"]} )
+										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "  
+										if props[u"imageFilelogLevel"] == "1": self.indiLOG.log(20,"mlx90640 command:{}".format(cmd))
 										os.system(cmd)
 						except Exception, e:
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

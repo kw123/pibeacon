@@ -9,23 +9,7 @@
 #
 #  copied from various sources especialy SPARKFUN
 #
-#
-# * @file	 SparkFun_APDS-9960.cpp
-# * @brief	 Library for the SparkFun APDS-9960 breakout board
-# * @author	 Shawn Hymel (SparkFun Electronics)
-# *
-# * @copyright	This code is public domain but you buy me a beer if you use
-# * this and we meet someday (Beerware license).
-# *
-# * This library interfaces the Avago APDS-9960 to Arduino over I2C. The library
-# * relies on the Arduino Wire (I2C) library. to use the library, instantiate an
-# * APDS9960 object, call init(), and call the appropriate functions.
-# *
-# * APDS-9960 current draw tests (default parameters):
-# *	  Off:					 1mA
-# *	  Waiting for gesture:	 14mA
-# *	  Gesture in progress:	 35mA
-#
+##
 
 ##
 
@@ -42,7 +26,7 @@ GPIO.setmode(GPIO.BCM)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "apds9960"
+G.program = "mlx90640"
 
 
 import smbus

@@ -523,7 +523,9 @@ def execCMDS(data):
 				U.logger.log(30," bad cmd no device given "+unicode(next))
 				continue
 				
+
 			device=next["device"]
+
 			
 			if device.lower()=="setsteppermotor":
 				cmdOut = json.dumps(next)
@@ -554,7 +556,7 @@ def execCMDS(data):
 				continue
 
 
-			if device.lower()=="output-neopixel":
+			if device.lower() == "output-neopixel":### OUTPUT-neopixel
 				cmdOut = json.dumps(next)
 				if cmdOut != "":
 					try:

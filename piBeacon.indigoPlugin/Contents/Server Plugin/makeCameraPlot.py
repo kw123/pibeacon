@@ -68,9 +68,9 @@ logger.log(20,"Dynamic:             {}".format(imageFileDynamic) )
 logger.log(20,"imageType:           {}".format(imageType) )
 logger.log(20,"colorBar:            {}".format(colorBar) )
 logger.log(20,"numberOfPixels in x: {} ".format(numberOfPixels) )
-logger.log(20,"data:")
+logger.log(20,"data: len: {}".format(len(data)))
 for kk in range(len(data)):
-	logger.log(20, "{}".format(data[kk]).replace(" ","") )
+	logger.log(20, "{}: {}".format(kk, data[kk]).replace(" ","") )
 
 pixelsIndata = len(data)
 pltDpi = 256

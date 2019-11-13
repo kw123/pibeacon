@@ -361,13 +361,13 @@ def readNewParams(force=0):
 			if u"shutdownSignalFromUPSPin"	 in inp:  
 				xxx = int(inp["shutdownSignalFromUPSPin"])
 				if shutdownSignalFromUPSPin !=-1 and xxx != shutdownSignalFromUPSPin:  # is a change, not just switch on 
-					U.logger.log(30, "UPS-V2 restart master for new shutdownSignalFromUPSPin input pin")
+					U.logger.log(30, "UPS-V2 restart master for new shutdownSignalFromUPSPin GPIO input pin")
 					os.system("/usr/bin/python "+G.homeDir+"master.py &" )
 					time.sleep(2)
 				if shutdownSignalFromUPSPin ==-1 and xxx != shutdownSignalFromUPSPin and xxx > 1:  # is a change, not just switch on 
 					shutdownSignalFromUPSPin =	  xxx
 					shutdownSignalFromUPS_InitTime = time.time()
-					U.logger.log(30,"UPS-V2 setting shutdown signal event tracking to init in in 2 minutes, using pin#{}".format(shutdownSignalFromUPSPin))
+					U.logger.log(30,"UPS-V2 setting shutdown signal event tracking to init in in 2 minutes, using GPIO-pin#{}".format(shutdownSignalFromUPSPin))
 
 
 			if u"batteryUPSshutdownAtxPercent"	 in inp:  
@@ -467,8 +467,8 @@ def readNewParams(force=0):
 ####################      #########################
 def setupX(action="leaveAlone"):
 	try:
-		if action == "leaveAlone": return 
-		U.logger.log(30, "startX called:{}".format(action))
+		if action == "leaveAlone" or  action == "": return 
+		U.logger.log(30, "startX called action: >>>{}<<<".format(action))
 		if action == "start": 	
 			if os.path.isfile(G.homeDir+"pygame.active"):
 				# need to reboot 
@@ -495,6 +495,8 @@ def setupX(action="leaveAlone"):
 				U.killOldPgm(-1,"callbeacon.py")
 				exit()
 			else:
+				if not U.pgmStillRunning("startmaster.sh"):
+					U.doReboot(tt=5., text="rebooting due to xterminal, startmaster.sh is not running")
 				U.logger.log(30, "startX already up, no action ")
 				
 		if action == "stop": 

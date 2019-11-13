@@ -204,11 +204,6 @@ def setupLibs(upgradeOpSys):
 		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		U.logger.log(30,	  ret[0]+"\n"+ret[1])
 
-		time.sleep(1)
-		cmd="apt-get install python-bluez"
-		U.logger.log(30, "==== installing "+cmd)
-		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,	  ret[0]+"\n"+ret[1])
 
 		time.sleep(1)
 		U.logger.log(30,	 "==== checking  spi")

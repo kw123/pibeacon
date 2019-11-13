@@ -596,8 +596,9 @@ def getIPCONFIG():
 			#	 wlan0: 3220685   14907    0    0    0     0          0      6469  1530314    5879    0    0    0     0       0          0
 			for line in retBytes:
 				lineItems = line.split()
+				if len(lineItems) <11: continue
 				dd = lineItems[0].strip(":").strip()
-			
+				
 				for ii in range(ind):
 					ddd = dev[ii]
 					if ddd == dd: 
@@ -608,6 +609,7 @@ def getIPCONFIG():
 
 			for line in retBytes:
 				lineItems = line.split()
+				if len(lineItems) <11: continue
 				dd = lineItems[0].strip(":").strip()
 			
 				for ii in range(ind):
@@ -763,34 +765,43 @@ def getIPCONFIG():
 
 ################################
 def getIPofRouter():
-	retRoute = subprocess.Popen("/sbin/ip route" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
-	#default via 192.168.1.1 dev eth0 proto dhcp src 192.168.1.22 metric 202 
-	#192.168.1.0/24 dev eth0 proto dhcp scope link src 192.168.1.22 metric 202 
-	for line in retRoute:
-		lineItems = line.split()
-		if lineItems[0] == "default" and isValidIP(lineItems[2]):
-			return  lineItems[2]
-			break
+	try:
+		retRoute = subprocess.Popen("/sbin/ip route" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
+		#default via 192.168.1.1 dev eth0 proto dhcp src 192.168.1.22 metric 202 
+		#192.168.1.0/24 dev eth0 proto dhcp scope link src 192.168.1.22 metric 202 
+		for line in retRoute:
+			lineItems = line.split()
+			if len(lineItems) > 1 and lineItems[0] == "default" and isValidIP(lineItems[2]):
+				return  lineItems[2]
+				break
+	except	Exception, e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return ""
 
 ################################
 def whichWifi():
-	ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
-	#print "whichWifi", ret 
-	if	ret.find("192.168.1.254") >-1: 
-		G.wifiType="adhoc"
-		return "adhoc"
-	G.wifiType="normal"
+	try:
+		ret = subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0]
+		#print "whichWifi", ret 
+		if	ret.find("192.168.1.254") >-1: 
+			G.wifiType="adhoc"
+			return "adhoc"
+		G.wifiType="normal"
+	except	Exception, e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return "normal"
 
 
 ################################
 def checkWhenAdhocWifistarted():
-	if not os.path.isfile(G.homeDir+"adhocWifistarted.time"): return -1
-	xxx, ddd = readJson(G.homeDir+"adhocWifistarted.time")
-	if  xxx =={}: return -1
-	if "startTime" in xxx:
-		return xxx["startTime"]
+	try:
+		if not os.path.isfile(G.homeDir+"adhocWifistarted.time"): return -1
+		xxx, ddd = readJson(G.homeDir+"adhocWifistarted.time")
+		if  xxx =={}: return -1
+		if "startTime" in xxx:
+			return xxx["startTime"]
+	except	Exception, e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return -1
 
 #################################
@@ -1444,7 +1455,7 @@ def getSerialDEV():
 		time.sleep(10)
 		return ""
 		
-	if version[0].find("Pi 3") == -1 and version[0].find("Pi Zero") == -1:	# not RPI3
+	if version[0].find("Pi 3") == -1 and version[0].find("Pi 4") == -1 and version[0].find("Pi Zero") == -1:	# pi2?
 		sP = "/dev/ttyAMA0"
 
 		### disable and remove tty usage for console
@@ -1468,7 +1479,7 @@ def getSerialDEV():
 			time.sleep(10)
 			return ""
 
-	else:# RPI3
+	else:# RPI3, 4
 		sP = "/dev/ttyS0"
 
 		### disable and remove tty usage for console
@@ -1479,6 +1490,7 @@ def getSerialDEV():
 			logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
 			time.sleep(10)
 			return ""
+	logger.log(20, "cBY:"+G.program.ljust(20)+ "serial port name:{}".format(sP) )
 	return sP
 
 

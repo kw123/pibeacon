@@ -141,7 +141,7 @@ class GetHandler(BaseHTTPRequestHandler):
 						'<option value="lightSensor:0.016;">*64 highest</option>'+
 						'<option value="lightSensor:0.031;">*32 </option>'+
 						'<option value="lightSensor:0.063;">*16 </option>'+
-						'<option value="lightSensor:0.125;>"*8 </option>'+
+						'<option value="lightSensor:0.125;">"*8 </option>'+
 						'<option value="lightSensor:0.25;">*4 </option>'+
 						'<option value="lightSensor:0.50;">*2 </option>'+
 						'<option value="lightSensor:1.00;">normal default </option>'+

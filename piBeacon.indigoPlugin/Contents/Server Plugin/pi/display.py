@@ -43,6 +43,22 @@ import	piBeaconGlobals as G
 
 _defaultDateStampFormat			   = u"%Y-%m-%d %H:%M:%S"
 
+
+class setupKillMyself:
+  def __init__(self):
+    signal.signal(signal.SIGINT, self.doExit)
+    signal.signal(signal.SIGTERM, self.doExit)
+
+  def doExit(self, signum, frame):
+	global killedMyself
+	if killedMyself > 0 and time.time() - killedMyself > 20: # need to ignore for some seconds, receiving signals at startup 
+		try: outputDev.delPy()
+		except: pass
+		U.logger.log(30, u"exiting display, received kill signal ")
+		os.kill(os.getpid(), signal.SIGTERM)
+		sys.exit()
+
+
 class LCD1602():
 	def __init__(self, i2caddr=0x3f,backgroundLightEnabed=1): 
 
@@ -1711,7 +1727,9 @@ global useLightSensorType, useLightSensorDevId
 global multIntensity, intensity, intensityDevice, lightSensorValue
 global bigScreenSize
 global zoom, runLoop, pygameInitialized
+global killedMyself
 
+killedMyself				= time.time()
 pygameInitialized			= False
 
 runLoop 					= True
@@ -1779,6 +1797,8 @@ U.setLogLevel()
 U.logger.log(30,"starting display")
 U.killOldPgm(myPID,G.program+".py")
 U.echoLastAlive(G.program)
+
+setupKillMyself()
 
 try:
 	if len(sys.argv[1]) > 10:
@@ -2604,6 +2624,7 @@ while runLoop:
 				if xxx == "stop":
 					try: outputDev.delPy()
 					except: pass
+					killedMyself = -1 # killing myself..
 					U.logger.log(30, " exiting - stop was requested ") 	
 					os.kill(os.getpid(), signal.SIGTERM)
 					runLoop = False

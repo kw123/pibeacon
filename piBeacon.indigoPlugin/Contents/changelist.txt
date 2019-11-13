@@ -1,3 +1,13 @@
+Added features / changes in v7.113.319 @ 2019-11-13
+===================================================
+
+1. small fixes to auto wifi config using file on ssd boot directory
+
+2. small fixes to menus
+
+3. fixes to code on rpi to determin ip numbers etc. ie when in first startup = not connected to indigo
+
+
 Added features / changes in v7.113.318 @ 2019-11-07
 ===================================================
 

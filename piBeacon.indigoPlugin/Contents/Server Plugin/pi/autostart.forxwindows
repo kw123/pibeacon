@@ -1,7 +1,7 @@
 @lxpanel --profile LXDE-pi
 @pcmanfm --desktop --profile LXDE-pi
 #@lxterminal -e /home/pi/pibeacon/startmaster.sh
-@/home/pi/pibeacon/startmaster.sh
+@/bin/sh /home/pi/pibeacon/startmaster.sh
 @point-rpi
 @xset s noblank
 @xset s off
