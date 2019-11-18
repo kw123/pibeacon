@@ -1475,7 +1475,7 @@ def getSerialDEV():
 		subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		if serials[0].find("serial0 -> ttyS0")==-1:
-			logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
+			logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 4 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
 			time.sleep(10)
 			return ""
 

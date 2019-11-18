@@ -223,6 +223,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"max31865",																# platinum temp resistor 
 						 u"pmairquality",
 						 u"amg88xx","mlx90640",													# infrared camera
+						 u"rdlidar",															# rd lidar 
 						 u"ccs811",																   # co2 voc 
 						 u"mhzCO2",																# co2 temp 
 						 u"rainSensorRG11",
@@ -2962,7 +2963,7 @@ class Plugin(indigo.PluginBase):
 				"i2cADS1x15-1", "i2cADS1x15"
 				"spiMCP3008-1", "spiMCP3008",
 				"i2cTCS34725", "as726x", "i2cOPT3001", "i2cVEML7700", "i2cVEML6030", "i2cVEML6040", "i2cVEML6070", "i2cVEML6075", "i2cTSL2561", 
-				"mlx90614", "amg88xx", "mlx90640",	
+				"mlx90614", "amg88xx", "mlx90640","rdlidar",
 				"vl503l0xDistance", "vcnl4010Distance", "vl6180xDistance", "apds9960", "ultrasoundDistance",
 				"INPUTpulse"]
 
@@ -3739,6 +3740,9 @@ class Plugin(indigo.PluginBase):
 					else:
 						valuesDict[u"description"] = "reset-GPIO not used"
 
+				if	typeId =="rdlidar" :
+						valuesDict[u"description"] = "MotorFrq: {}Hz; {} degrees in 1 bin".format(int(10*float(valuesDict[u"motorFrequency"])), valuesDict[u"anglesInOneBin"])
+
 
 				if	typeId =="Wire18B20" : # update serial number in states in case we jumped around with dev types. 
 					if len(dev.states["serialNumber"]) < 5  and dev.description.find("sN= 28")>-1:
@@ -4244,7 +4248,7 @@ class Plugin(indigo.PluginBase):
 				if devId >0:
 					name= "-"+indigo.devices[devId].name
 			except: name=""
-			xList.append((piS,"#"+piU+"-"+self.RPI[piU][u"ipNumberPi"]+name))
+			xList.append((piU,"#"+piU+"-"+self.RPI[piU][u"ipNumberPi"]+name))
 		return xList
 
 ####-------------------------------------------------------------------------####
@@ -5124,11 +5128,11 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonAnycommandCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		pi = valuesDict[u"configurePi"]
-		if pi ==u"": 
+		piU = valuesDict[u"configurePi"]
+		if piU ==u"": 
 			self.indiLOG.log(20, u"send YOUR command to rpi ...  no RPI selected")
 			return
-		if pi == "999":
+		if piU == "999":
 			for pi in range(_GlobalConst_numberOfRPI):
 				piU= unicode(pi)
 				out= json.dumps([{u"command":"general","cmdLine":valuesDict[u"anyCmdText"]}])
@@ -5138,7 +5142,7 @@ class Plugin(indigo.PluginBase):
 		else:
 				out= json.dumps([{u"command":"general","cmdLine":valuesDict[u"anyCmdText"]}])
 				self.indiLOG.log(20, u"send YOUR command to rpi:{}  {};  {}".format(piU, self.RPI[piU][u"ipNumberPi"], json.dumps(out)) )
-				self.presendtoRPI(pi,out)
+				self.presendtoRPI(piU,out)
 			
 		return
 
@@ -8003,7 +8007,7 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(20, u"setPIN bad parameter: typeId not supplied: for pi#{}".format(pi))
 					return
 
-				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeid:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
+				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
 				self.sendGPIOCommand(ip, pi, typeId, valuesDict[u"cmd"])
 				return
 
@@ -8013,7 +8017,7 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(20, u"setPIN bad parameter: typeId not supplied: for pi#{}".format(pi))
 					return
 
-				if self.decideMyLog(u"OutputDevice"): sself.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeid:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
+				if self.decideMyLog(u"OutputDevice"): sself.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
 				self.sendGPIOCommand(ip, pi, typeId, valuesDict[u"cmd"])
 				return
 
@@ -8022,7 +8026,7 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(20, u"setPIN bad parameter: typeId not supplied: for pi#{}".format(pi))
 					return
 
-				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeid:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
+				if True:  self.indiLOG.log(20, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
 				self.sendGPIOCommand(ip, pi, typeId, valuesDict[u"cmd"])
 				return
 
@@ -8381,13 +8385,13 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def startCalibrationCALLBACKAction(self, action1):
+	def startCalibrationCALLBACKaction(self, action1):
 		valuesDict = action1.props
 		valuesDict[u"cmd"] = "startCalibration"
 		self.setPin(valuesDict)
 
 ####-------------------------------------------------------------------------####
-	def setnewMessageCALLBACKAction(self, action1):
+	def setnewMessageCALLBACKaction(self, action1):
 		valuesDict = action1.props
 		valuesDict[u"cmd"] = "newMessage"
 		self.setPin(valuesDict)
@@ -11850,6 +11854,60 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(40,unicode(props))
 							self.indiLOG.log(40,unicode(len(data[u"rawData"]))+"     "+data[u"rawData"])
 
+					if sensor == u"rdlidar" :
+						try:
+								xx = data["triggerValues"]
+								newStatus = self.setStatusCol( dev, u"Leaving", 				xx["current"]["GT"], unicode(xx["current"]["GT"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Approaching", 			xx["current"]["LT"], unicode(xx["current"]["LT"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed", 	xx["empty"]["GT"],   unicode(xx["empty"]["GT"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Room_occupied", 			xx["empty"]["LT"],   unicode(xx["empty"]["LT"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								if "saveRawData" in props and props[u"saveRawData"] =="1" and False:
+										props["rawData"] = data
+										dev.replacePluginPropsOnServer(props)
+								if len(props[u"imageFileName"]) < 12: fileName = self.indigoPreferencesPluginDir+"rdLidarImages/image.png"
+								else: 								  fileName = props[u"imageFileName"]
+								if "mode" in props and props[u"mode"] in["manual","auto"]:
+									if (    "showAllImages" not in props or 
+											("showAllImages" in props and props[u"showAllImages"] == "1") or 
+											data["triggerValues"]["current"]["GT"] != 0 or 
+											data["triggerValues"]["current"]["LT"] != 0 or
+											data["triggerValues"]["empty"]["GT"] != 0 or
+											data["triggerValues"]["empty"]["LT"] != 0    ): 
+										imageParams	  = json.dumps( {"logFile":self.PluginLogFile, 
+													"logLevel":props[u"logLevel"],
+													"compress":props[u"fileCompress"],
+													"fileName":fileName,
+													"xMin":props[u"xMin"],
+													"xMax":props[u"xMax"],
+													"yMin":props[u"yMin"],
+													"yMax":props[u"yMax"],
+													"scalefactor":props[u"scalefactor"],
+													"mode":props[u"mode"],
+													"showPhi0":props[u"showPhi0"],
+													"frameON":props[u"frameON"],
+													"DPI":props[u"DPI"],
+													"fontSize":props[u"fontSize"],
+													"showLegend":props[u"showLegend"],
+													"topText":props[u"topText"],
+													"frameTight":props[u"frameTight"],
+													"yOffset":props[u"yOffset"],
+													"xOffset":props[u"xOffset"],
+													"numberOfDotsX":props[u"numberOfDotsX"],
+													"numberOfDotsY":props[u"numberOfDotsY"],
+													"phiOffset":props[u"phiOffset"],
+													"anglesInOneBin":props[u"anglesInOneBin"],
+													"colorCurrent":props[u"colorCurrent"],
+													"colorEmpty":props[u"colorEmpty"],
+													"colorLast":props[u"colorLast"],
+													"colorBackground":props[u"colorBackground"]} )
+										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeRdlidarPlot.py' '" +imageParams+"' '"+json.dumps(data)+"'  & "  
+										if props[u"logLevel"] == "1": self.indiLOG.log(20,"rdlidar command:{}".format(cmd))
+										os.system(cmd)
+						except Exception, e:
+							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.indiLOG.log(40,unicode(props))
+							self.indiLOG.log(40,unicode(len(data[u"rawData"]))+"     "+data[u"rawData"])
+
 					if u"Vertical" in data:
 						try:
 							x, UI  = float(data[u"Vertical"]),  "%7.3f"%(float(data[u"Vertical"]))
@@ -12080,7 +12138,7 @@ class Plugin(indigo.PluginBase):
 					currentDisplay = whichKeysToDisplay.split(u"/")
 
 			if unicode(dev.states[key]) != unicode(value):
-				self.addToStatesUpdateDict(unicode(dev.id), key, value,decimalPlaces=decimalPlaces,force=force)
+				self.addToStatesUpdateDict(unicode(dev.id), key, value, decimalPlaces=decimalPlaces,force=force)
 				self.fillMinMaxSensors(dev,key,value,decimalPlaces=decimalPlaces)
 
 			#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+"  in setStatusCol "+key+"  "+unicode(value)+"   "+unicode(valueUI))
@@ -14657,6 +14715,15 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId2")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId3")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"coincidenceTimeInterval")
+
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"motorFrequency")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nContiguousAngles")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"contiguousDeltaValue")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"triggerLast")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"triggerEmpty")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sendToIndigoEvery")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"anglesInOneBin")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"measurementsNeededForCalib")
 
 							self.deviceStopCommIgnore = time.time()
 							dev.replacePluginPropsOnServer(props)

@@ -26,7 +26,7 @@ GPIO.setmode(GPIO.BCM)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "mlx90640"
+G.program = "apds9960"
 
 
 import smbus

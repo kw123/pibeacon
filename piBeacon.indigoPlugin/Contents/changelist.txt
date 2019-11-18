@@ -1,3 +1,12 @@
+
+
+Added features / changes in v7.114.319 @ 2019-11-17
+===================================================
+
+1. added RD lidar sensor, see indigo web site for details
+
+
+3. fixes to code on rpi to determin ip numbers etc. ie when in first startup = not connected to indigo
 Added features / changes in v7.113.319 @ 2019-11-13
 ===================================================
 

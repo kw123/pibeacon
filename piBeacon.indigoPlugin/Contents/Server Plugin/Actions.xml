@@ -3275,7 +3275,7 @@ Then there are actions in each set (steps/sleep)
 
      <Action id="newMessage">
         <Name>Request new data from rPi</Name>
-        <CallbackMethod>setnewMessageCALLBACKAction</CallbackMethod>
+        <CallbackMethod>setnewMessageCALLBACKaction</CallbackMethod>
         <ConfigUI>
              <Label>Request new data from rPi</Label>
            <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3349,6 +3349,7 @@ Then there are actions in each set (steps/sleep)
                     <Option value= "mag3110"             >mag3110</Option>
                     <Option value= "bme680"              >bme680</Option>
                     <Option value= "mhz16"               >mhz16</Option>
+                    <Option value= "rdlidar"             >rdlidar</Option>
                     <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>
                     <Option value= "all"                 >all</Option>

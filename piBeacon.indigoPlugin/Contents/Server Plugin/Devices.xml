@@ -128,7 +128,7 @@
 				<Label> correction to received rssi eg -10 would reduce rssi by 10; -300: use for up/down, not distance</Label>
 			</Field>
 
-			<Field id="cutOffForClosestBeacon" type="menu"     defaultValue="20" tooltip=""> 
+			<Field id="cutOffForClosestBeacon" type="menu"     defaultValue="20" > 
 				<Label>.. CUT OFF distance for determining closest iBeacon: if distance &gt;</Label>
 				<List>
 					<Option value="1"   >&gt; 1 m ignore</Option>
@@ -354,7 +354,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
   A, B, C are independent of each other and can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="">
+			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  >
 				<Label>--(A)... enable shutdown pin IN/output:</Label>
 				<List>
 					<Option value="0"   >off</Option>
@@ -612,7 +612,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			 </Field>
 
-			<Field id="fanTempDevId"	type="menu" defaultValue="0" tooltip="" visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
+			<Field id="fanTempDevId"	type="menu" defaultValue="0"  visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
 				<Label>.. Which TempSensor to use for Fan:</Label>
 				<List class="self" filter="" method="filterTempSensorsOnThisRPI" dynamicReload="false" />
 			 </Field>
@@ -745,7 +745,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
     if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
 			</Field>
 
-			<Field    id="eth0"   type="menu" defaultValue='{"on":"on",        "useIP":"use"}' tooltip="">
+			<Field    id="eth0"   type="menu" defaultValue='{"on":"on",        "useIP":"use"}' >
 				<Label>ethernet cable(eth0) active:</Label>
 				<List>
 							<Option value='{"on":"on",        "useIP":"use"}'		>ON,  use eth0 IP# default </Option>
@@ -759,7 +759,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List> 
 			</Field>
 
-			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange","useIP":"use"}' tooltip="">
+			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange","useIP":"use"}' >
 				<Label>WiFi(wlan0) active:</Label>
 				<List>
 							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change ,  use wlan0 IP# </Option>
@@ -1347,7 +1347,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
   A, B, C are independent of each other and can be used together</Label>
 			</Field>
 
-			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  tooltip="">
+			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="rebootHardware" visibleBindingValue="true"  >
 				<Label>--(A)... enable shutdown pin IN/output:</Label>
 				<List>
 					<Option value="0"   >off</Option>
@@ -1600,7 +1600,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			 </Field>
 
-			<Field id="fanTempDevId"	type="menu" defaultValue="0" tooltip="" visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
+			<Field id="fanTempDevId"	type="menu" defaultValue="0"  visibleBindingId="fanEnable" visibleBindingValue="0,1" >	
 				<Label>.. Which TempSensor to use for Fan:</Label>
 				<List class="self" filter="" method="filterTempSensorsOnThisRPI" dynamicReload="false" />
 			 </Field>
@@ -1735,7 +1735,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
     if you have eg wifi off and no ethernet connection it will try with wifi ON</Label>
 			</Field>
 
-			<Field    id="eth0"   type="menu" defaultValue='{"on":"on",        "useIP":"use"}' tooltip="">
+			<Field    id="eth0"   type="menu" defaultValue='{"on":"on",        "useIP":"use"}' >
 				<Label>ethernet cable(eth0) active:</Label>
 				<List>
 							<Option value='{"on":"on",        "useIP":"use"}'		>ON,  use eth0 IP# default </Option>
@@ -1749,7 +1749,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List> 
 			</Field>
 
-			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange","useIP":"use"}' tooltip="">
+			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange","useIP":"use"}' >
 				<Label>WiFi(wlan0) active:</Label>
 				<List>
 							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change ,  use wlan0 IP# </Option>
@@ -2897,7 +2897,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
-			<Field id="mac" type="textfield"     defaultValue="" tooltip="" >
+			<Field id="mac" type="textfield"     defaultValue=""  >
 			<Label>enter MAC number for this device: </Label>
 			</Field>
 
@@ -4615,11 +4615,11 @@ After some days of running in clean air, proposed setup is:
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -5003,11 +5003,11 @@ After some days of running in clean air, proposed setup is:
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
 				<Option value="7"    > 7</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
@@ -5152,11 +5152,11 @@ After some days of running in clean air, proposed setup is:
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
 				<Option value="7"    > 7</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -5324,11 +5324,11 @@ After some days of running in clean air, proposed setup is:
 					<Option value="3"    > 3</Option>
 					<Option value="5"    > 5</Option>
 					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10	</Option>
-					<Option value="15"   > 15	</Option>
-					<Option value="20"   > 20	</Option>
-					<Option value="25"   > 25	</Option>
-					<Option value="30"   > 30	</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
 				</List>
 			</Field>
 
@@ -5466,11 +5466,11 @@ After some days of running in clean air, proposed setup is:
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
 				<Option value="7"    > 7</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
  
@@ -5646,11 +5646,11 @@ It measures CO2 VOC
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -5829,7 +5829,7 @@ It measures CO2 and temp using infraed light absorption
 				<Option value="large"   > sensitive to large  changes (recalib: 20 below,50 above) </Option>
 			</List>
 			</Field>
-			<Field id="timeaboveCalibrationMAX"   type="menu" defaultValue="1200" tooltip="" >
+			<Field id="timeaboveCalibrationMAX"   type="menu" defaultValue="1200"  >
 			<List>
 				<Option value="300"   > 5 </Option>
 				<Option value="600"   > 10 </Option>
@@ -5843,7 +5843,7 @@ It measures CO2 and temp using infraed light absorption
 			</List>
 			<Label>Re-calibrate if CO2 above(set by sensitivity)  Calibration point for xx minutes :</Label>
 			</Field>
-			<Field id="CO2normal"   type="textfield" defaultValue="410" tooltip="" >
+			<Field id="CO2normal"   type="textfield" defaultValue="410"  >
 			<Label>normal CO2 level [ppm]:</Label>
 			</Field>
 
@@ -5996,11 +5996,11 @@ It measures CO2 VOC
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -7520,11 +7520,11 @@ It measures CO2 VOC
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
 				<Option value="15"   > 15</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -7706,18 +7706,18 @@ you can setup
 			<Label>delta value(temp...[%]) to trigger indigo update:</Label>
 			<List>
 				<Option value="1"    > any change</Option>
-				<Option value="5"    > 5	</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
 				<Option value="30"   > 30 (default)  </Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="100"  > 100	</Option>
-				<Option value="150"  > 150	</Option>
-				<Option value="200"  > 200	</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="100"  > 100</Option>
+				<Option value="150"  > 150</Option>
+				<Option value="200"  > 200</Option>
 			</List>
 			</Field>
 
@@ -7919,6 +7919,392 @@ you can setup
 		</States>
 	</Device>
    
+
+   
+	<Device type="sensor" id="rdlidar">
+	<Name>INPUT-rdLidar</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup RD-Lidar sensor on individual rPis.. 
+    connect sensor to USB port and power 
+  </Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+
+			<Field id="infoLabel0" type="label">
+			<Label>Measuremnt parameters =============</Label>
+			</Field>
+
+			<Field id="motorFrequency" type="menu"     defaultValue="0.3" hidden="no" > 
+			<Label>Motor speed / data read frequency:</Label>
+			<List>
+				<Option value="1"   > 10Hz = 1/0.1secs  </Option>
+				<Option value="0.8" > 8Hz  = 1/0.12secs</Option>
+				<Option value="0.6" > 6Hz  = 1/0.18secs</Option>
+				<Option value="0.5" > 5Hz  = 1/0.2secs</Option>
+				<Option value="0.4" > 4Hz  = 1/0.25secs</Option>
+				<Option value="0.3" > 3Hz  = 1/0.3secs</Option>
+				<Option value="0.2" > 2Hz  = 1/0.5secs </Option>
+				<Option value="0.1" > 1Hz  = 1/1secs</Option>
+			</List>
+			</Field>
+
+			<Field id="anglesInOneBin" type="menu"     defaultValue="2" hidden="no" > 
+			<Label>Angles combined into one bin:</Label>
+			<List>
+				<Option value="1"   > 1	degree </Option>
+				<Option value="2"   > 2 degrees (default)</Option>
+				<Option value="3"   > 3	degrees</Option>
+				<Option value="4"   > 4	degrees</Option>
+			</List>
+			</Field>
+
+			<Field id="measurementsNeededForCalib" type="menu"     defaultValue="5" hidden="no" > 
+			<Label># of 360º measurements for empty room:</Label>
+			<List>
+				<Option value="3"   > 3</Option>
+				<Option value="4"   > 4</Option>
+				<Option value="5"   > 5 (default)</Option>
+				<Option value="6"   > 6</Option>
+				<Option value="7"   > 7</Option>
+				<Option value="8"   > 8</Option>
+				<Option value="9"   > 9</Option>
+			</List>
+			</Field>
+
+
+			<Field id="infoLabel2" type="label">
+			<Label>Trigger setup =====================</Label>
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+			<Label>Min delta secs between indigo updates:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+			</List>
+			</Field>
+
+			<Field id="sendToIndigoEvery" type="menu"     defaultValue="60" hidden="no" > 
+			<Label>Update indigo every x secs even if no trigger:</Label>
+			<List>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="20"  > 20  secs</Option>
+				<Option value="30"  > 30  secs</Option>
+				<Option value="40"  > 40  secs</Option>
+				<Option value="50"  > 50  secs</Option>
+				<Option value="60"  > 60  secs</Option>
+				<Option value="70"  > 70  secs</Option>
+				<Option value="80"  > 80  secs</Option>
+				<Option value="90"  > 90  secs</Option>
+			</List>
+			</Field>
+
+			<Field id="triggerEmpty" type="menu"     defaultValue="5" hidden="no" > 
+			<Label># of dots to trigger presence:</Label>
+			<List>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="4"    > 4</Option>
+				<Option value="5"    > 5(default)</Option>
+				<Option value="6"    > 6</Option>
+				<Option value="7"    > 7</Option>
+				<Option value="8"    > 8</Option>
+				<Option value="9"    > 9</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="12"   > 12</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				</List>
+			</Field>
+
+			<Field id="triggerLast" type="menu"     defaultValue="4" hidden="no" > 
+			<Label># of dots to trigger movement:</Label>
+			<List>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="4"    > 4 (default)</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="6"    > 6</Option>
+				<Option value="7"    > 7</Option>
+				<Option value="8"    > 8</Option>
+				<Option value="9"    > 9</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="12"   > 12</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+			</List>
+			</Field>
+
+			<Field id="contiguousDeltaValue" type="menu"     defaultValue="5" hidden="no" > 
+			<Label>last-current dot-value delta to qualify for contiguous shift[%]:</Label>
+			<List>
+				<Option value="2"   > 2</Option>
+				<Option value="3"   > 3</Option>
+				<Option value="4"   > 4</Option>
+				<Option value="5"   > 5	(default)</Option>
+				<Option value="6"   > 6</Option>
+				<Option value="7"   > 7</Option>
+				<Option value="8"   > 8</Option>
+				<Option value="9"   > 9</Option>
+				<Option value="10"  > 10</Option>
+			</List>
+			</Field>
+
+			<Field id="nContiguousAngles" type="menu"     defaultValue="5" hidden="no" > 
+			<Label>Number of contiguous dots to trigger event:</Label>
+			<List>
+				<Option value="2"   > 2</Option>
+				<Option value="3"   > 3</Option>
+				<Option value="4"   > 4</Option>
+				<Option value="5"   > 5	(default)</Option>
+				<Option value="6"   > 6</Option>
+				<Option value="7"   > 7</Option>
+				<Option value="8"   > 8</Option>
+				<Option value="9"   > 9</Option>
+				<Option value="10"  > 10</Option>
+			</List>
+			</Field>
+
+			<Field id="infoLabel3" type="label">
+			<Label>Image setup =====================</Label>
+			</Field>
+
+			<Field id="mode" type="menu"     defaultValue="0"> 
+			<List>
+				<Option value="off"    >do not create image file</Option>
+				<Option value="manual" >use detailed parameters</Option>
+				<Option value="auto"   >auto mode, all parameters below will be ignored</Option>
+			</List>
+			<Label>Image parameters off / auto / manual:</Label> 
+			</Field>
+
+			<Field id="showAllImages" type="menu"     defaultValue="0"> 
+			<List>
+				<Option value="0" >only create image file when event</Option>
+				<Option value="1" >create image file every time data arrives</Option>
+			</List>
+			<Label>Make image only for events or allways:</Label> 
+			</Field>
+
+			<Field id="DPI" type="textfield"     defaultValue="120"   visibleBindingId="mode" visibleBindingValue="manual,auto" > 
+			<Label>Dots per inch of screen:</Label> 
+			</Field>
+
+
+			<Field id="numberOfDotsX" type="textfield"     defaultValue="5000"  visibleBindingId="mode" visibleBindingValue="manual,auto" > 
+			<Label>Number of pixels in Display Y-axis:</Label> 
+			</Field>
+
+			<Field id="numberOfDotsY" type="textfield"     defaultValue="5000"  visibleBindingId="mode" visibleBindingValue="manual,auto"> 
+			<Label>Number of pixels in Display Y-axis:</Label> 
+			</Field>
+
+			<Field id="scalefactor" type="textfield"     defaultValue="1"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Axis scale factor, eg 0.1..10:</Label> 
+			</Field>
+
+			<Field id="phiOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Offset Phi (+=rotate left):</Label> 
+			</Field>
+
+			<Field id="xOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Offset X (+ = right):</Label> 
+			</Field>
+
+			<Field id="yOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Offset Y (+ = up):</Label> 
+			</Field>
+
+			<Field id="xMin" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Min X:</Label> 
+			</Field>
+
+			<Field id="xMax" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Max X:</Label> 
+			</Field>
+
+			<Field id="yMin" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Min Y:</Label> 
+			</Field>
+
+			<Field id="yMax" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Max X:</Label> 
+			</Field>
+
+			<Field id="fontSize" type="textfield"     defaultValue="50"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Font Size: eg 5...50:</Label> 
+			</Field>
+
+			<Field id="topText" type="textfield"     defaultValue=""  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Text on top</Label> 
+			</Field>
+
+
+			<Field id="showLegend" type="menu"     defaultValue="1" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Show Legend:</Label> 
+			</Field>
+
+			<Field id="showPhi0" type="menu"   defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Show phi=0 line</Label> 
+			</Field>
+
+			<Field id="frameON" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Show xy axes:</Label> 
+			</Field>
+
+
+			<Field id="frameTight" type="menu"     defaultValue="1" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Leave space around frame and data:</Label> 
+			</Field>
+
+
+			<Field id="fileCompress" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>compress png file:</Label> 
+			</Field>
+
+			<Field id="fileName" type="textfield"     defaultValue=""  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Set /path/filename:</Label> 
+			</Field>
+			<Field id="fileNameLabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>blank: create image in 
+.../Preferences/Plugins/
+   com.karlwachs.piBeacon/
+   rdLidarImages/image.png</Label>	
+			</Field>
+
+			<Field id="infoLabelColor" type="label">
+			<Label>.            set colors use #ff00aa or red green ..  lightgrey ..  r g b ...</Label>
+			</Field>
+
+			<Field id="colorCurrent" type="textField"     defaultValue="red"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Color for current dots:</Label> 
+
+			</Field>
+			<Field id="colorEmpty" type="textField"     defaultValue="green"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Color for empty room dots:</Label> 
+			</Field>
+
+			<Field id="colorLast" type="textField"     defaultValue="blue"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Color for previous values dots:</Label> 
+			</Field>
+
+			<Field id="colorBackground" type="textField"     defaultValue="lightgrey"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Color for background:</Label> 
+			</Field>
+
+			<Field id="logLevel" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>logLevel:</Label> 
+			</Field>
+
+
+			<Field id="infoLabelOther" type="label">
+			<Label>Other ==========================</Label>
+			</Field>
+
+
+			<Field id="saveRawData" type="menu"     defaultValue="0" >  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Save raw pixel data to device properties:</Label> 
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Re-Calibration_needed"    >Re-Calibration needed</Option>
+				<Option value="Room_occupied"    >Room occupied</Option>
+				<Option value="Approaching"      >Approaching</Option>
+				<Option value="Leaving"      >Leaving</Option>
+			</List>
+			</Field>
+
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="Leaving">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Leaving</TriggerLabel>
+				<ControlPageLabel>Leaving</ControlPageLabel>
+			</State>
+			<State id="Approaching">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Approaching</TriggerLabel>
+				<ControlPageLabel>Approaching</ControlPageLabel>
+			</State>
+			<State id="Re-Calibration_needed">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Re-Calibration_needed</TriggerLabel>
+				<ControlPageLabel>Re-Calibration_needed</ControlPageLabel>
+			</State>
+			<State id="Room_occupied">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Room_occupied</TriggerLabel>
+				<ControlPageLabel>Room_occupied</ControlPageLabel>
+			</State>
+
+
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+   
   
 	<Device type="sensor" id="mlx90640">
 	<Name>INPUT-mlx90640-infraredCamera</Name>
@@ -8009,18 +8395,18 @@ you can setup
 			<Label>delta value(temp...[%]) to trigger indigo update:</Label>
 			<List>
 				<Option value="1"    > any change</Option>
-				<Option value="5"    > 5	</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
 				<Option value="30"   > 30 (default)  </Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="100"  > 100	</Option>
-				<Option value="150"  > 150	</Option>
-				<Option value="200"  > 200	</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="100"  > 100</Option>
+				<Option value="150"  > 150</Option>
+				<Option value="200"  > 200</Option>
 			</List>
 			</Field>
 
@@ -8262,11 +8648,11 @@ you can setup
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 			<Field id="threshold" type="menu"     defaultValue="30" hidden="no" tooltip="to cut off low noise, not moving " > 
@@ -8274,14 +8660,14 @@ you can setup
 			<List>
 				<Option value="1"    > 1</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="75"   > 75	</Option>
-				<Option value="100"  > 100	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="75"   > 75</Option>
+				<Option value="100"  > 100</Option>
 			</List>
 			</Field>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
@@ -8420,15 +8806,15 @@ you can setup
 			<Field id="deltaX" type="menu"     defaultValue="30" hidden="no"  tooltip="use larger values, ortherwise it is too nervous"> 
 			<Label>delta sum(x,y,z)(%) to trigger INDIGO update :</Label>
 			<List>
-				<Option value="5"    > 5	</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="60"   > 60	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="80"   > 80	</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="60"   > 60</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="80"   > 80</Option>
 			</List>
 			</Field>
 			<Field id="sensorLoopWait" type="menu"     defaultValue="2" hidden="no"> 
@@ -8631,15 +9017,15 @@ you can setup
 			<Field id="deltaX" type="menu"     defaultValue="30" hidden="no"  tooltip="use larger values, ortherwise it is too nervous"> 
 			<Label>delta sum(x,y,z)(%) to trigger INDIGO update :</Label>
 			<List>
-				<Option value="5"    > 5	</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="60"   > 60	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="80"   > 80	</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="60"   > 60</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="80"   > 80</Option>
 			</List>
 			</Field>
 			<Field id="sensorLoopWait" type="menu"     defaultValue="2" hidden="no"> 
@@ -8662,7 +9048,7 @@ you can setup
 			</List>
 			<Field id="magResolution" type="menu"     defaultValue="1" hidden="no"> 
 			<List>
-				<Option value="0">0.073uT/LSB ..  88uT	</Option>
+				<Option value="0">0.073uT/LSB ..  88uT</Option>
 				<Option value="1">0.092uT/LSB .. 130uT  </Option>
 				<Option value="2">0.122uT/LSB .. 190uT  </Option>
 				<Option value="3">0.152uT/LSB .. 250uT  </Option>
@@ -8824,19 +9210,19 @@ you can setup
 			<Field id="deltaX" type="menu"     defaultValue="60" hidden="no"  tooltip="use larger values, ortherwise it is too nervous"> 
 			<Label>delta sum(X)(%) to trigger INDIGO update :</Label>
 			<List>
-				<Option value="1"    > 1	</Option>
+				<Option value="1"    > 1</Option>
 				<Option value="2"    > 2  </Option>
 				<Option value="5"    > 5  </Option>
 				<Option value="7"    > 7  </Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="60"   > 60	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="80"   > 80	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="60"   > 60</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="80"   > 80</Option>
 			</List>
 			</Field>
 			<Field id="sensorLoopWait" type="menu"     defaultValue="2" hidden="no"> 
@@ -9048,19 +9434,19 @@ you can setup
 			<Field id="deltaX" type="menu"     defaultValue="60" hidden="no"  tooltip="use larger values, ortherwise it is too nervous"> 
 			<Label>delta sum(X)(%) to trigger INDIGO update :</Label>
 			<List>
-				<Option value="1"    > 1	</Option>
+				<Option value="1"    > 1</Option>
 				<Option value="2"    > 2  </Option>
 				<Option value="5"    > 5  </Option>
 				<Option value="7"    > 7  </Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="60"   > 60	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="80"   > 80	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="60"   > 60</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="80"   > 80</Option>
 			</List>
 			</Field>
 			<Field id="sensorLoopWait" type="menu"     defaultValue="2" hidden="no"> 
@@ -9265,14 +9651,14 @@ you can setup
 			<Field id="deltaX" type="menu"     defaultValue="60" hidden="no"  tooltip="use larger values, ortherwise it is too nervous"> 
 			<Label>delta sum(X)(%) to trigger INDIGO update :</Label>
 			<List>
-				<Option value="10"   > 10	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="60"   > 60	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="80"   > 80	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="60"   > 60</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="80"   > 80</Option>
 			</List>
 			</Field>
 			<Field id="sensorLoopWait" type="menu"     defaultValue="2" hidden="no"> 
@@ -9444,14 +9830,14 @@ you can setup
 			<Field id="deltaX" type="menu"     defaultValue="60" hidden="no"  tooltip="use larger values, ortherwise it is too nervous"> 
 			<Label>delta sum(X)(%) to trigger INDIGO update :</Label>
 			<List>
-				<Option value="10"   > 10	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="40"   > 40	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="60"   > 60	</Option>
-				<Option value="70"   > 70	</Option>
-				<Option value="80"   > 80	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="40"   > 40</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="60"   > 60</Option>
+				<Option value="70"   > 70</Option>
+				<Option value="80"   > 80</Option>
 			</List>
 			</Field>
 			<Field id="sensorLoopWait" type="menu"     defaultValue="2" hidden="no"> 
@@ -9722,8 +10108,8 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			</Field>
 			<Field id="i2cAddress" type="menu"     defaultValue="64"> <Label>i2c address of ADC, connect A0,A1 to GND :</Label>
 			<List>
-				<Option value="64"   >0x40 = 64: A0-    A1-	</Option>
-				<Option value="65"   >0x41 = 65: A0-GND A1-	</Option>
+				<Option value="64"   >0x40 = 64: A0-    A1-</Option>
+				<Option value="65"   >0x41 = 65: A0-GND A1-</Option>
 				<Option value="68"   >0x44 = 68: A0-    A1-GND</Option>
 				<Option value="69"   >0x45 = 69: A0-GND A1-GND</Option>
 			</List>
@@ -9788,11 +10174,11 @@ For the MQ gas sensors you need to understand the required heating voltage.
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -9945,11 +10331,11 @@ For the MQ gas sensors you need to understand the required heating voltage.
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -10962,7 +11348,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
 
-			<Field id="sensorMode"   type="menu" defaultValue="dynamic" tooltip="" >
+			<Field id="sensorMode"   type="menu" defaultValue="dynamic"  >
 			<List>
 				<Option value="dynamic"          >dynamic switch of sensitivity rain-high-med-low </Option>
 				<Option value="checkIfIsRaining" >any rain - static-  states: no rain/drizzle/rain </Option>
@@ -11846,7 +12232,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Type of input function for each of the touch points:</Label>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="0" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" hidden="yes" tooltip="" >
+			<Field id="INPUTstate"   type="menu" defaultValue="0" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" hidden="yes"  >
 			<Label>(1) INPUT state#:</Label>
 			<List>
 				<Option value="0"   >0</Option>
@@ -13600,11 +13986,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -13653,7 +14039,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Show text to local display:</Label>
 				<List>
 				<Option value= "1"  >YES </Option>
-				<Option value= "0" >no	</Option>
+				<Option value= "0" >no</Option>
 				</List>
 			</Field>
 
@@ -13679,7 +14065,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>position Parameter 3 lin/log:</Label>
 				<List>
 				<Option value= "lin"  >linear scale  </Option>
-				<Option value= "log"  >log scale	</Option>
+				<Option value= "log"  >log scale</Option>
 				</List>
 			</Field>
 
@@ -13770,11 +14156,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 			<Field id="acuracyDistanceMode" type="menu"     defaultValue="10" hidden="no" > 
@@ -13833,7 +14219,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Show text to local display:</Label>
 				<List>
 				<Option value= "1"  >YES </Option>
-				<Option value= "0" >no	</Option>
+				<Option value= "0" >no</Option>
 				</List>
 			</Field>
 
@@ -13859,7 +14245,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>position Parameter 3 lin/log:</Label>
 				<List>
 				<Option value= "lin"  >linear scale  </Option>
-				<Option value= "log"  >log scale	</Option>
+				<Option value= "log"  >log scale</Option>
 				</List>
 			</Field>
 
@@ -13955,11 +14341,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 			<Field id="maxCurrent" type="menu"     defaultValue="4" hidden="no" > 
@@ -13969,13 +14355,13 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="2"    > 20</Option>
 				<Option value="3"    > 30</Option>
 				<Option value="4"    > 40</Option>
-				<Option value="5"    > 50	</Option>
-				<Option value="6"    > 60	</Option>
-				<Option value="8"    > 80	</Option>
-				<Option value="10"   > 100	</Option>
-				<Option value="12"   > 120	</Option>
-				<Option value="15"   > 150	</Option>
-				<Option value="20"   > 200	</Option>
+				<Option value="5"    > 50</Option>
+				<Option value="6"    > 60</Option>
+				<Option value="8"    > 80</Option>
+				<Option value="10"   > 100</Option>
+				<Option value="12"   > 120</Option>
+				<Option value="15"   > 150</Option>
+				<Option value="20"   > 200</Option>
 			</List>
 			</Field>
 
@@ -14031,7 +14417,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Show text to local display:</Label>
 				<List>
 				<Option value= "1"  >YES </Option>
-				<Option value= "0" >no	</Option>
+				<Option value= "0" >no</Option>
 				</List>
 			</Field>
 
@@ -14057,7 +14443,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>position Parameter 3 lin/log:</Label>
 				<List>
 				<Option value= "lin"  >linear scale  </Option>
-				<Option value= "log"  >log scale	</Option>
+				<Option value= "log"  >log scale</Option>
 				</List>
 			</Field>
 
@@ -14176,11 +14562,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="15"   > 15	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="25"   > 25	</Option>
-				<Option value="30"   > 30	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
 
@@ -14236,7 +14622,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>Show text to local display:</Label>
 				<List>
 				<Option value= "1"  >YES </Option>
-				<Option value= "0" >no	</Option>
+				<Option value= "0" >no</Option>
 				</List>
 			</Field>
 
@@ -14262,7 +14648,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>position Parameter 3 lin/log:</Label>
 				<List>
 				<Option value= "lin"  >linear scale  </Option>
-				<Option value= "log"  >log scale	</Option>
+				<Option value= "log"  >log scale</Option>
 				</List>
 			</Field>
 
@@ -14387,14 +14773,14 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>delta Color values to trigger update:</Label>
 			<List>
 				<Option value="1"    > 1</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="50"   > 50	</Option>
-				<Option value="100"  > 100	</Option>
-				<Option value="200"  > 200	</Option>
-				<Option value="500"  > 500	</Option>
-				<Option value="1000" > 1000	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="50"   > 50</Option>
+				<Option value="100"  > 100</Option>
+				<Option value="200"  > 200</Option>
+				<Option value="500"  > 500</Option>
+				<Option value="1000" > 1000</Option>
 			</List>
 			</Field>
             
@@ -14420,10 +14806,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Label>delta distance value to trigger update(values 0..255):</Label>
 			<List>
 				<Option value="1"    > 1</Option>
-				<Option value="10"   > 10	</Option>
-				<Option value="20"   > 20	</Option>
-				<Option value="30"   > 30	</Option>
-				<Option value="50"   > 50	</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="30"   > 30</Option>
+				<Option value="50"   > 50</Option>
 			</List>
 			</Field>
 

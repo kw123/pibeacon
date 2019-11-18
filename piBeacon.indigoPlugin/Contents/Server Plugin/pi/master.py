@@ -441,10 +441,11 @@ def readNewParams(force=0):
 
 				
 		#print " sensors:", sensors
-		U.logger.log(10, "sensors		  : " +	 sensorList)
+		U.logger.log(20, "sensors		  : " +	 sensorList)
 
 		for ss in G.specialSensorList:
-			if	ss in sensors: 
+			#U.logger.log(20, "checking sensor if {} ".format(ss))
+			if ss in sensors: 
 				checkifActive(ss, ss+".py", True)
 		
 		if	(rPiRestartCommand.find("rPiCommandPORT") >-1) and G.wifiType =="normal" and G.networkType !="clockMANUAL" and rPiCommandPORT >0:
@@ -585,6 +586,7 @@ def doWeNeedToStartTouch(sensorsI, sensorsOld):
 ####################      #########################
 def checkifActive(sensorName, pyName, active):
 	if active:
+		U.logger.log(20," check if active: {}  {}".format(sensorName,pyName))
 		checkIfPGMisRunning(pyName, force=True, checkAliveFile=sensorName )
 		checkIfAliveFileOK(sensorName)
 	else:
@@ -601,8 +603,9 @@ def installLibs():
 	
 ####################      #########################
 def startProgam(pgm, params="", reason=""):
-	U.logger.log(20, ">>>> starting "+pgm+" "+reason	  )
-	os.system("/usr/bin/python "+G.homeDir+pgm+" "+params+" &")
+	cmd = "sudo /usr/bin/python "+G.homeDir+pgm+" "+params+" &"
+	U.logger.log(20, ">>>> starting "+pgm+" "+reason+";--  with cmd: "+cmd  )
+	os.system(cmd)
 
 
 ####################      #########################
@@ -716,13 +719,13 @@ def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters="
 	if tt-G.tStart< 15 and not force: return
 	try:
 		if not U.pgmStillRunning(pgmToStart):
-			startProgam(pgmToStart, params=parameters, reason="restarting "+pgmToStart+"..not running")
+			startProgam(pgmToStart, params=parameters, reason=" -- restarting "+pgmToStart+" ..not running")
 			return
 		if checkAliveFile !="":
 			alive = checkIfAliveFileOK(checkAliveFile)
 			#print "pgm to start", pgmToStart, checkAliveFile, alive
 			if not alive:
-				startProgam(pgmToStart, params="", reason="restarting "+pgmToStart+"..not running .. no alive file")
+				startProgam(pgmToStart, params="", reason=" -- restarting "+pgmToStart+" ..not running .. no alive file")
 				return
 
 	except	Exception, e :
@@ -2032,7 +2035,7 @@ def execMaster():
 			
 
 					for ss in G.specialSensorList:
-						if	(ss in sensors or ss in activePGM )and not (ss in activePGMdict): 
+						if	(ss in sensors or ss in activePGM ) and not (ss in activePGMdict): 
 							checkIfPGMisRunning(ss+".py",checkAliveFile=ss)
 							   
 					for ss in activePGMdict:

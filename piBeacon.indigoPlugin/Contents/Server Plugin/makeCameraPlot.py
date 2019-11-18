@@ -37,8 +37,9 @@ logfileName		  = imageParams["logFile"]
 logLevel		  = imageParams["logLevel"] =="1"
 numberOfPixels	  = float(imageParams["numberOfDots"])
 imageFileDynamic  = imageParams["dynamic"] 
-colorBar		  = imageParams["colorBar"].split(",") 
 compress		  = imageParams["compress"]	 =="1"
+colorBar		  = imageParams["colorBar"].split(",") 
+
 
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -66,50 +67,57 @@ else:
 logger.log(20,"imageFile:           {}.png".format(imageOutfile) )
 logger.log(20,"Dynamic:             {}".format(imageFileDynamic) )
 logger.log(20,"imageType:           {}".format(imageType) )
-logger.log(20,"colorBar:            {}".format(colorBar) )
+logger.log(20,"colorsetting:        {}".format(colorBar) )
 logger.log(20,"numberOfPixels in x: {} ".format(numberOfPixels) )
 logger.log(20,"data: len: {}".format(len(data)))
 for kk in range(len(data)):
-	logger.log(20, "{}: {}".format(kk, data[kk]).replace(" ","") )
+		logger.log(20, "{}: {}".format(kk, data[kk]).replace(" ","") )
 
 pixelsIndata = len(data)
+
+
 pltDpi = 256
 
 plt.figure(figsize=(numberOfPixels/pltDpi, numberOfPixels/pltDpi), dpi=pltDpi)
 
-if	 imageType == "fixed":
-	norm = mpl.colors.Normalize(vmin=float(imageFileDynamic[0]),vmax=float(imageFileDynamic[1]))
-elif imageType == "dynamicWindow":
-	ma = -999
-	mm = +999
-	for ii in range(len(data)):
-		ma = max(ma,max(data[ii]))
-		mm = min(mm,min(data[ii]))
+
+if True:
+
+	if	 imageType == "fixed":
+		norm = mpl.colors.Normalize(vmin=float(imageFileDynamic[0]),vmax=float(imageFileDynamic[1]))
+	elif imageType == "dynamicWindow":
+		ma = -999
+		mm = +999
+		for ii in range(len(data)):
+			ma = max(ma,max(data[ii]))
+			mm = min(mm,min(data[ii]))
 		
-	vmid = (mm-ma) /2. +mm
-	norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-	logger.log(20, "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+		vmid = (mm-ma) /2. +mm
+		norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
+		logger.log(20, "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
-cur_axes = plt.gca()
-cur_axes.axes.get_xaxis().set_visible(False)
-cur_axes.axes.get_yaxis().set_visible(False)
+	cur_axes = plt.gca()
+	cur_axes.axes.get_xaxis().set_visible(False)
+	cur_axes.axes.get_yaxis().set_visible(False)
 
 
-if imageType !="dynamic":
-	if colorBar[0] =="color":
-		plt.imshow(data, norm=norm)
+	if imageType !="dynamic":
+		if colorBar[0] =="color":
+			plt.imshow(data, norm=norm)
+		else:
+			plt.imshow(data, norm=norm, cmap='gray')
 	else:
-		plt.imshow(data, norm=norm, cmap='gray')
-else:
-	if colorBar[0] =="color":
-		plt.imshow(data)
-	else:
-		plt.imshow(data, cmap='gray')
+		if colorBar[0] =="color":
+			plt.imshow(data)
+		else:
+			plt.imshow(data, cmap='gray')
 		
-if colorBar[1] == "bar":
-	cb = plt.colorbar()
-	cb.ax.tick_params(labelsize=int((10./512) *numberOfPixels)	 )
+	if colorBar[1] == "bar":
+		cb = plt.colorbar()
+		cb.ax.tick_params(labelsize=int((10./512) *numberOfPixels)	 )
+
+
 
 ifname = imageOutfile+".png"
 plt.savefig((ifname).encode('utf8'),dpi=pltDpi,bbox_inches='tight')	  
