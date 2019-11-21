@@ -680,11 +680,11 @@ def getValues(devId,empty):
 				try:
 					if ok < 14: 	continue # dont use weak signals
 					countValues +=1
-					bin = int(phi/anglesInOneBin[devId])
+					bin = min(useBins-1,int(phi/anglesInOneBin[devId]))
 					values[-1][bin] += float(v)
 					entries[-1][bin] += 1
 				except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(30, u"in Line {} has error={}, bin:{}, entries:{}".format(sys.exc_traceback.tb_lineno, e,bin, entries))
 
 			for ii in range(useBins):
 				values[-1][ii]  = int( values[-1][ii]/max(1.,entries[-1][ii]))
@@ -783,7 +783,7 @@ def getValues(devId,empty):
 
 					values[0]  	= copy.copy(accumV)
 					entries[0] 	= copy.copy(countC)
-					#U.logger.log(20,"created new empty room calibration file bins with empty bins: {} out of: {}, nMeas:{}; req:{}".format(accumV.count(0), len(accumV), nMeas, measurementsNeededForCalib[devId]))
+					U.logger.log(20,"created new empty room calibration file bins with empty bins: {} out of: {}, nMeas:{}; req:{}".format(accumV.count(0), len(accumV), nMeas, measurementsNeededForCalib[devId]))
 					U.writeJson(G.homeDir+"rdlidar.emptyRoom", {"values":values[0], "entries":entries[0], "anglesInOneBin":anglesInOneBin, "nMeas":nMeas})
 					##### calibration ended         ##############
 			##### check if calibration mode ##############  END

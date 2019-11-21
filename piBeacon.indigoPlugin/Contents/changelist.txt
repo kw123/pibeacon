@@ -1,5 +1,15 @@
 
 
+Added features / changes in v7.114.322 @ 2019-11-20
+===================================================
+
+1. fixed global varibale "currTZ not defined"  error on RPI 
+
+2. added warning in case /beacon_parameters file becomes too big.
+   also moved that file from temp directory to pibeacon directory as it not written to often.
+
+
+
 Added features / changes in v7.114.321 @ 2019-11-20
 ===================================================
 

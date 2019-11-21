@@ -344,6 +344,30 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def startup(self):
 		try:
+			if self.pathToPlugin.find("/"+self.pluginName+".indigoPlugin/")==-1:
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"The pluginname is not correct, please reinstall or rename")
+				self.errorLog(u"It should be   /Libray/....../Plugins/"+self.pluginName+".indigPlugin")
+				p=max(0,self.pathToPlugin.find("/Contents/Server"))
+				self.errorLog(u"It is: "+self.pathToPlugin[:p])
+				self.errorLog(u"please check your download folder, delete old *.indigoPlugin files or this will happen again during next update")
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
+				self.sleep(1000)
+				exit(1)
+				return
 
 			if not self.checkPluginPath(self.pluginName,  self.pathToPlugin):
 				exit()
@@ -14230,9 +14254,12 @@ class Plugin(indigo.PluginBase):
 			out["ignoreUUID"].append(UUID)
 
 
+		out = json.dumps(out)
 		f = open(self.indigoPreferencesPluginDir + "all/beacon_parameters", u"w")
-		f.write(json.dumps(out))
+		f.write(out)
 		f.close()
+		if len(out) > 50000:
+				self.indiLOG.log(50,"parameter file:\n{}all/beacon_parameters\n has become TOOO BIG, \nplease do menu/ignore individual beacons and reset history.\nyou might also want to switch off accept new ibeacons in config\n".format(self.indigoPreferencesPluginDir) )
 
 		try:
 			f = open(self.indigoPreferencesPluginDir + "all/touchFile", u"w")

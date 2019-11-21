@@ -1177,7 +1177,7 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 				
 			if  setNew < 30 and (setNew != currTZC or force):
 				logger.log(20, "cBY:"+G.program.ljust(20)+ u" changing timezone from: {}:{} to: {}:{}".format(currTZC,G.timeZones[currTZC+12], setNew, G.timeZones[setNew+12]) )
-				if currTZ != iTZ:
+				if currTZC != iTZ:
 					logger.log(30, "cBY:"+G.program.ljust(20)+ u" changing timezone executing")
 					if os.path.isfile("/usr/share/zoneinfo/"+G.timeZones[setNew+12]):
 						#  old
