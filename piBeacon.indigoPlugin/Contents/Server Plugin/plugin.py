@@ -11857,10 +11857,15 @@ class Plugin(indigo.PluginBase):
 					if sensor == u"rdlidar" :
 						try:
 								xx = data["triggerValues"]
-								newStatus = self.setStatusCol( dev, u"Leaving", 				xx["current"]["GT"], unicode(xx["current"]["GT"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Approaching", 			xx["current"]["LT"], unicode(xx["current"]["LT"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed", 	xx["empty"]["GT"],   unicode(xx["empty"]["GT"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Room_occupied", 			xx["empty"]["LT"],   unicode(xx["empty"]["LT"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Leaving_count", 					xx["current"]["GT"]["totalCount"], 	unicode(xx["current"]["GT"]["totalCount"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Approaching_count", 				xx["current"]["LT"]["totalCount"], 	unicode(xx["current"]["LT"]["totalCount"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed_count",		xx["empty"]["GT"]["totalCount"],   	unicode(xx["empty"]["GT"]["totalCount"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Room_occupied_count", 			xx["empty"]["LT"]["totalCount"],   	unicode(xx["empty"]["LT"]["totalCount"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+
+								newStatus = self.setStatusCol( dev, u"Leaving_value", 					xx["current"]["GT"]["totalSum"], 	unicode(xx["current"]["GT"]["totalSum"]), 	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Approaching_value", 				xx["current"]["LT"]["totalSum"], 	unicode(xx["current"]["LT"]["totalSum"]), 	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed_value", 	xx["empty"]["GT"]["totalSum"],   	unicode(xx["empty"]["GT"]["totalSum"]),   	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Room_occupied_value", 			xx["empty"]["LT"]["totalSum"],   	unicode(xx["empty"]["LT"]["totalSum"]),   	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
 								if "saveRawData" in props and props[u"saveRawData"] =="1" and False:
 										props["rawData"] = data
 										dev.replacePluginPropsOnServer(props)
@@ -11869,11 +11874,11 @@ class Plugin(indigo.PluginBase):
 								if "mode" in props and props[u"mode"] in["manual","auto"]:
 									if (    "showAllImages" not in props or 
 											("showAllImages" in props and props[u"showAllImages"] == "1") or 
-											data["triggerValues"]["current"]["GT"] != 0 or 
-											data["triggerValues"]["current"]["LT"] != 0 or
-											data["triggerValues"]["empty"]["GT"] != 0 or
-											data["triggerValues"]["empty"]["LT"] != 0    ): 
-										imageParams	  = json.dumps( {"logFile":self.PluginLogFile, 
+											data["triggerValues"]["current"]["GT"]["totalCount"] != 0 or 
+											data["triggerValues"]["current"]["LT"]["totalCount"] != 0 or
+											data["triggerValues"]["empty"]["GT"]["totalCount"] != 0 or
+											data["triggerValues"]["empty"]["LT"]["totalCount"] != 0    ): 
+										imageParams	  ={"logFile":self.PluginLogFile, 
 													"logLevel":props[u"logLevel"],
 													"compress":props[u"fileCompress"],
 													"fileName":fileName,
@@ -11884,8 +11889,11 @@ class Plugin(indigo.PluginBase):
 													"scalefactor":props[u"scalefactor"],
 													"mode":props[u"mode"],
 													"showPhi0":props[u"showPhi0"],
+													"showZeroDot":props[u"showZeroDot"],
 													"frameON":props[u"frameON"],
 													"DPI":props[u"DPI"],
+													"showTriggerValues":props[u"showTriggerValues"],
+													"showTimeStamp":props[u"showTimeStamp"],
 													"fontSize":props[u"fontSize"],
 													"showLegend":props[u"showLegend"],
 													"topText":props[u"topText"],
@@ -11899,8 +11907,9 @@ class Plugin(indigo.PluginBase):
 													"colorCurrent":props[u"colorCurrent"],
 													"colorEmpty":props[u"colorEmpty"],
 													"colorLast":props[u"colorLast"],
-													"colorBackground":props[u"colorBackground"]} )
-										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeRdlidarPlot.py' '" +imageParams+"' '"+json.dumps(data)+"'  & "  
+													"colorBackground":props[u"colorBackground"]} 
+										allData = json.dumps({"imageParams":imageParams, "data":data})
+										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeRdlidarPlot.py' '" +allData+"'  & "  
 										if props[u"logLevel"] == "1": self.indiLOG.log(20,"rdlidar command:{}".format(cmd))
 										os.system(cmd)
 						except Exception, e:
@@ -14367,6 +14376,10 @@ class Plugin(indigo.PluginBase):
 						if u"ifNetworkChanges" in props:
 							out[u"ifNetworkChanges"]	=  (props[u"ifNetworkChanges"])
 
+						out[u"addNewOneWireSensors"]  = "0"
+						if u"addNewOneWireSensors" in props:
+							out[u"addNewOneWireSensors"]	=  (props[u"addNewOneWireSensors"])
+
 						out[u"startWebServerSTATUS"]  = "0"
 						if u"startWebServerSTATUS" in props:
 							out[u"startWebServerSTATUS"]	=  int(props[u"startWebServerSTATUS"])
@@ -14374,7 +14387,6 @@ class Plugin(indigo.PluginBase):
 						out[u"startWebServerINPUT"]  = "0"
 						if u"startWebServerINPUT" in props:
 							out[u"startWebServerINPUT"]	=  int(props[u"startWebServerINPUT"])
-
 
 						out[u"GPIOTypeAfterBoot1"]  = "off"
 						if u"GPIOTypeAfterBoot1" in props:
@@ -14392,8 +14404,6 @@ class Plugin(indigo.PluginBase):
 						if u"GPIONumberAfterBoot2" in props:
 							try:    out[u"GPIONumberAfterBoot2"]	=  int(props[u"GPIONumberAfterBoot2"])
 							except: pass
-
-
 
 						out[u"simpleBatteryBackupEnable"]  =  "0"
 						if u"simpleBatteryBackupEnable" in props:

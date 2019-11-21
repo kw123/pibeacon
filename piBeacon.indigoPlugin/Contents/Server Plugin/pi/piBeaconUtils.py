@@ -100,7 +100,7 @@ def restartMyself(param="", reason="", delay=1, doPrint= True):
 	if doPrint: 
 		logger.log(50, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
 	else:
-		logger.log(30, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
+		logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
 
 	time.sleep(delay)
 	os.system("/usr/bin/python "+G.homeDir+G.program+".py "+ param+" &")

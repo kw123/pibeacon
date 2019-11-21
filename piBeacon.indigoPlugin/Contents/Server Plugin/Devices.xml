@@ -291,10 +291,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="120" > 120  </Option>
 				</List>
 			</Field>
-			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
+			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0" tooltip="this option will turn itself off at restart and overnight to disable ramdon creation of new devices when there is a bad cable connection"> 
 				<Label>... add new ONEWIRE sensors as they get detected:</Label> 
 				<List>
-					<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
+					<Option value="1"  >yes, automatically add new ONEwire sensors, see help</Option>
 					<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
 				</List>
 			</Field>
@@ -8163,10 +8163,42 @@ you can setup
 			</Field>
 
 
+			<Field id="showTimeStamp" type="menu"     defaultValue=""  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="top left outside"   >Top left outside</Option>
+				<Option value="top left inside"    >Top left inside</Option>
+				<Option value="top center inside"  >Top center inside</Option>
+				<Option value="top center outside" >Top center outside</Option>
+				<Option value="top right inside"   >Top right inside</Option>
+				<Option value="top right outside"  >Top right outside</Option>
+				<Option value=""   >off</Option>
+			</List>
+			<Label>Show HH:MM:SS</Label> 
+			</Field>
+
+			<Field id="showTriggerValues" type="menu"     defaultValue=""  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="top left outside"   >Top left outside</Option>
+				<Option value="top left inside"    >Top left inside</Option>
+				<Option value="top center inside"  >Top center inside</Option>
+				<Option value="top center outside" >Top center outside</Option>
+				<Option value="top right inside"   >Top right inside</Option>
+				<Option value="top right outside"  >Top right outside</Option>
+				<Option value=""   >off</Option>
+			</List>
+			<Label>Show parameters</Label> 
+			</Field>
+
+
 			<Field id="showLegend" type="menu"     defaultValue="1" visibleBindingId="mode" visibleBindingValue="manual,auto">  
 			<List>
-				<Option value="0"   >off</Option>
-				<Option value="1"   >ON</Option>
+				<Option value="upper left"   >upper left</Option>
+				<Option value="upper right"  >upper right</Option>
+				<Option value="upper center" >upper center</Option>
+				<Option value="lower left"   >lower left</Option>
+				<Option value="lower right"  >lower right</Option>
+				<Option value="lower center" >lower center</Option>
+				<Option value=""   >off</Option>
 			</List>
 			<Label>Show Legend:</Label> 
 			</Field>
@@ -8177,6 +8209,14 @@ you can setup
 				<Option value="1"   >ON</Option>
 			</List>
 			<Label>Show phi=0 line</Label> 
+			</Field>
+
+			<Field id="showZeroDot" type="menu"   defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Show DOT at 0,0 = position of the sensor</Label> 
 			</Field>
 
 			<Field id="frameON" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
@@ -8275,25 +8315,45 @@ you can setup
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="Leaving">
+			<State id="Leaving_count">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Leaving</TriggerLabel>
-				<ControlPageLabel>Leaving</ControlPageLabel>
+				<TriggerLabel>Leaving_count</TriggerLabel>
+				<ControlPageLabel>Leaving_count</ControlPageLabel>
 			</State>
-			<State id="Approaching">
+			<State id="Leaving_value">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Approaching</TriggerLabel>
-				<ControlPageLabel>Approaching</ControlPageLabel>
+				<TriggerLabel>Leaving_value</TriggerLabel>
+				<ControlPageLabel>Leaving_value</ControlPageLabel>
 			</State>
-			<State id="Re-Calibration_needed">
+			<State id="Approaching_count">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Re-Calibration_needed</TriggerLabel>
-				<ControlPageLabel>Re-Calibration_needed</ControlPageLabel>
+				<TriggerLabel>Approaching_count</TriggerLabel>
+				<ControlPageLabel>Approaching_count</ControlPageLabel>
 			</State>
-			<State id="Room_occupied">
+			<State id="Approaching_value">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Room_occupied</TriggerLabel>
-				<ControlPageLabel>Room_occupied</ControlPageLabel>
+				<TriggerLabel>Approaching_value</TriggerLabel>
+				<ControlPageLabel>Approaching_value</ControlPageLabel>
+			</State>
+			<State id="Re-Calibration_needed_count">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Re-Calibration_needed_count</TriggerLabel>
+				<ControlPageLabel>Re-Calibration_needed_count</ControlPageLabel>
+			</State>
+			<State id="Re-Calibration_needed_value">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Re-Calibration_needed_value</TriggerLabel>
+				<ControlPageLabel>Re-Calibration_needed_value</ControlPageLabel>
+			</State>
+			<State id="Room_occupied_count">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Room_occupied_count</TriggerLabel>
+				<ControlPageLabel>Room_occupied_count</ControlPageLabel>
+			</State>
+			<State id="Room_occupied_value">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Room_occupied_value</TriggerLabel>
+				<ControlPageLabel>Room_occupied_value</ControlPageLabel>
 			</State>
 
 

@@ -473,7 +473,7 @@ def setupX(action="leaveAlone"):
 		if action == "start": 	
 			if os.path.isfile(G.homeDir+"pygame.active"):
 				# need to reboot 
-				U.doReboot(tt=5., text="rebooting due to switch to xterminal from fulls screen pygame")
+				U.doReboot(tt=20., text="rebooting due to switch to xterminal from fulls screen pygame")
 				exit()
 			if not U.pgmStillRunning("startx"):
 				U.stopDisplay()
@@ -838,7 +838,7 @@ def checkIfAliveFileOK(sensor,force=""):
 
 
 ####################      #########################
-def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk space  left (min 10% or 500Mbyte)
+def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000,dir=""): # check if enough disk space  left (min 10% or 500Mbyte)
 	try:
 		ret=subprocess.Popen("df" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines = ret.split("\n")
@@ -858,6 +858,14 @@ def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk 
 					kbytesAvailable = int(items[3])
 					usedPercent=int(items[4].strip("%"))
 					if	usedPercent > 90 or kbytesAvailable < 4000 : retCode= 2 ## 90% or 4 Mbyte
+				except:
+					return 0
+			if line.find(G.homeDir+"temp") > -1: # for temp disks
+				items = line.split()
+				try:
+					kbytesAvailable = int(items[3])
+					usedPercent=int(items[4].strip("%"))
+					if	usedPercent > 90 or kbytesAvailable < 100 : retCode= 3 ## 90% or 100kb
 				except:
 					return 0
 
@@ -1142,7 +1150,9 @@ def writeJson2(data, fileName, lastWriteBatteryStatusI):
 def checkLogfiles():
 	global maxSizeOfLogfileOnRPI
 	try:
-		if checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) != 0: 	 # (need 500Mbyte free or 80% max
+		retCode =  checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) 	 # (need 500Mbyte free or 80% max
+
+		if retCode in[1,2]: 	 # (need 500Mbyte free or 80% max
 			os.system("sudo  chown -R pi:pi /var/log/*")
 			os.system("sudo echo "" >  /var/log/pibeacon.log")
 			files = subprocess.Popen("find /var/log -type f",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].split()
@@ -1150,7 +1160,14 @@ def checkLogfiles():
 				os.system("sudo echo "" >  {}".format(f) )
 			try: U.logger.log(30, "reset  logfiles  due to  limited disk space ")
 			except: pass
-		if checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) != 0: 	 # (need 500Mbyte free or 80% max
+		elif retCode ==3:
+			U.restartMyself(reason="not enough space in temp directory, restart master shoudl clean it up ", delay=20, doPrint =True)
+			time.sleep(20)
+
+			
+		retCode =  checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) 	 # (need 500Mbyte free or 80% max
+
+		if retCode in [1,2]: 	 # (need 500Mbyte free or 80% max
 			U.restartMyself(reason=" out of space ")
 			os.system("sudo killall -9 python; sleep 2;sudo reboot -f")
 
@@ -1162,7 +1179,7 @@ def checkLogfiles():
 		if not os.path.isfile(G.logDir+"pibeacon.log"): return 
 		nBytes = os.path.getsize(G.logDir+"pibeacon.log")
 		U.logger.log(10, "checking logfile size: {}".format(nBytes))
-		if nBytes > maxSizeOfLogfileOnRPI: # defualt 10 mBytes
+		if nBytes > maxSizeOfLogfileOnRPI: # default 10 mBytes
 			if  os.path.isfile(G.logDir+"pibeacon-1.log"):  
 				os.system("sudo rm "+G.logDir+"pibeacon-1.log ")
 			os.system("sudo cp "+G.logDir+"pibeacon.log "+G.logDir+"pibeacon-1.log ")
@@ -1646,7 +1663,7 @@ def execMaster():
 		else:
 			os.system("mkdir  "+G.homeDir+"temp")
 			alreadyBooted = False
-		os.system("mount -t tmpfs -o size=1m tmpfs "+G.homeDir+"temp")
+		os.system("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp")
 
 
 

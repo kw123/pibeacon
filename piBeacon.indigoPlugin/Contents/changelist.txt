@@ -1,5 +1,14 @@
 
 
+Added features / changes in v7.114.321 @ 2019-11-20
+===================================================
+
+1. fixed multiple onewire sensor detection 
+
+2. improved rd-lidar movement detection and display 
+
+
+
 Added features / changes in v7.114.319 @ 2019-11-17
 ===================================================
 

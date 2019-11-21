@@ -37,10 +37,12 @@ tStart			  = time.time()
 
 DPI = 300
 
-pluginDir		  = sys.argv[0].split("makeRdlidarPlot.py")[0]
-indigoDir		  = pluginDir.split("Plugins/")[0]
-imageParams		  = json.loads(sys.argv[1])
-logfileName		  = imageParams["logFile"]
+pluginDir		= sys.argv[0].split("makeRdlidarPlot.py")[0]
+indigoDir		= pluginDir.split("Plugins/")[0]
+allData 		= json.loads(sys.argv[1])
+imageParams		= allData["imageParams"]	
+data 			= allData["data"]	
+logfileName		= imageParams["logFile"]
 
 
 
@@ -118,8 +120,8 @@ except: frameON 		= True
 try: 	frameTight 		= imageParams["frameTight"] == "1"
 except: frameTight		= False
 
-try: 	showLegend 		= imageParams["showLegend"] == "1"
-except: showLegend 		= True
+try: 	showLegend 		= imageParams["showLegend"]
+except: showLegend 		= ""
 
 try: 	showPhi0 		= imageParams["showPhi0"] == "1"
 except: showPhi0 		= False
@@ -127,10 +129,19 @@ except: showPhi0 		= False
 try: 	topText 		= imageParams["topText"]
 except: topText 		= ""
 
+try: 	showTriggerValues = imageParams["showTriggerValues"]
+except: showTriggerValues = ""
+
 try: 	fontSize 		= int(imageParams["fontSize"])
 except: fontSize 		= 20
 
-data = json.loads(sys.argv[2])
+
+try: 	showTimeStamp 	= imageParams["showTimeStamp"]
+except: showTimeStamp 	= ""
+
+try: 	showZeroDot 	= imageParams["showZeroDot"] == "1"
+except: showZeroDot 	= True
+
 
 
 #
@@ -162,7 +173,7 @@ try:
 #### prep data ######################
 
 	anglesInOneBin = int(imageParams[u"anglesInOneBin"])
-	dataToPlot = {"dots":{"current":[[],[],[]],"empty":[[],[],[]],"last":[[],[],[]]}, "trigger":{"current":[],"empty":[]},"xy0":[]}
+	dataToPlot = {"dots":{"current":[[],[],[]],"empty":[[],[],[]],"last":[[],[],[]]}, "trigger":{"current":{"LT":[],"GT":[]},"empty":{"LT":[],"GT":[]}},"xy0":[],"zero":[],"time":[]}
 
 	useBins = 360 / anglesInOneBin
 	bins = [[math.cos( float(ii*anglesInOneBin+phiOffset)*(3.141/180.) ), math.sin( float(ii*anglesInOneBin+phiOffset)*(3.141/180.) ) ] for ii in range(useBins)]
@@ -170,41 +181,51 @@ try:
 	
 	dotSize = {"current":int( numberOfDotsX*(20./1000.) ) ,"empty":int( numberOfDotsX*(10./1000.) ),"last":int( numberOfDotsX*(10./1000.) )}
 
+
 	for kk in ["current","empty","last"]:
 		dd = data[kk]
 		for ii in range(len(dd)):
 			try:	
-				dataToPlot["dots"][kk][0].append( int( scalefactor*(bins[ii][0]*float(dd[ii])+xOffset) ) )	
-				dataToPlot["dots"][kk][1].append( int( scalefactor*(bins[ii][1]*float(dd[ii])+yOffset) ) )	
-				dataToPlot["dots"][kk][2].append( dotSize[kk] )	
+				value = float(dd[ii])
+				if value >0:
+					dataToPlot["dots"][kk][0].append( int( scalefactor*(bins[ii][0]*value+xOffset) ) )	
+					dataToPlot["dots"][kk][1].append( int( scalefactor*(bins[ii][1]*value+yOffset) ) )	
+					dataToPlot["dots"][kk][2].append( dotSize[kk] )	
 			except Exception, e:
 				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
 				break
 
 	for kk in ["current","empty"]:
-		tr = data["triggerValues"][kk]["directions"]
 		dd = data[kk]
-		for ii in range(len(tr)):
-			try:	
-				ll1 = tr[ii][0]
-				ll2 = tr[ii][1]
-				dataToPlot["trigger"][kk].append( [[],[]] )	
-				for jj in range(ll1,ll2+1):
-					value = float(dd[jj])
-					if value ==0: continue
-					dataToPlot["trigger"][kk][-1][0].append( int( scalefactor*(bins[jj][0]*value+xOffset) ) )	
-					dataToPlot["trigger"][kk][-1][1].append( int( scalefactor*(bins[jj][1]*value+yOffset) ) )	
-			except Exception, e:
-				logger.log(20,"Line {} has error={}, ii: {}; tr:{}".format(sys.exc_traceback.tb_lineno, e, ii, tr))
-				break
+		for LTGT in["LT","GT"]:
+			tr = data["triggerValues"][kk][LTGT]["sections"]
+			for ii in range(len(tr)):
+				try:	
+					ll1 = tr[ii]["bins"][0]
+					ll2 = tr[ii]["bins"][1]
+					if ll1 >= ll2 : continue
+					dataToPlot["trigger"][kk][LTGT].append( [[],[]] )	
+					for jj in range(ll1,ll2+1):
+						value = float(dd[jj])
+						if value ==0: continue
+						dataToPlot["trigger"][kk][LTGT][-1][0].append( int( scalefactor*(bins[jj][0]*value+xOffset) ) )	
+						dataToPlot["trigger"][kk][LTGT][-1][1].append( int( scalefactor*(bins[jj][1]*value+yOffset) ) )	
+				except Exception, e:
+					logger.log(20,"Line {} has error={}, ii: {}; tr:{}".format(sys.exc_traceback.tb_lineno, e, ii, tr))
+					break
+		#logger.log(20,"kk {}; pld:{}".format(kk, dataToPlot["trigger"][kk]))
 
 	dataToPlot["xy0"] = [[xOffset*phiOff[0],(xOffset+numberOfDotsX/3)*phiOff[0]], [yOffset*phiOff[1],(yOffset+numberOfDotsX/3)*phiOff[1]], [30,30]]
+	dataToPlot["zero"] = [xOffset,yOffset]
+	dataToPlot["time"] = [xOffset,yOffset]
+#### prep data ###################### END
 
 
 
-#### make plot  ######################
 
-	#
+
+#### fill plot  ######################
+
 	logger.log(20,"time used {:4.2f} --   setup fig, ax".format((time.time()-tStart)) )
 	plt.figure()
 	fig = plt.gcf()
@@ -228,8 +249,11 @@ try:
 		ax.set_xlim(yMin, yMax) 
 		ax.set_ylim(xMin, xMax) 
 
-	if not frameON: 	plt.axis('off')
-	plt.title("hallo")
+	if not frameON: 	
+		plt.axis('off')
+
+	if len(topText) > 0: 
+		plt.title(topText)
 
 	#DPI = fig.get_dpi()
 	fig.set_size_inches(int(numberOfDotsX/float(DPI)),int(numberOfDotsY/float(DPI)))	
@@ -238,26 +262,80 @@ try:
 	logger.log(20,"time used {:4.2f} --   now loop though the dots and add them".format((time.time()-tStart)) )
 
 	DotsAt4000Point = 25
-	normDot = max(4,int( (DotsAt4000Point*numberOfDotsX) /4000. ))
-	sizeDots 		= {"current":normDot,		"empty":max(2,int(normDot*0.7)),				"last":max(2,int(normDot*.5)), "phi0":max(2,int(normDot*.07))}
-	labelsDots		= {"current":"current",		"empty":"empty room",	"last":"previous"}
-	widthTrigger	= {"current":max(2,int(normDot/4)),"empty":max(2,int(normDot/6))}
+	normDot 		= max(4,int( (DotsAt4000Point*numberOfDotsX) /4000. ))
+	sizeDots 		= {"current":normDot,				"empty":max(1,int(normDot*0.6)),	"last":max(1,int(normDot*.4)), "phi0":max(1,int(normDot*.07)), "zero":max(1,int(normDot))}
+	labelsDots		= {"current":"current",				"empty":"empty room",	"last":"previous"}
+	linewidthTR		= {"current":max(2,int(normDot)),	"empty":max(2,int(normDot))}
+	LTGTstyle		= {"LT":"<",		"GT":">"}
+	LTGTlabel		= {"LT":"Closer",	"GT":"Further"}
 
 	for kk in ["current","empty","last"]:
 		if color[kk] !="#000000": 
-			ax.plot(dataToPlot["dots"][kk][0], dataToPlot["dots"][kk][1], 'o', color=color[kk], markersize=sizeDots[kk], label=labelsDots[kk])
+			ax.plot(dataToPlot["dots"][kk][0], dataToPlot["dots"][kk][1], '-', color=color[kk], linewidth=int(max(1,sizeDots[kk]/3)), label=labelsDots[kk])
+			#ax.plot(dataToPlot["dots"][kk][0], dataToPlot["dots"][kk][1], 'o', color=color[kk], markersize=sizeDots[kk], label=labelsDots[kk])
 
+	show = {"LT":True,"GT":True}
 	for kk in ["current","empty"]:
-		for dd in dataToPlot["trigger"][kk]:
-			ax.plot(dd[0], dd[1], color=color[kk], linewidth=widthTrigger[kk])
+		for LTGT in ["LT","GT"]:
+			for dd in dataToPlot["trigger"][kk][LTGT]:
+				if len(dd) >0:
+					if show[LTGT]: 
+						ax.plot(dd[0], dd[1], LTGTstyle[LTGT], color=color[kk],  markersize=linewidthTR[kk],label=LTGTlabel[LTGT]) 
+						show[LTGT] = False
+					else:
+						ax.plot(dd[0], dd[1], LTGTstyle[LTGT], color=color[kk],  markersize=linewidthTR[kk]) 
+
+	if showZeroDot:# zero dot 
+		ax.plot(dataToPlot["zero"][0], dataToPlot["zero"][1],'o', color='black',linewidth=sizeDots["zero"])
+
 	if showPhi0:
-		ax.plot(dataToPlot["xy0"][0], dataToPlot["xy0"][1], color='black',linewidth=int(normDot/8), label="phi=0")
+		ax.plot(dataToPlot["xy0"][0], dataToPlot["xy0"][1], color='black',linewidth=sizeDots["phi0"], label="phi=0")
+
+	if showTimeStamp !="":
+		try:
+				yOutside = 1.02
+				yInside  = 0.98
+				xLeft    = 0.01
+				xCenter  = 0.49
+				xRight   = 0.95
+
+				if	  showTimeStamp =="top center inside":	pos =[xCenter,yInside]
+				elif  showTimeStamp =="top center outside":	pos =[xCenter,yOutside]
+				elif  showTimeStamp =="top right inside":	pos =[xRight,yInside]
+				elif  showTimeStamp =="top right outside":	pos =[xRight,yOutside]
+				elif  showTimeStamp =="top left outside":	pos =[xRight,yOutside]
+				elif  showTimeStamp =="top left outside":	pos =[xLeft,yOutside]
+				else:										pos =[xLeft,yInside]
+				dd = datetime.datetime.fromtimestamp(data["timestamp"]).strftime("%H:%M:%S")
+				ax.text(pos[0], pos[1], dd,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
+		except: pass
+
+	if showTriggerValues !="":
+		try:
+				yOutside = 1.02
+				yInside  = 0.96
+				xLeft    = 0.01
+				xCenter  = 0.49
+				xRight   = 0.96
+
+				if	  showTriggerValues =="top center inside":	pos =[xCenter,yInside]
+				elif  showTriggerValues =="top center outside":	pos =[xCenter,yOutside]
+				elif  showTriggerValues =="top right inside":	pos =[xRight,yInside]
+				elif  showTriggerValues =="top right outside":	pos =[xRight,yOutside]
+				elif  showTriggerValues =="top left outside":	pos =[xRight,yOutside]
+				elif  showTriggerValues =="top left outside":	pos =[xLeft,yOutside]
+				else:											pos =[xLeft,yInside]
+				dd = json.dumps(data["triggerValues"],sort_keys=True, indent=2)
+				ax.text(pos[0], pos[1], dd,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
+		except: pass
 
 
-	if showLegend:
-		plt.legend()
-		plt.legend(fontsize = fontSize)
-# 
+	if showLegend !="":
+		plt.legend(fontsize = fontSize, loc=showLegend)
+#### fill plot  ###################### END
+
+
+#### make plotfile  ###################### 
 	logger.log(20,"time used {:4.2f} --   filling the plot:".format((time.time()-tStart)))
 	try: 	
 			if frameTight : plt.savefig((imageOutfile).encode('utf8'), bbox_inches='tight')
@@ -267,11 +345,12 @@ try:
 
 	try:	pngSize = os.path.getsize((imageOutfile).encode('utf8'))/1024.
 	except: pngSize = 0
-	# 
+#### make plotfile  ###################### END
 
 
 
 	
+#### compress plotfile  ###################### 
 	if compress:
 		try:
 			xxxFileName = imageOutfile.replace(".png","")+".xxx"
@@ -286,6 +365,9 @@ try:
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 		except  Exception, e:
 			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
+#### compress plotfile  ###################### END
+
+
 
 	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 

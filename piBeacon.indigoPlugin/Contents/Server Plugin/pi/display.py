@@ -50,8 +50,8 @@ class setupKillMyself:
     signal.signal(signal.SIGTERM, self.doExit)
 
   def doExit(self, signum, frame):
-	global killedMyself
-	if killedMyself > 0 and time.time() - killedMyself > 20: # need to ignore for some seconds, receiving signals at startup 
+	global klillMyselfTimeout
+	if klillMyselfTimeout > 0 and time.time() - klillMyselfTimeout > 20: # need to ignore for some seconds, receiving signals at startup 
 		try: outputDev.delPy()
 		except: pass
 		U.logger.log(30, u"exiting display, received kill signal ")
@@ -1361,6 +1361,7 @@ def readParams():
 		else:
 			runLoop = False
 		if not runLoop:
+			os.system("rm "+G.homeDir+"temp/display.inp > /dev/null 2>&1")
 			U.logger.log(30, u"exiting display, output dev display not defined")
 			try: outputDev.delPy()
 			except: pass
@@ -1727,9 +1728,9 @@ global useLightSensorType, useLightSensorDevId
 global multIntensity, intensity, intensityDevice, lightSensorValue
 global bigScreenSize
 global zoom, runLoop, pygameInitialized
-global killedMyself
+global klillMyselfTimeout
 
-killedMyself				= time.time()
+klillMyselfTimeout				= time.time()
 pygameInitialized			= False
 
 runLoop 					= True
@@ -1798,7 +1799,7 @@ U.logger.log(30,"starting display")
 U.killOldPgm(myPID,G.program+".py")
 U.echoLastAlive(G.program)
 
-setupKillMyself()
+#setupKillMyself()
 
 try:
 	if len(sys.argv[1]) > 10:
@@ -2624,7 +2625,7 @@ while runLoop:
 				if xxx == "stop":
 					try: outputDev.delPy()
 					except: pass
-					killedMyself = -1 # killing myself..
+					klillMyselfTimeout = -1 # killing myself..
 					U.logger.log(30, " exiting - stop was requested ") 	
 					os.kill(os.getpid(), signal.SIGTERM)
 					runLoop = False

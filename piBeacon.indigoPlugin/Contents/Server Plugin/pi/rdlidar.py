@@ -566,7 +566,7 @@ def startSensor(devId, motorFreq, restart=False):
 			empty= ""
 			jObj, raw = U.readJson(G.homeDir+"rdlidar.emptyRoom")
 			if raw !="" and "values" in jObj:
-				empty = jObj["values"]
+				empty = jObj
 				aa = jObj["anglesInOneBin"] 
 				if devId not in aa or aa[devId] != anglesInOneBin[devId]: 
 					empty = ""
@@ -613,6 +613,7 @@ def getValues(devId,empty):
 	ret = ""
 	try:
 		useBins = int(360 / anglesInOneBin[devId])
+		emptyBins = [0 for i in range(useBins)]
 
 		U.logger.log(20, "starting with params:\n========\nuseBins: {}; motorFrequency: {};  anglesInOneBin: {};  \ncontiguousDeltaValue: {};  nContiguousAngles: {};  \ntriggerLast:{};  triggerEmpty:{};  sendToIndigoEvery:{}\n========".format(
 				useBins, motorFrequency[devId], anglesInOneBin[devId], contiguousDeltaValue[devId], nContiguousAngles[devId], triggerLast[devId], triggerEmpty[devId],sendToIndigoEvery[devId] ))
@@ -623,26 +624,52 @@ def getValues(devId,empty):
 		if sensorCLASS[devId] =="": return
 			 
 		countMeasurements[devId] = 0
-		lastS =  0
-		emptyS = 0.
 		tStart = time.time()
-		values ={"current":[0 for i in range(anglesInOneBin[devId])], "last":[0 for i in range(useBins)], "empty":[0 for i in range(useBins)], "phi":[ ii*anglesInOneBin[devId] for ii in range(useBins)]}
-		triggerValues2 = {"current":{"GT":0,"LT":0,"maxValue":0,"directions":[]},"empty":{"GT":0,"LT":0,"maxValue":0,"directions":[]}}
-		triggerValues  = {"current":{"GT":0,"LT":0,"maxValue":0,"directions":[]},"empty":{"GT":0,"LT":0,"maxValue":0,"directions":[]}}
 
+		values = []
+		entries = []
+		nMeasKeep = max( 7,measurementsNeededForCalib[devId] +3)
+		nTriggerKeep = 6
+		for nn in range(nMeasKeep):
+			values.append(copy.copy(emptyBins))
+			entries.append(copy.copy(emptyBins))
 
 		if empty !="": 
-			values["empty"] = copy.copy(empty)
-			triggerValues["empty"]["maxValue"]  = max(values["empty"])
+			try:
+				values[0]  = copy.copy(empty["empty"])
+				entries[0] = copy.copy(empty["entries"])
+			except:
+				values[0]  = copy.copy(emptyBins)
+				entries[0]  = copy.copy(emptyBins)
+				calibrateEmptyRoom[devId] = True
+		else:
+			calibrateEmptyRoom[devId] = True
+
+
+		trV0 = { "current":{}, "empty":{} }
+		trV0["current"]["GT"] 		= {"totalCount":0, "totalSum":0, "sections":[] }
+		trV0["current"]["LT"] 		= {"totalCount":0, "totalSum":0, "sections":[] }
+		trV0["empty"]["GT"]   		= {"totalCount":0, "totalSum":0, "sections":[] }
+		trV0["empty"]["LT"]  		= {"totalCount":0, "totalSum":0, "sections":[] }
+		trV0["time"] = 0
+		trV =[]
+		for nn in range(nTriggerKeep+1):
+			trV.append(copy.copy(trV0)) 
+
+
+		loopCount = 0
 		for measurments in sensorCLASS[devId].iter_scans():
+			loopCount +=1
 			if getRdlidarThreads["state"] == "wait": 
 				time.sleep(0.2)
 				continue 
 			if getRdlidarThreads["state"] == "stop": break 
-
-			deltaList = {"current":[],"empty":[]}
-			values["current"] = [0 for i in range(useBins)]
-			values["entries"] = [0 for i in range(useBins)]
+			
+				
+			values.append(copy.copy(emptyBins))
+			entries.append(copy.copy(emptyBins))
+			del values[1]
+			del entries[1]
 
 			ss = sorted(measurments, key = lambda x: x[1])
 			nM = len(measurments)
@@ -654,137 +681,176 @@ def getValues(devId,empty):
 					if ok < 14: 	continue # dont use weak signals
 					countValues +=1
 					bin = int(phi/anglesInOneBin[devId])
-					values["current"][bin] += v
-					values["entries"][bin] += 1.
+					values[-1][bin] += float(v)
+					entries[-1][bin] += 1
 				except	Exception, e:
 					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			countNotEmptyBins = useBins - values["entries"].count(0)
-			upD={"current":0,"empty":0}
-			triggerValues["current"]["GT"] = 0
-			triggerValues["current"]["LT"] = 0
-			triggerValues["empty"]["GT"] = 0
-			triggerValues["empty"]["LT"] = 0
-			triggerValues["empty"]["directions"] = []
-			triggerValues["current"]["directions"] = []
-			nTot = 0
+
 			for ii in range(useBins):
-						nTot += values["entries"][ii]
-						values["current"][ii]  = ( values["current"][ii]/max(1.,values["entries"][ii]))
-						if values["entries"][ii] > 0 and values["last"][ii] >0 and values["empty"][ii] >0:	
-							for kk in ["current","empty"]:
-								delta = 100*(values["last"][ii] - values[kk][ii]) / max(1.,values["last"][ii] + values[kk][ii])
+				values[-1][ii]  = int( values[-1][ii]/max(1.,entries[-1][ii]))
 
-								if abs( delta ) >  contiguousDeltaValue[devId]:
+			countNotEmptyBins = useBins - entries[-1].count(0)
+			upD			= {"current":0,"empty":0}
+			deltaValues	= {"current":copy.copy(emptyBins),"empty": copy.copy(emptyBins)}
+			#U.logger.log(20, u"1---tv:{}".format(tv))
+			kk = 0
+			kki= 0
+			try:
+				for mm in range(nTriggerKeep):
+					nn = - (1 + mm)
+					deltaList = {"current":[],"empty":[]}
+					upD		  = {"current":0, "empty":0}
+					trV[nn] = copy.deepcopy(trV0)
+					trV[nn]["time"] = time.time()
+					for kk in ["current","empty"]:
+						if kk =="current":	kki = -1
+						else:			 	kki = 0 
+						if nn == 1 and kk =="current": continue
+						deltaList[kk] 	= []
+						upD[kk] 		= 0
+						for ii in range(useBins):
+							if entries[-1][ii] > 0 and entries[nn][ii] >0 and entries[0][ii] >0:	
+								deltaValues[kk][ii] = 100*(values[kki][ii] - values[nn][ii]) / max(1.,values[kki][ii] + values[nn][ii])
+
+								if abs( deltaValues[kk][ii] ) >  contiguousDeltaValue[devId]:
 									#U.logger.log(20, " {}; delta: {}; contiguousDeltaValue: {}".format(kk, delta, contiguousDeltaValue) )
-									if delta > 0:
+									if deltaValues[kk][ii] > 0:
 										if  upD[kk] != -1:
-											deltaList[kk].append( delta )
+											deltaList[kk].append( deltaValues[kk][ii] )
 											if len(deltaList[kk]) >= nContiguousAngles[devId]:
-												#if sum(deltaList[kk]) >  (nContiguousAngles*nContiguousAngles): 
-													if upD[kk] == +1:	
-																		triggerValues[kk]["GT"] 				+= 1 
-																		triggerValues[kk]["directions"][-1][1]  = ii
-																		triggerValues[kk]["directions"][-1][2] += +1
-																		triggerValues[kk]["directions"][-1][3] += int(delta)
-													else:				
-																		triggerValues[kk]["GT"] += nContiguousAngles[devId]
-																		triggerValues[kk]["directions"].append( [max(0,ii-nContiguousAngles[devId]-1), ii ,nContiguousAngles[devId], int(delta*nContiguousAngles[devId])  ] )
-													upD[kk] = +1
+												if upD[kk] == +1:	
+													trV[nn][kk]["GT"]["totalCount"]   		    += 1 
+													trV[nn][kk]["GT"]["totalSum"]   		  	+= int(deltaValues[kk][ii]) 
+													trV[nn][kk]["GT"]["sections"][-1]["bins"][1] = ii
+													trV[nn][kk]["GT"]["sections"][-1]["sum"]    += int(deltaValues[kk][ii])
+												else:	
+													trV[nn][kk]["GT"]["totalSum"]   += int(sum(deltaList[kk]))
+													trV[nn][kk]["GT"]["totalCount"] += nContiguousAngles[devId]
+													trV[nn][kk]["GT"]["sections"].append(  {"bins":[max(0,ii-nContiguousAngles[devId]-1),ii], "sum":int(sum(deltaList[kk]))} )
+													#U.logger.log(20, u"adding section: loopCount:{};  kk{}, kki{}, nn:{}, ii:{}; len(trv):{};  trV {} ".format(loopCount, kk, kki, nn, ii, len(trV[nn][kk]["GT"]["sections"]), trV[nn][kk]["GT"]))
+												upD[kk] = +1
 										else:
-											deltaList[kk] = []
-											upD[kk] = 0
+											deltaList[kk] 	= []
+											upD[kk] 		= 0
 
-									if delta < 0:
+									if deltaValues[kk][ii] < 0:
 										if upD[kk] != +1:
-											deltaList[kk].append( delta )
+											deltaList[kk].append( deltaValues[kk][ii] )
 											if len(deltaList[kk]) >= nContiguousAngles[devId]:
-												#if sum(deltaList[kk]) < -(nContiguousAngles*nContiguousAngles): 
-													if upD[kk] == -1:	
-																		triggerValues[kk]["LT"] 				+= 1 
-																		triggerValues[kk]["directions"][-1][1]  = ii
-																		triggerValues[kk]["directions"][-1][2] += +1
-																		triggerValues[kk]["directions"][-1][3] += int(delta)
-													else:				
-																		triggerValues[kk]["LT"] += nContiguousAngles[devId]
-																		triggerValues[kk]["directions"].append( [max(0,ii-nContiguousAngles[devId] -1), ii, nContiguousAngles[devId], int(delta*nContiguousAngles[devId])  ] )
-													upD[kk] = -1
+												if upD[kk] == -1:	
+													trV[nn][kk]["LT"]["totalCount"]   		    += 1 
+													trV[nn][kk]["LT"]["totalSum"]   			+= int(deltaValues[kk][ii]) 
+													trV[nn][kk]["LT"]["sections"][-1]["bins"][1] = ii
+													trV[nn][kk]["LT"]["sections"][-1]["sum"]    += int(deltaValues[kk][ii])
+												else:				
+													trV[nn][kk]["LT"]["totalCount"] += nContiguousAngles[devId]
+													trV[nn][kk]["LT"]["totalSum"]   += int(sum(deltaList[kk]))
+													trV[nn][kk]["LT"]["sections"].append(  {"bins":[max(0,ii-nContiguousAngles[devId]-1),ii], "sum":int(sum(deltaList[kk]))} )
+													#U.logger.log(20, u"adding section: loopCount:{};  kk{}, kki{}, nn:{}, ii:{}; len(trv):{};  trV {} ".format(loopCount, kk, kki, nn, ii, len(trV[nn][kk]["LT"]["sections"]), trV[nn][kk]["LT"]))
+												upD[kk] = -1
 										else:
-											deltaList[kk] = []
-											upD[kk] = 0
-	
-									
-								else:
-									deltaList[kk] = []
-									upD[kk] = 0
-						else:
-							if False:
-								deltaList["empty"] = []
-								upD["empty"] = 0
-								deltaList["current"] = []
-								upD["current"] = 0
-						values["current"][ii]  = int( values["current"][ii] )
-			triggerValues["current"]["maxValue"] = max(values["current"])
+											deltaList[kk] 	= []
+											upD[kk] 		= 0
 
+								
+								else:
+									deltaList[kk] 	= []
+									upD[kk] 		= 0
+			except	Exception, e:
+				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(20, u"trV {} kk{}, kki{}, nn:{}".format(trV, kk, kki, nn))
+				
 
 			countMeasurements[devId] +=1
 			##### check if calibration mode ##############
+			#U.logger.log(20,"countMeasurements: {};  waitforMeasurements: {};  calibrateEmptyRoom: {}".format(countMeasurements[devId], waitforMeasurements, calibrateEmptyRoom[devId]))
 			if countMeasurements[devId] >= waitforMeasurements and calibrateEmptyRoom[devId]:
-				LL = len(values["current"])
 				if countMeasurements[devId] == waitforMeasurements: # start calib
-					accumV =  copy.copy(values["current"])
-					countC = [0 for ii in range(LL)]
-					for ii  in range(LL):
-						if values["current"][ii] > 0: countC[ii] = 1
-				else: # accumulate 
-					for ii in range(LL):
-						accumV[ii] += values["current"][ii]
-						if values["current"][ii] > 0: countC[ii] +=1
-				if countMeasurements[devId] >= waitforMeasurements+ measurementsNeededForCalib[devId]: # finished calib
-					calibrateEmptyRoom[devId]= False
-					for ii in range(LL):
+					accumV = copy.copy(emptyBins)
+					countC = copy.copy(emptyBins)
+					nMeas =0
+
+				for ii in range(useBins):
+					accumV[ii] += values[-1][ii]
+					if values[-1][ii] > 0: countC[ii] += 1
+				nMeas +=1
+
+				if countMeasurements[devId] >= waitforMeasurements + measurementsNeededForCalib[devId]: # finished calib
+					calibrateEmptyRoom[devId] = False
+					for ii in range(useBins):
 						accumV[ii] = int(accumV[ii]/max(1,countC[ii]))
-					values["empty"] = copy.copy(accumV)
-					zeros = accumV.count(0)
-					triggerValues["empty"]["maxValue"] = triggerValues["current"]["maxValue"] 
-					U.logger.log(20,"created new empty room calibration file bins with no value: {} out of: {}".format(zeros, len(accumV)))
-					U.writeJson(G.homeDir+"rdlidar.emptyRoom", {"values":values["empty"],"anglesInOneBin":anglesInOneBin})
+						countC[ii] = int(countC[ii])
+
+					values[0]  	= copy.copy(accumV)
+					entries[0] 	= copy.copy(countC)
+					#U.logger.log(20,"created new empty room calibration file bins with empty bins: {} out of: {}, nMeas:{}; req:{}".format(accumV.count(0), len(accumV), nMeas, measurementsNeededForCalib[devId]))
+					U.writeJson(G.homeDir+"rdlidar.emptyRoom", {"values":values[0], "entries":entries[0], "anglesInOneBin":anglesInOneBin, "nMeas":nMeas})
 					##### calibration ended         ##############
 			##### check if calibration mode ##############  END
 
 
-
-
+			test = 0; test0 = 0
 			if not calibrateEmptyRoom[devId]:
-				test =	( 	triggerValues["current"]["GT"] > triggerLast[devId] or 
-							triggerValues["current"]["LT"] > triggerLast[devId]  or 
-							abs(triggerValues["empty"]["GT"] - triggerValues2["empty"]["GT"]) > triggerEmpty[devId] or 
-							abs(triggerValues["empty"]["LT"] - triggerValues2["empty"]["LT"]) > triggerEmpty[devId]  or 
-							time.time() - abs(sendToIndigoEvery[devId]) > lastAliveSend[devId]  or  
-							quick  
-						)  and 	( time.time() - lastAliveSend[devId] > minSendDelta[devId] ) 
-					
+				test0 =  (time.time() - lastAliveSend[devId]) > minSendDelta[devId] 
 
-				if  test:
-					data = {"triggerValues": triggerValues}
-					data["anglesInOneBin"] = anglesInOneBin
-					data["empty"] = values["empty"]
-					data["current"] = values["current"]
-					data["last"] = values["last"]
-					U.sendURL( {"sensors":{sensor:{devId:data}}} )
-					lastAliveSend[devId] = time.time()
-					# keep last send trigger values
-					triggerValues2 = copy.copy(triggerValues)
+				if test0:
+					maxAllValue	= {"current":-1, "empty":-1}
+					maxAllind 	= {"current":-1, "empty":-1}
+					for ce in ["current", "empty"]:
+						for lg in ["LT","GT"]:
+							for nn in range(nTriggerKeep):
+								ii = -(1+nn) 
+								if trV[ii][ce][lg]["totalCount"] > maxAllValue[ce]:
+									maxAllValue[ce] = trV[ii][ce][lg]["totalCount"]
+									maxAllind[ce] = ii
 
-			values["last"] = copy.copy(values["current"])
+					test =			maxAllValue["current"] > triggerLast[devId]
+					test = test or (time.time() - sendToIndigoEvery[devId]) > lastAliveSend[devId]
+					test = test or  quick
+	
 
-			U.logger.log(10, "testifSend:{};  dT:{:6.1f};  nM :{:3d}; nE: {:3d};   DELTA  Cont- L-GT: {:3d};  L-LT: {:3d};  E-GT: {:3d};  E-LT: {:3d}".format(
-				test, time.time() - tStart, nM, countNotEmptyBins, triggerValues["current"]["GT"], triggerValues["current"]["LT"], triggerValues["empty"]["GT"], triggerValues["empty"]["LT"])
-			 )
+					if  test:
+						data = {"triggerValues": {"current":trV[maxAllind["current"]]["current"], "empty":trV[maxAllind["empty"]]["empty"] } }
+						data["anglesInOneBin"] = anglesInOneBin
+						data["timestamp"] = time.time()
+						data["empty"] 	= values[0]
+						data["current"] = values[-1]
+						data["last"] 	= values[maxAllind["current"]]
+						U.sendURL( {"sensors":{sensor:{devId:data}}} )
+						lastAliveSend[devId] = time.time()
+						# keep last send trigger values
+
+						if False: U.logger.log(20,"maxAllValue:{};  maxAllind:{}\ntrV E gt:{}; lt:{}".format(maxAllValue, maxAllind, trV[maxAllind["empty"]]["empty"]["GT"], trV[maxAllind["empty"]]["empty"]["LT"]) )
+
+			if False:
+				U.logger.log(10, "testifSend:{};{};  dT:{:6.1f};  nM :{:3d}; nE: {:3d};   DELTA  Cont- L-GT: {};  L-LT: {};  E-GT: {};  E-LT: {}, trgEmpty:{};  trgLast:{}".format(
+					test,test0, time.time() - tStart, nM, countNotEmptyBins, trV[-1]["current"]["GT"], trV[-1]["current"]["LT"], trV[-1]["empty"]["GT"], trV[-1]["empty"]["LT"],  triggerEmpty[devId], triggerLast[devId] )
+				 )
 
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
+"""
+			if not calibrateEmptyRoom[devId]:
+				test =			trV[-1]["current"]["GT"]["totalCount"]  											> triggerLast[devId]
+				test = test or 	trV[-1]["current"]["LT"]["totalCount"]  											> triggerLast[devId]
+				test = test or	abs(trV[-1]["empty"]["GT"]["totalCount"]  - trV[-2]["empty"]["GT"]["totalCount"] ) > triggerEmpty[devId] 
+				test = test or	abs(trV[-1]["empty"]["LT"]["totalCount"]  - trV[-2]["empty"]["LT"]["totalCount"] ) > triggerEmpty[devId]  
+				test = test or	time.time() - abs(sendToIndigoEvery[devId]) > lastAliveSend[devId]  
+				test = test or	quick  
+				test = test and time.time() - lastAliveSend[devId] > minSendDelta[devId] 
+					
 
+				if  test:
+					data = {"triggerValues": trV[-1]}
+					data["anglesInOneBin"] = anglesInOneBin
+					data["empty"] 	= values[0]
+					data["current"] = values[-1]
+					data["last"] 	= values[-2]
+					U.sendURL( {"sensors":{sensor:{devId:data}}} )
+					lastAliveSend[devId] = time.time()
+					# keep last send trigger values
+"""
 
 
 
@@ -800,7 +866,7 @@ global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,t
 global calibrateEmptyRoom
 global countMeasurements, waitforMeasurements,	measurementsNeededForCalib
 
-waitforMeasurements 		= 4
+waitforMeasurements 		= 10
 measurementsNeededForCalib 	= {}
 motorFrequency 				= {}
 nContiguousAngles			= {}
