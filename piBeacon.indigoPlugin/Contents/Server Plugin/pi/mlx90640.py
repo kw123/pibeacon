@@ -404,6 +404,7 @@ def readParams():
 	global deltaX, amg88xx, minSendDelta
 	global oldRaw, lastRead
 	global startTime
+	global usbPort
 	try:
 
 
@@ -452,6 +453,29 @@ def readParams():
 			except:
 				sensorRefreshSecs = 91	  
 			if old != sensorRefreshSecs: restart = True
+
+			if devId not in usbPort:	usbPort[devId]						= -1
+			test = ""
+			try:
+				old = usbPort[devId]
+				if "usbPort" in sensors[sensor][devId]: 
+					test = sensors[sensor][devId]["usbPort"]
+					if test != "autoPick" or old.find("USB") == -1:
+						usbPort[devId] = sensors[sensor][devId]["usbPort"]
+			except: test = "autoPick"
+
+			if old ==-1 or old.find("USB") == -1  or (old !=-1 and test != old and test != "autoUSB") : 
+				if test == "autoUSB":
+					usbPort[devId] = U.findActiveUSB()
+				else: usbPort[devId] = test
+				if not U.checkIfusbSerialActive(usbPort[devId]):
+					U.logger.log(30, u"{} is not active, return ".format(usbPort[devId]))
+					usbPort[devId] =""
+					continue
+			if old != usbPort[devId]:
+				restart = True
+
+
 
 			
 			i2cAddress = U.getI2cAddress(sensors[sensor][devId], default ="")
@@ -504,8 +528,9 @@ def startSensor(devId,i2cAddress):
 	global startTime
 	global sensorClass, oldPix,  ny,ny
 	global ser
+	global usbPort
 	try: 
-		U.logger.log(30,"==== Start {} ===== @ i2c={} ".format(sensor,i2cAddress))
+		U.logger.log(30,"==== Start {} ===== @ address use: {} ".format(sensor,i2cAddress))
 		startTime =time.time()
 
 		p =[]
@@ -517,27 +542,40 @@ def startSensor(devId,i2cAddress):
 
 
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-		if int(i2cAdd) >0:
-			try:
-				U.logger.log(30, u" i2cAdd {}".format(i2cAdd) )
-				sensorClass[devId]  =	  MLX90640(address=i2cAdd)
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				sensorClass[devId] =""
-			time.sleep(1)
-
-		else:  # serial read 
+		if str(i2cAdd).find("USB") >-1 or str(i2cAdd).find("serial") >-1:
 			U.muxTCA9548Areset()
-			devName = U.getSerialDEV()
-			sensorClass[devId] = serial.Serial(devName)
-			sensorClass[devId].baudrate = 115200
 
-			# set frequency of module to 4 Hz
-			sensorClass[devId].write(serial.to_bytes([0xA5,0x25,0x01,0xCB]))
-			time.sleep(0.1)
+			if str(i2cAdd).find("serial") >-1: 
+				devName = U.getSerialDEV()
+				sensorClass[devId] = serial.Serial(devName)
+				sensorClass[devId].baudrate = 115200
 
-			# Starting automatic data colection
-			sensorClass[devId].write(serial.to_bytes([0xA5,0x35,0x02,0xDC]))
+				# set frequency of module to 4 Hz
+				sensorClass[devId].write(serial.to_bytes([0xA5,0x25,0x01,0xCB]))
+				time.sleep(0.1)
+
+				# Starting automatic data colection
+				sensorClass[devId].write(serial.to_bytes([0xA5,0x35,0x02,0xDC]))
+			else:
+				devName = usbPort[devId]
+				sensorClass[devId] = serial.Serial(devName)
+				sensorClass[devId].baudrate = 115200
+
+				# set frequency of module to 4 Hz
+				sensorClass[devId].write(serial.to_bytes([0xA5,0x25,0x01,0xCB]))
+				time.sleep(0.1)
+
+				# Starting automatic data colection
+				sensorClass[devId].write(serial.to_bytes([0xA5,0x35,0x02,0xDC]))
+
+		if int(i2cAdd) >0:
+				try:
+					U.logger.log(30, u" i2cAdd {}".format(i2cAdd) )
+					sensorClass[devId]  =	  MLX90640(address=i2cAdd)
+				except	Exception, e:
+					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					sensorClass[devId] =""
+				time.sleep(1)
 
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -606,32 +644,33 @@ def getValues(devId):
 	try:
 		#print "len", len(pix[devId]), len(pix[devId][0]), nx, ny
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
-		if int(i2cAdd) >0:
-			if sensorClass[devId] =="":
-				badSensor +=1
-			return "badSensor"
-			rawData=[]
-			for ii in range(nx):
-				ttt =[]
-				for jj in range(ny):
-					ttt.append(round(sensorClass[devId].getCompensatedPixData(ii,jj),1)) 
-					#print jj,ttt
-				rawData.append(ttt)
-				#print "after",pix[devId], ttt
-			val["ambientTemperature"] = 0
-			U.muxTCA9548Areset()
+		if str(i2cAdd).find("USB") >-1 or str(i2cAdd).find("serial"):
+				U.muxTCA9548Areset()
+				ddd = sensorClass[devId].read(1544)
+				print "len, daraw read :",len(ddd), round(float(  (ord(ddd[1540]) + ord(ddd[1541])*256) )/100.,1)
+				rawData=[]
+				for ii in range(nx):
+					ttt =[]
+					for jj in range(ny):
+						ind = ( ii*ny +jj )*2
+						ttt.append(round( float(ord(ddd[ind+4]) + ord(ddd[ind+1+4])*256)/100, 1))
+					rawData.append(ttt)
+		else:
+			if int(i2cAdd) >0:
+				if sensorClass[devId] =="":
+					badSensor +=1
+				return "badSensor"
+				rawData=[]
+				for ii in range(nx):
+					ttt =[]
+					for jj in range(ny):
+						ttt.append(round(sensorClass[devId].getCompensatedPixData(ii,jj),1)) 
+						#print jj,ttt
+					rawData.append(ttt)
+					#print "after",pix[devId], ttt
+				val["ambientTemperature"] = 0
+				U.muxTCA9548Areset()
 
-		else:  # serial 
-			U.muxTCA9548Areset()
-			ddd = sensorClass[devId].read(1544)
-			print "len, daraw read :",len(ddd), round(float(  (ord(ddd[1540]) + ord(ddd[1541])*256) )/100.,1)
-			rawData=[]
-			for ii in range(nx):
-				ttt =[]
-				for jj in range(ny):
-					ind = ( ii*ny +jj )*2
-					ttt.append(round( float(ord(ddd[ind+4]) + ord(ddd[ind+1+4])*256)/100, 1))
-				rawData.append(ttt)
 		#print rawData
 		val = convertPixels(oldPix[devId],rawData,nx,ny)
 		val["ambientTemperature"] = round(float(  (ord(ddd[1540]) + ord(ddd[1541])*256) )/100.,1)
@@ -658,6 +697,8 @@ global oldRaw, lastRead
 global startTime,  lastMeasurement
 global oldPix,  ny,ny
 global uniformityOLD,  movementOLD, horizontal1OLD, horizontal2OLD, vertical1OLD, vertical2OLD 
+global usbPort
+usbPort						= {}
 oldPix						= {}
 nx							= 32
 ny							= 24

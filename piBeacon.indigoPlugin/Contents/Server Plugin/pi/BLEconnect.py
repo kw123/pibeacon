@@ -88,6 +88,7 @@ def readParams():
 		return False
 
 def tryToConnect(MAC,BLEtimeout,devId):
+	global errCount
 
 	ret	 = {"signal": -999, "txPower": -999,"flag0ok":0,"byte2":0}
 	try:
@@ -135,14 +136,16 @@ def tryToConnect(MAC,BLEtimeout,devId):
 					time.sleep(5)
 				else:
 					break
-			os.system("rm "+G.homeDir+"temp/stopBLE")
+			errCount +=1
+			if errCount  < 5: return {}
+			os.system("rm "+G.homeDir+"temp/stopBLE > /dev/null 2>&1")
 			U.logger.log(50, u"in Line {} has error ... sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno))
-			time.sleep(1)
-			U.restartMyself(param="", reason="sock.recv error")
+			U.restartMyself(reason="sock.recv error",delay = 10)
 
 	except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	U.logger.log(10, "{}:  {}".format(MAC, ret))
+	errCount = 0
 	return ret
 
 
@@ -158,9 +161,10 @@ def execBLEconnect():
 	global sensorList,restartBLEifNoConnect
 	global macList,oldParams
 	global oldRaw,	lastRead
+	global errCount
 	oldRaw					= ""
 	lastRead				= 0
-
+	errCount				= 0
 	###################### constants #################
 
 	####################  input gios   ...allrpi	  only rpi2 and rpi0--

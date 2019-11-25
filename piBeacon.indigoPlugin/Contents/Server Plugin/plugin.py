@@ -365,8 +365,8 @@ class Plugin(indigo.PluginBase):
 				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
 				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
 				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.sleep(1000)
-				exit(1)
+				self.sleep(100000)
+				self.quitNOW="wromg plugin name"
 				return
 
 			if not self.checkPluginPath(self.pluginName,  self.pathToPlugin):
@@ -3758,14 +3758,14 @@ class Plugin(indigo.PluginBase):
 						valuesDict[u"description"] = "INP:"+valuesDict[u"gpioIn"]+"-SW5:"+valuesDict[u"gpioSW5"]+"-SW2:"+valuesDict[u"gpioSW2"]+"-SW1:"+valuesDict[u"gpioSW1"]+"-SW12V:"+valuesDict[u"gpioSWP"]
 
 
-				if	typeId =="pmairquality" :
+				if	typeId =="pmairquality":
 					if valuesDict[u"resetPin"] !="-1" and valuesDict[u"resetPin"] !="":
 						valuesDict[u"description"] = "reset-GPIO: " +valuesDict[u"resetPin"]
 					else:
 						valuesDict[u"description"] = "reset-GPIO not used"
 
-				if	typeId =="rdlidar" :
-						valuesDict[u"description"] = "MotorFrq: {}Hz; {} degrees in 1 bin".format(int(10*float(valuesDict[u"motorFrequency"])), valuesDict[u"anglesInOneBin"])
+				if	typeId =="rdlidar":
+						valuesDict[u"description"] = "MotorFrq: {}Hz; {}º in 1 bin; {}".format( int(10*float(valuesDict[u"motorFrequency"])), valuesDict[u"anglesInOneBin"], valuesDict[u"usbPort"] ) 
 
 
 				if	typeId =="Wire18B20" : # update serial number in states in case we jumped around with dev types. 
@@ -11881,21 +11881,30 @@ class Plugin(indigo.PluginBase):
 					if sensor == u"rdlidar" :
 						try:
 								xx = data["triggerValues"]
-								newStatus = self.setStatusCol( dev, u"Leaving_count", 					xx["current"]["GT"]["totalCount"], 	unicode(xx["current"]["GT"]["totalCount"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Approaching_count", 				xx["current"]["LT"]["totalCount"], 	unicode(xx["current"]["LT"]["totalCount"]), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed_count",		xx["empty"]["GT"]["totalCount"],   	unicode(xx["empty"]["GT"]["totalCount"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Room_occupied_count", 			xx["empty"]["LT"]["totalCount"],   	unicode(xx["empty"]["LT"]["totalCount"]),   whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Leaving_count", 					xx["current"]["GT"]["totalCount"], 	"leaving Count:{}".format(xx["current"]["GT"]["totalCount"]),		whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Approaching_count", 				xx["current"]["LT"]["totalCount"], 	"approaching Count:{}".format(xx["current"]["LT"]["totalCount"]),	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed_count",		xx["empty"]["GT"]["totalCount"],   	"calibration Count:{}".format(xx["empty"]["GT"]["totalCount"]), 	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Room_occupied_count", 			xx["empty"]["LT"]["totalCount"],   	"occupied Count:{}".format(xx["empty"]["LT"]["totalCount"]),   		whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
 
-								newStatus = self.setStatusCol( dev, u"Leaving_value", 					xx["current"]["GT"]["totalSum"], 	unicode(xx["current"]["GT"]["totalSum"]), 	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Approaching_value", 				xx["current"]["LT"]["totalSum"], 	unicode(xx["current"]["LT"]["totalSum"]), 	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed_value", 	xx["empty"]["GT"]["totalSum"],   	unicode(xx["empty"]["GT"]["totalSum"]),   	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								newStatus = self.setStatusCol( dev, u"Room_occupied_value", 			xx["empty"]["LT"]["totalSum"],   	unicode(xx["empty"]["LT"]["totalSum"]),   	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-								if "saveRawData" in props and props[u"saveRawData"] =="1" and False:
-										props["rawData"] = data
-										dev.replacePluginPropsOnServer(props)
-								if len(props[u"imageFileName"]) < 12: fileName = self.indigoPreferencesPluginDir+"rdLidarImages/image.png"
-								else: 								  fileName = props[u"imageFileName"]
-								if "mode" in props and props[u"mode"] in["manual","auto"]:
+								newStatus = self.setStatusCol( dev, u"Leaving_value", 					xx["current"]["GT"]["totalSum"], 	"leaving value:{}".format(xx["current"]["GT"]["totalSum"]), 		whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Approaching_value", 				xx["current"]["LT"]["totalSum"], 	"approcahing value:{}".format(xx["current"]["LT"]["totalSum"]), 	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Re-Calibration_needed_value", 	xx["empty"]["GT"]["totalSum"],   	"calibration value:{}".format(xx["empty"]["GT"]["totalSum"]),   	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Room_occupied_value", 			xx["empty"]["LT"]["totalSum"],   	"occupied value:{}".format(xx["empty"]["LT"]["totalSum"]),   		whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+
+								newStatus = self.setStatusCol( dev, u"Current_NonZeroBins", 			xx["current"]["nonZero"],   		"current non zero bins:{}".format(xx["current"]["nonZero"]),   		whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"Calibration_NonZeroBins", 		xx["empty"]["nonZero"],  			"calibration non zero bins:{}".format(xx["empty"]["nonZero"]),   	whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+								newStatus = self.setStatusCol( dev, u"ubsPortUsed", 					xx["port"],  						xx["port"],   														whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+
+								if "empty" in data and len(data["empty"]) > 10:
+									props["empty"] = json.dumps(data["empty"])
+									dev.replacePluginPropsOnServer(props)
+								else:
+									try:	data["empty"] =  json.loads(props["empty"])
+									except: data["empty"] =[]
+
+								if len(props[u"fileName"]) < 5:	fileName = self.indigoPreferencesPluginDir+"rdLidarImages/"+dev.name+".png"
+								else: 						  	fileName = props[u"fileName"]
+								if "mode" in props and props[u"mode"] in ["manual","auto"] and ("sendPixelData" in props and props["sendPixelData"] =="1"):
 									if (    "showAllImages" not in props or 
 											("showAllImages" in props and props[u"showAllImages"] == "1") or 
 											data["triggerValues"]["current"]["GT"]["totalCount"] != 0 or 
@@ -11911,6 +11920,7 @@ class Plugin(indigo.PluginBase):
 													"yMin":props[u"yMin"],
 													"yMax":props[u"yMax"],
 													"scalefactor":props[u"scalefactor"],
+													"showZeroValues":props[u"showZeroValues"],
 													"mode":props[u"mode"],
 													"showPhi0":props[u"showPhi0"],
 													"showZeroDot":props[u"showZeroDot"],
@@ -14753,6 +14763,7 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"INPUTdevId3")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"coincidenceTimeInterval")
 
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"usbPort")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"motorFrequency")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nContiguousAngles")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"contiguousDeltaValue")
@@ -14761,6 +14772,7 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sendToIndigoEvery")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"anglesInOneBin")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"measurementsNeededForCalib")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sendPixelData")
 
 							self.deviceStopCommIgnore = time.time()
 							dev.replacePluginPropsOnServer(props)

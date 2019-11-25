@@ -196,58 +196,62 @@ def checkParametersFile(defaultParameters, force=False):
 
 #################################
 def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=False, deleteAfterRead = False):
-	if not G.loggerSet:
-		setLogging()
+	try:
+		if not G.loggerSet:
+			setLogging()
 
-	if G.osVersion < 4:
-		ret = subprocess.Popen("/bin/cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
-		for line in ret:
-			try:
-				if line.find("VERSION_ID=") ==0: 
-					items = line.split("=")
-					G.osVersion = int( items[1].strip('"') )
-					logger.log(10, u"cBY:{:<20} os version:{}".format(G.program,G.osVersion) )
-					break
-			except	Exception, e :
-				logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+		if G.osVersion < 4:
+			ret = subprocess.Popen("/bin/cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
+			for line in ret:
+				try:
+					if line.find("VERSION_ID=") ==0: 
+						items = line.split("=")
+						G.osVersion = int( items[1].strip('"') )
+						logger.log(10, u"cBY:{:<20} os version:{}".format(G.program,G.osVersion) )
+						break
+				except	Exception, e :
+					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 
-	t = 0
-	if not os.path.isfile(inFile):
-		if lastTimeStamp != "": 
-			return "","error",t
-		return "","error"
-
-	if testTimeOnly:  return t
-			
-	t = os.path.getmtime(inFile)
-	if lastTimeStamp != "": 
-		if lastTimeStamp == t: 
-			if testTimeOnly: return t
-			else: 			 return "","",t
-	if testTimeOnly:  return t
-	
-	inp, inRaw = readJson(inFile)
-	if deleteAfterRead: os.remove(inFile)
-
-	if inp =={}:
+		t = 0
 		if not os.path.isfile(inFile):
 			if lastTimeStamp != "": 
-				if lastTimeStamp == t: return "","error",t
+				return "","error",t
 			return "","error"
-		time.sleep(0.1)
-		inp, inRaw = readJson(inFile)
-		if inp =={}:
-			if inFile == G.homeDir+"temp/parameters":
-				logger.log(20, u"cBY:{:<20} doRead error empty file".format(G.program))
-		if deleteAfterRead: os.remove(inFile)
-		if lastTimeStamp != "":
-			return "","error", t
-		return "","error"
 
-	if lastTimeStamp != "":
-		return inp, inRaw, t
-	return inp, inRaw
+		if testTimeOnly:  return t
+			
+		t = os.path.getmtime(inFile)
+		if lastTimeStamp != "": 
+			if lastTimeStamp == t: 
+				if testTimeOnly: return t
+				else: 			 return "","",t
+		if testTimeOnly:  return t
+	
+		inp, inRaw = readJson(inFile)
+		if deleteAfterRead: os.remove(inFile)
+
+		if inp =={}:
+			if not os.path.isfile(inFile):
+				if lastTimeStamp != "": 
+					if lastTimeStamp == t: return "","error",t
+				return "","error"
+			time.sleep(0.1)
+			inp, inRaw = readJson(inFile)
+			if inp =={}:
+				if inFile == G.homeDir+"temp/parameters":
+					logger.log(20, u"cBY:{:<20} doRead error empty file".format(G.program))
+			if deleteAfterRead: os.remove(inFile)
+			if lastTimeStamp != "":
+				return "","error", t
+			return "","error"
+
+		if lastTimeStamp != "":
+			return inp, inRaw, t
+		return inp, inRaw
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return {}, ""
 
 #################################
 def setNetwork(mode):
@@ -345,6 +349,7 @@ def getGlobalParams(inp):
 
 #################################
 def cleanUpSensorlist(sens, theSENSORlist):
+	try:
 		deldevID={}		   
 		for devId in theSENSORlist:
 			if devId not in sens:
@@ -355,39 +360,44 @@ def cleanUpSensorlist(sens, theSENSORlist):
 			####exit()
 			pass
 		return theSENSORlist
-
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return {}
 #################################
 def doReboot(tt=1, text="", cmd=""):
-	if cmd =="":
-		doCmd= G.rebootCommand
-	else: 
-		doCmd = cmd
-	try:     G.sendThread["run"] = False
-	except: pass
-	logger.log(50, "cBY:"+G.program.ljust(20)+ u"  rebooting / shutdown "+doCmd+"  "+ text)
-	os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
-
-
-	time.sleep(0.1)
-	time.sleep(tt)
-
-
-	if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
-		try: os.system("sudo killall -9 pigpiod &")
+	try:
+		if cmd =="":
+			doCmd= G.rebootCommand
+		else: 
+			doCmd = cmd
+		try:     G.sendThread["run"] = False
 		except: pass
+		logger.log(50, "cBY:"+G.program.ljust(20)+ u"  rebooting / shutdown "+doCmd+"  "+ text)
+		os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
+
+
 		time.sleep(0.1)
+		time.sleep(tt)
 
-	if cmd =="":
-		os.system(doCmd+";sleep 2;sudo reboot -f")
-		time.sleep(20)
-		os.system("sudo killall -9 python; sudo sync;sudo sleep 2; sudo reboot -f") 
-		os.system("sudo sync;sudo halt") 
-	else:
-		os.system(doCmd)
-		time.sleep(20)
-		os.system("sudo sync;sudo halt") 
 
-	doRebootThroughRUNpinReset()
+		if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
+			try: os.system("sudo killall -9 pigpiod &")
+			except: pass
+			time.sleep(0.1)
+
+		if cmd =="":
+			os.system(doCmd+";sleep 2;sudo reboot -f")
+			time.sleep(20)
+			os.system("sudo killall -9 python; sudo sync;sudo sleep 2; sudo reboot -f") 
+			os.system("sudo sync;sudo halt") 
+		else:
+			os.system(doCmd)
+			time.sleep(20)
+			os.system("sudo sync;sudo halt") 
+
+		doRebootThroughRUNpinReset()
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 #################################
 def checkifRebooting():
@@ -424,69 +434,73 @@ def sendRebootHTML(reason,reboot=True):
 
 #################################
 def setUpRTC(useRTCnew):
-	global initRTC
 	try:
-		if initRTC:
-			initRTC=False
-	except:
-			initRTC=True
+		global initRTC
+		try:
+			if initRTC:
+				initRTC=False
+		except:
+				initRTC=True
 		
 
-	if useRTCnew == "manual":
-		return
+		if useRTCnew == "manual":
+			return
 
-	if useRTCnew not in ["ds3231","ds1307"]: useRTCnew ="0"
+		if useRTCnew not in ["ds3231","ds1307"]: useRTCnew ="0"
 
-	if	G.useRTC == useRTCnew and not initRTC: # return if not first and no change
-		return
+		if	G.useRTC == useRTCnew and not initRTC: # return if not first and no change
+			return
 	
-	if useRTCnew == "ds3231":
-		if findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") == 2: # already there ?
-			G.useRTC = useRTCnew
-			return 
+		if useRTCnew == "ds3231":
+			if findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") == 2: # already there ?
+				G.useRTC = useRTCnew
+				return 
 		
-		uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local",	 before="(sleep ")
-		removefromFile("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt")
-		uncommentOrAdd("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt", before="")
-		removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
-		os.system("apt-get -y remove fake-hwclock")
-		doReboot(tt=30, text="installing HW clock" )
+			uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local",	 before="(sleep ")
+			removefromFile("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt")
+			uncommentOrAdd("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt", before="")
+			removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
+			os.system("apt-get -y remove fake-hwclock")
+			doReboot(tt=30, text="installing HW clock" )
 
-	elif useRTCnew == "ds1307":
-		if findString("dtoverlay=i2c-rtc,ds1307",	"/boot/config.txt") == 2: # already done ?
-			G.useRTC = useRTCnew
-			return 
-		uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local", before="(sleep ")
-		removefromFile("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt")
-		uncommentOrAdd("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt", before="")
+		elif useRTCnew == "ds1307":
+			if findString("dtoverlay=i2c-rtc,ds1307",	"/boot/config.txt") == 2: # already done ?
+				G.useRTC = useRTCnew
+				return 
+			uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local", before="(sleep ")
+			removefromFile("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt")
+			uncommentOrAdd("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt", before="")
 
-		# in /lib/udev/hwclock-set ADD # infront of 
-		#if [ -e /run/systemd/system ] ; then
-		# exit 0
-		#fi
-		removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
-		os.system("sudo chmod a+x  /lib/udev/hwclock-set")
-		os.system("apt-get -y remove fake-hwclock")
-		doReboot(tt=30, text="installing HW clock")
+			# in /lib/udev/hwclock-set ADD # infront of 
+			#if [ -e /run/systemd/system ] ; then
+			# exit 0
+			#fi
+			removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
+			os.system("sudo chmod a+x  /lib/udev/hwclock-set")
+			os.system("apt-get -y remove fake-hwclock")
+			doReboot(tt=30, text="installing HW clock")
 
-	else:
-		if (findString("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt") != 2 and 
-			findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") != 2 ) : # already done ?
-			G.useRTC = useRTCnew
-			return 
+		else:
+			if (findString("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt") != 2 and 
+				findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") != 2 ) : # already done ?
+				G.useRTC = useRTCnew
+				return 
 
-		removefromFile("dtoverlay=i2c-rtc,ds3231","/boot/config.txt")
-		removefromFile("dtoverlay=i2c-rtc,ds1307","/boot/config.txt")
-		removefromFile('/sbin/hwclock -s|| echo "hwclock not working"', "/etc/rc.local" )
-		# in /lib/udev/hwclock-set REMOVE # infront of 
-		#if [ -e /run/systemd/system ] ; then
-		# exit 0
-		#fi
-		os.system("cp "+G.homeDir+"hwclock.set.nohwclock /lib/udev/hwclock-set") 
-		os.system("sudo chmod a+x  /lib/udev/hwclock-set")
-		os.system("apt-get -y install fake-hwclock") 
+			removefromFile("dtoverlay=i2c-rtc,ds3231","/boot/config.txt")
+			removefromFile("dtoverlay=i2c-rtc,ds1307","/boot/config.txt")
+			removefromFile('/sbin/hwclock -s|| echo "hwclock not working"', "/etc/rc.local" )
+			# in /lib/udev/hwclock-set REMOVE # infront of 
+			#if [ -e /run/systemd/system ] ; then
+			# exit 0
+			#fi
+			os.system("cp "+G.homeDir+"hwclock.set.nohwclock /lib/udev/hwclock-set") 
+			os.system("sudo chmod a+x  /lib/udev/hwclock-set")
+			os.system("apt-get -y install fake-hwclock") 
 
 		doReboot(tt=30, text=" .. reason de installing HW clock" ,cmd="")
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return
 
 #################################
 def getIPNumber():
@@ -823,96 +837,111 @@ def startAdhocWifi():
 
 #################################
 def stopAdhocWifi(setwifi="manual"):
-	if  os.path.isfile(G.homeDir+"adhocWifistarted.time"): 
-		os.system("sudo rm "+ G.homeDir+"adhocWifistarted.time")
-	if os.path.isfile(G.homeDir+"temp/adhocWifi.stop"):
-		os.system("sudo rm "+G.homeDir+"temp/adhocWifi.stop")
-	if os.path.isfile(G.homeDir+"temp/adhocWifi.start"):
-		os.system("sudo rm "+G.homeDir+"temp/adhocWifi.start")
+	try:
+		if  os.path.isfile(G.homeDir+"adhocWifistarted.time"): 
+			os.system("sudo rm "+ G.homeDir+"adhocWifistarted.time")
+		if os.path.isfile(G.homeDir+"temp/adhocWifi.stop"):
+			os.system("sudo rm "+G.homeDir+"temp/adhocWifi.stop")
+		if os.path.isfile(G.homeDir+"temp/adhocWifi.start"):
+			os.system("sudo rm "+G.homeDir+"temp/adhocWifi.start")
 
-#	if setwifi == "manual":
-#	logger.log(50, "cBY:"+G.program.ljust(20)+ u" stopAdhocwebserver Wifi: stopping wifi, restoring wifi active (manual) interface file and reboot")
-#		os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT /etc/network/interfaces')
-#		os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT '+G.homeDir+'interfaces')#
-#		os.system('sudo cp '+G.homeDir+'dhclient.conf-fast/etc/dhcp/dhclient.conf')
+	#	if setwifi == "manual":
+	#	logger.log(50, "cBY:"+G.program.ljust(20)+ u" stopAdhocwebserver Wifi: stopping wifi, restoring wifi active (manual) interface file and reboot")
+	#		os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT /etc/network/interfaces')
+	#		os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT '+G.homeDir+'interfaces')#
+	#		os.system('sudo cp '+G.homeDir+'dhclient.conf-fast/etc/dhcp/dhclient.conf')
 
-	if True:
-		logger.log(50, "cBY:"+G.program.ljust(20)+ u" stopAdhocwebserver Wifi: stopping wifi, restoring wifi active (dhcp) interface file and reboot")
-		os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT-wifi /etc/network/interfaces')
-		os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
+		if True:
+			logger.log(50, "cBY:"+G.program.ljust(20)+ u" stopAdhocwebserver Wifi: stopping wifi, restoring wifi active (dhcp) interface file and reboot")
+			os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT-wifi /etc/network/interfaces')
+			os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
 
-	time.sleep(2)
-	doReboot(tt=0)
+		time.sleep(2)
+		doReboot(tt=0)
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 
 #################################
 def startWiFi():
-	if G.wifiEth["wlan0"]["on"] == "dontChange": return 
-	logger.log(20, u"cBY:{:<20} starting WiFi".format(G.program) )
-	os.system("sudo rfkill unblock all")
+	try:
+		if G.wifiEth["wlan0"]["on"] == "dontChange": return 
+		logger.log(20, u"cBY:{:<20} starting WiFi".format(G.program) )
+		os.system("sudo rfkill unblock all")
 
 
-	# new tool to be converted..  --> use ip instead if ifconfig 
-	# ip link set dev wlan1 up
-	# sudo ip addr flush dev eth0
-	time.sleep(0.5)
-	ret  = subprocess.Popen("sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		# new tool to be converted..  --> use ip instead if ifconfig 
+		# ip link set dev wlan1 up
+		# sudo ip addr flush dev eth0
+		time.sleep(0.5)
+		ret  = subprocess.Popen("sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 
-	ret += subprocess.Popen("sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	if G.osVersion < 8:
-		ret += subprocess.Popen("sudo ifconfig wlan0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	else:
-		ret += subprocess.Popen("sudo /sbin/ip link set wlan0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	ret += subprocess.Popen("sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf & sudo dhcpcd wlan0&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	time.sleep(0.5)
-	ret += subprocess.Popen("sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	ret += subprocess.Popen("sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	ret += subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
-	logger.log(30, u"cBY:{:<20} starting Wifi: {}".format(G.program, ret))
-	G.wifiEnabled = True
+		ret += subprocess.Popen("sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		if G.osVersion < 8:
+			ret += subprocess.Popen("sudo ifconfig wlan0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		else:
+			ret += subprocess.Popen("sudo /sbin/ip link set wlan0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		ret += subprocess.Popen("sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf & sudo dhcpcd wlan0&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		time.sleep(0.5)
+		ret += subprocess.Popen("sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		ret += subprocess.Popen("sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		ret += subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
+		logger.log(30, u"cBY:{:<20} starting Wifi: {}".format(G.program, ret))
+		G.wifiEnabled = True
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 	return
 #################################
 def startEth():
-	if G.wifiEth["eth0"]["on"] == "dontChange": return 
-	ret = subprocess.Popen("sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	if G.osVersion < 8:
-		ret += subprocess.Popen("sudo ifconfig eth0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	else:
-		ret += subprocess.Popen("sudo /sbin/ip link set  eth0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	ret += subprocess.Popen("sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	ret += subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
-	logger.log(30,  u"cBY:{:<20} starting ETH: {}".format(G.program, ret))
-	G.eth0Enabled = True
+	try:
+		if G.wifiEth["eth0"]["on"] == "dontChange": return 
+		ret = subprocess.Popen("sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		if G.osVersion < 8:
+			ret += subprocess.Popen("sudo ifconfig eth0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		else:
+			ret += subprocess.Popen("sudo /sbin/ip link set  eth0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		ret += subprocess.Popen("sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		ret += subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		os.system('sudo cp '+G.homeDir+'dhclient.conf-fast /etc/dhcp/dhclient.conf')
+		logger.log(30,  u"cBY:{:<20} starting ETH: {}".format(G.program, ret))
+		G.eth0Enabled = True
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 #################################
 def stopWiFi(calledFrom=""):
-	if G.wifiEth["wlan0"]["on"] == "dontChange": return 
-	logger.log(30, u"cBY:{:<20} stopping WiFi: called from:{}".format(G.program, calledFrom))
-	ret = subprocess.Popen("sudo rfkill unblock all"    	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	if G.osVersion < 8:
-		ret += subprocess.Popen("sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	else:
-		ret += subprocess.Popen("sudo /sbin/ip link set wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+	try:
+		if G.wifiEth["wlan0"]["on"] == "dontChange": return 
+		logger.log(30, u"cBY:{:<20} stopping WiFi: called from:{}".format(G.program, calledFrom))
+		ret = subprocess.Popen("sudo rfkill unblock all"    	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		if G.osVersion < 8:
+			ret += subprocess.Popen("sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		else:
+			ret += subprocess.Popen("sudo /sbin/ip link set wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 
-	logger.log(30, u"cBY:{:<20} stopping WiFi: {}; called from:{}".format(G.program, ret, calledFrom))
-	G.wifiEnabled = False
+		logger.log(30, u"cBY:{:<20} stopping WiFi: {}; called from:{}".format(G.program, ret, calledFrom))
+		G.wifiEnabled = False
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 #################################
 def stopEth():
-	if G.wifiEth["eth0"]["on"] == "dontChange": return 
-	ret = subprocess.Popen("sudo rfkill unblock all"   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	if G.osVersion < 8:
-		ret += subprocess.Popen("sudo ifconfig eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-	else:
-		ret += subprocess.Popen("sudo /sbin/ip link set  eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+	try:
+		if G.wifiEth["eth0"]["on"] == "dontChange": return 
+		ret = subprocess.Popen("sudo rfkill unblock all"   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		if G.osVersion < 8:
+			ret += subprocess.Popen("sudo ifconfig eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
+		else:
+			ret += subprocess.Popen("sudo /sbin/ip link set  eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 		
-	logger.log(30, u"cBY:{:<20} stopping ETH: {}".format(G.program, ret))
-	G.eth0Enabled = False
+		logger.log(30, u"cBY:{:<20} stopping ETH: {}".format(G.program, ret))
+		G.eth0Enabled = False
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return
 
 #################################
@@ -1199,20 +1228,26 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 
 #################################... not used !!
 def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
-	logger.log(30, "cBY:"+G.program.ljust(20)+ u" resetting wifi to default for next re-boot")
-	if os.path.isfile(G.homeDir+defaultFile): 
-		os.system("cp "+G.homeDir+defaultFile+" /etc/network/interfaces")
-	stopWiFi(calledFrom="resetWifi")
-	time.sleep(0.2)
-	startWiFi()
+	try:
+		logger.log(30, "cBY:"+G.program.ljust(20)+ u" resetting wifi to default for next re-boot")
+		if os.path.isfile(G.homeDir+defaultFile): 
+			os.system("cp "+G.homeDir+defaultFile+" /etc/network/interfaces")
+		stopWiFi(calledFrom="resetWifi")
+		time.sleep(0.2)
+		startWiFi()
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return	
 
 #################################
 def restartWifi():
-	logger.log(30, "cBY:"+G.program.ljust(20)+ u" restartWifi  w new config and wps files")
-	stopWiFi(calledFrom="restartWifi")
-	time.sleep(0.2)
-	startWiFi()
+	try:
+		logger.log(30, "cBY:"+G.program.ljust(20)+ u" restartWifi  w new config and wps files")
+		stopWiFi(calledFrom="restartWifi")
+		time.sleep(0.2)
+		startWiFi()
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return	
 
 #################################
@@ -1421,77 +1456,116 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
 
 	return wlan0IP,eth0IP, changed
 		
-
-		
-
 #################################
 def writeIPtoFile(ip,reason=""):
-	G.ipAddress = ip
-	f=open(G.homeDir+"ipAddress","w")
-	f.write(G.ipAddress.strip(" ").strip("\n").strip(" "))
-	f.close()
-	logger.log(30,u"cBY:{:<20} writing ip number to file >>{}<<  reason:{}".format( G.program, G.ipAddress, reason))
+	try:
+		G.ipAddress = ip
+		f=open(G.homeDir+"ipAddress","w")
+		f.write(G.ipAddress.strip(" ").strip("\n").strip(" "))
+		f.close()
+		logger.log(30,u"cBY:{:<20} writing ip number to file >>{}<<  reason:{}".format( G.program, G.ipAddress, reason))
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return	
 
 
+#################################
+def findActiveUSB():
+	activUsbList=[]
+	try:
+		cmd = "/bin/ls -l /dev | grep USB"
+		# returns: crw-rw----  1 root dialout 188,   0 Nov 22 09:51 ttyUSB0
+		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+
+		#logger.log(10,u"cBY:{:<20} found ls /dev usb:  {}".format( G.program,ret) )
+		for line in ret.split("\n"):
+				if line.find("dialout") == -1: continue
+				line = line.split()[-1]
+				if line.find("tty") == -1: continue
+				line.split("tty")[-1]
+				#logger.log(10,u"cBY:{:<20} return  {}".format( G.program,line) )
+				activUsbList.append(line)
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return activUsbList
+
 
 #################################
-def getSerialDEV():	   
-	version = subprocess.Popen("cat /proc/device-tree/model" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-	# return eg 
-	# Raspberry Pi 2 Model B Rev 1.1
-	#return "/dev/ttyAMA0"
-	serials = subprocess.Popen("ls -l /dev/ | grep serial" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-	# should return something like:
-	#lrwxrwxrwx 1 root root			  5 Apr 20 11:17 serial0 -> ttyS0
-	#lrwxrwxrwx 1 root root			  7 Apr 20 11:17 serial1 -> ttyAMA0
-	#or just:
-	#lrwxrwxrwx 1 root root           7 Jul  7 13:30 serial1 -> ttyAMA0
+def checkIfusbSerialActive(usb):
+	try:
+		cmd = "/bin/ls -l /dev | grep "+usb
+		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+		if  ret.find(usb) > -1 and ret.find("dialout")> -1: return True
+		else: 
+			#U.logger.log(30, u"{} is not active, returned:{}  cmd:{} ".format( usb, ret, cmd) )
+			return False
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return False
 
 
 
-	if version[0].find("Raspberry") ==-1:
-		logger.log(30, "cBY:"+G.program.ljust(20)+ u" cat /proc/device-tree/model something is wrong... "+unicode(version)  )
-		time.sleep(10)
-		return ""
+#################################
+def getSerialDEV():	 
+	try:  
+		version = subprocess.Popen("cat /proc/device-tree/model" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		# return eg 
+		# Raspberry Pi 2 Model B Rev 1.1
+		#return "/dev/ttyAMA0"
+		serials = subprocess.Popen("ls -l /dev/ | grep serial" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		# should return something like:
+		#lrwxrwxrwx 1 root root			  5 Apr 20 11:17 serial0 -> ttyS0
+		#lrwxrwxrwx 1 root root			  7 Apr 20 11:17 serial1 -> ttyAMA0
+		#or just:
+		#lrwxrwxrwx 1 root root           7 Jul  7 13:30 serial1 -> ttyAMA0
+
+
+
+		if version[0].find("Raspberry") ==-1:
+			logger.log(30, "cBY:"+G.program.ljust(20)+ u" cat /proc/device-tree/model something is wrong... "+unicode(version)  )
+			time.sleep(10)
+			return ""
 		
-	if version[0].find("Pi 3") == -1 and version[0].find("Pi 4") == -1 and version[0].find("Pi Zero") == -1:	# pi2?
-		sP = "/dev/ttyAMA0"
+		if version[0].find("Pi 3") == -1 and version[0].find("Pi 4") == -1 and version[0].find("Pi Zero") == -1:	# pi2?
+			sP = "/dev/ttyAMA0"
 
-		### disable and remove tty usage for console
-		subprocess.Popen("systemctl stop serial-getty@ttyAMA0.service" ,	shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			### disable and remove tty usage for console
+			subprocess.Popen("systemctl stop serial-getty@ttyAMA0.service" ,	shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-		if serials[0].find("serial0 -> ttyAMA0") ==-1 :
-			logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi2 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0" )
-			time.sleep(10)
-			return ""
+			if serials[0].find("serial0 -> ttyAMA0") ==-1 :
+				logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi2 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0" )
+				time.sleep(10)
+				return ""
 
-	elif version[0].find("Pi Zero") >-1:	# not RPI3
-		sP = "/dev/ttyS0"
+		elif version[0].find("Pi Zero") >-1:	# not RPI3
+			sP = "/dev/ttyS0"
 
-		### disable and remove tty usage for console
-		subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			### disable and remove tty usage for console
+			subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-		if serials[0].find("serial0 -> ttyS0")==-1:
-			logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 4 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
-			time.sleep(10)
-			return ""
+			if serials[0].find("serial0 -> ttyS0")==-1:
+				logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 4 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
+				time.sleep(10)
+				return ""
 
-	else:# RPI3, 4
-		sP = "/dev/ttyS0"
+		else:# RPI3, 4
+			sP = "/dev/ttyS0"
 
-		### disable and remove tty usage for console
-		subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			### disable and remove tty usage for console
+			subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-		if serials[0].find("serial0 -> ttyS0")==-1:
-			logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
-			time.sleep(10)
-			return ""
-	logger.log(20, "cBY:"+G.program.ljust(20)+ "serial port name:{}".format(sP) )
-	return sP
+			if serials[0].find("serial0 -> ttyS0")==-1:
+				logger.log(30, "cBY:"+G.program.ljust(20)+ u" pi3 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0" )
+				time.sleep(10)
+				return ""
+		logger.log(20, "cBY:"+G.program.ljust(20)+ "serial port name:{}".format(sP) )
+		return sP
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return ""
 
 
 #################################
@@ -1532,84 +1606,91 @@ def geti2c():
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 def selectHCI(HCIs, useDev, default):
-	if len(HCIs) ==1:
-		useHCI = list(HCIs)[0]
-		myBLEmac= HCIs[useHCI]["BLEmac"]
-		devId = 0
-		return useHCI,  myBLEmac, devId
+	try:
+		if len(HCIs) ==1:
+			useHCI = list(HCIs)[0]
+			myBLEmac= HCIs[useHCI]["BLEmac"]
+			devId = 0
+			return useHCI,  myBLEmac, devId
 
-	elif len(HCIs) == 2:
-		if useDev =="USB":
-			for hh in ["hci0","hci1"]:
-				if HCIs[hh]["bus"] =="USB":
-					useHCI	= hh
-					myBLEmac= HCIs[hh]["BLEmac"]
-					devId	= HCIs[hh]["numb"]
-					return useHCI,  myBLEmac, devId
+		elif len(HCIs) == 2:
+			if useDev =="USB":
+				for hh in ["hci0","hci1"]:
+					if HCIs[hh]["bus"] =="USB":
+						useHCI	= hh
+						myBLEmac= HCIs[hh]["BLEmac"]
+						devId	= HCIs[hh]["numb"]
+						return useHCI,  myBLEmac, devId
 
-		elif useDev =="UART":
-			for hh in ["hci0","hci1"]:
-				if HCIs[hh]["bus"] =="UART":
-					useHCI	= hh
-					myBLEmac= HCIs[hh]["BLEmac"]
-					devId	= HCIs[hh]["numb"]
-					return useHCI,  myBLEmac, devId
+			elif useDev =="UART":
+				for hh in ["hci0","hci1"]:
+					if HCIs[hh]["bus"] =="UART":
+						useHCI	= hh
+						myBLEmac= HCIs[hh]["BLEmac"]
+						devId	= HCIs[hh]["numb"]
+						return useHCI,  myBLEmac, devId
 
-		else:
-			for hh in ["hci0","hci1"]:
-				if HCIs[hh]["bus"] == default:
-					useHCI	= hh
-					myBLEmac= HCIs[hh]["BLEmac"]
-					devId	= HCIs[hh]["numb"]
-					return useHCI,  myBLEmac, devId
+			else:
+				for hh in ["hci0","hci1"]:
+					if HCIs[hh]["bus"] == default:
+						useHCI	= hh
+						myBLEmac= HCIs[hh]["BLEmac"]
+						devId	= HCIs[hh]["numb"]
+						return useHCI,  myBLEmac, devId
 
-		useHCI	= "hci0"
-		myBLEmac= HCIs[useHCI]["BLEmac"]
-		devId	= HCIs[useHCI]["numb"]
-		return useHCI,  myBLEmac, devId
+			useHCI	= "hci0"
+			myBLEmac= HCIs[useHCI]["BLEmac"]
+			devId	= HCIs[useHCI]["numb"]
+			return useHCI,  myBLEmac, devId
+
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		
 	logger.log(20, "cBY:"+G.program.ljust(20)+ u" BLEconnect: NO BLE STACK UP ")
 	return 0, -1, -1
 
 #################################
 def whichHCI():
+	try:
 
-	#hci={"hci0":{"bus":"UART", "numb":0 ,"BLEmac":"xx:xx:xx:xx:xx:xx"}}
-	hci ={}
+		#hci={"hci0":{"bus":"UART", "numb":0 ,"BLEmac":"xx:xx:xx:xx:xx:xx"}}
+		hci ={}
 		
-	ret	   = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()#################################	 BLE iBeaconScanner	 ----> end
-	# try again, sometimes does not return anything
-	if len(ret[0]) < 5:
-		time.sleep(0.5)
-		ret	  = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()#################################	BLE iBeaconScanner	----> end
-		logger.log(30, "cBY:"+G.program.ljust(20)+ u" whichHCI, hciconfig...  2. try: "+unicode(ret))
+		ret	   = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()#################################	 BLE iBeaconScanner	 ----> end
+		# try again, sometimes does not return anything
+		if len(ret[0]) < 5:
+			time.sleep(0.5)
+			ret	  = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()#################################	BLE iBeaconScanner	----> end
+			logger.log(30, "cBY:"+G.program.ljust(20)+ u" whichHCI, hciconfig...  2. try: "+unicode(ret))
 		
-	lines = ret[0].split("\n")
-	for ll in range(len(lines)):
-		if lines[ll].find("hci")>-1:
-			bus = lines[ll].split("Bus: ")[1]
-			hciNo = lines[ll].split(":")[0]
-			hci[hciNo] = {"bus":bus, "numb":int(hciNo[3:])}
-			if lines[ll+1].find("BD Address:")>-1:
-				mm=lines[ll+1].strip().split("BD Address: ")[1]
-				mm=mm.split(" ")
-				if len(mm)>2:
-					hci[hciNo]["BLEmac"] = mm[0]
+		lines = ret[0].split("\n")
+		for ll in range(len(lines)):
+			if lines[ll].find("hci")>-1:
+				bus = lines[ll].split("Bus: ")[1]
+				hciNo = lines[ll].split(":")[0]
+				hci[hciNo] = {"bus":bus, "numb":int(hciNo[3:])}
+				if lines[ll+1].find("BD Address:")>-1:
+					mm=lines[ll+1].strip().split("BD Address: ")[1]
+					mm=mm.split(" ")
+					if len(mm)>2:
+						hci[hciNo]["BLEmac"] = mm[0]
 
-		#hci1:	Type: Primary  Bus: UART
-		#	BD Address: B8:27:EB:D4:E3:35  ACL MTU: 1021:8	SCO MTU: 64:1
-		#	UP RUNNING 
-		#	RX bytes:2850 acl:21 sco:0 events:141 errors:0
-		#	TX bytes:5581 acl:20 sco:0 commands:115 errors:0
-		#
-		#hci0:	Type: Primary  Bus: USB
-		#	BD Address: 5C:F3:70:69:69:FB  ACL MTU: 1021:8	SCO MTU: 64:1
-		#	UP RUNNING 
-		#	RX bytes:11143 acl:0 sco:0 events:379 errors:0
-		#	TX bytes:4570 acl:0 sco:0 commands:125 errors:0
-	if hci =={}: logger.log(30, unicode(lines))
-	return	hci				  
-
+			#hci1:	Type: Primary  Bus: UART
+			#	BD Address: B8:27:EB:D4:E3:35  ACL MTU: 1021:8	SCO MTU: 64:1
+			#	UP RUNNING 
+			#	RX bytes:2850 acl:21 sco:0 events:141 errors:0
+			#	TX bytes:5581 acl:20 sco:0 commands:115 errors:0
+			#
+			#hci0:	Type: Primary  Bus: USB
+			#	BD Address: 5C:F3:70:69:69:FB  ACL MTU: 1021:8	SCO MTU: 64:1
+			#	UP RUNNING 
+			#	RX bytes:11143 acl:0 sco:0 events:379 errors:0
+			#	TX bytes:4570 acl:0 sco:0 commands:125 errors:0
+		if hci =={}: logger.log(30, unicode(lines))
+		return	hci				  
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return {}
 
 
 
@@ -1706,11 +1787,11 @@ def execSend():
 										logger.log(30, "cBY:"+G.program.ljust(20)+ u" curl err:"+ ret[1])
 										os.system("echo '"+G.program+": NOT successfully send -- "+data0+"' > "+ G.homeDir+"temp/messageSend")
 									else:
-										os.system("echo '"+G.program+": send --  "+data0+"' > "+ G.homeDir+"temp/messageSend")
+										os.system("echo '"+datetime.datetime.now().strftime("%H:%M:%S ")+G.program+": send --  "+data0+"' > "+ G.homeDir+"temp/messageSend")
 								else:
 									cmd.append(" &")
 									subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-									os.system("echo '"+G.program+": sending  "+data0+"' > "+ G.homeDir+"temp/messageSend")
+									os.system("echo '"+datetime.datetime.now().strftime("%H:%M:%S ")+G.program+": sending  "+data0+"' > "+ G.homeDir+"temp/messageSend")
 
 					else:  ## do socket comm 
 						
@@ -1750,10 +1831,10 @@ def execSend():
 
 								if MSGwasSend:
 											logger.log(10, "cBY:"+G.program.ljust(20)+ u" msg: " + unicode(sendData)+"\n" )
-											os.system("echo '"+G.program+":  send -- "+data0+"' > "+ G.homeDir+"temp/messageSend")
+											os.system("echo '"+datetime.datetime.now().strftime("%H:%M:%S ")+G.program+":  send -- "+data0+"' > "+ G.homeDir+"temp/messageSend")
 								else:
 											logger.log(10, "cBY:"+G.program.ljust(20)+ u" msg not send "+sendData)
-											os.system("echo '"+G.program+": NOT successfully send -- "+data0+"' > "+ G.homeDir+"temp/messageSend")
+											os.system("echo '"+datetime.datetime.now().strftime("%H:%M:%S ")+G.program+": NOT successfully send -- "+data0+"' > "+ G.homeDir+"temp/messageSend")
 								try:	soc.shutdown(socket.SHUT_RDWR)
 								except: pass
 								try:	soc.close()
@@ -1781,8 +1862,13 @@ def getI2cAddress(string,default =0):
 		if "i2cAddress" in string:
 			if string["i2cAddress"].find("x") >-1:
 				i2cAddress = int(string["i2cAddress"],16)
+
+			elif string["i2cAddress"].find("USB") >-1:
+				return string["i2cAddress"]
+
 			else:
 				i2cAddress = int(string["i2cAddress"])
+
 		else:
 			i2cAddress =default
 		return  i2cAddress

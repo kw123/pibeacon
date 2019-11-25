@@ -806,7 +806,7 @@ if True: #__name__ == "__main__":
 	myPID		= int(os.getpid())
 	U.setLogging()
 	readParams()
-
+	#G.debug  = 1
 #### read exec command list for restart values, update if needed and write back
 	execcommands={}
 	#print "execcommands" , sys.argv

@@ -7937,7 +7937,17 @@ you can setup
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup RD-Lidar sensor on individual rPis.. 
-    connect sensor to USB port and power 
+    connect sensor to USB port and power
+    definitions: 
+      enpty room: set calibration (menu or action) when nobody is in room
+      trigger: when N dots next to each other have &gt; Z distance change events are triggered
+       current - last values and current - empty room vcalues. are 2 different triggers
+       when the value is + the distance is bigger, hence = leaving or recalibration is needed
+       when the value is - things are closer to the sensor = approacing or presence
+       current - last  triigers on faster movement, 
+       current - empty room triggers show the differnce tof now to when room was calibrated.
+       to improve the quality of data 6+ 360º measurements 
+          are taken and compared to current or empty room 
   </Label>
 			</Field>
 
@@ -7948,6 +7958,17 @@ you can setup
 
 			<Field id="infoLabel0" type="label">
 			<Label>Measuremnt parameters =============</Label>
+			</Field>
+
+			<Field id="usbPort" type="menu"     defaultValue="autoUSB" hidden="no" > 
+			<Label>USB port, check "ls -l /dev | grep USB" on RPI:</Label>
+			<List>
+				<Option value="autoUSB"  >let the RPI pick .. will try all active USB</Option>
+				<Option value="ttyUSB0"  >ttyUSB0</Option>
+				<Option value="ttyUSB1"  >ttyUSB1</Option>
+				<Option value="ttyUSB2"  >ttyUSB2</Option>
+				<Option value="ttyUSB3"  >ttyUSB3</Option>
+			</List>
 			</Field>
 
 			<Field id="motorFrequency" type="menu"     defaultValue="0.3" hidden="no" > 
@@ -7987,21 +8008,26 @@ you can setup
 			</List>
 			</Field>
 
-
-			<Field id="infoLabel2" type="label">
-			<Label>Trigger setup =====================</Label>
+			<Field id="sendPixelData" type="menu"     defaultValue="1" hidden="no" > 
+			<Label>send pixel data to plugin for graphing:</Label>
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
 			<Label>Min delta secs between indigo updates:</Label>
 			<List>
-				<Option value="1"   > 1   secs </Option>
-				<Option value="2"   > 2   secs</Option>
-				<Option value="3"   > 3   secs</Option>
 				<Option value="4"   > 4   secs</Option>
 				<Option value="6"   > 6   secs</Option>
 				<Option value="8"   > 8   secs</Option>
 				<Option value="10"  > 10  secs</Option>
+				<Option value="12"  > 12  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+				<Option value="20"  > 20  secs</Option>
+				<Option value="25"  > 25  secs</Option>
+				<Option value="30"  > 30  secs</Option>
 			</List>
 			</Field>
 
@@ -8016,17 +8042,58 @@ you can setup
 				<Option value="60"  > 60  secs</Option>
 				<Option value="70"  > 70  secs</Option>
 				<Option value="80"  > 80  secs</Option>
-				<Option value="90"  > 90  secs</Option>
 			</List>
 			</Field>
 
-			<Field id="triggerEmpty" type="menu"     defaultValue="5" hidden="no" > 
-			<Label># of dots to trigger presence:</Label>
+
+			<Field id="infoLabelT2" type="label">
+			<Label>Trigger setup =====================</Label>
+			</Field>
+			<Field id="infoLabelT3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+			<Label> trigger when N dots next to each other have a change in distance &gt; Z</Label>
+			</Field>
+
+			<Field id="contiguousDeltaValue" type="menu"     defaultValue="5" hidden="no" tooltip="change in distance for a dot to qualify for contiguous section" > 
+			<Label>Min Change in value(distance) previous-current Z: [%]:</Label>
+			<List>
+				<Option value="2"   > 2</Option>
+				<Option value="3"   > 3</Option>
+				<Option value="4"   > 4</Option>
+				<Option value="5"   > 5	(default)</Option>
+				<Option value="6"   > 6</Option>
+				<Option value="7"   > 7</Option>
+				<Option value="8"   > 8</Option>
+				<Option value="9"   > 9</Option>
+				<Option value="10"  > 10</Option>
+				<Option value="11"  > 11</Option>
+				<Option value="12"  > 12</Option>
+			</List>
+			</Field>
+
+			<Field id="nContiguousAngles" type="menu"     defaultValue="5" hidden="no" tooltip="first selection step for trigger" > 
+			<Label># of contiguous dots to preselect trigger event (N):</Label>
+			<List>
+				<Option value="2"   > 2</Option>
+				<Option value="3"   > 3</Option>
+				<Option value="4"   > 4</Option>
+				<Option value="5"   > 5	(default)</Option>
+				<Option value="6"   > 6</Option>
+				<Option value="7"   > 7</Option>
+				<Option value="8"   > 8</Option>
+				<Option value="9"   > 9</Option>
+				<Option value="10"  > 10</Option>
+				<Option value="11"  > 11</Option>
+				<Option value="12"  > 12</Option>
+			</List>
+			</Field>
+
+			<Field id="triggerEmpty" type="menu"     defaultValue="5" hidden="no" tooltip="must be > pre-trigger" > 
+			<Label># of contiguous dots to trigger PRESENCE (N):</Label>
 			<List>
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="4"    > 4</Option>
-				<Option value="5"    > 5(default)</Option>
+				<Option value="5"    > 5 (default)</Option>
 				<Option value="6"    > 6</Option>
 				<Option value="7"    > 7</Option>
 				<Option value="8"    > 8</Option>
@@ -8039,8 +8106,8 @@ you can setup
 				</List>
 			</Field>
 
-			<Field id="triggerLast" type="menu"     defaultValue="4" hidden="no" > 
-			<Label># of dots to trigger movement:</Label>
+			<Field id="triggerLast" type="menu"     defaultValue="4" hidden="no"  tooltip="must be > pre-trigger" > 
+			<Label># of contiguous dots to trigger MOVEMENT(N):</Label>
 			<List>
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
@@ -8058,35 +8125,6 @@ you can setup
 			</List>
 			</Field>
 
-			<Field id="contiguousDeltaValue" type="menu"     defaultValue="5" hidden="no" > 
-			<Label>last-current dot-value delta to qualify for contiguous shift[%]:</Label>
-			<List>
-				<Option value="2"   > 2</Option>
-				<Option value="3"   > 3</Option>
-				<Option value="4"   > 4</Option>
-				<Option value="5"   > 5	(default)</Option>
-				<Option value="6"   > 6</Option>
-				<Option value="7"   > 7</Option>
-				<Option value="8"   > 8</Option>
-				<Option value="9"   > 9</Option>
-				<Option value="10"  > 10</Option>
-			</List>
-			</Field>
-
-			<Field id="nContiguousAngles" type="menu"     defaultValue="5" hidden="no" > 
-			<Label>Number of contiguous dots to trigger event:</Label>
-			<List>
-				<Option value="2"   > 2</Option>
-				<Option value="3"   > 3</Option>
-				<Option value="4"   > 4</Option>
-				<Option value="5"   > 5	(default)</Option>
-				<Option value="6"   > 6</Option>
-				<Option value="7"   > 7</Option>
-				<Option value="8"   > 8</Option>
-				<Option value="9"   > 9</Option>
-				<Option value="10"  > 10</Option>
-			</List>
-			</Field>
 
 			<Field id="infoLabel3" type="label">
 			<Label>Image setup =====================</Label>
@@ -8103,7 +8141,7 @@ you can setup
 
 			<Field id="showAllImages" type="menu"     defaultValue="0"> 
 			<List>
-				<Option value="0" >only create image file when event</Option>
+				<Option value="0" >only create image file when event triggered</Option>
 				<Option value="1" >create image file every time data arrives</Option>
 			</List>
 			<Label>Make image only for events or allways:</Label> 
@@ -8112,7 +8150,6 @@ you can setup
 			<Field id="DPI" type="textfield"     defaultValue="120"   visibleBindingId="mode" visibleBindingValue="manual,auto" > 
 			<Label>Dots per inch of screen:</Label> 
 			</Field>
-
 
 			<Field id="numberOfDotsX" type="textfield"     defaultValue="5000"  visibleBindingId="mode" visibleBindingValue="manual,auto" > 
 			<Label>Number of pixels in Display Y-axis:</Label> 
@@ -8126,8 +8163,8 @@ you can setup
 			<Label>Axis scale factor, eg 0.1..10:</Label> 
 			</Field>
 
-			<Field id="phiOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
-			<Label>Offset Phi (+=rotate left):</Label> 
+			<Field id="phiOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto" tooltip="+90 = rote left 90 degrees ">  
+			<Label>Rotate data [º]:</Label> 
 			</Field>
 
 			<Field id="xOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
@@ -8151,7 +8188,7 @@ you can setup
 			</Field>
 
 			<Field id="yMax" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
-			<Label>Max X:</Label> 
+			<Label>Max Y:</Label> 
 			</Field>
 
 			<Field id="fontSize" type="textfield"     defaultValue="50"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
@@ -8219,6 +8256,14 @@ you can setup
 			<Label>Show DOT at 0,0 = position of the sensor</Label> 
 			</Field>
 
+			<Field id="showZeroValues" type="menu"   defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Show empty Value lines</Label> 
+			</Field>
+
 			<Field id="frameON" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
 			<List>
 				<Option value="0"   >off</Option>
@@ -8252,7 +8297,7 @@ you can setup
 				<Label>blank: create image in 
 .../Preferences/Plugins/
    com.karlwachs.piBeacon/
-   rdLidarImages/image.png</Label>	
+   rdLidarImages/devName.png</Label>	
 			</Field>
 
 			<Field id="infoLabelColor" type="label">
@@ -8300,10 +8345,14 @@ you can setup
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Re-Calibration_needed"    >Re-Calibration needed</Option>
-				<Option value="Room_occupied"    >Room occupied</Option>
-				<Option value="Approaching"      >Approaching</Option>
-				<Option value="Leaving"      >Leaving</Option>
+				<Option value="Re-Calibration_needed_count"	>Re-Calibration needed - count</Option>
+				<Option value="Re-Calibration_needed_value"	>Re-Calibration needed - value</Option>
+				<Option value="Room_occupied_count"    		>Room occupied - count</Option>
+				<Option value="Room_occupied_value"      	>Room_occupied - value</Option>
+				<Option value="Approaching_count"      		>Approaching - count</Option>
+				<Option value="Approaching_value"      		>Approaching - value</Option>
+				<Option value="Leaving_count"      			>Leaving - count</Option>
+				<Option value="Leaving_value"      			>Leaving - value</Option>
 			</List>
 			</Field>
 
@@ -8356,6 +8405,25 @@ you can setup
 				<ControlPageLabel>Room_occupied_value</ControlPageLabel>
 			</State>
 
+			<State id="Calibration_NonZeroBins">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Calibration_NonZeroBin</TriggerLabel>
+				<ControlPageLabel>Calibration_NonZeroBin</ControlPageLabel>
+			</State>
+
+			<State id="Current_NonZeroBins">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Current_NonZeroBins</TriggerLabel>
+				<ControlPageLabel>Current_NonZeroBins</ControlPageLabel>
+			</State>
+
+
+			<State id="ubsPortUsed">
+				<ValueType>String</ValueType>
+				<TriggerLabel>ubsPortUsed</TriggerLabel>
+				<ControlPageLabel>ubsPortUsed</ControlPageLabel>
+			</State>
+
 
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -8401,25 +8469,13 @@ you can setup
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="0"> <Label>i2c address of device:</Label>
+			<Field id="usbPort" type="menu"     defaultValue="ttyUSB0"> <Label>Usb Port:</Label>
 			<List>
-				<Option value="51"   >0x33 = 51  i2cAddress </Option>
-				<Option value="0"    >use serial port type device (use RX, TX pins) </Option>
-				<Option value="-1"   >use USB type device  </Option>
-			</List>
-			</Field>
-			<Field id="useMuxChannel" type="menu"     defaultValue="-1" visibleBindingId="i2cAddress" visibleBindingValue="51"> > 
-			<Label>use TCA9548A multiplexer for this sensor:</Label> 
-			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
+				<Option value="ttyUSB0"  >ttyUSB0</Option>
+				<Option value="ttyUSB1"  >ttyUSB1</Option>
+				<Option value="ttyUSB2"  >ttyUSB2</Option>
+				<Option value="ttyUSB3"  >ttyUSB3</Option>
+				<Option value="autoUSB"  >let the RPI USB</Option>
 			</List>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
@@ -8442,13 +8498,15 @@ you can setup
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
 			<Label>min delta secs between indigo updates :</Label>
 			<List>
-				<Option value="1"   > 1   secs </Option>
-				<Option value="2"   > 2   secs</Option>
-				<Option value="3"   > 3   secs</Option>
 				<Option value="4"   > 4   secs</Option>
 				<Option value="6"   > 6   secs</Option>
 				<Option value="8"   > 8   secs</Option>
 				<Option value="10"  > 10  secs</Option>
+				<Option value="12"  > 12  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+				<Option value="20"  > 20  secs</Option>
+				<Option value="25"  > 25  secs</Option>
+				<Option value="30"  > 30  secs</Option>
 			</List>
 			</Field>
 			<Field id="deltaX" type="menu"     defaultValue="30" hidden="no" > 

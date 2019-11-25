@@ -20,6 +20,7 @@ import matplotlib.patches as patches
 import logging
 import logging.handlers
 global logging, logger
+import copy
 
 
 
@@ -83,7 +84,7 @@ except:	compress		= Flase
 try:	yOffset 		= int(imageParams["yOffset"])
 except: yOffset 		= 0
 
-try:	xOffset 		= 0# int(imageParams["xOffset"])
+try:	xOffset 		= int(imageParams["xOffset"])
 except: xOffset 		= 0
 
 try:	scalefactor 	= float (imageParams["scalefactor"])
@@ -143,6 +144,10 @@ try: 	showZeroDot 	= imageParams["showZeroDot"] == "1"
 except: showZeroDot 	= True
 
 
+try: 	showZeroValues 	= imageParams["showZeroValues"] == "1"
+except: showZeroValues 	= False
+
+
 
 #
 
@@ -176,8 +181,8 @@ try:
 	dataToPlot = {"dots":{"current":[[],[],[]],"empty":[[],[],[]],"last":[[],[],[]]}, "trigger":{"current":{"LT":[],"GT":[]},"empty":{"LT":[],"GT":[]}},"xy0":[],"zero":[],"time":[]}
 
 	useBins = 360 / anglesInOneBin
-	bins = [[math.cos( float(ii*anglesInOneBin+phiOffset)*(3.141/180.) ), math.sin( float(ii*anglesInOneBin+phiOffset)*(3.141/180.) ) ] for ii in range(useBins)]
-	phiOff = [math.cos( float(-phiOffset)*(3.141/180.) ), math.sin( float(-phiOffset)*(3.141/180.) ) ]
+	bins = [[math.cos( -float(ii*anglesInOneBin-phiOffset)*(3.141/180.) ), math.sin(-float(ii*anglesInOneBin-phiOffset)*(3.141/180.) ) ] for ii in range(useBins)]
+	phiOff = [math.cos( -float(-phiOffset)*(3.141/180.) ), math.sin( -float(-phiOffset)*(3.141/180.) ) ]
 	
 	dotSize = {"current":int( numberOfDotsX*(20./1000.) ) ,"empty":int( numberOfDotsX*(10./1000.) ),"last":int( numberOfDotsX*(10./1000.) )}
 
@@ -187,10 +192,10 @@ try:
 		for ii in range(len(dd)):
 			try:	
 				value = float(dd[ii])
-				if value >0:
-					dataToPlot["dots"][kk][0].append( int( scalefactor*(bins[ii][0]*value+xOffset) ) )	
-					dataToPlot["dots"][kk][1].append( int( scalefactor*(bins[ii][1]*value+yOffset) ) )	
-					dataToPlot["dots"][kk][2].append( dotSize[kk] )	
+				if value == 0 and not showZeroValues: continue
+				dataToPlot["dots"][kk][0].append( int( scalefactor*(bins[ii][0]*value+xOffset) ) )	
+				dataToPlot["dots"][kk][1].append( int( scalefactor*(bins[ii][1]*value+yOffset) ) )	
+				dataToPlot["dots"][kk][2].append( dotSize[kk] )	
 			except Exception, e:
 				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
 				break
@@ -207,7 +212,7 @@ try:
 					dataToPlot["trigger"][kk][LTGT].append( [[],[]] )	
 					for jj in range(ll1,ll2+1):
 						value = float(dd[jj])
-						if value ==0: continue
+						if value == 0: continue
 						dataToPlot["trigger"][kk][LTGT][-1][0].append( int( scalefactor*(bins[jj][0]*value+xOffset) ) )	
 						dataToPlot["trigger"][kk][LTGT][-1][1].append( int( scalefactor*(bins[jj][1]*value+yOffset) ) )	
 				except Exception, e:
@@ -215,9 +220,9 @@ try:
 					break
 		#logger.log(20,"kk {}; pld:{}".format(kk, dataToPlot["trigger"][kk]))
 
-	dataToPlot["xy0"] = [[xOffset*phiOff[0],(xOffset+numberOfDotsX/3)*phiOff[0]], [yOffset*phiOff[1],(yOffset+numberOfDotsX/3)*phiOff[1]], [30,30]]
-	dataToPlot["zero"] = [xOffset,yOffset]
-	dataToPlot["time"] = [xOffset,yOffset]
+	dataToPlot["xy0"] = [ [ scalefactor*xOffset,scalefactor*(numberOfDotsX/3*phiOff[0] + xOffset) ], [ scalefactor*yOffset,scalefactor*(numberOfDotsX/3*phiOff[1] + yOffset) ]]
+	dataToPlot["zero"] =  [ scalefactor*xOffset,scalefactor*yOffset]
+	dataToPlot["time"] =  [ scalefactor*xOffset,scalefactor*yOffset]
 #### prep data ###################### END
 
 
@@ -245,7 +250,7 @@ try:
 	except: ax.set_axis_bgcolor(color["background"]) #2.x
 
 
-	if xMax !=0. and yMax !=0 and False:
+	if xMax !=0. and yMax !=0:
 		ax.set_xlim(yMin, yMax) 
 		ax.set_ylim(xMin, xMax) 
 
@@ -325,9 +330,24 @@ try:
 				elif  showTriggerValues =="top left outside":	pos =[xRight,yOutside]
 				elif  showTriggerValues =="top left outside":	pos =[xLeft,yOutside]
 				else:											pos =[xLeft,yInside]
-				dd = json.dumps(data["triggerValues"],sort_keys=True, indent=2)
+				## make a nice looking sjon dumps for the trigger info, combine list to one line and remove empty structures 
+				out = copy.deepcopy(data["triggerValues"])
+				for kk in ["current","empty"]:
+					dd = data["triggerValues"][kk]
+					for LTGT in["LT","GT"]:
+						ltr= len(tr)
+						tr = data["triggerValues"][kk][LTGT]["sections"]
+						ltr= len(tr)
+						if ltr ==0: 
+							out[kk][LTGT]={}
+						else:
+							for ii in range(ltr):
+								out[kk][LTGT]["sections"][ii]["bins"] = unicode(data["triggerValues"][kk][LTGT]["sections"][ii]["bins"])
+				out["off-x/y/phi"] = "{:.0f}/{:.0f}/{:.0f}".format(xOffset, yOffset,phiOffset)
+				dd = json.dumps(out,sort_keys=True, indent=2)
 				ax.text(pos[0], pos[1], dd,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
-		except: pass
+		except  Exception, e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
 
 
 	if showLegend !="":

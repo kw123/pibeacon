@@ -258,7 +258,7 @@ while True:
 							changed= 5
 							break
 						try:
-							U.logger.log(20,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]))
+							U.logger.log(10,unicode(devid)+"  "+unicode(lastData[sens][devid])+"  "+unicode(data[sens][devid]))
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx

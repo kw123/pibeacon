@@ -363,7 +363,7 @@ def readParams(init):
 
 
 	try:
-		f=open(G.homeDir+"temp/beacon_parameters","r")
+		f=open(G.homeDir+"beacon_parameters","r")
 		InParams=json.loads(f.read().strip("\n"))
 		f.close()
 	except:

@@ -300,7 +300,7 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 	U.logger.log(10,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
 	if tt- ggg["lastSignal"] > ggg["deadTime"]:	 
 		if gpio not in INPUTcount: INPUTcount[gpio] = 0
-		INPUTcount[gpioINT]+=1
+		INPUTcount[gpio]+=1
 		ggg["count"] = INPUTcount[gpio]
 		#print gpioINT, INPUTcount[gpioINT]
 		ggg["lastSignal"] = tt

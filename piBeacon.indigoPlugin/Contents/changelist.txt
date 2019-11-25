@@ -1,4 +1,24 @@
 
+Added features / changes in v7.114.323 @ 2019-11-24
+===================================================
+
+1. improved rd-lidar sensor:
+   - 1. added selection (UBS0...4) or autotdetect of USB port
+   - 2. added auto restart when usb gets interrrupted or receonnected
+   - 3. added option in rdlidar device edit to select if graph data is send from RPi to indigo. That reduces data by factor of > 10.
+        That data is not needed if no plots are produced.
+   - 4. compressed trigger parameter display in graph (list in one line, empty sections now shown)
+   - 5. added option to not suppresss values of no measurement in plot. Only meant to show how many gaps in data (angles with no godd quality values)
+   - 6. fixed angle display in graph. The sensor spins clock wise while math.sin(phi) goes conter clockwise; the data in display are now also clockwise
+   - 7. improved menus w explanations and tooltips. 
+
+2. fixed INPUTcount sensor, had one wrong index (integer instead of string for GPIO)
+
+3. Added time stamp to temp/messageSend on RPI. That file contains the last message sedn to the RPI. It is overwritten by the next message.
+   follow it with cd pibeacon <ret>  tail -F temp/messageSend <ret> (use -F not -f). lloks linke:
+   15:15:18 beaconloop:  send -- {"msgs":[["24...
+   15:15:19 rdlidar:  send -- {"pi":"0","se...
+
 
 Added features / changes in v7.114.322 @ 2019-11-20
 ===================================================
