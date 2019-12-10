@@ -1,0 +1,35 @@
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set authKeyOrPassword [lindex $argv 2 ] 
+set ipNumber [lindex $argv 3 ] 
+set timeout [lindex $argv 4 ] 
+
+
+set timeout $timeout
+spawn ssh $userID@$ipNumber
+ 
+if {$authKeyOrPassword == "assword"} { 
+    expect {
+        "(yes/no)? " { 
+            send "yes\r"
+            sleep 0.1
+            expect "$authKeyOrPassword"  { send "$password\r"}
+        }    
+        "$authKeyOrPassword" { 
+            send "$password\r" 
+        }
+    }
+}
+
+expect "Last login:" { }
+sleep 1
+send "mkdir /home/pi/pibeacon \r"
+send  "rm /home/pi/pibeacon/soundfiles/*\r"
+send  "mkdir /home/pi/pibeacon \r" 
+send  "mkdir /home/pi/pibeacon/fonts \r" 
+send  "mkdir /home/pi/pibeacon/displayfiles \r" 
+send  "mkdir /home/pi/pibeacon/soundfiles \r" 
+send  "exit\r"
+expect eof
+
+
