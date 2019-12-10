@@ -2442,6 +2442,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="label0"               type="label" >
 				<Label>setup BLE tracking:</Label>
@@ -2895,7 +2896,8 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="mac" type="textfield"     defaultValue=""  >
 			<Label>enter MAC number for this device: </Label>
@@ -3021,6 +3023,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -3103,6 +3106,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup DHT xx temp  humidity sensor on individual rPis.. connect 3.3, GND,signal and 4.7K resistor</Label>
@@ -5252,6 +5256,7 @@ After some days of running in clean air, proposed setup is:
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup max31865 -PT  temp  sensor on individual rPis.. connect 3.3, GND, SPS pins</Label>
@@ -5399,10 +5404,11 @@ After some days of running in clean air, proposed setup is:
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup pm air quality  paritculate sensor on individual rPis.. 
+			<Label>Setup pm air quality  particulate sensor on individual rPis.. 
     Currently only PMS5003 is supported 
     Particles are in counts per 0.1 Liter air
       pm and standard  in ug/m**3
@@ -5588,13 +5594,13 @@ After some days of running in clean air, proposed setup is:
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2csgp30 CO2 VOC sensor on individual rPis.. 
-    connect 3.3, GND, SDA,SCL.
-It measures CO2 VOC 
-====set baseline to fixed value of clean air====
+			<Label>Setup sgp30 CO2 VOC sensor on individual rPis.. 
+    connect 3.3, GND, SDA, SCL. The sensor does not show on i2detect -y 1 sometimes
+====use menu/action calibrate command to reset baseline to 0====
   </Label>
 			</Field>
 
@@ -5602,33 +5608,9 @@ It measures CO2 VOC
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="88"> <Label>i2c address of device:</Label>
-			<List>
-				<Option value="88"   >0x58 = 88  </Option>
-			</List>
-			</Field>
-			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-			<Label>use TCA9548A multiplexer for this sensor:</Label> 
-			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
-			</List>
-			</Field>
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no"> 
-			<Label>read sensor every xx secs :</Label>
-			<List>
-				<Option value="1"   > 1   secs fixed</Option>
-			</List>
-			</Field>
+
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>min delta secs between indigo updates:</Label>
 			<List>
 				<Option value="1"   > 1   secs </Option>
 				<Option value="2"   > 2   secs</Option>
@@ -5751,7 +5733,7 @@ It measures CO2 VOC
     connect 5V, GND, SDA,SCL, 
     if i2c version  set switch to i2c (right)
     sel voltage bridge to 3.3V (left)
-It measures CO2 and temp using infraed light absorption 
+It measures CO2 and temp using infrared light absorption 
 ====set baseline to fixed value of clean air====
   </Label>
 			</Field>
@@ -7933,6 +7915,7 @@ you can setup
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabel" type="label">
@@ -7941,13 +7924,13 @@ you can setup
     definitions: 
       enpty room: set calibration (menu or action) when nobody is in room
       trigger: when N dots next to each other have &gt; Z distance change events are triggered
-       current - last values and current - empty room vcalues. are 2 different triggers
+       current - last values and current - calibrated room vcalues. are 2 different triggers
        when the value is + the distance is bigger, hence = leaving or recalibration is needed
        when the value is - things are closer to the sensor = approacing or presence
        current - last  triigers on faster movement, 
-       current - empty room triggers show the differnce tof now to when room was calibrated.
+       current - calibrated room triggers show the differnce tof now to when room was calibrated.
        to improve the quality of data 6+ 360º measurements 
-          are taken and compared to current or empty room 
+          are taken and compared to current or calibrated room 
   </Label>
 			</Field>
 
@@ -7994,9 +7977,29 @@ you can setup
 				<Option value="4"   > 4	degrees</Option>
 			</List>
 			</Field>
+			<Field id="minSignalStrength" type="menu"     defaultValue="14" hidden="no" > 
+			<Label>Min signal strength to accept measurement:</Label>
+			<List>
+				<Option value="1"   > 1</Option>
+				<Option value="2"   > 2</Option>
+				<Option value="3"   > 3</Option>
+				<Option value="4"   > 4</Option>
+				<Option value="5"   > 5</Option>
+				<Option value="6"   > 6</Option>
+				<Option value="7"   > 7</Option>
+				<Option value="8"   > 8</Option>
+				<Option value="9"   > 9</Option>
+				<Option value="10"  > 10</Option>
+				<Option value="11"  > 11</Option>
+				<Option value="12"  > 12</Option>
+				<Option value="13"  > 13</Option>
+				<Option value="14"  > 14 (default)</Option>
+				<Option value="15"  > 15</Option>
+			</List>
+			</Field>
 
 			<Field id="measurementsNeededForCalib" type="menu"     defaultValue="5" hidden="no" > 
-			<Label># of 360º measurements for empty room:</Label>
+			<Label># of 360º measurements for calibrated room:</Label>
 			<List>
 				<Option value="3"   > 3</Option>
 				<Option value="4"   > 4</Option>
@@ -8087,7 +8090,7 @@ you can setup
 			</List>
 			</Field>
 
-			<Field id="triggerEmpty" type="menu"     defaultValue="5" hidden="no" tooltip="must be > pre-trigger" > 
+			<Field id="triggerCalibrated" type="menu"     defaultValue="5" hidden="no" tooltip="must be > pre-trigger" > 
 			<Label># of contiguous dots to trigger PRESENCE (N):</Label>
 			<List>
 				<Option value="2"    > 2</Option>
@@ -8123,6 +8126,11 @@ you can setup
 				<Option value="20"   > 20</Option>
 				<Option value="25"   > 25</Option>
 			</List>
+			</Field>
+
+
+			<Field id="doNotUseDataRanges" type="textfield"     defaultValue="" hidden="no" > 
+			<Label>Exclude bin#s from trigger,  format= 5-10;180-190;..:</Label>
 			</Field>
 
 
@@ -8163,7 +8171,7 @@ you can setup
 			<Label>Axis scale factor, eg 0.1..10:</Label> 
 			</Field>
 
-			<Field id="phiOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto" tooltip="+90 = rote left 90 degrees ">  
+			<Field id="phiOffset" type="textfield"     defaultValue="0"  visibleBindingId="mode" visibleBindingValue="manual,auto" tooltip="+90 = rotate clockwise 90 degrees ">  
 			<Label>Rotate data [º]:</Label> 
 			</Field>
 
@@ -8248,6 +8256,14 @@ you can setup
 			<Label>Show phi=0 line</Label> 
 			</Field>
 
+			<Field id="showDoNotTrigger" type="menu"   defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<List>
+				<Option value="0"   >off</Option>
+				<Option value="1"   >ON</Option>
+			</List>
+			<Label>Show areas not use for trigger</Label> 
+			</Field>
+
 			<Field id="showZeroDot" type="menu"   defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
 			<List>
 				<Option value="0"   >off</Option>
@@ -8261,7 +8277,7 @@ you can setup
 				<Option value="0"   >off</Option>
 				<Option value="1"   >ON</Option>
 			</List>
-			<Label>Show empty Value lines</Label> 
+			<Label>Show calibrated Value lines</Label> 
 			</Field>
 
 			<Field id="frameON" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
@@ -8308,8 +8324,8 @@ you can setup
 			<Label>Color for current dots:</Label> 
 
 			</Field>
-			<Field id="colorEmpty" type="textField"     defaultValue="green"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
-			<Label>Color for empty room dots:</Label> 
+			<Field id="colorCalibrated" type="textField"     defaultValue="green"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
+			<Label>Color for Calibrated room dots:</Label> 
 			</Field>
 
 			<Field id="colorLast" type="textField"     defaultValue="blue"  visibleBindingId="mode" visibleBindingValue="manual,auto">  
@@ -8323,7 +8339,9 @@ you can setup
 			<Field id="logLevel" type="menu"     defaultValue="0" visibleBindingId="mode" visibleBindingValue="manual,auto">  
 			<List>
 				<Option value="0"   >off</Option>
-				<Option value="1"   >ON</Option>
+				<Option value="1"   >plugin call cmd to matplot py</Option>
+				<Option value="2"   >matplot py program only</Option>
+				<Option value="3"   >plugin and matplot y</Option>
 			</List>
 			<Label>logLevel:</Label> 
 			</Field>
@@ -8339,7 +8357,7 @@ you can setup
 				<Option value="0"   >off</Option>
 				<Option value="1"   >ON</Option>
 			</List>
-			<Label>Save raw pixel data to device properties:</Label> 
+			<Label>Save raw pixel data to variable devName_data:</Label> 
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
@@ -8450,7 +8468,6 @@ you can setup
 
 			<Field id="infoLabel" type="label">
 			<Label>Setup i2c mlx90640 infrared camera sensor on individual rPis.. 
-    connect 3.3, GND,   SDA,SCL. or TX, RX 
 It measures - all temp values are converted to std temp (set in config)
         -Average Temperature of pixels,
         -MinimumPixel  = min Temperature val of all pixels,
@@ -10855,6 +10872,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelspiMCP3008" type="label">
@@ -11006,6 +11024,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelspiMCP3008" type="label">
@@ -11408,6 +11427,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="showhelp"     type="checkbox"     defaultValue="true" hidden="no"><Label>Show Help:</Label> </Field>
 
@@ -11785,6 +11805,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -11991,6 +12012,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -12308,6 +12330,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -12468,6 +12491,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -12640,6 +12664,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -12852,6 +12877,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -13082,6 +13108,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup INPUT  GPIOs  on individual rPis</Label>
@@ -13228,6 +13255,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -13370,6 +13398,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -13546,6 +13575,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -13796,6 +13826,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest"  type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange"     type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabelINPUT" type="label">
 			<Label>Setup rotator encoded switch on individual rPis
@@ -13915,6 +13946,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest"  type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange"     type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelINPUT" type="label">
@@ -14052,6 +14084,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabelmysensor" type="label">
 			<Label>Setup ultrasound distance sensor on individual rPis</Label>
@@ -14232,6 +14265,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 

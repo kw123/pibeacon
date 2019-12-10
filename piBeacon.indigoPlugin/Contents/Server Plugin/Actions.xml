@@ -3294,6 +3294,7 @@ Then there are actions in each set (steps/sleep)
                     <Option value= "vl6180xDistance"     >vl6180x Distance</Option>
                     <Option value= "vl503l0xDistance"    >vl503l0x Distance</Option>
                     <Option value= "apds9960"            >apds9960 gesture</Option>
+                    <Option value= "sgp30"               >sgp30 </Option>
                     <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>
                     <Option value= "all"                 >all</Option>
@@ -3350,6 +3351,7 @@ Then there are actions in each set (steps/sleep)
                     <Option value= "bme680"              >bme680</Option>
                     <Option value= "mhz16"               >mhz16</Option>
                     <Option value= "rdlidar"             >rdlidar</Option>
+                    <Option value= "sgp30"               >sgp30</Option>
                     <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>
                     <Option value= "all"                 >all</Option>

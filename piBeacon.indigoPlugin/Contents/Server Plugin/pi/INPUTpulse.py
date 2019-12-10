@@ -30,7 +30,7 @@ def checkReset():
 	return False
 
 def readParams():
-	global sensor, sensors
+	global sensor, sensors, oldSensor
 	global INPgpioType,INPUTcount,INPUTlastvalue
 	global GPIOdict, restart
 	global oldRaw, lastRead
@@ -56,165 +56,180 @@ def readParams():
 			U.logger.log(20,	"no "+ G.program+" sensor defined, exiting")
 			exit()
 
-		sens= sensors[sensor]
-		#print "sens:", sens
-		found ={str(ii):{"RISING":0,"FALLING":0,"BOTH":0 } for ii in range(100)}
+		sens = sensors[sensor]
+
+		new = False
 		for devId in sens:
-			sss= sens[devId]
-			if "gpio"									not in sss: continue
-			if "deadTime"								not in sss: continue
-			if "risingOrFalling"						not in sss: continue
-			if "minSendDelta"							not in sss: continue
-			if "bounceTime"								not in sss: continue
-			if "deadTimeBurst"							not in sss: continue
-			if "inpType"								not in sss: continue
-			if "timeWindowForBursts"					not in sss: continue
-			if "timeWindowForContinuousEvents"			not in sss: continue
-			if "minEventsinTimeWindowToTriggerBursts" 	not in sss: continue
-			gpio						= sss["gpio"]
-			risingOrFalling				= sss["risingOrFalling"]
-			inpType						= sss["inpType"]
+			if devId not in oldSensor: 
+				new = True
+			else:
+				for item in sens[devId]:
+					if item not in oldSensor:
+						new = True
+					elif unicode(sens[devId][item]) != unicode(oldSensor[devId][item]):
+						new = True
+					if new: break
+			if new: break		 
+		oldSensor = copy.deepcopy(sensors[sensor])
 
-			try:	bounceTime			= int(sss["bounceTime"])
-			except: bounceTime			= 10
+		if new:
+			found ={str(ii):{"RISING":0,"FALLING":0,"BOTH":0 } for ii in range(100)}
+			for devId in sens:
+				sss= sens[devId]
+				if "gpio"									not in sss: continue
+				if "deadTime"								not in sss: continue
+				if "risingOrFalling"						not in sss: continue
+				if "minSendDelta"							not in sss: continue
+				if "bounceTime"								not in sss: continue
+				if "deadTimeBurst"							not in sss: continue
+				if "inpType"								not in sss: continue
+				if "timeWindowForBursts"					not in sss: continue
+				if "timeWindowForContinuousEvents"			not in sss: continue
+				if "minEventsinTimeWindowToTriggerBursts" 	not in sss: continue
+				gpio						= sss["gpio"]
+				risingOrFalling				= sss["risingOrFalling"]
+				inpType						= sss["inpType"]
 
-			try:	minSendDelta		= int(sss["minSendDelta"])
-			except: minSendDelta		= 1
+				try:	bounceTime			= int(sss["bounceTime"])
+				except: bounceTime			= 10
 
-			try:	deadTime			= float(sss["deadTime"])
-			except: deadTime			= 1
+				try:	minSendDelta		= int(sss["minSendDelta"])
+				except: minSendDelta		= 1
 
-			try:	deadTimeBurst		= float(sss["deadTimeBurst"])
-			except: deadTimeBurst		= 1
+				try:	deadTime			= float(sss["deadTime"])
+				except: deadTime			= 1
 
-			try:	timeWindowForBursts = int(sss["timeWindowForBursts"])
-			except: timeWindowForBursts = -1
+				try:	deadTimeBurst		= float(sss["deadTimeBurst"])
+				except: deadTimeBurst		= 1
 
-			try:	minEventsinTimeWindowToTriggerBursts = int(sss["minEventsinTimeWindowToTriggerBursts"])
-			except: minEventsinTimeWindowToTriggerBursts = -1
+				try:	timeWindowForBursts = int(sss["timeWindowForBursts"])
+				except: timeWindowForBursts = -1
 
-			try:	timeWindowForContinuousEvents = float(sss["timeWindowForContinuousEvents"])
-			except: timeWindowForContinuousEvents = -1
-			try:	minSendDelta = float(sss["minSendDelta"])
-			except: minSendDelta = -1
+				try:	minEventsinTimeWindowToTriggerBursts = int(sss["minEventsinTimeWindowToTriggerBursts"])
+				except: minEventsinTimeWindowToTriggerBursts = -1
+
+				try:	timeWindowForContinuousEvents = float(sss["timeWindowForContinuousEvents"])
+				except: timeWindowForContinuousEvents = -1
+				try:	minSendDelta = float(sss["minSendDelta"])
+				except: minSendDelta = -1
 
 
 
-			found[gpio][risingOrFalling]		 = 1
-			if gpio in GPIOdict and "risingOrFalling" in GPIOdict[gpio]: ### this is update
-					if GPIOdict[gpio]["bounceTime"] !=	bounceTime: 
-						restart=True
-						return
-					if GPIOdict[gpio]["risingOrFalling"] !=	 risingOrFalling: 
-						restart=True
-						return
-					GPIOdict[gpio]["deadTime"]								= deadTime
-					GPIOdict[gpio]["deadTimeBurst"]							= deadTimeBurst
-					GPIOdict[gpio]["devId"]									= devId
-					GPIOdict[gpio]["minSendDelta"]							= minSendDelta
-					GPIOdict[gpio]["minEventsinTimeWindowToTriggerBursts"]	= minEventsinTimeWindowToTriggerBursts
-					GPIOdict[gpio]["timeWindowForBursts"]					= timeWindowForBursts
-					GPIOdict[gpio]["timeWindowForContinuousEvents"]			= timeWindowForContinuousEvents
-					GPIOdict[gpio]["lastsendBurst"]							= 0
-					GPIOdict[gpio]["lastsendCount"]							= 0
-					GPIOdict[gpio]["lastsendContinuousEvent"]				= 0
-					GPIOdict[gpio]["lastsendContinuousEventEND"]			= 0
-					if inpType != GPIOdict[gpio]["inpType"]:
-						if	 inpType == "open":
-							GPIO.setup(int(gpio), GPIO.IN)
-						elif inpType == "high":
-							GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_UP)
-						elif inpType == "low":
-							GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+				found[gpio][risingOrFalling]		 = 1
+				if gpio in GPIOdict and "risingOrFalling" in GPIOdict[gpio]: ### this is update
+						if GPIOdict[gpio]["bounceTime"] !=	bounceTime: 
+							restart=True
+							return
+						if GPIOdict[gpio]["risingOrFalling"] !=	 risingOrFalling: 
+							restart=True
+							return
+						GPIOdict[gpio]["deadTime"]								= deadTime
+						GPIOdict[gpio]["deadTimeBurst"]							= deadTimeBurst
+						GPIOdict[gpio]["devId"]									= devId
+						GPIOdict[gpio]["minSendDelta"]							= minSendDelta
+						GPIOdict[gpio]["minEventsinTimeWindowToTriggerBursts"]	= minEventsinTimeWindowToTriggerBursts
+						GPIOdict[gpio]["timeWindowForBursts"]					= timeWindowForBursts
+						GPIOdict[gpio]["timeWindowForContinuousEvents"]			= timeWindowForContinuousEvents
+						GPIOdict[gpio]["lastsendBurst"]							= 0
+						GPIOdict[gpio]["lastsendCount"]							= 0
+						GPIOdict[gpio]["lastsendContinuousEvent"]				= 0
+						GPIOdict[gpio]["lastsendContinuousEventEND"]			= 0
+						if inpType != GPIOdict[gpio]["inpType"]:
+							if	 inpType == "open":
+								GPIO.setup(int(gpio), GPIO.IN)
+							elif inpType == "high":
+								GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_UP)
+							elif inpType == "low":
+								GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+						GPIOdict[gpio]["inpType"]	 = inpType
+						continue 
+				elif gpio in GPIOdict and "risingOrFalling" not in GPIOdict[gpio]: # partial update
+					GPIOdict[gpio]={
+									  "devId":							devId,
+									  "inpType":						inpType,
+									  "minSendDelta":					minSendDelta,
+									  "bounceTime":						bounceTime,
+									  "deadTime":						deadTime,
+									  "deadTimeBurst":					deadTimeBurst,
+									  "risingOrFalling":				risingOrFalling,
+									  "timeWindowForBursts":			timeWindowForBursts,
+									  "timeWindowForContinuousEvents":	timeWindowForContinuousEvents,
+									  "minEventsinTimeWindowToTriggerBursts": minEventsinTimeWindowToTriggerBursts,
+									  "lastSignal":						0,
+									  "lastsendCount":					0,
+									  "lastsendBurst":					0,
+									  "lastsendContinuousEvent":		0,
+									  "lastsendContinuousEventEND":		0,
+									  "count":							0 }
+					if	 inpType == "open":
+						GPIO.setup(int(gpio), GPIO.IN)
+					elif inpType == "high":
+						GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_UP)
+					elif inpType == "low":
+						GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+					if	risingOrFalling == "RISING": 
+						if bounceTime > 0:
+							GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING,  bouncetime=bounceTime)  
+						else:
+							GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING)  
+					elif  risingOrFalling == "FALLING": 
+						if bounceTime > 0:
+							GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING, bouncetime=bounceTime)  
+						else:
+							GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING)  
+					else:
+						if bounceTime > 0:
+							GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH, bouncetime=bounceTime)  
+						else:
+							GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH)  
 					GPIOdict[gpio]["inpType"]	 = inpType
-					continue 
-			elif gpio in GPIOdict and "risingOrFalling" not in GPIOdict[gpio]: # partial update
-				GPIOdict[gpio]={
-								  "devId":							devId,
-								  "inpType":						inpType,
-								  "minSendDelta":					minSendDelta,
-								  "bounceTime":						bounceTime,
-								  "deadTime":						deadTime,
-								  "deadTimeBurst":					deadTimeBurst,
-								  "risingOrFalling":				risingOrFalling,
-								  "timeWindowForBursts":			timeWindowForBursts,
-								  "timeWindowForContinuousEvents":	timeWindowForContinuousEvents,
-								  "minEventsinTimeWindowToTriggerBursts": minEventsinTimeWindowToTriggerBursts,
-								  "lastSignal":						0,
-								  "lastsendCount":					0,
-								  "lastsendBurst":					0,
-								  "lastsendContinuousEvent":		0,
-								  "lastsendContinuousEventEND":		0,
-								  "count":							0 }
-				if	 inpType == "open":
-					GPIO.setup(int(gpio), GPIO.IN)
-				elif inpType == "high":
-					GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_UP)
-				elif inpType == "low":
-					GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-				if	risingOrFalling == "RISING": 
-					if bounceTime > 0:
-						GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING,  bouncetime=bounceTime)  
-					else:
-						GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING)  
-				elif  risingOrFalling == "FALLING": 
-					if bounceTime > 0:
-						GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING, bouncetime=bounceTime)  
-					else:
-						GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING)  
-				else:
-					if bounceTime > 0:
-						GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH, bouncetime=bounceTime)  
-					else:
-						GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH)  
-				GPIOdict[gpio]["inpType"]	 = inpType
 
-			elif gpio not in GPIOdict: # new setup
-				GPIOdict[gpio]={
-								  "devId":							devId,
-								  "inpType":						inpType,
-								  "minSendDelta":					minSendDelta,
-								  "bounceTime":						bounceTime,
-								  "deadTime":						deadTime,
-								  "deadTimeBurst":					deadTimeBurst,
-								  "risingOrFalling":				risingOrFalling,
-								  "timeWindowForBursts":			timeWindowForBursts,
-								  "timeWindowForContinuousEvents":	timeWindowForContinuousEvents,
-								  "minEventsinTimeWindowToTriggerBursts": minEventsinTimeWindowToTriggerBursts,
-								  "lastSignal":						0,
-								  "lastsendCount":					0,
-								  "lastsendBurst":					0,
-								  "lastsendContinuousEvent":		0,
-								  "lastsendContinuousEventEND":		0,
-								  "coincidence":					{},
-								  "count":							0 }
-				if	 inpType == "open":
-					GPIO.setup(int(gpio), GPIO.IN)
-				elif inpType == "high":
-					GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_UP)
-				elif inpType == "low":
-					GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-				if	risingOrFalling == "RISING": 
-					if bounceTime > 0:
-						GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING,  bouncetime=bounceTime)  
+				elif gpio not in GPIOdict: # new setup
+					GPIOdict[gpio]={
+									  "devId":							devId,
+									  "inpType":						inpType,
+									  "minSendDelta":					minSendDelta,
+									  "bounceTime":						bounceTime,
+									  "deadTime":						deadTime,
+									  "deadTimeBurst":					deadTimeBurst,
+									  "risingOrFalling":				risingOrFalling,
+									  "timeWindowForBursts":			timeWindowForBursts,
+									  "timeWindowForContinuousEvents":	timeWindowForContinuousEvents,
+									  "minEventsinTimeWindowToTriggerBursts": minEventsinTimeWindowToTriggerBursts,
+									  "lastSignal":						0,
+									  "lastsendCount":					0,
+									  "lastsendBurst":					0,
+									  "lastsendContinuousEvent":		0,
+									  "lastsendContinuousEventEND":		0,
+									  "coincidence":					{},
+									  "count":							0 }
+					if	 inpType == "open":
+						GPIO.setup(int(gpio), GPIO.IN)
+					elif inpType == "high":
+						GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_UP)
+					elif inpType == "low":
+						GPIO.setup(int(gpio), GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+					if	risingOrFalling == "RISING": 
+						if bounceTime > 0:
+							GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING,  bouncetime=bounceTime)  
+						else:
+							GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING)  
+					elif  risingOrFalling == "FALLING": 
+						if bounceTime > 0:
+							GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING, bouncetime=bounceTime)  
+						else:
+							GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING)  
 					else:
-						GPIO.add_event_detect(int(gpio), GPIO.RISING,	callback=RISING)  
-				elif  risingOrFalling == "FALLING": 
-					if bounceTime > 0:
-						GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING, bouncetime=bounceTime)  
-					else:
-						GPIO.add_event_detect(int(gpio), GPIO.FALLING,	callback=FALLING)  
-				else:
-					if bounceTime > 0:
-						GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH, bouncetime=bounceTime)  
-					else:
-						GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH)  
-				GPIOdict[gpio]["inpType"]	 = inpType
+						if bounceTime > 0:
+							GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH, bouncetime=bounceTime)  
+						else:
+							GPIO.add_event_detect(int(gpio), GPIO.BOTH,		callback=BOTH)  
+					GPIOdict[gpio]["inpType"]	 = inpType
 				
 				
 		oneFound = False
-		restart=False
-		delGPIO={}
+		restart =False
+		delGPIO ={}
 		U.logger.log(10, "GPIOdict: " +unicode(GPIOdict))
 		for gpio in GPIOdict:
 			if gpio not in INPUTcount: INPUTcount[gpio] = 0
@@ -430,29 +445,28 @@ def resetContinuousEvents():
 
   
 def execMain():
-	global sensors, sensor, INPUTcount
+	global sensors, sensor, oldSensor, INPUTcount
 	global oldParams
 	global GPIOdict, restart, BURSTS, lastGPIO, contEVENT
 	global oldRaw,	lastRead, lastSend
 	global minSendDelta
 	global coincidence
 
-	coincidence				= {}
-	oldRaw					= ""
-	lastRead				= 0
-	minSendDelta			= 50
-	###################### constants #################
-	sensor			  = G.program
-
-	INPUTlastvalue	  = ["-1" for i in range(100)]
-	INPUTcount		  = {}
-	BURSTS			  = [[]	  for i in range(50)]
-	contEVENT		  = [0	  for i in range(50)]
-	lastGPIO		  = [""	  for ii in range(50)]
-	oldParams		  = ""
-	GPIOdict		  = {}
-	restart			  = False
-	countReset		  = False
+	oldSensor		= {}
+	coincidence		= {}
+	oldRaw			= ""
+	lastRead		= 0
+	minSendDelta	= 50
+	sensor			= G.program
+	INPUTlastvalue	= ["-1" for i in range(100)]
+	INPUTcount		= {}
+	BURSTS			= [[]	  for i in range(50)]
+	contEVENT		= [0	  for i in range(50)]
+	lastGPIO		= [""	  for ii in range(50)]
+	oldParams		= ""
+	GPIOdict		= {}
+	restart			= False
+	countReset		= False
 
 
 	U.setLogging()

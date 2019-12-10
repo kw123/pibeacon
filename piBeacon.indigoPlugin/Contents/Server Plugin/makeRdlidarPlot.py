@@ -40,14 +40,12 @@ DPI = 300
 
 pluginDir		= sys.argv[0].split("makeRdlidarPlot.py")[0]
 indigoDir		= pluginDir.split("Plugins/")[0]
-allData 		= json.loads(sys.argv[1])
-imageParams		= allData["imageParams"]	
-data 			= allData["data"]	
+imageParams 	= json.loads(sys.argv[1])
 logfileName		= imageParams["logFile"]
 
 
 
-logLevel		  = imageParams["logLevel"] =="1"
+logLevel		  = imageParams["logLevel"] in ["2","3"]
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
 if  not logLevel:
@@ -59,7 +57,7 @@ else:
 
 
 
-color ={"current":"#FF0000","empty":"#00FF00","last":"#0000FF","background":"#5A5A5A"}
+color ={"current":"#FF0000","calibrated":"#00FF00","last":"#0000FF","background":"#5A5A5A"}
 	
 
 
@@ -69,6 +67,9 @@ imageDir = logfileName[0:imageOutfile.rfind('/')]
 if not os.path.exists(imageDir):
 	os.mkdir(imageDir)
 
+
+try: 	anglesInOneBin	= int(imageParams["anglesInOneBin"])
+except: anglesInOneBin	= 1
 
 try: 	DPI				= int(imageParams["DPI"])
 except: DPI			 	= 400
@@ -97,8 +98,8 @@ except: phiOffset 		= 0.
 try: 	color["current"] = imageParams["colorCurrent"]
 except: color["current"] = "red"
 
-try: 	color["empty"]   = imageParams["colorEmpty"]
-except: color["empty"]	 = "green"
+try: 	color["calibrated"]   = imageParams["colorCalibrated"]
+except: color["calibrated"]	 = "green"
 
 try: 	color["last"]	= imageParams["colorLast"]
 except: color["last"]	= "blue"
@@ -147,8 +148,32 @@ except: showZeroDot 	= True
 try: 	showZeroValues 	= imageParams["showZeroValues"] == "1"
 except: showZeroValues 	= False
 
+try: 	showDoNotTrigger 	= imageParams["showDoNotTrigger"] == "1"
+except: showDoNotTrigger 	= True
 
+try: 	
+	doNotUseDataRanges = []
+	doNotUseDataRangesShow 	= imageParams["doNotUseDataRanges"]
+	if len(doNotUseDataRangesShow) > 2:
+		ddd = doNotUseDataRangesShow.split(";")
+		for dd in ddd: 
+			if len(dd) > 2 and "-" in dd:
+				d = dd.split("-")
+				doNotUseDataRanges.append([int(d[0]),int(d[1])])
+				#logger.log(20,u"dd {} d {} doNotUseDataRanges:{}".format(dd, d, doNotUseDataRanges)  )
+		
+except: doNotUseDataRanges 	= []
 
+try: 	dataFile 	= imageParams["dataFile"] 
+except: dataFile 	= "/tmp/makerdlidar.dat"
+
+try:
+	f = open(dataFile,"r")
+	data = json.loads(f.read())
+	f.close()
+except  Exception, e:
+	logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
+	exit()
 #
 
 try:
@@ -159,35 +184,46 @@ try:
 	logger.log(20,"pluginDir          :{}".format(pluginDir) )
 	logger.log(20,"indigoDir          :{}".format(indigoDir) )
 	logger.log(20,"imageOutfile       :{}".format(imageOutfile) )
-	logger.log(20,"fontSize           :{}".format(fontSize) )
+	logger.log(20,"compressImage      :{}".format(compress) )
+	logger.log(20,"dataInFile         :{}".format(imageParams["dataFile"]) )
 	logger.log(20,"x from to          :{} / {}".format(xMin,xMax) )
-	logger.log(20,"y from to          :{} / {}".format(yMin,yMax) )
 	logger.log(20,"offset x,y         :{} / {}".format(xOffset, yOffset) )
-	logger.log(20,"numberOfDotsX      :{}".format(numberOfDotsX) )
-	logger.log(20,"numberOfDotsY      :{}".format(numberOfDotsY) )
+	logger.log(20,"numberOfDotsX,Y    :{} / {}".format(numberOfDotsX, numberOfDotsY) )
+	logger.log(20,"anglesInOneBin     :{}".format(anglesInOneBin) )
+	logger.log(20,"DPI                :{}".format(DPI) )
+	logger.log(20,"scalefactor        :{}".format(scalefactor) )
+	logger.log(20,"phiOffset          :{}".format(phiOffset) )
+	logger.log(20,"frameTight         :{}".format(frameTight) )
 	logger.log(20,"frameON            :{}".format(frameON) )
+	logger.log(20,"showPhi0           :{}".format(showPhi0) )
 	logger.log(20,"showLegend         :{}".format(showLegend) )
+	logger.log(20,"showTimeStamp      :{}".format(showTimeStamp) )
+	logger.log(20,"showZeroDot        :{}".format(showZeroDot) )
+	logger.log(20,"showZeroValues     :{}".format(showZeroValues) )
+	logger.log(20,"showDoNotTrigger   :{}".format(showDoNotTrigger) )
+	logger.log(20,"showTriggerValues  :{}".format(showTriggerValues) )
 	logger.log(20,"topText            :{}".format(topText) )
+	logger.log(20,"fontSize           :{}".format(fontSize) )
 	logger.log(20,"colorCurrent       :{}".format(color["current"]) )
-	logger.log(20,"colorEmpty         :{}".format(color["empty"]) )
+	logger.log(20,"colorCalibrated    :{}".format(color["calibrated"]) )
 	logger.log(20,"colorprevious      :{}".format(color["last"]) )
 	logger.log(20,"colorBackground    :{}".format(color["background"]) )
-	logger.log(20,"compressImage      :{}".format(compress) )
+
 
 
 #### prep data ######################
 
-	anglesInOneBin = int(imageParams[u"anglesInOneBin"])
-	dataToPlot = {"dots":{"current":[[],[],[]],"empty":[[],[],[]],"last":[[],[],[]]}, "trigger":{"current":{"LT":[],"GT":[]},"empty":{"LT":[],"GT":[]}},"xy0":[],"zero":[],"time":[]}
+	#phiOffset = 0
+	dataToPlot = {"dots":{"current":[[],[],[]],"calibrated":[[],[],[]],"last":[[],[],[]]},"doNotTrigger":[[],[]], "trigger":{"current":{"LT":[],"GT":[]},"calibrated":{"LT":[],"GT":[]}},"xy0":[],"zero":[],"time":[]}
 
 	useBins = 360 / anglesInOneBin
-	bins = [[math.cos( -float(ii*anglesInOneBin-phiOffset)*(3.141/180.) ), math.sin(-float(ii*anglesInOneBin-phiOffset)*(3.141/180.) ) ] for ii in range(useBins)]
-	phiOff = [math.cos( -float(-phiOffset)*(3.141/180.) ), math.sin( -float(-phiOffset)*(3.141/180.) ) ]
+	bins = [[math.cos( -float(ii*anglesInOneBin+phiOffset)*(3.141/180.) ), math.sin(-float(ii*anglesInOneBin+phiOffset)*(3.141/180.) ) ] for ii in range(useBins)]
+	phiOff = [math.cos( -float(+phiOffset)*(3.141/180.) ), math.sin( -float(+phiOffset)*(3.141/180.) ) ]
 	
-	dotSize = {"current":int( numberOfDotsX*(20./1000.) ) ,"empty":int( numberOfDotsX*(10./1000.) ),"last":int( numberOfDotsX*(10./1000.) )}
+	dotSize = {"current":int( numberOfDotsX*(20./1000.) ) ,"calibrated":int( numberOfDotsX*(10./1000.) ),"last":int( numberOfDotsX*(10./1000.) )}
 
 
-	for kk in ["current","empty","last"]:
+	for kk in ["current","calibrated","last"]:
 		dd = data[kk]
 		for ii in range(len(dd)):
 			try:	
@@ -200,7 +236,26 @@ try:
 				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
 				break
 
-	for kk in ["current","empty"]:
+	
+	for kk in doNotUseDataRanges:
+			try:	
+				dataToPlot["doNotTrigger"][0].append( int( scalefactor*(xOffset) ) )	
+				dataToPlot["doNotTrigger"][1].append( int( scalefactor*(yOffset) ) )	
+				ii  = kk[0]
+				ii2 = kk[1]
+				value = (float(data["calibrated"][ii]) + float(data["calibrated"][ii2]))/4
+				dataToPlot["doNotTrigger"][0].append( int( scalefactor*(bins[ii][0]*value+xOffset) ) )	
+				dataToPlot["doNotTrigger"][1].append( int( scalefactor*(bins[ii][1]*value+yOffset) ) )	
+				dataToPlot["doNotTrigger"][0].append( int( scalefactor*(bins[ii2][0]*value+xOffset) ) )	
+				dataToPlot["doNotTrigger"][1].append( int( scalefactor*(bins[ii2][1]*value+yOffset) ) )	
+				dataToPlot["doNotTrigger"][0].append( int( scalefactor*(xOffset) ) )	
+				dataToPlot["doNotTrigger"][1].append( int( scalefactor*(yOffset) ) )	
+			except Exception, e:
+				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
+				break
+	logger.log(30,"doNotTrigger:{},  {}".format(doNotUseDataRanges, dataToPlot["doNotTrigger"]) )
+
+	for kk in ["current","calibrated"]:
 		dd = data[kk]
 		for LTGT in["LT","GT"]:
 			tr = data["triggerValues"][kk][LTGT]["sections"]
@@ -268,19 +323,19 @@ try:
 
 	DotsAt4000Point = 25
 	normDot 		= max(4,int( (DotsAt4000Point*numberOfDotsX) /4000. ))
-	sizeDots 		= {"current":normDot,				"empty":max(1,int(normDot*0.6)),	"last":max(1,int(normDot*.4)), "phi0":max(1,int(normDot*.07)), "zero":max(1,int(normDot))}
-	labelsDots		= {"current":"current",				"empty":"empty room",	"last":"previous"}
-	linewidthTR		= {"current":max(2,int(normDot)),	"empty":max(2,int(normDot))}
+	sizeDots 		= {"current":normDot,				"calibrated":max(1,int(normDot*0.6)),	"last":max(1,int(normDot*.4)), "phi0":max(1,int(normDot*.07)), "zero":max(1,int(normDot))}
+	labelsDots		= {"current":"current",				"calibrated":"Calibrated room",	"last":"previous"}
+	linewidthTR		= {"current":max(2,int(normDot)),	"calibrated":max(2,int(normDot)), "notTrigger":max(1,int(normDot*.08)) }
 	LTGTstyle		= {"LT":"<",		"GT":">"}
 	LTGTlabel		= {"LT":"Closer",	"GT":"Further"}
 
-	for kk in ["current","empty","last"]:
+	for kk in ["current","calibrated","last"]:
 		if color[kk] !="#000000": 
 			ax.plot(dataToPlot["dots"][kk][0], dataToPlot["dots"][kk][1], '-', color=color[kk], linewidth=int(max(1,sizeDots[kk]/3)), label=labelsDots[kk])
 			#ax.plot(dataToPlot["dots"][kk][0], dataToPlot["dots"][kk][1], 'o', color=color[kk], markersize=sizeDots[kk], label=labelsDots[kk])
 
 	show = {"LT":True,"GT":True}
-	for kk in ["current","empty"]:
+	for kk in ["current","calibrated"]:
 		for LTGT in ["LT","GT"]:
 			for dd in dataToPlot["trigger"][kk][LTGT]:
 				if len(dd) >0:
@@ -295,6 +350,10 @@ try:
 
 	if showPhi0:
 		ax.plot(dataToPlot["xy0"][0], dataToPlot["xy0"][1], color='black',linewidth=sizeDots["phi0"], label="phi=0")
+
+
+	if showDoNotTrigger:
+		ax.plot(dataToPlot["doNotTrigger"][0], dataToPlot["doNotTrigger"][1], color='grey',linewidth=linewidthTR["notTrigger"], label="notTrigger")
 
 	if showTimeStamp !="":
 		try:
@@ -332,7 +391,7 @@ try:
 				else:											pos =[xLeft,yInside]
 				## make a nice looking sjon dumps for the trigger info, combine list to one line and remove empty structures 
 				out = copy.deepcopy(data["triggerValues"])
-				for kk in ["current","empty"]:
+				for kk in ["current","calibrated"]:
 					dd = data["triggerValues"][kk]
 					for LTGT in["LT","GT"]:
 						ltr= len(tr)
@@ -344,6 +403,8 @@ try:
 							for ii in range(ltr):
 								out[kk][LTGT]["sections"][ii]["bins"] = unicode(data["triggerValues"][kk][LTGT]["sections"][ii]["bins"])
 				out["off-x/y/phi"] = "{:.0f}/{:.0f}/{:.0f}".format(xOffset, yOffset,phiOffset)
+				out["doNotUse"] = "{}".format(doNotUseDataRangesShow)
+				#del out["doNotUseDataRanges"]
 				dd = json.dumps(out,sort_keys=True, indent=2)
 				ax.text(pos[0], pos[1], dd,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
 		except  Exception, e:

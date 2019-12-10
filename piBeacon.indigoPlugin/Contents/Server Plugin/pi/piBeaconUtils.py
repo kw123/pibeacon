@@ -195,6 +195,33 @@ def checkParametersFile(defaultParameters, force=False):
 			restartMyself(reason="bad parameter... file.. restored" , doPrint= True)
 
 #################################
+def readFloat(filename, default=0.):
+	try:
+		f = open(filename)
+		v = float(f.read())
+		f.close()
+	except:
+		try: f.close()
+		except: pass
+		v = default
+	return v
+
+#################################
+def readInt(filename, default=0):
+	try:
+		f = open(filename)
+		v = int(f.read())
+		f.close()
+	except:
+		try: f.close()
+		except: pass
+		v = default
+	return v
+
+
+
+
+#################################
 def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=False, deleteAfterRead = False):
 	try:
 		if not G.loggerSet:
@@ -1581,10 +1608,10 @@ def geti2c():
 			temp=[]
 			ii=-1
 			for line in	 lines:
-				if line.find(":") ==-1: continue  # skip first line
+				if line.find(":") ==-1: continue  # skip non data lines
 				ii+=1
 				line = line[3:]
-				line = line.replace("--","    ")
+				line = line.replace("-"," ")
 				val = [line[jj:jj+3] for jj in range(0,3*16,3)]
 				kk = -1
 				if len(val)>0:
@@ -1600,7 +1627,6 @@ def geti2c():
 	except	Exception, e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return ["i2c detect error"]
-
 
 
 
@@ -2228,13 +2254,15 @@ def checkIfrebootAction(action):
 
 
 def sendi2cToPlugin(sensDict):
-	i2c			= ""
+	i2cList		= ""
 	lastBoot	= ""
 	os			= ""
 	temp		= ""
 	rpiType		= ""
+	i2cError	= ""
 	try:
-		i2c		 = geti2c()
+		#logger.log(30, u"cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
+		i2cList	 = geti2c()
 		sensList = ""		
 		for sens in sensDict:
 			if sens.find("i2c") == 0: # strip i2c from the beginning of name.
@@ -2246,6 +2274,27 @@ def sendi2cToPlugin(sensDict):
 				sensList += str(ll)+" "+ss+", "
 			else:
 				sensList += ss+", "
+			for devId in sensDict[sens]:
+				if "i2cAddress" in sensDict[sens][devId]:
+					logger.log(10, u"cBY:{:<20}   i2c:{} in sensor:{}".format(G.program, sensDict[sens][devId]["i2cAddress"], sens) )
+					try: 
+						i2cI = int(sensDict[sens][devId]["i2cAddress"])
+						if i2cI < 1: continue
+					except: continue
+				else: continue
+
+				matchFound = False
+				for i2cH in i2cList:
+					i2cActive = i2cH.split("=")[0]
+					if int(i2cActive) != i2cI: continue
+					matchFound =True
+					logger.log(10, u"cBY:{:<20}  match found for i2c:{}".format(G.program,i2cI) )
+					break
+				if not matchFound:
+					logger.log(10, u"cBY:{:<20}  no match found for i2c:{}".format(G.program,i2cI) )
+					i2cError += "sensor:{} - devId:{} i2c:{}/{}; ".format(sens, devId, i2cI,hex(i2cI))
+	
+		i2cError = i2cError.strip("; ")
 
 		if len(sensList) > 0: sensList = sensList.strip(" ").strip(",")
 		#																	remove trailing null chars;  \\ for escape  of \
@@ -2275,7 +2324,8 @@ def sendi2cToPlugin(sensDict):
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
 
-		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2c).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
+		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2cList).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
+		if i2cError != "": data["i2cError"] = i2cError
 		##print data
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
 

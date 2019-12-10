@@ -271,6 +271,7 @@ def readParams():
 	global oldRaw, lastRead
 	global startTime
 	global CO2normal, CO2offset,sensitivity,timeaboveCalibrationMAX
+	global interfaceType
 	try:
 
 
@@ -299,7 +300,7 @@ def readParams():
 			exit()
 			
 
-		U.logger.log(30, G.program+" reading new parameter file" )
+		U.logger.log(10, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -321,16 +322,22 @@ def readParams():
 			
 			old = i2cAddress
 			i2cAddress = U.getI2cAddress(sensors[sensor][devId],default="")
-			if old != i2cAddress: restart = True
+			if old != i2cAddress: 
+				#U.logger.log(20, "new i2cAddress {} vs {}". format(old, i2cAddress))
+				restart = True
 
 			try: old = interfaceType
 			except: old = ""; interfaceType ="i2c"
 			try:
 				if "interfaceType" in sensors[sensor][devId]: 
-					interfaceType= sensors[sensor][devId]["minSendDelta"]
+					interfaceType= sensors[sensor][devId]["interfaceType"]
+				else:
+					interfaceType ="i2c"
 			except:
 				interfaceType = "i2c"
-			if old != interfaceType: restart = True
+			if old != interfaceType: 
+				#U.logger.log(20, "new interface")
+				restart = True
 
 
 
@@ -372,12 +379,11 @@ def readParams():
 				minSendDelta = 5.
 
 				
-			if devId not in mhz16sensor or	restart:
-				startSensor(devId, i2cAddress,interfaceType)
+			if devId not in mhz16sensor or restart:
+				U.logger.log(20," new / changed parameters read: i2cAddress:{};	 minSendDelta:{};  deltaX:{};  sensorRefreshSecs:{};  restart:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs, restart))
+				startSensor(devId, i2cAddress)
 				if mhz16sensor[devId] =="":
 					return
-			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
-					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"  restart:"+str(restart))
 				
 		deldevID={}		   
 		for devId in mhz16sensor:
@@ -398,12 +404,12 @@ def readParams():
 
 
 #################################
-def startSensor(devId,i2cAddress,interfaceType):
+def startSensor(devId,i2cAddress):
 	global sensors, sensor
 	global startTime
-	global mhz16sensor 
+	global mhz16sensor , interfaceType
 	
-	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(20,"==== Start {} ===== @ i2c={} , interfaceType:{}" .format(G.program, i2cAddress, interfaceType))
 	startTime =time.time()
 
 
@@ -554,8 +560,10 @@ global deltaX, mhz16sensor, minSendDelta
 global	lastRead
 global startTime,  lastMeasurement, reStartReq 
 global CO2offset, CO2normal, sensitivity,timeaboveCalibrationMAX
+global interfaceType
 
 
+interfaceType				= ""
 i2cAddress					=""
 timeOKCalibration			={}
 timeaboveCalibrationMAX		={}

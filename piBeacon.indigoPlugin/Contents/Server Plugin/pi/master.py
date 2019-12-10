@@ -17,12 +17,14 @@ import RPi.GPIO as GPIO
 try:
 	import serial
 except:
-	os.system("sudo apt-get install python-serial")
+	pass
+
+
+
 sys.path.append(os.getcwd())
 import	piBeaconGlobals as G
 import	piBeaconUtils	as U
 G.program = "master"
-
 
 
 
@@ -76,7 +78,7 @@ def checkIfGpioIsInstalled():
 def checkWiFiSetupBootDir():
 	if os.path.isfile("/boot/wifiInfo.json"):
 		wifiInfo, raw = U.readJson("/boot/wifiInfo.json")
-		U.logger.log(30, 'reading wifiinfo file:{}'.format(raw) )
+		U.logger.log(20, 'reading wifi info file:{}'.format(raw) )
 		os.system("sudo rm /boot/wifiInfo.json")
 		if wifiInfo !={} and "SSID" in wifiInfo and  "passCode" in wifiInfo: 
 			U.makeNewSupplicantFile(wifiInfo)	
@@ -428,11 +430,21 @@ def readNewParams(force=0):
 
 		time.sleep(1)
 
+	
+		if	(rPiRestartCommand.find("rPiCommandPORT") >-1) and G.wifiType =="normal" and G.networkType !="clockMANUAL" and rPiCommandPORT >0:
+				startProgam("receiveCommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
+
+
 		setACTIVEorKILL("INPUTgpio","INPUTgpio.py","")
+		time.sleep(1)
 		setACTIVEorKILL("INPUTpulse","INPUTpulse.py","INPUTpulse")
+		time.sleep(1)
 		setACTIVEorKILL("INPUTtouch","INPUTtouch.py","INPUTtouch")
+		time.sleep(1)
 		setACTIVEorKILL("INPUTtouch16","INPUTtouch16.py","INPUTtouch16")
+		time.sleep(1)
 		setACTIVEorKILL("INPUTRotarySwitchAbsolute","INPUTRotarySwitchAbsolute.py","INPUTRotarySwitchAbsolute")
+		time.sleep(1)
 		setACTIVEorKILL("INPUTRotarySwitchIncremental","INPUTRotarySwitchIncremental.py","INPUTRotarySwitchIncremental")
 	
 
@@ -447,9 +459,7 @@ def readNewParams(force=0):
 			#U.logger.log(20, "checking sensor if {} ".format(ss))
 			if ss in sensors: 
 				checkifActive(ss, ss+".py", True)
-		
-		if	(rPiRestartCommand.find("rPiCommandPORT") >-1) and G.wifiType =="normal" and G.networkType !="clockMANUAL" and rPiCommandPORT >0:
-				startProgam("receiveCommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
+				time.sleep(1)
 
 		if	not beforeLoop:
 			if rPiRestartCommand.find("beacons") >-1 :
@@ -598,6 +608,7 @@ def checkifActive(sensorName, pyName, active):
 #########  start pgms  
 def installLibs():
 	if U.pgmStillRunning("installLibs.py"): return
+	os.system("/usr/bin/python "+G.homeDir+"installLib2.py ") # wait until finished
 	os.system("/usr/bin/python "+G.homeDir+"installLibs.py ") # wait until finished
 
 	
@@ -1440,7 +1451,7 @@ def fixRcLocal(sleepTime):
 				out+=line+"\n"
 
 		if writeOut:
-			U.logger.log(30, "writing new rc.local file with new line:\n {}".format(test))
+			U.logger.log(20, "writing new rc.local file with new line:\n {}".format(test))
 			f=open(+G.homeDir+"temp/rc.local","w")
 			f.write(out)
 			f.close()
@@ -1500,7 +1511,7 @@ def checkFSCHECKfile():
 			if data.find("data may be corrupt") >-1: # not fixed, send msg to plugin 
 				dataSend = u"dosfsck has error also after re-run: "+ "/--/".join((data.split("\n"))[0:10])
 
-			U.logger.log(30, dataSend)
+			U.logger.log(20, dataSend)
 			U.sendURL(sendAlive="alive",text=dataSend)
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1666,7 +1677,6 @@ def execMaster():
 		os.system("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp")
 
 
-
 		if cleanupOldFiles():
 			startProgam("master.py", params="", reason="..cleaned-up old files")
 
@@ -1701,10 +1711,10 @@ def execMaster():
 		time.sleep(1)
 
 		readNewParams(force=2)
-		U.logger.log(30, "START.. indigoServer IP:>>{}<<".format(G.ipOfServer) )
+		U.logger.log(20, "START.. indigoServer @ IP:>>{}<<".format(G.ipOfServer) )
 
 		if clearHostsFile: 
-			U.logger.log(30, "resetting file /home/pi/.ssh/known_hosts")
+			U.logger.log(20, "resetting file /home/pi/.ssh/known_hosts")
 			os.system("sudo rm /home/pi/.ssh/known_hosts")  
 
 		checkLogfiles()
@@ -1719,7 +1729,7 @@ def execMaster():
 
 		adhocWifiStarted = U.checkWhenAdhocWifistarted()
 
-		if G.wifiType == "adhoc": U.logger.log(30, "Master adhocWifi , master started at: {} ".format(adhocWifiStarted) )
+		if G.wifiType == "adhoc": U.logger.log(20, "Master adhocWifi , master started at: {} ".format(adhocWifiStarted) )
 		
 
 		os.system("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py")
@@ -1740,7 +1750,7 @@ def execMaster():
 					U.logger.log(30, "no ip number working, trying again, indigoServerOn:{}, ip:{}".format(indigoServerOn, G.ipAddress))
 				else:
 					U.clearNetwork()
-					U.logger.log(30, "ip number found  ip:{}".format(G.ipAddress))
+					U.logger.log(20, "ip number found  ip:{}".format(G.ipAddress))
 					break
 
 		else:
@@ -1758,7 +1768,7 @@ def execMaster():
 						U.logger.log(30, "no ip number working, trying again, indigoServerOn:{}, ip:{}".format(indigoServerOn, G.ipAddress))
 					else:
 						U.clearNetwork()
-						U.logger.log(30, "ip number found  ip:{}".format( G.ipAddress))
+						U.logger.log(20, "ip number found  ip:{}".format( G.ipAddress))
 						break
 	
 		readNewParams(force = 1)
@@ -1846,7 +1856,7 @@ def execMaster():
 							G.switchedToWifi = time.time()
 							indigoServerOn, changed, connected = U.getIPNumberMaster()
 				else: 
-					U.logger.log(30, "can ping indigo server at ip:>>{}<<".format(G.ipOfServer))
+					U.logger.log(20, "can ping indigo server at ip:>>{}<<".format(G.ipOfServer))
 					break
 				time.sleep(10)
 
@@ -1981,6 +1991,7 @@ def execMaster():
 		
 			if loopCount == 3: 
 				checkFSCHECKfile()
+
 
 			try:	
 				readNewParams()

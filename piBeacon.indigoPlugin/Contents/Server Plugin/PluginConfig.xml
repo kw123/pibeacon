@@ -221,13 +221,17 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         </List>    
 
    </Field>
-   
-   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, if blank use no security" >
-        <Label>userid for indigo webserver:</Label> 
+
+   <Field id="infoLabeluserID" type="label">
+        <Label>userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina</Label>
    </Field>
    
-   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver" >
-        <Label>password for indigo webserver:</Label> 
+   <Field id="userIDOfServer"   type="textfield" defaultValue="" tooltip="only used to make executabel work under catalina" >
+        <Label>userid for indigo server:</Label> 
+   </Field>
+   
+   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, also used to make executabel work under catalina" >
+        <Label>password for indigo (webserver):</Label> 
    </Field>
    <Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
         <List>

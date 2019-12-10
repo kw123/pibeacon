@@ -81,13 +81,13 @@ _HEALTH_STATUSES = {
 }
 
 
-class RPLidarException(Exception):
-	'''Basic exception class for RPLidar'''
-
 
 def _b2i(byte):
 	'''Converts byte to integer (for Python 2 compatability)'''
 	return byte if int(sys.version[0]) == 3 else ord(byte)
+
+class RPLidarException(Exception):
+	'''Basic exception class for RPLidar'''
 
 
 
@@ -238,7 +238,7 @@ class RPLidar(object):
 			descriptor = self._serial_port.read(DESCRIPTOR_LEN)
 			U.logger.log(10,'{}-Recieved descriptor: {}'.format(self.port,descriptor) )
 			if len(descriptor) != DESCRIPTOR_LEN:
-				raise RPLidarException('Descriptor length mismatch')
+				raise RPLidarException(' Descriptor length mismatch')
 			elif not descriptor.startswith(SYNC_BYTE + SYNC_BYTE2):
 				raise RPLidarException('{}-Incorrect descriptor starting bytes .. ok  first 2 calls '.format(self.port) )
 			is_single = _b2i(descriptor[-2]) == 0
@@ -450,7 +450,7 @@ def readParams():
 	global rawOld
 	global oldRaw, lastRead
 	global startTime
-	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerEmpty, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData
+	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData, doNotUseDataRanges, minSignalStrength
 	global sensorCLASS
 
 	try:
@@ -489,12 +489,14 @@ def readParams():
 			if devId not in contiguousDeltaValue:		contiguousDeltaValue[devId]		 	= 5
 			if devId not in anglesInOneBin:				anglesInOneBin[devId] 				= 2
 			if devId not in triggerLast:				triggerLast[devId] 					= 4
-			if devId not in triggerEmpty:				triggerEmpty[devId] 				= 5
+			if devId not in triggerCalibrated:			triggerCalibrated[devId] 			= 5
 			if devId not in sendToIndigoEvery:			sendToIndigoEvery[devId]			= 30
 			if devId not in lastAliveSend:				lastAliveSend[devId]				= time.time()
 			if devId not in measurementsNeededForCalib:	measurementsNeededForCalib[devId]	= -1
 			if devId not in usbPort:					usbPort[devId]						= -1
 			if devId not in sendPixelData:				sendPixelData[devId]				= True
+			if devId not in doNotUseDataRanges:			doNotUseDataRanges[devId]			= []
+			if devId not in minSignalStrength:			minSignalStrength[devId]			= []
 
 			try:
 				old = usbPort[devId]
@@ -505,8 +507,15 @@ def readParams():
 			if old !=-1 and usbPort[devId] != old : 
 				restart = True
 
+			try:
+				minSignalStrength[devId] = 14
+				if "minSignalStrength" in sensors[sensor][devId]: 
+					minSignalStrength[devId] = int(sensors[sensor][devId]["minSignalStrength"])
+			except: minSignalStrength[devId] = 14
+
 
 			try:
+				sendPixelData[devId] = True
 				if "sendPixelData" in sensors[sensor][devId]: 
 					sendPixelData[devId] = sensors[sensor][devId]["sendPixelData"] =="1"
 			except:	sendPixelData[devId] = True
@@ -517,7 +526,7 @@ def readParams():
 					measurementsNeededForCalib[devId] = int(sensors[sensor][devId]["measurementsNeededForCalib"])
 			except:	measurementsNeededForCalib[devId] = 6
 			if old !=-1 and old != measurementsNeededForCalib[devId]: 
-				os.remove(G.homeDir+"rdlidar.emptyRoom"+usbPortUsed[devId]+"> /dev/null 2>&1 ")
+				os.remove(G.homeDir+"rdlidar.calibrated"+usbPortUsed[devId]+"> /dev/null 2>&1 ")
 				restart = True
 
 			try:
@@ -528,11 +537,11 @@ def readParams():
 			if old != triggerLast[devId]: restart = True
 
 			try:
-				old = triggerEmpty[devId]
-				if "triggerEmpty" in sensors[sensor][devId]: 
-					triggerEmpty[devId] = float(sensors[sensor][devId]["triggerEmpty"])
-			except:	triggerEmpty[devId] = 5
-			if old != triggerEmpty[devId]: restart = True
+				old = triggerCalibrated[devId]
+				if "triggerCalibrated" in sensors[sensor][devId]: 
+					triggerCalibrated[devId] = float(sensors[sensor][devId]["triggerCalibrated"])
+			except:	triggerCalibrated[devId] = 5
+			if old != triggerCalibrated[devId]: restart = True
 
 			try:
 				old = sendToIndigoEvery[devId]
@@ -575,7 +584,19 @@ def readParams():
 					anglesInOneBin[devId] = int(sensors[sensor][devId]["anglesInOneBin"])
 			except:	anglesInOneBin[devId] = 2
 			if old != anglesInOneBin[devId]: restart = True
-			
+
+			try:
+				if "doNotUseDataRanges" in sensors[sensor][devId]: 
+					doNotUseDataRanges[devId] = []
+					if len(sensors[sensor][devId]["doNotUseDataRanges"]) > 2:
+						ddd = sensors[sensor][devId]["doNotUseDataRanges"].split(";")
+						for dd in ddd: 
+							if len(dd) > 2 and "-" in dd:
+								d = dd.split("-")
+								doNotUseDataRanges[devId].append([int(d[0]),int(d[1])])
+			except:	doNotUseDataRanges[devId] = []
+	
+		
 			if devId not in sensorCLASS  or restart:
 				if not startSensor(devId, restart = True) or sensorCLASS[devId] == "":
 					U.logger.log(30, u"{}-bad sensor start, stopping that sensor".format(usbPortUsed[devId]) )
@@ -602,7 +623,7 @@ def startSensor(devId, restart=False):
 	global sensors, sensor
 	global startTime
 	global sensorCLASS
-	global countMeasurements, calibrateEmptyRoom, usbPortUsed, usbPort, motorFrequency
+	global countMeasurements, calibratecalibrated, usbPortUsed, usbPort, motorFrequency
 	global quick, getRdlidarThreads
 	try:
 
@@ -672,7 +693,7 @@ def startSensor(devId, restart=False):
 
 			U.logger.log(20, u"thread started -{}".format(usbPortUsed[devId]))
 		else:
-			U.logger.log(20, u"getRdlidarThreads already on :{}".format(getRdlidarThreads,usbPortUsed[devId]))
+			U.logger.log(20, u"getRdlidarThreads already on :{}".format(usbPortUsed[devId]))
 		
 		getRdlidarThreads[devId]["state"] = "run"
 
@@ -689,293 +710,290 @@ def startSensor(devId, restart=False):
 def getValues(devId):
 	global sensor, sensors,	 sensorCLASS, badSensor
 	global startTimes
-	global countMeasurements, calibrateEmptyRoom
-	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerEmpty, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData
+	global countMeasurements, calibratecalibrated
+	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData, doNotUseDataRanges, minSignalStrength
 	global quick, getRdlidarThreads
 	global waitforMeasurements, measurementsNeededForCalib
 	
-	emptySend = False
+	calibratedSend = False
 
+	# skip errors that repeated > 100 secs, try again, exit if 2 in a row < 100 secs 
+	lastError = 0
+	lastAliveSend[devId] = time.time()
+	while  time.time() - lastError > 100:
+		lastError = time.time()
+		try:
+			ret = ""
+			useBins = int(360 / anglesInOneBin[devId])
+			calibratedBins = [0 for i in range(useBins)]
 
-	ret = ""
-	try:
-		useBins = int(360 / anglesInOneBin[devId])
-		emptyBins = [0 for i in range(useBins)]
+			U.logger.log(20, "{}- starting with params:\n========\nuseBins: {}; motorFrequency: {};  anglesInOneBin: {};  \ncontiguousDeltaValue: {};  nContiguousAngles: {};  \ntriggerLast:{};  triggerCalibrated:{};  sendToIndigoEvery:{}\n========".format( usbPortUsed[devId],
+					useBins, motorFrequency[devId], anglesInOneBin[devId], contiguousDeltaValue[devId], nContiguousAngles[devId], triggerLast[devId], triggerCalibrated[devId],sendToIndigoEvery[devId] ))
+			while getRdlidarThreads[devId]["state"] != "run":
+				if getRdlidarThreads[devId]["state"] == "stop": return 
+				time.sleep(1)
 
-		U.logger.log(20, "{}- starting with params:\n========\nuseBins: {}; motorFrequency: {};  anglesInOneBin: {};  \ncontiguousDeltaValue: {};  nContiguousAngles: {};  \ntriggerLast:{};  triggerEmpty:{};  sendToIndigoEvery:{}\n========".format( usbPortUsed[devId],
-				useBins, motorFrequency[devId], anglesInOneBin[devId], contiguousDeltaValue[devId], nContiguousAngles[devId], triggerLast[devId], triggerEmpty[devId],sendToIndigoEvery[devId] ))
-		while getRdlidarThreads[devId]["state"] != "run":
-			if getRdlidarThreads[devId]["state"] == "stop": wait
-			time.sleep(1)
-
-		if sensorCLASS[devId] =="": return
+			if sensorCLASS[devId] =="": return
 			 
-		countMeasurements[devId] = 0
+			countMeasurements[devId] = 0
 
-		values 			= []
-		entries 		= []
-		timeStamps		= []
-		nMeasKeep 		= max( 7,measurementsNeededForCalib[devId] +3)
-		nTriggerKeep 	= 6
-
-
-
-		for nn in range(nMeasKeep):
-			values.append(copy.copy(emptyBins))
-			entries.append(copy.copy(emptyBins))
-			timeStamps.append(time.time())
-
-		empty= ""
-		U.logger.log(20, "trying to read: {}rdlidar.emptyRoom-{}".format(G.homeDir,usbPortUsed[devId]) )
-		jObj, raw = U.readJson("{}rdlidar.emptyRoom-{}".format(G.homeDir,usbPortUsed[devId]) )
-		if raw !="" and "values" in jObj:
-			empty = jObj
-			aa = jObj["anglesInOneBin"] 
-			if devId not in aa or aa[devId] != anglesInOneBin[devId]: 
-				empty = ""
-		if empty !="":
-			U.logger.log(20, u"read old calibration file")
-			calibrateEmptyRoom[devId] = False
-		else:
-			U.logger.log(20, u"need new calibration, no old file found-{}".format(usbPortUsed[devId]) )
-			calibrateEmptyRoom[devId]= True
-
-		if empty !="": 
-			try:
-				if useBins != len(empty["values"]):
-					calibrateEmptyRoom[devId] = True
-				else:
-					values[0]  = copy.copy(empty["values"])
-					entries[0] = copy.copy(empty["entries"])
-			except:
-				values[0]  = copy.copy(emptyBins)
-				entries[0]  = copy.copy(emptyBins)
-				calibrateEmptyRoom[devId] = True
-		else:
-			calibrateEmptyRoom[devId] = True
+			values 			= []
+			entries 		= []
+			timeStamps		= []
+			nMeasKeep 		= max( 7,measurementsNeededForCalib[devId] +3)
+			nTriggerKeep 	= 6
 
 
-		trV0 = { "current":{}, "empty":{} }
-		trV0["current"]["nonZero"]	= 0
-		trV0["current"]["GT"] 		= {"totalCount":0, "totalSum":0, "sections":[]}
-		trV0["current"]["LT"] 		= {"totalCount":0, "totalSum":0, "sections":[]}
-		trV0["empty"]["nonZero"]	= 0
-		trV0["empty"]["GT"]   		= {"totalCount":0, "totalSum":0, "sections":[]}
-		trV0["empty"]["LT"]  		= {"totalCount":0, "totalSum":0, "sections":[]} 
-		trV0["empty"]["LT"]  		= {"totalCount":0, "totalSum":0, "sections":[]}
-		trV =[]
-		for nn in range(nTriggerKeep+1):
-			trV.append(copy.copy(trV0)) 
+
+			for nn in range(nMeasKeep):
+				values.append(copy.copy(calibratedBins))
+				entries.append(copy.copy(calibratedBins))
+				timeStamps.append(time.time())
+
+			calibrated= ""
+			U.logger.log(20, "trying to read: {}rdlidar.calibrated-{}".format(G.homeDir,usbPortUsed[devId]) )
+			jObj, raw = U.readJson("{}rdlidar.calibrated-{}".format(G.homeDir,usbPortUsed[devId]) )
+			if raw !="" and "values" in jObj:
+				calibrated = jObj
+				aa = jObj["anglesInOneBin"] 
+				if devId not in aa or aa[devId] != anglesInOneBin[devId]: 
+					calibrated = ""
+			if calibrated !="":
+				U.logger.log(20, u"read old calibration file")
+				calibratecalibrated[devId] = False
+			else:
+				U.logger.log(20, u"need new calibration, no old file found-{}".format(usbPortUsed[devId]) )
+				calibratecalibrated[devId]= True
 
 
-		tStart		= time.time()
-		loopCount 	= 0
-		for measurments in sensorCLASS[devId].iter_scans():
-			loopCount +=1
-			if getRdlidarThreads[devId]["state"] == "wait": 
-				time.sleep(0.2)
-				continue 
-			if getRdlidarThreads[devId]["state"] == "stop": break 
+			trV0 = { "current":{}, "calibrated":{} }
+			trV0["current"]["nonZero"]	= 0
+			trV0["current"]["GT"] 		= {"totalCount":0, "totalSum":0, "sections":[]}
+			trV0["current"]["LT"] 		= {"totalCount":0, "totalSum":0, "sections":[]}
+			trV0["calibrated"]["nonZero"]	= 0
+			trV0["calibrated"]["GT"]   		= {"totalCount":0, "totalSum":0, "sections":[]}
+			trV0["calibrated"]["LT"]  		= {"totalCount":0, "totalSum":0, "sections":[]} 
+			trV0["calibrated"]["LT"]  		= {"totalCount":0, "totalSum":0, "sections":[]}
+			trV =[]
+			for nn in range(nTriggerKeep+1):
+				trV.append(copy.copy(trV0)) 
+
+
+
+			if calibrated !="": 
+				try:
+					if useBins != len(calibrated["values"]):
+						calibratecalibrated[devId] = True
+					else:
+						values[0]  = copy.copy(calibrated["values"])
+						entries[0] = copy.copy(calibrated["entries"])
+				except:
+					values[0]  = copy.copy(calibratedBins)
+					entries[0]  = copy.copy(calibratedBins)
+					calibratecalibrated[devId] = True
+				trV[0]["calibrated"]["nonZero"]	= useBins - entries[0].count(0)
+			else:
+				calibratecalibrated[devId] = True
+
+
+
+			tStart		= time.time()
+			loopCount 	= 0
+			for measurments in sensorCLASS[devId].iter_scans():
+				loopCount +=1
+				if getRdlidarThreads[devId]["state"] == "wait": 
+					time.sleep(0.2)
+					continue 
+				if getRdlidarThreads[devId]["state"] == "stop": break 
 			
 				
-			values.append(copy.copy(emptyBins))
-			entries.append(copy.copy(emptyBins))
-			timeStamps.append(time.time())
-			del values[1]
-			del entries[1]
-			del timeStamps[1]
+				values.append(copy.copy(calibratedBins))
+				entries.append(copy.copy(calibratedBins))
+				timeStamps.append(time.time())
+				del values[1]
+				del entries[1]
+				del timeStamps[1]
 
-			ss = sorted(measurments, key = lambda x: x[1])
-			nM = len(measurments)
-			countNotEmptyBins = 0
-			# combine bins, pick only good signal values
-			for ok, phi, v in ss:
-				try:
-					if ok < 14: 	continue # dont use weak signals
-					bin = min(useBins-1,int(phi/anglesInOneBin[devId]))
-					values[-1][bin] += float(v)
-					entries[-1][bin] += 1
-				except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}, bin:{}, entries:{} --{}".format(sys.exc_traceback.tb_lineno, e,bin, entries,  usbPortUsed[devId]))
-
-			for ii in range(useBins):
-				values[-1][ii]  = int( values[-1][ii]/max(1.,entries[-1][ii]))
-
-			countNotEmptyBins = useBins - entries[-1].count(0)
-			upD			= {"current":0,"empty":0}
-			deltaValues	= {"current":copy.copy(emptyBins),"empty": copy.copy(emptyBins)}
-			#U.logger.log(20, u"1---tv:{}".format(tv))
-			kk = 0
-			kki= 0
-			try:
-				for mm in range(nTriggerKeep):
-					nn = - (1 + mm)
-					deltaList = {"current":[],"empty":[]}
-					upD		  = {"current":0, "empty":0}
-					trV[nn] = copy.deepcopy(trV0)
-					trV[nn]["current"]["nonZero"] = useBins-(entries[nn]).count(0)
-					for kk in ["current","empty"]:
-						if kk =="current":	kki = -1
-						else:			 	kki = 0 
-						if nn == 1 and kk =="current": continue
-						deltaList[kk] 	= []
-						upD[kk] 		= 0
-						for ii in range(useBins):
-							if entries[-1][ii] > 0 and entries[nn][ii] >0 and entries[0][ii] >0:	
-								deltaValues[kk][ii] = 100*(values[kki][ii] - values[nn][ii]) / max(1.,values[kki][ii] + values[nn][ii])
-
-								if abs( deltaValues[kk][ii] ) >  contiguousDeltaValue[devId]:
-									#U.logger.log(20, " {}; delta: {}; contiguousDeltaValue: {}".format(kk, delta, contiguousDeltaValue) )
-									if deltaValues[kk][ii] > 0:
-										if  upD[kk] != -1:
-											deltaList[kk].append( deltaValues[kk][ii] )
-											if len(deltaList[kk]) >= nContiguousAngles[devId]:
-												if upD[kk] == +1:	
-													trV[nn][kk]["GT"]["totalCount"]   		    += 1 
-													trV[nn][kk]["GT"]["totalSum"]   		  	+= int(deltaValues[kk][ii]) 
-													trV[nn][kk]["GT"]["sections"][-1]["bins"][1] = ii
-													trV[nn][kk]["GT"]["sections"][-1]["sum"]    += int(deltaValues[kk][ii])
-												else:	
-													trV[nn][kk]["GT"]["totalSum"]   += int(sum(deltaList[kk]))
-													trV[nn][kk]["GT"]["totalCount"] += nContiguousAngles[devId]
-													trV[nn][kk]["GT"]["sections"].append(  {"bins":[max(0,ii-nContiguousAngles[devId]-1),ii], "sum":int(sum(deltaList[kk]))} )
-													#U.logger.log(20, u"adding section: loopCount:{};  kk{}, kki{}, nn:{}, ii:{}; len(trv):{};  trV {} ".format(loopCount, kk, kki, nn, ii, len(trV[nn][kk]["GT"]["sections"]), trV[nn][kk]["GT"]))
-												upD[kk] = +1
-										else:
-											deltaList[kk] 	= []
-											upD[kk] 		= 0
-
-									if deltaValues[kk][ii] < 0:
-										if upD[kk] != +1:
-											deltaList[kk].append( deltaValues[kk][ii] )
-											if len(deltaList[kk]) >= nContiguousAngles[devId]:
-												if upD[kk] == -1:	
-													trV[nn][kk]["LT"]["totalCount"]   		    += 1 
-													trV[nn][kk]["LT"]["totalSum"]   			+= int(deltaValues[kk][ii]) 
-													trV[nn][kk]["LT"]["sections"][-1]["bins"][1] = ii
-													trV[nn][kk]["LT"]["sections"][-1]["sum"]    += int(deltaValues[kk][ii])
-												else:				
-													trV[nn][kk]["LT"]["totalCount"] += nContiguousAngles[devId]
-													trV[nn][kk]["LT"]["totalSum"]   += int(sum(deltaList[kk]))
-													trV[nn][kk]["LT"]["sections"].append(  {"bins":[max(0,ii-nContiguousAngles[devId]-1),ii], "sum":int(sum(deltaList[kk]))} )
-													#U.logger.log(20, u"adding section: loopCount:{};  kk{}, kki{}, nn:{}, ii:{}; len(trv):{};  trV {} ".format(loopCount, kk, kki, nn, ii, len(trV[nn][kk]["LT"]["sections"]), trV[nn][kk]["LT"]))
-												upD[kk] = -1
-										else:
-											deltaList[kk] 	= []
-											upD[kk] 		= 0
-
-								
-								else:
-									deltaList[kk] 	= []
-									upD[kk] 		= 0
-					trV[nn]["empty"]["nonZero"] = trV[0]["empty"]["nonZero"]	
-			except	Exception, e:
-				U.logger.log(20, u"in Line {} has error={} --{}".format(sys.exc_traceback.tb_lineno, e,  usbPortUsed[devId]))
-				U.logger.log(20, u"trV {} kk{}, kki{}, nn:{}".format(trV, kk, kki, nn))
-				
-
-			countMeasurements[devId] +=1
-			##### check if calibration mode ##############
-			#U.logger.log(20,"countMeasurements: {};  waitforMeasurements: {};  calibrateEmptyRoom: {}".format(countMeasurements[devId], waitforMeasurements, calibrateEmptyRoom[devId]))
-			if countMeasurements[devId] >= waitforMeasurements and calibrateEmptyRoom[devId]:
-				if countMeasurements[devId] == waitforMeasurements: # start calib
-					accumV = copy.copy(emptyBins)
-					countC = copy.copy(emptyBins)
-					nMeas =0
+				ss = sorted(measurments, key = lambda x: x[1])
+				nM = len(measurments)
+				countNotcalibratedBins = 0
+				# combine bins, pick only good signal values
+				for ok, phi, v in ss:
+					try:
+						if ok < minSignalStrength[devId]: 	continue # dont use weak signals
+						bin = min(useBins-1,int(phi/anglesInOneBin[devId]))
+						values[-1][bin] += float(v)
+						entries[-1][bin] += 1
+					except	Exception, e:
+						U.logger.log(30, u"in Line {} has error={}, bin:{}, entries:{} --{}".format(sys.exc_traceback.tb_lineno, e,bin, entries,  usbPortUsed[devId]))
 
 				for ii in range(useBins):
-					accumV[ii] += values[-1][ii]
-					if values[-1][ii] > 0: countC[ii] += 1
-				nMeas +=1
+					values[-1][ii]  = int( values[-1][ii]/max(1.,entries[-1][ii]))
 
-				if countMeasurements[devId] >= waitforMeasurements + measurementsNeededForCalib[devId]: # finished calib
-					calibrateEmptyRoom[devId] = False
+				countNotcalibratedBins = useBins - entries[-1].count(0)
+				upD			= {"current":0,"calibrated":0}
+				deltaValues	= {"current":copy.copy(calibratedBins),"calibrated": copy.copy(calibratedBins)}
+				#U.logger.log(20, u"1---tv:{}".format(tv))
+				kk = 0
+				kki= 0
+				try:
+					for mm in range(nTriggerKeep):
+						nn = - (1 + mm)
+						deltaList = {"current":[],"calibrated":[]}
+						upD		  = {"current":0, "calibrated":0}
+						trV[nn] = copy.deepcopy(trV0)
+						trV[nn]["current"]["nonZero"] = useBins-(entries[nn]).count(0)
+						for kk in ["current","calibrated"]:
+							if kk =="current":	kki = -1
+							else:			 	kki = 0 
+							if nn == 1 and kk =="current": continue
+							deltaList[kk] 	= []
+							upD[kk] 		= 0
+							for ii in range(useBins):
+
+								## exclude data form bin ranges for triggers:
+								try:
+									use = True
+									for dd in doNotUseDataRanges[devId]: # [[notFrom#1,notTo#1],[notFrom#2,notTo#2],..]
+										if ii > dd[0] and ii < dd[1]: 
+											use = False
+											break
+								except: 
+									use = True
+
+								if use and entries[-1][ii] > 0 and entries[nn][ii] >0 and entries[0][ii] >0:	
+									deltaValues[kk][ii] = 100*(values[kki][ii] - values[nn][ii]) / max(1.,values[kki][ii] + values[nn][ii])
+
+									if abs( deltaValues[kk][ii] ) >  contiguousDeltaValue[devId]:
+										#U.logger.log(20, " {}; delta: {}; contiguousDeltaValue: {}".format(kk, delta, contiguousDeltaValue) )
+										if deltaValues[kk][ii] > 0:
+											if  upD[kk] != -1:
+												deltaList[kk].append( deltaValues[kk][ii] )
+												if len(deltaList[kk]) >= nContiguousAngles[devId]:
+													if upD[kk] == +1:	
+														trV[nn][kk]["GT"]["totalCount"]   		    += 1 
+														trV[nn][kk]["GT"]["totalSum"]   		  	+= int(deltaValues[kk][ii]) 
+														trV[nn][kk]["GT"]["sections"][-1]["bins"][1] = ii
+														trV[nn][kk]["GT"]["sections"][-1]["sum"]    += int(deltaValues[kk][ii])
+													else:	
+														trV[nn][kk]["GT"]["totalSum"]   += int(sum(deltaList[kk]))
+														trV[nn][kk]["GT"]["totalCount"] += nContiguousAngles[devId]
+														trV[nn][kk]["GT"]["sections"].append(  {"bins":[max(0,ii-nContiguousAngles[devId]-1),ii], "sum":int(sum(deltaList[kk]))} )
+														#U.logger.log(20, u"adding section: loopCount:{};  kk{}, kki{}, nn:{}, ii:{}; len(trv):{};  trV {} ".format(loopCount, kk, kki, nn, ii, len(trV[nn][kk]["GT"]["sections"]), trV[nn][kk]["GT"]))
+													upD[kk] = +1
+											else:
+												deltaList[kk] 	= []
+												upD[kk] 		= 0
+
+										if deltaValues[kk][ii] < 0:
+											if upD[kk] != +1:
+												deltaList[kk].append( deltaValues[kk][ii] )
+												if len(deltaList[kk]) >= nContiguousAngles[devId]:
+													if upD[kk] == -1:	
+														trV[nn][kk]["LT"]["totalCount"]   		    += 1 
+														trV[nn][kk]["LT"]["totalSum"]   			+= int(deltaValues[kk][ii]) 
+														trV[nn][kk]["LT"]["sections"][-1]["bins"][1] = ii
+														trV[nn][kk]["LT"]["sections"][-1]["sum"]    += int(deltaValues[kk][ii])
+													else:				
+														trV[nn][kk]["LT"]["totalCount"] += nContiguousAngles[devId]
+														trV[nn][kk]["LT"]["totalSum"]   += int(sum(deltaList[kk]))
+														trV[nn][kk]["LT"]["sections"].append(  {"bins":[max(0,ii-nContiguousAngles[devId]-1),ii], "sum":int(sum(deltaList[kk]))} )
+														#U.logger.log(20, u"adding section: loopCount:{};  kk{}, kki{}, nn:{}, ii:{}; len(trv):{};  trV {} ".format(loopCount, kk, kki, nn, ii, len(trV[nn][kk]["LT"]["sections"]), trV[nn][kk]["LT"]))
+													upD[kk] = -1
+											else:
+												deltaList[kk] 	= []
+												upD[kk] 		= 0
+
+								
+									else:
+										deltaList[kk] 	= []
+										upD[kk] 		= 0
+						trV[nn]["calibrated"]["nonZero"] = trV[0]["calibrated"]["nonZero"]	
+				except	Exception, e:
+					U.logger.log(20, u"in Line {} has error={} --{}".format(sys.exc_traceback.tb_lineno, e,  usbPortUsed[devId]))
+					U.logger.log(20, u"trV {} kk{}, kki{}, nn:{}".format(trV, kk, kki, nn))
+				
+
+				countMeasurements[devId] +=1
+				##### check if calibration mode ##############
+				#U.logger.log(20,"countMeasurements: {};  waitforMeasurements: {};  calibratecalibrated: {}".format(countMeasurements[devId], waitforMeasurements, calibratecalibrated[devId]))
+				if countMeasurements[devId] >= waitforMeasurements and calibratecalibrated[devId]:
+					if countMeasurements[devId] == waitforMeasurements: # start calib
+						accumV = copy.copy(calibratedBins)
+						countC = copy.copy(calibratedBins)
+						nMeas =0
+
 					for ii in range(useBins):
-						accumV[ii] = int(accumV[ii]/max(1,countC[ii]))
-						countC[ii] = int(countC[ii])
+						accumV[ii] += values[-1][ii]
+						if values[-1][ii] > 0: countC[ii] += 1
+					nMeas +=1
 
-					values[0]  	= copy.copy(accumV)
-					entries[0] 	= copy.copy(countC)
-					trV[0]["empty"]["nonZero"] = useBins-(entries[0]).count(0)
-					U.logger.log(20,"{}-created new empty room calibration file bins with empty bins: {} out of: {}, nMeas:{}; req:{}".format( usbPortUsed[devId], accumV.count(0), len(accumV), nMeas, measurementsNeededForCalib[devId]))
-					U.writeJson(G.homeDir+"rdlidar.emptyRoom-"+usbPortUsed[devId], {"values":values[0], "entries":entries[0], "anglesInOneBin":anglesInOneBin, "nMeas":nMeas})
-					emptySend = False
-					##### calibration ended         ##############
-			##### check if calibration mode ##############  END
+					if countMeasurements[devId] >= waitforMeasurements + measurementsNeededForCalib[devId]: # finished calib
+						calibratecalibrated[devId] = False
+						for ii in range(useBins):
+							accumV[ii] = int(accumV[ii]/max(1,countC[ii]))
+							countC[ii] = int(countC[ii])
+
+						values[0]  	= copy.copy(accumV)
+						entries[0] 	= copy.copy(countC)
+						trV[0]["calibrated"]["nonZero"] = useBins-(entries[0]).count(0)
+						U.logger.log(20,"{}-created new calibrated room calibration file bins with zero bins: {} out of: {}, nMeas:{}; req:{}".format( usbPortUsed[devId], accumV.count(0), len(accumV), nMeas, measurementsNeededForCalib[devId]))
+						U.writeJson(G.homeDir+"rdlidar.calibrated-"+usbPortUsed[devId], {"values":values[0], "entries":entries[0], "anglesInOneBin":anglesInOneBin, "nMeas":nMeas})
+						calibratedSend = False
+						##### calibration ended         ##############
+				##### check if calibration mode ##############  END
 
 
-			test = 0; test0 = 0
-			if not calibrateEmptyRoom[devId] and loopCount > 20:
-				test0 =  (time.time() - lastAliveSend[devId]) > minSendDelta[devId] 
+				test = 0; test0 = 0
+				if not calibratecalibrated[devId] and loopCount > 20:
+					test0 =  (time.time() - lastAliveSend[devId]) > minSendDelta[devId] 
 
-				if test0:
-					maxAllValue	= {"current":-1, "empty":-1}
-					maxAllind 	= {"current":-1, "empty":-1}
-					for ce in ["current", "empty"]:
-						for lg in ["LT","GT"]:
-							for nn in range(nTriggerKeep):
-								ii = -(1+nn) 
-								if trV[ii][ce][lg]["totalCount"] > maxAllValue[ce]:
-									maxAllValue[ce] = trV[ii][ce][lg]["totalCount"]
-									maxAllind[ce] = ii
+					if test0:
+						maxAllValue	= {"current":-1, "calibrated":-1}
+						maxAllind 	= {"current":-1, "calibrated":-1}
+						for ce in ["current", "calibrated"]:
+							for lg in ["LT","GT"]:
+								for nn in range(nTriggerKeep):
+									ii = -(1+nn) 
+									if trV[ii][ce][lg]["totalCount"] > maxAllValue[ce]:
+										maxAllValue[ce] = trV[ii][ce][lg]["totalCount"]
+										maxAllind[ce] = ii
 
-					test =			maxAllValue["current"] > triggerLast[devId]
-					test = test or (time.time() - sendToIndigoEvery[devId]) > lastAliveSend[devId]
-					test = test or  quick
+						test =			maxAllValue["current"] > triggerLast[devId]
+						test = test or (time.time() - sendToIndigoEvery[devId]) > lastAliveSend[devId]
+						test = test or  quick
 	
 
-					if  test:
-						data = {"triggerValues": 
-								{"current":trV[maxAllind["current"]]["current"], 
-								"empty":trV[maxAllind["empty"]]["empty"] ,
-								"nBins":useBins, 
-								"port":usbPortUsed[devId],
-								"anglesInOneBin":anglesInOneBin,
-								"dTime_Last-Current": round(timeStamps[maxAllind["current"]] - timeStamps[-1],2),
-								"dIndex_Last-Current": -maxAllind["current"] } }
-						if sendPixelData[devId]:
-							if not emptySend:
-								data["empty"] 	= values[0]
-								emptySend = True
-							data["current"] = values[-1]
-							data["last"] 	= values[maxAllind["current"]]
-						U.sendURL( {"sensors":{sensor:{devId:data}}} )
-						lastAliveSend[devId] = time.time()
-						# keep last send trigger values
+						if  test:
+							data = {"triggerValues": 
+									{"current": trV[maxAllind["current"]]["current"], 
+									"calibrated": trV[maxAllind["calibrated"]]["calibrated"] ,
+									"nBins": useBins, 
+									"port": usbPortUsed[devId],
+									"dTime_Last-Current": round(timeStamps[maxAllind["current"]] - timeStamps[-1],2),
+									"dIndex_Last-Current": -maxAllind["current"] } }
+							if sendPixelData[devId]:
+								if not calibratedSend:
+									data["calibrated"] 	= values[0]
+									calibratedSend = True
+								data["current"] = values[-1]
+								data["last"] 	= values[maxAllind["current"]]
+							U.sendURL( {"sensors":{sensor:{devId:data}}} )
+							lastAliveSend[devId] = time.time()
+							# keep last send trigger values
 
-						if False: U.logger.log(20,"{}-maxAllValue:{};  maxAllind:{}\ntrV E gt:{}; lt:{}".format( usbPortUsed[devId], maxAllValue, maxAllind, trV[maxAllind["empty"]]["empty"]["GT"], trV[maxAllind["empty"]]["empty"]["LT"]) )
-					U.echoLastAlive(G.program)
+							if False: U.logger.log(20,"{}-maxAllValue:{};  maxAllind:{}\ntrV E gt:{}; lt:{}".format( usbPortUsed[devId], maxAllValue, maxAllind, trV[maxAllind["calibrated"]]["calibrated"]["GT"], trV[maxAllind["calibrated"]]["calibrated"]["LT"]) )
+						U.echoLastAlive(G.program)
 
-			if False:
-				U.logger.log(20, "{}-testifSend:{};{};  dT:{:6.1f};  nM :{:3d}; nE: {:3d};   DELTA  Cont- L-GT: {};  L-LT: {};  E-GT: {};  E-LT: {}, trgEmpty:{};  trgLast:{}".format(
-					 usbPortUsed[devId],test,test0, time.time() - tStart, nM, countNotEmptyBins, trV[-1]["current"]["GT"], trV[-1]["current"]["LT"], trV[-1]["empty"]["GT"], trV[-1]["empty"]["LT"],  triggerEmpty[devId], triggerLast[devId] )
-				 )
-		U.logger.log(30, u"{}-exit getsensor due error in iter_measurments".format({ usbPortUsed[devId]}))
-		lastAliveSend[devId]  = 0
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				if False:
+					U.logger.log(20, "{}-testifSend:{};{};  dT:{:6.1f};  nM :{:3d}; nE: {:3d};   DELTA  Cont- L-GT: {};  L-LT: {};  E-GT: {};  E-LT: {}, trgcalibrated:{};  trgLast:{}".format(
+						 usbPortUsed[devId],test,test0, time.time() - tStart, nM, countNotcalibratedBins, trV[-1]["current"]["GT"], trV[-1]["current"]["LT"], trV[-1]["calibrated"]["GT"], trV[-1]["calibrated"]["LT"],  triggerCalibrated[devId], triggerLast[devId] )
+					 )
+		except	Exception, e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	U.logger.log(30, u"{}-exit getsensor due error in iter_measurments".format({ usbPortUsed[devId]}))
+	lastAliveSend[devId]  = 0
 	return 
-"""
-			if not calibrateEmptyRoom[devId]:
-				test =			trV[-1]["current"]["GT"]["totalCount"]  											> triggerLast[devId]
-				test = test or 	trV[-1]["current"]["LT"]["totalCount"]  											> triggerLast[devId]
-				test = test or	abs(trV[-1]["empty"]["GT"]["totalCount"]  - trV[-2]["empty"]["GT"]["totalCount"] ) > triggerEmpty[devId] 
-				test = test or	abs(trV[-1]["empty"]["LT"]["totalCount"]  - trV[-2]["empty"]["LT"]["totalCount"] ) > triggerEmpty[devId]  
-				test = test or	time.time() - abs(sendToIndigoEvery[devId]) > lastAliveSend[devId]  
-				test = test or	quick  
-				test = test and time.time() - lastAliveSend[devId] > minSendDelta[devId] 
-					
-
-				if  test:
-					data = {"triggerValues": trV[-1]}
-					data["anglesInOneBin"] = anglesInOneBin
-					data["empty"] 	= values[0]
-					data["current"] = values[-1]
-					data["last"] 	= values[-2]
-					U.sendURL( {"sensors":{sensor:{devId:data}}} )
-					lastAliveSend[devId] = time.time()
-					# keep last send trigger values
-"""
 
 
 
@@ -987,10 +1005,12 @@ global sensorCLASS
 global oldRaw, lastRead
 global startTime
 global quick, getRdlidarThreads
-global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerEmpty, sendToIndigoEvery, lastAliveSend,minSendDelta, usbPortUsed, sendPixelData
-global calibrateEmptyRoom
+global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend,minSendDelta, usbPortUsed, sendPixelData, doNotUseDataRanges, minSignalStrength
+global calibratecalibrated
 global countMeasurements, waitforMeasurements,	measurementsNeededForCalib
 
+minSignalStrength			= {}
+doNotUseDataRanges			= {}
 sendPixelData				= {}
 usbPort						= {}
 usbPortUsed					= {}
@@ -1001,11 +1021,11 @@ nContiguousAngles			= {}
 contiguousDeltaValue 		= {}
 anglesInOneBin 				= {}
 triggerLast 				= {}
-triggerEmpty 				= {}
+triggerCalibrated 				= {}
 sendToIndigoEvery 			= {}
 lastAliveSend				= {}
 minSendDelta				= {}	
-calibrateEmptyRoom			= {}
+calibratecalibrated			= {}
 countMeasurements			= {}
 
 getRdlidarThreads			={}
@@ -1074,9 +1094,9 @@ while True:
 					U.restartMyself(reason=" rdlidar data acquisition seems to hang", delay= 20)
 
 		if U.checkNewCalibration(G.program):
-			U.logger.log(30, u"starting with new empty room data calibration")
-			for devId in calibrateEmptyRoom:
-				calibrateEmptyRoom[devId] = True
+			U.logger.log(30, u"starting with new calibrated room data calibration")
+			for devId in calibratecalibrated:
+				calibratecalibrated[devId] = True
 				countMeasurements[devId]  = 0
 
 		time.sleep(loopSleep)
