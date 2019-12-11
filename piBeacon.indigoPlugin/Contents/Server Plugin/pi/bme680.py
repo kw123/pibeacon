@@ -956,7 +956,7 @@ def startSensor(devId,i2cAddress):
 	BMEsensor[devId].set_filter(FILTER_SIZE_3)
 	BMEsensor[devId].set_gas_status(ENABLE_GAS_MEAS)
 
-	U.logger.log(30,"\n\nInitial reading:")
+	U.logger.log(20,"\n\nInitial reading:")
 	for name in dir(BMEsensor[devId].data):
 		value = getattr(BMEsensor[devId].data, name)
 

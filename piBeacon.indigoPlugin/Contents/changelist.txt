@@ -1,9 +1,24 @@
+Added features / changes in v7.115.326 @ 2019-12-11
+===================================================
+
+1. added states to sensor devices:
+    eg TemperatureChange10Minutes shows the delta temperature now - 10 minutes ago
+    available for  Temperature, humidity, pressure, airquality, CO2, VOC
+    each has 3 states eg 5 minutes/1 hours /12 hours or 10 minutes /1 hour /6 hours ..
+    depending of how which timing makes sense: for co2 and airquaility you want to have fast reaction time (=5 minutes), 
+    for temperature and humidity 10 miutes is fine ..
+    In addition you still have min / max today and yesterday
+
+
+
+
 
 Added features / changes in v7.114.326 @ 2019-12-09
 ===================================================
 
 1. improved rd-lidar sensor:
    - 1. option to exclude certain angles from being used in move trigger
+   option to exclude certain angles from being used in move trigger
 
 2. fix bug: i2c state in RPi, number were wrong for Hex > 20
 

@@ -6478,7 +6478,7 @@ class Plugin(indigo.PluginBase):
 				for iii in range(200):
 					if u"%%v:" not in cmds and "%%d:" not in cmds and "%%eval:" not in cmds and "%%FtoC:" not in cmds: break
 					cmds= self.convertVariableOrDeviceStateToText(self.convertVariableOrDeviceStateToText(cmds))
-				if self.decideMyLog(u"Special"): self.indiLOG.log(20, "tries:{}; input:{}\n result:{}".format(iii, vd[u"command"], cmds) )
+				#if self.decideMyLog(u"Special"): self.indiLOG.log(20, "tries:{}; input:{}\n result:{}".format(iii, vd[u"command"], cmds) )
 
 				if cmds .find(u"[{'") ==0: #  this will not work for json  replace ' with " as text delimiters and save any " 
 					cmds = cmds.replace(u"'","aa123xxx123xxxaa").replace('"',"'").replace(u"aa123xxx123xxxaa",'"')
@@ -10398,7 +10398,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			if stateName not in _GlobalConst_fillMinMaxStates: return 
 			if stateName in dev.states and stateName+u"MaxToday" in dev.states:
-				if self.decideMyLog(u"Special"): self.indiLOG.log(10, u"fillMinMaxSensors "+dev.name+"  "+stateName+";  newV= "+unicode(value)+";  in dev.states= "+unicode(dev.states[stateName])+"  dec_pl="+ unicode(decimalPlaces) )
+				#if self.decideMyLog(u"Special"): self.indiLOG.log(10, u"fillMinMaxSensors "+dev.name+"  "+stateName+";  newV= "+unicode(value)+";  in dev.states= "+unicode(dev.states[stateName])+"  dec_pl="+ unicode(decimalPlaces) )
 				val = float(value)
 				if val > float(dev.states[stateName+u"MaxToday"]):
 					self.addToStatesUpdateDict(unicode(dev.id),stateName+u"MaxToday",	 val, decimalPlaces=decimalPlaces)
@@ -11001,7 +11001,7 @@ class Plugin(indigo.PluginBase):
 			if stateName in varJson:
 				###self.indiLOG.log(20, u"updateStateIf : "+statename+"  "+ unicode(varJson[statename]))
 				if deviceStateName =="Temperature": 
-					x, UI, decimalPlaces  = self.convTemp(varJson[stateName])
+					x, UI, decimalPlaces, useFormat = self.convTemp(varJson[stateName])
 				else: 
 					x, UI, decimalPlaces  =  varJson[stateName], varJson[stateName], 1
 				self.setStatusCol( dev, deviceStateName, x, UI, "", "",{})
@@ -11515,6 +11515,7 @@ class Plugin(indigo.PluginBase):
 
 				devUpdate = {}
 				for devIds in sensors[sensor]:
+					updateProps = False
 					devUpdate[devIds] = True
 					try:
 						try:	devId = int(devIds)
@@ -11573,8 +11574,14 @@ class Plugin(indigo.PluginBase):
 							data["illuminance"] = float(data["green"])*6.83
 						self.updateRGB(dev, data, whichKeysToDisplay, dispType=4)
 						if u"temp" in data:
-							x, UI, decimalPlaces  = self.convTemp(data["temp"])
+							x, UI, decimalPlaces, useFormat  = self.convTemp(data["temp"])
 							self.addToStatesUpdateDict(unicode(dev.id),u"temperature", x, decimalPlaces=decimalPlaces)
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+							if updateProps: 
+								props[doUpdate[0]] = doUpdate[1]
+								self.deviceStopCommIgnore = time.time()
+								dev.replacePluginPropsOnServer(props)
+
 						if u"LEDcurrent" in data:
 							self.addToStatesUpdateDict(unicode(dev.id),u"LEDcurrent", data["LEDcurrent"], decimalPlaces=1)
 						continue
@@ -11694,7 +11701,7 @@ class Plugin(indigo.PluginBase):
 						continue
 
 					elif dev.deviceTypeId == "BLEsensor":
-						self.updateBLEsensor(dev,data,whichKeysToDisplay,pi)
+						self.updateBLEsensor(dev,data,props,whichKeysToDisplay,pi)
 						continue
 
 					elif dev.deviceTypeId == "ina219":
@@ -11750,6 +11757,7 @@ class Plugin(indigo.PluginBase):
 					if sensor =="pmairquality":
 						self.updatePMAIRQUALITY(dev,data,whichKeysToDisplay)
 						continue
+
 					if sensor =="launchpgm":
 						st = data[u"status"]
 						self.addToStatesUpdateDict(unicode(dev.id), "status", st)
@@ -11767,8 +11775,13 @@ class Plugin(indigo.PluginBase):
 						try:
 							x, UI  = int(float(data[u"CO2"])),  u"CO2 %d[ppm] "%(float(data[u"CO2"]))
 							newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate =  self.updateChangedValues(dev, x, props, "CO2", "{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 							x, UI  = int(float(data[u"VOC"])),  u"VOC %d[ppb]"%(float(data[u"VOC"]))
 							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "VOC", "{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
 						except Exception, e:
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							self.indiLOG.log(20, unicode(props))
@@ -11815,7 +11828,10 @@ class Plugin(indigo.PluginBase):
 					if sensor in["mhzCO2"]:
 						try:
 							x, UI  = int(float(data[u"CO2"])),  u"CO2 %d[ppm] "%(float(data[u"CO2"]))
-							newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							newStatus   = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "CO2", "{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
 							if abs( float(dev.states["CO2offset"]) - float(data[u"CO2offset"])	) > 1: 
 								self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 							self.addToStatesUpdateDict(unicode(dev.id),"calibration", data[u"calibration"]) 
@@ -11824,24 +11840,60 @@ class Plugin(indigo.PluginBase):
 						except Exception, e:
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							self.indiLOG.log(40, unicode(props))
-						continue
 
 
 					if u"hum" in data:
 						hum= data[u"hum"]
 						x, UI, decimalPlaces  = self.convHum(hum)
 						newStatus = self.setStatusCol( dev, u"Humidity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
+						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "Humidity", "{:d}%", whichKeysToDisplay, decimalPlaces)
+						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 
 					if u"temp" in data:
 						temp = data[u"temp"]
-						x, UI, decimalPlaces = self.convTemp(temp)
+						x, UI, decimalPlaces, useFormat = self.convTemp(temp)
 						newStatus = self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces )
+						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 					if u"AmbientTemperature" in data:
 						temp = data[u"AmbientTemperature"]
-						x, UI, decimalPlaces  = self.convTemp(temp)
+						x, UI, decimalPlaces, useFormat  = self.convTemp(temp)
 						newStatus = self.setStatusCol( dev, u"AmbientTemperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces)
+
+
+					if u"press" in data:
+						newStatus, updateProps0, doUpdate = self.setPressureDisplay(dev, props, data, whichKeysToDisplay,newStatus)
+						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
+					if u"Vertical" in data:
+						try:
+							x, UI  = float(data[u"Vertical"]),  "%7.3f"%(float(data[u"Vertical"]))
+							newStatus = self.setStatusCol( dev, u"VerticalMovement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 3)
+						except: pass
+
+					if u"Horizontal" in data:
+						try:
+							x, UI  = float(data[u"Horizontal"]),   "%7.3f"%(float(data[u"Horizontal"]))
+							newStatus = self.setStatusCol( dev, u"HorizontalMovement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 3)
+						except: pass
+
+					if u"MinimumPixel" in data:
+						x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"MinimumPixel"])
+						newStatus = self.setStatusCol( dev, u"MinimumPixel", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces)
+
+					if u"MaximumPixel" in data:
+						x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"MaximumPixel"])
+						newStatus = self.setStatusCol( dev, u"MaximumPixel", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces)
+
+					if u"GasResistance" in data:
+						gr,grUI, aq, aqUI, gb, gbUI = self.convGas( [ data[u"GasResistance"], data[u"AirQuality"], data[u"GasBaseline"] ]	)
+						newStatus = self.setStatusCol( dev, u"GasResistance", gr, grUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+						newStatus = self.setStatusCol( dev, u"AirQuality",    aq, aqUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+						newStatus = self.setStatusCol( dev, u"GasBaseline",   gb, gbUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
+						updateProps0, doUpdate = self.updateChangedValues(dev, aq, props, "AirQuality", "{:d}%", whichKeysToDisplay, 0)
+						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 					if u"MovementAbs" in data:
 						try:
@@ -11854,6 +11906,7 @@ class Plugin(indigo.PluginBase):
 							x, UI  = float(data[u"Movement"]), "%5.2f"%(float(data[u"Movement"]))
 							newStatus = self.setStatusCol( dev, u"Movement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 2)
 						except: pass
+
 					if u"Uniformity" in data:
 						try:
 							x, UI  = float(data[u"Uniformity"]), "%5.1f"%(float(data[u"Uniformity"]))
@@ -11996,36 +12049,11 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(40,"props: {}".format(props))
 							self.indiLOG.log(40,"triggervalues: {}".format(data[u"triggerValues"]) )
 
-					if u"Vertical" in data:
-						try:
-							x, UI  = float(data[u"Vertical"]),  "%7.3f"%(float(data[u"Vertical"]))
-							newStatus = self.setStatusCol( dev, u"VerticalMovement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 3)
-						except: pass
+					if updateProps:
+						self.deviceStopCommIgnore = time.time()
+						dev.replacePluginPropsOnServer(props)
 
-					if u"Horizontal" in data:
-						try:
-							x, UI  = float(data[u"Horizontal"]),   "%7.3f"%(float(data[u"Horizontal"]))
-							newStatus = self.setStatusCol( dev, u"HorizontalMovement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 3)
-						except: pass
-
-					if u"MinimumPixel" in data:
-						x, UI, decimalPlaces  = self.convTemp(data[u"MinimumPixel"])
-						newStatus = self.setStatusCol( dev, u"MinimumPixel", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces)
-
-					if u"MaximumPixel" in data:
-						x, UI, decimalPlaces  = self.convTemp(data[u"MaximumPixel"])
-						newStatus = self.setStatusCol( dev, u"MaximumPixel", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces)
-
-					if u"GasResistance" in data:
-						gr,grUI, aq, aqUI, gb, gbUI = self.convGas( [ data[u"GasResistance"], data[u"AirQuality"], data[u"GasBaseline"] ]	)
-						newStatus = self.setStatusCol( dev, u"GasResistance", gr, grUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-						newStatus = self.setStatusCol( dev, u"AirQuality",    aq, aqUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-						newStatus = self.setStatusCol( dev, u"GasBaseline",   gb, gbUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-
-
-					newStatus = self.setPressureDisplay(dev,data,whichKeysToDisplay,newStatus)
-
-
+		
 				for devIds in devUpdate:
 					if devIds in self.updateStatesDict:
 						if self.decideMyLog(u"SensorData"): self.indiLOG.log(10, u"pi# "+unicode(pi) + "  " + unicode(devIds)+"  "+unicode(self.updateStatesDict))
@@ -12034,8 +12062,8 @@ class Plugin(indigo.PluginBase):
 
 		except Exception, e:
 			if len(unicode(e)) > 5 :
-				if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"pi# "+unicode(pi) + "  " + unicode(sensors))
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.indiLOG.log(40,u"pi# "+unicode(pi) + "  " + unicode(sensors))
 
 		return
 
@@ -12182,36 +12210,50 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setPressureDisplay(self,dev,data,whichKeysToDisplay,newStatus):
+	def setPressureDisplay(self, dev, props, data, whichKeysToDisplay, newStatus):
 		try:
+			updateProps = False
+			doUpdate    = []
 			if u"press" in data:
 				p = float(data[u"press"])
-				decimalPlaces = 1
 
 				if self.pressureUnits == "atm":
-					p *= 0.000009869233; pu = (u"%6.3f" % p + u" atm");			  decimalPlaces =4
+					useFormat = "{:6.3f} atm" ;		decimalPlaces = 4; mult = 0.000009869233
+					p *= mult ; pu = useFormat.format(p)
 				elif self.pressureUnits == "bar":
-					p *= 0.00001; pu = (u"%6.3f" % p + u" Bar");				  decimalPlaces =4
+					useFormat = "{:6.3f} Bar" ;		decimalPlaces = 4; mult = 0.00001
+					p *= mult ; pu = useFormat.format(p)
 				elif self.pressureUnits == "mbar":
-					p *= 0.01; pu = (u"%6.1f" % p + u" mBar");					  decimalPlaces =1
+					useFormat = "{:6.1f} mbar";		decimalPlaces = 1; mult = 0.01
+					p *= mult; pu = useFormat.format(p)
 				elif self.pressureUnits == "mm":
-					p *= 0.00750063; pu = (u"%6d" % p + u' mmHg');				  decimalPlaces =0
+					useFormat = "{:6d} mmHg";		decimalPlaces = 0; mult = 0.00750063
+					p *= mult ; pu = useFormat.format(p)
 				elif self.pressureUnits == "Torr":
-					p *= 0.00750063; pu = (u"%6d" % p + u" Torr") ;				  decimalPlaces =0
+					useFormat = "{:6d} Torr" ;		decimalPlaces = 0; mult = 0.00750063
+					p *= mult; pu = useFormat.format(p)
 				elif self.pressureUnits == "inches":
-					p *= 0.000295299802; pu = (u"%6.2f" % p + u' "Hg') ;		  decimalPlaces =2
+					useFormat = "{:6.2f} inches";	decimalPlaces = 2; mult = 0.000295299802
+					p *= mult ; pu = useFormat.format(p)
 				elif self.pressureUnits == "PSI":
-					p *= 0.000145038; pu = (u"%6.2f" % p + u" PSI");			  decimalPlaces =2
+					useFormat = "{:6.2f} PSI";		decimalPlaces = 2; mult = 0.000145038
+					p *= mult ; pu = useFormat.format(p)
 				elif self.pressureUnits == "hPascal":
-					p *=0.01; pu = (u"%6d" % p + u" hPa");						  decimalPlaces =0 
+					useFormat = "{:6d} hPa";		decimalPlaces = 0; mult = 0.01
+					p *= mult ; pu = useFormat.format(p)
 				else:
-					pu = (u"%9d" % p + u' Pa').strip()
+					useFormat = "{:9d}  Pa"; 		decimalPlaces = 0; mult = 1.
+					p *= mult ; pu = useFormat.format(p)
+				#self.indiLOG.log(20,"p ={}  units:{}".format( p, self.pressureUnits ) )
 				pu = pu.strip()
 				newStatus = self.setStatusCol(dev, u"Pressure", p, pu, whichKeysToDisplay, u"",newStatus, decimalPlaces = decimalPlaces)
+				updateProps, doUpdate = self.updateChangedValues(dev, p, props, "Pressure", useFormat, whichKeysToDisplay, decimalPlaces)
+
 		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		return newStatus
+		#self.indiLOG.log(20,"returning {} {} {} dat:{} ".format(useFormat, decimalPlaces, p, data) )
+		return newStatus, updateProps, doUpdate
 
 
 ####-------------------------------------------------------------------------####
@@ -12285,7 +12327,7 @@ class Plugin(indigo.PluginBase):
 				for serialNumber in NNN:
 					temp = NNN[serialNumber]
 					if temp == "85.0":	temp = "999.9"
-					x, UI, decimalPlaces  = self.convTemp(temp)
+					x, UI, decimalPlaces, useFormat  = self.convTemp(temp)
 					if dev.states[u"serialNumber"] == "" or dev.states[u"serialNumber"] == serialNumber: # ==u"" new, ==Serial# already setup
 						if dev.states[u"serialNumber"] == "": 
 							self.addToStatesUpdateDict(unicode(dev.id),"serialNumber",serialNumber)
@@ -12301,8 +12343,14 @@ class Plugin(indigo.PluginBase):
 							else:
 								dev.description = u"sN= " + serialNumber 
 								dev.replaceOnServer()
-
+							dev = indigo.devices[dev.id]
+						props = dev.pluginProps
 						self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev.states[u"status"], decimalPlaces = decimalPlaces )
+						updateProps, doUpdate = self.updateChangedValues(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+						if updateProps: 
+							props[doUpdate[0]] = doUpdate[1]
+							self.deviceStopCommIgnore = time.time()
+							dev.replacePluginPropsOnServer(props)
 
 					else: # try to somewhere else
 						#indigo.server.log("  not present, checking other " )
@@ -12339,6 +12387,12 @@ class Plugin(indigo.PluginBase):
 									self.RPI[unicode(pi)]["input"]["Wire18B20"][unicode(dev1.id)] = ""
 									self.addToStatesUpdateDict(unicode(dev1.id),"serialNumber",serialNumber)
 									self.setStatusCol( dev1, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev1.states[u"status"], decimalPlaces = decimalPlaces )
+									props = dev1.pluginProps
+									updateProps, doUpdate = self.updateChangedValues(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+									if updateProps: 
+										props[doUpdate[0]] = doUpdate[1]
+										self.deviceStopCommIgnore = time.time()
+										dev1.replacePluginPropsOnServer(props)
 									self.executeUpdateStatesDict(onlyDevID=unicode(dev1.id),calledFrom="updateOneWire")
 									self.setONErPiV(pi,"piUpToDate", [u"updateParamsFTP"])
 									self.saveConfig()
@@ -12352,13 +12406,20 @@ class Plugin(indigo.PluginBase):
 
  
 ####-------------------------------------------------------------------------####
-	def updateBLEsensor(self,dev,data,whichKeysToDisplay,pi):
+	def updateBLEsensor(self, dev, data, props, whichKeysToDisplay,pi):
 		try:
-			x, UI, decimalPlaces  = self.convTemp(data[u"temp"])
+			x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"temp"])
 			self.addToStatesUpdateDict(unicode(dev.id),"TxPower",data[u"txPower"])
 			self.addToStatesUpdateDict(unicode(dev.id),"rssi"	,data[u"rssi"])
 			self.addToStatesUpdateDict(unicode(dev.id),"UUID"	,data[u"UUID"])
 			self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev.states[u"status"], decimalPlaces = decimalPlaces )
+			updateProps, doUpdate = self.updateChangedValues(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+			if updateProps: 
+				props[doUpdate[0]] = doUpdate[1]
+				self.deviceStopCommIgnore = time.time()
+				dev.replacePluginPropsOnServer(props)
+				props[doUpdate[0]] = doUpdate[1]
+
 		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -12367,7 +12428,7 @@ class Plugin(indigo.PluginBase):
 
  
 ####-------------------------------------------------------------------------####
-	def updatePULSE(self,dev,data,whichKeysToDisplay):
+	def updatePULSE(self, dev, data, whichKeysToDisplay):
 		if self.decideMyLog(u"SensorData"): self.indiLOG.log(10, "updatePULSE {}".format(data))
 		props = dev.pluginProps
 		try:	
@@ -12456,6 +12517,74 @@ class Plugin(indigo.PluginBase):
 		return 
  
  
+
+
+####-------------------------------------------------------------------------####
+	def updateChangedValues(self,dev, value, props, propToUpdate, useFormat, whichKeysToDisplay, decimalPlaces):
+		try:	
+			if propToUpdate not in dev.states: 					
+				self.indiLOG.log(20, "updateChangedValues: prop{}  \nnot in props: {}".format(propToUpdate, props))
+				return False, []
+
+			updateList = []
+			for state in dev.states:
+				if state.find(propToUpdate+"Change") == 0:
+					upU = state.split("Change")[1]
+					if len(upU) < 2: continue
+					if upU.find("Hour") >-1:     updateN = "Hour";   updateMinutes = 3600
+					elif upU.find("Minute") >-1: updateN = "Minute"; updateMinutes = 60
+					else: continue
+					amount = upU.split(updateN)[0]
+					updateList.append( {"state":state, "unit":updateN, "deltaSecs":updateMinutes * int(amount), "pointer":0, "changed":0} )
+
+			updateList = sorted(updateList, key = lambda x: x["deltaSecs"])				
+			if len(updateList) < 1: return False, []
+
+			if propToUpdate+"list" in props: 
+				valueList = json.loads(props[propToUpdate+"list"])
+			else:
+				valueList = [(0,0),(0,0)]
+
+
+			if type(value) == float and useFormat.find("{:d}") ==-1:	valueList.append([int(time.time()),round(value,decimalPlaces)])
+			else:														valueList.append([int(time.time()),int(value)])
+
+			jj 		= len(updateList)
+			cutMax	= updateList[-1]["deltaSecs"]
+			ll		= len(valueList)
+			for ii in range(ll):
+				if len(valueList) <= 2: break
+				if (valueList[-1][0] - valueList[0][0]) > cutMax: valueList.pop(0)
+				else: 				    break
+
+						
+			ll = len(valueList)
+			if ll > 1:
+				for kk in range(jj):
+					cut = updateList[kk]["deltaSecs"]
+					updateList[kk]["pointer"] = 0
+					if cut != cutMax: # we can skip the largest, must be first and last entry
+						for ii in range(ll-1,-1,-1):
+							if (valueList[-1][0] - valueList[ii][0]) <= cut:
+								updateList[kk]["pointer"] = ii
+							else:
+								break
+
+					changed			 = ( valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] )
+					try: 	uChanged = useFormat.format(changed)
+					except: uChanged = unicode(changed)
+					#updateList[kk]["changed"] = uChanged
+					self.setStatusCol( dev, updateList[kk]["state"], changed, uChanged, whichKeysToDisplay, "","", decimalPlaces = decimalPlaces )
+
+			#if self.decideMyLog(u"Special") and dev.name=="s-4-bme680" : self.indiLOG.log(20, "updateChangedValues for {}:  len({});valueList: \n{} ... \n{}".format(dev.name, len(valueList), valueList, updateList))
+			return True, [propToUpdate+"list",json.dumps(valueList).strip(" ")]
+
+		except Exception, e:
+			#if len(unicode(e)) > 5 :
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return False, []
+ 
+
 ####-------------------------------------------------------------------------####
 	def updateTEA5767(self,pi,sensors,sensor):
 		if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, sensor+"     "+unicode(sensors))
@@ -13294,7 +13423,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def convTemp(self, temp):
 		try:
-
+			useFormat="{:.1f}"
 			temp = float(temp)
 			if temp == 999.9:
 				return 999.9,"badSensor", 1
@@ -13308,12 +13437,13 @@ class Plugin(indigo.PluginBase):
 				suff = u"ºC"
 			if self.tempDigits == 0:
 				cString = "%d"
+				useFormat ="{:d}"
 			else:
 				cString = "%."+unicode(self.tempDigits)+"f"
 			tempU = (cString % temp).strip()
-			return round(temp,self.tempDigits) , tempU + suff,self.tempDigits
+			return round(temp,self.tempDigits) , tempU + suff,self.tempDigits, useFormat
 		except:pass
-		return -99, u"",self.tempDigits
+		return -99, u"",self.tempDigits, useFormat
 
 
 

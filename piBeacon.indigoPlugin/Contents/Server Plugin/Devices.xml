@@ -1087,11 +1087,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
-			<State id="TemperatureMaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
-			</State>
 			<State id="TemperatureMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMinToday</TriggerLabel>
@@ -2977,6 +2972,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3058,6 +3068,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -3165,6 +3190,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3190,6 +3230,37 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Humidity</TriggerLabel>
 				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
 			</State>
 			<State id="HumidityMaxToday">
 				<ValueType>Number</ValueType>
@@ -3295,6 +3366,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3398,6 +3484,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -3509,6 +3610,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3616,6 +3732,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3662,6 +3793,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>PressureMinYesterday</TriggerLabel>
 				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -3749,6 +3895,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3795,6 +3956,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>PressureMinYesterday</TriggerLabel>
 				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -3881,6 +4057,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -3927,6 +4118,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>PressureMinYesterday</TriggerLabel>
 				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -4014,6 +4220,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4060,6 +4281,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>PressureMinYesterday</TriggerLabel>
 				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -4148,6 +4384,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4174,6 +4425,22 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Humidity</TriggerLabel>
 				<ControlPageLabel>Humidity</ControlPageLabel>
 			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
 			<State id="HumidityMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
@@ -4280,6 +4547,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4306,6 +4588,22 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Humidity</TriggerLabel>
 				<ControlPageLabel>Humidity</ControlPageLabel>
 			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
 			<State id="HumidityMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
@@ -4421,6 +4719,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4447,6 +4760,22 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Humidity</TriggerLabel>
 				<ControlPageLabel>Humidity</ControlPageLabel>
 			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
 			<State id="HumidityMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
@@ -4492,6 +4821,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>PressureMinYesterday</TriggerLabel>
 				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -4671,6 +5015,21 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4697,6 +5056,22 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>Humidity</TriggerLabel>
 				<ControlPageLabel>Humidity</ControlPageLabel>
 			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
 			<State id="HumidityMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
@@ -4765,6 +5140,21 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>PressureMinYesterday</TriggerLabel>
 				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
 			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
+			</State>
 
 			<State id="GasResistance">
 				<ValueType>number</ValueType>
@@ -4797,7 +5187,22 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>AirQualityMinYesterday</TriggerLabel>
 				<ControlPageLabel>AirQualityMinYesterday</ControlPageLabel>
 			</State>
-                
+ 			<State id="AirQualityChange5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AirQualityChange5Minutes</TriggerLabel>
+				<ControlPageLabel>PressurAirQualityChange5MinuteseChange5Minutes</ControlPageLabel>
+			</State>
+			<State id="AirQualityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AirQualityChange1Hour</TriggerLabel>
+				<ControlPageLabel>AirQualityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="AirQualityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AirQualityChange12Hours</TriggerLabel>
+				<ControlPageLabel>AirQualityChange12Hours</ControlPageLabel>
+			</State>
+               
 			<State id="GasBaseline">
 				<ValueType>number</ValueType>
 				<TriggerLabel>GasBaseline</TriggerLabel>
@@ -4888,6 +5293,21 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4914,6 +5334,22 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>Humidity</TriggerLabel>
 				<ControlPageLabel>Humidity</ControlPageLabel>
 			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
 			<State id="HumidityMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
@@ -5037,6 +5473,21 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -5187,6 +5638,21 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -5360,6 +5826,21 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -5677,6 +6158,21 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>CO2MinYesterday</TriggerLabel>
 				<ControlPageLabel>CO2MinYesterday</ControlPageLabel>
 			</State>
+			<State id="CO2Change5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change5Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change5Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change20Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change20Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change1Hour</TriggerLabel>
+				<ControlPageLabel>CO2Change1Hour</ControlPageLabel>
+			</State>
 
 			<State id="VOC">
 				<ValueType>Number</ValueType>
@@ -5702,6 +6198,21 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Number</ValueType>
 				<TriggerLabel>VOCMinYesterday</TriggerLabel>
 				<ControlPageLabel>VOCMinYesterday</ControlPageLabel>
+			</State>
+			<State id="VOCChange5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange5Minutes</TriggerLabel>
+				<ControlPageLabel>VOCChange5Minutes</ControlPageLabel>
+			</State>
+			<State id="VOCChange20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange20Minutes</TriggerLabel>
+				<ControlPageLabel>VOCChange20Minutes</ControlPageLabel>
+			</State>
+			<State id="VOCChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange1Hour</TriggerLabel>
+				<ControlPageLabel>VOCChange1Hour</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -5880,6 +6391,21 @@ It measures CO2 and temp using infrared light absorption
 				<TriggerLabel>CO2MinYesterday</TriggerLabel>
 				<ControlPageLabel>CO2MinYesterday</ControlPageLabel>
 			</State>
+			<State id="CO2Change5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change5Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change5Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change20Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change20Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change1Hour</TriggerLabel>
+				<ControlPageLabel>CO2Change1Hour</ControlPageLabel>
+			</State>
 			<State id="CO2calibration">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>CO2calibration</TriggerLabel>
@@ -6009,6 +6535,21 @@ It measures CO2 VOC
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -6057,6 +6598,21 @@ It measures CO2 VOC
 				<TriggerLabel>CO2MinYesterday</TriggerLabel>
 				<ControlPageLabel>CO2MinYesterday</ControlPageLabel>
 			</State>
+			<State id="CO2Change5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change5Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change5Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change20Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change20Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change1Hour</TriggerLabel>
+				<ControlPageLabel>CO2Change1Hour</ControlPageLabel>
+			</State>
 
 			<State id="VOC">
 				<ValueType>Number</ValueType>
@@ -6082,6 +6638,21 @@ It measures CO2 VOC
 				<ValueType>Number</ValueType>
 				<TriggerLabel>VOCMinYesterday</TriggerLabel>
 				<ControlPageLabel>VOCMinYesterday</ControlPageLabel>
+			</State>
+			<State id="VOCChange5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange5Minutes</TriggerLabel>
+				<ControlPageLabel>VOCChange5Minutes</ControlPageLabel>
+			</State>
+			<State id="VOCChange20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange20Minutes</TriggerLabel>
+				<ControlPageLabel>VOCChange20Minutes</ControlPageLabel>
+			</State>
+			<State id="VOCChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange1Hour</TriggerLabel>
+				<ControlPageLabel>VOCChange1Hour</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -6432,10 +7003,25 @@ It measures CO2 VOC
 				<TriggerLabel>illuminance</TriggerLabel>
 				<ControlPageLabel>illuminance</ControlPageLabel>
 			</State>
-			<State id="temperature">
+			<State id="Temperature">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>temperature</TriggerLabel>
-				<ControlPageLabel>temperature</ControlPageLabel>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="LEDcurrent">
 				<ValueType>Number</ValueType>
@@ -7541,6 +8127,21 @@ It measures CO2 VOC
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -7805,6 +8406,21 @@ you can setup
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -8645,6 +9261,21 @@ you can setup
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -8848,6 +9479,21 @@ you can setup
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -9058,6 +9704,21 @@ you can setup
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
@@ -9688,6 +10349,21 @@ you can setup
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -9867,6 +10543,21 @@ you can setup
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Number</ValueType>
