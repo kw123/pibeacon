@@ -3350,7 +3350,7 @@ Then there are actions in each set (steps/sleep)
                     <Option value= "mag3110"             >mag3110</Option>
                     <Option value= "bme680"              >bme680</Option>
                     <Option value= "mhz16"               >mhz16</Option>
-                    <Option value= "rdlidar"             >rdlidar</Option>
+                    <Option value= "lidar"               >lidar360</Option>
                     <Option value= "sgp30"               >sgp30</Option>
                     <Option value= "mysensor"            >mysensor</Option>
                     <Option value= "myprogram"           >myprogram</Option>

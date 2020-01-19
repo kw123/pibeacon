@@ -19,14 +19,14 @@ import threading
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-G.program = "rdlidar"
+G.program = "lidar360"
 
-'''Simple and lightweight module for working with RPLidar rangefinder scanners.
+'''Simple and lightweight module for working with Lidar rangefinder scanners.
 
 Usage example:
 
->>> from rplidar import RPLidar
->>> lidar = RPLidar('/dev/ttyUSB0')
+>>> from Lidar import Lidar
+>>> lidar = Lidar('/dev/ttyUSB0')
 >>> 
 >>> info = lidar.get_info()
 >>> print(info)
@@ -43,7 +43,7 @@ Usage example:
 >>> lidar.stop_motor()
 >>> lidar.disconnect()
 
-For additional information please refer to the RPLidar class documentation.
+For additional information please refer to the Lidar class documentation.
 '''
 import codecs
 import serial
@@ -86,13 +86,13 @@ def _b2i(byte):
 	'''Converts byte to integer (for Python 2 compatability)'''
 	return byte if int(sys.version[0]) == 3 else ord(byte)
 
-class RPLidarException(Exception):
-	'''Basic exception class for RPLidar'''
+class LidarException(Exception):
+	'''Basic exception class for Lidar'''
 
 
 
-class RPLidar(object):
-	'''Class for communicating with RPLidar rangefinder scanners'''
+class Lidar(object):
+	'''Class for communicating with Lidar rangefinder scanners'''
 
 	_serial_port = None  #: serial port connection
 	port = ''  #: Serial port name, e.g. /dev/ttyUSB0
@@ -102,7 +102,7 @@ class RPLidar(object):
 
 	def __init__(self, port, baudrate=115200, timeout=1, logger=None, mSpeed=DEFAULT_MOTOR_PWM):
 		try:
-			'''Initilize RPLidar object for communicating with the sensor.
+			'''Initilize Lidar object for communicating with the sensor.
 
 			Parameters
 			----------
@@ -122,7 +122,7 @@ class RPLidar(object):
 			self.timeout = timeout
 			self.motor_running = None
 			if logger is None:
-				logger = logging.getLogger('rplidar')
+				logger = logging.getLogger('Lidar')
 			self.connect()
 			self.start_motor()
 		except	Exception, e:
@@ -136,10 +136,10 @@ class RPLidar(object):
 			inversed_new_scan = bool((_b2i(raw[0]) >> 1) & 0b1)
 			quality = _b2i(raw[0]) >> 2
 			if new_scan == inversed_new_scan:
-				raise RPLidarException('{}-New scan flags mismatch'.format(self.port))
+				raise LidarException('{}-New scan flags mismatch'.format(self.port))
 			check_bit = _b2i(raw[1]) & 0b1
 			if check_bit != 1:
-				raise RPLidarException('{}-Check bit not equal to 1'.format(self.port))
+				raise LidarException('{}-Check bit not equal to 1'.format(self.port))
 			angle = ((_b2i(raw[1]) >> 1) + (_b2i(raw[2]) << 7)) / 64.
 			distance = (_b2i(raw[3]) + (_b2i(raw[4]) << 8)) / 4.
 			return new_scan, quality, angle, distance
@@ -160,7 +160,7 @@ class RPLidar(object):
 					parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE,
 					timeout=self.timeout, dsrdtr=True)
 			except serial.SerialException as err:
-				raise RPLidarException('{}-Failed to connect to the sensor due to: {}'.format(self.port, err) )
+				raise LidarException('{}-Failed to connect to the sensor due to: {}'.format(self.port, err) )
 		except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -238,9 +238,9 @@ class RPLidar(object):
 			descriptor = self._serial_port.read(DESCRIPTOR_LEN)
 			U.logger.log(10,'{}-Recieved descriptor: {}'.format(self.port,descriptor) )
 			if len(descriptor) != DESCRIPTOR_LEN:
-				raise RPLidarException(' Descriptor length mismatch')
+				raise LidarException(' Descriptor length mismatch')
 			elif not descriptor.startswith(SYNC_BYTE + SYNC_BYTE2):
-				raise RPLidarException('{}-Incorrect descriptor starting bytes .. ok  first 2 calls '.format(self.port) )
+				raise LidarException('{}-Incorrect descriptor starting bytes .. ok  first 2 calls '.format(self.port) )
 			is_single = _b2i(descriptor[-2]) == 0
 			return _b2i(descriptor[2]), is_single, _b2i(descriptor[-1])
 		except	Exception, e:
@@ -253,7 +253,7 @@ class RPLidar(object):
 			data = self._serial_port.read(dsize)
 			U.logger.log(10,'{}-Recieved data len{}'.format(self.port,len(data)) )
 			if len(data) != dsize:
-				raise RPLidarException('{}-Wrong body size'.format(self.port) )
+				raise LidarException('{}-Wrong body size'.format(self.port) )
 			return data
 		except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}  -{}".format(sys.exc_traceback.tb_lineno, e, self.port) )
@@ -270,11 +270,11 @@ class RPLidar(object):
 			self._send_cmd(GET_INFO_BYTE)
 			dsize, is_single, dtype = self._read_descriptor()
 			if dsize != INFO_LEN:
-				raise RPLidarException('{}-Wrong get_info reply length'.format(self.port) )
+				raise LidarException('{}-Wrong get_info reply length'.format(self.port) )
 			if not is_single:
-				raise RPLidarException('{}-Not a single response mode'.format(self.port) )
+				raise LidarException('{}-Not a single response mode'.format(self.port) )
 			if dtype != INFO_TYPE:
-				raise RPLidarException('{}-Wrong response data type'.format(self.port) )
+				raise LidarException('{}-Wrong response data type'.format(self.port) )
 			raw = self._read_response(dsize)
 			serialnumber = codecs.encode(raw[4:], 'hex').upper()
 			serialnumber = codecs.decode(serialnumber, 'ascii')
@@ -307,11 +307,11 @@ class RPLidar(object):
 			self._send_cmd(GET_HEALTH_BYTE)
 			dsize, is_single, dtype = self._read_descriptor()
 			if dsize != HEALTH_LEN:
-				raise RPLidarException('{}-Wrong get_info reply length'.format(self.port) )
+				raise LidarException('{}-Wrong get_info reply length'.format(self.port) )
 			if not is_single:
-				raise RPLidarException('{}-Not a single response mode'.format(self.port) )
+				raise LidarException('{}-Not a single response mode'.format(self.port) )
 			if dtype != HEALTH_TYPE:
-				raise RPLidarException('{}-Wrong response data type'.format(self.port) )
+				raise LidarException('{}-Wrong response data type'.format(self.port) )
 			raw = self._read_response(dsize)
 			status = _HEALTH_STATUSES[_b2i(raw[0])]
 			error_code = (_b2i(raw[1]) << 8) + _b2i(raw[2])
@@ -379,18 +379,18 @@ class RPLidar(object):
 				self.reset()
 				status, error_code = self.get_health()
 				if status == _HEALTH_STATUSES[2]:
-					raise RPLidarException('{}-RPLidar hardware failure. Error code: {}'.format(self.port, error_code) )
+					raise LidarException('{}-Lidar hardware failure. Error code: {}'.format(self.port, error_code) )
 			elif status == _HEALTH_STATUSES[1]:
 				U.logger.log(20,'{}-Warning sensor status detected! Error code:{}'.format(self.port, error_code) )
 			cmd = SCAN_BYTE
 			self._send_cmd(cmd)
 			dsize, is_single, dtype = self._read_descriptor()
 			if dsize != 5:
-				raise RPLidarException('{}-Wrong get_info reply length'.format(self.port) )
+				raise LidarException('{}-Wrong get_info reply length'.format(self.port) )
 			if is_single:
-				raise RPLidarException('{}-Not a multiple response mode'.format(self.port) )
+				raise LidarException('{}-Not a multiple response mode'.format(self.port) )
 			if dtype != SCAN_TYPE:
-				raise RPLidarException('{}-Wrong response data type'.format(self.port) )
+				raise LidarException('{}-Wrong response data type'.format(self.port) )
 			while True:
 				raw = self._read_response(dsize)
 				U.logger.log(10,'{}-Recieved scan response: {}'.format(self.port, raw) )
@@ -450,7 +450,7 @@ def readParams():
 	global rawOld
 	global oldRaw, lastRead
 	global startTime
-	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData, doNotUseDataRanges, minSignalStrength
+	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData, doNotUseDataRanges, doNotUseDataRangesString, minSignalStrength
 	global sensorCLASS
 
 	try:
@@ -481,6 +481,7 @@ def readParams():
 		U.logger.log(20, "{}-reading new parameter file".format(sensor) )
 
 		restart = False
+		deldevID={}		   
 		for devId in sensors[sensor]:
 
 			
@@ -526,7 +527,7 @@ def readParams():
 					measurementsNeededForCalib[devId] = int(sensors[sensor][devId]["measurementsNeededForCalib"])
 			except:	measurementsNeededForCalib[devId] = 6
 			if old !=-1 and old != measurementsNeededForCalib[devId]: 
-				os.remove(G.homeDir+"rdlidar.calibrated"+usbPortUsed[devId]+"> /dev/null 2>&1 ")
+				os.remove(G.homeDir+"lidar.calibrated"+usbPortUsed[devId]+"> /dev/null 2>&1 ")
 				restart = True
 
 			try:
@@ -587,9 +588,11 @@ def readParams():
 
 			try:
 				if "doNotUseDataRanges" in sensors[sensor][devId]: 
+					doNotUseDataRangesString[devId] =""
 					doNotUseDataRanges[devId] = []
 					if len(sensors[sensor][devId]["doNotUseDataRanges"]) > 2:
-						ddd = sensors[sensor][devId]["doNotUseDataRanges"].split(";")
+						doNotUseDataRangesString[devId] =sensors[sensor][devId]["doNotUseDataRanges"]
+						ddd = doNotUseDataRangesString[devId].split(";")
 						for dd in ddd: 
 							if len(dd) > 2 and "-" in dd:
 								d = dd.split("-")
@@ -598,10 +601,10 @@ def readParams():
 	
 		
 			if devId not in sensorCLASS  or restart:
-				if not startSensor(devId, restart = True) or sensorCLASS[devId] == "":
+				if  not startSensor(devId, restart = True)  or (devId in sensorCLASS and sensorCLASS[devId] == ""): 
+					deldevID[devId] = True
 					U.logger.log(30, u"{}-bad sensor start, stopping that sensor".format(usbPortUsed[devId]) )
 				
-		deldevID={}		   
 		for devId in sensorCLASS:
 			if devId not in sensors[sensor]:
 				deldevID[devId]=1
@@ -624,12 +627,13 @@ def startSensor(devId, restart=False):
 	global startTime
 	global sensorCLASS
 	global countMeasurements, calibratecalibrated, usbPortUsed, usbPort, motorFrequency
-	global quick, getRdlidarThreads
+	global quick, getlidarThreads
 	try:
 
 		
-
-		startTime =time.time()
+		sensorCLASS[devId] = ""
+		usbPortUsed[devId] = ""
+		startTime = time.time()
 
 		startOK = False
 			
@@ -646,7 +650,7 @@ def startSensor(devId, restart=False):
 					continue
 			for ii in range(3): # need to init several times in some circumstances 
 				try:
-					sensorCLASS[devId]  =	 RPLidar('/dev/'+usbPortUsed[devId], mSpeed = motorFrequency[devId])#  U.getSerialDEV())
+					sensorCLASS[devId]  = Lidar('/dev/'+usbPortUsed[devId], mSpeed = motorFrequency[devId])#  U.getSerialDEV())
 					time.sleep(0.5)	
 					info = sensorCLASS[devId].get_info()
 					if info == None: continue 	
@@ -674,33 +678,35 @@ def startSensor(devId, restart=False):
 
 
 		if not startOK:
-			U.logger.log(20, u"rdlidar not started, no usb works, need to restart pgm-{}".format(usbPortUsed[devId]) )
+			U.logger.log(20, u"{} not started, no usb works, need to restart pgm-{}".format(G.program, usbPortUsed[devId]) )
 			time.sleep(10)
+			sensorCLASS[devId] = ""
 			return False
 
 
 		countMeasurements[devId] = 0
 			
-		if devId not in getRdlidarThreads: getRdlidarThreads[devId] = {}
+		if devId not in getlidarThreads: getlidarThreads[devId] = {}
 		if restart:
-			getRdlidarThreads[devId]["state"] = "stop"
+			getlidarThreads[devId]["state"] = "stop"
 			sensorCLASS[devId].stop()
 			time.sleep(3)
-			getRdlidarThreads[devId]={}
-		if getRdlidarThreads[devId] == {}:
-			getRdlidarThreads[devId] = { "run":True, "state":"wait", "thread": threading.Thread(name=u'getValues', target=getValues, args=(devId,))}	
-			getRdlidarThreads[devId]["thread"].start()
+			getlidarThreads[devId]={}
+		if getlidarThreads[devId] == {}:
+			getlidarThreads[devId] = { "run":True, "state":"wait", "thread": threading.Thread(name=u'getValues', target=getValues, args=(devId,))}	
+			getlidarThreads[devId]["thread"].start()
 
 			U.logger.log(20, u"thread started -{}".format(usbPortUsed[devId]))
 		else:
-			U.logger.log(20, u"getRdlidarThreads already on :{}".format(usbPortUsed[devId]))
+			U.logger.log(20, u"getlidarThreads already on :{}".format(usbPortUsed[devId]))
 		
-		getRdlidarThreads[devId]["state"] = "run"
+		getlidarThreads[devId]["state"] = "run"
 
 		time.sleep(.1)
 
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e, usbPortUsed[devId]))
+		sensorCLASS[devId] = ""
 		return False
 	return True
 
@@ -712,7 +718,7 @@ def getValues(devId):
 	global startTimes
 	global countMeasurements, calibratecalibrated
 	global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend, minSendDelta, usbPortUsed, usbPort, sendPixelData, doNotUseDataRanges, minSignalStrength
-	global quick, getRdlidarThreads
+	global quick, getlidarThreads
 	global waitforMeasurements, measurementsNeededForCalib
 	
 	calibratedSend = False
@@ -729,8 +735,8 @@ def getValues(devId):
 
 			U.logger.log(20, "{}- starting with params:\n========\nuseBins: {}; motorFrequency: {};  anglesInOneBin: {};  \ncontiguousDeltaValue: {};  nContiguousAngles: {};  \ntriggerLast:{};  triggerCalibrated:{};  sendToIndigoEvery:{}\n========".format( usbPortUsed[devId],
 					useBins, motorFrequency[devId], anglesInOneBin[devId], contiguousDeltaValue[devId], nContiguousAngles[devId], triggerLast[devId], triggerCalibrated[devId],sendToIndigoEvery[devId] ))
-			while getRdlidarThreads[devId]["state"] != "run":
-				if getRdlidarThreads[devId]["state"] == "stop": return 
+			while getlidarThreads[devId]["state"] != "run":
+				if getlidarThreads[devId]["state"] == "stop": return 
 				time.sleep(1)
 
 			if sensorCLASS[devId] =="": return
@@ -751,8 +757,8 @@ def getValues(devId):
 				timeStamps.append(time.time())
 
 			calibrated= ""
-			U.logger.log(20, "trying to read: {}rdlidar.calibrated-{}".format(G.homeDir,usbPortUsed[devId]) )
-			jObj, raw = U.readJson("{}rdlidar.calibrated-{}".format(G.homeDir,usbPortUsed[devId]) )
+			U.logger.log(20, "trying to read: {}lidar360.calibrated-{}".format(G.homeDir,usbPortUsed[devId]) )
+			jObj, raw = U.readJson("{}lidar360.calibrated-{}".format(G.homeDir,usbPortUsed[devId]) )
 			if raw !="" and "values" in jObj:
 				calibrated = jObj
 				aa = jObj["anglesInOneBin"] 
@@ -801,10 +807,10 @@ def getValues(devId):
 			loopCount 	= 0
 			for measurments in sensorCLASS[devId].iter_scans():
 				loopCount +=1
-				if getRdlidarThreads[devId]["state"] == "wait": 
+				if getlidarThreads[devId]["state"] == "wait": 
 					time.sleep(0.2)
 					continue 
-				if getRdlidarThreads[devId]["state"] == "stop": break 
+				if getlidarThreads[devId]["state"] == "stop": break 
 			
 				
 				values.append(copy.copy(calibratedBins))
@@ -938,7 +944,7 @@ def getValues(devId):
 						entries[0] 	= copy.copy(countC)
 						trV[0]["calibrated"]["nonZero"] = useBins-(entries[0]).count(0)
 						U.logger.log(20,"{}-created new calibrated room calibration file bins with zero bins: {} out of: {}, nMeas:{}; req:{}".format( usbPortUsed[devId], accumV.count(0), len(accumV), nMeas, measurementsNeededForCalib[devId]))
-						U.writeJson(G.homeDir+"rdlidar.calibrated-"+usbPortUsed[devId], {"values":values[0], "entries":entries[0], "anglesInOneBin":anglesInOneBin, "nMeas":nMeas})
+						U.writeJson(G.homeDir+G.program+".calibrated-"+usbPortUsed[devId], {"values":values[0], "entries":entries[0], "anglesInOneBin":anglesInOneBin, "nMeas":nMeas})
 						calibratedSend = False
 						##### calibration ended         ##############
 				##### check if calibration mode ##############  END
@@ -971,7 +977,8 @@ def getValues(devId):
 									"nBins": useBins, 
 									"port": usbPortUsed[devId],
 									"dTime_Last-Current": round(timeStamps[maxAllind["current"]] - timeStamps[-1],2),
-									"dIndex_Last-Current": -maxAllind["current"] } }
+									"dIndex_Last-Current": -maxAllind["current"]},
+									"doNotUseDataRanges":doNotUseDataRangesString[devId] }
 							if sendPixelData[devId]:
 								if not calibratedSend:
 									data["calibrated"] 	= values[0]
@@ -1004,12 +1011,13 @@ global sensor, sensors, badSensor
 global sensorCLASS
 global oldRaw, lastRead
 global startTime
-global quick, getRdlidarThreads
-global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend,minSendDelta, usbPortUsed, sendPixelData, doNotUseDataRanges, minSignalStrength
+global quick, getlidarThreads
+global motorFrequency, nContiguousAngles, contiguousDeltaValue, anglesInOneBin,triggerLast, triggerCalibrated, sendToIndigoEvery, lastAliveSend,minSendDelta, usbPortUsed, sendPixelData, doNotUseDataRanges, doNotUseDataRangesString, minSignalStrength
 global calibratecalibrated
 global countMeasurements, waitforMeasurements,	measurementsNeededForCalib
 
 minSignalStrength			= {}
+doNotUseDataRangesString	= {}
 doNotUseDataRanges			= {}
 sendPixelData				= {}
 usbPort						= {}
@@ -1028,7 +1036,7 @@ minSendDelta				= {}
 calibratecalibrated			= {}
 countMeasurements			= {}
 
-getRdlidarThreads			={}
+getlidarThreads			={}
 quick						= False
 oldDistances				={}
 	
@@ -1091,7 +1099,7 @@ while True:
 
 			for devId in lastAliveSend:
 				if time.time() - lastAliveSend[devId] > 120: 
-					U.restartMyself(reason=" rdlidar data acquisition seems to hang", delay= 20)
+					U.restartMyself(reason=G.program+" data acquisition seems to hang", delay= 20)
 
 		if U.checkNewCalibration(G.program):
 			U.logger.log(30, u"starting with new calibrated room data calibration")

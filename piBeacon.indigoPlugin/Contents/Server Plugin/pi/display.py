@@ -1746,7 +1746,7 @@ lastlightSensorValue 		= 0
 lastTimeLightSensorValue	= 0
 lastTimeLightSensorFile 	= 0
 lightSensorValueRaw 		= 1
-lightSensorSlopeForDisplay 			= 1.49
+lightSensorSlopeForDisplay 	= 1.49
 lightSensMax  				= 1
 lightMinDimForDisplay  		= 0.3
 lightSensorOnForDisplay 	= False
@@ -1917,8 +1917,10 @@ while runLoop:
 				if "xwindows" in data: xwindows = data["xwindows"].lower()
 				if "xwindowSize" in data: 
 					try:
-						xwindowSize = (data["xwindowSize"]).split(",")
-						xwindowSize  = [int(xwindowSize[0]), int(xwindowSize[1])]
+						try: xwindowSize = json.loads(data["xwindowSize"])
+						except:
+							xwindowSize = (data["xwindowSize"]).split(",")
+							xwindowSize  = [int(xwindowSize[0]), int(xwindowSize[1])]
 					except: pass
 				U.logger.log(10, "=== 0 start new disp dev: = sizes:{} {}".format(xwindowSize, xwindows)  )
 				if 	xwindowSize != [0,0] and xwindows =="on":
@@ -1929,9 +1931,9 @@ while runLoop:
 					scrollPages, maxPagesY, maxPagesX, scrollxy, lastScrollxy, lastscrollPages=	 setScrollPages(scrollxy,scrollPages)
 					if xwindows == "on" :
 						if int(xwindowSize[0]) != xmax or int(xwindowSize[1]) != ymax:
-							U.logger.log(10, "=== 3 start new disp dev: = size:{};   old  x:{}; y:{}".format(xwindowSize, xmax, ymax))
+							U.logger.log(20, "=== 3 start new disp dev: = size:{};   old  x:{}; y:{}".format(xwindowSize, xmax, ymax))
 							fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev, matrix, overwriteXmax=xwindowSize[0] , overwriteYmax=xwindowSize[1], reset = "reset" )
-							U.logger.log(10, "=== 3 start new disp dev: = sizes:{}; {}".format(xmax, ymax))
+							U.logger.log(20, "=== 3 start new disp dev: = sizes:{}; {}".format(xmax, ymax))
 
  					U.logger.log(10, "=== starting image ===")
 					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))

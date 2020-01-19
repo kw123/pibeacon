@@ -596,7 +596,7 @@ def doWeNeedToStartTouch(sensorsI, sensorsOld):
 ####################      #########################
 def checkifActive(sensorName, pyName, active):
 	if active:
-		U.logger.log(20," check if active: {}  {}".format(sensorName,pyName))
+		U.logger.log(10," check if active: {}  {}".format(sensorName,pyName))
 		checkIfPGMisRunning(pyName, force=True, checkAliveFile=sensorName )
 		checkIfAliveFileOK(sensorName)
 	else:
@@ -1935,7 +1935,7 @@ def execMaster():
 
 		G.tStart	  = time.time()
 
-		U.sendi2cToPlugin(sensors)	
+		U.sendSensorAndRPiInfoToPlugin(sensors)	
 		tAtLoopSTart =time.time()
 
 		U.testNetwork()
@@ -2129,7 +2129,7 @@ def execMaster():
 					U.checkrclocalFile()
 
 				if loopCount%8 == 0: 
-					U.sendi2cToPlugin(sensors)		   
+					U.sendSensorAndRPiInfoToPlugin(sensors)		   
 					if adhocWifiStarted ==0: tryRestartNetwork()
 		
 				if loopCount %4 ==0: # check network every 40 secs

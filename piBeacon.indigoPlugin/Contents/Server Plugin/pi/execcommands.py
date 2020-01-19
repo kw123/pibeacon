@@ -432,11 +432,13 @@ def execCMDS(data):
 	global execcommands, PWM
 
 	for ijji in range(1):
+			next =""
 			try:
 				next = json.loads(data)
 			except	Exception, e:
 					U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					U.logger.log(30," bad command: json failed  %s"%unicode(data))
+					continue
 
 			#print next
 			#print "next command: "+unicode(next)

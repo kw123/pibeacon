@@ -2004,7 +2004,8 @@ use eg to track someone moving around - going from one room to the next" >
 				</List>
 			</Field>
 			<Field id="label4"               type="label"  > 
-				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
+				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite
+  use signal value at 1 distance to RPI for this field</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999"> 
 				<Label>.... -dBm=</Label>
@@ -2020,7 +2021,7 @@ use eg to track someone moving around - going from one room to the next" >
 				<Label>== run gatttool on rpi to get iBeacon info, requires SSD 7/2018 or GT </Label>
 			</Field>
 			<Field id="SupportsBatteryLevel" type="checkbox"     defaultValue="false"  hidden="false">
-				<Label>.... supports battery level info:</Label>
+				<Label>.... supports battery level info read from iBeacon:</Label>
 			</Field>
 
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
@@ -2029,13 +2030,14 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="2A19-public-batteryLevel-int"    > read battery level w UUID=2A19 public     for eg noda/aiko/iHere</Option>
 					<Option value="off"    				  >off</Option>
 				</List>
-				<Label>.... battery level:</Label>
+				<Label>.... battery level cmd:</Label>
 			</Field>
 
 			<Field id="txPowerlevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
-					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons, social retail,..</Option>
+<!--					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons, social retail,..</Option>
 					<Option value="2A07-public-txPowerLevel-int" >read  tx power level w UUID=2A07 public     for eg noda/aiko/iHere</Option>
+-->
 					<Option value="off"      >off</Option>
 				</List>
 				<Label>.... TX power level info at UUID=xx.. not implemented yet:</Label>
@@ -2416,6 +2418,11 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>Number</ValueType>
 				<TriggerLabel>batteryLevel</TriggerLabel>
 				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryLevelLastUpdate">
+				<ValueType>string</ValueType>
+				<TriggerLabel>batteryLevelLastUpdate</TriggerLabel>
+				<ControlPageLabel>batteryLevelLastUpdate</ControlPageLabel>
 			</State>
 
 	</States>
@@ -8519,8 +8526,8 @@ you can setup
    
 
    
-	<Device type="sensor" id="rdlidar">
-	<Name>INPUT-rdLidar</Name>
+	<Device type="sensor" id="lidar360">
+	<Name>INPUT-Lidar360</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -8535,18 +8542,19 @@ you can setup
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup RD-Lidar sensor on individual rPis.. 
+			<Label>Setup Lidar360 sensor on individual rPis.. 
     connect sensor to USB port and power
     definitions: 
       enpty room: set calibration (menu or action) when nobody is in room
-      trigger: when N dots next to each other have &gt; Z distance change events are triggered
-       current - last values and current - calibrated room vcalues. are 2 different triggers
+      trigger: when N dots next to each other have &gt; Z a distance change events are triggered
+       current - last values and current - calibrated room vcalues are 2 different triggers
        when the value is + the distance is bigger, hence = leaving or recalibration is needed
        when the value is - things are closer to the sensor = approacing or presence
-       current - last  triigers on faster movement, 
-       current - calibrated room triggers show the differnce tof now to when room was calibrated.
-       to improve the quality of data 6+ 360º measurements 
-          are taken and compared to current or calibrated room 
+       current - last  triggers on faster movement, 
+       current - calibrated room triggers show the differnce of now to when room was calibrated.
+       to improve the quality of data 6+ sequential 360º measurements 
+          are taken and compared to current or calibrated room,
+          if the largest of the measurements has sum of Z > threshold: event is triggered
   </Label>
 			</Field>
 
@@ -8587,10 +8595,10 @@ you can setup
 			<Field id="anglesInOneBin" type="menu"     defaultValue="2" hidden="no" > 
 			<Label>Angles combined into one bin:</Label>
 			<List>
-				<Option value="1"   > 1	degree </Option>
+				<Option value="1"   > 1	degree - if you have strong signals: surfaces that reflect well</Option>
 				<Option value="2"   > 2 degrees (default)</Option>
 				<Option value="3"   > 3	degrees</Option>
-				<Option value="4"   > 4	degrees</Option>
+				<Option value="4"   > 4	degrees - if you have week signals </Option>
 			</List>
 			</Field>
 			<Field id="minSignalStrength" type="menu"     defaultValue="14" hidden="no" > 
@@ -8763,10 +8771,14 @@ you can setup
 			<Label>Image parameters off / auto / manual:</Label> 
 			</Field>
 
-			<Field id="showAllImages" type="menu"     defaultValue="0"> 
+			<Field id="showImageWhen" type="menu"     defaultValue="90"> 
 			<List>
-				<Option value="0" >only create image file when event triggered</Option>
-				<Option value="1" >create image file every time data arrives</Option>
+				<Option value="-999999999" >create image file every time data arrives</Option>
+				<Option value="30"  >create image file when triggered or every 30 secs needs to be &gt;..delta..indigo updates</Option>
+				<Option value="60"  >create image file when triggered or every 60 secs</Option>
+				<Option value="90"  >create image file when triggered or every 90 secs</Option>
+				<Option value="120" >create image file when triggered or every 2 minutes</Option>
+				<Option value="999999999999999999" >only create image file when event triggered</Option>
 			</List>
 			<Label>Make image only for events or allways:</Label> 
 			</Field>
@@ -8929,7 +8941,7 @@ you can setup
 				<Label>blank: create image in 
 .../Preferences/Plugins/
    com.karlwachs.piBeacon/
-   rdLidarImages/devName.png</Label>	
+   Lidar360Images/devName.png</Label>	
 			</Field>
 
 			<Field id="infoLabelColor" type="label">
@@ -8957,7 +8969,7 @@ you can setup
 				<Option value="0"   >off</Option>
 				<Option value="1"   >plugin call cmd to matplot py</Option>
 				<Option value="2"   >matplot py program only</Option>
-				<Option value="3"   >plugin and matplot y</Option>
+				<Option value="3"   >plugin and matplot</Option>
 			</List>
 			<Label>logLevel:</Label> 
 			</Field>
@@ -15837,13 +15849,15 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 
 			<Field id="infoLabelAPDS9960r" type="label">
 			<Label>Setup lightning sensor  as3935on individual rPis.. 
         connect 3.3, GND, SDA,SCL and int pin to gpio 
         and board-Si to V+; EN_V to GND
-        if no other i2c device a 10Kohm SCL to V+ is required</Label>
+        if no other i2c device a 10Kohm SCL to V+ is required
+        it might not show with "i2cdetect -y 1"</Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
@@ -17208,6 +17222,23 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 
+			<Field id="lightMaxDimForDisplay"  type="menu" defaultValue="1.0" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+				<List>
+					<Option value= "0.1"     > 10%</Option>
+					<Option value= "0.2"     > 20%</Option>
+					<Option value= "0.3"     > 30%</Option>
+					<Option value= "0.4"     > 40%</Option>
+					<Option value= "0.5"     > 50%</Option>
+					<Option value= "0.6"     > 60%</Option>
+					<Option value= "0.7"     > 70% max light</Option>
+					<Option value= "0.8"     > 80% max light</Option>
+					<Option value= "0.9"     > 90% max light</Option>
+					<Option value= "1.0"     >100% max light</Option>
+				</List>
+			<Label>.. maximum light level:</Label>
+			</Field>
+
+
 
 
 			<Field id="infoLabelsensors" type="label" visibleBindingId="devType" visibleBindingValue="ssd1351,sh1106,st7735,RGBmatrix32x32,RGBmatrix64x16,RGBmatrix64x32,RGBmatrix96x32,screen,screenXwindows">
@@ -17556,6 +17587,39 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 				<Option value= "14"  > 14</Option>
 				</List>
 			<Label>DMA channel -- only for experts (depends on RPi, for rpi4 use 10 ):</Label>
+			</Field>
+
+			<Field id="lightSensorOnForDisplay" type="checkbox" defaultValue="false" hidden ="false">
+				<Label>=== Use light sensor to dim LED/ screen:</Label>
+			</Field>
+
+			<Field id="lightSensorForDisplay-DevId-type"  type="menu" defaultValue="-1" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+				<List class="self" filter="" method="filterLightSensorOnRpi" dynamicReload="false"/>
+				<Label>.. use which light sensor:</Label>
+			</Field>
+
+			<Field id="lightSensorSlopeForDisplay"  type="textfield" defaultValue="1.0" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+			<Label>.. light sensor sensitivity factor 0.1..10:</Label>
+			</Field>
+
+			<Field id="lightMinDimForDisplay"  type="textfield" defaultValue="1" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+			<Label>.. minimum light level(1-255):</Label>
+			</Field>
+
+			<Field id="lightMaxDimForDisplay"  type="textfield" defaultValue="255" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+			<Label>.. maximum light level (1-255):</Label>
+			</Field>
+
+
+
+
+
+			<Field id="writeOutputToState"  type="menu" defaultValue="0"  >
+				<List>
+				<Option value= "0"   >no</Option>
+				<Option value= "1"   >YES</Option>
+				</List>
+			<Label>Show output in device state:</Label>
 			</Field>
 
 
@@ -18307,6 +18371,7 @@ States:
 
 
 	<Device type="sensor" id="mhzI2C">          <Name>mhz i2c  deprecated, use new definition device</Name>	</Device>
+	<Device type="sensor" id="rdlidar">         <Name>rdlidar deprecated, use new definition device lidar360</Name>	</Device>
 	<Device type="sensor" id="mhzSERIAL">       <Name>mhz serial  deprecated, use new definition device</Name>	</Device>
 
 	<Device type="custom" id="OUTPUTgpio-4">	<Name>OUTPUT-GPIO-max-4-PINs - deprecated</Name>	</Device>

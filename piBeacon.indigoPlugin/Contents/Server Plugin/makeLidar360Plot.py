@@ -38,7 +38,7 @@ tStart			  = time.time()
 
 DPI = 300
 
-pluginDir		= sys.argv[0].split("makeRdlidarPlot.py")[0]
+pluginDir		= sys.argv[0].split("makelidar360Plot.py")[0]
 indigoDir		= pluginDir.split("Plugins/")[0]
 imageParams 	= json.loads(sys.argv[1])
 logfileName		= imageParams["logFile"]
@@ -48,6 +48,7 @@ logfileName		= imageParams["logFile"]
 logLevel		  = imageParams["logLevel"] in ["2","3"]
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
+#logLevel = True
 if  not logLevel:
 	logger.setLevel(logging.ERROR)
 else:
@@ -151,21 +152,9 @@ except: showZeroValues 	= False
 try: 	showDoNotTrigger 	= imageParams["showDoNotTrigger"] == "1"
 except: showDoNotTrigger 	= True
 
-try: 	
-	doNotUseDataRanges = []
-	doNotUseDataRangesShow 	= imageParams["doNotUseDataRanges"]
-	if len(doNotUseDataRangesShow) > 2:
-		ddd = doNotUseDataRangesShow.split(";")
-		for dd in ddd: 
-			if len(dd) > 2 and "-" in dd:
-				d = dd.split("-")
-				doNotUseDataRanges.append([int(d[0]),int(d[1])])
-				#logger.log(20,u"dd {} d {} doNotUseDataRanges:{}".format(dd, d, doNotUseDataRanges)  )
-		
-except: doNotUseDataRanges 	= []
 
 try: 	dataFile 	= imageParams["dataFile"] 
-except: dataFile 	= "/tmp/makerdlidar.dat"
+except: dataFile 	= "/tmp/makelidar360.dat"
 
 try:
 	f = open(dataFile,"r")
@@ -175,6 +164,20 @@ except  Exception, e:
 	logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
 	exit()
 #
+
+
+try: 	
+	doNotUseDataRanges = []
+	try:	doNotUseDataRangesShow 	= data["doNotUseDataRanges"]
+	except:  doNotUseDataRangesShow  = ""
+	if len(doNotUseDataRangesShow) > 2:
+		ddd = doNotUseDataRangesShow.split(";")
+		for dd in ddd: 
+			if len(dd) > 2 and "-" in dd:
+				d = dd.split("-")
+				doNotUseDataRanges.append([int(d[0]),int(d[1])])
+				#logger.log(20,u"dd {} d {} doNotUseDataRanges:{}".format(dd, d, doNotUseDataRanges)  )
+except:	doNotUseDataRanges 	= []
 
 try:
 	# print start to logfile 
@@ -253,7 +256,7 @@ try:
 			except Exception, e:
 				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
 				break
-	logger.log(30,"doNotTrigger:{},  {}".format(doNotUseDataRanges, dataToPlot["doNotTrigger"]) )
+	logger.log(20,"doNotTrigger:{},  {}".format(doNotUseDataRanges, dataToPlot["doNotTrigger"]) )
 
 	for kk in ["current","calibrated"]:
 		dd = data[kk]
@@ -390,26 +393,33 @@ try:
 				elif  showTriggerValues =="top left outside":	pos =[xLeft,yOutside]
 				else:											pos =[xLeft,yInside]
 				## make a nice looking sjon dumps for the trigger info, combine list to one line and remove empty structures 
-				out = copy.deepcopy(data["triggerValues"])
+				out = "==TRIGGER INFO==\n"
+				mapLTGT ={"LT":"Approaching(<)","GT":"Leaving(>)"}
+				mapCURCal ={"current":"Current Move","calibrated":"Compared to Calibrated"}
 				for kk in ["current","calibrated"]:
 					dd = data["triggerValues"][kk]
+					out += "{}:\n".format(mapCURCal[kk])
 					for LTGT in["LT","GT"]:
 						ltr= len(tr)
 						tr = data["triggerValues"][kk][LTGT]["sections"]
 						ltr= len(tr)
-						if ltr ==0: 
-							out[kk][LTGT]={}
-						else:
+						if ltr >0: 
+							out += "..{}:\n".format(mapLTGT[LTGT])
 							for ii in range(ltr):
-								out[kk][LTGT]["sections"][ii]["bins"] = unicode(data["triggerValues"][kk][LTGT]["sections"][ii]["bins"])
-				out["off-x/y/phi"] = "{:.0f}/{:.0f}/{:.0f}".format(xOffset, yOffset,phiOffset)
-				out["doNotUse"] = "{}".format(doNotUseDataRangesShow)
-				#del out["doNotUseDataRanges"]
-				dd = json.dumps(out,sort_keys=True, indent=2)
-				ax.text(pos[0], pos[1], dd,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
+								bins = "{}-{}".format(data["triggerValues"][kk][LTGT]["sections"][ii]["bins"][0],data["triggerValues"][kk][LTGT]["sections"][ii]["bins"][1])
+								out += "....bins:{}; sum:{}\n".format(bins,data["triggerValues"][kk][LTGT]["sections"][ii]["sum"])
+							out += "....totalCount:{}\n".format(data["triggerValues"][kk][LTGT]["totalCount"])
+							out += "....totalSum:{}\n".format(data["triggerValues"][kk][LTGT]["totalSum"])
+						else: out += "..{}: -- \n".format(mapLTGT[LTGT])
+				out+= "nMeas.Last-Current: {}\n".format(data["triggerValues"]["dIndex_Last-Current"])
+				out+= "dTime_Last-Current: {}\n".format(data["triggerValues"]["dTime_Last-Current"])
+				out+= "notTriggerBins:{}\n".format(doNotUseDataRangesShow)
+				out+= "Image:\n"
+				out+= "off-x/y/phi: {:.0f}/{:.0f}/{:.0f}".format(xOffset, yOffset,phiOffset)
+				ax.text(pos[0], pos[1], out,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
+				logger.log(30,out )
 		except  Exception, e:
 			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
-
 
 	if showLegend !="":
 		plt.legend(fontsize = fontSize, loc=showLegend)

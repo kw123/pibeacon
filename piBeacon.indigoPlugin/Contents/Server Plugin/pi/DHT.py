@@ -24,40 +24,41 @@ import Adafruit_DHT
 # DHT
 # ===========================================================================
 
-def getDATAdht(DHTpinI,Type):
+def getDATAdht(DHTpinI,Type,devId):
 		global sensorDHT, startDHT, lastRead
+		global lastSensorRead
 		t,h="",""
 		try:
 			ii=startDHT[str(DHTpinI)]
 		except:
 			if startDHT =="":
-				startDHT={}
-				sensorDHT={}
-			lastRead = 0
-			startDHT[str(DHTpinI)]  = 1
+				startDHT  = {}
+				sensorDHT = {}
+			if devId not in lastSensorRead: 
+				lastSensorRead[devId] = 0
+			startDHT[str(DHTpinI)] = 1
 			if Type.lower() == "11":		
 				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT11
 			else:	  
 				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT22
 		try:
-			if time.time() - lastRead < 3.: time.sleep( max(0, min(3.1, 3.5 - (time.time() - lastRead )) ) )
+			if time.time() - lastSensorRead[devId] < 3.: time.sleep( max(0, min(3.1, 3.5 - (time.time() - lastRead )) ) )
 			h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
 			if unicode(h) == "None" or unicode(t) == "None":
 				time.sleep(3.) # min wait between read -s 2.0 secs, give it a little more..
 				h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
 				if unicode(h) == "None" or unicode(t) == "None":
-					U.logger.log(20, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpinI)+" try again" )
-			#f h is not None and t is not None:
-			#print " return data: "+str(h)+" "+str(t), Type, "pin",str(DHTpinI)
+					U.logger.log(20, " return data failed: h:"+str(h)+" t:"+str(t)+"  Type:"+str(Type)+"  pin:"+str(DHTpinI) )
+			#U.logger.log(20, " return data: t:{}, h:{} pin: {}".format(t, h, DHTpinI) )
 #			# sensorDHT=""
-			lastRead = time.time() 
+			lastSensorRead[devId] = time.time() 
 			try: return float(t),float(h)
 			except: return "",""
 			#else: return "" ,""  
 		except	Exception, e:
 			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			U.logger.log(20, u" pin: "+ str(DHTpinI)+" return value: t="+ unicode(t)+"; h=" + unicode(h) )
-		lastRead = time.time() 
+		lastSensorRead[devId] = time.time() 
 		return "",""
 
 
@@ -71,10 +72,9 @@ def getDHT(sensor,dataI):
 			for devId in sensors[sensor]:
 				t =[-1000,-1000]; h=[-1000,-1000]
 				for ii in range(2):
-					t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
+					t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
 					if t[ii] =="":
 						time.sleep(4)
-						t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"] )
 	
 				if abs(t[0]-t[1]) > 3 or t[0] == -1000 or t[1] == -1000 or h[0] == -1000 or h[1] == -1000:
 					# bad result 
@@ -156,7 +156,6 @@ def readParams():
 		if "sensors"			  in inp: sensors =				   (inp["sensors"])
 		if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
 
-
 		sensorList=""
 		for sensor in sensors:
 			sensorList+=sensor.split("-")[0]+","
@@ -180,12 +179,13 @@ global sensorList, sensors,badSensors
 global startDHT
 global regularCycle
 global oldRaw, lastRead
-global	sensorRefreshSecs
+global sensorRefreshSecs, lastSensorRead
 
 
 sensorRefreshSecs	= 90
 oldRaw				= ""
 lastRead			= 0
+lastSensorRead		= {}
 startDHT			= ""
 loopCount			= 0
 sensorList			= []

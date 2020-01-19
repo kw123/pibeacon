@@ -1,3 +1,35 @@
+Added features / changes in v7.115.329 @ 2019-01-18
+===================================================
+
+1. device state " batteryLevelLastUpdate" to iBeacon devices.
+   with this information you can see when the last successful update of the iBeacon battery level was obtained.
+
+2. add daily report to indigo log / plugin log if batterylevel to low or update older than 2 days eg:
+piBeacon Warning                    batterylevel level test:
+b-iHere black2                      last level reported:  74%, has not been updated for > 2 days:
+b-iHere_black                       last level reported:  76%, has not been updated for > 2 days:
+b-Mazda-aaa                               level down to:  11% ... charge or replace battery
+
+   if all ok one line "batterylevel level test:  no iBeacon found with low battery indicator or old update"  is printed to plugin.log
+   you could trigger on event log warning to check for that output 
+
+2. if there are any active ibeacons w battery reporting,  each morning at 4 or after plugin relaunch 
+   the plugin will request a battery level update  from the RPIs
+
+
+Added features / changes in v7.115.327 @ 2019-01-15
+===================================================
+
+1. adding new rpi does not require a restart of the plugin anymore:
+
+2. fixed DHT sensor if it does not answer it will not hang anymore 
+
+3. minor menu text improvements
+
+3. print config adjustments and additions
+
+
+
 Added features / changes in v7.115.326 @ 2019-12-11
 ===================================================
 
@@ -17,7 +49,6 @@ Added features / changes in v7.114.326 @ 2019-12-09
 ===================================================
 
 1. improved rd-lidar sensor:
-   - 1. option to exclude certain angles from being used in move trigger
    option to exclude certain angles from being used in move trigger
 
 2. fix bug: i2c state in RPi, number were wrong for Hex > 20

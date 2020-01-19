@@ -50,7 +50,7 @@ def readRejects():
 			f.close()
 			nExistingMacs = len(rejectExisting)
 	except:
-		logger.log(20,in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
+		logger.log(20,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		pass
 	
 #################################
@@ -68,7 +68,7 @@ def writeRejects():
 			items[1]=float(items[1])
 			timeSt  = time.strftime('%Y-%m-%d %H:%M:%S',  time.localtime(items[1]))
 		except  Exception, e:
-			logger.log(20,in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
+			logger.log(20,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			logger.log(20,items[1])
 			#exit()
 		reason  = items[2]
@@ -84,12 +84,12 @@ def writeRejects():
 					rejectExisting[mac]["last"]=timeSt
 				if  rejectExisting[mac]["first"] > timeSt:
 					rejectExisting[mac]["first"]=timeSt
-				if ","+rPi not in  rejectExisting[mac]["rPi"] and rejectExisting[mac]["rPi"].find(rPi)!=0:  
+				if ","+rPi not in  rejectExisting[mac]["rPi"] and rejectExisting[mac]["rPi"].find(rPi) != 0:  
 					rejectExisting[mac]["rPi"]+=","+rPi
 				rejectExisting[mac]["rPi"] = rejectExisting[mac]["rPi"].strip(",")
 				rejectExisting[mac]["count"]+=1
 			except  Exception, e:
-				logger.log(20,in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), force=True)
+				logger.log(20,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	
 	#print  rejectExisting   
@@ -112,7 +112,7 @@ def writeRejects():
 			out0.append(out)
 			logger.log(20,"\n"+out)
 		except: 
-			logger.log(20,error for "+ mac, force=True)
+			logger.log(20,"error for "+ mac)
 			logger.log(20,(unicode(rejectExisting[mac]))
 	lastDate.sort()	 
 	nRejects = len(out0)
@@ -139,17 +139,17 @@ def writeRejects():
 global dataDir, rejectsIn, rejectExisting
 global logfileName, logLevel, printON, nRejects, nFiles, nExistingMacs
 
-printON = False
-nRejects = 0
-nFiles = 0
-nExistingMacs =0
+printON 		= False
+nRejects 		= 0
+nFiles 			= 0
+nExistingMacs 	= 0
 
 pluginDir		= sys.argv[0].split("updateRejects.py")[0]
 indigoDir		= pluginDir.split("Plugins/")[0]
 dataDir 		= indigoDir+"Preferences/Plugins/com.karlwachs.piBeacon/rejected/"
 logfileName 	= indigoDir+"Logs/com.karlwachs.piBeacon/plugin.log"
 ### logfile setup
-try: logLevel = sys.argv[1]=="1"
+try: logLevel = sys.argv[1] == "1"
 except: logLevel = False
 
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
@@ -162,9 +162,9 @@ else:
 
 
 	
-logger.log(20,========= start    @ "+unicode(datetime.datetime.now())+"  =========== " )
+logger.log(20,"========= start    @ {}  =========== ".format(datetime.datetime.now() )
 readRejects()
 writeRejects()
 
-logger.log(20,========= finished @ "+unicode(datetime.datetime.now())+"; read %d files from RPIs, ;  MACs in reject list before %d,  after: %d"%(nFiles, nExistingMacs, nRejects))
+logger.log(20,"========= finished @ {}; read {} files from RPIs ;  MACs in reject list before {},  after: {}"format(datetime.datetime.now(), nFiles, nExistingMacs, nRejects) )
 sys.exit(0)		

@@ -1595,40 +1595,6 @@ def getSerialDEV():
 	return ""
 
 
-#################################
-def geti2c():
-	try:
-		i2cChannels=[]
-		temp =[]
-		ret= subprocess.Popen("i2cdetect -y 1",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if ret[1] is not  None and ret[1].find("No such file or directory") > 0:
-			i2cChannels=["i2c.ERROR:.no.such.file....redo..SSD?"]
-		else:
-			lines = ret[0].split("\n")
-			temp=[]
-			ii=-1
-			for line in	 lines:
-				if line.find(":") ==-1: continue  # skip non data lines
-				ii+=1
-				line = line[3:]
-				line = line.replace("-"," ")
-				val = [line[jj:jj+3] for jj in range(0,3*16,3)]
-				kk = -1
-				if len(val)>0:
-					for v in val:
-						kk+=1
-						if v !="   ":
-							v16=ii*16 + kk
-							if v.find("UU")>-1: v16 =-v16
-							temp.append(v16) # converted
-			for channel in temp:
-				i2cChannels.append("{}={}".format(channel,hex(channel)))
-		return i2cChannels
-	except	Exception, e :
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
-	return ["i2c detect error"]
-
-
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 def selectHCI(HCIs, useDev, default):
@@ -2251,18 +2217,14 @@ def checkIfrebootAction(action):
 
 
 ################################
+################################
 
 
-def sendi2cToPlugin(sensDict):
-	i2cList		= ""
-	lastBoot	= ""
-	os			= ""
-	temp		= ""
-	rpiType		= ""
+#################################
+def getSensorInfo(sensDict, i2cList):
 	i2cError	= ""
 	try:
 		#logger.log(30, u"cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
-		i2cList	 = geti2c()
 		sensList = ""		
 		for sens in sensDict:
 			if sens.find("i2c") == 0: # strip i2c from the beginning of name.
@@ -2295,8 +2257,18 @@ def sendi2cToPlugin(sensDict):
 					i2cError += "sensor:{} - devId:{} i2c:{}/{}; ".format(sens, devId, i2cI,hex(i2cI))
 	
 		i2cError = i2cError.strip("; ")
-
 		if len(sensList) > 0: sensList = sensList.strip(" ").strip(",")
+		return i2cError, sensList
+	except Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return "","",""
+
+
+
+#################################
+def getRPiType():
+	try:
+		#logger.log(30, u"cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
 		#																	remove trailing null chars;  \\ for escape  of \
 		rpiType	 = subprocess.Popen("cat /sys/firmware/devicetree/base/model | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		###print "rpiType1>>"+rpiType+"<<"
@@ -2309,29 +2281,105 @@ def sendi2cToPlugin(sensDict):
 		###print "serN>>"+serN+"<<"
 		rpiType +=", ser#"+serN
 		#  --> Raspberry Pi 3 Model B Plus Rev 1.3/ ser#00000000dcfb216c
+		return rpiType
+	except Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return ""
 
+
+#################################
+def getOSinfo():
+	try:
 		osInfo	 = subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").split("\n")
 		for line in osInfo:
 			if line .find("VERSION=") == 0:
 				os = line.split("=")[1].strip('"').strip(' ')
 		os += ", "+ subprocess.Popen("uname -r" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
 		os += ", "+ subprocess.Popen("uname -v" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip(' ')
+		return os
+	except Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return ""
 
+
+#################################
+def getTemperatureOfRPI():
+	try:
 		tempInfo = subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		try:	temp = tempInfo.split("=")[1].split("'")[0]
 		except: temp = "0"
+		return temp
+	except Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return ""
 
+
+#################################
+def getLastBoot():
+	try:
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
 		lastBoot = subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n")
+		return lastBoot
+	except Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return ""
 
-		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2cList).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
+
+#################################
+def geti2c():
+	try:
+		i2cChannelsINTHex=[]
+		i2cChannelsHEX=[]
+		temp =[]
+		ret= subprocess.Popen("i2cdetect -y 1",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		if ret[1] is not  None and ret[1].find("No such file or directory") > 0:
+			i2cChannels=["i2c.ERROR:.no.such.file....redo..SSD?"]
+		else:
+			lines = ret[0].split("\n")
+			temp=[]
+			ii=-1
+			for line in	 lines:
+				if line.find(":") ==-1: continue  # skip non data lines
+				ii+=1
+				line = line[3:]
+				line = line.replace("-"," ")
+				val = [line[jj:jj+3] for jj in range(0,3*16,3)]
+				kk = -1
+				if len(val)>0:
+					for v in val:
+						kk+=1
+						if v !="   ":
+							v16=ii*16 + kk
+							if v.find("UU")>-1: v16 =-v16
+							temp.append(v16) # converted
+			for channel in temp:
+				i2cChannelsINTHex.append("{}={}".format(channel,hex(channel)))
+				i2cChannelsHEX.append("{}".format(hex(channel)))
+		return i2cChannelsINTHex,i2cChannelsHEX
+	except	Exception, e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+	return ["i2c detect error"]
+
+
+
+#################################
+def sendSensorAndRPiInfoToPlugin(sensDict):
+	try:
+		i2cListIntHex,i2cListHex	= geti2c()
+		i2cError, sensList			= getSensorInfo(sensDict,i2cListIntHex)
+		rpiType						= getRPiType()
+		os							= getOSinfo()
+		temp						= getTemperatureOfRPI()
+		lastBoot					= getLastBoot()
+
+		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2cListHex).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp, "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart}
 		if i2cError != "": data["i2cError"] = i2cError
 		##print data
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
-
 	except Exception, e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return 
+
 
 #################################
 def testBad(newX, lastX, inXXX):

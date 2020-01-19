@@ -32,11 +32,21 @@ def Color(red, green, blue):
 	"""
 	return (red << 16) | (green << 8) | blue
 def applyIntensity(c):
-	global intensity
+	global intensity, multIntensity
+	global lightMinDimForDisplay, lightMaxDimForDisplay
+	ret =[0,0,0]
 	try:
-		return [int(c[0]*intensity),int(c[1]*intensity),int(c[2]*intensity)]
-	except:
-		return [0,0,0]
+		for ii in range(3):	
+			r = c[ii] * intensity * multIntensity
+			r = int( min(r , lightMaxDimForDisplay) )
+			if c[ii] > 0:  r = int( max( r, lightMinDimForDisplay) )
+			ret[ii] = r
+		#U.logger.log(20, u"applyIntensity c: {}; ret: {};   {};   {};   {};   {}".format(c, ret, intensity, multIntensity, lightMaxDimForDisplay, lightMinDimForDisplay))
+		return ret
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
+		return ret
 
 
 class _LED_Data(object):
@@ -655,6 +665,9 @@ class draw():
 def readParams(pgmType="neopixel"):
 	global devType,	 intensityDevice,flipDisplay, signalPin,OrderOfMatrix, PWMchannel, DMAchannel, frequency
 	global astOrderOfMatrix, lastdevType, lastsignalPin, lastintensityDevice, lastPWMchannel, lastDMAchannel,lastfrequency
+	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
+	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay, useLightSensorType, useLightSensorDevId
+	global multIntensity, intensity, intensityDevice, lightSensorValue
 	global inpRaw
 	global oldRaw, lastRead
 	try:
@@ -730,6 +743,35 @@ def readParams(pgmType="neopixel"):
 						U.logger.log(10, " new OrderOfMatrix="+unicode(OrderOfMatrix)+" new="+unicode(lastOrderOfMatrix))
 						retCode = 1
 
+
+					if "lightSensorOnForDisplay" in ddd:
+						try:	
+							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
+						except	Exception, e:
+								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+					if "lightSensorForDisplay-DevId-type" in ddd:
+						try:	
+							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
+							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
+						except	Exception, e:
+								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+					if "lightSensorSlopeForDisplay" in ddd:
+						try:	
+							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
+						except	Exception, e:
+								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					if "lightMinDimForDisplay" in ddd:
+						try:	
+							lightMinDimForDisplay = max(0.0, min(255., float(ddd["lightMinDimForDisplay"]) ) )
+						except: pass
+					if "lightMaxDimForDisplay" in ddd:
+						try:	
+							lightMaxDimForDisplay = max(0.0, min(255., float(ddd["lightMaxDimForDisplay"]) ) )
+						except: pass
+
+
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return	retCode
@@ -737,10 +779,11 @@ def readParams(pgmType="neopixel"):
 def readNewInput():
 	try:
 		f = open(G.homeDir+"temp/neopixel.inp","r")
-		xxx= f.read()  
-		items=xxx.split("\n")
+		xxx = f.read().strip("\n") 
+		items = xxx.split("\n")
 		f.close()
 		os.remove(G.homeDir+"temp/neopixel.inp")
+		U.logger.log(10," new input: {}".format(xxx))
 		return items
 	except:	 
 		items=[]
@@ -780,9 +823,96 @@ def deleteLastCommands():
 			os.remove(G.homeDir+"neopixel.last")
 	except: pass
 	
+# ------------------    ------------------ 
 def restartNEOpixel(param=""):
 	global devType,lastdevType
 	U.restartMyself(reason="restarting due to new device type, old="+devTypeLast+" new="+devType, param=param, doPrint=True)
+
+
+# ------------------    ------------------ 
+def getLightSensorValue(force=False):
+	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
+	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay, intensity, useLightSensorType, useLightSensorDevId
+	global multIntensity, intensityDevice, lightSensorValue
+	try:
+		tt0 = time.time()
+		#U.logger.log(20, "lightSensorValue 1")
+		if not lightSensorOnForDisplay:		return False
+		if (tt0 - lastTimeLightSensorValue < 2) and not force:		return False
+		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"):	return False
+###{  "sensors": {    "i2cOPT3001": {      "393522233": {        "light": 40.96      }    }  },   "time": 1568991254.784975}
+		rr , raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
+		if rr == {}:
+			time.sleep(0.1)
+			rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
+		os.system("sudo rm "+G.homeDir+"temp/lightSensor.dat")
+		if rr == {} or "time" not in rr: 							return False
+		if "sensors" not in rr: 									return False
+		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
+		if useLightSensorType not in rr["sensors"]: 				return False
+		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
+		tt = float(rr["time"])
+		if tt == lastTimeLightSensorFile:						 	return False	
+
+		lightSensorValueREAD = -1
+		for devId in rr["sensors"][useLightSensorType]:
+			if devId == useLightSensorDevId:
+				lightSensorValueREAD = float(rr["sensors"][useLightSensorType][devId]["light"])
+				break
+		if lightSensorValueREAD ==-1 : return 
+		lastTimeLightSensorFile = tt
+
+		#U.logger.log(20, "lightSensorValue 2")
+		if   useLightSensorType == "i2cTSL2561":	maxRange = 2000.
+		elif useLightSensorType == "i2cOPT3001":	maxRange = 60.
+		elif useLightSensorType == "i2cVEML6030":	maxRange = 700.
+		elif useLightSensorType == "i2cIS1145":		maxRange = 2000.
+		else:										maxRange = 1000.
+
+		lightSensorValueRaw = lightSensorValueREAD * (lightSensorSlopeForDisplay/maxRange) 
+		lightSensorValueRaw = max(0.05, lightSensorValueRaw)
+		lightSensorValueRaw = min(20, lightSensorValueRaw)
+		# lightSensorValueRaw should be now between ~ 0.001 and ~1.
+		#if force:	
+		#	lightSensorValue = lightSensorValueRaw
+		#	return True
+		if (  abs(lightSensorValueRaw-lastlightSensorValue) / (max (0.005, lightSensorValueRaw+lastlightSensorValue))  ) < 0.05: return False
+		lightSensorValue = (lightSensorValueRaw*1 + lastlightSensorValue*3) / 4.
+		lastTimeLightSensorValue = tt0
+		#U.logger.log(20, "lightSensorValue sl:{};  read:{:.0f}, raw:{:.3f};  new used:{:.4f};  last:{:.4f}; maxR:{:.1f}, inties:{}; {}".format(lightSensorSlopeForDisplay, lightSensorValueREAD, lightSensorValueRaw, lightSensorValue, lastlightSensorValue,  maxRange, intensityDevice,  multIntensity) )
+		lastlightSensorValue = lightSensorValue
+		multIntensity =  intensityDevice * lightSensorValue
+		return True
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return False
+
+
+# ------------------    ------------------ 
+def checkLightSensor():
+	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw
+	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay
+	global multIntensity, intensityDevice, lightSensorValue
+	try:
+		
+			
+		if not lightSensorOnForDisplay : return False
+		if not getLightSensorValue(force=True):
+			if (  abs(lightSensorValueRaw - lightSensorValue) / (max(0.005, lightSensorValueRaw + lightSensorValue))  ) > 0.05:
+				#U.logger.log(20, " step up down light: lsv:{};  lsvR:{};  newlsv:{}; inties:{};  {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensityDevice,  multIntensity) )
+				lightSensorValue     = (lightSensorValueRaw*1 + lightSensorValue*3) / 4.
+				lastlightSensorValue = lightSensorValue
+				multIntensity =  intensityDevice * lightSensorValue
+				return True
+			else:
+				if lightSensorValue == lightSensorValueRaw: return False
+				lightSensorValue     = lightSensorValueRaw
+				multIntensity = intensityDevice * lightSensorValue
+				#U.logger.log(20, " step read    light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensityDevice,  multIntensity) )
+				return True
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
 	
 #=============================
 #=============================
@@ -791,6 +921,10 @@ def restartNEOpixel(param=""):
 global LED_COUNT, rotation, intenstity, intensity, lastAlive
 global devType,	 intensityDevice,flipDisplay, signalPin,OrderOfMatrix, PWMchannel, DMAchannel, frequency
 global lastOrderOfMatrix, lastdevType, lastsignalPin, lastintensityDevice, lastPWMchannel, lastDMAchannel,lastfrequency
+global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
+global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay
+global useLightSensorType, useLightSensorDevId
+global multIntensity, intensity, intensityDevice, lightSensorValue
 global height,width
 global linearDATA
 global oldRaw,	lastRead
@@ -812,6 +946,20 @@ DMAchannel		= 5
 frequency		= 800000
 intensity		= 1
 intensityDevice = 1
+
+useLightSensorType 			= ""
+useLightSensorDevId 		= 0
+
+multIntensity				= 1
+lightSensorValue			= 1.
+lastlightSensorValue 		= 0
+lastTimeLightSensorValue	= 0
+lastTimeLightSensorFile 	= 0
+lightSensorValueRaw 		= 1
+lightSensorSlopeForDisplay 	= 1.
+lightMinDimForDisplay  		= 0.3
+lightMaxDimForDisplay		= 255
+lightSensorOnForDisplay 	= False
 
 
 pgmType	 = "neopixel"
@@ -856,7 +1004,6 @@ brightness(intensityDevice)
 image = draw(nx=width,ny=height)
 ##image.clear([0,0,0])## not enabled, keep last alive 
 
-items=[]
 #items.append({})
 #items[0]["resetInitial"]	 = [0,0,0]
 #items[0]["repeat"]			 = 1
@@ -872,26 +1019,32 @@ items=[]
 #items[0]["command"].append(   {"type":"sPoint","position":[6,6,255,255,0],"display":"immediate"}  )
 
 #print items
+items			= []
 loopCount		= 0
 loop			= 0
 lastAlive		= 0
 devTypeLast		= devType
-
-myPID	= str(os.getpid())
+lastItems		= []
+redoItems 		= False
+lastClock 		= 0
+tclockLast 		= time.time() -1
+myPID			= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")
 
 time.sleep(0.1)
-lastClock =0
-tclockLast = time.time() -1
 while True:
 	ttx = time.time()
 	try:
 		if loop == 1 and  (items == [] or items ==""):
 			items = readLastCommands()
 
+		if redoItems and lastItems != []: 
+			items = copy.copy(lastItems)
+		#U.logger.log(20,"redo: {}, nitems: {};  items: {}, lastItems: {}".format(redoItems, len(items), unicode(items)[0:50],  unicode(lastItems)[0:50]) )
+
 		for item in items:
 		
-			U.logger.log(10, "item:"+unicode(item ))
+			#U.logger.log(20, "item:{}".format(unicode(item)[0:300]))
 			#print item
 			try:
 				if len(item) < 1: continue
@@ -937,10 +1090,6 @@ while True:
 						time.sleep(startAtDateTime)
 				except:
 					pass
-
-
-
-
 
 			
 			repeat=1
@@ -1199,10 +1348,13 @@ while True:
 						time.sleep(min(0.1, max(0,time.time()- lastClock)))
 					#print "neopixel sleep end repeat ", time.time() -tt0
 		time.sleep(0.1) 
-		items=[]
+		if items != []:
+			lastItems = copy.copy(items)
+		items = []
 		try:
 			if checkIfnewInput():
-				items=readNewInput()
+				items = readNewInput()
+			redoItems = checkLightSensor()
 		except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				

@@ -138,7 +138,7 @@ specialOutputList=[		"display",
 						"OUTPUTgpio"]
 
 specialSensorList =[ 	"amg88xx",
-						"rdlidar",
+						"lidar360",
 						"mlx90640",
 						"as726x",
 						"APDS9960",
