@@ -60,14 +60,19 @@ def getBeaconParameters(devices):
 
 				for xx in params:
 					yy = xx.split("-")
-					if len(yy) != 4: continue
+					if len(yy) < 4: continue
 					uuid.append(yy[0])
 					if yy[1] == "randomON": random.append(" -t random ")
 					else:				    random.append(" ")
 					state.append(yy[2])
 					dType.append(yy[3])
-#					"2A19-randomON-batteryLevel-int"  > read battery level UUID=2A19 random ON  for eg XY beacons
-#					<"2A19-randomOff-batteryLevel-int" > read battery level UUID=2A19 random off for ed noda/aiko/iHere 
+					bits = 127
+					norm = 100
+					if len(yy) == 6:
+						bits = int(yy[4].split("=")[1])
+						norm = int(yy[5].split("=")[1])
+#					"2A19-randomON-batteryLevel-int-bits127-max64"  > read battery level UUID=2A19 random ON  for eg XY beacons
+#					<"2A19-randomOff-batteryLevel-int-bits63-max36" > read battery level UUID=2A19 random off for ed noda/aiko/iHere 
 
 				#U.logger.log(20,"{}:  state: {}; uuid:{}; random:{}; dType:{} ".format(mac, state, uuid, random, dType ) )
 				if len(state) ==0: continue
@@ -75,10 +80,10 @@ def getBeaconParameters(devices):
 					cmd = "sudo /bin/hciconfig hci0 down"
 					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 					cmd = "sudo /bin/hciconfig hci0 up; /usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -b {} {} --char-read --uuid={}".format(timeoutSecs, mac,random[ll], uuid[ll])
+					##					                                                 /usr/bin/gatttool -b 24:da:11:26:3b:4d --char-read --uuid=2A19 - public -batteryLevel-int
 					U.logger.log(20,"iBeacon: {};   command: {}  ".format(mac, cmd) )
 					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 					check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
-					U.logger.log(20,"... ret: {}  ".format(check) )
 					if check.find("connect error") >-1:	value = check
 					elif check.find("killed") >-1:		value = "timeout"
 					elif check.find("error") >-1: 		value = check
@@ -87,9 +92,11 @@ def getBeaconParameters(devices):
 						ret2 = ret[0].split("value: ")
 						if len(ret2) == 2:  
 							try:
-								if dType[ll] == "int": value = int(ret2[1].strip(),16)
+								if dType[ll] == "int": 
+									value = int(((int(ret2[1].strip(),16) & bits ) *100)/norm)
 								if dType[ll] == "str": value = str(ret2[1])
 							except:pass
+					U.logger.log(20,"... ret: {}; bits: {}; norm:{}; value: {} ".format(check, bits, norm, value) )
 					U.logger.log(10,"{}:  return: {} {} {} ".format(mac, state[ll], ret[0], value) )
 					if "sensors" not in data: data["sensors"] = {}
 					if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}

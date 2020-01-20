@@ -1,3 +1,13 @@
+Added features / changes in v7.115.330 @ 2019-01-19
+===================================================
+
+1. fixed:  get batterly level for noda aiko beacons. they are a little special 
+   they use 6 bits, bit 7 is always on, max value is 36 hex = 54 int 
+   in device edit you must use the proper ibeacon type for battery value read.
+
+
+
+
 Added features / changes in v7.115.329 @ 2019-01-18
 ===================================================
 
