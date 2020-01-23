@@ -84,6 +84,7 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines=ret.split("\n")
+		del ret
 		for line in lines:
 			if len(line) < 10: continue
 			items=line.split()
@@ -93,6 +94,8 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			logger.log(10, u"cBY:{:<20}  killing {}  {}  {}".format(G.program, pgmToKill, param1, param2) )
 			os.system("kill -9 "+str(pid))
 	except Exception, e:
+		if unicode(e).find("Too many open files") >-1:
+			doReboot(tt=3, text=unicode(e))
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 #################################
@@ -278,6 +281,8 @@ def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=Fa
 		return inp, inRaw
 	except	Exception, e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
+		if unicode(e).find("Too many open files") >-1:
+			doReboot(tt=3, text=unicode(e))
 	return {}, ""
 
 #################################

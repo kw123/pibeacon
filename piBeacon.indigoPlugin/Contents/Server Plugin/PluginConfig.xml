@@ -31,7 +31,7 @@
    </Field>
 
 
-    <Field    id="enableBroadCastEvents" type="menu"  defaultValue="false" tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
+    <Field    id="enableBroadCastEvents" type="menu"  defaultValue="0" tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
         <List>
             <Option value="0"          >disable</Option>
             <Option value="all"        >ENABLE ALL:   for all devices that have an up/ down status</Option>
@@ -50,10 +50,10 @@
 
    <Field id="simpleSeparator22" type="separator"/>
    <Field id="infoLabel22" type="label">
-        <Label>Parameters for iBeacons </Label>
+        <Label>Parameters for iBeacons, might be overwritten for individual ibeacons</Label>
    </Field>
    <Field    id="secToDown"   type="menu" defaultValue="80" tooltip="this is the default value, can be overwritten in each device edit">
-        <Label>Status goes from UP 2 DOWN  if no signal in:</Label>
+        <Label>Status goes from UP to DOWN  if no signal in:</Label>
         <List>
             <Option value="30"  > 30 Seconds</Option>
             <Option value="45"  > 45 Seconds</Option>
@@ -69,8 +69,8 @@
             <Option value="180" >  3 Minutes </Option>
         </List>
    </Field>
-   <Field    id="expTimeMultiplier"   type="menu" defaultValue="2" tooltip=" eg UP to down is 60 choosing 3 down to expired is 180 secs ">
-        <Label>Status goes from DOWN 2 EXP after x times UP 2 DOWN time:</Label>
+   <Field    id="expTimeMultiplier"   type="menu" defaultValue="2" tooltip="eg UP to down is 60secs choosing 3, then down to expired is 180 secs ">
+        <Label>Status goes from DOWN to EXP after x times UP to DOWN time:</Label>
         <List>
             <Option value="1.5" > 1.5</Option>
             <Option value="2"   > 2</Option>
@@ -83,6 +83,10 @@
             <Option value="10"  >10 </Option>
         </List>
    </Field>
+    <Field id="expTimeMultiplierLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>this allow to extend just the time it takes to go from DOWN to EXPIRED status</Label>
+    </Field>
+
    <Field    id="txPowerCutoffDefault"   type="menu" defaultValue="999"   tooltip="default cutoff for bluetooth strength used to ignore non ibeacon devices with VERY strong signal">
         <Label>ignore BLE devices if txPower GT:</Label>
         <List>
@@ -95,7 +99,10 @@
             <Option value="999"  >no limit</Option>
         </List>
    </Field>
- 
+     <Field id="txPowerCutoffDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>use to ignore beacons that show TX power very high</Label>
+    </Field>
+
        <Field    id="acceptNewiBeacons"   type="menu" defaultValue="-999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
         <Label>Accept any new iBeacons:</Label>
         <List>
@@ -121,6 +128,9 @@
             <Option value="-999" >accept ALL</Option>
         </List>
    </Field>
+    <Field id="acceptNewiBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>use to manage new find beacons, use eg -55 and place new beacon next to RPI, or switch off to reject any new beacon</Label>
+    </Field>
 
        <Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
         <Label>reboot RPI if GT x minutes w no iBeacon messages (on RPI):</Label>
@@ -131,6 +141,10 @@
            <Option value="99999999999999"  >do NOT reboot, just wait </Option>
       </List>
    </Field>
+    <Field id="rebootIfNoMessagesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>use if you experience instability, if you have just rpi and no beacon is home and no road near do not set to reboot</Label>
+    </Field>
+
    <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
         <Label>reboot RPI if GT xx empty beacon messages received (from plugin):</Label>
         <List>
@@ -145,10 +159,13 @@
             <Option value="100" > 100 </Option>
         </List>    
    </Field>
+    <Field id="enableRebootRPIifNoMessagesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>after xx seconds the plugin will connect to RPI and reboot</Label>
+    </Field>
 
 
    <Field    id="setClostestRPItextToBlank"   type="menu" defaultValue="1" tooltip="">
-        <Label>set clostestRPItext to blank when iBeacon down:</Label>
+        <Label>set clostestRPItext(dev-State) to blank when iBeacon down:</Label>
         <List>
             <Option value="1" >keep last RPi device name</Option>
             <Option value="0" >set to blank </Option>
@@ -162,6 +179,9 @@
             <Option value="1" >accept </Option>
         </List>
    </Field>
+   <Field id="sacceptJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>reject beacons that do not comply with ibeacon message standard (ie VERY short messages)</Label>
+    </Field>
 
        <Field    id="sendFullUUID"   type="menu" defaultValue="0" tooltip="short messages reduces message size by 50%">
         <Label>RPi to send full UUID in every message or only every 10ths:</Label>
@@ -170,6 +190,9 @@
             <Option value="1" >always long , full UUID</Option>
         </List>
    </Field>
+    <Field id="sendFullUUIDLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>in stable operations the UUID information is not needed(it does not change), this will cut the size of the message in half</Label>
+    </Field>
 
 
     <Field    id="removeJunkBeacons"   type="menu" defaultValue="1" tooltip="enable or disable the deletion of new beacons after more than one hour if not renamed">
@@ -179,6 +202,9 @@
             <Option value="1" >delete</Option>
         </List>
    </Field>
+    <Field id="removeJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>if you have accept new beacons on and get flodded with new beacons, this option will allow to delete them if you have not renamed gthem from the default name after one hour</Label>
+    </Field>
 
 
    <Field id="simpleSeparator33" type="separator"/>
@@ -188,6 +214,9 @@
    <Field    id="myIpNumber"   type="textfield" defaultValue="192.168.1.x">
         <Label>IP Number of indigo MAC server:</Label>
    </Field>
+    <Field id="myIpNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>This information will be send to the RPI, then used by the RPI to connect to the indigo server</Label>
+    </Field>
 
    <Field id="IndigoOrSocket"   type="menu" defaultValue="socket" tooltip="web server wil go thorugh curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
 Socket communication will go directly through socket communication to plugin that updates the device states etc." >
@@ -222,8 +251,9 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
    </Field>
 
-   <Field id="infoLabeluserID" type="label">
-        <Label>userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina</Label>
+   <Field id="infoLabeluserID" type="label" fontSize="small" >
+        <Label>
+userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina, security type is used by RPI to indigo curl connection </Label>
    </Field>
    
    <Field id="userIDOfServer"   type="textfield" defaultValue="" tooltip="only used to make executabel work under catalina" >
@@ -242,8 +272,9 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         <Label>DIGEST, BASIC or no  authentication:</Label> 
    </Field>
 
-   <Field id="infoLabelwifi" type="label">
-        <Label>WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~/piBeacon directory, they will NOT be activated. YOU can move/activate them with "sudo python interface.py" on the RPI</Label>
+   <Field id="infoLabelwifi" type="label" fontSize="small" >
+        <Label>
+WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~/piBeacon directory, they will NOT be activated. YOU can move/activate them with "sudo python interface.py" on the RPI</Label>
    </Field>
    <Field id="wifiSSID"   type="textfield" defaultValue="" tooltip="" >
         <Label>...  SSID of your router:</Label> 
@@ -261,10 +292,11 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
 
    <Field id="infoLabel44" type="label">
-        <Label>EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
+        <Label>
+EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
    </Field>
 
-   <Field id="infoLabel45" type="label">
+   <Field id="infoLabel45" type="label" fontSize="small" >
 		<Label>- Setup Wifi(wlan0) vs cable (eth0)
     on/off: ON/On if other off/off/do not change
     use IP: which IP# to send to Indigo to ID raspberry
@@ -509,7 +541,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
    </Field>
 
        <Field    id="lightningNumerOfSensors"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
-        <Label>Hpw many Lightning sensor have to fire to set variable:</Label>
+        <Label>How many Lightning sensor have to fire to set variable:</Label>
         <List>
             <Option value="1"  > 1 sensor in time window</Option>
             <Option value="2"  > 2 sensors in time window</Option>
@@ -533,7 +565,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
             <Option value="600">10 minutes update</Option>
         </List>
     </Field>
-    <Field id="posLabel2" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">  
+    <Field id="posLabel2" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600" fontSize="small" >  
     <Label>        This will create a png file with the positions of the selected iBeacons (in beacon device edit)
         =you can supply a "background.png" image in either  
           1. check: ".../Indigo x.y/Preferences/Plugins/com.karlwachs.piBeacon/plotPositions/"
@@ -664,7 +696,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
 
 
-    <Field id="maxSizeOfLogfileOnRPI"   type = "menu" defaultValue = "10000000" tooltip="a copy will be kept: pibeacon-1.log; if you use ramdisk, please use less than 21MB"  >
+    <Field id="maxSizeOfLogfileOnRPI"   type = "menu" defaultValue = "10000000" tooltip="One copy will be kept: pibeacon-1.log; if you use ramdisk, please use less than 21MB"  >
         <Label>Debug...max pibeacon logfile size on RPI:</Label>
         <List>
             <Option value="5000000"  >5MB</Option>
@@ -679,8 +711,11 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
         <Label>Debug...which RPI:</Label>
                 <List class="self" filter="" method="filterPiC" dynamicReload="false"/>
         </Field>
+    <Field id="debugRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>This will enable verbose debugging --ON the PRI-- not on the indigo server. Use this only while debugging, as this will stress the RPI SSD </Label>
+    </Field>
    
-    <Field id="infoLabel99" type="label"> <Label>debug level for plugin:</Label>  </Field>
+    <Field id="infoLabel99" type="label"> <Label>Debug area for plugin:</Label>  </Field>
         
     <Field    id="debugLogic"         type="checkbox"  defaultValue="false"       tooltip=""> <Label> Debug...                   ... (1) Logic:</Label>  </Field>
     <Field    id="debugDevMgmt"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (2) beacon device management:</Label>  </Field>
@@ -694,11 +729,11 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
     <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8) send BC for status updates:</Label>  </Field>
     <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9) update BLE-connect:</Label>  </Field>
     <Field    id="debugCAR"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (10) CAR type devices:</Label>  </Field>
-    <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (11) all of the above .. everything:</Label>  </Field>
-    <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (12) tcpip socket comm:</Label>  </Field>
-    <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (13)beacon position plots:</Label>  </Field>
+    <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (11) tcpip socket comm:</Label>  </Field>
+    <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (12) beacon position plots:</Label>  </Field>
 
     <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (s) special debug (only for development):</Label>  </Field>
+    <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
     <Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
         <List>

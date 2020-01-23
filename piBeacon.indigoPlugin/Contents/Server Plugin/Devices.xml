@@ -8,12 +8,12 @@
 			<Field id="isRPIDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="enablePiNumberMenu" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" 		type="checkbox" defaultValue="true"  hidden ="true"></Field>
+			<Field id="SupportsSensorValue" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="enablePiNumberMenu" 		type="checkbox" defaultValue="true"  hidden ="true"></Field>
 			<Field id="label1"  type="label" >
 			<Label>Parameters for rPi devices</Label>
 			</Field>
@@ -37,6 +37,11 @@
 					<Option value="8" >8</Option>
 					<Option value="9" >9</Option>
 				</List>
+			</Field>
+			<Field id="RPINumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>set if you create a new RPI
+
+Change here or in initial setup:</Label>
 			</Field>
 
  
@@ -70,6 +75,10 @@
 					<Option value="rebootloop,pingBoot"  >reboot rPi </Option>
 				</List>
 			</Field>
+			<Field id="newIPNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>.. 
+</Label>
+			</Field>
 
 			<Field    id="startXonPi"   type="menu" defaultValue="leaveAlone">
 				 <List>
@@ -82,7 +91,8 @@
 
 
 			<Field id="label14"               type="label" > 
-				<Label>== iBeacon related:...</Label>
+				<Label>
+== iBeacon related:...</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
 				<Label>.... Transition from UP to Down to Expired after seconds:</Label>
@@ -104,6 +114,9 @@
 					<Option value="600" >10 minutes</Option>
 					<Option value="1200" >20 minutes</Option>
 				</List>
+			</Field>
+			<Field id="expirationTimeLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>will overwrite settings in config for THIS RPI</Label>
 			</Field>
 
 
@@ -152,6 +165,9 @@
 					<Option value="300" >&gt; 300 m ignore</Option>
 				</List>
 			</Field>
+			<Field id="cutOffForClosestBeaconLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>ignore beacons for determining closest iBeacons to THIS RPI </Label>
+			</Field>
 
 
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300" tooltip="How often should we update the signal and distance states"> 
@@ -166,6 +182,7 @@
 					<Option value="1200">after 20 minutes</Option>
 				</List>
 			</Field>
+
 			<Field id="BLELabel" type="label" >  
 				<Label>== BLEconnect:...</Label>	</Field>
 			<Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" ">
@@ -291,6 +308,13 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="120" > 120  </Option>
 				</List>
 			</Field>
+			<Field id="updateSignalValuesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>general parameters for sensors, can be overwritten by individual settings of sensor
+
+</Label>
+			</Field>
+
+
 			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0" tooltip="this option will turn itself off at restart and overnight to disable ramdon creation of new devices when there is a bad cable connection"> 
 				<Label>... add new ONEWIRE sensors as they get detected:</Label> 
 				<List>
@@ -501,11 +525,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall python;sudo sync;sleep 4; sudo reboot -f" >
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot" >
 				<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall -9 python; sleep 4;sudo reboot" > sudo killall -9 python;sudo sync;sudo sleep 4;sudo reboot  .. default</Option>
-					<Option value="sudo killall -9 python; sudo sync;sleep 4; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 4; sudo reboot -f ..  in case the default hangs</Option>
+					<Option value="sudo killall -9 python;sleep 6;sudo reboot" >sudo killall -9 python;sleep 6;sudo reboot</Option>
+					<Option value="sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f</Option>
 				</List>
 			</Field>
 
@@ -794,7 +818,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<Label>... overwrite the current MAC number with:</Label>
 			</Field>
 			<Field id="label61" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>	</Field>
+			<Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>
+			</Field>
 
 
 	</ConfigUI>
@@ -1127,12 +1152,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="isRPISensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="enablePiNumberMenu" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" 		type="checkbox" defaultValue="true"  hidden ="true"></Field>
+			<Field id="SupportsSensorValue" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="enablePiNumberMenu" 		type="checkbox" defaultValue="true"  hidden="true"></Field>
 
 			<Field id="label1"  type="label" >
 			<Label>Parameters for rPi Sensors types only -- not used for ibeacons or BLE connect devices</Label>
@@ -1163,7 +1188,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="newIPNumber" type="textfield"     defaultValue=""> 
 				<Label>... (over)write the current IP number of RPI with:</Label>
 			</Field>
- 
+			<Field id="RPINumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>set if you create a new RPI
+
+Change here or in initial setup:</Label>
+			</Field>
 
 			<Field id="newuserIdPi" type="textfield"     defaultValue=""> 
 				<Label>... (over)write the current RPI-userId with:</Label>
@@ -1189,6 +1218,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="restartLoop,pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
 					<Option value="rebootloop,pingBoot"  >reboot rPi </Option>
 				</List>
+			</Field>
+			<Field id="newIPNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>.. 
+			</Label>
 			</Field>
 
 			<Field    id="startXonPi"   type="menu" defaultValue="leaveAlone">
@@ -1279,6 +1312,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="120" > 120  </Option>
 				</List>
 			</Field>
+			<Field id="updateSignalValuesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>general parameters for sensors, can be overwritten by individual settings of sensor
+
+</Label>
+			</Field>
+
 			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0"> 
 				<Label>... add new ONEWIRE sensors as they get detected:</Label> 
 				<List>
@@ -1486,11 +1525,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall python;sudo sync;sleep 4; sudo reboot -f" >
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot" >
 				<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall python;sleep 4;sudo reboot" > sudo killall  python;sleep 4;sudo reboot  .. default</Option>
-					<Option value="sudo killall python;sudo sync;sleep 4; sudo reboot -f" >sudo killall  python;sudo sync;sleep 4; sudo reboot -f ..  in case the default hangs</Option>
+					<Option value="sudo killall -9 python;sleep 6;sudo reboot" >sudo killall -9 python;sleep 6;sudo reboot</Option>
+					<Option value="sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f</Option>
 				</List>
 			</Field>
 
@@ -1857,6 +1896,8 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 		</States>
 	</Device>
 
+
+
 	<Device type="sensor" id="beacon">
 		<Name>beacon</Name>
 		<UiDisplayStateId>displayStatus</UiDisplayStateId>
@@ -1889,6 +1930,9 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="600" >10 minutes</Option>
 					<Option value="1200" >20 minutes</Option>
 				</List>
+			</Field>
+			<Field id="expirationTimeLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>This will overwrite the default setting in config</Label>
 			</Field>
 			<Field id="label11"               type="label" > 
 				<Label>== Fast UP to down mode:</Label>
@@ -1931,7 +1975,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 					<Option value="-999" >signal must be off = no signal</Option>
 				</List>
 			</Field>
-            
+ 			<Field id="fastDownMinLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>For normal beacons: RPIs will send an update once every minute: If no signal no message will be send. then teh expiration timer will determine UP to down. 
+For fastDown beacons: the RPIs will send a message "no signal" outside the one minutes schedule if no signal was received from the beacon for xx seconds. Then the plugin will set the status to Down immediately</Label>
+			</Field>
+           
 			<Field id="label22"               type="label" > 
 				<Label>== Send msg to indigo ... </Label>
 			</Field>
@@ -1955,6 +2003,9 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="30" >30 dBm</Option>
 					<Option value="999" >do not use</Option>
 				</List>
+			</Field>
+ 			<Field id="signalDeltaLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>use this to detect beacons that eg leave a room and you want to know quickly</Label>
 			</Field>
 			<Field id="minSignalCutoff"   type="menu" defaultValue="20" tooltip="if the beaocn is UP: use any signal, if beacon is down, ignore if less than cutoff to stop up/down/up if it has a weak signal" >
 				<Label>.... do NOT send if signal less than xx for down to UP:</Label> 
@@ -1983,6 +2034,9 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="-999" >do not use</Option>
 				</List>
 			</Field>
+ 			<Field id="minSignalCutoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>use this to cut off UP-signals for weak signals. This value is used on the RPI</Label>
+			</Field>
 
 			<Field id="label3"               type="label"  > 
 				<Label>== Set type of beacon (for future use):</Label>
@@ -2004,12 +2058,18 @@ use eg to track someone moving around - going from one room to the next" >
 				</List>
 			</Field>
 			<Field id="label4"               type="label"  > 
-				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite
-  use signal value at 1 distance to RPI for this field</Label>
+				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999"> 
 				<Label>.... -dBm=</Label>
 			</Field>
+ 			<Field id="beaconTxPowerLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>For proper distance calculations the Signal value at 1 m is required. 
+To calibrate put the beacon 1 m away from the RPI and note the received signal value
+Put THAT value into this field</Label>
+			</Field>
+
+
 			<Field id="label41"               type="label"  > 
 				<Label>== Use min signal if you want to only detect iBeacons that are in the same room as the RPI, 
           might lead to false negatives .. try a range -80..-90  </Label>
@@ -2017,27 +2077,45 @@ use eg to track someone moving around - going from one room to the next" >
 			<Field id="IgnoreBeaconIfSignalLessThan" type="textfield"     defaultValue="-999"> 
 				<Label>.... ignore if signal less than   Minimum:</Label>
 			</Field>
+			<Field id="IgnoreBeaconIfSignalLessThanLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>This is similar to the parameter for the RPI, but is used in the plugin AFTER the data is received from the RPI</Label>
+			</Field>
 			<Field id="label47"               type="label"  > 
 				<Label>== run gatttool on rpi to get iBeacon info, requires SSD 7/2018 or GT </Label>
 			</Field>
 			<Field id="SupportsBatteryLevel" type="checkbox"     defaultValue="false"  hidden="false">
-				<Label>.... supports battery level info read from iBeacon:</Label>
+				<Label>.... supports battery level info read from iBeacon </Label>
+			</Field>
+			<Field id="label49" type="label" fontSize="small" alignText="right" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
+				<Label>The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
+  It will REPORT (warning log) once a day on beacons, if their last update &gt; 2 days or battery level &lt; 20%  
+  The reads are send to the RPI that is closest to the beacon to be read.
+  You can manually force to read all beacons w action or menu "Get Beacon param.."  
+  There are different types of beacons that require differnt methods.   
+  Not all beacons support the read of battery level.  
+  You can test your iBeaon on the rpi with the following line commands   
+    sudo /bin/hciconfig hci0 down;sudo /bin/hciconfig hci0 up  
+    sudo /usr/bin/gatttool -b mac# -t public --char-read --uuid=2A19  
+    sudo /usr/bin/gatttool -b mac# -t random --char-read --uuid=2A19   
+      (replace the mac# number with yours).
+ === please note during the time the RPI reads the battery level ===
+ === it can not listen to iBeacon signals (&lt; 15s per beacon)  ===</Label>
 			</Field>
 
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
 					<Option value="2A19-randomON-batteryLevel-int-bits=127-norm=100" >random 127bits/max100 eg XY beacons, social retail,..</Option>
-					<Option value="2A19-public-batteryLevel-int-bits=127-norm=100"   >public 127bits/max100 eg noda/iHere</Option>
-					<Option value="2A19-public-batteryLevel-int-bits=63-norm=36"     >public 63bits/max36 eg noda/aiko</Option>
+					<Option value="2A19-public-batteryLevel-int-bits=127-norm=100"   >public 127bits/max100 eg nonda/iHere</Option>
+					<Option value="2A19-public-batteryLevel-int-bits=63-norm=36"     >public 63bits/max36 eg nonda/aiko</Option>
 					<Option value="off"    				  >off</Option>
 				</List>
-				<Label>.... battery level cmd UUID=2A19 ...:</Label>
+				<Label>.... battery level cmd:</Label>
 			</Field>
 
 			<Field id="txPowerlevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
 <!--					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons, social retail,..</Option>
-					<Option value="2A07-public-txPowerLevel-int" >read  tx power level w UUID=2A07 public     for eg noda/aiko/iHere</Option>
+					<Option value="2A07-public-txPowerLevel-int" >read  tx power level w UUID=2A07 public     for eg nonda/aiko/iHere</Option>
 -->
 					<Option value="off"      >off</Option>
 				</List>
@@ -2055,6 +2133,9 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="0"     >use it </Option>
 					<Option value="1"     >do NOT use THIS iBeacon</Option>
 				</List>
+			</Field>
+			<Field id="IgnoreBeaconForClosestToRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>if you want to only use certain beacons to trigger on closest beacon to RPI set the others to off</Label>
 			</Field>
 
 			<Field id="label5"               type="label"  > 
@@ -2142,7 +2223,11 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
 			</Field>
-  
+			<Field id="enableBroadCastEventsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>This is for internal communication between plugins. It is a fast and effective way to tell other plugins up/down .. status
+this requires other plugins to subscribe to this service</Label>
+			</Field>
+ 
 			<Field id="simpleSeparator6" type="separator"/>
 			<Field id="label6"               type="label"  > 
 				<Label>EXPERTS ONLY!! </Label>
@@ -2161,7 +2246,6 @@ use eg to track someone moving around - going from one room to the next" >
 
 			<Field id="label61"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
 				<Label>Must not be equal to an existing ACTIVE device. Use this to eg replace an iBeacon with a new one. Write MAC address of new beacon here. This will then ONLY replace the MAC number and keep history of THIS device. It will set the old MAC# to IGNORE
-
 You can use this also to create a new iBeacon device   But do NOT use an existing MAC number</Label>
 			</Field>
 		</ConfigUI>
@@ -4878,7 +4962,7 @@ It measures Temp, humidity and pressure like eg bme280 and in addition
      a gas value that is a resistance that chnages with air quality. 
 In clean air the resistance is the highest, if it senses eg VOC gases the 
   resistance becomes lower.
-airQuality/GasSore is curent resistance / baseline
+airQuality/GasSore is (current resistance) / baseline
 The program can use differnt modes for airQuality/gasScore calibration: 
 - auto calibration: it will run until it finds stable gas resistance and sets that as 
      its basline to be clean air, 
@@ -4897,10 +4981,10 @@ After some days of running in clean air, proposed setup is:
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="119"> <Label>i2c address of device:</Label>
+			<Field id="i2cAddress" type="menu"     defaultValue="118"> <Label>i2c address of device:</Label>
 			<List>
-				<Option value="118"   >0x76 = 118 (SDO-Gnd) </Option>
-				<Option value="119"   >0x77 = 119 (SDO-V+)default</Option>
+				<Option value="118"   >0x76 = 118 (SDO-Gnd)default </Option>
+				<Option value="119"   >0x77 = 119 (SDO-V+)</Option>
 			</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 

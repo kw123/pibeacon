@@ -40,7 +40,6 @@ _GlobalConst_numberOfRPI		 = 20
 _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"lastUp": 0, u"note": u"beacon", u"expirationTime": 90,
 			   u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, u"signalDelta": 999, u"minSignalCutoff": -999,
 			   u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other", u"beaconTxPower": +999, u"fastDown": u"0",
-			   u"batteryLevelLastUpdate": 	0,
 			   u"fastDownMinSignal":	-999,
 			   u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
 			   u"receivedSignals":		[{"rssi":-999, "lastSignal": 0, "distance":99999} for kk in range(10)]} #  for 10 RPI
@@ -454,6 +453,17 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
+	def setCurrentlyBooting(self, addTime, setBy=""):
+		try:	self.currentlyBooting = time.time() + addTime
+		except: self.errorLog("setCurrentlyBooting:  setting BeaconsCheck,  bad number requested {}, called from: {} ".format(addTime, setBy))
+		try:
+			self.indiLOG.log(20,"setting BeaconsCheck to off (no up-->down) for {:3d} secs requested by: {} ".format(addTime, setBy))
+		except:
+			indigo.server.log(  "setting BeaconsCheck to off (no up-->down) for {:3d} secs requested by: {} ".format(addTime, setBy))
+		return 
+
+
+####-------------------------------------------------------------------------####
 	def initFileDir(self):
 
 
@@ -779,7 +789,8 @@ class Plugin(indigo.PluginBase):
 			self.RPIFileSort				= True
 
 			self.bootWaitTime				= 100
-			self.currentlyBooting			= time.time() + self.bootWaitTime + 25
+			self.setCurrentlyBooting(self.bootWaitTime + 25, setBy="setVariables")
+			self.checkBatteryLevelHours		= [4,12,20] # which hour to check battery levels
 			self.lastUPtoDown				= time.time() + 35
 			self.lastsetupFilesForPi 		= time.time()
 			self.checkIPSendSocketOk		= {}
@@ -4164,7 +4175,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def printBLEreportCALLBACK(self, valuesDict=None, typeId=""):
 
-		self.currentlyBooting			= time.time()+80
+		self.setCurrentlyBooting(80, setBy="printBLEreportCALLBACK")
 		pi = valuesDict[u"configurePi"]
 		if pi ==u"": return
 		out= json.dumps([{u"command":"BLEreport"}])
@@ -4910,17 +4921,17 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonShutdownCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		self.currentlyBooting = time.time()+self.bootWaitTime
+		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonShutdownCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=[u"shutdownSSH"], Text="shut down rPi# ")
 
 ####-------------------------------------------------------------------------####
 	def buttonSendAllandRebootCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		self.currentlyBooting = time.time()+self.bootWaitTime
+		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonSendAllandRebootCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=[u"initSSH",u"updateAllFilesFTP","rebootSSH"], Text="rPi configure and reboot pi# ")
 
 ####-------------------------------------------------------------------------####
 	def buttonRebootCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		self.currentlyBooting = time.time()+self.bootWaitTime
+		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonRebootCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=[u"rebootSSH"], Text="rPi reboot")
 
 ####-------------------------------------------------------------------------####
@@ -7420,7 +7431,7 @@ class Plugin(indigo.PluginBase):
 
 #
 ####-------------------------------------------------------------------------####
-	def getBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def getBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
 		
 		devices={}
 		if  valuesDict is None: return  
@@ -7429,6 +7440,7 @@ class Plugin(indigo.PluginBase):
 		for pi in range(_GlobalConst_numberOfiBeaconRPI):
 			if valuesDict["piServerNumber"] == str(pi) or valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
 				devices[str(pi)] = {} 
+		minTime = [0 for ii in range(_GlobalConst_numberOfRPI)]
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
 			props = dev.pluginProps
 			if dev.states["status"] !="up": continue
@@ -7436,23 +7448,36 @@ class Plugin(indigo.PluginBase):
 				pi = str(dev.states["closestRPI"])
 			else:
 				pi = valuesDict["piServerNumber"]
+
 			dd = []
 			if "SupportsBatteryLevel" in props and props["SupportsBatteryLevel"]:
 				if "batteryLevelUUID" in props  and len(props["batteryLevelUUID"]) >2 and props["batteryLevelUUID"] !="off":
-					try: 
-						dist= float( dev.states["Pi_"+str(pi)+"_Distance"] )
-						if dist < 100.:
-							dd.append(props["batteryLevelUUID"])
-					except Exception, e:
-						self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					try: 	batteryLevelLastUpdate = time.mktime(time.strptime(dev.states["batteryLevelLastUpdate"], _defaultDateStampFormat ))
+					except: batteryLevelLastUpdate = 0
+					try: 	batteryLevel = int(dev.states["batteryLevel"])
+					except: batteryLevel = 0
+					if force or   batteryLevel < 20   or   (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 30% dont need to redo it again
+						try: 
+							dist= float( dev.states["Pi_"+str(pi)+"_Distance"] )
+							if dist < 100.:
+								dd.append(props["batteryLevelUUID"])
+								minTime[int(pi)] += 15
+								if self.decideMyLog(u"Special"): self.indiLOG.log(20,"getBeaconParametersCALLBACKmenu requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last sucessfull check @: {}".format(pi, dev.name, dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"]) )
+						except Exception, e:
+							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+					else:
+						if self.decideMyLog(u"Special"): self.indiLOG.log(20,        "getBeaconParametersCALLBACKmenu no update needed              for beacon: {:30s}; lastV: {:3d}; last sucessfull check @: {}".format(dev.name, dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
 
 				if "txPowerlevelUUID" in props  and len(props["txPowerlevelUUID"]) >2 and props["txPowerlevelUUID"] !="off":
-						dd.append(props["txPowerlevelUUID"])
+					dd.append(props["txPowerlevelUUID"])
+					
 
 			if dd !=[]:
 				devices[pi][dev.address] =dd
+		minTime = max(minTime)
 
-
+		atLeastOne = False
 		for pi in devices:
 				if devices[pi] == {}: 
 					if valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
@@ -7466,6 +7491,8 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog(u"SocketRPI"): self.indiLOG.log(30,"getBeaconParametersCALLBACKmenu valuesdict:{}".format(xx) )
 
 					self.setPin(xx)
+					atLeastOne = True
+		if atLeastOne: self.setCurrentlyBooting(minTime+10, setBy="getBeaconParameters (batteryLevel ..)")
 
 
 
@@ -9156,19 +9183,19 @@ class Plugin(indigo.PluginBase):
 		self.initSprinkler()
 
 		if self.indigoInputPORT > 0 and self.IndigoOrSocket == u"socket":
-			self.currentlyBooting				= time.time() + 40
+			self.setCurrentlyBooting(50, setBy="initConcurrentThread")
 			self.socketServer, self.stackReady	= self.startTcpipListening(self.myIpNumber, self.indigoInputPORT)
-			self.currentlyBooting				= time.time() + 20
+			self.setCurrentlyBooting(40, setBy="initConcurrentThread")
 		else:
 			self.indiLOG.log(20,u" ..  subscribing to indigo variable changes" )
 			indigo.variables.subscribeToChanges()
-			self.currentlyBooting	= time.time() + 20
+			self.setCurrentlyBooting(40, setBy="initConcurrentThread")
 			self.stackReady			= True
 
-		self.lastMinute			= now.minute
-		self.lastHour			= now.hour
-		self.lastDay			= [-1,-1,-1]
-		self.lastSecCheck		= 0
+		self.lastMinuteChecked	= now.minute
+		self.lastHourChecked	= now.hour
+		self.lastDayChecked		= [-1 for ii in range(len(self.checkBatteryLevelHours)+2)]
+		self.lastSecChecked		= 0
 		self.countLoop			= 0
 		self.indiLOG.log(10, u" ..   checking sensors" )
 		self.syncSensors()
@@ -9181,7 +9208,7 @@ class Plugin(indigo.PluginBase):
 		self.rPiRestartCommand = [u"master" for ii in range(_GlobalConst_numberOfRPI)]	## which part need to restart on rpi
 		self.setupFilesForPi()
 		if self.currentVersion != self.pluginVersion :
-			self.currentlyBooting = time.time() + 40
+			self.setCurrentlyBooting(40, setBy="initConcurrentThread")
 			self.indiLOG.log(10, u" ..  new py programs  etc will be send to rPis")
 			for pi in range(_GlobalConst_numberOfRPI) :
 				if self.RPI[unicode(pi)][u"ipNumberPi"] != "":
@@ -9195,12 +9222,12 @@ class Plugin(indigo.PluginBase):
 		if len(self.checkCarsNeed) > 0:
 			for carId in self.checkCarsNeed:
 				self.updateAllCARbeacons(carId,force=True)
-		self.currentlyBooting = time.time() + 10
 
 		self.checkForUpdates(datetime.datetime.now())
 
 		self.lastUpdateSend = time.time()  # used to send updates to all rPis if not done anyway every day
 		self.pluginState	= "run"
+		self.setCurrentlyBooting(50, setBy="initConcurrentThread")
 
 		return 
 
@@ -9501,7 +9528,7 @@ class Plugin(indigo.PluginBase):
 		anyChange= False
 		try:
 			tt = time.time()
-			if time.time()- self.lastSecCheck < 9. or time.time()- self.startTime < 30: return anyChange
+			if time.time()- self.lastSecChecked < 9. or time.time()- self.startTime < 30: return anyChange
 
 
 			self.checkcProfile()
@@ -9543,7 +9570,7 @@ class Plugin(indigo.PluginBase):
 
 			self.performActionList()
 
-			if self.lastMinute != now.minute: 
+			if self.lastMinuteChecked != now.minute: 
 				anyChange=True
 
 
@@ -9556,9 +9583,9 @@ class Plugin(indigo.PluginBase):
 				  (self.beaconPositionsUpdateTime > 0 and (time.time()- self.beaconPositionsLastCheck)	> self.beaconPositionsUpdateTime )	 ):
 					self.makeNewBeaconPositionPlots()
 
-			self.lastSecCheck		= time.time()
-			self.lastMinute			= now.minute
-			self.lastHour			= now.hour
+			self.lastSecChecked		= time.time()
+			self.lastMinuteChecked			= now.minute
+			self.lastHourChecked			= now.hour
 
 			self.freezeAddRemove	= False
 			self.initStatesOnServer = False
@@ -9746,7 +9773,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def checkMinute(self, now):
-		if now.minute == self.lastMinute: return
+		if now.minute == self.lastMinuteChecked: return
 
 		try:
 			self.fixConfig(checkOnly = ["all"], fromPGM="checkMinute") # checkMinute
@@ -10048,7 +10075,7 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(40,u"BeaconsCheckPeriod communication to indigo is interrupted")
 							return
 
-				if now.minute != self.lastMinute:
+				if now.minute != self.lastMinuteChecked:
 					try :
 						devId = int(self.beacons[beacon][u"indigoId"])
 						if devId > 0 :
@@ -10105,7 +10132,7 @@ class Plugin(indigo.PluginBase):
 	def checkHour(self,now):
 		try:
 		
-			if now.hour == self.lastHour: return
+			if now.hour == self.lastHourChecked: return
 			if now.hour ==0:
 				self.resetMinMaxSensors()
 			self.rollOverRainSensors()
@@ -10179,27 +10206,28 @@ class Plugin(indigo.PluginBase):
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-
-
 ####-------------------------------------------------------------------------####
 	def checkDay(self,now):
 			# do check once a day at 10 am
 
+		if time.time() <= self.currentlyBooting + 130: return 
+
+
+		##### first check ibeacons battery updates:
+		### get battery status from ibeacon 
 		try:
-			if time.time() <= self.currentlyBooting + 30: return 
-			if self.lastDay[0] == -1 or (self.lastDay[0] != now.day and now.hour == 4 ) :  # and now.hour == 4:
-				self.getBeaconParametersCALLBACKmenu(valuesDict={"piServerNumber":"all"})
-				self.lastDay[0] = now.day
-				return 
+			for ii in range(len(self.checkBatteryLevelHours)):
+				if self.lastDayChecked[ii] != now.day and now.hour == self.checkBatteryLevelHours[ii]: 
+					self.getBeaconParametersCALLBACKmenu(valuesDict={"piServerNumber":"all"}, force=False)
+					self.lastDayChecked[ii] = now.day
+					return 
 		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 		try:
-			if time.time() <= self.currentlyBooting + 120: return 
-			if self.lastDay[1] ==-1 or (self.lastDay[1] != now.day and now.hour == 8):
-				self.lastDay[1] = now.day
-		##### first check ibeacons battery updates:
+		### report on bad ibeacon battery status
+			if self.lastDayChecked[len(self.checkBatteryLevelHours)] != now.day and now.hour == 8:
 				badBeacons	= 0
 				testBeacons	= 0
 				out			= ""
@@ -10218,21 +10246,25 @@ class Plugin(indigo.PluginBase):
 					#self.indiLOG.log(10,"  ibeacon: {:30s}  level: {:3d}%,  last update was: {} ".format(dev.name, batteryLevel, batteryLevelLastUpdate) )
 					if time.time() - lastTimeStamp > 2*24*3600:
 						badBeacons+=1
-						out += "{:35s}last level reported: {:3d}%, has not been updated for > 2 days:\n".format(dev.name, batteryLevel, batteryLevelLastUpdate) 
+						out += "{:35s}last level reported: {:3d}%, has not been updated for > 2 days: {}\n".format(dev.name, batteryLevel, batteryLevelLastUpdate) 
 						#trigger  tbi
 					elif batteryLevel < 20:
 						badBeacons+=1
 						out += "{:35s}      level down to: {:3d}% ... charge or replace battery\n".format(dev.name, batteryLevel) 
 						#trigger tbi
 				if out != "":
-					self.indiLOG.log(30,"batterylevel level test:\n{}".format(out.strip("\n")) )
+					self.indiLOG.log(30,"batterylevel level test:\n{}".format(out) )
 				elif testBeacons > 0 and badBeacons == 0: self.indiLOG.log(20,"batterylevel level test:  no iBeacon found with low battery indicator or old update")
+				self.lastDayChecked[len(self.checkBatteryLevelHours)] = now.day
 
-		##### second .. nothing yet
 		
 		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+		##### second .. nothing yet
+		
+		return 
 
 
 
@@ -10675,7 +10707,7 @@ class Plugin(indigo.PluginBase):
 		return beaconUpdatedIds
  
 ####-------------------------------------------------------------------------####
-	def execUpdate(self,  timeStampOfReceive, pi,data,varUnicode):
+	def execUpdate(self, timeStampOfReceive, pi, data, varUnicode):
 
 		beaconUpdatedIds = []
 		try:
@@ -10698,8 +10730,6 @@ class Plugin(indigo.PluginBase):
 				secondsCollected = 0
 				if u"secsCol" in data:
 					secondsCollected = data[u"secsCol"]
-				if u"reason" in data:
-					reason = data[u"reason"]
 				msgs = data[u"msgs"]
 				if len(msgs) > 0 and piMAC != "":
 					if u"ipAddress" in data:
@@ -11096,10 +11126,9 @@ class Plugin(indigo.PluginBase):
 			if new==u"reboot":
 				#self.addToStatesUpdateDict(unicode(dev.id),u"lastMessage", now)
 				if dev.states[u"online"] != "reboot":
-					self.indiLOG.log(20, u"setting status of pi# "+unicode(pi)+"   to reboot for "+unicode(int(self.bootWaitTime))+" seconds or until new message arrives")
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 					self.addToStatesUpdateDict(unicode(dev.id),u"online", u"reboot")
-					self.currentlyBooting=time.time()+self.bootWaitTime
+					self.setCurrentlyBooting(self.bootWaitTime, setBy=u"setting status of pi# "+unicode(pi)+"   to reboot  or until new message arrives")
 					if pi >= _GlobalConst_numberOfiBeaconRPI: 
 						self.addToStatesUpdateDict(unicode(dev.id),u"status", u"reboot")
 					return
@@ -12678,33 +12707,34 @@ class Plugin(indigo.PluginBase):
 					if indigoId > 0:
 						dev = indigo.devices[int(indigoId)]
 						props = dev.pluginProps
+						try: 	batteryLevelLastUpdate = time.mktime(time.strptime(dev.states["batteryLevelLastUpdate"], _defaultDateStampFormat ))
+						except: batteryLevelLastUpdate = 0
 						for state in data[beacon]:
 
 							if type(data[beacon][state]) == type(1):
 								upd = True
 								if state+"UUID" in props:
-									if (props[state+"UUID"]).find("-int")> 5: 
+									if (props[state+"UUID"]).find("-int") > 5: 
 										if data[beacon][state] < 0: 
 											upd = False
 								if upd:
 									try:
 										self.addToStatesUpdateDict(indigoId, state, data[beacon][state])
 										if state == "batteryLevel": 
-											self.beacons[beacon]["batteryLevelLastUpdate"] = time.time()
 											self.addToStatesUpdateDict(indigoId, "batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
 									except Exception, e:
 										if len(unicode(e)) > 5 :
 											self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 								else:
-									if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20,"updateGetBeaconParameters pi:{} ignoring beacon:{} .. {};  bad data read ... < 0".format(pi,beacon, data[beacon] ) )
+									if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(20,"update GetBeaconParameters pi:{} beacon:{} .. {};  bad data read  < 0; last good update was {}, current batterylevel status: {}".format(pi,beacon, data[beacon], dev.states["batteryLevelLastUpdate"], dev.states["batteryLevel"]  ) )
 							else:
 								if data[beacon][state].find("error") >-1 or  data[beacon][state].find("timeout") >-1 :
 									if state == "batteryLevel" and "batteryLevelLastUpdate" in dev.states: 
 											if  len(dev.states["batteryLevelLastUpdate"] ) < 10:
 												self.addToStatesUpdateDict(indigoId, "batteryLevelLastUpdate", "2000-01-01 00:00:00")
-											self.indiLOG.log(20,"update BeaconParameters pi:{}  beacon:{} .. error msg: {}; last update was {}".format(pi,beacon, data[beacon][state].find("error"), dev.states["batteryLevelLastUpdate"] ) )
+											if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(20,"updateGetBeaconParameters pi:{}  beacon:{} .. error msg: {}; last update was {}, current batterylevel status: {}".format(pi,beacon, data[beacon][state].find("error"), dev.states["batteryLevelLastUpdate"], dev.states["batteryLevel"] ) )
 									else:
-										self.indiLOG.log(20,"update BeaconParameters pi:{} beacon:{} .. error msg: {}".format(pi,beacon, data[beacon][state] ) )
+										if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(20,"updateGetBeaconParameters pi:{} beacon:{} .. error msg: {}".format(pi,beacon, data[beacon][state] ) )
 								else:
 									try:
 										if state+"UUID" in props and (props[state+"UUID"]).find("-int") == -1: 
@@ -16010,7 +16040,7 @@ class Plugin(indigo.PluginBase):
 						   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
 						   unicode(self.beacons[beacon][u"signalDelta"]).rjust(6) + " " + \
 						   unicode(self.beacons[beacon][u"minSignalCutoff"]).rjust(6) + " " + \
-						   unicode(min(9999999,int(self.beacons[beacon][u"batteryLevelLastUpdate"]))).rjust(23) +\
+						   unicode("-").rjust(23) +\
 						   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"]))).rjust(13) + " " + \
 						   unicode(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
 						   unicode(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
@@ -16029,7 +16059,7 @@ class Plugin(indigo.PluginBase):
 						   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
 						   unicode(self.beacons[beacon][u"signalDelta"]).rjust(6) + " " + \
 						   unicode(self.beacons[beacon][u"minSignalCutoff"]).rjust(6) + " " + \
-						   unicode(min(9999999,int(self.beacons[beacon][u"batteryLevelLastUpdate"]))).rjust(23) +\
+						   unicode("-").rjust(23) +\
 						   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"]))).rjust(12) + " " + \
 						   unicode(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
 						   unicode(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \

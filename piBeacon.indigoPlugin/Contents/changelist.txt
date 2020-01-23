@@ -1,7 +1,29 @@
+Added features / changes in v7.115.332 @ 2019-01-23
+===================================================
+
+1. optimized acquisition of battery level for ibeacons
+   - repeat process every 8 hours(4/12/20). Request to read if last successfull read was > 17 hour or battery level < 20%
+   - send  tasks to closest rpi for each beacon
+   - prevent up-->down status change for ibeacons during measurement times
+   - generate a warning log entry when ibeacon has bad / old info: > 2 days or < 20% once a day at 8am
+  ==> you need to enable this option idividually for each beacon in device edit
+
+2. split of getBeaconParameters.py from execcommands.py to be able to better mange termination of processes
+
+3. added comments in device edit for battery level setting and process.
+
+4. streamlined plugin process to manage do not do up--> donw status changes while RPIs are busy
+
+5. added several comments and explanations to config and device edit 
+
+6. added a reboot trigger on RPI if error "too many open files" 
+
+
+
 Added features / changes in v7.115.330 @ 2019-01-19
 ===================================================
 
-1. fixed:  get batterly level for noda aiko beacons. they are a little special 
+1. fixed:  get battery level for noda aiko beacons. they are a little special 
    they use 6 bits, bit 7 is always on, max value is 36 hex = 54 int 
    in device edit you must use the proper ibeacon type for battery value read.
 
