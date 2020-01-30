@@ -1467,11 +1467,11 @@ def fixRcLocal(sleepTime):
 		writeOut = ""
 		test     = ""
 		for line in callbeacon:
-			if line.find("/usr/bin/python /home/pi/pibeacon/master.py")>-1:
+			if line.find("cd {}; /usr/bin/python {}master.py &")>-1 and writeOut =="":
 				if sleepTime =="0":
-					test = 'os.system("cd /home/pi/pibeacon; /usr/bin/python /home/pi/pibeacon/master.py & ")'
+					test = 'os.system("cd {}; /usr/bin/python {}master.py & ".format(homeDir,homeDir))'
 				else:
-					test = 'os.system("sleep '+sleepTime+'; cd /home/pi/pibeacon; python /home/pi/pibeacon/master.py &")'
+					test = 'os.system("sleep '+sleepTime+'; cd {}; /usr/bin/python {}master.py & ".format(homeDir,homeDir))'
 				if line == test:
 					break
 				else:
@@ -1486,9 +1486,9 @@ def fixRcLocal(sleepTime):
 			f.write(out)
 			f.close()
 
-			## updating callbeacon file 
-			U.logger.log(20, "writing new callbeacon.py file")
-			os.system("cp /home/pi/pibeacon/callbeacon.py /home/pi/callbeacon.py")
+		## updating callbeacon file 
+		U.logger.log(20, "writing callbeacon.py file")
+		os.system("cp /home/pi/pibeacon/callbeacon.py /home/pi/callbeacon.py")
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return

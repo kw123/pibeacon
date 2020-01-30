@@ -36,6 +36,12 @@
 					<Option value="7" >7</Option>
 					<Option value="8" >8</Option>
 					<Option value="9" >9</Option>
+					<Option value="10" >10</Option>
+					<Option value="11" >11</Option>
+					<Option value="12" >12</Option>
+					<Option value="13" >13</Option>
+					<Option value="14" >14</Option>
+					<Option value="15" >15</Option>
 				</List>
 			</Field>
 			<Field id="RPINumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -69,10 +75,10 @@ Change here or in initial setup:</Label>
 				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
 				 <List>
 					<Option value="doNothing"            >do nothing (not recommended)</Option>
-					<Option value="restartLoop,-"        >restart progams on rPi(default) </Option>
-					<Option value="rebootloop,-"         >reboot rPi if internal problem</Option>
-					<Option value="restartLoop,pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
-					<Option value="rebootloop,pingBoot"  >reboot rPi </Option>
+					<Option value="restartLoop"        >restart progams on rPi(default) </Option>
+					<Option value="rebootloop"         >reboot rPi if internal problem</Option>
+					<Option value="restartLoop-pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
+					<Option value="rebootloop-pingBoot"  >reboot rPi </Option>
 				</List>
 			</Field>
 			<Field id="newIPNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -185,7 +191,7 @@ Change here or in initial setup:</Label>
 
 			<Field id="BLELabel" type="label" >  
 				<Label>== BLEconnect:...</Label>	</Field>
-			<Field id="BLEserial" type="menu"     defaultValue="serial" tooltip=" ">
+			<Field id="BLEserial" type="menu"     defaultValue="sequential" tooltip=" ">
 				<Label> .... queries seq. or parallel on THIS rPi:</Label>
 				<List>
 					<Option value="sequential" > run BLEconnect in sequential in one program</Option>
@@ -525,10 +531,10 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot" >
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot now" >
 				<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall -9 python;sleep 6;sudo reboot" >sudo killall -9 python;sleep 6;sudo reboot</Option>
+					<Option value="sudo killall -9 python;sleep 6;sudo reboot now"           >sudo killall -9 python;sleep 6;sudo reboot now</Option>
 					<Option value="sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f</Option>
 				</List>
 			</Field>
@@ -804,10 +810,16 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="label6"               type="label"  > 
 				<Label>EXPERTS ONLY!!---------------- </Label>
 			</Field>
+			<Field id="sqlLoggerIgnoreStates" type="textfield" default="" readonly="true">
+				<Label>To reduce SQL-logger load, set value=</Label>
+			</Field>
+			<Field id="sqlLoggerIgnoreStateslabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>In Manage Global Device Properties, select device, add property sqlLoggerIgnoreStates and copy/paste above value, click add</Label>	
+			</Field>
 
 
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
-				<Label>... Ignore state of this beacon:</Label>
+				<Label>... Ignore state of this rpi-beacon:</Label>
 			<List>
 				<Option value="0" >keep or make active = normal</Option>
 				<Option value="1" >set to short term ignore</Option>
@@ -1082,6 +1094,101 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ControlPageLabel>Pi_9_Time</ControlPageLabel>
 			</State>
 
+			<State id="Pi_10_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_10_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_10_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_10_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_10_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_10_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_10_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_10_Time</TriggerLabel>
+				<ControlPageLabel>Pi_10_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_11_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_11_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_11_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_11_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_11_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_11_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_11_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_11_Time</TriggerLabel>
+				<ControlPageLabel>Pi_11_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_12_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_12_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_12_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_12_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_12_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_12_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_12_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_12_Time</TriggerLabel>
+				<ControlPageLabel>Pi_12_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_13_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_13_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_13_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_13_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_13_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_13_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_13_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_13_Time</TriggerLabel>
+				<ControlPageLabel>Pi_13_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_14_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_14_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_14_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_14_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_14_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_14_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_14_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_14_Time</TriggerLabel>
+				<ControlPageLabel>Pi_14_Time</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_15_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_15_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_15_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_15_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_15_Time</TriggerLabel>
+				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
+			</State>
+
 			<State id="note">
 				<ValueType>String</ValueType>
 				<TriggerLabel>note</TriggerLabel>
@@ -1171,16 +1278,32 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="RPINumber" type="menu"    enabledBindingId="enablePiNumberMenu"  defaultValue=""> 
 				<Label>... RPi #:(only use undefined RPIs)</Label>
 				 <List>
-					<Option value="10" >10</Option>
-					<Option value="11" >11</Option>
-					<Option value="12" >12</Option>
-					<Option value="13" >13</Option>
-					<Option value="14" >14</Option>
 					<Option value="15" >15</Option>
 					<Option value="16" >16</Option>
 					<Option value="17" >17</Option>
 					<Option value="18" >18</Option>
 					<Option value="19" >19</Option>
+					<Option value="20" >20</Option>
+					<Option value="21" >21</Option>
+					<Option value="22" >22</Option>
+					<Option value="23" >23</Option>
+					<Option value="24" >24</Option>
+					<Option value="25" >25</Option>
+					<Option value="26" >26</Option>
+					<Option value="27" >27</Option>
+					<Option value="28" >28</Option>
+					<Option value="29" >29</Option>
+					<Option value="30" >30</Option>
+					<Option value="31" >31</Option>
+					<Option value="32" >32</Option>
+					<Option value="33" >33</Option>
+					<Option value="34" >34</Option>
+					<Option value="35" >35</Option>
+					<Option value="36" >36</Option>
+					<Option value="37" >37</Option>
+					<Option value="38" >38</Option>
+					<Option value="39" >39</Option>
+					<Option value="40" >40</Option>
 				</List>
 			</Field>
  
@@ -1213,10 +1336,10 @@ Change here or in initial setup:</Label>
 				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
 				 <List>
 					<Option value="doNothing"            >do nothing (not recommended)</Option>
-					<Option value="restartLoop,-"        >restart progams on rPi(default) </Option>
-					<Option value="rebootloop,-"         >reboot rPi if internal problem</Option>
-					<Option value="restartLoop,pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
-					<Option value="rebootloop,pingBoot"  >reboot rPi </Option>
+					<Option value="restartLoop"        >restart progams on rPi(default) </Option>
+					<Option value="rebootloop"         >reboot rPi if internal problem</Option>
+					<Option value="restartLoop-pingBoot" >restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
+					<Option value="rebootloop-pingBoot"  >reboot rPi </Option>
 				</List>
 			</Field>
 			<Field id="newIPNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -1525,10 +1648,10 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot" >
+			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot now" >
 				<Label>...reboot command:</Label>
 				<List>
-					<Option value="sudo killall -9 python;sleep 6;sudo reboot" >sudo killall -9 python;sleep 6;sudo reboot</Option>
+					<Option value="sudo killall -9 python;sleep 6;sudo reboot now"           >sudo killall -9 python;sleep 6;sudo reboot now</Option>
 					<Option value="sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f</Option>
 				</List>
 			</Field>
@@ -2227,10 +2350,20 @@ Put THAT value into this field</Label>
 				<Label>This is for internal communication between plugins. It is a fast and effective way to tell other plugins up/down .. status
 this requires other plugins to subscribe to this service</Label>
 			</Field>
- 
+
+
+
 			<Field id="simpleSeparator6" type="separator"/>
 			<Field id="label6"               type="label"  > 
 				<Label>EXPERTS ONLY!! </Label>
+			</Field>
+
+			<Field id="sqlLoggerIgnoreStates" type="textfield" default="" readonly="true">
+				<Label>To reduce SQL-logger load, set value=</Label>
+			</Field>
+			<Field id="sqlLoggerIgnoreStateslabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>In Manage Global Device Properties, select device, add property sqlLoggerIgnoreStates and copy/paste above value, click add</Label>	
+
 			</Field>
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
 				<Label>... Ignore state of this beacon:</Label>
@@ -2456,6 +2589,102 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<ControlPageLabel>Pi_9_Time</ControlPageLabel>
 			</State>
 
+			<State id="Pi_10_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_10_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_10_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_10_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_10_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_10_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_10_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_10_Time</TriggerLabel>
+				<ControlPageLabel>Pi_10_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_11_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_11_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_11_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_11_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_11_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_11_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_11_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_11_Time</TriggerLabel>
+				<ControlPageLabel>Pi_11_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_12_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_12_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_12_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_12_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_12_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_12_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_12_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_12_Time</TriggerLabel>
+				<ControlPageLabel>Pi_12_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_13_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_13_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_13_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_13_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_13_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_13_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_13_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_13_Time</TriggerLabel>
+				<ControlPageLabel>Pi_13_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_14_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_14_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_14_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_14_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_14_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_14_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_14_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_14_Time</TriggerLabel>
+				<ControlPageLabel>Pi_14_Time</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_15_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_15_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_15_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_15_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_15_Time</TriggerLabel>
+				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
+			</State>
+``
+
 			<State id="note">
 			<ValueType>String</ValueType>
 			<TriggerLabel>note</TriggerLabel>
@@ -2553,6 +2782,11 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="rPiEnable7" type="checkbox" defaultValue="false">  <Label>rPi #7:</Label> </Field>
 			<Field id="rPiEnable8" type="checkbox" defaultValue="false">  <Label>rPi #8:</Label> </Field>
 			<Field id="rPiEnable9" type="checkbox" defaultValue="false">  <Label>rPi #9:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
 
 
 
@@ -2929,6 +3163,106 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Pi_9_Time</TriggerLabel>
 				<ControlPageLabel>Pi_9_Time</ControlPageLabel>
 			</State>
+
+			<State id="Pi_10_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_10_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_10_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_10_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_10_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_10_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_10_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_10_Time</TriggerLabel>
+				<ControlPageLabel>Pi_10_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_11_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_11_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_11_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_11_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_11_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_11_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_11_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_11_Time</TriggerLabel>
+				<ControlPageLabel>Pi_11_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_12_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_12_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_12_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_12_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_12_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_12_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_12_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_12_Time</TriggerLabel>
+				<ControlPageLabel>Pi_12_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_13_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_13_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_13_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_13_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_13_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_13_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_13_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_13_Time</TriggerLabel>
+				<ControlPageLabel>Pi_13_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_14_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_14_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_14_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_14_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_14_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_14_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_14_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_14_Time</TriggerLabel>
+				<ControlPageLabel>Pi_14_Time</ControlPageLabel>
+			</State>
+
+
+			<State id="Pi_15_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_15_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_15_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_15_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_15_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_15_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_15_Time</TriggerLabel>
+				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
+			</State>
+
+
+
 			<State id="created">
 				<ValueType>String</ValueType>
 				<TriggerLabel>created</TriggerLabel>
@@ -12215,7 +12549,6 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
-			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="showhelp"     type="checkbox"     defaultValue="true" hidden="no"><Label>Show Help:</Label> </Field>
 
@@ -12240,13 +12573,18 @@ General info:
        the relay clicks ~ twice per sec until count finished 
        ie number of buckets reported 
 
+use relay 
+    1. GPIO connected relays  or 
+    2. .. wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099
+       relay 1 is towards +3v +5V rpi pins
+
 Default pins for dynamic mode:
     pin  2  +5V to relay board, to run the board 
-    pin  8 GPIO14 : 12 V relay #4
-    pin 10 GPIO15 : dip sw 5 relay #3
-    pin 12 GPIO18 : dip sw 2 relay #2
+    pin  8 GPIO14/52relay4 : 12 V relay #4
+    pin 10 GPIO15/52relay3 : dip sw 5 relay #3
+    pin 12 GPIO18/52relay2 : dip sw 2 relay #2
     pin 14 ground to relay board 
-    pin 16 GPIO23 : dip sw 1 relay #1
+    pin 16 GPIO23/52relay1 : dip sw 1 relay #1
     pin 18 GPIO24 : input = sensor output relay on sensor board; 
     pin 20 ground : input = ...    polarity does not matter
     power supply: 
@@ -12264,6 +12602,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
                    stays at rain until ~ 140 seconds after last drop
     High med low sensitive simply count buckets, 
                    switch to no rain after xx secs set in parameter
+( NO = normally open contact, NC = normally closed contact for relays)
 </Label> 
 			</Field>
             
@@ -12285,35 +12624,64 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			<Label>select mode for sensor:</Label>
 			</Field>
 
+			<Field id="relayType"   type="menu" defaultValue="dynamic"  >
+			<List>
+				<Option value="gpio-relay"   >use relays connected to gpios (low = relay ON)</Option>
+				<Option value="i2c-relay"    >use i2c relay from 52pi</Option>
+			</List>
+			<Label>type of relay used:</Label>
+			</Field>
+			<Field id="infoLabel-i2c-relay" type="label" visibleBindingId="relayType" visibleBindingValue="i2c-relay" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>connect 
+          relay#4  NC +12V
+          relay#3  NO SW5
+          relay#2  NO SW2
+          relay#1  NO SW1</Label>
+			</Field>
 
-			<Field id="gpioIn"   type="menu" defaultValue="24" tooltip="select gpio pin# for the INPUT channel" >
+
+			<Field id="i2cAddress" type="menu"     defaultValue="16" visibleBindingId="relayType" visibleBindingValue="i2c-relay" >
+			<Label>i2c address of relay:</Label>
+			<List>
+				<Option value="16"   >0x10 = 16</Option>
+				<Option value="17"   >0x11 = 17</Option>
+				<Option value="18"   >0x12 = 18</Option>
+				<Option value="19"   >0x13 = 19</Option>
+			</List>
+			</Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="false"><Label>Check for gpio-relay type</Label></Field>
+
+
+			<Field id="gpioIn"   type="menu" defaultValue="24" tooltip="select gpio pin# for the INPUT channel"  >
 			<Label> Which gpio pin for sensor input pin:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
 
-			<Field id="gpioSW5"   type="menu" defaultValue="15" tooltip="for mode change" >
+			<Field id="gpioSW5"   type="menu" defaultValue="15" tooltip="for mode change" visibleBindingId="relayType" visibleBindingValue="gpio-relay">
 			<Label> Which gpio pin for SW 5:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
 
-			<Field id="gpioSW2"   type="menu" defaultValue="18" tooltip="sensitivity 1" >
+			<Field id="gpioSW2"   type="menu" defaultValue="18" tooltip="sensitivity 1" visibleBindingId="relayType" visibleBindingValue="gpio-relay">
 			<Label> Which gpio pin for SW 2:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="gpioSW1"   type="menu" defaultValue="23" tooltip="sensitivity 2" >
+			<Field id="gpioSW1"   type="menu" defaultValue="23" tooltip="sensitivity 2" visibleBindingId="relayType" visibleBindingValue="gpio-relay">
 			<Label> Which gpio pin for SW 1:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="gpioSWP"   type="menu" defaultValue="14" tooltip="12 v power line to sensor, will be used to cycle power when settings change" >
+			<Field id="gpioSWP"   type="menu" defaultValue="14" tooltip="12 v power line to sensor, will be used to cycle power when settings change" visibleBindingId="relayType" visibleBindingValue="gpio-relay">
 			<Label> Which gpio pin for 12VPower:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
+
+
 
 			<Field id="cyclePower"   type="menu" defaultValue="1" tooltip="when using a relay for 12 v power line to sensor, it can be used to cycle power when settings change" >
 			<Label>cycle power when switching settings:</Label>
@@ -12323,58 +12691,6 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			</List>
 			</Field>
 
-<!-- 
-			<Field id="infoLabeltime" type="label" visibleBindingId="sensorMode" visibleBindingValue="dynamic">			<Label>==max time between events = clicks to switch to lower sensitivity (larger buckets)</Label> </Field>
-			<Field id="TimeSwitchSensitivityRainToMayBeRaining"   type="menu" defaultValue="0" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>no rain to may be rain:</Label>
-			<List>
-				<Option value="0"   >no wait </Option>
-				<Option value="10"  >second click with 10 sec after reset </Option>
-			</List>
-			</Field>
-			<Field id="TimeSwitchSensitivityMayBeRainingToHigh"   type="menu" defaultValue="0" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>May be  rain to high Sensitivity:</Label>
-			<List>
-				<Option value="0"   >no wait </Option>
-				<Option value="10"  >second click with 10 sec after reset </Option>
-			</List>
-			</Field>
-			<Field id="TimeSwitchSensitivityHighToMed"   type="menu" defaultValue="10" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>high to medium Sensitivity:</Label>
-			<List>
-				<Option value="10"   >4 clicks in 10 secs</Option>
-			</List>
-			</Field>
-			<Field id="TimeSwitchSensitivityMedToLow"   type="menu" defaultValue="10" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>medium to low Sensitivity:</Label>
-			<List>
-				<Option value="10"   >4 clicks in 10 secs</Option>
-			</List>
-			</Field>
-			<Field id="infoLabeltime2" type="label"  visibleBindingId="sensorMode" visibleBindingValue="dynamic">               
-				<Label>==Time w no event = click of relay to switch to higher sensitivity level</Label> 
-			</Field>
-			<Field id="infoLabeltime21" type="label" alignText="right" fontSize="small" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>must be &gt; time between messages, eg 60 secs</Label> </Field>
-
-			<Field id="TimeSwitchSensitivityLowToMed"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>low to medium Sensitivity:</Label>
-			<List>
-				<Option value="100"  >no click in 100 secs</Option>
-			</List>
-			</Field>
-			<Field id="TimeSwitchSensitivityMedToHigh"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>medium to high Sensitivity:</Label>
-			<List>
-				<Option value="100"  >no click in 100 secs</Option>
-			</List>
-			</Field>
-			<Field id="TimeSwitchSensitivityHighToAnyRain"   type="menu" defaultValue="100" visibleBindingId="sensorMode" visibleBindingValue="dynamic">
-			<Label>high to any rain:</Label>
-			<List>
-				<Option value="100"  >no click in 100 secs</Option>
-			</List>
-			</Field>
 -->      
 			<Field id="sendMSGEverySecs" type="menu"     defaultValue="90" hidden="no" > 
 			<Label>Send Msg to indigo every:</Label>

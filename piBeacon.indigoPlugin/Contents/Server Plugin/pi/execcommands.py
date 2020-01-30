@@ -79,71 +79,45 @@ def OUTPUTi2cRelay(command):
 
 
 		try:
+			if inverseGPIO: 
+				up   = 0x00
+				down = 0xff
+				on   = "low"
+				off  = "high" 
+			else:
+				up   = 0xff
+				down = 0x00
+				on   = "high"
+				off  = "low" 
 			if cmd == "up":
-				if inverseGPIO: 
-					bus.write_byte_data(i2cAddress, pin, 0x00)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
-				else:
-					U.logger.log(30, "relay up {} {} {} ".format(i2cAddress, pin, 0xFF))
-					bus.write_byte_data(i2cAddress, pin, 0xFF)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
-		
+				bus.write_byte_data(i2cAddress, pin, up)
+				U.logger.log(30, "relay {} {} {} ".format(i2cAddress, pin, down))
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
 			elif cmd == "down":
-				if inverseGPIO: 
-					bus.write_byte_data(i2cAddress, pin, 0xff)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
-				else:
-					U.logger.log(30, "relay down {} {} {} ".format(i2cAddress, pin, 0x00))
-					bus.write_byte_data(i2cAddress, pin, 0x00)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+				U.logger.log(30, "relay {} {} {} ".format(i2cAddress, pin, down))
+				bus.write_byte_data(i2cAddress, pin, 0x00)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd == "pulseUp":
-				if inverseGPIO: 
-						bus.write_byte_data(i2cAddress, pin, 0x00)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
-				else:			
-						bus.write_byte_data(i2cAddress, pin, 0xff)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				bus.write_byte_data(i2cAddress, pin, up)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 				time.sleep(pulseUp)
-				if inverseGPIO: 
-						bus.write_byte_data(i2cAddress, pin, 0xff)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
-				else:			
-						bus.write_byte_data(i2cAddress, pin, 0x00)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
-
+				bus.write_byte_data(i2cAddress, pin, down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd == "pulseDown":
-				if not inverseGPIO: 
-						bus.write_byte_data(i2cAddress, pin, 0x00)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
-				else:			
-						bus.write_byte_data(i2cAddress, pin, 0xff)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+				bus.write_byte_data(i2cAddress, pin, down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 				time.sleep(pulseDown)
-				if not inverseGPIO: 
-						bus.write_byte_data(i2cAddress, pin, 0xff)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
-				else:			
-						bus.write_byte_data(i2cAddress, pin, 0x00)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+				bus.write_byte_data(i2cAddress, pin, up)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
 			elif cmd == "continuousUpDown":
 				for ii in range(nPulses):
-					if  inverseGPIO: 
-							bus.write_byte_data(i2cAddress, pin, 0x00)
-							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
-					else:			
-							bus.write_byte_data(i2cAddress, pin, 0xff)
-							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
+					bus.write_byte_data(i2cAddress, pin, up)
 					time.sleep(pulseUp)
-					if inverseGPIO: 
-							bus.write_byte_data(i2cAddress, pin, 0xff)
-							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"high"}}}})
-					else:			
-							bus.write_byte_data(i2cAddress, pin, 0x00)
-							if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":"low"}}}})
+					bus.write_byte_data(i2cAddress, pin, down)
 					time.sleep(pulseDown)
 
 			U.removeOutPutFromFutureCommands(pin, devType)

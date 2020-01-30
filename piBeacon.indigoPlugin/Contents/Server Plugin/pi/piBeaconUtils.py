@@ -95,27 +95,52 @@ def killOldPgm(myPID,pgmToKill,param1="",param2=""):
 			os.system("kill -9 "+str(pid))
 	except Exception, e:
 		if unicode(e).find("Too many open files") >-1:
-			doReboot(tt=3, text=unicode(e))
+			doReboot(tt=3, text=unicode(e), force=True)
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 
 #################################
-def restartMyself(param="", reason="", delay=1, doPrint= True):
-	if doPrint: 
-		logger.log(50, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
-	else:
-		logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
-
+def restartMyself(param="", reason="", delay=1, doPrint=True):
+	try:
+		if doPrint: 
+			logger.log(50, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
+		else:
+			logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
+	except: pass
 	time.sleep(delay)
-	os.system("/usr/bin/python "+G.homeDir+G.program+".py "+ param+" &")
-	time.sleep(10)
+
+	lastRestartCount	= 0
+	lastRestart 		= 0
+	if os.path.isfile(G.homeDir+"temp/restartLast."+G.program):
+		lastRestart = os.path.getmtime(G.homeDir+"temp/restartLast."+G.program)
+		f = open(G.homeDir+"temp/restartLast."+G.program)
+		lastRestartCount = int(f.read())
+		f.close()
+	if time.time() - lastRestart  < 300 and lastRestartCount > 5:
+		doReboot(tt=10, text="restarted "+G.program+" too often", force=True)
+	elif time.time() - lastRestart  >600:
+		 lastCount  = 0
+
+	cmd= "echo  "+str(lastRestartCount+1)+" > "+G.homeDir+"temp/restartLast."+G.program
+	logger.log(30, cmd )
+	os.system(cmd)
+	cmd = "sudo /usr/bin/python "+G.homeDir+G.program+".py "+ param+" &"
+	logger.log(30, cmd )
+	os.system(cmd)
+	exit()
+	time.sleep(5)
+	
 #################################
 def restartMaster( reason="", doPrint= True):
-	if doPrint: 
-		logger.log(50, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
-	else:
-		logger.log(30, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
+	try:
+		if doPrint: 
+			logger.log(50, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
+		else:
+			logger.log(30, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
+	except: pass
 
-	os.system("/usr/bin/python "+G.homeDir+"master.py  &")
+	os.system("sudo /usr/bin/python "+G.homeDir+"master.py  &")
+	exit()
+	time.sleep(5)
 
 #################################
 def setStopCondition(on=True):
@@ -282,7 +307,7 @@ def doRead(inFile=G.homeDir+"temp/parameters", lastTimeStamp="", testTimeOnly=Fa
 	except	Exception, e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Too many open files") >-1:
-			doReboot(tt=3, text=unicode(e))
+			doReboot(tt=3, text=unicode(e), force=True)
 	return {}, ""
 
 #################################
@@ -396,7 +421,7 @@ def cleanUpSensorlist(sens, theSENSORlist):
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_traceback.tb_lineno, e))
 	return {}
 #################################
-def doReboot(tt=1, text="", cmd=""):
+def doReboot(tt=1, text="", cmd="", force=False):
 	try:
 		if cmd =="":
 			doCmd= G.rebootCommand
@@ -404,13 +429,19 @@ def doReboot(tt=1, text="", cmd=""):
 			doCmd = cmd
 		try:     G.sendThread["run"] = False
 		except: pass
-		logger.log(50, "cBY:"+G.program.ljust(20)+ u"  rebooting / shutdown "+doCmd+"  "+ text)
+		try: logger.log(50, "cBY:"+G.program.ljust(20)+ u"  rebooting / shutdown with cmd="+doCmd+" .. remarks= "+ text)
+		except: pass
 		os.system("echo 'rebooting / shutdown' > "+G.homeDir+"temp/rebooting.now")
 
 
 		time.sleep(0.1)
 		time.sleep(tt)
 
+		if force:
+			try: os.system("sudo killall -9 python; sleep 4;sudo reboot -f")
+			except: pass
+			try: logger.log(50, "cBY:"+G.program.ljust(20)+ u"  rebooting / shutdown forced did not work")
+			except: pass
 
 		if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
 			try: os.system("sudo killall -9 pigpiod &")

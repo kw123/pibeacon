@@ -1,3 +1,27 @@
+Added features / changes in v7.116.332 @ 2019-01-30
+===================================================
+
+1. ++++ STRUCTURAL CHANGE: ++++
+   # of ibeacon pi-servers increased from (#0-#9) to (#0-#15) == 10 --> 16 pi-servers
+   # of sensor pi-servers increased from (#10-#19) to (#16-#40) == 10 --> 25 pi servers
+   As a consequence CURRRENT pi- servers #0-#9 should not experience any change. 
+   BUT current pi-servers #10-#15 will need to be re-created as pi-servers #16 .. #40 (pick any number) ie sensors-only  pi-servers
+   Also all sensors and output devices need to point to the new pi-server numbers (device edit of sensors and outputs) 
+   you will see a lot of new indigo sql device tables crated and converted from number to real 
+   ++++ STRUCTURAL CHANGE: ++++
+
+2. added support for i2c relay from 52pi for RG11 rain sensor.
+   see device edit for details for relay# to dip-switch mapping   
+
+3. removed option to foget ALL history, that removed all definitions for all BLE RPI and recreated them with new indigo ID
+
+4. changed default for restart options, apparently indigo does not like ","" in defaults  
+
+5. fixed bug with menu command shutdown rpi
+
+6. many smaller fixed and improvemnst in menus and controls 
+
+
 Added features / changes in v7.115.332 @ 2019-01-23
 ===================================================
 

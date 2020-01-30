@@ -70,9 +70,14 @@
                 <Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
             </Field>
 
-            <Field id="GPIOpin"   type="menu" defaultValue="-1" tooltip="select the OUTPUT state" >
-                <Label>pick relay# = channel:</Label>
-                    <List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true"/>
+            <Field id="GPIOpin"   type="menu" defaultValue="-1" tooltip="# go from 1-4" >
+                <Label>pick relay# on board:</Label>
+                <List>
+                    <Option value= "1"             >relay# 1</Option>
+                    <Option value= "2"             >relay# 2</Option>
+                    <Option value= "3"             >relay# 3</Option>
+                    <Option value= "4"             >relay# 4</Option>
+                </List>
             </Field>
             <Field id="cmd"	type="menu" default="up"	 >
                 <List>

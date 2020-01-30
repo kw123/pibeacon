@@ -7,7 +7,7 @@ import subprocess
 homeDir  = "/home/pi/pibeacon/"
 homeDir0 = "/home/pi/"
 
-#set GPIOs if requested BEFOR master.py runs just onece after boot 
+#set GPIOs if requested BEFOR master.py runs just once after boot 
 os.system("/usr/bin/python {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
 
 
@@ -54,13 +54,12 @@ for dd in delList:
 
 os.system("rm -r {}logs                   >/dev/null 2>&1".format(homeDir))
 
-# check if master running, if not restart after 50 secs  
+# check if master running, if not restart after 50-100 secs  
 time.sleep(50)
-ret = subprocess.Popen("ps -ef | grep master.py | grep -v grep", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
-lines = ret.split("\n")
-for line in lines :
-	if len(line) < 10 : continue
-	exit()
+for ii in range(10):
+	ret = subprocess.Popen("ps -ef | grep master.py | grep -v grep", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+	if ret.find("master.py") >-1: exit()
+	time.sleep(5)
 print ("callbeacon       restarting master.py, seems to not be active")
 os.system("cd {}; /usr/bin/python   {}master.py & ".format(homeDir,homeDir))		
 

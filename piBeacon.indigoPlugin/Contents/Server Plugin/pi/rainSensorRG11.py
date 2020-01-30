@@ -13,6 +13,7 @@ import	sys, os, subprocess, copy
 import	time,datetime
 import	json
 import	RPi.GPIO as GPIO  
+import  smbus
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -27,7 +28,7 @@ def readParams():
 	global ON, off
 	global oldRaw, lastRead
 	global switchToLowerSensitive, switchToHigherSensitive, bucketSize,bucketSize0, sendMSGEverySecs
-	global status
+	global status, relayType, i2cAddress, bus
 	try:
 		restart = False
 
@@ -54,11 +55,14 @@ def readParams():
 		found ={str(ii):{"RISING":0,"GPIOchanged":0,"BOTH":0 } for ii in range(100)}
 		for devId in sens:
 			sss= sens[devId]
+			if "relayType" in sss:	relayType = sss["relayType"]
+			else: 					relayType = "gpio-relay"
 			if "gpioIn"					   not in sss: continue
-			if "gpioSW5"				   not in sss: continue
-			if "gpioSW2"				   not in sss: continue
-			if "gpioSW1"				   not in sss: continue
-			if "gpioSWP"				   not in sss: continue
+			if relayType == "gpio-relay":
+				if "gpioSW5"				   not in sss: continue
+				if "gpioSW2"				   not in sss: continue
+				if "gpioSW1"				   not in sss: continue
+				if "gpioSWP"				   not in sss: continue
 			if "sensorMode"				   not in sss: continue
 			
 			cp	= sss["cyclePower"] != "0"
@@ -70,19 +74,30 @@ def readParams():
 				return 
 
 			cyclePower = True 
-			if gpioSWP != int(sss["gpioSWP"]):
-				gpioSWP = int(sss["gpioSWP"])
-				if gpioSWP >0: GPIO.setup(gpioSWP, GPIO.OUT)
-				powerOFF(calledFrom="read")
-			if gpioSW1 != int(sss["gpioSW1"]):
-				gpioSW1 = int(sss["gpioSW1"])
-				if gpioSW1 >0: GPIO.setup(gpioSW1, GPIO.OUT)
-			if gpioSW2 != int(sss["gpioSW2"]):
-				gpioSW2 = int(sss["gpioSW2"])
-				if gpioSW2 >0: GPIO.setup(gpioSW2, GPIO.OUT)
-			if gpioSW5 != int(sss["gpioSW5"]):
-				gpioSW5 = int(sss["gpioSW5"])
-				if gpioSW5 >0: GPIO.setup(gpioSW5, GPIO.OUT)
+			if relayType == "gpio-relay":
+				if gpioSWP != int(sss["gpioSWP"]):
+					gpioSWP = int(sss["gpioSWP"])
+					if gpioSWP >0: GPIO.setup(gpioSWP, GPIO.OUT)
+					powerOFF(calledFrom="read")
+				if gpioSW1 != int(sss["gpioSW1"]):
+					gpioSW1 = int(sss["gpioSW1"])
+					if gpioSW1 >0: GPIO.setup(gpioSW1, GPIO.OUT)
+				if gpioSW2 != int(sss["gpioSW2"]):
+					gpioSW2 = int(sss["gpioSW2"])
+					if gpioSW2 >0: GPIO.setup(gpioSW2, GPIO.OUT)
+				if gpioSW5 != int(sss["gpioSW5"]):
+					gpioSW5 = int(sss["gpioSW5"])
+					if gpioSW5 >0: GPIO.setup(gpioSW5, GPIO.OUT)
+			else: 
+				if bus =="":
+					DEVICE_BUS = 1
+					bus= smbus.SMBus(DEVICE_BUS)
+					i2cAddress = int(sss["i2cAddress"])
+					gpioSWP = 4
+					gpioSW5 = 3
+					gpioSW2 = 2
+					gpioSW1 = 1
+
 			switchToLowerSensitive["checkIfIsRaining"]	= 10# int(sss["TimeSwitchSensitivityRainToMayBeRaining"])
 			switchToLowerSensitive["maybeRain"]			= 10# int(sss["TimeSwitchSensitivityMayBeRainingToHigh"])
 			switchToLowerSensitive["highSensitive"]		= 10# int(sss["TimeSwitchSensitivityHighToMed"])
@@ -409,49 +424,55 @@ def checkIfRelayON():
 	global lastRelayONCheck
 	global gpioIn, gpioSWP, ON, off, cyclePower
 	global eventStartedList, lastGPIOStatus, newGPIOStatus
-	if time.time()- lastRelayONCheck < 3: return 
-	lastRelayONCheck = time.time()
-	gpioStatus = getGPIO(gpioIn,calledFrom="checkRelay")
-	maxONTime = 40
-	if gpioStatus:
-		if cyclePower:
-			if sensorMode == "checkIfIsRaining":
-				if time.time()- eventStartedList[nEvenstStarted-1] < maxONTime: return 
-				U.logger.log(30, "resetting device in \"check if raining mode\", signal relay is ON for > "+str(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
+	try:
+		if time.time()- lastRelayONCheck < 3: return 
+		lastRelayONCheck = time.time()
+		gpioStatus = getGPIO(gpioIn,calledFrom="checkRelay")
+		maxONTime = 40
+		if gpioStatus:
+			if cyclePower:
+				if sensorMode == "checkIfIsRaining":
+					if time.time()- eventStartedList[nEvenstStarted-1] < maxONTime: return 
+					U.logger.log(30, "resetting device in \"check if raining mode\", signal relay is ON for > "+str(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
+				else:
+					if time.time()- eventStartedList[nEvenstStarted-1] < 5: return 
+					U.logger.log(30, "hanging? resetting device, signal relay is on for > "+str(maxONTime)+"secs: "+str( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
+					powerCyleRelay()
+				eventStartedList= [time.time()-(7+5*(nEvenstStarted-ii)) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
 			else:
-				if time.time()- eventStartedList[nEvenstStarted-1] < 5: return 
-				U.logger.log(30, "hanging? resetting device, signal relay is on for > "+str(maxONTime)+"secs: "+str( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
-				powerCyleRelay()
-			eventStartedList= [time.time()-(7+5*(nEvenstStarted-ii)) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
-		else:
-			if	 time.time()- eventStartedList[nEvenstStarted-1] < 10: 
-				return
-			elif time.time()- eventStartedList[nEvenstStarted-1] < 145: #set to drizzle
-				setModeTo("highSensitive", calledFrom="checkIfRelayON", powerCycle=False, force = False)
-				sendShortStatus(rainMsg["highSensitive"])
-			else: # set to rain
-				setModeTo("medSensitive", calledFrom="checkIfRelayON", powerCycle=False, force = False)
-				sendShortStatus(rainMsg["medSensitive"])
-				#eventStartedList = time.time()
+				if	 time.time()- eventStartedList[nEvenstStarted-1] < 10: 
+					return
+				elif time.time()- eventStartedList[nEvenstStarted-1] < 145: #set to drizzle
+					setModeTo("highSensitive", calledFrom="checkIfRelayON", powerCycle=False, force = False)
+					sendShortStatus(rainMsg["highSensitive"])
+				else: # set to rain
+					setModeTo("medSensitive", calledFrom="checkIfRelayON", powerCycle=False, force = False)
+					sendShortStatus(rainMsg["medSensitive"])
+					#eventStartedList = time.time()
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 			
 def checkIfMSGtoBeSend(force =False):
-	global lastCalcCheck, sendMSGEverySecs, ProgramStart, sensorMode, switchToLowerSensitive
-	if time.time()- lastCalcCheck < max( sendMSGEverySecs, switchToLowerSensitive[status["currentMode"]] ) and not force: return 
-	if time.time() - ProgramStart < 5 : return 
+	global lastCalcCheck, sendMSGEverySecs, ProgramStart, sensorMode, switchToLowerSensitive, bucketSize
+	try:
+		if time.time()- lastCalcCheck < max( sendMSGEverySecs, switchToLowerSensitive[status["currentMode"]] ) and not force: return 
+		if time.time() - ProgramStart < 5 : return 
 	
-	rate, totalRain, measurementTime, nBuckets,nBucketsSinceReset= calcRates()
-	data={"sensors":{sensor:{}}}
-	rainLevel = rainMsg[status["currentMode"]]
-	for devId in sensors[sensor]: 
-		data["sensors"][sensor][devId] = {"rainRate": round(rate,4), "totalRain": round(totalRain,4),"nBucketsTotal": nBuckets,"nBuckets": nBucketsSinceReset, "measurementTime":round(measurementTime,1),"mode":sensorMode,"sensitivity":status["currentMode"],"bucketSize":bucketSize[status["currentMode"]],"rainLevel":rainLevel}
-	U.sendURL(data,wait=False)
-	resetMes()
-	if nBuckets < 4 and time.time()- lastCalcCheck > 40 and rainLevel > 1:
-		checkIfDownGradedNeeded( force = True )
-	U.writeRainStatus(status)
-	lastCalcCheck = time.time()
+		rate, totalRain, measurementTime, nBuckets,nBucketsSinceReset= calcRates()
+		data={"sensors":{sensor:{}}}
+		rainLevel = rainMsg[status["currentMode"]]
+		for devId in sensors[sensor]: 
+			data["sensors"][sensor][devId] = {"rainRate": round(rate,4), "totalRain": round(totalRain,4),"nBucketsTotal": nBuckets,"nBuckets": nBucketsSinceReset, "measurementTime":round(measurementTime,1),"mode":sensorMode,"sensitivity":status["currentMode"],"bucketSize":bucketSize[status["currentMode"]],"rainLevel":rainLevel}
+		U.sendURL(data,wait=False)
+		resetMes()
+		if nBuckets < 4 and time.time()- lastCalcCheck > 40 and rainLevel > 1:
+			checkIfDownGradedNeeded( force = True )
+		U.writeRainStatus(status)
+		lastCalcCheck = time.time()
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 def sendShortStatus(level):
@@ -469,32 +490,56 @@ def sendShortStatus(level):
 
 def setcheckIfIsRaining():
 	global cyclePower
-	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
+	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
-		setGPIO(gpioSW5, ON)
-		setGPIO(gpioSW2, off)
-		setGPIO(gpioSW1, off)
+		if relayType == "gpio-relay":
+			setGPIO(gpioSW5, ON)
+			setGPIO(gpioSW2, off)
+			setGPIO(gpioSW1, off)
+		else:
+			seti2cRelay( gpioSW5, 0xff)
+			seti2cRelay( gpioSW2, 0x00)
+			seti2cRelay( gpioSW1, 0x00)
+	
+
 def sethighSensitive():
 	global cyclePower
-	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
+	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
-		setGPIO(gpioSW5, off)
-		setGPIO(gpioSW2, ON)
-		setGPIO(gpioSW1, off)
+		if relayType == "gpio-relay":
+			setGPIO(gpioSW5, off)
+			setGPIO(gpioSW2, ON)
+			setGPIO(gpioSW1, off)
+		else:
+			seti2cRelay( gpioSW5, 0x00)
+			seti2cRelay( gpioSW2, 0xff)
+			seti2cRelay( gpioSW1, 0x00)
+
 def setmedSensitive():
 	global cyclePower
-	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
+	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
-		setGPIO(gpioSW5, off)
-		setGPIO(gpioSW2, off)
-		setGPIO(gpioSW1, ON)
+		if relayType == "gpio-relay":
+			setGPIO(gpioSW5, off)
+			setGPIO(gpioSW2, off)
+			setGPIO(gpioSW1, ON)
+		else:
+			seti2cRelay( gpioSW5, 0x00)
+			seti2cRelay( gpioSW2, 0x00)
+			seti2cRelay( gpioSW1, 0xff)
+
 def setlowSensitive():
 	global cyclePower
-	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off
+	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
-		setGPIO(gpioSW5, off)
-		setGPIO(gpioSW2, off)
-		setGPIO(gpioSW1, off)
+		if relayType == "gpio-relay":
+			setGPIO(gpioSW5, off)
+			setGPIO(gpioSW2, off)
+			setGPIO(gpioSW1, off)
+		else:
+			seti2cRelay( gpioSW5, 0x00)
+			seti2cRelay( gpioSW2, 0x00)
+			seti2cRelay( gpioSW1, 0x00)
 
 def powerCyleRelay():
 	global gpioSWP, ON, off
@@ -503,13 +548,23 @@ def powerCyleRelay():
 
 def powerON(calledFrom=""):
 	global gpioSWP, ON, off
-	setGPIO(gpioSWP, off)
+	if relayType == "gpio-relay":
+		setGPIO(gpioSWP, off)
+	else:
+		seti2cRelay( gpioSWP, 0x00)
 
 def powerOFF(calledFrom=""):
-	global gpioSWP, ON, off
-	setGPIO(gpioSWP, ON)
+	global gpioSWP, ON, off, relayType
+	if relayType == "gpio-relay":
+		setGPIO(gpioSWP, ON)
+	else:
+		seti2cRelay( gpioSWP, 0xff)
 
 
+def seti2cRelay(pin,ONoff):
+	global bus, i2cAddress
+	if pin > 0:
+		bus.write_byte_data(i2cAddress, pin, ONoff)
 
 def setGPIO(pin,ONoff):
 	if pin > 0:
@@ -518,10 +573,10 @@ def setGPIO(pin,ONoff):
 def getGPIO(pin,calledFrom=""):
 	global ON, lastGPIOStatus, newGPIOStatus
 	if pin > 0:
-		lastGPIOStatus = newGPIOStatus
-		st =  GPIO.input(pin) == ON
-		newGPIOStatus = st
-		return st
+			lastGPIOStatus = newGPIOStatus
+			st =  GPIO.input(pin) == ON
+			newGPIOStatus = st
+			return st
 	return 0
 
   
@@ -546,9 +601,12 @@ global ProgramStart
 global lastShortMsgSend
 global lastShortMsg
 global inGPIOchanged, lastGPIOStatus, newGPIOStatus
+global relayType, i2cAddress, bus
 
 ###################### init #################
-	
+bus						 = "" 
+i2cAddress				 = 16
+relayType				 = "gpio-relay"
 uPmm					 = 25.
 minTimeBetweenModeSwitch = 5
 nextModeSwitchNotBefore	 = 0
@@ -569,8 +627,8 @@ gpioSW5					 = -1
 gpioSWP					 = -1
 sensorMode				 = "dynamic"
 cyclePower				 = True
-ON						 = False # for relay outoput 
-off						 = True	 # for relay outoput 
+ON						 = False # for relay output 
+off						 = True	 # for relay output 
 
 
 restart					 = False

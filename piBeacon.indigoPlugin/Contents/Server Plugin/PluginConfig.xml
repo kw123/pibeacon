@@ -717,22 +717,23 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
    
     <Field id="infoLabel99" type="label"> <Label>Debug area for plugin:</Label>  </Field>
         
-    <Field    id="debugLogic"         type="checkbox"  defaultValue="false"       tooltip=""> <Label> Debug...                   ... (1) Logic:</Label>  </Field>
-    <Field    id="debugDevMgmt"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (2) beacon device management:</Label>  </Field>
-    <Field    id="debugBeaconData"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (3) beacon data:</Label>  </Field>
-    <Field    id="debugSensorData"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (4) sensor devices:</Label>  </Field>
-    <Field    id="debugOutputDevice"  type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (5) output devices:</Label>  </Field>
-    <Field    id="debugUpdateRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6) update RPI:</Label>  </Field>
-    <Field    id="debugSocketRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6a) sockect comm to RPI:</Label>  </Field>
-    <Field    id="debugOfflineRPI"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6b) show error messages if RPI is offline:</Label>  </Field>
-    <Field    id="debugFing"          type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (7) update Fingscan:</Label>  </Field>
-    <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8) send BC for status updates:</Label>  </Field>
-    <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9) update BLE-connect:</Label>  </Field>
-    <Field    id="debugCAR"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (10) CAR type devices:</Label>  </Field>
-    <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (11) tcpip socket comm:</Label>  </Field>
-    <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (12) beacon position plots:</Label>  </Field>
+    <Field    id="debugLogic"         type="checkbox"  defaultValue="false"       tooltip=""> <Label> Debug...                   ... (1)  Logic:</Label>  </Field>
+    <Field    id="debugDevMgmt"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (2)  beacon device management:</Label>  </Field>
+    <Field    id="debugBeaconData"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (3)  beacon data:</Label>  </Field>
+    <Field    id="debugSensorData"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (4)  sensor devices:</Label>  </Field>
+    <Field    id="debugOutputDevice"  type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (5)  output devices:</Label>  </Field>
+    <Field    id="debugUpdateRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6)  update RPI:</Label>  </Field>
+    <Field    id="debugSocketRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (7)  sockect comm to RPI:</Label>  </Field>
+    <Field    id="debugOfflineRPI"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8)  show error messages if RPI is offline:</Label>  </Field>
+    <Field    id="debugFing"          type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9)  update Fingscan:</Label>  </Field>
+    <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (11) send BC for status updates:</Label>  </Field>
+    <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (12) update BLE-connect:</Label>  </Field>
+    <Field    id="debugCAR"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (13) CAR type devices:</Label>  </Field>
+    <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (14) tcpip socket comm:</Label>  </Field>
+    <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (15) beacon position plots:</Label>  </Field>
+    <Field    id="debugBatteryLevel"  type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
 
-    <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (s) special debug (only for development):</Label>  </Field>
+    <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (S) special debug (only for development):</Label>  </Field>
     <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
     <Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
