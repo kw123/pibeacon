@@ -345,11 +345,11 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
                 <Label>Delete tracking History of</Label><Title>ALL beacons</Title>
                 <CallbackMethod>buttonConfirmMACDeleteALLCALLBACK</CallbackMethod>
             </Field>
+-->
             <Field   id="buttonDeleteJunk2" type="button"	tooltip="This will empty the internal history list of beacons that have no corresponding devices">
                 <Label>Delete beacons history of deleted devices</Label><Title>delete</Title>
                 <CallbackMethod>buttonConfirmMACDeleteOLDHISTORYCALLBACK</CallbackMethod>
             </Field>
--->
         </ConfigUI>
     </MenuItem>
 

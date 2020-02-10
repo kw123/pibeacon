@@ -2923,11 +2923,11 @@ def getT5403(sensor, data):
 			p = press
 
 			if t!="":
-				try:	t = float(t) + float(sensors[sensor][devId]["offsetTemp"])
+				try:	t = round( float(t) + float(sensors[sensor][devId]["offsetTemp"]), 2)
 				except: pass
-				data[sensor][devId] = {"temp":round(t,1)}
+				data[sensor][devId] = {"temp":round(t,2)}
 				if p!="":
-					try:	p = (float(p) + float(sensors[sensor][devId]["offsetPress"]))
+					try:	p = round( (float(p) + float(sensors[sensor][devId]["offsetPress"])), 2)
 					except: pass
 				data[sensor][devId]["press"]=round(p,1)
 				putValText(sensors[sensor][devId],[t],["temp"])
@@ -2987,8 +2987,6 @@ def getBMP(sensor, data):
 				data[sensor][devId] = {"temp":t}
 
 				if p!="":
-					try:	p = float(p) + float(sensors[sensor][devId]["offsetPress"])
-					except: pass
 					data[sensor][devId]["press"]=p
 				
 				if devId in badSensors: del badSensors[devId]
@@ -3048,10 +3046,6 @@ def getBME(sensor, data,BMP=False):
 				data[sensor][devId] = {"temp":t}
 
 				if p!="":
-					try:	p = float(p) + float(sensors[sensor][devId]["offsetPress"])
-					except:	 
-						data = incrementBadSensor(devId,sensor,data)
-						return data
 					data[sensor][devId]["press"]=p
 
 				if h!= "":
@@ -3197,8 +3191,6 @@ def getAM2320(sensor, data):
 						data[sensor][devId] = {"temp":t}
 
 						if h!= "":
-							try:	h = (float(h)  + float(sensors[sensor][devId]["offsetHum"]))
-							except: pass
 							data[sensor][devId]["hum"]=h
 						
 						if devId in badSensors: del badSensors[devId]
@@ -3342,8 +3334,6 @@ def getMS5803(sensor, data):
 				except: pass
 
 				if temp != "" and temp >-90:
-					try:	temp +=	 float(sensors[sensor][devId]["offsetTemp"])
-					except: pass
 					data[sensor][devId]={}
 					data[sensor][devId]["temp"] = temp
 					if press >-90:
@@ -4330,7 +4320,7 @@ def doDisplay():
 						p =	 float(theValues[ii])
 						if pressureUnits == "atm":							   p *= 0.000009869233; p = "%6.3f"%p; pu= "P[atm]"
 						elif pressureUnits == "bar":						   p *= 0.00001; p = "%7.4f" % p;	   pu= "P[Bar]"
-						elif pressureUnits == "mbar":						   p *= 0.01; p = "%6.1f" % p	;	   pu= "P[mBar]"
+						elif pressureUnits.lower() == "mbar":				   p *= 0.01; p = "%6.1f" % p	;	   pu= "P[mBar]"
 						elif pressureUnits == "mm":							   p *= 0.00750063; p = "%6.1f"%p;	   pu= 'P[mmHg]'
 						elif pressureUnits == "Torr":						   p *= 0.00750063; p = "%6.1f"%p;	   pu= "P[Torr]"
 						elif pressureUnits == "inches":						   p *= 0.000295299802; p = "%6.2f"%p; pu= 'P["Hg]'

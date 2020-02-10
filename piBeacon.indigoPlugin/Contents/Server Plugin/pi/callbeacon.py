@@ -43,12 +43,14 @@ os.system("cd {}; /usr/bin/python {}master.py & ".format(homeDir,homeDir))
 
 
 # remove old files 
+
 delList =[
 		"beacon_batteryLevelPosition", "beacon_ignoreMAC", "beacon_offsetUUID", "beacon_UUIDtoIphone, beacon_doNotIgnore", "beacon_fastDown", "beacon_ignoreUUID", 
 		"beacon_minSignalCutoff", "beacon_onlyTheseMAC", "beacon_signalDelta",  "rejects.*", 
 		"logfile", "logfile-1", "call-log",  "errlog", "logfile", "master.log", 
 		"alive", "interface", "beaconloop",
-		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py" ]
+		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py" 
+		"moistureSensorAdafruit","checkAdfruitInclude.py","checkForInclude.py"]
 for dd in delList:
 	os.system("rm {}{} > /dev/null 2>&1 ".format(homeDir, dd))
 

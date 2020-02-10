@@ -348,7 +348,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<Label>== Hardware/reboot/UPS configs:...</Label>
 			</Field>
 
-			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
+			<Field id="rebootHardware"     type="checkbox"     defaultValue="false" > <Label>Reboot hardware installed?:</Label>			</Field>
 			<Field id="labelhw1"           type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
 				<Label>The plugin supports 3 options for hardware reset and UPS etc
   -A. "shutdown hardwire reset": Connect a GPIO out pin to RUN/REST pin on the board. 
@@ -648,7 +648,23 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			 </Field>
 
 
-			<Field id="labelPIGPIO"              type="label"> <Label></Label></Field>
+			<Field id="enableVoltage"              type="label"> 
+				<Label>== Enable voltage monitoring:...</Label>
+			</Field>
+			<Field id="enableVoltageCheck"	type="menu" defaultValue="0"  >	
+				<Label> ... use method:</Label>
+				<List>
+					<Option value="0"     >dis-enable v-check, ie for pi zero</Option>
+					<Option value="file"  >enable v-check throught checking @ /sys/devices/platform/soc/soc:firmware/get_throttled"</Option>
+					<Option value="gpio"  >enable v-check throught GPIO#35, 2.choice</Option>
+				</List>
+			 </Field>
+			<Field id="enableVoltageCheckLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
+				<Label>There are 2 methods (a) checking GPIO35, if value==0 --> event. This does not work on Pi0, it will disable the pi0
+(b) checking file for values !=0
+     /sys/devices/platform/soc/soc:firmware/get_throttled</Label>
+			</Field>
+
 			<Field id="labelPIGPIOfirst"         type="label"> 
 				<Label>== use GPIO or PIGPIO for "PWM" outputs:...</Label>
 			</Field>
@@ -799,7 +815,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 							<Option value='{"on":"onIf",      "useIP":"useIf"}'		>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"off",       "useIP":"doNotUse"}'	>off  </Option>
 							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , any change must be set by user, use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any chnage must be set by user, do not use wlan0 IP#</Option>
+							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any change must be set by user, do not use wlan0 IP#</Option>
 						</List> 
 			</Field>
 
@@ -809,12 +825,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<Field id="simpleSeparator6" type="separator"/>
 			<Field id="label6"               type="label"  > 
 				<Label>EXPERTS ONLY!!---------------- </Label>
-			</Field>
-			<Field id="sqlLoggerIgnoreStates" type="textfield" default="" readonly="true">
-				<Label>To reduce SQL-logger load, set value=</Label>
-			</Field>
-			<Field id="sqlLoggerIgnoreStateslabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-				<Label>In Manage Global Device Properties, select device, add property sqlLoggerIgnoreStates and copy/paste above value, click add</Label>	
 			</Field>
 
 
@@ -890,7 +900,7 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			</State>
 
 			<State id="closestiBeacon">
-				<ValueType>string</ValueType>
+				<ValueType>String</ValueType>
 				<TriggerLabel>closestiBeacon</TriggerLabel>
 				<ControlPageLabel>closestiBeacon</ControlPageLabel>
 			</State>
@@ -1189,6 +1199,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
 			</State>
 
+			<State id="updateReason">
+				<ValueType>String</ValueType>
+				<TriggerLabel>updateReason</TriggerLabel>
+				<ControlPageLabel>updateReason</ControlPageLabel>
+			</State>
+
 			<State id="note">
 				<ValueType>String</ValueType>
 				<TriggerLabel>note</TriggerLabel>
@@ -1224,6 +1240,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<TriggerLabel>TemperatureMinToday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
 			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxYesterday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
@@ -1243,6 +1264,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>sensors_active</TriggerLabel>
 				<ControlPageLabel>sensors_active</ControlPageLabel>
+			</State>
+			<State id="bad_voltage_count">
+				<ValueType>String</ValueType>
+				<TriggerLabel>bad_voltage_count</TriggerLabel>
+				<ControlPageLabel>bad_voltage_count</ControlPageLabel>
 			</State>
 
 
@@ -1468,7 +1494,7 @@ Change here or in initial setup:</Label>
 				<Label>== Hardware/reboot configs:...</Label>
 			</Field>
 
-			<Field id="rebootHardware"     type="checkbox"     defaultValue="true" > <Label>Reboot hardware installed?:</Label>			</Field>
+			<Field id="rebootHardware"     type="checkbox"     defaultValue="rebootHardware" > <Label>Reboot hardware installed?:</Label>			</Field>
 			<Field id="labelhw1"           type="label" visibleBindingId="rebootHardware" visibleBindingValue="true"> 
 				<Label>The plugin supports 3 options for hardware reset and UPS etc
   -A. "shutdown hardwire reset": Connect a GPIO out pin to RUN/REST pin on the board. 
@@ -1763,7 +1789,23 @@ Change here or in initial setup:</Label>
 			 </Field>
 
 
-			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
+			<Field id="enableVoltage"              type="label"> 
+				<Label>== Enable voltage monitoring:...</Label>
+			</Field>
+			<Field id="enableVoltageCheck"	type="menu" defaultValue="0"  >	
+				<Label> ... use method:</Label>
+				<List>
+					<Option value="0"     >dis-enable v-check, ie for pi zero</Option>
+					<Option value="file"  >enable v-check throught checking @ /sys/devices/platform/soc/soc:firmware/get_throttled"</Option>
+					<Option value="gpio"  >enable v-check throught GPIO#35, 2.choice</Option>
+				</List>
+			 </Field>
+			<Field id="enableVoltageCheckLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
+				<Label>There are 2 methods (a) checking GPIO35, if value==0 --> event. This does not work on Pi0, it will disable the pi0
+(b) checking file for values !=0
+     /sys/devices/platform/soc/soc:firmware/get_throttled</Label>
+			</Field>
+
 			<Field id="labelGPIOfirst"               type="label"> 
 				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
 			</Field>
@@ -1916,7 +1958,7 @@ Change here or in initial setup:</Label>
 							<Option value='{"on":"onIf",      "useIP":"useIf"}'		>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
 							<Option value='{"on":"off",       "useIP":"doNotUse"}'	>off  </Option>
 							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , any change must be set by user, use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any chnage must be set by user, do not use wlan0 IP#</Option>
+							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , any change must be set by user, do not use wlan0 IP#</Option>
 						</List> 
 			</Field>
 
@@ -2015,6 +2057,11 @@ Change here or in initial setup:</Label>
 				<TriggerLabel>sensors_active</TriggerLabel>
 				<ControlPageLabel>sensors_active</ControlPageLabel>
 			</State>
+			<State id="bad_voltage_count">
+				<ValueType>String</ValueType>
+				<TriggerLabel>bad_voltage_count</TriggerLabel>
+				<ControlPageLabel>bad_voltage_count</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>
@@ -2055,7 +2102,8 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 			<Field id="expirationTimeLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>This will overwrite the default setting in config</Label>
+				<Label>This will overwrite the default setting in config. for normal beacon operation, if no signal is received a beaconafter "expirationTime" willl be set to DOWN and after another "expirationTime" it will go to EXPIRED
+the time up --> down  vs down --> expired can be changed in config for all ibeacons eg times 2 etc</Label>
 			</Field>
 			<Field id="label11"               type="label" > 
 				<Label>== Fast UP to down mode:</Label>
@@ -2076,7 +2124,7 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 			<Field id="fastDownMinSignal" type="menu"     defaultValue="-999" tooltip="interprete a signal less than xx dBm as no signal, good if you go away from rpi eg leave the room "> 
-				<Label>... no signal = dBm less than  </Label>
+				<Label>... no signal = dBm less than:</Label>
 				<List>
 					<Option value="-60" >-60 dBm </Option>
 					<Option value="-65" >-65 dBm </Option>
@@ -2099,14 +2147,14 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
  			<Field id="fastDownMinLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>For normal beacons: RPIs will send an update once every minute: If no signal no message will be send. then teh expiration timer will determine UP to down. 
-For fastDown beacons: the RPIs will send a message "no signal" outside the one minutes schedule if no signal was received from the beacon for xx seconds. Then the plugin will set the status to Down immediately</Label>
+				<Label>For normal beacons: RPIs will send an update once every minute: If no signal == no message will be send. Then the expiration timer process will determine UP to Down after yy seconds w/o signal. 
+For FASTDOWN beacons: the RPIs will send a message "NO SIGNAL" outside the one minutes schedule if no signal was received from the beacon for xx seconds. Then the plugin will set the status to Down IMMEDIATELY</Label>
 			</Field>
            
 			<Field id="label22"               type="label" > 
 				<Label>== Send msg to indigo ... </Label>
 			</Field>
-			<Field id="signalDelta"   type="menu" defaultValue="20" tooltip="rPI will send a message to indigo if the signal strength changes by more than xx dBm, 
+			<Field id="signalDelta"   type="menu" defaultValue="999" tooltip="rPI will send a message to indigo if the signal strength changes by more than xx dBm, 
 use eg to track someone moving around - going from one room to the next" >
 				<Label>....      If signal change greater than:</Label> 
 				<List>
@@ -2130,7 +2178,7 @@ use eg to track someone moving around - going from one room to the next" >
  			<Field id="signalDeltaLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>use this to detect beacons that eg leave a room and you want to know quickly</Label>
 			</Field>
-			<Field id="minSignalCutoff"   type="menu" defaultValue="20" tooltip="if the beaocn is UP: use any signal, if beacon is down, ignore if less than cutoff to stop up/down/up if it has a weak signal" >
+			<Field id="minSignalCutoff"   type="menu" defaultValue="-999" tooltip="if the beaocn is UP: use any signal, if beacon is down, ignore if less than cutoff to stop up/down/up if it has a weak signal" >
 				<Label>.... do NOT send if signal less than xx for down to UP:</Label> 
 				<List>
 					<Option value="-60" >-60 dBm </Option>
@@ -2158,7 +2206,7 @@ use eg to track someone moving around - going from one room to the next" >
 				</List>
 			</Field>
  			<Field id="minSignalCutoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>use this to cut off UP-signals for weak signals. This value is used on the RPI</Label>
+				<Label>use this to cut off UP-signals for weak signals. This value is used on the RPI, before info is send to the plugin</Label>
 			</Field>
 
 			<Field id="label3"               type="label"  > 
@@ -2358,13 +2406,6 @@ this requires other plugins to subscribe to this service</Label>
 				<Label>EXPERTS ONLY!! </Label>
 			</Field>
 
-			<Field id="sqlLoggerIgnoreStates" type="textfield" default="" readonly="true">
-				<Label>To reduce SQL-logger load, set value=</Label>
-			</Field>
-			<Field id="sqlLoggerIgnoreStateslabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-				<Label>In Manage Global Device Properties, select device, add property sqlLoggerIgnoreStates and copy/paste above value, click add</Label>	
-
-			</Field>
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
 				<Label>... Ignore state of this beacon:</Label>
 				<List>
@@ -2683,7 +2724,13 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<TriggerLabel>Pi_15_Time</TriggerLabel>
 				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
 			</State>
-``
+
+			<State id="updateReason">
+				<ValueType>String</ValueType>
+				<TriggerLabel>updateReason</TriggerLabel>
+				<ControlPageLabel>updateReason</ControlPageLabel>
+			</State>
+
 
 			<State id="note">
 			<ValueType>String</ValueType>
@@ -2787,6 +2834,7 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
 			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
 			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
 
 
 
@@ -5282,18 +5330,18 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="SupportsOnState" 		type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" 	type="checkbox" defaultValue="true"  hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
 
 
 			<Field id="infoLabel" type="label">
-			<Label>Setup i2cBME680 temp pressure humidity sensor on individual rPis.. 
+				<Label>Setup i2cBME680 temp pressure humidity sensor on individual rPis.. 
     connect 3.3, GND, SDA,SCL.
 It measures Temp, humidity and pressure like eg bme280 and in addition 
-     a gas value that is a resistance that chnages with air quality. 
+     a gas value that is a resistance that changes with air quality. 
 In clean air the resistance is the highest, if it senses eg VOC gases the 
   resistance becomes lower.
 airQuality/GasSore is (current resistance) / baseline
@@ -5308,111 +5356,139 @@ The sensor read rate will impact the baseline, that is due to the heat cycle
    if you change the read cyle time, it must be recalibrated 
 After some days of running in clean air, proposed setup is: 
 ====set baseline to fixed value of clean air====
-  </Label>
+</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-			<Label>select rPi-server to which the sensor is connect to:</Label> 
+				<Label>select rPi-server to which the sensor is connect to:</Label> 
 			</Field>
 			<Field id="i2cAddress" type="menu"     defaultValue="118"> <Label>i2c address of device:</Label>
-			<List>
-				<Option value="118"   >0x76 = 118 (SDO-Gnd)default </Option>
-				<Option value="119"   >0x77 = 119 (SDO-V+)</Option>
-			</List>
+				<List>
+					<Option value="118"   >0x76 = 118 (SDO-Gnd)default </Option>
+					<Option value="119"   >0x77 = 119 (SDO-V+)</Option>
+				</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-			<Label>use TCA9548A multiplexer for this sensor:</Label> 
-			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
-			</List>
+				<Label>use TCA9548A multiplexer for this sensor:</Label> 
+				<List>
+					<Option value="-1"    >off </Option>
+					<Option value="0"     >channel 0  </Option>
+					<Option value="1"     >channel 1  </Option>
+					<Option value="2"     >channel 2  </Option>
+					<Option value="3"     >channel 3  </Option>
+					<Option value="4"     >channel 4  </Option>
+					<Option value="5"     >channel 5  </Option>
+					<Option value="6"     >channel 6  </Option>
+					<Option value="7"     >channel 7  </Option>
+				</List>
 			</Field>
-			<Field id="calibrateIfgt" type="menu"     defaultValue="110" hidden="no"> 
-			<Label>recalibrate automatically if AirQuality gt:</Label>
-			<List>
-				<Option value="8888888" > set to static value</Option>
-				<Option value="9999999" > read calibration from file</Option>
-				<Option value="103"    > 103 percent</Option>
-				<Option value="105"    > 105 percent</Option>
-				<Option value="107"    > 107 percent</Option>
-				<Option value="110"    > 110 percent</Option>
-				<Option value="115"    > 115 percent</Option>
-				<Option value="120"    > 120 percent</Option>
-			</List>
+			<Field id="calibrateSetting" type="menu"     defaultValue="dynamic-startWithFile" hidden="no"> 
+				<Label>Set Baseline or calibrate automatically if AirQuality gt:</Label>
+				<List>
+					<Option value="dynamic-startWithFile" >dynamic, first read calibration from file (stored from last run)</Option>
+					<Option value="dynamic-noFile" 		  >dynamic, start from scratch each time it starts</Option>
+					<Option value="readFromFile" 	      >read calibration from file (stored from last run)</Option>
+					<Option value="setFixedValue"         >set fixed Value</Option>
+				</List>
 			</Field>
-			<Field id="setCalibration" type="textfield"     defaultValue="180000" hidden="no"  visibleBindingId="calibrateIfgt" visibleBindingValue="8888888"> 
+			<Field id="recalibrateIfGT" type="menu"     defaultValue="103" visibleBindingId="calibrateSetting" visibleBindingValue="dynamic"> 
+				<Label>Set re-calibrate if AirQuality &gt;</Label>
+				<List>
+					<Option value="101"    >dynamic, change if &gt; 101 percent, likely to sensitive</Option>
+					<Option value="102"    >dynamic, change if &gt; 102 percent</Option>
+					<Option value="103"    >dynamic, change if &gt; 103 percent (default)</Option>
+					<Option value="105"    >dynamic, change if &gt; 105 percent</Option>
+					<Option value="107"    >dynamic, change if &gt; 107 percent</Option>
+					<Option value="110"    >dynamic, change if &gt; 110 percent</Option>
+					<Option value="115"    >dynamic, change if &gt; 115 percent</Option>
+					<Option value="120"    >dynamic, change if &gt; 120 percent</Option>
+				</List>
+			</Field>
+			<Field id="calibrateIfgtLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Setting to other than dynamic, will require user to manage gas baseline</Label>
+			</Field>
+			<Field id="setCalibrationToFixedValue" type="textfield"     defaultValue="2500000" hidden="no"  visibleBindingId="calibrateSetting" visibleBindingValue="setFixedValue"> 
 			<Label>set Calibration value fixed to:</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="3" hidden="no"> 
 			<Label>read sensor every xx secs :</Label>
-			<List>
-				<Option value="1"   > 1   secsfor testing</Option>
-				<Option value="2"   > 2   secs</Option>
-				<Option value="3"   > 3   secs default</Option>
-				<Option value="4"   > 4   secs</Option>
-				<Option value="5"   > 5   secs</Option>
-				<Option value="6"   > 6   secs</Option>
-				<Option value="8"   > 8   secs</Option>
-				<Option value="10"  > 10  secs</Option>
-				<Option value="12"  > 12  secs</Option>
-				<Option value="15"  > 15  secs</Option>
-				<Option value="20"  > 20  secs</Option>
-				<Option value="30"  > 30  secs</Option>
-				<Option value="40"  > 40  secs</Option>
-				<Option value="60"  > 60  secs</Option>
-			</List>
+				<List>
+					<Option value="1"   >1   secs</Option>
+					<Option value="2"   >2   secs</Option>
+					<Option value="3"   >3   secs default</Option>
+					<Option value="4"   >4   secs</Option>
+					<Option value="5"   >5   secs</Option>
+				</List>
+			</Field>
+			<Field id="sensorRefreshSecsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Changing how often the sensor is read will require a new calbration, it might take an hour to be stable</Label>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
-			<List>
-				<Option value="1"   > 1   secs </Option>
-				<Option value="2"   > 2   secs</Option>
-				<Option value="3"   > 3   secs</Option>
-				<Option value="4"   > 4   secs</Option>
-				<Option value="6"   > 6   secs</Option>
-				<Option value="8"   > 8   secs</Option>
-				<Option value="10"  > 10  secs</Option>
-			</List>
+				<Label>min delta secs between indigo updates :</Label>
+				<List>
+					<Option value="1"   >1   secs </Option>
+					<Option value="2"   >2   secs</Option>
+					<Option value="3"   >3   secs</Option>
+					<Option value="4"   >4   secs</Option>
+					<Option value="6"   >6   secs</Option>
+					<Option value="8"   >8   secs</Option>
+					<Option value="10"  >10  secs</Option>
+				</List>
 			</Field>
 			<Field id="deltaX" type="menu"     defaultValue="10" hidden="no" > 
-			<Label>delta value (%) to trigger indigo update:</Label>
-			<List>
-				<Option value="1"    > 1</Option>
-				<Option value="2"    > 2</Option>
-				<Option value="3"    > 3</Option>
-				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10</Option>
-				<Option value="15"   > 15</Option>
-				<Option value="20"   > 20</Option>
-				<Option value="25"   > 25</Option>
-				<Option value="30"   > 30</Option>
-			</List>
+				<Label>delta value (%) to trigger indigo update:</Label>
+				<List>
+					<Option value="1"    >1</Option>
+					<Option value="2"    >2</Option>
+					<Option value="3"    >3</Option>
+					<Option value="5"    >5</Option>
+					<Option value="10"   >10</Option>
+					<Option value="15"   >15</Option>
+					<Option value="20"   >20</Option>
+					<Option value="25"   >25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
+			</Field>
+
+			<Field id="sendToIndigoSecs" type="menu"     defaultValue="60">
+				<Label>send update to indigo every xx secs(overwrites RPI set):</Label>
+				<List>
+					<Option value="15" >15 </Option>
+					<Option value="20" >20 </Option>
+					<Option value="30" >30 </Option>
+					<Option value="50" >50 </Option>
+					<Option value="60" >60 (default)</Option>
+					<Option value="80" >80 </Option>
+					<Option value="90" >90 </Option>
+				</List>
+			</Field>
+
+			<Field id="AirQuality0-100ToTextMapping" type="textfield"     defaultValue="95=Good/85=Average/75=Little Bad/65=Bad/50=Worse/0=Very Bad"> 
+			<Label>Text mapping of airquality% to limits:</Label>
+			</Field>
+			<Field id="AirQuality0-100ToTextMappingLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>format: limitTop=text/.../0=text, will map airquality from 0-100% to text items, you must at least 3. Default: 
+95=Good/85=Average/75=Little Bad/65=Bad/50=Worse/0=Very Bad</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"      >Humidity</Option>
-				<Option value="Pressure"      >Pressure</Option>
-				<Option value="GasResistance" >Gas  (raw resistance)</Option>
-				<Option value="AirQuality"    >AirQuality (in % after calibration set)</Option>
-				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
-				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
-				<Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
-				<Option value="Temperature/Humidity/Pressure/AirQuality"     >Temperature/Humidity/Pressure/AirQuality</Option>
-				<Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
-				<Option value="Temperature/GasResistance"     >Temperature/GasResistance</Option>
-				<Option value="Temperature/AirQuality"     >Temperature/AirQuality</Option>
-			</List>
+				<List>
+					<Option value="Temperature"  >Temperature</Option>
+					<Option value="Humidity"      >Humidity</Option>
+					<Option value="Pressure"      >Pressure</Option>
+					<Option value="GasResistance" >Gas  (raw resistance)</Option>
+					<Option value="AirQuality"    >AirQuality (in % after calibration set)</Option>
+					<Option value="AirQualityText"    >Good ... Very Bad</Option>
+					<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
+					<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
+					<Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
+					<Option value="Temperature/Humidity/Pressure/AirQuality"     >Temperature/Humidity/Pressure/AirQuality</Option>
+					<Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
+					<Option value="Temperature/GasResistance"     >Temperature/GasResistance</Option>
+					<Option value="Temperature/AirQuality"     >Temperature/AirQuality</Option>
+				</List>
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
 			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
@@ -5420,11 +5496,11 @@ After some days of running in clean air, proposed setup is:
 			<Field id="offsetGas" type="textfield"      defaultValue="0"> <Label>offset added to measured Gas(Ohm):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
-			<Label>use local display to show values:</Label> 
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >No</Option>
-			</List>
+				<Label>use local display to show values:</Label> 
+				<List>
+					<Option value="1"  >yes</Option>
+					<Option value="0"  >No</Option>
+				</List>
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
@@ -5586,6 +5662,16 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>number</ValueType>
 				<TriggerLabel>GasResistance</TriggerLabel>
 				<ControlPageLabel>GasResistance</ControlPageLabel>
+			</State>
+			<State id="AirQualityText">
+				<ValueType>String</ValueType>
+				<TriggerLabel>AirQualityText</TriggerLabel>
+				<ControlPageLabel>AirQualityText</ControlPageLabel>
+			</State>
+			<State id="SensorStatus">
+				<ValueType>String</ValueType>
+				<TriggerLabel>SensorStatus</TriggerLabel>
+				<ControlPageLabel>SensorStatus</ControlPageLabel>
 			</State>
                 
 			<State id="AirQuality">
@@ -12896,6 +12982,194 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 
 
 
+	<Device type="sensor" id="moistureSensor">
+	<Name>INPUT-moisture sensor</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="lastUpdate"         type="textfield"     defaultValue="0" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="python3" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="true"></Field>
+
+
+			<Field id="infoLabelINPUT" type="label" >
+			<Label>This support Chirp and Adafruit STEMMA Soil Sensor - I2C Capacitive Moisture Sensor 
+The Adafruit requires phyton3 and adafruit-circuitpython-seesaw installed on the RPi
+   The plugin will do this automatically
+You must supply the min max value = dry and in wet soil:
+  first measure in dry soil --> min
+  seconds add water --> max
+Moisture state will show % between the 2 values 100*(raw-min)/(max-min)
+  typical values are ~300/1000
+The Chirp sensor also has a crude measurement of light, the adafruit will show 0 as illuminance </Label> 
+			</Field>
+            
+		<Field id="infoLabelRPI" type="label"> 				<Label>==RPI setup:  -----------------------------</Label> </Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+
+
+
+			<Field id="sensorMode" type="menu"     defaultValue="chirp"  >
+			<Label>i2c address of relay:</Label>
+			<List>
+				<Option value="adafruit"   >adafruit </Option>
+				<Option value="chirp"      >chirp</Option>
+			</List>
+			</Field>
+
+
+			<Field id="i2cAddress" type="menu"     defaultValue="32"  >
+			<Label>i2c address of sensor:</Label>
+			<List>
+				<Option value="32"   >0x20 = 32  for chirp</Option>
+				<Option value="54"   >0x36 = 54</Option>
+				<Option value="55"   >0x37 = 55</Option>
+				<Option value="56"   >0x38 = 56</Option>
+				<Option value="57"   >0x39 = 57</Option>
+			</List>
+			</Field>
+
+			<Field id="deltaX" type="menu"     defaultValue="5" hidden="no" > 
+			<Label>delta value (%) to trigger indigo update:</Label>
+			<List>
+				<Option value="1"    > 1</Option>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
+			</List>
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+			<Label>min delta secs between indigo updates :</Label>
+			<List>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+			</List>
+			</Field>
+     
+			<Field id="sendMSGEverySecs" type="menu"     defaultValue="90" hidden="no" > 
+			<Label>Send Msg to indigo every:</Label>
+			<List>
+				<Option value="10"   >10  secs only for testing</Option>
+				<Option value="60"   >60  secs</Option>
+				<Option value="90"   >90  secs</Option>
+				<Option value="120"  >120 secs</Option>
+				<Option value="150"  >150 secs</Option>
+				<Option value="180"  >180 secs</Option>
+				<Option value="240"  >240 secs</Option>
+				<Option value="300"  >300 secs</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp" type="textfield"      defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="minMoisture" type="textfield"     defaultValue="310"> <Label>Moisture: min = value when dry:</Label> </Field>
+			<Field id="maxMoisture" type="textfield"     defaultValue="610"> <Label>Moisture: max = value when in water:</Label> </Field>
+            
+			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
+			<List>
+				<Option value="Moisture"        >Moisture</Option>
+				<Option value="Temperature"     >Temperature</Option>
+			</List>
+			<Label>State to display in the State Column:</Label>
+			</Field>
+
+			</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="illuminance">
+				<ValueType>number</ValueType>
+				<TriggerLabel>illuminance</TriggerLabel>
+				<ControlPageLabel>illuminance</ControlPageLabel>
+			</State>
+			<State id="Moisture">
+				<ValueType>number</ValueType>
+				<TriggerLabel>Moisture</TriggerLabel>
+				<ControlPageLabel>Moisture</ControlPageLabel>
+			</State>
+			<State id="Moisture_raw">
+				<ValueType>number</ValueType>
+				<TriggerLabel>Moisture_raw</TriggerLabel>
+				<ControlPageLabel>Moisture_raw</ControlPageLabel>
+			</State>
+			<State id="MoistureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MoistureMaxToday</TriggerLabel>
+				<ControlPageLabel>MoistureMaxToday</ControlPageLabel>
+			</State>
+			<State id="MoistureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MoistureMinToday</TriggerLabel>
+				<ControlPageLabel>MoistureMinToday</ControlPageLabel>
+			</State>
+			<State id="MoistureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MoistureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>MoistureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="MoistureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>MoistureMinYesterday</TriggerLabel>
+				<ControlPageLabel>MoistureMinYesterday</ControlPageLabel>
+			</State>
+				<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
+
 	<Device type="sensor" id="INPUTcoincidence">
 	<Name>INPUT-coincidence- for PULSE sensors</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -15208,39 +15482,27 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20" hidden="no"> 
-			<Label>check Distance every :</Label>
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" tooltip="lower number allow for faster reaction time, need to check cpu on rpi with lower numebrs"> 
+			<Label>check Distance every:</Label>
 			<List>
-				<Option value="0.5" > 0.5 secs - only with dedicated rPi</Option>
-				<Option value="1"   > 1   secs - only with dedicated rPi</Option>
+				<Option value="0.3" > 0.3 secs </Option>
+				<Option value="0.4" > 0.4 secs </Option>
+				<Option value="0.5" > 0.5 secs </Option>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="1.5" > 1.5 secs </Option>
 				<Option value="2"   > 2   secs</Option>
 				<Option value="3"   > 3   secs</Option>
 				<Option value="4"   > 4   secs</Option>
-				<Option value="6"   > 6   secs</Option>
-				<Option value="8"   > 8   secs</Option>
-				<Option value="10"  > 10  secs</Option>
-				<Option value="12"  > 12  secs</Option>
-				<Option value="15"  > 15  secs</Option>
-				<Option value="20"  > 20  secs</Option>
-				<Option value="30"  > 30  secs</Option>
-				<Option value="40"  > 40  secs</Option>
-				<Option value="60"  > 60  secs</Option>
-				<Option value="80"  > 80  secs</Option>
-				<Option value="100" > 100 secs</Option>
-				<Option value="120" > 2   minutes</Option>
-				<Option value="180" > 3   minutes</Option>
-				<Option value="-90#0" > dynamic retry ~ 1.0sec; send if delta dist > xx% or 90 seconds</Option>
-				<Option value="-90#1" > dynamic retry ~ 0.5sec; send if delta dist > xx% or 90 seconds</Option>
-				<Option value="-90#2" > dynamic retry ~ 0.1sec; send if delta dist > xx% or 90 seconds</Option>
 			</List>
 			</Field>
-			<Field id="deltaDist" type="menu"     defaultValue="10" hidden="no" enableBindingId="sensorRefreshSecs" enableBindingValue="-90#0,-90#1,-90#2"  visibleBindingId="sensorRefreshSecs"    visibleBindingValue="-90#0,-90#1,-90#2"> 
-			<Label>delta Dist(%) to trigger dynamic update:</Label>
+			<Field id="deltaDist" type="menu"     defaultValue="3" hidden="no" enableBindingId="sensorRefreshSecs" > 
+			<Label>delta Dist(%) to trigger update:</Label>
 			<List>
 				<Option value="1"    > 1</Option>
 				<Option value="2"    > 2</Option>
 				<Option value="3"    > 3</Option>
 				<Option value="5"    > 5</Option>
+				<Option value="7"    > 7</Option>
 				<Option value="10"   > 10</Option>
 				<Option value="15"   > 15</Option>
 				<Option value="20"   > 20</Option>
@@ -15276,7 +15538,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
-			<Field id="displayS"     type="menu"     defaultValue="distance" hidden="no"> 
+			<Field id="displayS"     type="menu"         defaultValue="distance" hidden="no"> 
 			<Label>Property to display in the State Column:</Label>
 			<List>
 				<Option value="distance"  >distance</Option>

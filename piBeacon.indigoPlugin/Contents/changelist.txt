@@ -1,3 +1,41 @@
+Added features / changes in v7.117.333 @ 2019-02-09
+===================================================
+
+1. fixed pressure format for pascal units (%.0f instead of %d as value is float)
+   fixed BLEconnect was disabled when switching to 16 RPI
+   fixed pressure and humidity offsets, for some sensors (eg BME280) it was applied twice
+
+2. improved dynamic behavior (fast changinging distance) for ultrasound distance sensor.
+
+3. improved BME680 mamangement, added SensorStatus, AirQualityText
+
+4. option to suppress writing certain high frequency dev/states and variables to SQL logger
+   requires Indigo 7.4.1 or higher
+   this can reduce the cpu load of the SQL logger by > 20%..30%
+   variables: pi_IN_x and b_count and lastChanged
+   states: Pi_xx_Time, TxPowerReceived,UUID,closestRPIText,displayStatus,status,batteryLevelLastUpdate,pktInfo,sensorvalue_ui,updateReason  
+   these are mostly text fields that do not need to be kept in sql history
+   you need to set and select in plugin config
+   will reduce SQL data for device types: beacon, rpi, rpi-sensor, BLEconnect, sensors
+
+5. changed mbar to mBar in config. You need to reselect the pressure unit in config
+
+6. added Adafruit STEMMA Soil Moisture Sensor and Chirp soil sensor
+   it is configured to give rel moisture 0-100%
+
+7. changed message structure (pi --> indigo) from a list to a dict, for easier reading
+
+8. added state "updateReason" for iBeacons to indicat why it was updated
+   - timer = data once a minute (90+ % of times)
+   - new beacon
+   - fast down
+   - fast down back
+   - beacon is back
+   - delta signal = if you enabled that parameter in beacon device edit
+
+9. can now handle python3.x modules on RPI
+
+
 Added features / changes in v7.116.332 @ 2019-01-30
 ===================================================
 

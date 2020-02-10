@@ -30,6 +30,18 @@
         <Label>...STATUS changed variables start w:</Label>
    </Field>
 
+    <Field    id="SQLLoggingEnable"   type="menu" defaultValue="on-on" tooltip="">
+        <Label>Configure SQL logger for specific variables and devices (not) log</Label>
+        <List>
+            <Option value="on-on"   >log normal = log everything </Option>
+            <Option value="off-on"  >disable devices/states -  enable variables</Option>
+            <Option value="on-off"  >enable  devices/states - disable variables</Option>
+            <Option value="off-off"	>disable devices/states - disable variables</Option>
+        </List>    
+   </Field>
+   <Field id="SQLLoggingEnableLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>This is only for: dev/states = Pi_x_Time etc, variables: pi_IN_xx. This saves SQL logger cpu and disk-space. There is no (good) reason to write them to the SQL logger</Label>
+    </Field>
 
     <Field    id="enableBroadCastEvents" type="menu"  defaultValue="0" tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
         <List>
@@ -490,7 +502,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="Pascal"    >Pascal </Option>
             <Option value="hPascal"   >Hecto Pascal (Pa/100)</Option>
             <Option value="bar"       >Bar       (Pa*0.00001)</Option>
-            <Option value="mbar"      >mBar      (Pa*0.01)</Option>
+            <Option value="mBar"      >mBar      (Pa*0.01)</Option>
             <Option value="atm"       >atm       (Pa*0.000009869233)</Option>
             <Option value="inches"    >inches Hg (Pa*0.000295299802)</Option>
             <Option value="mm"        >mm Hg     (Pa*0.00750063)</Option>
@@ -732,6 +744,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
     <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (14) tcpip socket comm:</Label>  </Field>
     <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (15) beacon position plots:</Label>  </Field>
     <Field    id="debugBatteryLevel"  type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
+    <Field    id="debugSQLlogger"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (17) SQLlogger:</Label>  </Field>
 
     <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (S) special debug (only for development):</Label>  </Field>
     <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (99) all of the above .. everything:</Label>  </Field>

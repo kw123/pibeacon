@@ -92,7 +92,9 @@ sendThread			= {}
 rebootIfNoMessagesSeconds = 99999999999
 osVersion 			= 0
 ipOfRouter			= ""
-
+enableVoltageCheck	= "0"
+enableRebootCheck	= "restartLoop"
+pythonVersion		= 2
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
 import sys
@@ -123,7 +125,8 @@ programFiles=[			"beaconloop",
 						"setGPIO",
 						"playsound",
 						"checkSystemLOG",
-						"copyToTemp"]
+						"copyToTemp"
+						"checkVoltage"]
 
 specialOutputList=[		"display",
 						"myoutput",
@@ -165,6 +168,7 @@ specialSensorList =[ 	"amg88xx",
 						"mpu6050",
 						"mpu9255",
 						"rainSensorRG11",
+						"moistureSensor",
 						"sgp30",
 						"pmairquality",
 						"vl503l0xDistance",
@@ -175,7 +179,9 @@ specialSensorList =[ 	"amg88xx",
 parameterFileList  =[	"patterns",
 						"beacon_parameters",
 						"parameters"]
-	
+
+python3Apps			=[ "moistureSensor"]
+
 loggerSet 		   = False
 global logging, logger
 

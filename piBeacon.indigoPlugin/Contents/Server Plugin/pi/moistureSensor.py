@@ -1,0 +1,357 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+####################
+
+import sys, os, time, json, datetime,subprocess,copy
+import smbus
+import math
+import time
+
+from board import SCL, SDA
+import busio
+from adafruit_seesaw.seesaw import Seesaw
+
+
+sys.path.append(os.getcwd())
+import	piBeaconUtils	as U
+import	piBeaconGlobals as G
+G.program = "moistureSensor"
+
+
+
+
+class MoistureChirp:
+	def __init__(self,  address=0x20):
+
+		self.address =address
+		self.smbus = SMBus(1)
+		self.smbus.write_byte(self.address, 0x06) # reset
+		time.sleep(0.1)
+		self.smbus.read_byte_data(self.address, 0x07) #send wake up , need to wait 1 sec after
+		time.sleep(1)
+
+	def getdata(): 
+		retData={"temp":-99, "illuminance":-99, "moisture":-99}
+		# wait until ready
+		for ii in range(20):
+			if not self.smbus.read_byte_data(self.address, 0x09): 
+				ret = self.smbus.read_word_data(self.address, 0x05)
+				retData["temp"] =  ((ret & 0xFF) << 8) + (ret >> 8)
+				break 
+			time.sleep(0.02)
+
+		for ii in range(20):
+			if not self.smbus.read_byte_data(self.address, 0x09): 
+				val = self.smbus.read_word_data(self.address, 0x03)
+				retData["illuminance"] = ((ret & 0xFF) << 8) + (ret >> 8) 
+				break 
+			time.sleep(0.02)
+		for ii in range(20):
+			if not self.smbus.read_byte_data(self.address, 0x09): 
+				val = self.smbus.read_word_data(self.address, 0x00)
+				retData["moisture"] = ((ret & 0xFF) << 8) + (ret >> 8) 
+				break 
+			time.sleep(0.02)
+
+		return retData
+# ===========================================================================
+# read params
+# ===========================================================================
+
+###############################
+def readParams():
+	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
+	global deltaX, SENSOR, minSendDelta, sensorMode
+	global oldRaw, lastRead
+	global startTime, lastMeasurement, sendToIndigoSecs
+	try:
+
+
+
+		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		if inp == "": return
+		if lastRead2 == lastRead: return
+		lastRead   = lastRead2
+		if inpRaw == oldRaw: return
+		oldRaw	   = inpRaw
+		
+		externalSensor=False
+		sensorList=[]
+		sensorsOld= copy.copy(sensors)
+
+
+		
+		U.getGlobalParams(inp)
+		  
+		if "sensorList"			in inp:	 sensorList=			 (inp["sensorList"])
+		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
+		
+ 
+		if sensor not in sensors:
+			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
+			exit()
+			
+
+		U.logger.log(10,"{} reading new parameters".format(G.program) )
+
+		deltaX={}
+		restart = False
+		sendToIndigoSecs = G.sendToIndigoSecs	
+		for devId in sensors[sensor]:
+	
+
+			old = U.getI2cAddress(sensors[sensor][devId], default ="")
+			try:
+				if "i2cAddress" in sensors[sensor][devId]:
+					i2cAddress = float(sensors[sensor][devId]["i2cAddress"])
+			except:
+				i2cAddress = 119	   
+			if old != i2cAddress:  restart = True 
+
+			try:
+				if devId not in deltaX: deltaX[devId]  = 0.1
+				if "deltaX" in sensors[sensor][devId]: 
+					deltaX[devId]= float(sensors[sensor][devId]["deltaX"])/100.
+			except:
+				deltaX[devId] = 0.1
+
+			try:
+				if devId not in sensorMode: sensorMode[devId]  = "" # chirp or adafruit
+				if "sensorMode" in sensors[sensor][devId]: 
+					sensorMode[devId]= sensors[sensor][devId]["sensorMode"]
+			except:
+				sensorMode[devId] = "chirp"
+
+
+
+			try:
+				if "minSendDelta" in sensors[sensor][devId]: 
+					minSendDelta= float(sensors[sensor][devId]["minSendDelta"])
+			except:
+				minSendDelta = 5.
+
+				
+			if devId not in SENSOR or  restart:
+				U.logger.log(20," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs) )
+				startSensor(devId, i2cAddress)
+				if SENSOR[devId] =="":
+					return
+		deldevID={}		   
+		for devId in SENSOR:
+			if devId not in sensors[sensor]:
+				deldevID[devId]=1
+		for dd in  deldevID:
+			del SENSOR[dd]
+		if len(SENSOR) ==0: 
+			####exit()
+			pass
+
+
+
+	except Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30, "{}".format(sensors[sensor]))
+		
+
+
+#################################
+def startSensor(devId,i2cAddress):
+	global sensors,sensor
+	global startTime
+	global gasBaseLine, gasBurnIn
+	global SENSOR, i2c_bus
+	startTime =time.time()
+
+	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
+	
+	try:
+		ii = SENSOR[devId]
+	except:
+		try:
+			time.sleep(1)
+			i2c_bus = busio.I2C(SCL, SDA)
+			SENSOR[devId]  = Seesaw(i2c_bus, addr=i2cAdd)
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			SENSOR[devId] = ""
+			U.muxTCA9548Areset()
+			return
+	U.muxTCA9548Areset()
+
+
+
+#################################
+def getValues(devId):
+	global sensor, sensors,	 SENSOR, badSensor
+	global startTime, sendToIndigoSecs, sensorMode
+
+	try:
+		if SENSOR[devId] == "": 
+			badSensor +=1
+			return "badSensor"
+
+		temp   		 = 0
+		press  		 = 0
+		hum	   		 = 0
+		gas	   		 = 0
+		gasScore	 = -1
+		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
+
+		if sensorMode[devId] == "adafruit":
+			temp  		= SENSOR[devId].get_temp()
+			temp  		+=  float(sensors[sensor][devId]["offsetTemp"]) 
+			moisture	= SENSOR[devId].moisture_read()
+			data = {"temp":	round(temp,1), 
+			 "illuminance":	-1,
+				"moisture":	round(moisture,0)} 
+
+		elif sensorMode[devId] == "chirp":
+			dataFromSens  = SENSOR[devId].getdata()
+			if dataFromSens["moisture"] == -99: return "badSensor"
+			temp  		=  dataFromSens["temp"]/10. + float(sensors[sensor][devId]["offsetTemp"]) 
+			illuminance	=  dataFromSens["illuminance"]
+			moisture	=  dataFromSens["moisture"]
+			data = {"temp":	round(temp,1), 
+			 "illuminance":	round(illuminance,0),
+				"moisture":	round(moisture,0)} 
+
+		badSensor = 0
+		return data
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+	badSensor += 1
+	if badSensor > 3: return "badSensor"
+	return ""
+
+
+
+
+
+############################################
+def execMoistureSensor():
+	global sensor, sensors, badSensor, sensorList
+	global deltaX, SENSOR, minSendDelta, sensorMode
+	global oldRaw, lastRead
+	global startTime, sendToIndigoSecs, sensorRefreshSecs, lastMeasurement
+
+	sensorMode					= {}
+	sendToIndigoSecs			= 80
+	startTime					= time.time()
+	lastMeasurement				= time.time()
+	oldRaw						= ""
+	lastRead					= 0
+	minSendDelta				= 5.
+	loopCount					= 0
+	sensorRefreshSecs			= 3
+	sensorList					= []
+	sensors						= {}
+	sensor						= G.program
+	quick						= False
+	output						= {}
+	badSensor					= 0
+	SENSOR						= {}
+	deltaX						= {}
+	myPID						= str(os.getpid())
+	U.setLogging()
+	U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
+
+
+	if U.getIPNumber() > 0:
+		time.sleep(10)
+		exit()
+
+	readParams()
+
+	time.sleep(1)
+
+	lastRead = time.time()
+
+	U.echoLastAlive(G.program)
+
+	firstValue			= True
+
+
+	lastValues0			= {"moisture":0,"temp":0, "illuminance":0}
+	lastValues			= {}
+	lastValues2			= {}
+	lastData			= {}
+	lastSend			= 0
+	G.lastAliveSend		= time.time()
+
+	sensorWasBad 		= False
+	while True:
+		try:
+			tt = time.time()
+			sendData = False
+			data ={}
+			if sensor in sensors:
+				data = {"sensors": {sensor:{}}}
+				for devId in sensors[sensor]:
+					if devId not in lastValues: 
+						lastValues[devId]  =copy.copy(lastValues0)
+						lastValues2[devId] =copy.copy(lastValues0)
+					values = getValues(devId)
+					if values == "": 
+						continue
+
+					data["sensors"][sensor][devId]={}
+					if values == "badSensor":
+						sensorWasBad = True
+						data["sensors"][sensor][devId]="badSensor"
+						if badSensor < 5: 
+							U.logger.log(30," bad sensor")
+							U.sendURL(data)
+						else:
+							U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
+						lastValues2[devId] =copy.copy(lastValues0)
+						lastValues[devId]  =copy.copy(lastValues0)
+						continue
+					elif values["moisture"] !="" :
+					
+						data["sensors"][sensor][devId] = values
+						deltaN =0
+						for xx in lastValues0:
+							try:
+								current = float(values[xx])
+								delta	= current-lastValues2[devId][xx]
+								delta  /=  max (0.5,(current+lastValues2[devId][xx])/2.)
+								deltaN	= max(deltaN,abs(delta) )
+								lastValues[devId][xx] = current
+							except: pass
+					else:
+						continue
+					if (   ( deltaN > deltaX[devId]	 ) or  (  tt - abs(sendToIndigoSecs) > G.lastAliveSend  ) or quick ) and  ( tt - G.lastAliveSend > minSendDelta ):
+						sendData = True
+						lastValues2[devId] = copy.copy(lastValues[devId])
+						firstValue = False
+			if sendData:
+				U.sendURL(data)
+			U.makeDATfile(G.program, data)
+
+			loopCount +=1
+
+			##U.makeDATfile(G.program, data)
+			quick = U.checkNowFile(G.program)				 
+			U.echoLastAlive(G.program)
+
+			tt= time.time()
+			if tt - lastRead > 5.:	
+				readParams()
+				lastRead = tt
+			time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
+			lastMeasurement = time.time()
+
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			time.sleep(5.)
+
+
+G.pythonVersion = int(sys.version.split()[0].split(".")[0])
+# output: , use the first number only
+#3.7.3 (default, Apr  3 2019, 05:39:12) 
+#[GCC 8.2.0]
+
+execMoistureSensor()
+try: 	G.sendThread["run"] = False; time.sleep(1)
+except: pass
+sys.exit(0)

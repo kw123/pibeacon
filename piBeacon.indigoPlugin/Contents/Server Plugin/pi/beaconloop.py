@@ -125,21 +125,24 @@ def startBlueTooth(pi):
 	## good explanation: http://gaiger-G.programming.blogspot.com/2015/01/bluetooth-low-energy.html
 	U.logger.log(30,"(re)starting bluetooth")
 	try:
-		ret = subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
-		ret = subprocess.Popen("hciconfig hci1 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
-		time.sleep(0.1)
-		ret = subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
-		ret = subprocess.Popen("hciconfig hci1 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
-		time.sleep(0.1)
-		ret = subprocess.Popen("hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
-		ret = subprocess.Popen("hciconfig hci1 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
+		subprocess.call(["sudo","hciconfig","hci0","down &"]) # disable bluetooth
+		subprocess.call(["sudo","hciconfig","hci1","down &"]) # disable bluetooth
+		time.sleep(0.2)
+		subprocess.call(["sudo","hciconfig","hci0","down &"]) # disable bluetooth
+		subprocess.call(["sudo","hciconfig","hci1","down &"]) # disable bluetooth
+		time.sleep(0.2)
+		subprocess.call(["sudo","hciconfig","hci0","up &"]) # denable bluetooth
+		subprocess.call(["sudo","hciconfig","hci1","up &"]) # enable bluetooth
+		time.sleep(0.3)
+
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 		HCIs = U.whichHCI()
 		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BeaconUseHCINo,"UART")
 		if myBLEmac ==  -1:
+			U.logger.log(20,"myBLEmac wrong: myBLEmac:{}".format( myBLEmac))
 			return 0,  0, -1
-		U.logger.log(30,"Beacon Use HCINo " +unicode(G.BeaconUseHCINo)+";  useHCI:" +unicode(useHCI)+ ";  myBLEmac:"+unicode(myBLEmac)+"; devId:" +unicode(devId))
+		U.logger.log(20,"Beacon Use HCINo {};  useHCI:{};  myBLEmac:{}; devId:{}" .format(G.BeaconUseHCINo, useHCI, myBLEmac, devId))
 			
 
 		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
@@ -150,56 +153,53 @@ def startBlueTooth(pi):
 		MAJ					= " 00 09"
 		MIN					= " 00 "+"0%x"%(int(pi))
 		txP					= " C5 00"
-		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
-		U.logger.log(30,cmd) 
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
+		cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCI, OGF, OCF, iBeaconPrefix, uuid, MAJ, MIN, txP)
+		U.logger.log(20,cmd) 
+		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+		time.sleep(0.2)
 		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
 		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
 		#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
 		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
-		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
+		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
+		cmd	 = "hcitool -i {} cmd{} 0x0006 00 10 00 20 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCI, OGF)
 		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
-		U.logger.log(30,cmd) 
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		U.logger.log(20,cmd) 
+		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
 		####################################LE Set Advertise Enable
-		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
-		U.logger.log(30,cmd) 
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
+		time.sleep(0.2)
+		cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCI, OGF)
+		U.logger.log(20,cmd) 
+		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+		time.sleep(0.2)
 
 		ret = subprocess.Popen("hciconfig ", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
+		if ret[1] != "":	U.logger.log(30,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
+		else:			 	U.logger.log(30,"BLE start returned:\n{}my BLE mac# is >>{}<<".format(ret[0], myBLEmac))
+		if myBLEmac != "":
+			writeFile("myBLEmac",myBLEmac)
+		else:
+			return 0, "", -1
 
-		if ret[1] != "": 
-			U.logger.log(30,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
-		else:			 U.logger.log(30,"BLE start returned:\n{}".format(ret[0]))
 	except Exception, e: 
 		U.logger.log(50,u"exit at restart BLE stack error  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
-		f = open(G.homeDir+"temp/restartNeeded","w")
-		f.write("bluetooth_startup.ERROR:"+unicode(e))
-		f.close()
-		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		writeFile("restartNeeded","bluetooth_startup.ERROR:{}".format(e))
+		downHCI(useHCI)
+		time.sleep(0.2)
 		return 0, "", -5
 
-	U.logger.log(30,"my BLE mac# is : "+ unicode(myBLEmac))
-	if myBLEmac !="":
-		f=open(G.homeDir+"myBLEmac","w")
-		f.write(myBLEmac)
-		f.close()
 
 	try:
 		sock = bluez.hci_open_dev(devId)
 		U.logger.log(30, "ble thread started")
 	except	Exception, e:
-		U.logger.log(30,"error accessing bluetooth device..."+unicode(e))
-		f = open(G.homeDir+"temp/rebootNeeded","w")
-		f.write("bluetooth_startup.ERROR:"+unicode(e))
-		f.close()
-		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		U.logger.log(30,"error accessing bluetooth device...".format(e))
+		writeFile("temp\rebootNeeded","bluetooth_startup.ERROR:".format(e))
+		downHCI(useHCI)
 		return 0,  "", -1
 		
 	try:
@@ -208,27 +208,45 @@ def startBlueTooth(pi):
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Bad file descriptor") >-1:
-			f = open(G.homeDir+"temp/rebootNeeded","w")
-			f.write("bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
-			f.close()
+			writeFile("temp\rebootNeeded","bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
 		if unicode(e).find("Network is down") >-1:
-			f = open(G.homeDir+"temp/rebootNeeded","w")
-			f.write("bluetooth_startup.ERROR:Network_is_down...need_to_reboot")
-			f.close()
-		subprocess.Popen("hciconfig "+useHCI+" down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+			writeFile("temp\rebootNeeded","bluetooth_startup.ERROR:Network_is_down...need_to_reboot")
+		downHCI(useHCI)
 		return 0, "", -1 
 	return sock, myBLEmac, 0
 
+#################################
+def writeFile(outFile, text):
+	try:
+		f = open("{}{}".format(G.homeDir, outFile),"w")
+		f.write(text)
+		f.close()
+	except	Exception, e:
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		if unicode(e).find("Read-only file system:") >-1:
+			f = open(G.homeDir+"temp/rebootNeeded","w")
+			f.write("Read-only file system")
+			f.close()
+	return
 
 
+def downHCI(useHCI):
+	try:
+		subprocess.Popen("hciconfig {} down &".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE) # enable bluetooth
+		time.sleep(0.2)
+		subprocess.Popen("service bluetooth restart &",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		time.sleep(0.2)
+		subprocess.Popen("service dbus restart &",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		time.sleep(0.2)
+	except	Exception, e:
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return
 
 	
 #################################
 def toReject(text):
 	try:
-		f=open(G.homeDir+"temp/rejects","a")
+		f=open("{}temp/rejects".format(G.homeDir),"a")
 		f.write(str(time.time())+";"+text+"\n")
 		f.close()
 	except	Exception, e:
@@ -241,7 +259,7 @@ def toReject(text):
 def readbeacon_ExistingHistory():
 	global	beacon_ExistingHistory, lastWriteHistory
 	try:
-		fg=open(G.homeDir+"beacon_ExistingHistory","r")
+		fg=open("{}beacon_ExistingHistory".format(G.homeDir),"r")
 		beacon_ExistingHistory=json.loads(fg.read())
 		fg.close()
 		reset=False
@@ -262,7 +280,7 @@ def writebeacon_ExistingHistory():
 	if time.time() - lastWriteHistory < 100: return
 	lastWriteHistory=time.time()
 	try:
-		fg=open(G.homeDir+"beacon_ExistingHistory","w")
+		fg=open("{}beacon_ExistingHistory".format(G.homeDir),"w")
 		fg.write(json.dumps(beacon_ExistingHistory))
 		fg.close()
 	except	Exception, e:
@@ -282,8 +300,8 @@ def handleHistory():
 	delHist=[]		  
 	for beaconMAC in beacon_ExistingHistory:
 		if beacon_ExistingHistory[beaconMAC]["lCount"] < 0: beacon_ExistingHistory[beaconMAC]["lCount"] =10
-		beacon_ExistingHistory[beaconMAC]["lCount"] -=1
-		beacon_ExistingHistory[beaconMAC]["reason"] =0
+		beacon_ExistingHistory[beaconMAC]["lCount"] -= 1
+		beacon_ExistingHistory[beaconMAC]["reason"] = 0
 		if time.time() - beacon_ExistingHistory[beaconMAC]["timeSt"] > deleteHistoryAfterSeconds : # delete history if older than 2 days with no message
 			delHist.append(beaconMAC)
 				
@@ -328,7 +346,6 @@ def readParams(init):
 		U.getGlobalParams(inp)
 
 		if "rebootSeconds"		in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
-		if "enableRebootCheck"	in inp:	 enableRebootCheck=		 (inp["enableRebootCheck"])
 		if "sendAfterSeconds"	in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
 		if "acceptNewiBeacons"	in inp:	 acceptNewiBeacons=	  int(inp["acceptNewiBeacons"])
 		if "sendFullUUID"		in inp:	 sendFullUUID=			 (inp["sendFullUUID"]=="1" )
@@ -363,7 +380,7 @@ def readParams(init):
 
 
 	try:
-		f=open(G.homeDir+"beacon_parameters","r")
+		f=open("{}beacon_parameters".format(G.homeDir),"r")
 		InParams=json.loads(f.read().strip("\n"))
 		f.close()
 	except:
@@ -410,12 +427,12 @@ def readParams(init):
 
 
 		
-	U.logger.log(0,"fastDown:			" +unicode(fastDown))
-	U.logger.log(0,"signalDelta:			" +unicode(signalDelta))
-	U.logger.log(0,"ignoreUUID:			" +unicode(ignoreUUID))
-	U.logger.log(0,"ignoreMAC:			" +unicode(ignoreMAC))
-	U.logger.log(0,"UUIDtoIphone:		" +unicode(UUIDtoIphone))
-	U.logger.log(0,"UUIDtoIphoneReverse: " +unicode(UUIDtoIphoneReverse))
+	U.logger.log(0,"fastDown:            {}".format(fastDown))
+	U.logger.log(0,"signalDelta:         {}".format(signalDelta))
+	U.logger.log(0,"ignoreUUID:          {}".format(ignoreUUID))
+	U.logger.log(0,"ignoreMAC:           {}".format(ignoreMAC))
+	U.logger.log(0,"UUIDtoIphone:        {}".format(UUIDtoIphone))
+	U.logger.log(0,"UUIDtoIphoneReverse: {}".format(UUIDtoIphoneReverse))
 	return	True
 
 
@@ -428,7 +445,7 @@ def composeMSGSensor(data):
 #################################
 def composeMSG(beaconsNew,timeAtLoopStart,reason):
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds
-	global myBLEmac, sendFullUUID
+	global myBLEmac, sendFullUUID,  mapReasonToText
 	try:
 		if myBLEmac == "00:00:00:00:00:00":
 			time.sleep(2)
@@ -450,16 +467,20 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 				if beaconsNew[beaconMAC]["count"] !=0 :
 					avePower	=float("%5.0f"%(beaconsNew[beaconMAC]["txPower"]	/beaconsNew[beaconMAC]["count"]))
 					aveSignal	=float("%5.1f"%(beaconsNew[beaconMAC]["rssi"]		/beaconsNew[beaconMAC]["count"]))
-					data.append([str(beaconMAC),beacon_ExistingHistory[beaconMAC]["reason"],uuid,aveSignal,avePower,beaconsNew[beaconMAC]["count"],beaconsNew[beaconMAC]["bLevel"],beaconsNew[beaconMAC]["pktInfo"]])
+					r  = min(6,max(0,beacon_ExistingHistory[beaconMAC]["reason"]))
+					rr = mapReasonToText[r]
+					newData = {"mac":beaconMAC,"reason":rr,"uuid":uuid,"rssi":aveSignal,"txPower":avePower,"count":beaconsNew[beaconMAC]["count"],"batteryLevel":beaconsNew[beaconMAC]["bLevel"],"pktInfo":beaconsNew[beaconMAC]["pktInfo"]}
+					#print r, beacon_ExistingHistory[beaconMAC]["reason"], newData
+					data.append(newData)
 					beacon_ExistingHistory[beaconMAC]["rssi"]=beaconsNew[beaconMAC]["rssi"]/max(beaconsNew[beaconMAC]["count"],1.) # average last rssi
 			except	Exception, e:
 				U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.logger.log(30, " error composing msg \n"+unicode(beaconsNew[beaconMAC]))
+				U.logger.log(30, " error composing msg \n{}".format(beaconsNew[beaconMAC]))
 
 		secsCollected=int(time.time()-timeAtLoopStart)
 ##		  if unicode(data).find("0C:F3:EE:00:66:15") > -1:	 print data
 
-		data ={"msgs":data,"pi":str(G.myPiNumber),"mac":myBLEmac,"secsCol":secsCollected,"reason":reason}
+		data ={"msgs":data,"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":secsCollected,"reason":reason}
 		U.sendURL(data)
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -470,7 +491,8 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 
 #################################
 def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
-	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE, ignoreUUID,	 beacon_ExistingHistory, deleteHistoryAfterSeconds,signalDelta,fastDown, minSignalCutoff
+	global collectMsgs, sendAfterSeconds, loopMaxCallBLE, ignoreUUID,	 beacon_ExistingHistory, deleteHistoryAfterSeconds,signalDelta,fastDown, minSignalCutoff
+	global onlyTheseMAC
  
 	t=time.time()
 	try:
@@ -482,8 +504,11 @@ def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
 				else:
 					#print "accepting: ", beaconMAC, minSignalCutoff[beaconMAC] ,  float(beaconMSG[2])
 					pass
-					
-			reason=2 
+			if beaconMAC not in onlyTheseMAC:
+				reason = 2
+			else:
+				reason = 5
+
 			beacon_ExistingHistory[beaconMAC]={"uuid":beaconMSG[1],"lCount":1,"txPower":float(beaconMSG[3]),"rssi":float(beaconMSG[2]),"reason":reason,"timeSt":t}
 			
 		elif beaconMAC in minSignalCutoff and float(beaconMSG[2]) < minSignalCutoff[beaconMAC]:# 
@@ -492,24 +517,24 @@ def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
 				return reason
 	 
 		elif beacon_ExistingHistory[beaconMAC]["rssi"] ==-999: # in fast down mode, was down for some time
-			reason=4 
+			reason = 4 
 			#print " rssi=-999 "+ beaconMAC +"; dT: "+unicode(t-beacon_ExistingHistory[beaconMAC]["timeSt"])+"sec; rssi= "+beaconMSG[2] +"; ex history: "+unicode(beacon_ExistingHistory[beaconMAC])+"; fd: "+ unicode(fastDown)+"; t:"+unicode(t) 
 			beacon_ExistingHistory[beaconMAC]={"uuid":beaconMSG[1],"lCount":1,"txPower":float(beaconMSG[3]),"rssi":float(beaconMSG[2]),"reason":reason,"timeSt":t}
 	 
 
  
 		elif (t - beacon_ExistingHistory[beaconMAC]["timeSt"])	> 1.3*sendAfterSeconds: # not new but have not heard for > 1+1/3 periods
-			reason=5
-			beacon_ExistingHistory[beaconMAC]["reason"]=reason
+			reason = 5
+			beacon_ExistingHistory[beaconMAC]["reason"] = reason
 			#print	"curl: first msg after	collect time "+ beaconMAC +" "+unicode(beacon_ExistingHistory[beaconMAC])
 
 		elif beaconMAC in signalDelta: 
-			if beacon_ExistingHistory[beaconMAC]["rssi"] !=-999. and float(beaconMSG[2]) !=0:
+			if beacon_ExistingHistory[beaconMAC]["rssi"] !=-999. and float(beaconMSG[2]) != 0:
 				if abs(beacon_ExistingHistory[beaconMAC]["rssi"]-float(beaconMSG[2])) >	 signalDelta[beaconMAC] :	# delta signal > xxdBm (set param)
 					#print beaconMAC, "signalDelta",beacon_ExistingHistory[beaconMAC]["rssi"], float(beaconMSG[2]), signalDelta[beaconMAC] 
-					reason=6
+					reason = 6
 					beacon_ExistingHistory[beaconMAC]["reason"]=reason
-					U.logger.log(0, "curl: signalDelta "+ beaconMAC +" "+unicode(beacon_ExistingHistory[beaconMAC]) )
+					U.logger.log(0, "curl: signalDelta {} {}".format(beaconMAC, beacon_ExistingHistory[beaconMAC]) )
 
 		beacon_ExistingHistory[beaconMAC]["reason"]= max(1,beacon_ExistingHistory[beaconMAC]["reason"])
 		beacon_ExistingHistory[beaconMAC]["timeSt"]= t
@@ -558,8 +583,8 @@ def setUUIDcompare(uuid, constantUUIDmajMIN,lenOfUUID):
 		UUid  = uuid
 		if len(UUIDx)	 !=3:			return False, uuid
 		if len(UUIDx[0]) != lenOfUUID:	return False, uuid
-		if	 constantUUIDmajMIN	 == "uuid--min":	UUid = UUIDx[0] + "--"+ UUIDx[2]
-		elif constantUUIDmajMIN	 == "uuid-maj-":	UUid = UUIDx[0] + "-" + UUIDx[1] + "-"
+		if	 constantUUIDmajMIN	 == "uuid--min":	UUid = "{}--{}".format(UUIDx[0], UUIDx[2])
+		elif constantUUIDmajMIN	 == "uuid-maj-":	UUid = "{}-{}-".format(UUIDx[0], UUIDx[2])
 		elif constantUUIDmajMIN	 == "uuid--":		UUid = UUIDx[0]
 		return True, UUid
 	except	Exception, e:
@@ -594,7 +619,7 @@ def checkIfFastDown(beaconsNew,reason):
 			if beacon_ExistingHistory[beacon]["rssi"] == -999: continue # already fast down send
 
 				 
-			reason=3
+			reason = 3
 			beacon_ExistingHistory[beacon]["timeSt"]= tt
 			beacon_ExistingHistory[beacon]["rssi"]= -999
 			beacon_ExistingHistory[beacon]["reason"]= reason
@@ -741,12 +766,14 @@ def execbeaconloop():
 	global acceptNewiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored, sendFullUUID, minSignalCutoff, acceptJunkBeacons
 	global myBLEmac, BLEsensorMACs
 	global oldRaw,	lastRead
-	global UUIDtoIphone, UUIDtoIphoneReverse
+	global UUIDtoIphone, UUIDtoIphoneReverse, mapReasonToText
 	BLEsensorMACs = {}
 
+
+	mapReasonToText		= ["init","timer","new_beacon","fastDown","fastDown_back","beacon_is_back","delta_signal",""]
 	acceptJunkBeacons	= False
-	oldRaw					= ""
-	lastRead				= 0
+	oldRaw				= ""
+	lastRead			= 0
 	minSignalCutoff		= {}
 	acceptNewiBeacons	= -999
 	enableiBeacons		= "1"
@@ -802,7 +829,7 @@ def execbeaconloop():
 	logfileCheck = tt
 	paramCheck	 = tt
 
-	os.system("echo "+str(tt)+" > "+ G.homeDir+"temp/alive.beaconloop  &" )
+	U.echoLastAlive(G.program)
 	lastAlive=tt
 	lastIgnoreReset =tt
 	U.logger.log(30, "starting loop")
@@ -830,7 +857,7 @@ def execbeaconloop():
 			
 			beaconsNew = {}
 		
-			U.logger.log(0,"beacons info: "+unicode(beacon_ExistingHistory))
+			U.logger.log(0,"beacons info: {}".format(beacon_ExistingHistory))
 			timeAtLoopStart = tt
 
 			U.echoLastAlive(G.program)
@@ -845,7 +872,7 @@ def execbeaconloop():
 					sys.exit(4)
 
 				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber)
-				U.logger.log(30,"stopping "+G.program+" bad BLE start retCode= "+str(retCode) )
+				U.logger.log(30,"stopping {} bad BLE start retCode= {}".format(G.program, retCode) )
 				if retCode != 0 : sys.exit(5)
 
 			old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
@@ -885,15 +912,15 @@ def execbeaconloop():
 				except Exception, e:
 					for ii in range(30):
 						if os.path.isfile(G.homeDir+"temp/stopBLE"):
+							os.system("rm {}temp/stopBLE".format(G.homeDir))
 							time.sleep(5)
 						else:
 							break
-					os.system("rm "+G.homeDir+"temp/stopBLE")
 					U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
 					time.sleep(1)
 					U.restartMyself(param="", reason="sock.recv error")
 				doP = False
-				U.logger.log(0, "loopCount:"+unicode(loopCount)+ "  #:"+unicode(iiWhile)+"  len:"+unicode(len(pkt))) 
+				U.logger.log(0, "loopCount:{}  #:{}  len:{}".format(loopCount, iiWhile, len(pkt))) 
 				pkLen = len(pkt)
 				if pkLen > 20: 
 					num_reports = struct.unpack("B", pkt[4])[0]
@@ -902,7 +929,7 @@ def execbeaconloop():
 						offS = 7
 						for i in range(0, num_reports):
 							if pkLen < offS + 6: 
-								U.logger.log(20, "bad data" +unicode(i)+ " "+unicode(num_reports)+ " "+unicode(offS + 6)+ " " +unicode(pkLen)+ "xx")
+								U.logger.log(20, "bad data{} {} {} {}xx".format(i, num_reports, offS + 6, pkLen))
 								break
 							# build the return string: mac#, uuid-major-minor,txpower??,rssi
 							mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
@@ -1106,6 +1133,7 @@ def execbeaconloop():
 	try: 	G.sendThread["run"] = False; time.sleep(1)
 	except: pass
 
+U.echoLastAlive(G.program)
 execbeaconloop()
 
 U.logger.log(30,"end of beaconloop.py ") 

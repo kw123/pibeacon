@@ -136,10 +136,10 @@ def tryToConnect(MAC,BLEtimeout,devId):
 					time.sleep(5)
 				else:
 					break
-			errCount +=1
-			if errCount  < 5: return {}
-			os.system("rm "+G.homeDir+"temp/stopBLE > /dev/null 2>&1")
-			U.logger.log(50, u"in Line {} has error ... sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno))
+			errCount += 1
+			if errCount  < 10: return {}
+			os.system("rm {}temp/stopBLE > /dev/null 2>&1".format(G.homeDir))
+			U.logger.log(20, u"in Line {} has error ... sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno))
 			U.restartMyself(reason="sock.recv error",delay = 10)
 
 	except	Exception, e:
@@ -252,8 +252,8 @@ def execBLEconnect():
 				lastRead=tt
 
 			if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
-				U.logger.log(30, "requested a restart of BLE stack due to no signal for "+str(int(tt-lastSignal))+" seconds")
-				os.system("echo xx > "+G.homeDir+"temp/BLErestart") # signal that we need to restart BLE
+				U.logger.log(30, "requested a restart of BLE stack due to no signal for {:.0f} seconds".format(tt-lastSignal))
+				os.system("echo xx > {}temp/BLErestart".format(G.homeDir)) # signal that we need to restart BLE
 				lastSignal = time.time() +30
 				restartCount +=1
 

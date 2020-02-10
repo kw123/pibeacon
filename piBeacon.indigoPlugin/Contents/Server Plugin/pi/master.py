@@ -30,33 +30,6 @@ G.program = "master"
 
 
 
-####################      #########################
-def cleanupOldFiles():
-
-
-	os.system("rm -r {}logs                     >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}iPhoneBLE.py             >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}rejects.*                >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}logfile                  >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}logfile-1                >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}call-log                 >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}alive                    >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}master.log               >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}interface                >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}logfile                  >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}beaconloop               >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}errlog                   >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}getsensorvalues.py       >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}receiveGPIOcommands.py   >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}rennameMeTo_myoutput.py  >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}renameMyTo_mysensors.py  >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}INPUTRotata*             >/dev/null 2>&1".format(G.homeDir))
-	os.system("rm	 {}INPUTRotateSwitchGrey.py >/dev/null 2>&1".format(G.homeDir))
-
-	return False
-
-
-
 
 ####################      #########################
 def checkIfGpioIsInstalled():
@@ -89,7 +62,7 @@ def checkWiFiSetupBootDir():
 
 ####################      #########################
 def readNewParams(force=0):
-	global enableRebootCheck,  restart,sensorList,rPiCommandPORT, firstRead
+	global restart,sensorList,rPiCommandPORT, firstRead
 	global sensorEnabled, enableiBeacons, beforeLoop, cAddress,rebootHour,rebooted,BLEserial,BLEserialOLD,sensors,enableShutDownSwitch, rebootWatchDogTime
 	global shutdownInputPin, shutdownPinVoltSensor,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles
 	global actions, output
@@ -109,6 +82,7 @@ def readNewParams(force=0):
 	global typeForPWM, maxSizeOfLogfileOnRPI
 	global xWindows, startXonPi
 	global clearHostsFile
+	global python3
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -146,7 +120,6 @@ def readNewParams(force=0):
 		BLEconnectUseHCINoOld = copy.copy(G.BLEconnectUseHCINo)
 
 		if u"BLEserial"						in inp:	 BLEserial =					   (inp["BLEserial"])
-		if u"enableRebootCheck"				in inp:	 enableRebootCheck=				   (inp["enableRebootCheck"])
 		if u"batteryMinPinActiveTimeForShutdown" in inp: batteryMinPinActiveTimeForShutdown= float(inp["batteryMinPinActiveTimeForShutdown"])
 		if u"enableiBeacons"				in inp:	 enableiBeacons=		 		   (inp["enableiBeacons"])
 		if u"cAddress"						in inp:	 cAddress=				  		    inp["cAddress"]
@@ -250,6 +223,7 @@ def readNewParams(force=0):
 		sensorList =""
 		for sensor in sensors:
 			sensorList+=sensor+","
+			python3[sensor] = False
 		
 		if "output"				in inp:	 
 			output=				  (inp["output"])
@@ -301,6 +275,18 @@ def readNewParams(force=0):
 				except: pass
 				U.killOldPgm(-1, pgm+".py")
 
+
+		for pgm in G.python3Apps:
+			if sensorList.find(pgm) >-1:
+					U.logger.log(10, "checking if Active: {}".format(pgm)) 
+					activePGM[pgm] = True
+					python3[pgm]   = True
+					if pgm not in activePGM:
+						startProgam(pgm+".py", params="", reason="restarting {}..not running".format(pgm))
+			else:
+				try: del activePGM[pgm] 
+				except: pass
+				U.killOldPgm(-1, pgm+".py")
 
 
 
@@ -614,7 +600,13 @@ def installLibs():
 	
 ####################      #########################
 def startProgam(pgm, params="", reason=""):
-	cmd = "sudo /usr/bin/python "+G.homeDir+pgm+" "+params+" &"
+	global python3
+	pgm1 = pgm.split(".")[0]
+	if pgm1 in python3 and python3[pgm1]: 
+		cmd = "sudo /usr/bin/python3 "+G.homeDir+pgm+" "+ params+" &"
+		U.logger.log(30, ">>>> starting "+pgm+" "+reason+";--  with cmd: "+cmd  )
+	else:
+		cmd = "sudo /usr/bin/python "+G.homeDir+pgm+"  "+ params+" &"
 	U.logger.log(20, ">>>> starting "+pgm+" "+reason+";--  with cmd: "+cmd  )
 	os.system(cmd)
 
@@ -727,7 +719,8 @@ def checkIfNeopixelIsRunning(pgm= "neopixel"):
 ####################      #########################
 def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters=""):
 	tt = time.time()
-	if tt-G.tStart< 15 and not force: return
+	#U.logger.log(30, u"{};  {};  {};  {}; dt:{:.0f}".format(pgmToStart, force,checkAliveFile, parameters , tt-G.tStart))
+	if tt-G.tStart< 15. and not force: return
 	try:
 		if not U.pgmStillRunning(pgmToStart):
 			startProgam(pgmToStart, params=parameters, reason=" -- restarting "+pgmToStart+" ..not running")
@@ -746,7 +739,7 @@ def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters="
 
 ####################      #########################
 def checkIfbeaconLoopIsRunning():
-	global	sensorList, enableRebootCheck, enableiBeacons, sensorAlive, sensors, lastAlive
+	global	sensorList, enableiBeacons, sensorAlive, sensors, lastAlive
 	try:
 		#print "checking beaconloop running start of pgm"
 		tt = time.time()
@@ -756,12 +749,12 @@ def checkIfbeaconLoopIsRunning():
 
 
 		#print "checking beaconloop running 0"
-		if enableRebootCheck.find("restartLoop")>-1  or enableRebootCheck.find("rebootLoop") >-1:
+		if G.enableRebootCheck.find("restartLoop")>-1  or G.enableRebootCheck.find("rebootLoop") >-1:
 			#print "checking beaconloop running 1"
 			if	not checkIfAliveFileOK("beaconloop"):
 				#print "checking beaconloop running 2"
 			
-				if	enableRebootCheck.find("rebootLoop") >-1:
+				if	G.enableRebootCheck.find("rebootLoop") >-1:
 					U.sendURL(sendAlive="reboot")
 					time.sleep(20)
 					U.doReboot(tt=10., text=" Seconds since change in alive file :"+ str(tt- lastAlive["beaconloop"]) +" -- rebooting ")
@@ -769,7 +762,7 @@ def checkIfbeaconLoopIsRunning():
 				#print "checking beaconloop running 3"
 				U.killOldPgm(-1,"beaconloop.py")
 				checkIfAliveFileOK("beaconloop",force="set")
-				startProgam("beaconloop.py", params="", reason=" restart requested by plugin ")
+				startProgam("beaconloop.py", params="", reason=" restart du to old  Alive-File")
 			return
 
 		#print "checking beaconloop running 4"
@@ -814,7 +807,7 @@ def checkIfAliveFileOK(sensor,force=""):
 				time.sleep(0.2)
 				if os.path.isfile(G.homeDir+"temp/alive."+sensor):
 						f = open(G.homeDir+"temp/alive."+sensor,"r")
-						data =f.read()
+						data = f.read()
 						data =data.strip("\n")
 						lastUpdate=float(data)
 						f.close()
@@ -838,7 +831,9 @@ def checkIfAliveFileOK(sensor,force=""):
 		#print " alive test 2  delta T",tt - lastUpdate 
 		if tt - lastUpdate > 240:  ## nothing for 4 min signal: no alive
 			alive = False
-		sensorAlive[sensor] = lastUpdate
+			sensorAlive[sensor] = tt
+		else:
+			sensorAlive[sensor] = lastUpdate
 	except	Exception, e:
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return alive
@@ -1549,7 +1544,7 @@ def tryRestartNetwork():
 ### artificial indent to indicate main program 
 def execMaster():
 	try:
-		global enableRebootCheck,myPID,restart,sensorList,rPiCommandPORT,firstRead
+		global myPID,restart,sensorList,rPiCommandPORT,firstRead
 		global rebootWatchDogTime, lastrebootWatchDogTime
 		global sensorEnabled,  restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootHour,rebooted,BLEserial,BLEserialOLD
 		global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
@@ -1573,14 +1568,16 @@ def execMaster():
 		global typeForPWM, maxSizeOfLogfileOnRPI
 		global xWindows, startXonPi
 		global clearHostsFile
+		global python3
 
+		python3					= {}
 		clearHostsFile			= False
 		xWindows				= ""
 		startXonPi				= "leaveAlone"
 		maxSizeOfLogfileOnRPI	= 10000000
 		typeForPWM				= "GPIO"
 		ifNetworkChanges  		= "doNothing"
-		masterVersion			= 11.3
+		masterVersion			= 12.4
 		sundial					= ""
 		checkFSCHECKfileDone	= False
 		wifiEthCheck			= {}
@@ -1620,7 +1617,6 @@ def execMaster():
 		enableiBeacons			= "1"
 		beforeLoop				= True
 		myPID					= str(os.getpid())
-		enableRebootCheck		= ""
 		restart					= ""
 		sensorEnabled			= []
 		sensorList				= []
@@ -1677,9 +1673,6 @@ def execMaster():
 		os.system("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp")
 
 
-		if cleanupOldFiles():
-			startProgam("master.py", params="", reason="..cleaned-up old files")
-
 		G.tStart	  = time.time()
 
 		U.resetRebootingNow()
@@ -1718,6 +1711,9 @@ def execMaster():
 			os.system("sudo rm /home/pi/.ssh/known_hosts")  
 
 		checkLogfiles()
+
+		os.system("sudo /usr/bin/python3 {}checkForInclude-py3.py & ".format(G.homeDir))
+		os.system("sudo /usr/bin/python {}checkForInclude-py2.py & ".format(G.homeDir))
 
 		time.sleep(1)
 		
@@ -1843,7 +1839,7 @@ def execMaster():
 				if U.testPing(G.ipOfServer) >0:
 					readNewParams()
 					if time.time() - G.ipConnection > 600.: # after 10 minutes 
-						if enableRebootCheck.find("rebootPing") >-1:
+						if G.enableRebootCheck.find("rebootPing") >-1:
 							U.sendURL(sendAlive="reboot")
 							U.doReboot(tt=30., text=" reboot due to no  PING reply from MAC for 10 minutes ")				
 					if time.time() - G.ipConnection > 100.: 
@@ -1971,9 +1967,14 @@ def execMaster():
 
 		U.logger.log(20,"starting loop")
 
+		if G.enableVoltageCheck.find("0") == -1: 
+			print "\n\n enableVoltageCheck:",G.enableVoltageCheck
+			checkIfPGMisRunning("checkVoltage.py", force=True)
 
 		checkTempForFanOnOff(force = True)
 		lastCheckAlive = time.time() -90
+
+		# start voltage checker 
 
 		while True:
 			if loopCount > 1000000000: loopCount = 0
@@ -2002,6 +2003,14 @@ def execMaster():
 							time.sleep(60) # give it some time directly after reboot
 						U.sendRebootHTML("change_in_ramdisk_for_logfiles")
 					# check if fs is still ok
+
+					if G.enableVoltageCheck.find("0") > -1 or G.enableVoltageCheck.find("-new") >-1:
+							U.killOldPgm(-1, "checkVoltage.py")
+							G.enableVoltageCheck = G.enableVoltageCheck.split("-")[0]
+							time.sleep(0.1)
+
+					if  G.enableVoltageCheck.find("0") == -1:
+						checkIfPGMisRunning("checkVoltage.py")
 
 				
 				if loopCount%60 == 0: # every 10 minutes
@@ -2067,7 +2076,7 @@ def execMaster():
 							checkIfPGMisRunning(ss+".py",checkAliveFile=ss)
 							   
 					for ss in activePGMdict:
-						checkIfPGMisRunning(activePGMdict[ss][0],checkAliveFile=activePGMdict[ss][1] )
+						checkIfPGMisRunning(activePGMdict[ss][0],checkAliveFile=activePGMdict[ss][1])
 
 				checkIfPGMisRunning("copyToTemp.py")
 		
@@ -2144,7 +2153,7 @@ def execMaster():
 					if (G.networkStatus).find("indigo") > -1 and (G.networkType).find("clock") ==-1:
 						if U.testPing(G.ipOfServer)==2:				# if no ping gets return we assume we are not connected, this happens after powerfailure. the router comes aback after rpi and wifi has given up, need to restart
 							if time.time() - G.ipConnection > 600.: # after 10 minutes 
-								if enableRebootCheck.find("rebootPing") >-1:
+								if G.enableRebootCheck.find("rebootPing") >-1:
 									U.sendURL(sendAlive="reboot")
 									U.doReboot(tt=30., text=" reboot due to no  PING reply from MAC for 10 minutes ")				
 

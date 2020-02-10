@@ -207,9 +207,9 @@ class bigScreen :
 			## ge sizeList:  eg =  [(1680, 1050), (1440, 900), (1280, 1024), (1280, 960), (1152, 864), (1024, 768), (832, 624), (800, 600), (720, 400), (640, 480)]
 			sizeList = self.pygame.display.list_modes()
 			U.logger.log(20, u"screen sizeList:{}".format(sizeList) )
-			fullScreenSize =sizeList[0]  #self.pygame.display.Info().current_w, self.pygame.display.Info().current_h]
+			fullScreenSize = sizeList[0]  #self.pygame.display.Info().current_w, self.pygame.display.Info().current_h]
 
-			U.logger.log(20, u"Framebuffer 1: fullsize:{} - oldSize:{};  overwrite x:{}; y:{}".format(fullScreenSize, bigScreenSize, overwriteXmax, overwriteYmax) )
+			U.logger.log(20, u"Framebuffer 1: fullsize:{} - oldSize:{};  check if we want to overwrite supplied  x:{}; y:{}, displayResolution:{}".format(fullScreenSize, bigScreenSize, overwriteXmax, overwriteYmax, displayResolution) )
 			if disp_no:
 				U.logger.log(20, "using X display = {0}".format(disp_no))
 				if overwriteXmax == 0 and overwriteYmax == 0:
@@ -220,12 +220,20 @@ class bigScreen :
 					bigScreenSize[1] = min(int(overwriteYmax), fullScreenSize[1])
 				self.pygame.display.set_caption(name)
 				self.screen = self.pygame.display.set_mode(bigScreenSize)
-				U.logger.log(20, u"Framebuffer 2. size: {};  overwrite x:{}; y:{}".format(bigScreenSize, overwriteXmax, overwriteYmax) )
+				U.logger.log(20, u"Framebuffer 2.a size: {};  overwrite x:{}; y:{}".format(bigScreenSize, overwriteXmax, overwriteYmax) )
 			else:
+				if displayResolution != (0,0):
+					if False and (displayResolution[0] > fullScreenSize[0] or displayResolution[1] > fullScreenSize[1]):
+						bigScreenSize = fullScreenSize[0]
+					else:
+						bigScreenSize = displayResolution
+					self.screen = self.pygame.display.set_mode(displayResolution, self.pygame.FULLSCREEN)
+					U.logger.log(20, u"Framebuffer 2.b size: set to indigo-dev output def: {} vs available {}".format( bigScreenSize, sizeList[0]) )
+				else:
+					bigScreenSize = fullScreenSize
+					self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
+					U.logger.log(20, u"Framebuffer 2.c size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
 				os.system("echo fullScreen > "+G.homeDir+"pygame.active") # after this we can not do startx, need to reboot first
-				bigScreenSize = fullScreenSize
-				self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
-				U.logger.log(20, u"Framebuffer 2. size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
 
 			U.logger.log(20, u"got screen object" )
 
@@ -1286,7 +1294,7 @@ def readParams():
 		global lastRead, newRead
 		global useLightSensorType, useLightSensorDevId, lightSensorSlopeForDisplay, lightSensorOnForDisplay, lightMinDimForDisplay
 		global multIntensity, intensity, intensityDevice, lightSensorValue
-		global runLoop
+		global runLoop, displayResolution
 
 		newRead		= False
 		inp,inpRaw,ttt = U.doRead(lastTimeStamp=lastRead)
@@ -1353,6 +1361,15 @@ def readParams():
 					if "lightMinDimForDisplay" in ddd:
 						try:	
 							lightMinDimForDisplay = max(0.0, min(1., float(ddd["lightMinDimForDisplay"]) ) )
+						except: pass
+					if "displayResolution" in ddd:
+						try:	
+							xx = ddd["displayResolution"]
+							if   "x" in xx: x ="x"
+							elif "," in xx: x =","
+							xx = ddd["displayResolution"].split(x)
+							if len(xx) ==2:
+								displayResolution = (int(xx[0]),int(xx[1]))
 						except: pass
 
 			else:
@@ -1728,7 +1745,9 @@ global useLightSensorType, useLightSensorDevId
 global multIntensity, intensity, intensityDevice, lightSensorValue
 global bigScreenSize
 global zoom, runLoop, pygameInitialized
-global klillMyselfTimeout
+global klillMyselfTimeout, displayResolution
+
+displayResolution			= (0,0)
 
 klillMyselfTimeout				= time.time()
 pygameInitialized			= False

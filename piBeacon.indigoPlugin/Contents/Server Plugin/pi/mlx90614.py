@@ -351,7 +351,7 @@ def doDisplay():
 							p *= 0.000009869233; p = "%6.3f"%p; pu= "P[atm]"
 						elif pressureUnits == "bar":
 							p *= 0.00001; p = "%7.4f" % p;		pu= "P[Bar]"
-						elif pressureUnits == "mbar":
+						elif pressureUnits.lower() == "mbar":
 							p *= 0.01; p = "%6.1f" % p	 ;		pu= "P[mBar]"
 						elif pressureUnits == "mm":
 							p *= 0.00750063; p = "%6.1f"%p;		  pu= 'P[mmHg]'

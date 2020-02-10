@@ -795,7 +795,8 @@ def readParams():
 	global rawOld
 	global deltaX, BME680, minSendDelta
 	global oldRaw, lastRead
-	global startTime, calibrateIfgt, setCalibration, firstValue
+	global startTime, gasBurnIn, gasBaseLine, lastMeasurement, sendToIndigoSecs, calibrationReadFromFile
+	global calibrateSetting, recalibrateIfGT,  setCalibrationToFixedValue, StateOfSensorCalibration
 	try:
 
 
@@ -826,51 +827,61 @@ def readParams():
 
 		U.logger.log(10, "BME680 reading new parameter file" )
 
-		if sensorRefreshSecs == 91:
-			try:
-				xx	   = str(inp["sensorRefreshSecs"]).split("#")
-				sensorRefreshSecs = float(xx[0]) 
-			except:
-				sensorRefreshSecs = 91	  
 		deltaX={}
 		restart = False
+		sendToIndigoSecs = G.sendToIndigoSecs	
 		for devId in sensors[sensor]:
+			initdevId(devId)
+			try:
+				if "sendToIndigoSecs" in sensors[sensor][devId]:
+					sendToIndigoSecs = float(sensors[sensor][devId]["sendToIndigoSecs"])
+			except:
+				sendToIndigoSecs = G.sendToIndigoSecs	  
 
 			try:
 				if "sensorRefreshSecs" in sensors[sensor][devId]:
-					xx = sensors[sensor][devId]["sensorRefreshSecs"].split("#")
-					sensorRefreshSecs = float(xx[0]) 
+					xx = float(sensors[sensor][devId]["sensorRefreshSecs"])
+					if sensorRefreshSecs >0 and xx != sensorRefreshSecs:
+						U.restartMyself(reason="new measuremnt time, need to recalibrate",doPrint=False)
+					sensorRefreshSecs = xx
 			except:
-				sensorRefreshSecs = 91	  
+				sensorRefreshSecs = 5	  
 
-			old = calibrateIfgt
+			old = calibrateSetting[devId]
 			try:
-				if "calibrateIfgt" in sensors[sensor][devId]:
-					calibrateIfgt = float(sensors[sensor][devId]["calibrateIfgt"])
+				if "calibrateSetting" in sensors[sensor][devId]:
+					calibrateSetting[devId] = sensors[sensor][devId]["calibrateSetting"]
 			except:
-				calibrateIfgt = 110	   
-			if old > 200 and calibrateIfgt < 200:  restart = True  # switch from static to dyname, need to recalobarte = restart sensor
+				calibrateSetting[devId] = "dynamic-startWithFile"	   
+			if old  != calibrateSetting[devId] and old != "":  restart = True  # switch from static to dyname, need to recalobarte = restart sensor
+
+			if devId not in recalibrateIfGT: recalibrateIfGT[devId] = ""
+			try:
+				if "recalibrateIfGT" in sensors[sensor][devId]:
+					recalibrateIfGT[devId] = float(sensors[sensor][devId]["recalibrateIfGT"])
+			except:
+				recalibrateIfGT[devId] = 200.   
+
+			# only once if file then dynamic
+			if calibrateSetting[devId].find("startWithFile") > -1 and  gasBaseLine[devId] == 0:
+				gasBaseLine[devId] = getBaseLine(devId)
+				if gasBaseLine[devId] == 0:
+					StateOfSensorCalibration[devId] = "need new baseline"
+
 
 			try:
-				if calibrateIfgt == 8888888.:
-					if "setCalibration" in sensors[sensor][devId]:
-						setCalibration = float(sensors[sensor][devId]["setCalibration"])
-					else:
-						setCalibration = 0	  
-						calibrateIfgt  = 110  
-				elif calibrateIfgt <200: 
-					setCalibration = 0	  
-				elif calibrateIfgt == 9999999.:
-					try:
-						f = open(G.homeDir+"bme680.Calibration","r")
-						setCalibration = json.loads(f.read())["resistance"]
-						f.close()
-					except: 
-						calibrateIfgt = 110	 # fallback if nothing in file
+				if "setCalibrationToFixedValue" in sensors[sensor][devId]:
+					setCalibrationToFixedValue[devId] = float(sensors[sensor][devId]["setCalibrationToFixedValue"])
+				else:
+					setCalibrationToFixedValue[devId] = 100000  
 			except:
-				setCalibration = 0	  
-				calibrateIfgt  = 110	
-			
+				setCalibrationToFixedValue[devId] = 100000 
+ 
+
+			if calibrateSetting[devId].find("setFixedValue") >-1: 
+				gasBaseLine[devId] = setCalibrationToFixedValue[devId]
+				StateOfSensorCalibration[devId] = "baseline set"
+		
 			old = U.getI2cAddress(sensors[sensor][devId], default ="")
 			try:
 				if "i2cAddress" in sensors[sensor][devId]:
@@ -894,10 +905,13 @@ def readParams():
 
 				
 			if devId not in BMEsensor or  restart:
-				U.logger.log(20," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{};;  calibrateIfgt:{}; setCalibration:{}; sensorRefreshSecs:{}".format(i2cAddress, minSendDelta, deltaX[devId], calibrateIfgt, setCalibration, sensorRefreshSecs) )
-				startSensor(devId, i2cAddress)
+				U.logger.log(20," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{};;  recalibrateIfGT:{}; sensorRefreshSecs:{}".format(i2cAddress, minSendDelta, deltaX[devId], recalibrateIfGT[devId], sensorRefreshSecs) )
+				startSensor(devId)
 				if BMEsensor[devId] =="":
 					return
+			if restart: 
+				saveBaseLine(0,devId)
+				U.restartMyself(reason="new settings, need to restart",doPrint=False)
 				
 		deldevID={}		   
 		for devId in BMEsensor:
@@ -913,20 +927,44 @@ def readParams():
 
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		U.logger.log(30, unicode(sensors[sensor]))
+		U.logger.log(30, "{}".format(sensors[sensor]))
 		
+#################################
+def initdevId(devId):
+	global calibrateSetting, recalibrateIfGT, StateOfSensorCalibration, setCalibrationToFixedValue
+	global gasBaseLine, gasBurnIn
+	if devId not in calibrateSetting: 				calibrateSetting[devId] 			= ""
+	if devId not in recalibrateIfGT: 				recalibrateIfGT[devId] 				= ""
+	if devId not in StateOfSensorCalibration: 		StateOfSensorCalibration[devId] 	= "startUP"
+	if devId not in setCalibrationToFixedValue: 	setCalibrationToFixedValue[devId] 	= 0
+	if devId not in gasBurnIn: 						gasBurnIn[devId] 					= []
+	if devId not in gasBaseLine: 					gasBaseLine[devId] 					= 0
+#
+################################
+def saveBaseLine(baseline,devId):
+	
+	f = open(G.homeDir+"bme680-"+devId+".Calibration","w")
+	f.write(json.dumps({"baseline":baseline}))
+	f.close()
+
+#################################
+def getBaseLine(devId):
+	try:
+		f = open(G.homeDir+"bme680-"+devId+"Calibration","r")
+		baseline = json.loads(f.read())["baseline"]
+		f.close()
+		return baseline
+	except: 
+		return 0
 
 
-
-def startSensor(devId,i2cAddress):
+#################################
+def startSensor(devId):
 	global sensors,sensor
 	global startTime
 	global gasBaseLine, gasBurnIn
-	global BMEsensor, firstValue
+	global BMEsensor
 	startTime =time.time()
-	gasBaseLine = 0
-	gasBurnIn	= []
-
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
 	
@@ -935,8 +973,7 @@ def startSensor(devId,i2cAddress):
 	except:
 		try:
 			time.sleep(1)
-			BMEsensor[devId]  = BME680(i2c_addr=i2cAdd)
-	
+			BMEsensor[devId]  	= BME680(i2c_addr=i2cAdd)
 		except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			BMEsensor[devId] =""
@@ -956,7 +993,7 @@ def startSensor(devId,i2cAddress):
 	BMEsensor[devId].set_filter(FILTER_SIZE_3)
 	BMEsensor[devId].set_gas_status(ENABLE_GAS_MEAS)
 
-	U.logger.log(20,"\n\nInitial reading:")
+	U.logger.log(20,"Initial reading:")
 	for name in dir(BMEsensor[devId].data):
 		value = getattr(BMEsensor[devId].data, name)
 
@@ -966,7 +1003,6 @@ def startSensor(devId,i2cAddress):
 	BMEsensor[devId].set_gas_heater_temperature(320)
 	BMEsensor[devId].set_gas_heater_duration(150)
 	BMEsensor[devId].select_gas_heater_profile(0)
-	firstValue = True
 	# Up to 10 heater profiles can be configured, each
 	# with their own temperature and duration.
 	# sensor.set_gas_heater_profile(200, 150, nb_profile=1)
@@ -974,67 +1010,92 @@ def startSensor(devId,i2cAddress):
 	U.muxTCA9548Areset()
 
 
+
 #################################
 def getValues(devId):
 	global sensor, sensors,	 BMEsensor, badSensor
 	global startTime
-	global gasBaseLine, gasBurnIn, lastMeasurement, calibrateIfgt,setCalibration, firstValue
+	global startTime, gasBurnIn, gasBaseLine, lastMeasurement, sendToIndigoSecs, calibrationReadFromFile
+	global calibrateSetting, recalibrateIfGT,  setCalibrationToFixedValue, StateOfSensorCalibration
+
 	try:
-		if BMEsensor[devId] =="": 
+		if BMEsensor[devId] == "": 
 			badSensor +=1
 			return "badSensor"
+
+		temp   		 = 0
+		press  		 = 0
+		hum	   		 = 0
+		gas	   		 = 0
+		gasScore	 = -1
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
+
 		if BMEsensor[devId].get_sensor_data():
 			temp   = BMEsensor[devId].data.temperature
 			press  = BMEsensor[devId].data.pressure
 			hum	   = BMEsensor[devId].data.humidity
 			gas	   = BMEsensor[devId].data.gas_resistance
 			heatSt = BMEsensor[devId].data.status & HEAT_STAB_MSK
-			lastMeasurement = time.time()
-			if setCalibration >0.:
-				startTime = 0.
-				gasBaseLine = setCalibration
-				
-			if startTime >0 and heatSt > 0 and time.time() - startTime > 25 :  # wait at least 25secs and heat ok
-					gasBurnIn.append(float(gas))
-					if len(gasBurnIn)  > 2: U.logger.log(10, "gasBurnIn: "+unicode(gasBurnIn)+ ", delta: "+ unicode(abs(gasBurnIn[-1]-gasBurnIn[-2])/max(1,(gasBurnIn[-1]+gasBurnIn[-2])))  )
-					if len(gasBurnIn)  > 6 and abs(gasBurnIn[-1]-gasBurnIn[-2])/max(1,(gasBurnIn[-1]+gasBurnIn[-2])) < 0.0005: # wait for 13+ cycles, last measurements must be stable
-						gasBaseLine = sum(gasBurnIn[-4:])/(4.) # take last 4  measurements 
-						U.logger.log(30," calibrated: after "+ str(int(time.time()-startTime))+" sec;  nof samples:"+str(len(gasBurnIn)) +"	baseline:"+str(gasBaseLine)+"  heatStatus:"+str(heatSt) )
-						startTime = 0
-						# save new calibration data to file 
-						f = open(G.homeDir+"bme680.Calibration","w")
-						f.write(json.dumps({"resistance":gasBaseLine}))
-						f.close()
-					
-			if startTime ==0 : 
-				if gas > gasBaseLine*(calibrateIfgt/100.) and not firstValue and setCalibration == 0: #recalibrate over x %	 higher than previous calibartion (=100% clean air) 
-					U.logger.log(30,"re calibrated: due to shift high in baseline new value:"+str(gas)+";  oldbaseLine: "+str(gasBaseLine) )
-					gasScore	= "calibrating"
-					startSensor(devId, U.getI2cAddress(sensors[sensor][devId], default =0) )
-				else:
-					gasScore = ("%3d"%(int(gas/ gasBaseLine *100))).strip()
-			else:
-				gasScore ="calibrating"
+			if gasBaseLine[devId] > 0: gasScore = int(100* gas/gasBaseLine[devId])
 
-			temp  +=  float(sensors[sensor][devId]["offsetTemp"]) 
-			press +=  float(sensors[sensor][devId]["offsetPress"]) 
-			hum	  +=  float(sensors[sensor][devId]["offsetHum"])  
-			gas	  +=  float(sensors[sensor][devId]["offsetGas"])
+			SensorStatus = "calibrated"
+			if heatSt == 0:										SensorStatus = "calibrating"
+			if StateOfSensorCalibration[devId] != "calibrated":	SensorStatus = "calibrating"
+
+			if heatSt >0:   # wait at least 25secs and heat ok
+				if time.time() - startTime > 60 and StateOfSensorCalibration[devId] != "calibrated":  # wait at least 60secs and heat ok
+						gasBurnIn[devId].append(float(gas))
+						if len(gasBurnIn[devId])  > 2: U.logger.log(20, "StateOfSensorCalibration:{}, gas:{}, gasBaseLine:{},  delta: {}, gasBurnIn: {}".format(StateOfSensorCalibration[devId], gas, gasBaseLine[devId], abs(gasBurnIn[devId][-1]-gasBurnIn[devId][-2])/max(1,(gasBurnIn[devId][-1]+gasBurnIn[devId][-2])), gasBurnIn[devId][-3:]  ) )
+						if len(gasBurnIn[devId])  > 200: 
+							U.logger.log(20, "resetting gasBurnIn, too long" )
+							gasBurnIn[devId] = []
+							return ""
+						if len(gasBurnIn[devId])  > 12 and abs(gasBurnIn[devId][-1]-gasBurnIn[devId][-2])/max(1,(gasBurnIn[devId][-1]+gasBurnIn[devId][-2])) < 0.0002: # wait for 13+ cycles, last measurements must be stable
+							if StateOfSensorCalibration[devId] in ["need new baseline","startUP","calibrating"] or ( calibrateSetting[devId].find("dynamic") and (gas > gasBaseLine[devId]*1.01) ):
+								gasBaseLine[devId] = sum(gasBurnIn[devId][-8:])/(8.) # take ave of last 8 measurments
+								U.logger.log(30," calibrated: after {:.0f} sec;  nof samples:{}	baseline:{} heatStatus:{}".format(time.time()-startTime, len(gasBurnIn[devId]), gasBaseLine[devId], heatSt) )
+								# save new calibration data to file 
+								if gasBaseLine[devId] > getBaseLine(devId):
+									saveBaseLine(gasBaseLine[devId],devId)
+								gasScore = int(100* gas/gasBaseLine[devId])
+							SensorStatus = "calibrated"
+							StateOfSensorCalibration[devId] ="calibrated"
+
+				if SensorStatus == "calibrated": 
+					if  gasBaseLine[devId] >0: 
+						if calibrateSetting[devId].find("dynamic") > -1 and gas > gasBaseLine[devId]*(recalibrateIfGT[devId]/100.): #recalibrate over x %	 higher than previous calibration (=100% clean air) 
+							U.logger.log(30,"re-calibrating: due to shift high in baseline new value:{};  oldbaseLine: {}".format(gas, gasBaseLine[devId]) )
+							StateOfSensorCalibration[devId]	= "calibrating"
+							startSensor(devId)
+							return ""
+						else:
+							gasScore = int(100* gas/gasBaseLine[devId])
+							SensorStatus = "measuring"
+							if gasBaseLine[devId] > getBaseLine(devId):
+								saveBaseLine(gasBaseLine[devId],devId)
+					else:
+						SensorStatus ="calibrating"
+
+				temp  +=  float(sensors[sensor][devId]["offsetTemp"]) 
+				press +=  float(sensors[sensor][devId]["offsetPress"]) 
+				hum	  +=  float(sensors[sensor][devId]["offsetHum"])  
+				gas	  +=  float(sensors[sensor][devId]["offsetGas"])
 			 
-			data = {"temp":			round(temp,1), 
-					"press":		round(press,1), 
-					"hum":			round(hum,1),
-					"GasResistance":gas, 
-					"GasBaseline":	gasBaseLine, 
-					"AirQuality":	gasScore}
-			U.logger.log(10, unicode(data)) 
 			badSensor = 0
+			if time.time() - startTime > 30 :  # wait at least 25secs and heat ok
+				data = {"temp":			round(temp,1), 
+						"press":		round(press,1), 
+						"hum":			round(hum,1),
+						"GasResistance":gas, 
+						"GasBaseline":	gasBaseLine[devId], 
+						"SensorStatus":	SensorStatus,
+						"AirQuality":	gasScore}
+			else: return ""
 			return data
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	badSensor+=1
-	if badSensor >3: return "badSensor"
+	badSensor += 1
+	if badSensor > 3: return "badSensor"
 	return ""
 
 
@@ -1046,21 +1107,26 @@ global rawOld
 global sensor, sensors, badSensor
 global deltaX, BMEsensor, minSendDelta
 global oldRaw, lastRead
-global startTime, gasBurnIn, gasBaseLine, lastMeasurement,calibrateIfgt,setCalibration, firstValue
+global startTime, gasBurnIn, gasBaseLine, lastMeasurement, sendToIndigoSecs, calibrationReadFromFile
+global calibrateSetting, recalibrateIfGT,  setCalibrationToFixedValue, calibrated, StateOfSensorCalibration
 
-
-firstValue					= True
-setCalibration				= 0
-calibrateIfgt				= 1.1
-gasBaseLine					= 0
-gasBurnIn					= []
+StateOfSensorCalibration	= {}
+calibrated					= 0
+setCalibrationToFixedValue	= {} 
+calibrationReadFromFile		= {}
+recalibrateIfGT				= {}
+calibrateSetting			= {}
+calibrationFromFile			= {}
+sendToIndigoSecs			= 80
+gasBaseLine					= {}			
+gasBurnIn					= {}
 startTime					= time.time()
 lastMeasurement				= time.time()
 oldRaw						= ""
 lastRead					= 0
 minSendDelta				= 5.
 loopCount					= 0
-sensorRefreshSecs			= 91
+sensorRefreshSecs			= -1
 NSleep						= 100
 sensorList					= []
 sensors						= {}
@@ -1070,7 +1136,6 @@ display						= "0"
 output						= {}
 badSensor					= 0
 sensorActive				= False
-loopSleep					= 0.5
 rawOld						= ""
 BMEsensor					={}
 deltaX				  = {}
@@ -1104,9 +1169,9 @@ lastDisplay			= 0
 startTime			= time.time()
 G.lastAliveSend		= time.time() -1000
 
+lastMeasurement 	= time.time()
 
-loopSleep = sensorRefreshSecs
-sensorWasBad = False
+sensorWasBad 		= False
 while True:
 	try:
 		tt = time.time()
@@ -1119,7 +1184,9 @@ while True:
 					lastValues[devId]  =copy.copy(lastValues0)
 					lastValues2[devId] =copy.copy(lastValues0)
 				values = getValues(devId)
-				if values == "": continue
+				if values == "": 
+					continue
+
 				data["sensors"][sensor][devId]={}
 				if values =="badSensor":
 					sensorWasBad = True
@@ -1148,14 +1215,12 @@ while True:
 						except: pass
 				else:
 					continue
-				if (   ( deltaN > deltaX[devId]	 ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
-						if time.time() - startTime < 120 and deltaN > 0.5: 
+				if (   ( deltaN > deltaX[devId]	 ) or  (  tt - abs(sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
+						if time.time() - startTime < 60 and deltaN > 0.5: 
 							sendData = False
 						else:
 							sendData = True
-						if not firstValue: # do not send first measurement, it is always OFFFF
 							lastValues2[devId] = copy.copy(lastValues[devId])
-						firstValue = False
 		if sendData:
 			U.sendURL(data)
 		#print " bme680 to makeDATfile ", data
@@ -1167,15 +1232,18 @@ while True:
 		quick = U.checkNowFile(G.program)				 
 		U.echoLastAlive(G.program)
 
-		if loopCount %5 ==0 and not quick:
-			tt= time.time()
-			if tt - lastRead > 5.:	
-				readParams()
-				lastRead = tt
-		#if gasBaseLine ==0: loopSleep = 1
-		#else:				 loopSleep = sensorRefreshSecs
-		if not quick:
-			time.sleep(loopSleep )
+		tt= time.time()
+		if tt - lastRead > 5.:	
+			if U.checkNewCalibration(G.program):
+				for devId in BMEsensor: 
+					saveBaseLine(0,devId)
+				U.restartMyself(reason="new calibration requested from Indigo",doPrint=False)
+
+			readParams()
+			lastRead = tt
+		time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
+		lastMeasurement = time.time()
+
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
