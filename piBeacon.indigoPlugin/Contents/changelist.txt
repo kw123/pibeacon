@@ -1,3 +1,26 @@
+Added features / changes in v7.117.334 @ 2019-02-09
+===================================================
+
+1. added menu option to update beacon battery level for a SINGLE beacon, not just all
+
+2. added clostestRPIlast and clostestRPIlast states to RPi, ibeacon and BLEconnect states. it show the previous clostest RPI
+   this is not the second clostsest!!
+
+3. added "nohup" to ssh master start, otehrwise master stops when ssh session ends
+
+4. fixed clostest RPI in BLEconnect, was not alwasy showing correct RPI.
+
+5. added requiremnt that two (RSSI values - lastAverage)  in sequence > delta signal to trigger deltat signal change.
+   this remove some noise fluctuations of signals that otherwise would trigger delta_signal > xx state.
+   
+6. fixed:
+   Error setting up BLEconnect Line 3636 has error=range() integer end a
+   Error Line 12444 has error=Unknown format code 'd' 
+  
+7. improved stability reading for adafruit moisture sensor 
+ 
+
+
 Added features / changes in v7.117.333 @ 2019-02-09
 ===================================================
 

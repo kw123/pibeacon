@@ -737,9 +737,9 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
     <Field    id="debugUpdateRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6)  update RPI:</Label>  </Field>
     <Field    id="debugSocketRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (7)  sockect comm to RPI:</Label>  </Field>
     <Field    id="debugOfflineRPI"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (8)  show error messages if RPI is offline:</Label>  </Field>
-    <Field    id="debugFing"          type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9)  update Fingscan:</Label>  </Field>
-    <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (11) send BC for status updates:</Label>  </Field>
-    <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (12) update BLE-connect:</Label>  </Field>
+    <Field    id="debugFing"          type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9)  send data to Fingscan:</Label>  </Field>
+    <Field    id="debugBC"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (11) send BC to status update listeners:</Label>  </Field>
+    <Field    id="debugBLE"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (12) BLE-connect:</Label>  </Field>
     <Field    id="debugCAR"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (13) CAR type devices:</Label>  </Field>
     <Field    id="debugSocket"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (14) tcpip socket comm:</Label>  </Field>
     <Field    id="debugPlotPositions" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (15) beacon position plots:</Label>  </Field>

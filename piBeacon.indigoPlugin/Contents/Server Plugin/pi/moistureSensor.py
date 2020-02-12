@@ -19,7 +19,8 @@ G.program = "moistureSensor"
 
 
 
-
+###############################
+###############################
 class MoistureChirp:
 	def __init__(self,  address=0x20):
 
@@ -27,8 +28,16 @@ class MoistureChirp:
 		self.smbus = SMBus(1)
 		self.smbus.write_byte(self.address, 0x06) # reset
 		time.sleep(0.1)
-		self.smbus.read_byte_data(self.address, 0x07) #send wake up , need to wait 1 sec after
+		#send wake up , need to wait 1 sec after
+		self.smbus.read_byte_data(self.address, 0x07) 
 		time.sleep(1)
+		self.version = self.smbus.read_byte_data(self.address, 0x07) 
+		time.sleep(1)
+		return 
+
+
+	def getVersion(): 
+		return self.version
 
 	def getdata(): 
 		retData={"temp":-99, "illuminance":-99, "moisture":-99}
@@ -41,8 +50,9 @@ class MoistureChirp:
 			time.sleep(0.02)
 
 		for ii in range(20):
+			self.smbus.write_byte(self.address, 0x03)
 			if not self.smbus.read_byte_data(self.address, 0x09): 
-				val = self.smbus.read_word_data(self.address, 0x03)
+				val = self.smbus.read_word_data(self.address, 0x04)
 				retData["illuminance"] = ((ret & 0xFF) << 8) + (ret >> 8) 
 				break 
 			time.sleep(0.02)
@@ -169,8 +179,14 @@ def startSensor(devId,i2cAddress):
 	except:
 		try:
 			time.sleep(1)
-			i2c_bus = busio.I2C(SCL, SDA)
-			SENSOR[devId]  = Seesaw(i2c_bus, addr=i2cAdd)
+			if sensorMode[devId]== "adafruit":
+				i2c_bus = busio.I2C(SCL, SDA)
+				SENSOR[devId]  = Seesaw(i2c_bus, addr=i2cAdd)
+
+			elif sensorMode[devId] == "chirp":
+				SENSOR[devId] = MoistureChirp(addr=i2cAdd)
+				U.logger.log(30, u"started chirp sensor, version= ={}".format(SENSOR[devId].getVersion()) )
+	
 		except	Exception as e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			SENSOR[devId] = ""
@@ -190,37 +206,53 @@ def getValues(devId):
 			badSensor +=1
 			return "badSensor"
 
-		temp   		 = 0
-		press  		 = 0
-		hum	   		 = 0
-		gas	   		 = 0
-		gasScore	 = -1
+		temp		 = 0.
+		moisture	 = 0.
+		illuminance	 = 0.
+		tempL		 = [-1000*ii for ii in range(5)]
+		moistureL	 = [-1000*ii for ii in range(5)]
+		illuminanceL = [-1000*ii for ii in range(5)]
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
 
-		if sensorMode[devId] == "adafruit":
-			temp  		= SENSOR[devId].get_temp()
-			temp  		+=  float(sensors[sensor][devId]["offsetTemp"]) 
-			moisture	= SENSOR[devId].moisture_read()
-			data = {"temp":	round(temp,1), 
-			 "illuminance":	-1,
-				"moisture":	round(moisture,0)} 
+		# take the average of  measurments every 0.2 secs
+		goodM = 0
+		for ii in range(10):
+			time.sleep(0.2)
+			if sensorMode[devId] == "adafruit":
+				tempL[goodM]  		= SENSOR[devId].get_temp()
+				moistureL[goodM]	= SENSOR[devId].moisture_read()
 
-		elif sensorMode[devId] == "chirp":
-			dataFromSens  = SENSOR[devId].getdata()
-			if dataFromSens["moisture"] == -99: return "badSensor"
-			temp  		=  dataFromSens["temp"]/10. + float(sensors[sensor][devId]["offsetTemp"]) 
-			illuminance	=  dataFromSens["illuminance"]
-			moisture	=  dataFromSens["moisture"]
-			data = {"temp":	round(temp,1), 
-			 "illuminance":	round(illuminance,0),
-				"moisture":	round(moisture,0)} 
+			elif sensorMode[devId] == "chirp":
+				dataFromSens  = SENSOR[devId].getdata()
+				if dataFromSens["moisture"] == -99: return "badSensor"
+				tempL[goodM]  		=  dataFromSens["temp"]/10.
+				illuminanceL[goodM] =  dataFromSens["illuminance"]
+				moistureL[goodM]	=  dataFromSens["moisture"]
+			goodM +=1
+			if goodM > 4: break
+		tempL 		 = sorted(tempL)[1:4]; 			tc =0
+		illuminanceL = sorted(illuminanceL)[1:4];	mc= 0
+		moistureL	 = sorted(moistureL)[1:4];		ic =0
 
+		for ii in range(3):
+			if moistureL[ii] > -99:		moisture 		+= moistureL[ii]; 		mc += 1.
+			if tempL[ii] > -99:			temp 			+= tempL[ii]; 			tc += 1.
+			if illuminanceL[ii] > -99:	illuminance		+= illuminanceL[ii]; 	ic += 1.
+		
+		temp 		= temp/max(1.,tc) + float(sensors[sensor][devId]["offsetTemp"]) 
+		moisture 	= moisture/max(1.,mc)
+		illuminance = illuminance/max(1.,ic)
+
+		data = {"temp":	round(temp,1), 
+		 "illuminance":	round(illuminance,0),
+			"moisture":	round(moisture,0)} 
+		#print (tempL, illuminanceL, moistureL, data)
 		badSensor = 0
 		return data
 	except	Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	badSensor += 1
-	if badSensor > 3: return "badSensor"
+	if badSensor > 5: return "badSensor"
 	return ""
 
 

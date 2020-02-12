@@ -67,7 +67,7 @@ def execGeneral(next):
 			items	   =  next["cmdLine"].split("=")
 			mactime	   = items[1]
 			os.system('date -s "'+mactime+'"')
-			mactt	   = time.mktime( datetime.datetime.strptime(mactime,"%Y-%m-%d %H:%M:%S.%f").timetuple() )
+			mactt	   = U.getTimetimeFromDateString(mactime)
 			deltaTime  = tt - mactt
 			U.sendURL(data={"deltaTime":deltaTime},sendAlive="alive", wait=False)
 			if "useRTC" in inp and inp["useRTC"] !="":

@@ -472,7 +472,9 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 					newData = {"mac":beaconMAC,"reason":rr,"uuid":uuid,"rssi":aveSignal,"txPower":avePower,"count":beaconsNew[beaconMAC]["count"],"batteryLevel":beaconsNew[beaconMAC]["bLevel"],"pktInfo":beaconsNew[beaconMAC]["pktInfo"]}
 					#print r, beacon_ExistingHistory[beaconMAC]["reason"], newData
 					data.append(newData)
-					beacon_ExistingHistory[beaconMAC]["rssi"]=beaconsNew[beaconMAC]["rssi"]/max(beaconsNew[beaconMAC]["count"],1.) # average last rssi
+					beacon_ExistingHistory[beaconMAC]["rssi"]  = beaconsNew[beaconMAC]["rssi"]/max(beaconsNew[beaconMAC]["count"],1.) # average last rssi
+					beacon_ExistingHistory[beaconMAC]["count"] = beaconsNew[beaconMAC]["count"] 
+					beacon_ExistingHistory[beaconMAC]["timeSt"] = time.time()
 			except	Exception, e:
 				U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.logger.log(30, " error composing msg \n{}".format(beaconsNew[beaconMAC]))
@@ -490,15 +492,16 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 
 
 #################################
-def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
+def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG, beaconsNew):
 	global collectMsgs, sendAfterSeconds, loopMaxCallBLE, ignoreUUID,	 beacon_ExistingHistory, deleteHistoryAfterSeconds,signalDelta,fastDown, minSignalCutoff
 	global onlyTheseMAC
  
 	t=time.time()
+	rssi = float(beaconMSG[2])
 	try:
 		if beaconMAC not in beacon_ExistingHistory: # is it new?
 			if beaconMAC in minSignalCutoff:
-				if	float(beaconMSG[2]) < minSignalCutoff[beaconMAC]:
+				if	rssi < minSignalCutoff[beaconMAC]:
 					#print "rejecting: ", beaconMAC, minSignalCutoff[beaconMAC] ,  float(beaconMSG[2])
 					return reason
 				else:
@@ -509,17 +512,16 @@ def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
 			else:
 				reason = 5
 
-			beacon_ExistingHistory[beaconMAC]={"uuid":beaconMSG[1],"lCount":1,"txPower":float(beaconMSG[3]),"rssi":float(beaconMSG[2]),"reason":reason,"timeSt":t}
+			beacon_ExistingHistory[beaconMAC]={"uuid":beaconMSG[1],"lCount":1,"txPower":float(beaconMSG[3]),"rssi":rssi,"reason":reason,"timeSt":t,"count":beaconsNew[beaconMAC]["dCount"]}
 			
-		elif beaconMAC in minSignalCutoff and float(beaconMSG[2]) < minSignalCutoff[beaconMAC]:# 
-			if float(beaconMSG[2]) < minSignalCutoff[beaconMAC]: 
-				#print "rejecting: existing", beaconMAC, minSignalCutoff[beaconMAC] ,  float(beaconMSG[2])
-				return reason
-	 
-		elif beacon_ExistingHistory[beaconMAC]["rssi"] ==-999: # in fast down mode, was down for some time
+		# no up if signal weak  
+		elif beaconMAC in minSignalCutoff and rssi < minSignalCutoff[beaconMAC]:# 
+			return reason
+
+		elif beacon_ExistingHistory[beaconMAC]["rssi"] == -999: # in fast down mode, was down for some time
 			reason = 4 
 			#print " rssi=-999 "+ beaconMAC +"; dT: "+unicode(t-beacon_ExistingHistory[beaconMAC]["timeSt"])+"sec; rssi= "+beaconMSG[2] +"; ex history: "+unicode(beacon_ExistingHistory[beaconMAC])+"; fd: "+ unicode(fastDown)+"; t:"+unicode(t) 
-			beacon_ExistingHistory[beaconMAC]={"uuid":beaconMSG[1],"lCount":1,"txPower":float(beaconMSG[3]),"rssi":float(beaconMSG[2]),"reason":reason,"timeSt":t}
+			beacon_ExistingHistory[beaconMAC]={"uuid":beaconMSG[1],"lCount":1,"txPower":float(beaconMSG[3]),"rssi":rssi,"reason":reason,"timeSt":t,"count":beaconsNew[beaconMAC]["dCount"]}
 	 
 
  
@@ -529,15 +531,28 @@ def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,msgCount):
 			#print	"curl: first msg after	collect time "+ beaconMAC +" "+unicode(beacon_ExistingHistory[beaconMAC])
 
 		elif beaconMAC in signalDelta: 
-			if beacon_ExistingHistory[beaconMAC]["rssi"] !=-999. and float(beaconMSG[2]) != 0:
-				if abs(beacon_ExistingHistory[beaconMAC]["rssi"]-float(beaconMSG[2])) >	 signalDelta[beaconMAC] :	# delta signal > xxdBm (set param)
-					#print beaconMAC, "signalDelta",beacon_ExistingHistory[beaconMAC]["rssi"], float(beaconMSG[2]), signalDelta[beaconMAC] 
-					reason = 6
-					beacon_ExistingHistory[beaconMAC]["reason"]=reason
-					U.logger.log(0, "curl: signalDelta {} {}".format(beaconMAC, beacon_ExistingHistory[beaconMAC]) )
+			if beacon_ExistingHistory[beaconMAC]["rssi"] != -999. and rssi != 0:
+				if abs(beacon_ExistingHistory[beaconMAC]["rssi"]-rssi) >  signalDelta[beaconMAC] :	# delta signal > xxdBm (set param)
+					if beaconsNew[beaconMAC]["dCount"] > 0:
+						#print beaconMAC, "signalDelta",beacon_ExistingHistory[beaconMAC]["rssi"], float(beaconMSG[2]), signalDelta[beaconMAC] 
+						reason = 6
+						beacon_ExistingHistory[beaconMAC]["reason"] = reason
+						beaconsNew[beaconMAC]["count"] = 2
+						beaconsNew[beaconMAC]["rssi"]  = beaconsNew[beaconMAC]["rssiLast"] + rssi
+						#U.logger.log(30, "signalDelta A) mac:{} rssi: {} , dc:{};; hist c:{} - rssiAv{}".format(beaconMAC, beaconMSG[2], beaconsNew[beaconMAC]["dCount"], beacon_ExistingHistory[beaconMAC]["count"], beacon_ExistingHistory[beaconMAC]["rssi"]) )
+					else:
+						beaconsNew[beaconMAC]["dCount"]    +=1 
+						beaconsNew[beaconMAC]["rssiLast"]  = rssi
+						#U.logger.log(30, "signalDelta B) mac:{} rssi: {} , dc:{};; hist c:{} - rssiAv{}".format(beaconMAC, beaconMSG[2], beaconsNew[beaconMAC]["dCount"], beacon_ExistingHistory[beaconMAC]["count"], beacon_ExistingHistory[beaconMAC]["rssi"]) )
+				else:
+					#U.logger.log(30, "signalDelta C) mac:{} rssi: {} , dc:{};; hist c:{} - rssiAv{}".format(beaconMAC, beaconMSG[2], beaconsNew[beaconMAC]["dCount"], beacon_ExistingHistory[beaconMAC]["count"], beacon_ExistingHistory[beaconMAC]["rssi"]) )
+					beaconsNew[beaconMAC]["dCount"]    = 0
+					beaconsNew[beaconMAC]["rssiLast"]  = -999
 
-		beacon_ExistingHistory[beaconMAC]["reason"]= max(1,beacon_ExistingHistory[beaconMAC]["reason"])
-		beacon_ExistingHistory[beaconMAC]["timeSt"]= t
+
+
+		beacon_ExistingHistory[beaconMAC]["reason"] = max(1,beacon_ExistingHistory[beaconMAC]["reason"])
+		beacon_ExistingHistory[beaconMAC]["timeSt"] = t
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return reason
@@ -1061,26 +1076,20 @@ def execbeaconloop():
 							if not iphoneUUID:
 								if checkIfIgnore(uuid,beaconMAC): continue
 
-							if not (beaconMAC in onlyTheseMAC or beaconMAC	in doNotIgnore):  # this is a new one
+							if not (beaconMAC in onlyTheseMAC or beaconMAC in doNotIgnore):  # this is a new one
 								if rssi < acceptNewiBeacons: continue						  # if new it must have signal > threshold
 
 							if beaconMAC not in beaconsNew: # add fresh one if not in new list
-								beaconsNew[beaconMAC]={"uuid":uuid,"txPower":txPower,"rssi":rssi,"count":1,"timeSt":tt,"bLevel":bl,"pktInfo":"len:"+str(pkLen)+", type:"+beaconType}# [uid-major-minor,txPower,signal strength, # of measuremnts
+								beaconsNew[beaconMAC]={"uuid":uuid,"txPower":txPower,"rssi":rssi,"count":1,"timeSt":tt,"bLevel":bl,"pktInfo":"len:"+str(pkLen)+", type:"+beaconType, "dCount":0}# [uid-major-minor,txPower,signal strength, # of measuremnts
 								#reason = 3
 							
 							else:  # increment averages and counters
-								if beaconsNew[beaconMAC]["rssi"] == -999:
-									beaconsNew[beaconMAC]["rssi"]	 = rssi # signal
-									beaconsNew[beaconMAC]["count"]	 = 1  # count for calculating averages
-									beaconsNew[beaconMAC]["txPower"] = txPower # transmit power
-									#print "rssi =-999 set first entry ",beaconMAC, rssi,"-- rssi"
-								else:	 
-									beaconsNew[beaconMAC]["rssi"]	 += rssi # signal
-									beaconsNew[beaconMAC]["count"]	 += 1  # count for calculating averages
-									beaconsNew[beaconMAC]["txPower"] += txPower # transmit power
-								beaconsNew[beaconMAC]["timeSt"]		 = tt  # count for calculating averages
-								beaconsNew[beaconMAC]["bLevel"]		 = bLevel # battery level or temp of sensor 
-							reason= checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,beaconsNew[beaconMAC]["count"])
+								beaconsNew[beaconMAC]["rssi"]	 += rssi # signal
+								beaconsNew[beaconMAC]["count"]	 += 1  # count for calculating averages
+								beaconsNew[beaconMAC]["txPower"] += txPower # transmit power
+								beaconsNew[beaconMAC]["timeSt"]	 = tt  # count for calculating averages
+								beaconsNew[beaconMAC]["bLevel"]	 = bLevel # battery level or temp of sensor 
+							reason= checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,beaconsNew)
 							####if beaconMAC =="0C:F3:EE:00:66:15": print  beaconsNew
 
 					except	Exception, e:

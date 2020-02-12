@@ -210,6 +210,15 @@ def pgmStillRunning(pgmToTest, verbose=False) :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
+################################# 2020-12-12 12:12:12
+def getTimetimeFromDateString( dateString, fmrt="%Y-%m-%d %H:%M:%S"): 
+	if len(dateString) == 19:
+		try:
+			return  time.mktime( datetime.datetime.strptime(dateString, fmrt).timetuple()  )
+		except:
+			return 0		
+	else:
+		return 0
 
 #################################
 def checkParametersFile(defaultParameters, force=False):

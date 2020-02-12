@@ -905,6 +905,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ControlPageLabel>closestiBeacon</ControlPageLabel>
 			</State>
 
+			<State id="closestiBeaconLast">
+				<ValueType>String</ValueType>
+				<TriggerLabel>closestiBeaconLast</TriggerLabel>
+				<ControlPageLabel>closestiBeaconLast</ControlPageLabel>
+			</State>
+
 			<State id="closestRPI">
 			<ValueType>number</ValueType>
 			<TriggerLabel>closestRPI</TriggerLabel>
@@ -915,6 +921,18 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			<ValueType>string</ValueType>
 			<TriggerLabel>closestRPIText</TriggerLabel>
 			<ControlPageLabel>closestRPIText</ControlPageLabel>
+			</State>
+
+			<State id="closestRPILast">
+			<ValueType>number</ValueType>
+			<TriggerLabel>closestRPILast</TriggerLabel>
+			<ControlPageLabel>closestRPILast</ControlPageLabel>
+			</State>
+
+			<State id="closestRPITextLast">
+			<ValueType>string</ValueType>
+			<TriggerLabel>closestRPITextLast</TriggerLabel>
+			<ControlPageLabel>closestRPITextSecond</ControlPageLabel>
 			</State>
 
 			<State id="PosX">
@@ -2760,9 +2778,21 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</State>
 
 			<State id="closestRPIText">
-			<ValueType>String</ValueType>
+			<ValueType>string</ValueType>
 			<TriggerLabel>closestRPIText</TriggerLabel>
 			<ControlPageLabel>closestRPIText</ControlPageLabel>
+			</State>
+
+			<State id="closestRPILast">
+			<ValueType>number</ValueType>
+			<TriggerLabel>closestRPILast</TriggerLabel>
+			<ControlPageLabel>closestRPILast</ControlPageLabel>
+			</State>
+
+			<State id="closestRPITextLast">
+			<ValueType>string</ValueType>
+			<TriggerLabel>closestRPITextLast</TriggerLabel>
+			<ControlPageLabel>closestRPITextSecond</ControlPageLabel>
 			</State>
 
 			<State id="lastStatusChange">
@@ -3334,10 +3364,23 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</State>
 
 			<State id="closestRPIText">
-			<ValueType>String</ValueType>
+			<ValueType>string</ValueType>
 			<TriggerLabel>closestRPIText</TriggerLabel>
 			<ControlPageLabel>closestRPIText</ControlPageLabel>
 			</State>
+
+			<State id="closestRPILast">
+			<ValueType>number</ValueType>
+			<TriggerLabel>closestRPILast</TriggerLabel>
+			<ControlPageLabel>closestRPILast</ControlPageLabel>
+			</State>
+
+			<State id="closestRPITextLast">
+			<ValueType>string</ValueType>
+			<TriggerLabel>closestRPITextLast</TriggerLabel>
+			<ControlPageLabel>closestRPITextSecond</ControlPageLabel>
+			</State>
+
 
 		</States>
 	</Device>
@@ -13353,10 +13396,10 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<TriggerLabel>count</TriggerLabel>
 				<ControlPageLabel>count</ControlPageLabel>
 			</State>
-			<State id="countsPerSecond">
+			<State id="countsPerLast">
 				<ValueType>String</ValueType>
-				<TriggerLabel>countsPerSecond</TriggerLabel>
-				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+				<TriggerLabel>countsPerLast</TriggerLabel>
+				<ControlPageLabel>countsPerLast</ControlPageLabel>
 			</State>
 			<State id="countsPerMinute">
 				<ValueType>String</ValueType>
@@ -13672,10 +13715,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>count</TriggerLabel>
 				<ControlPageLabel>count</ControlPageLabel>
 			</State>
-			<State id="countsPerSecond">
+			<State id="countsPerLast">
 				<ValueType>String</ValueType>
-				<TriggerLabel>countsPerSecond</TriggerLabel>
-				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+				<TriggerLabel>countsPerLast</TriggerLabel>
+				<ControlPageLabel>countsPerLast</ControlPageLabel>
 			</State>
 			<State id="countsPerMinute">
 				<ValueType>String</ValueType>

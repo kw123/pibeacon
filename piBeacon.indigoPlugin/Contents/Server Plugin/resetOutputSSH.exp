@@ -23,7 +23,7 @@ if {$authKeyOrPassword == "assword"} {
 sleep 0.5
 expect ":" { }
 send "sudo rm /home/pi/pibeacon/execcommands.current\r"
-send "sudo sync;sudo killall python;sudo reboot -f\r"
+send "sudo sync;sudo killall python;sleep 4;sudo reboot -f\r"
 
 set timeout 0.1
 expect eof

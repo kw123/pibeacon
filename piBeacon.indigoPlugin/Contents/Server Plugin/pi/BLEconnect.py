@@ -238,7 +238,7 @@ def execBLEconnect():
 
 
 
-	U.logger.log(30, "BLEconnect: using mac:"+myBLEmac+";  "+useHCI	+"; bus:"+HCIs[useHCI]["bus"])
+	U.logger.log(30, "BLEconnect: using mac:{};  useHCI: {}; bus: {}; serching for MACs:\n{}".format(myBLEmac, useHCI, HCIs[useHCI]["bus"] , macList))
 
 	while True:
 

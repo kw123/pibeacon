@@ -26,7 +26,7 @@ if {$authKeyOrPassword == "assword"} {
 expect "pi@" { 
 	sleep 1
 	set timeout 60
-	send "cd /home/pi/pibeacon; sudo hciconfig $HCI down;sudo hciconfig $HCI up; sudo hcitool lescan & sleep $collectTime  && sudo pkill --signal SIGINT hcitool;sudo python master.py \r"
+	send "cd /home/pi/pibeacon; sudo hciconfig $HCI down;sudo hciconfig $HCI up; sudo hcitool lescan & sleep $collectTime  && sudo pkill --signal SIGINT hcitool;nohup sudo python master.py \r"
     }
 expect "Killed" {send "exit\r"}
 expect eof

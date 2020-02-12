@@ -914,12 +914,25 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
     <MenuItem id="getBatteryLevels">
         <Name>Get iBeacons parameters from rPi</Name>
         <ConfigUI>
+			<Field id="infoLabelINPUT0" type="label" >
+				<Label>Get update for ALL beacons</Label> 
+			</Field>
              <Field id="piServerNumber"   type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm " >
-                <Label>select rPi to use for query, use ALL for optimized distribution</Label>
+               <Label>select rPi to use for query, use ALL for optimized distribution</Label>
                 <List class="self" filter="" method="filterPiBLE" dynamicReload="false"/>
              </Field>
-             <Field  id="exec" type="button"	>
+             <Field  id="execAll" type="button"	>
                 <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>getBeaconParametersCALLBACKmenu</CallbackMethod>
+             </Field>
+			<Field id="infoLabelINPUT1" type="label" >
+				<Label>OR get update for ONE specific beacon</Label> 
+			</Field>
+             <Field id="devIdOfBeacon"   type="menu" defaultValue=""  >
+                <Label>select beacon from list</Label>
+                <List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false"/>
+             </Field>
+             <Field  id="execBeacon" type="button"	>
+                <Label> ....after selection click</Label><Title>EXECUTE</Title> <CallbackMethod>getONEBeaconParametersCALLBACKmenu</CallbackMethod>
              </Field>
         </ConfigUI>
     </MenuItem>

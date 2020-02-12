@@ -23,7 +23,7 @@ if {$authKeyOrPassword == "assword"} {
 
 sleep 1
 expect ":" { }
-send "sudo /usr/bin/python /home/pi/pibeacon/installLibs.py  force &\r"
+send "nohup sudo /usr/bin/python /home/pi/pibeacon/installLibs.py  force &\r"
 
 set timeout 0.1
 expect eof
