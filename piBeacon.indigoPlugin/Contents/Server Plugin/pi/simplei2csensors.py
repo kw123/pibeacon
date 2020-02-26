@@ -4027,19 +4027,19 @@ def doDisplay():
 		except:
 			initDisplay=time.time() # start display.py if we come here after startup first time
 			print " starting display from simplei2csensors 1"
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&" , shell=True)
 			time.sleep(0.2)
 
 		if time.time() - initDisplay > 3600*3: # once every 3 hour restart display
 			print " starting display from simplei2csensors 2"
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&" , shell=True)
 			initDisplay =time.time()
 			time.sleep(0.2)
 
 		
 		if not U.pgmStillRunning("display.py"):
 			print " starting display from simplei2csensors 3"
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&" , shell=True)
 			time.sleep(0.2)
 			initDisplay =time.time()
 
@@ -4444,7 +4444,7 @@ def doDisplay():
 			except	Exception, e:
 				U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				if unicode(e).find("No space left on device") >-1:
-					os.system("rm "+G.homeDir+"temp/* ")
+					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
 	except	Exception, e:
 		U.logger.log(30,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

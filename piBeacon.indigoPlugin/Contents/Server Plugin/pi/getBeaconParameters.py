@@ -24,7 +24,7 @@ def getBeaconParameters(devices):
 	try:	
 		devices = json.loads(devices)
 		if len(devices) ==0: return
-		os.system("echo getbeaconparameters  > "+G.homeDir+"temp/stopBLE")
+		subprocess.call("echo getbeaconparameters  > "+G.homeDir+"temp/stopBLE", shell=True)
 		ret = subprocess.Popen("/bin/hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # disenable bluetooth
 		time.sleep(0.1)
 		ret = subprocess.Popen("/bin/hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
@@ -99,7 +99,7 @@ def getBeaconParameters(devices):
 	if data !={}:
 		U.sendURL(data, wait=False, squeeze=False)
 
-	os.system("rm "+G.homeDir+"temp/stopBLE")
+	subprocess.call("rm "+G.homeDir+"temp/stopBLE", shell=True)
 	killMyselfAtEnd = True
 	return
 
@@ -131,5 +131,5 @@ if True: #__name__ == "__main__":
 	if killMyselfAtEnd: 
 		#U.logger.log(20, u"exec cmd: killing myself at PID {}".format(myPID))
 		time.sleep(5)
-		os.system("sudo kill -9 "+str(myPID) )
+		subprocess.call("sudo kill -9 "+str(myPID), shell=True )
 	exit(0)

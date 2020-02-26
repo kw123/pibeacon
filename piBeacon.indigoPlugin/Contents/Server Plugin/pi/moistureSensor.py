@@ -7,9 +7,6 @@ import smbus
 import math
 import time
 
-from board import SCL, SDA
-import busio
-from adafruit_seesaw.seesaw import Seesaw
 
 
 sys.path.append(os.getcwd())
@@ -24,44 +21,69 @@ G.program = "moistureSensor"
 class MoistureChirp:
 	def __init__(self,  address=0x20):
 
-		self.address =address
-		self.smbus = SMBus(1)
-		self.smbus.write_byte(self.address, 0x06) # reset
-		time.sleep(0.1)
-		#send wake up , need to wait 1 sec after
-		self.smbus.read_byte_data(self.address, 0x07) 
-		time.sleep(1)
-		self.version = self.smbus.read_byte_data(self.address, 0x07) 
-		time.sleep(1)
+		try:
+			self.version = 0
+			import smbus
+			self.address = 0x20
+			self.bus = smbus.SMBus(1)
+			time.sleep(0.1)
+			#send wake up , need to wait after
+			self.bus.read_byte_data(self.address, 0x07) 
+			time.sleep(1)
+			self.version = self.bus.read_byte_data(self.address, 0x07) 
+
+			# don't do a reset 
+			#time.sleep(0.1)
+			#self.bus.write_byte(self.address, 0x06) # reset
+
+			time.sleep(1)
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		return 
 
-
-	def getVersion(): 
+	def getVersion(self): 
 		return self.version
 
-	def getdata(): 
+	def getdata(self, moisture=True, temp=True, illuminance=True): 
 		retData={"temp":-99, "illuminance":-99, "moisture":-99}
-		# wait until ready
-		for ii in range(20):
-			if not self.smbus.read_byte_data(self.address, 0x09): 
-				ret = self.smbus.read_word_data(self.address, 0x05)
-				retData["temp"] =  ((ret & 0xFF) << 8) + (ret >> 8)
-				break 
-			time.sleep(0.02)
+		try:
+			if temp:
+				for ii in range(20):
+					if not self.bus.read_byte_data(self.address, 0x09): 
+						time.sleep(0.05)
+						ret = self.bus.read_word_data(self.address, 0x05)
+						retData["temp"] =  ((ret & 0xFF) << 8) + (ret >> 8)
+						break 
+		except:
+			U.logger.log(30, u"in Line {} has error={} temp ".format(sys.exc_info()[-1].tb_lineno, e))
 
-		for ii in range(20):
-			self.smbus.write_byte(self.address, 0x03)
-			if not self.smbus.read_byte_data(self.address, 0x09): 
-				val = self.smbus.read_word_data(self.address, 0x04)
-				retData["illuminance"] = ((ret & 0xFF) << 8) + (ret >> 8) 
-				break 
-			time.sleep(0.02)
-		for ii in range(20):
-			if not self.smbus.read_byte_data(self.address, 0x09): 
-				val = self.smbus.read_word_data(self.address, 0x00)
-				retData["moisture"] = ((ret & 0xFF) << 8) + (ret >> 8) 
-				break 
-			time.sleep(0.02)
+		try:
+			if moisture:
+				for ii in range(20):
+					if not self.bus.read_byte_data(self.address, 0x09): 
+						time.sleep(0.05)
+						ret = self.bus.read_word_data(self.address, 0x00)
+						retData["moisture"] = ((ret & 0xFF) << 8) + (ret >> 8) 
+						break 
+		except:
+			U.logger.log(30, u"in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
+
+		try:
+			if illuminance:
+				il = 0
+				for kk in range(3):
+					for ii in range(20):
+						self.bus.write_byte(self.address, 0x03)
+						if not self.bus.read_byte_data(self.address, 0x09): 
+							time.sleep(0.05)
+							ret = self.bus.read_word_data(self.address, 0x04)
+							il = ((ret & 0xFF) << 8) + (ret >> 8) 
+							break 
+					if il != 0: break
+					time.sleep(1)
+				retData["illuminance"] = il 
+		except:
+			U.logger.log(30, u"in Line {} has error={} illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		return retData
 # ===========================================================================
@@ -113,7 +135,7 @@ def readParams():
 			old = U.getI2cAddress(sensors[sensor][devId], default ="")
 			try:
 				if "i2cAddress" in sensors[sensor][devId]:
-					i2cAddress = float(sensors[sensor][devId]["i2cAddress"])
+					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
 			except:
 				i2cAddress = 119	   
 			if old != i2cAddress:  restart = True 
@@ -130,9 +152,7 @@ def readParams():
 				if "sensorMode" in sensors[sensor][devId]: 
 					sensorMode[devId]= sensors[sensor][devId]["sensorMode"]
 			except:
-				sensorMode[devId] = "chirp"
-
-
+				sensorMode[devId] = "chirp-2.7"
 
 			try:
 				if "minSendDelta" in sensors[sensor][devId]: 
@@ -142,7 +162,7 @@ def readParams():
 
 				
 			if devId not in SENSOR or  restart:
-				U.logger.log(20," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs) )
+				U.logger.log(30," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}, sensorMode:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs, sensorMode[devId]) )
 				startSensor(devId, i2cAddress)
 				if SENSOR[devId] =="":
 					return
@@ -180,12 +200,16 @@ def startSensor(devId,i2cAddress):
 		try:
 			time.sleep(1)
 			if sensorMode[devId]== "adafruit":
+				from board import SCL, SDA
+				import busio
+				from adafruit_seesaw.seesaw import Seesaw
 				i2c_bus = busio.I2C(SCL, SDA)
-				SENSOR[devId]  = Seesaw(i2c_bus, addr=i2cAdd)
+				SENSOR[devId]  = Seesaw(i2c_bus, addr=i2cAddress)
 
-			elif sensorMode[devId] == "chirp":
-				SENSOR[devId] = MoistureChirp(addr=i2cAdd)
-				U.logger.log(30, u"started chirp sensor, version= ={}".format(SENSOR[devId].getVersion()) )
+			elif sensorMode[devId].find("chirp") >-1:
+				SENSOR[devId] = MoistureChirp(address=i2cAddress)
+				v = SENSOR[devId].getVersion()
+				U.logger.log(30, u"started chirp sensor, version={}".format(v) )
 	
 		except	Exception as e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -222,8 +246,14 @@ def getValues(devId):
 				tempL[goodM]  		= SENSOR[devId].get_temp()
 				moistureL[goodM]	= SENSOR[devId].moisture_read()
 
-			elif sensorMode[devId] == "chirp":
-				dataFromSens  = SENSOR[devId].getdata()
+			elif sensorMode[devId] == "chirp-2.7":
+				dataFromSens  = SENSOR[devId].getdata(moisture=True, temp=True, illuminance=True)
+				if dataFromSens["moisture"] == -99: return "badSensor"
+				tempL[goodM]  		=  dataFromSens["temp"]/10.
+				illuminanceL[goodM] =  dataFromSens["illuminance"]
+				moistureL[goodM]	=  dataFromSens["moisture"]
+			else:
+				dataFromSens  = SENSOR[devId].getdata(moisture=True, temp=False, illuminance=False)
 				if dataFromSens["moisture"] == -99: return "badSensor"
 				tempL[goodM]  		=  dataFromSens["temp"]/10.
 				illuminanceL[goodM] =  dataFromSens["illuminance"]
@@ -274,7 +304,7 @@ def execMoistureSensor():
 	lastRead					= 0
 	minSendDelta				= 5.
 	loopCount					= 0
-	sensorRefreshSecs			= 3
+	sensorRefreshSecs			= 9
 	sensorList					= []
 	sensors						= {}
 	sensor						= G.program

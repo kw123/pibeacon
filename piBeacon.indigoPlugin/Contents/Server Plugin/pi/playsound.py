@@ -29,7 +29,7 @@ def killOldPgm(myPID,pgmToKill):
                 pid=int(line[1])
                 if pid == int(myPID): continue
                 U.logger.log(30, "killing "+pgmToKill)
-                os.system("kill -9 "+str(pid))
+                subprocess.call("kill -9 "+str(pid), shell=True)
         except Exception, e:
             U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -56,7 +56,7 @@ try:
     killOldPgm(myPID, "playsound.py")  # old old instances of myself if they are still running
     cmdOut= cmd["player"]+ " "+homeDir+"soundfiles/"++ cmd["file"] +" &"
     U.logger.log(10, cmdOut)
-    os.system(cmdOut)
+    subprocess.call(cmdOut, shell=True)
 except  Exception, e:
     U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 

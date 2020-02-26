@@ -92,7 +92,6 @@ sendThread			= {}
 rebootIfNoMessagesSeconds = 99999999999
 osVersion 			= 0
 ipOfRouter			= ""
-enableVoltageCheck	= "0"
 enableRebootCheck	= "restartLoop"
 pythonVersion		= 2
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
@@ -124,8 +123,10 @@ programFiles=[			"beaconloop",
 						"BLEsensor",
 						"setGPIO",
 						"playsound",
+						"PCF8591",
+						"ADS1x15",
 						"checkSystemLOG",
-						"copyToTemp"
+						"copyToTemp",
 						"checkVoltage"]
 
 specialOutputList=[		"display",
@@ -147,6 +148,8 @@ specialSensorList =[ 	"amg88xx",
 						"APDS9960",
 						"bme680",
 						"bno055" ,
+						"PCF8591",
+						"ADS1x15",
 						"ccs811",
 						"DHT",
 						"hmc5883L",

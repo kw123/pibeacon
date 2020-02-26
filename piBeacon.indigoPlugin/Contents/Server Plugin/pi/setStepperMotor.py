@@ -559,7 +559,7 @@ def checkForNewImput():
 			if restart:
 				time.sleep(0.1)
 				U.restartmyself()
-				os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
+				subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 			if stopMoveNOW[devId]: 
 				print" clear queue bf " ,actionQueue[devId].qsize() 
@@ -641,7 +641,7 @@ except:
 	pass
 
 lastAlive = time.time()
-os.system("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor)
+subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor, shell=True)
 
 
 U.killOldPgm(myPID,G.program+".py")# del old instances of myself if they are still running

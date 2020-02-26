@@ -333,9 +333,9 @@ badSensor					= 0
 sensorActive				= False
 loopSleep					= 0.5
 rawOld						= ""
-INAsensor					={}
-deltaX				  = {}
-myPID		= str(os.getpid())
+INAsensor					= {}
+deltaX						= {}
+myPID						= str(os.getpid())
 U.setLogging()
 
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running

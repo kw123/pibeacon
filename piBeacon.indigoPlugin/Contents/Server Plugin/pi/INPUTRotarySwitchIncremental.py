@@ -255,7 +255,7 @@ def startGPIO(devId):
 				import Queue
 				if not U.pgmStillRunning("pigpiod"): 	
 					U.logger.log(30, "starting pigpiod")
-					os.system("sudo pigpiod &")
+					subprocess.call("sudo pigpiod &", shell=True)
 					time.sleep(0.5)
 					if not U.pgmStillRunning("pigpiod"): 	
 						U.logger.log(30, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888")

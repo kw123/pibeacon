@@ -22,8 +22,9 @@ if {$authKeyOrPassword == "assword"} {
 }
 
 expect "Last login:" { }
-send "sudo killall -9 python;sleep 0.5;sudo reboot -f\r"
-
+sleep 3
+send "sudo killall -9 python;sleep 4;sudo reboot -f\r"
+sleep 3
 expect "Rebooting" {}
-set timeout 0.1
+set timeout 1s
 expect eof

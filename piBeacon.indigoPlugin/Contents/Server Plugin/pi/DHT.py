@@ -75,13 +75,15 @@ def getDHT(sensor,dataI):
 					t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
 					if t[ii] =="":
 						time.sleep(4)
-	
-				if abs(t[0]-t[1]) > 3 or t[0] == -1000 or t[1] == -1000 or h[0] == -1000 or h[1] == -1000:
+				try: 
+					if abs(t[0]-t[1]) > 3 or t[0] == -1000 or t[1] == -1000 or h[0] == -1000 or h[1] == -1000:
 					# bad result 
-					t = ""; h=""
-				else:
-					t = (t[0] + t[1] )/2.					
-					h = (h[0] + h[1] )/2.					
+						t = ""; h=""
+					else:
+						t = (t[0] + t[1] )/2.					
+						h = (h[0] + h[1] )/2.	
+				except:
+					t = ""; h=""	
 
 				if t != "":
 					try:	

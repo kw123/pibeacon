@@ -113,7 +113,7 @@ def readNew():
         if restart:
             U.logger.log(10, u"restarting radio")
             time.sleep(0.1)
-            os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
+            subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
     
     except  Exception, e:
         U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -345,7 +345,7 @@ except:
     pass
 
 lastAlive      = time.time()
-os.system("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor)
+subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor, shell=True)
 
 frequency       =  defFreq
 if "frequency" in command:

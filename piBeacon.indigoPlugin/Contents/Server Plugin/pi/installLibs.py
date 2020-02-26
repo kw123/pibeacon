@@ -295,16 +295,16 @@ def doReboot(tt=1,text="",cmd=""):
 	print " rebooting / shutdown ", text
 	time.sleep(tt)
 	if cmd =="":
-		os.system(rebootCommand)
+		subprocess.call(rebootCommand, shell=True)
 	else:
-		os.system(cmd)
+		subprocess.call(cmd, shell=True)
 
 
 global debug, rebootCommand
 rebootCommand ="reboot now"
 
 if not os.path.isdir(G.logDir):
-	os.system("mkdir "+G.logDir +" 2>&1 1>/dev/null &")
+	subprocess.call("mkdir "+G.logDir +" 2>&1 1>/dev/null &", shell=True)
 
 U.setLogging()
 
@@ -336,7 +336,7 @@ try:
 	U.killOldPgm(myPID,"receiveGPIOcommands.py")
 	U.killOldPgm(myPID,"ultrasoundDistance.py")
 	U.killOldPgm(myPID,"display.py")
-	os.system("rm " + G.homeDir + "installLibs.done	 >/dev/null 2>&1")
+	subprocess.call("rm " + G.homeDir + "installLibs.done	 >/dev/null 2>&1", shell=True)
 	test[0] = -1
 	arguments = unicode(sys.argv)
 except:

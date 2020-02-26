@@ -85,7 +85,7 @@ def readParams():
 					tznew  = int(timeZone.split(" ")[0])
 					if tznew != currTZ:
 						U.logger.log(30, u"changing timezone from "+str(currTZ)+"  "+G.timeZones[currTZ+12]+" to "+str(tznew)+"  "+G.timeZones[tznew+12])
-						os.system("sudo cp /usr/share/zoneinfo/"+G.timeZones[tznew+12]+" /etc/localtime")
+						subprocess.call("sudo cp /usr/share/zoneinfo/"+G.timeZones[tznew+12]+" /etc/localtime", shell=True)
 						currTZ = tznew
 
 			clockDict["timeZone"] = str(currTZ)+" "+ G.timeZones[currTZ+12]
@@ -299,7 +299,7 @@ def startNEOPIXEL(setClock = ""):
 		
 		if not U.pgmStillRunning("neopixel.py neopixelClock"):
 			U.killOldPgm(myPID,"neopixel.py")
-			os.system("/usr/bin/python "+G.homeDir+"neopixel.py neopixelClock &" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"neopixel.py neopixelClock &", shell=True)
 		setNEOinput(out)
 
 	except	Exception, e:
@@ -645,10 +645,10 @@ def setAllSwitchesOff():
 def startWithNewDate(newDate,set):
 	U.logger.log(10, set+':	;;; date -s "'+newDate+'" ' +set)
 	if newDate !="":
-		os.system("date -s '"+newDate+"'")
+		subprocess.call("date -s '"+newDate+"'", shell=True)
 		if "useRTC" in inp and (inp["useRTC"] !="" and inp["useRTC"] !="0"):
 				U.logger.log(10, " sync hwclock" )
-				os.system("sudo hwclock -w") # set hw clock to system time stamp, only works if HW is enabled
+				subprocess.call("sudo hwclock -w", shell=True) # set hw clock to system time stamp, only works if HW is enabled
 	U.logger.log(10, 'set1:	;;; date -s finished ')
 	startNEOPIXEL()
 	### no!	  resetGPIO = True
@@ -691,7 +691,7 @@ def makeTZ(tz):
 	U.writeTZ(  cTZ="tz" )
 
 def writeTZ(tz ):
-	os.system("sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime")
+	subprocess.call("sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime", shell=True)
 
 
 #################################
@@ -727,7 +727,7 @@ def startNEOPIXELNewTime(h,m,d,tz=""):
 		dd = datetime.datetime.now() - datetime.timedelta(d-dd.day)
 		newDate = dd.strftime("%Y-%m-%d ")+"%02d"%h+":"+"%02d"%m+":00"
 	U.logger.log(10, 'bf startNEOPIXEL:	;;; date -s "'+newDate+'"')
-	#os.system("date -s '"+newDate+"'")
+	#subprocess.call("date -s '"+newDate+"'", shell=True)
 	startNEOPIXEL(setClock="%02d"%d+":%02d"%h+":%02d"%m+":00")
  
 #################################
@@ -930,7 +930,7 @@ def saveParameters():
 	f.write(json.dumps(inp, sort_keys=True, indent=2))
 	f.close()
 	lastNeoParamsSet = time.time() 
-	os.system("touch "+G.homeDir+"temp/touchFile")
+	subprocess.call("touch "+G.homeDir+"temp/touchFile", shell=True)
 	return
 
 #################################
@@ -1044,18 +1044,18 @@ def afterAdhocWifistarted(maxTime):
 def resetEverything():
 	print "resetting everything back to default, then reboot "
 	U.killOldPgm(myPID,"neopixel.py")
-	os.system('sudo cp '+G.homeDir+'interfaces-DEFAULT-clock /etc/network/interfaces')
-	os.system('cp '+G.homeDir+'parameters-DEFAULT-clock '+G.homeDir+'parameters')
-	os.system('sudo cp '+G.homeDir+'wpa_supplicant.conf-DEFAULT-clock /etc/wpa_supplicant/wpa_supplicant.conf')
+	subprocess.call('sudo cp '+G.homeDir+'interfaces-DEFAULT-clock /etc/network/interfaces', shell=True)
+	subprocess.call('cp '+G.homeDir+'parameters-DEFAULT-clock '+G.homeDir+'parameters', shell=True)
+	subprocess.call('sudo cp '+G.homeDir+'wpa_supplicant.conf-DEFAULT-clock /etc/wpa_supplicant/wpa_supplicant.conf', shell=True)
 	time.sleep(2)
-	os.system("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f")
+	subprocess.call("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f", shell=True)
 	return ## dummy
 
 #################################
 def shutdown():
 	print" we are shutting down now"
 	time.sleep(1.5)
-	os.system("sudo killall -9 python;sleep 2; shutdown now")
+	subprocess.call("sudo killall -9 python;sleep 2; shutdown now", shell=True)
 	return ## dummy
 
 
@@ -1077,8 +1077,8 @@ def readMarksFile():
 	
 #################################
 def restorePattern():
-	os.system(" cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"patterns") 
-	os.system(" cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"temp/patterns") 
+	subprocess.call("cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"patterns", shell=True) 
+	subprocess.call("cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"temp/patterns", shell=True) 
 	return 
 	
 #################################
@@ -1188,10 +1188,10 @@ setupGPIOforTimeset()
 slTime = 1
 
 #save old wifi setting
-os.system('cp /etc/network/interfaces '+G.homeDir+'interfaces-old')
+subprocess.call('cp /etc/network/interfaces '+G.homeDir+'interfaces-old', shell=True)
 
 # stop x11 vnc listener
-#os.system('sudo systemctl stop vncserver-x11-serviced.service')
+#subprocess.call('sudo systemctl stop vncserver-x11-serviced.service', shell=True)
 
 	
 sleepTime = slTime

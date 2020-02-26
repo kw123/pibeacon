@@ -23,5 +23,6 @@ if {$authKeyOrPassword == "assword"} {
 expect "Last login:"
 sleep 3
 send "cd /home/pi/pibeacon;nohup sudo /usr/bin/python master.py &\r"
+sleep 2
 set timeout 1
 expect eof

@@ -28,7 +28,7 @@ G.program = "BLEconnect"
 def readParams():
 		global debug, ipOfServer,myPiNumber,passwordOfServer, userIdOfServer, authentication,ipOfServer,portOfServer,sensorList,restartBLEifNoConnect
 		global macList 
-		global oldRaw, lastRead
+		global oldRaw, lastRead, BLEconnectMode
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return False
@@ -44,6 +44,7 @@ def readParams():
 			U.getGlobalParams(inp)
 			if "restartBLEifNoConnect"	in inp:	 restartBLEifNoConnect=		  (inp["restartBLEifNoConnect"])
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])
+			if "BLEconnectMode"			in inp:	 BLEconnectMode=			  (inp["BLEconnectMode"])
 
 			if "BLEconnect" not in sensorList:
 				U.logger.log(30, u" no iphoneBLE definitions supplied (1) stopping")
@@ -90,7 +91,7 @@ def readParams():
 def tryToConnect(MAC,BLEtimeout,devId):
 	global errCount
 
-	ret	 = {"signal": -999, "txPower": -999,"flag0ok":0,"byte2":0}
+	retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
 	try:
 		for ii in range(5):	 # wait until (wifi) sending is finsihed
 			if os.path.isfile(G.homeDir + "temp/sending"):
@@ -114,19 +115,19 @@ def tryToConnect(MAC,BLEtimeout,devId):
 			handle = struct.unpack("8xH14x", request.tostring())[0]
 			cmd_pkt=struct.pack('H', handle)
 			# Send command to request RSSI
-			rssi = bt.hci_send_req(hci_sock, bt.OGF_STATUS_PARAM, bt.OCF_READ_RSSI, bt.EVT_CMD_COMPLETE, 4, cmd_pkt)
+			socdata = bt.hci_send_req(hci_sock, bt.OGF_STATUS_PARAM, bt.OCF_READ_RSSI, bt.EVT_CMD_COMPLETE, 4, cmd_pkt)
 			bt_sock.close()
 			hci_sock.close()
-			flag0ok	  = struct.unpack('b', rssi[0])[0]
-			txPower	  = struct.unpack('b', rssi[1])[0]
-			byte2	  = struct.unpack('b', rssi[2])[0]
-			signal	  = struct.unpack('b', rssi[3])[0]
+			flag0ok	  = struct.unpack('b', socdata[0])[0]
+			txPower	  = struct.unpack('b', socdata[1])[0]
+			byte2	  = struct.unpack('b', socdata[2])[0]
+			rssi	  = struct.unpack('b', socdata[3])[0]
 			#print MAC, test0, txPower, test2, signal
-			ret["flag0ok"]	= flag0ok
-			ret["byte2"]	= byte2
-			if flag0ok == 0 and not (txPower == signal and signal == 0 ):
-				ret["signal"]	= signal
-				ret["txPower"]	= txPower
+			retdata["flag0ok"]	= flag0ok
+			retdata["byte2"]	= byte2
+			if flag0ok == 0 and not (txPower == rssi and rssi == 0 ):
+				retdata["rssi"]	= rssi
+				retdata["txPower"]	= txPower
 		except IOError:
 			# Happens if connection fails (e.g. device is not in range)
 			bt_sock.close()
@@ -138,16 +139,55 @@ def tryToConnect(MAC,BLEtimeout,devId):
 					break
 			errCount += 1
 			if errCount  < 10: return {}
-			os.system("rm {}temp/stopBLE > /dev/null 2>&1".format(G.homeDir))
+			subprocess.call("rm {}temp/stopBLE > /dev/null 2>&1".format(G.homeDir), shell=True)
 			U.logger.log(20, u"in Line {} has error ... sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno))
-			U.restartMyself(reason="sock.recv error",delay = 10)
+			U.restartMyself(reason="sock.recv error", delay = 10)
 
 	except	Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	U.logger.log(10, "{}:  {}".format(MAC, ret))
+	U.logger.log(10, "{}:  {}".format(MAC, retdata))
 	errCount = 0
-	return ret
+	return retdata
 
+
+
+
+#################################
+def tryToConnectCommandLine(MAC,BLEtimeout,useHCI):
+	global errCount
+
+	retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
+	try:
+		for ii in range(5):	 # wait until (wifi) sending is finsihed
+			if os.path.isfile(G.homeDir + "temp/sending"):
+				#print "delaying hci"
+				time.sleep(0.5)
+			else:
+				 break
+		# Connection timed out
+		# Input/output error ok for 1. step, not ok for step 2
+		#  stop:  "Device is not available."
+	  #timeout -s SIGINT 5s hcitool cc  18:65:90:6A:B9:0D; hcitool rssi 18:65:90:6A:B9:0D; hcitool tpl 18:65:90:6A:B9:0D
+	  #timeout -s SIGINT 5s hcitool cc  18:65:90:6A:B9:0D; hcitool rssi 18:65:90:6A:B9:0D; hcitool tpl 18:65:90:6A:B9:0D
+		cmd = "sudo timeout -s SIGINT {}s hcitool -i {}  cc {}; hcitool -i {} rssi {} ; hcitool -i {} tpl {}".format(BLEtimeout, useHCI, MAC, useHCI,  MAC, useHCI, MAC)
+		U.logger.log(10, cmd)
+		ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		parts = ret[0].strip("\n").split("\n")
+		U.logger.log(10, "{}  1. try ret: {} --- err>>{}<<".format(MAC, ret[0].strip("\n"), ret[1].strip("\n")))
+
+		for line in parts:
+				if line.find("RSSI return value:") >- 1:
+					retdata["rssi"] = int(line.split("RSSI return value:")[1].strip())
+				if line.find("Current transmit power level:") > -1:
+					retdata["txPower"] = int(line.split("Current transmit power level:")[1].strip())
+
+
+	except  Exception, e:
+			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			return {}
+	
+	U.logger.log(10, "{} return data: {}".format(MAC, retdata))
+	return retdata
 
 
 
@@ -162,6 +202,8 @@ def execBLEconnect():
 	global macList,oldParams
 	global oldRaw,	lastRead
 	global errCount
+	global BLEconnectMode
+	BLEconnectMode			= "socket" # or commandLine
 	oldRaw					= ""
 	lastRead				= 0
 	errCount				= 0
@@ -231,14 +273,18 @@ def execBLEconnect():
 
 	#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 	HCIs = U.whichHCI()
-	useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
-	if BLEid <0:
-		U.logger.log(0, "BLEconnect: NO BLE STACK UP ")
-		sys.exit(1)
+	if HCIs["hci"] !={}:
+		useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo,"UART")
+		if BLEid < 0:
+			U.logger.log(0, "BLEconnect: BLE STACK is not  UP  HCI:{}".format(HCIs))
+			sys.exit(1)
+	else:
+			U.logger.log(0, "BLEconnect: BLE STACK HCI is empty HCI:{}".format(HCIs))
+			sys.exit(1)
 
 
 
-	U.logger.log(30, "BLEconnect: using mac:{};  useHCI: {}; bus: {}; serching for MACs:\n{}".format(myBLEmac, useHCI, HCIs[useHCI]["bus"] , macList))
+	U.logger.log(20, "BLEconnect: using mac:{};  useHCI: {}; bus: {}; mode: {} serching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
 
 	while True:
 
@@ -253,7 +299,7 @@ def execBLEconnect():
 
 			if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
 				U.logger.log(30, "requested a restart of BLE stack due to no signal for {:.0f} seconds".format(tt-lastSignal))
-				os.system("echo xx > {}temp/BLErestart".format(G.homeDir)) # signal that we need to restart BLE
+				subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
 				lastSignal = time.time() +30
 				restartCount +=1
 
@@ -281,7 +327,7 @@ def execBLEconnect():
 							if quick:
 								for ml in macList :
 									if onlyThisMAC != "" and onlyThisMAC != ml: continue
-									macList[ml]["lastData"]	   = {"signal":-999,"txPower":-999}
+									macList[ml]["lastData"]	   = {"rssi":-999,"txPower":-999}
 									macList[ml]["lastTesttt"]  = 0.
 									#macList[ml]["lastMsgtt"]  = 0.
 									macList[ml]["retryIfUPtemp"] = macList[ml]["retryIfUP"]
@@ -307,14 +353,18 @@ def execBLEconnect():
 				elif tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshDownSecs"] - macList[thisMAC]["quickTest"]:	 continue
 
 
-				data0 = tryToConnect(thisMAC,macList[thisMAC]["BLEtimeout"],BLEid)
-				#if nowP: print "nowP:	testing: "+thisMAC+"  "+ unicode(data0)
+				######### here we actually get the data from the phones ###################
+				if BLEconnectMode =="socket":
+					data0 = tryToConnect(thisMAC, macList[thisMAC]["BLEtimeout"], BLEid)
+				else:
+					data0 = tryToConnectCommandLine(thisMAC, macList[thisMAC]["BLEtimeout"], useHCI)
+
 
 				#print	data0
 				macList[thisMAC]["lastTesttt"] =tt
 
 				if	data0 != {}:
-					if data0["signal"] !=-999:
+					if data0["rssi"] !=-999:
 						macList[thisMAC]["up"] =True
 						lastSignal	 = time.time()
 						restartCount = 0
@@ -324,7 +374,7 @@ def execBLEconnect():
 					else:
 						macList[thisMAC]["up"] =False
 
-					if data0["signal"]!=macList[thisMAC]["lastData"] or (tt-macList[thisMAC]["lastMsgtt"]) > (macList[thisMAC]["iPhoneRefreshUpSecs"]-1.): # send htlm message to indigo, if new data, or last msg too long ago
+					if data0["rssi"]!=macList[thisMAC]["lastData"] or (tt-macList[thisMAC]["lastMsgtt"]) > (macList[thisMAC]["iPhoneRefreshUpSecs"]-1.): # send htlm message to indigo, if new data, or last msg too long ago
 						if macList[thisMAC]["lastData"] != -999 and not macList[thisMAC]["up"] and (tt-macList[thisMAC]["lastMsgtt"]) <	 macList[thisMAC]["iPhoneRefreshUpSecs"]+2.:
 							macList[thisMAC]["quickTest"] =macList[thisMAC]["iPhoneRefreshDownSecs"]/2.
 							continue
@@ -332,7 +382,7 @@ def execBLEconnect():
 						macList[thisMAC]["quickTest"] = 0.
 						#print "af -"+datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"], macList[thisMAC]["quickTest"], data0
 						macList[thisMAC]["lastMsgtt"]  = tt
-						macList[thisMAC]["lastData"] = data0["signal"]
+						macList[thisMAC]["lastData"] = data0["rssi"]
 						data={}
 						data["sensors"]					= {"BLEconnect":{macList[thisMAC]["devId"]:{thisMAC:data0}}}
 						U.sendURL(data)

@@ -24,6 +24,6 @@ sleep 0.5
 expect ":" { }
 send "sudo rm /home/pi/pibeacon/execcommands.current\r"
 send "sudo sync;sudo killall python;sleep 4;sudo reboot -f\r"
-
+sleep 5
 set timeout 0.1
 expect eof

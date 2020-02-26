@@ -584,19 +584,19 @@ def getDistance():
                     if actionShortDistance !="":
                         if actionDistanceOld !="short"  and distance <= actionShortDistanceLimit:
                             if actionDistanceOld != "short":
-                                os.system(actionShortDistance)
+                                subprocess.call(actionShortDistance, shell=True)
                                 actionDistanceOld ="short"
 
                     if actionMediumDistance !="":
                         if actionDistanceOld !="medium"  and distance >  actionShortDistanceLimit and distance < actionLongDistanceLimit:
                             if actionDistanceOld != "medium":
-                                os.system(actionMediumDistance)
+                                subprocess.call(actionMediumDistance, shell=True)
                                 actionDistanceOld ="medium"
                             
                     if actionLongDistance !="":
                         if actionDistanceOld !="long"    and distance >=  actionLongDistanceLimit:
                             if actionDistanceOld != "long":
-                                os.system(actionLongDistance)
+                                subprocess.call(actionLongDistance, shell=True)
                                 actionDistanceOld ="long"
                     return  ("%7.1f"%(distance)).strip() #  return in cm/lux
 

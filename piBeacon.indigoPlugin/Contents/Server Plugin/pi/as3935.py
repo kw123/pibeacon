@@ -617,7 +617,7 @@ while True:
 
 	if reStartReq:
 		time.sleep(5)
-		os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
+		subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

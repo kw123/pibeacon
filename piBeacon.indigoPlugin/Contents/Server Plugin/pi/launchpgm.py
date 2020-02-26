@@ -77,7 +77,7 @@ def stopSensors(launchCmd):
 def startSensors(launchCmd):
 		try:
 			# do your init here
-			os.system(launchCmd+" &")
+			subprocess.call(launchCmd+" &", shell=True)
 			## add any init code here for address # addr
 			U.logger.log(30, u"starting	" + unicode(launchCmd) )
 		except	Exception, e:

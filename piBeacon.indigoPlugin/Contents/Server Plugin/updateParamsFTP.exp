@@ -46,7 +46,7 @@ expect "sftp" {  send  "put *  /home/pi/pibeacon/ \r" }
 send "\r"
 sleep .2
 expect "sftp" {  send  "rm /home/pi/pibeacon/temp/touchFile \r" }
-sleep 1
+sleep 3
 expect "sftp" {  send  "quit\r" }
 set timeout 0.1
 expect eof

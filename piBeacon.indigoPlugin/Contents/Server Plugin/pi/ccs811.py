@@ -702,7 +702,7 @@ while True:
 			time.sleep(loopSleep)
 		if reStartReq:
 			time.sleep(5)
-			os.system("/usr/bin/python "+G.homeDir+G.program+".py &")
+			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

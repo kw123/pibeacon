@@ -302,7 +302,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			f.write(sundial)
 			f.close()
 
-		##os.system("kill -9 "+str(pid) )
+		##subprocess.call("kill -9 "+str(pid), shell=True)
 		
 		
 
@@ -337,7 +337,7 @@ U.logger.log(20,"Starting web server with IP#:{}:{}  output file:{}, sundial:{}"
 pid =  os.getpid()
 
 if os.path.isfile(outFile):
-	os.system("rm "+outFile)
+	subprocess.call("rm "+outFile, shell=True)
 
 U.killOldPgm(str(pid),"webserverINPUT.py")
 time.sleep(0.5)

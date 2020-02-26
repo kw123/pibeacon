@@ -33,18 +33,18 @@ def doDisplay():
 			a=initDisplay  # this fails if fist time
 		except:
 			initDisplay=0 # start display.py if we come here after startup first time
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&", shell=True )
 			time.sleep(0.2)
 
 		if initDisplay > 300:
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&", shell=True )
 			initDisplay =0
 			time.sleep(0.2)
 		initDisplay +=1
 
 		
 		if not U.pgmStillRunning("display.py"):
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&", shell=True )
 			time.sleep(0.2)
 
 
@@ -477,7 +477,7 @@ def doDisplay():
 			except	Exception, e:
 				print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 				if unicode(e).find("No space left on device") >-1:
-					os.system("rm "+G.homeDir+"temp/* ")
+					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
 	except	Exception, e:
 		print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)

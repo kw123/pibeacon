@@ -1,4 +1,72 @@
-Added features / changes in v7.117.334 @ 2019-02-09
+Added features / changes in v7.118.338 @ 2020-02-17
+===================================================
+
+1. added option for several sensor types to have red/grey/green status column colors
+   in devcice edit (for sensors only) you can set the condition when the icon should be red/grey/green
+   eg green: 20<x<30, grey 30<=x<60, red x>=60, where x is the sensor value as shown in the status field
+
+2. fixed action shutdown rpi through ssh command timing issue for some slower RPI network connections
+
+3. now has 20 ibeacon RPi and 20 RPI sensor only RPI.
+  you might need to restart the plugin twice to get all the new states loaded.
+
+4. the ibeacon state Names are now Pi_xx_Signal .. _Distance  .._Time = 2 digits for all pi_xx states  ie Pi_1 --> Pi_01, to make it sort better.
+	and there are now 20 ibeacon RPIs (0-19) and 20 non iBeacon RPI (for sensors only) 20-39
+
+5. fixed issue with wrong ip number on RPI when switching between Wifi and ethernet
+
+
+1. upgraded ADC converters, more parameters, models :
+   0. apply offset and multiplier to value
+   1. if Resistor measurement (one resistor to V+or gd, the measurement resistor to gnd or V+, eg light, thermistor ..)
+      will calculate the proper value of the resistor
+   2. if value [min,max] = (INPUT -Min)/Max-Min)
+   3. if  log;  log(value)
+   4. if  1/value;   value = 1/value
+   5. apply offset2 and multiplier2
+   6. format formula and add  unit 
+     any input number can be a simple formula eg 1./255
+
+2. plugin now shows RPI power problems as: 
+	none
+	#0 Under-voltage,
+	#1 ARM freq capped,
+	#2 Curr throttled,
+	#3 Soft temp limit active,
+	#16 Under-voltage occd since reboot,
+	#17 Throttling occd since reboot,
+	#18 ARM freq capped occd since reboot,
+	#19 Soft temp limit occd
+
+3. RPI will reboot if hciconfig shows DOWN for 2 tests in a row ~ 20 sec apart
+
+4. a new program will be running on the RPI: master.sh
+   It will test every 25 secs if master.py is running, if not it will restart it 
+   This is mostly for development as starting master.py from the console and logging out 
+   will kill it after some seconds  .. the parent process stops and then the childprocess also.
+
+5. fixed reboot action, only reboot menue was working
+
+6. cleanup some code in beaconloop and BLEconnect
+
+7. fixed master.sh bug that caused constant restarts of master.py (from V .334)
+
+
+
+1. upgraded ADC converters, more paraemteers, models :
+   1. Resistor mesasurement (one resistor to V+, the mreasurment resistor to gnd, eg light, thermistor ..)
+   2. value [min,max] = (INPUT -Min)/Max-Min)
+   3. lin: (value + offset)* multiplier;  log;  log(value * offset) *multiplier
+   4. format formula and unit 
+   any input number can be a simple formula eg 1./255
+
+2. added option for BLEconnect to work thorugh commandline tools (hcitool) instead of python code.
+  it seems that running BLEconnect together with wifi on the internal chips can create timeout > 1 sec.
+   ie for a pi0-W use an extermnal BLE-dongle and send BOTH iBeacon AND BLEconnect to the external BLE dongle, pings are const at ~ 5msec.
+
+
+
+Added features / changes in v7.117.334 @ 2020-02-11
 ===================================================
 
 1. added menu option to update beacon battery level for a SINGLE beacon, not just all
@@ -21,16 +89,16 @@ Added features / changes in v7.117.334 @ 2019-02-09
  
 
 
-Added features / changes in v7.117.333 @ 2019-02-09
+Added features / changes in v7.117.333 @ 2020-02-09
 ===================================================
 
 1. fixed pressure format for pascal units (%.0f instead of %d as value is float)
    fixed BLEconnect was disabled when switching to 16 RPI
    fixed pressure and humidity offsets, for some sensors (eg BME280) it was applied twice
 
-2. improved dynamic behavior (fast changinging distance) for ultrasound distance sensor.
+2. improved dynamic behavior (fast changing distance) for ultrasound distance sensor.
 
-3. improved BME680 mamangement, added SensorStatus, AirQualityText
+3. improved BME680 manangement, added SensorStatus, AirQualityText
 
 4. option to suppress writing certain high frequency dev/states and variables to SQL logger
    requires Indigo 7.4.1 or higher
@@ -48,7 +116,7 @@ Added features / changes in v7.117.333 @ 2019-02-09
 
 7. changed message structure (pi --> indigo) from a list to a dict, for easier reading
 
-8. added state "updateReason" for iBeacons to indicat why it was updated
+8. added state "updateReason" for iBeacons to indicate why it was updated
    - timer = data once a minute (90+ % of times)
    - new beacon
    - fast down
@@ -59,7 +127,7 @@ Added features / changes in v7.117.333 @ 2019-02-09
 9. can now handle python3.x modules on RPI
 
 
-Added features / changes in v7.116.332 @ 2019-01-30
+Added features / changes in v7.116.332 @ 2020-01-30
 ===================================================
 
 1. ++++ STRUCTURAL CHANGE: ++++
@@ -80,24 +148,24 @@ Added features / changes in v7.116.332 @ 2019-01-30
 
 5. fixed bug with menu command shutdown rpi
 
-6. many smaller fixed and improvemnst in menus and controls 
+6. many smaller fixed and improvements in menus and controls 
 
 
-Added features / changes in v7.115.332 @ 2019-01-23
+Added features / changes in v7.115.332 @ 2020-01-23
 ===================================================
 
 1. optimized acquisition of battery level for ibeacons
-   - repeat process every 8 hours(4/12/20). Request to read if last successfull read was > 17 hour or battery level < 20%
+   - repeat process every 8 hours(4/12/20). Request to read if last successful read was > 17 hour or battery level < 20%
    - send  tasks to closest rpi for each beacon
    - prevent up-->down status change for ibeacons during measurement times
    - generate a warning log entry when ibeacon has bad / old info: > 2 days or < 20% once a day at 8am
-  ==> you need to enable this option idividually for each beacon in device edit
+  ==> you need to enable this option individually for each beacon in device edit
 
 2. split of getBeaconParameters.py from execcommands.py to be able to better mange termination of processes
 
 3. added comments in device edit for battery level setting and process.
 
-4. streamlined plugin process to manage do not do up--> donw status changes while RPIs are busy
+4. streamlined plugin process to manage do not do up--> down status changes while RPIs are busy
 
 5. added several comments and explanations to config and device edit 
 
@@ -105,7 +173,7 @@ Added features / changes in v7.115.332 @ 2019-01-23
 
 
 
-Added features / changes in v7.115.330 @ 2019-01-19
+Added features / changes in v7.115.330 @ 2020-01-19
 ===================================================
 
 1. fixed:  get battery level for noda aiko beacons. they are a little special 
@@ -115,7 +183,7 @@ Added features / changes in v7.115.330 @ 2019-01-19
 
 
 
-Added features / changes in v7.115.329 @ 2019-01-18
+Added features / changes in v7.115.329 @ 2020-01-18
 ===================================================
 
 1. device state " batteryLevelLastUpdate" to iBeacon devices.
@@ -134,7 +202,7 @@ b-Mazda-aaa                               level down to:  11% ... charge or repl
    the plugin will request a battery level update  from the RPIs
 
 
-Added features / changes in v7.115.327 @ 2019-01-15
+Added features / changes in v7.115.327 @ 2020-01-15
 ===================================================
 
 1. adding new rpi does not require a restart of the plugin anymore:
@@ -155,7 +223,7 @@ Added features / changes in v7.115.326 @ 2019-12-11
     available for  Temperature, humidity, pressure, airquality, CO2, VOC
     each has 3 states eg 5 minutes/1 hours /12 hours or 10 minutes /1 hour /6 hours ..
     depending of how which timing makes sense: for co2 and airquaility you want to have fast reaction time (=5 minutes), 
-    for temperature and humidity 10 miutes is fine ..
+    for temperature and humidity 10 minutes is fine ..
     In addition you still have min / max today and yesterday
 
 
@@ -191,7 +259,7 @@ Added features / changes in v7.114.323 @ 2019-11-24
 
 1. improved rd-lidar sensor:
    - 1. added selection (UBS0...4) or autotdetect of USB port
-   - 2. added auto restart when usb gets interrrupted or receonnected
+   - 2. added auto restart when usb gets interrupted or re-connected
    - 3. added option in rdlidar device edit to select if graph data is send from RPi to indigo. That reduces data by factor of > 10.
         That data is not needed if no plots are produced.
    - 4. compressed trigger parameter display in graph (list in one line, empty sections now shown)
@@ -201,8 +269,8 @@ Added features / changes in v7.114.323 @ 2019-11-24
 
 2. fixed INPUTcount sensor, had one wrong index (integer instead of string for GPIO)
 
-3. Added time stamp to temp/messageSend on RPI. That file contains the last message sedn to the RPI. It is overwritten by the next message.
-   follow it with cd pibeacon <ret>  tail -F temp/messageSend <ret> (use -F not -f). lloks linke:
+3. Added time stamp to temp/messageSend on RPI. That file contains the last message send to the RPI. It is overwritten by the next message.
+   follow it with cd pibeacon <ret>  tail -F temp/messageSend <ret> (use -F not -f). looks linke:
    15:15:18 beaconloop:  send -- {"msgs":[["24...
    15:15:19 rdlidar:  send -- {"pi":"0","se...
 
@@ -210,7 +278,7 @@ Added features / changes in v7.114.323 @ 2019-11-24
 Added features / changes in v7.114.322 @ 2019-11-20
 ===================================================
 
-1. fixed global varibale "currTZ not defined"  error on RPI 
+1. fixed global variable "currTZ not defined"  error on RPI 
 
 2. added warning in case /beacon_parameters file becomes too big.
    also moved that file from temp directory to pibeacon directory as it not written to often.
@@ -232,7 +300,7 @@ Added features / changes in v7.114.319 @ 2019-11-17
 1. added RD lidar sensor, see indigo web site for details
 
 
-3. fixes to code on rpi to determin ip numbers etc. ie when in first startup = not connected to indigo
+3. fixes to code on rpi to determine ip numbers etc. ie when in first startup = not connected to indigo
 Added features / changes in v7.113.319 @ 2019-11-13
 ===================================================
 
@@ -240,7 +308,7 @@ Added features / changes in v7.113.319 @ 2019-11-13
 
 2. small fixes to menus
 
-3. fixes to code on rpi to determin ip numbers etc. ie when in first startup = not connected to indigo
+3. fixes to code on rpi to determine ip numbers etc. ie when in first startup = not connected to indigo
 
 
 Added features / changes in v7.113.318 @ 2019-11-07
@@ -255,7 +323,7 @@ Added features / changes in v7.113.318 @ 2019-11-07
 3. added option to setup wifi through file on RPI SSD boot directory. 
    this is the directory visible when you mount the SSD on a mac, it should also contain the file config.txt 
    add a file: wifiInfo.json with the exact format:
-   {"SSID":"abc", "passCode":"def"}
+   wifiInfo.json
    the file name as well as keys and data are case sensitive.
 	   it will add:
 network={

@@ -23,7 +23,7 @@ def readRejects():
 		
 			f=open(file,"r")
 			for line in f.readlines():
-				os.system("echo "+line+" >> "+homeDir+"rejected/rejects.in" )
+				subprocess.call("echo "+line+" >> "+homeDir+"rejected/rejects.in", shell=True )
 				line=line.strip("\n")
 				if len(line) < 30: continue
 				if len(line) > 500: continue

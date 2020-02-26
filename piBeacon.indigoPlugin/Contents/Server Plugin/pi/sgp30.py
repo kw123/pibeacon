@@ -314,7 +314,7 @@ def startSensor2(devId, lastPowerUp=0, init=0):
 				threadDict[devId]["pause"] = True
 			delBaseLine()
 			sensorClass[devId].set_init_air_quality()
-			os.system("echo {}> {}{}.lastInit".format(time.time(), G.homeDir, G.program) )
+			subprocess.call("echo {}> {}{}.lastInit".format(time.time(), G.homeDir, G.program), shell=True )
 			time.sleep(12)
 		else:
 			try: 	lastReadSensor = U.readFloat("{}temp/{}.lastreadSensor".format(time.time(), G.homeDir,G.program),default=0)
@@ -415,7 +415,7 @@ def readBaseLine(devId):
 
 #################################
 def delBaseLine():
-	os.system("rm "+G.homeDir+G.program+".baseline > /dev/null 2>&1")
+	subprocess.call("rm "+G.homeDir+G.program+".baseline > /dev/null 2>&1", shell=True)
 	return 
 
 #################################
@@ -551,7 +551,7 @@ def getValues(devId):
 								deltaN = max(deltaN,delta) 
 								lastValues[devId][xx] = current
 							except: pass
-						os.system("echo {:.0f} > {}temp/{}.lastreadSensor".format(time.time(), G.homeDir,G.program))
+						subprocess.call("echo {:.0f} > {}temp/{}.lastreadSensor".format(time.time(), G.homeDir,G.program), shell=True)
 					else:
 						continue
 					if (  ( ( deltaN > deltaX[devId]  ) or  ( time.time() - abs(G.sendToIndigoSecs) > G.lastAliveSend ) or  quick   ) and  ( time.time() - G.lastAliveSend > minSendDelta ) ):

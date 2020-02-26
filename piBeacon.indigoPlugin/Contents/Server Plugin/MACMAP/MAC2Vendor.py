@@ -34,18 +34,18 @@ class MAP2Vendor:
             self.filePath = pathToMACFiles
             if self.filePath[-1]!="/": self.filePath+="/"
             if not os.path.isdir(self.filePath):
-                os.system("mkdir "+self.filePath)
+                subprocess.call("mkdir "+self.filePath, shell=True)
         else:
             self.filePath = self.MAChome+"indigo/mac2Vendor/"
             if not os.path.isdir(self.MAChome+"indigo"):
-                os.system("mkdir "+self.MAChome+"indigo")
+                subprocess.call("mkdir "+self.MAChome+"indigo", shell=True)
             if not os.path.isdir(self.filePath):
-                os.system("mkdir "+self.filePath)
+                subprocess.call("mkdir "+self.filePath, shell=True)
 
         self.refreshFromIeeAfterDays = refreshFromIeeAfterDays
 
         if not os.path.isdir(self.filePath):
-            os.system("mkdir "+self.filePath)
+            subprocess.call("mkdir "+self.filePath, shell=True)
 
        
         if not self.isFileCurrent("mac2Vendor.json"): 
@@ -81,11 +81,11 @@ class MAP2Vendor:
         cmd  =  "rm "+self.filePath+"oui ;"
         cmd +=  "rm "+self.filePath+"mam ;"
         cmd +=  "rm "+self.filePath+"oui36"
-        os.system(cmd)
+        subprocess.call(cmd, shell=True)
 
-        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui/oui.csv      |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui' &";self.myLog(cmd);os.system(cmd)
-        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui28/mam.csv    |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"mam' &";self.myLog(cmd);os.system(cmd)
-        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui36/oui36.csv  |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui36' &";self.myLog(cmd);os.system(cmd)
+        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui/oui.csv      |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui' &";self.myLog(cmd);subprocess.call(cmd, shell=True)
+        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui28/mam.csv    |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"mam' &";self.myLog(cmd);subprocess.call(cmd, shell=True)
+        cmd= "/usr/bin/curl -L https://standards.ieee.org/develop/regauth/oui36/oui36.csv  |  tail -n +2  | cut -d',' -f'2,3' | sed 's/\"//'> '"+self.filePath+"oui36' &";self.myLog(cmd);subprocess.call(cmd, shell=True)
        
         self.getFilesStatus = "submitted" 
 

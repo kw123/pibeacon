@@ -251,15 +251,15 @@ def doAction(devId, distanceIN):
 				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
 
 			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
-				os.system(actionShortDistance)
+				subprocess.call(actionShortDistance, shell=True)
 				actionDistanceOld = "short"
 					
 			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
-				os.system(actionMediumDistance)
+				subprocess.call(actionMediumDistance, shell=True)
 				actionDistanceOld = "medium"
 					
 			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
-				os.system(actionLongDistance)
+				subprocess.call(actionLongDistance, shell=True)
 				actionDistanceOld =" long"
 
 	except  Exception, e:

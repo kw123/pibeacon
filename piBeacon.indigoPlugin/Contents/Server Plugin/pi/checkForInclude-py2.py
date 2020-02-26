@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import	os, time
+import	os
 
-
-sleepTime = 30
 try:
-	pass #from adafruit_seesaw.seesaw import Seesaw
+	import serial
 except:
-	time.sleep(sleepTime)
-	sleepTime -= 30
-	#os.system("sudo pip3 install adafruit-circuitpython-seesawimport busio &")
+	subprocess.call("sudo apt-get install python-serial", shell=True)
+
+try:
+	import smbus2
+except:
+	subprocess.call("sudo pip install smbus2", shell=True)
+
 exit()

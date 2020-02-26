@@ -110,20 +110,33 @@ def hci_le_set_scan_parameters(sock):
 
 #################################  BLE iBeaconScanner  ----> end
 def startBlueTooth(pi):
-	global myBLEmac
-	try:
-		## good explanation: http://gaiger-G.programming.blogspot.com/2015/01/bluetooth-low-energy.html
-		U.logger.log(30,"(re)starting bluetooth")
-		ret = subprocess.Popen("hciconfig hci0 down ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		time.sleep(0.2)
-		ret = subprocess.Popen("hciconfig hci0 up ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()	 # enable bluetooth
-		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
-		HCIs = U.whichHCI()
-		useHCI,  myBLEmac, devId = U.selectHCI(HCIs, G.BLEconnectUseHCINo,"UART")
-		if devId <0 :
-			return 0,  "", -1,
-		U.logger.log(30,"MAC#{}; on useHCI:{};  HCIs:{}; devId:{}".format(myBLEmac,useHCI, HCIs, devId) ) 
+	global myBLEmac, downCount 
 
+	useHCI	 = ""
+	myBLEmac = ""
+	devId	 = 0
+	## good explanation: http://gaiger-G.programming.blogspot.com/2015/01/bluetooth-low-energy.html
+	U.logger.log(30,"(re)starting bluetooth")
+	try:
+		HCIs = U.whichHCI()
+		for hci in HCIs["hci"]:
+			U.logger.log(20,"down and up :{}".format(hci))
+			subprocess.call("sudo hciconfig {} down &".format(hci), shell=True) # disable bluetooth
+			time.sleep(0.2)
+			subprocess.call("sudo hciconfig {} up &".format(hci), shell=True) # enable bluetooth
+		time.sleep(0.3)
+
+
+		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
+		HCIs = U.whichHCI()
+		#
+
+		#U.logger.log(30,"myBLEmac HCIs{}".format( HCIs))
+		useHCI,  myBLEmac, devId = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"UART")
+		if myBLEmac ==  -1:
+			U.logger.log(20,"myBLEmac wrong: myBLEmac:{}".format( myBLEmac))
+			return 0,  0, -1
+		U.logger.log(20,"Beacon Use HCINo {};  useHCI:{};  myBLEmac:{}; devId:{}" .format(G.BeaconUseHCINo, useHCI, myBLEmac, devId))
 			
 
 		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
@@ -131,55 +144,77 @@ def startBlueTooth(pi):
 		OCF					= " 0x0008"
 		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
 		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
-		maj					= " 00 09"
-		min					= " 00 "+"0%x"%(int(pi))
+		MAJ					= " 00 09"
+		MIN					= " 00 "+"0%x"%(int(pi))
 		txP					= " C5 00"
-		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + maj + min + txP
-		U.logger.log(30,cmd)
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
+		cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCI, OGF, OCF, iBeaconPrefix, uuid, MAJ, MIN, txP)
+		U.logger.log(20,cmd) 
+		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+		time.sleep(0.2)
 		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
 		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
 		#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
 		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
-		cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
+		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
+		cmd	 = "hcitool -i {} cmd{} 0x0006 00 10 00 20 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCI, OGF)
 		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
-		U.logger.log(30,cmd )
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		U.logger.log(20,cmd) 
+		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
 		####################################LE Set Advertise Enable
-		cmd	 = "hcitool -i {} cmd{} 0x000a 01".format(useHCI, OGF)
-		U.logger.log(30,cmd )
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
+		time.sleep(0.2)
+		cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCI, OGF)
+		U.logger.log(20,cmd) 
+		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+		time.sleep(0.2)
 
-		ret = subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,"BLE start returned :  {} \n {}".format(ret[0], ret[1]))
+
+		HCIs = U.whichHCI()
+		ret = HCIs["ret"]
+
+		if ret[1] != "":	U.logger.log(30,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
+		else:			 	
+				U.logger.log(20,"BLE start returned:\n{}my BLE mac# is >>{}<<".format(ret[0], myBLEmac))
+				if useHCI in HCIs["hci"]:
+					if HCIs["hci"][useHCI]["upDown"] == "DOWN":
+						if downCount > 1:
+							U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
+							writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig ".format(useHCI))
+							time.sleep(10)
+						downCount +=1
+						time.sleep(10)
+						return 0,  "", -1
+				else:
+					U.logger.log(30," {}  not in hciconfig list".format(useHCI))
+					downCount +=1
+					time.sleep(10)
+					return 0,  "", -1
+					
+				
+		if myBLEmac != "":
+			writeFile("myBLEmac",myBLEmac)
+		else:
+			return 0, "", -1
+
 	except Exception, e: 
-		U.logger.log(50,"beaconloop exit at restart BLE stack error:"+unicode(e) )
+		U.logger.log(50,u"exit at restart BLE stack error  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(10)
-		f = open("{}temp/rebootNeeded".format(G.homeDir),"w")
-		f.write("bluetooth_startup.ERROR:"+unicode(e))
-		f.close()
-		subprocess.Popen("hciconfig {} down ".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		writeFile("restartNeeded","bluetooth_startup.ERROR:{}".format(e))
+		downHCI(useHCI)
+		time.sleep(0.2)
 		return 0, "", -5
 
-	U.logger.log(30,"my BLE mac# is : ()".format(myBLEmac))
-	if myBLEmac !="":
-		f=open(G.homeDir+"myBLEmac","w")
-		f.write(myBLEmac)
-		f.close()
 
 	try:
 		sock = bluez.hci_open_dev(devId)
 		U.logger.log(30, "ble thread started")
 	except	Exception, e:
-		U.logger.log(50,"error accessing bluetooth device...{}".format(e))
-		f = open("{}temp/rebootNeeded".format(G.homeDir),"w")
-		f.write("bluetooth_startup.ERROR:{}".format(e))
-		f.close()
-		subprocess.Popen("hciconfig {} down ".format(useHCI)",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		U.logger.log(30,"error accessing bluetooth device...".format(e))
+		if downCount > 2:
+			writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:".format(e))
+			downHCI(useHCI)
+		downCount +=1
 		return 0,  "", -1
 		
 	try:
@@ -188,19 +223,55 @@ def startBlueTooth(pi):
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Bad file descriptor") >-1:
-			f = open("{}temp/rebootNeeded".format(G.homeDir),"w")
-			f.write("bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
-			f.close()
+			writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
 		if unicode(e).find("Network is down") >-1:
-			f = open("{}temp/rebootNeeded".format(G.homeDir),"w")
-			f.write("bluetooth_startup.ERROR:Network_is_down...need_to_reboot")
-			f.close()
-		subprocess.Popen("hciconfig {} down ".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  # enable bluetooth
-		subprocess.Popen("service bluetooth restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		subprocess.Popen("service dbus restart ",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		return 0,  "", -1
-	return sock,  myBLEmac, devId
+			if downCount > 2:
+				writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Network_is_down...need_to_reboot")
+			downCount +=1
+		downHCI(useHCI)
+		return 0, "", -1 
+	return sock, myBLEmac, 0
 
+#################################
+def writeFile(outFile, text):
+	try:
+		f = open("{}{}".format(G.homeDir, outFile),"w")
+		f.write(text)
+		f.close()
+		#U.logger.log(20, u"===== writing to {}{} text:{}".format(G.homeDir, outFile, text))
+	except	Exception, e:
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		if unicode(e).find("Read-only file system:") >-1:
+			f = open(G.homeDir+"temp/rebootNeeded","w")
+			f.write("Read-only file system")
+			f.close()
+	return
+
+
+def downHCI(useHCI):
+	try:
+		subprocess.Popen("hciconfig {} down &".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE) # enable bluetooth
+		time.sleep(0.2)
+		subprocess.Popen("service bluetooth restart &",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		time.sleep(0.2)
+		subprocess.Popen("service dbus restart &",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		time.sleep(0.2)
+	except	Exception, e:
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return
+
+	
+#################################
+def toReject(text):
+	try:
+		f=open("{}temp/rejects".format(G.homeDir),"a")
+		f.write(str(time.time())+";"+text+"\n")
+		f.close()
+	except	Exception, e:
+		if unicode(e).find("Read-only file system:") >-1:
+			f = open(G.homeDir+"temp/rebootNeeded","w")
+			f.write("Read-only file system")
+			f.close()
 
 
 
@@ -374,167 +445,171 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 
 ####### main pgm / loop ############
 
+def execBLEsensor():
+	global myBLEmac, BLEsensorMACs
+	global oldRaw,	lastRead, sensor
+	global downCount
 
-global myBLEmac, BLEsensorMACs
-global oldRaw,	lastRead, sensor
-oldRaw					= ""
-lastRead				= 0
-G.authentication	= "digest"
-# get params
-myBLEmac			= ""
-BLEsensorMACs		= {}
+	downCount			= 0
+	oldRaw				= ""
+	lastRead			= 0
+	G.authentication	= "digest"
+	myBLEmac			= ""
+	BLEsensorMACs		= {}
 
-myPID			= str(os.getpid())
-#kill old G.programs
-U.setLogging()
-U.killOldPgm(myPID,"{}.py".format(G.program))
+	myPID			= str(os.getpid())
+	U.setLogging()
+	U.killOldPgm(myPID,"{}.py".format(G.program))
 
+	sensor				= G.program	 
+	readParams(True)
 
-
-sensor				= G.program	 
-readParams(True)
-
-
-# getIp address 
-if U.getIPNumber() > 0:
-	U.logger.log(30, " no ip number " )
-	time.sleep(10)
-	exit()
+	# getIp address 
+	if U.getIPNumber() > 0:
+		U.logger.log(30, " no ip number exiting" )
+		time.sleep(10)
+		return 
 
 
 ## start bluetooth
-sock,  myBLEmac, retCode = startBlueTooth(G.myPiNumber)  
-if retCode <0: 
-	U.logger.log(30, " stopping due to bad BLE start " )
-	sys.exit(1)
+
+	## start bluetooth
+	for ii in range(5):
+		sock, myBLEmac, retCode= startBlueTooth(G.myPiNumber)  
+		if retCode ==0: break 
+		time.sleep(3)
+	if retCode != 0: 
+		U.logger.log(30,"beaconloop exit, recode from getting BLE stack >0, after 3 tries:")
+		return 
+
 
 	
-loopCount	 = 0
-tt			 = time.time()
-paramCheck	 = tt
+	loopCount	 = 0
+	tt			 = time.time()
+	paramCheck	 = tt
 
-U.echoLastAlive(G.program)
-U.logger.log(30,"starting loop" )
-G.tStart= time.time()
+	U.echoLastAlive(G.program)
+	U.logger.log(30,"starting loop" )
+	G.tStart= time.time()
 
-errCount = 0
-try:
-	while True:
-		tt = time.time()
+	errCount = 0
+	try:
+		while True:
+			tt = time.time()
 				   
 			
-		timeAtLoopStart = tt
+			timeAtLoopStart = tt
 
 
-		old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
+			old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 
-		# perform a device inquiry on bluetooth device #0
-		# The inquiry should last 8 * 1.28 = 10.24 seconds
-		# before the inquiry is performed, bluez should flush its cache of
-		# previously discovered devices
-		flt = bluez.hci_filter_new()
-		bluez.hci_filter_all_events(flt)
-		bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
-		sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
-
-
-		ii = 1000
-		while ii>0:
-			ii-=1
-			tt=time.time()
-			quick = U.checkNowFile(sensor)				  
-			if tt - paramCheck >2:
-				newParametersFile = readParams(False)
-				paramCheck=time.time()
-				if newParametersFile: 
-					quick = True
-
-			## get new data
-#			 allBeaconMSGs = parse_events(sock, collectMsgs,offsetUUID,batteryLevelPosition,maxParseSec ) # get the data:  get up to #collectMsgs at one time
-			allBeaconMSGs=[]
-			try:	
-				pkt = sock.recv(255)
-				errCount = 0
-			except	Exception, e:
-				for ii in range(30):
-					if os.path.isfile("{}temp/stopBLE".format(G.homeDir)):
-						time.sleep(5)
-					else:
-						break
-				os.system("rm {}temp/stopBLE".format(G.homeDir))
-				U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
-				time.sleep(1)
-				U.restartMyself(param="", reason="sock.recv error")
-				U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				errCount += 1
-				if errCount > 3:
-					break
-
-			doP = False
-			if len(pkt) > 15: 
-				num_reports = struct.unpack("B", pkt[4])[0]
-				num_reports =1
-				try:
-					offS = 7
-					for i in range(0, num_reports):
-						if len(pkt) < offS + 6: 
-							U.logger.log(30,"bad data "+unicode(i)+"  "+unicode(num_reports)+"  "+unicode(offS + 6)+"  " +unicode(len(pkt)) + " xx" )
-							break
-						# build the return string: mac#, uuid-major-minor,txpower??,rssi
-						mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
-						if mac not in BLEsensorMACs: 
-							continue
-							
-						pkLen				= len(pkt)
-						nBytesThisMSG		= ord(pkt[offS+6])
-
-						msgStart			= offS+7
-						AD1Len				= ord(pkt[msgStart])
-						AD1Start			= msgStart+1
-						if nBytesThisMSG > 17:
-							AD2Len			= ord(pkt[AD1Start+AD1Len])
-							AD2Start		= AD1Start+AD1Len +1
-						else:
-							AD2Len			= AD1Len
-							AD2Start		= AD1Start
-
-						offsetU			= 0
-						uuidStart		= AD2Start ##  (-Maj-Min-batteryLength-TX-RSSI)
-						uuidLen			= msgStart+nBytesThisMSG-uuidStart-2-2-1-offsetU
-						if uuidStart > pkLen-2 or  uuidStart < 12:
-							uuidLen			 = min(nBytesThisMSG-5,16)
-							uuidStart		 = AD1Start+2
-
-						UUID = returnstringpacket(pkt[uuidStart : uuidStart +uuidLen])
-
-						if len(UUID)>32:
-							UUID=UUID[len(UUID)-32:]  # drop AD2 stuff only used the real UUID 
-						Maj	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen	: uuidStart+uuidLen+2])
-						Min	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen+2: uuidStart+uuidLen+4])
-						#lastB = 
-						tx	 = "%i" % struct.unpack("b", pkt[ -2 ])
-						rx	 = "%i" % struct.unpack("b", pkt[ -1 ])
-
-						doSensors(pkt,UUID,Maj,Min,mac,rx,tx)
-						time.sleep(1)
-
-						break
+			# perform a device inquiry on bluetooth device #0
+			# The inquiry should last 8 * 1.28 = 10.24 seconds
+			# before the inquiry is performed, bluez should flush its cache of
+			# previously discovered devices
+			flt = bluez.hci_filter_new()
+			bluez.hci_filter_all_events(flt)
+			bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
+			sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
 
 
+			ii = 1000
+			while ii>0:
+				ii-=1
+				tt=time.time()
+				quick = U.checkNowFile(sensor)				  
+				if tt - paramCheck >2:
+					newParametersFile = readParams(False)
+					paramCheck=time.time()
+					if newParametersFile: 
+						quick = True
+
+				## get new data
+	#			 allBeaconMSGs = parse_events(sock, collectMsgs,offsetUUID,batteryLevelPosition,maxParseSec ) # get the data:  get up to #collectMsgs at one time
+				allBeaconMSGs=[]
+				try:	
+					pkt = sock.recv(255)
+					errCount = 0
 				except	Exception, e:
+					for ii in range(30):
+						if os.path.isfile("{}temp/stopBLE".format(G.homeDir)):
+							time.sleep(5)
+						else:
+							break
+					subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
+					U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
+					time.sleep(1)
+					U.restartMyself(param="", reason="sock.recv error")
 					U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					U.logger.log(30, " BLEsensor "+"bad data") 
-					continue# skip if bad data
+					errCount += 1
+					if errCount > 3:
+						break
 
-		sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
-		#print "reason",datetime.datetime.now(), reason
-		U.echoLastAlive(G.program)
-except	Exception, e:
-	U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	U.logger.log(30, "  exiting loop due to error\n")
+				doP = False
+				if len(pkt) > 15: 
+					num_reports = struct.unpack("B", pkt[4])[0]
+					num_reports =1
+					try:
+						offS = 7
+						for i in range(0, num_reports):
+							if len(pkt) < offS + 6: 
+								U.logger.log(30,"bad data "+unicode(i)+"  "+unicode(num_reports)+"  "+unicode(offS + 6)+"  " +unicode(len(pkt)) + " xx" )
+								break
+							# build the return string: mac#, uuid-major-minor,txpower??,rssi
+							mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
+							if mac not in BLEsensorMACs: 
+								continue
+							
+							pkLen				= len(pkt)
+							nBytesThisMSG		= ord(pkt[offS+6])
 
-print ("{} BLEcsensor end of {}".format( datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program) ) 
+							msgStart			= offS+7
+							AD1Len				= ord(pkt[msgStart])
+							AD1Start			= msgStart+1
+							if nBytesThisMSG > 17:
+								AD2Len			= ord(pkt[AD1Start+AD1Len])
+								AD2Start		= AD1Start+AD1Len +1
+							else:
+								AD2Len			= AD1Len
+								AD2Start		= AD1Start
+
+							offsetU			= 0
+							uuidStart		= AD2Start ##  (-Maj-Min-batteryLength-TX-RSSI)
+							uuidLen			= msgStart+nBytesThisMSG-uuidStart-2-2-1-offsetU
+							if uuidStart > pkLen-2 or  uuidStart < 12:
+								uuidLen			 = min(nBytesThisMSG-5,16)
+								uuidStart		 = AD1Start+2
+
+							UUID = returnstringpacket(pkt[uuidStart : uuidStart +uuidLen])
+
+							if len(UUID)>32:
+								UUID=UUID[len(UUID)-32:]  # drop AD2 stuff only used the real UUID 
+							Maj	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen	: uuidStart+uuidLen+2])
+							Min	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen+2: uuidStart+uuidLen+4])
+							#lastB = 
+							tx	 = "%i" % struct.unpack("b", pkt[ -2 ])
+							rx	 = "%i" % struct.unpack("b", pkt[ -1 ])
+
+							doSensors(pkt,UUID,Maj,Min,mac,rx,tx)
+							time.sleep(1)
+
+							break
+
+
+					except	Exception, e:
+						U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, " BLEsensor "+"bad data") 
+						continue# skip if bad data
+
+			sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
+			#print "reason",datetime.datetime.now(), reason
+			U.echoLastAlive(G.program)
+	except	Exception, e:
+		U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, "  exiting loop due to error\n")
+execBLEsensor()
+print ("{} BLEsensor end of {}".format( datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"), G.program) ) 
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
-ys.exit(0)
+sys.exit(0)
 

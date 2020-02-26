@@ -30,18 +30,18 @@ def displayDistance(dist,sensor,sensors, output,distanceUnits):
 			lastMSG		= 0
 			lastDistVal = 0
 			initDisplay = 0 # start display.py if we come here after startup first time
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&", shell=True )
 			time.sleep(0.1)
 			#print "init variables", lastDistVal
 		
 		if initDisplay > 5000:
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&", shell=True )
 			initDisplay =0
 			time.sleep(0.1)
 		initDisplay +=1
 		 
 		if not U.pgmStillRunning("display.py"):
-			os.system("/usr/bin/python "+G.homeDir+"display.py	&" )
+			subprocess.call("/usr/bin/python "+G.homeDir+"display.py	&", shell=True )
 			
 		if sensor not in sensors: return	
 		for devid in sensors[sensor]:
@@ -254,7 +254,7 @@ def displayDistance(dist,sensor,sensors, output,distanceUnits):
 			except	Exception, e:
 				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 				if unicode(e).find("No space left on device") >-1:
-					os.system("rm "+G.homeDir+"temp/* ")
+					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
 		
 	except	Exception, e:

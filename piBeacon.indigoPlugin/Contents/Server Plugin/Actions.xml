@@ -3148,7 +3148,7 @@ Then there are actions in each set (steps/sleep)
 
      <Action id="sendrebootCommandssh">
         <Name>send reboot command  to rPi via ssh</Name>
-            <CallbackMethod>buttonRebootCALLBACKaction</CallbackMethod>
+            <CallbackMethod>buttonRebootsshCALLBACKaction</CallbackMethod>
          <ConfigUI>
            <Label>send SHUTDOWN unix command to rpi </Label>
            <Field id="configurePi"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -3161,7 +3161,7 @@ Then there are actions in each set (steps/sleep)
 
      <Action id="sendshutdownCommandssh">
         <Name>send SHUTDOWN  to rPi via ssh</Name>
-            <CallbackMethod>buttonShutdownCALLBACKaction</CallbackMethod>
+            <CallbackMethod>buttonShutdownsshCALLBACKaction</CallbackMethod>
          <ConfigUI>
            <Label>send SHUTDOWN unix command to rpi </Label>
            <Field id="configurePi"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >

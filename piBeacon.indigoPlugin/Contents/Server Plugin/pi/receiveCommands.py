@@ -44,7 +44,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 			U.logger.log(10,"cmd= "+cmdJ)
 			#print cmdJ
 			cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
-			os.system(cmdOut)
+			subprocess.call(cmdOut, shell=True)
 			time.sleep(0.1)
 		readParams()
 		return	 
@@ -58,7 +58,7 @@ def execGeneral(next):
 	try:
 		# execute unix command
 		if next["cmdLine"].lower().find("sudo reboot")>-1 or next["cmdLine"].lower().find("sudo halt")>-1:
-			os.system(next["cmdLine"] )	 
+			subprocess.call(next["cmdLine"] , shell=True)	 
 			return True
 			
 		# execute set time command 
@@ -66,12 +66,12 @@ def execGeneral(next):
 			tt		   = time.time()
 			items	   =  next["cmdLine"].split("=")
 			mactime	   = items[1]
-			os.system('date -s "'+mactime+'"')
+			subprocess.call('date -s "'+mactime+'"', shell=True)
 			mactt	   = U.getTimetimeFromDateString(mactime)
 			deltaTime  = tt - mactt
 			U.sendURL(data={"deltaTime":deltaTime},sendAlive="alive", wait=False)
 			if "useRTC" in inp and inp["useRTC"] !="":
-				os.system("hwclock --systohc") # set hw clock to system time stamp, only works if HW is enabled
+				subprocess.call("hwclock --systohc", shell=True) # set hw clock to system time stamp, only works if HW is enabled
 			return True
 		# execute set time command 
 		if next["cmdLine"].find("refreshNTP")>-1:
@@ -122,7 +122,7 @@ def getcurentCMDS():
 				cmdJ = json.dumps(next)
 				cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
 				U.logger.log(30,"cmd= "+cmdOut)
-				os.system(cmdOut)
+				subprocess.call(cmdOut, shell=True)
 				time.sleep(0.3) # give each command time to finish
 			if keep!={}:
 				f=open(G.homeDir+"execcommands.current","w")

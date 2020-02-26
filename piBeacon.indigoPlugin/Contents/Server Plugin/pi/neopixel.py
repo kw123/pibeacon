@@ -845,7 +845,7 @@ def getLightSensorValue(force=False):
 		if rr == {}:
 			time.sleep(0.1)
 			rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
-		os.system("sudo rm "+G.homeDir+"temp/lightSensor.dat")
+		subprocess.call("sudo rm "+G.homeDir+"temp/lightSensor.dat", shell=True)
 		if rr == {} or "time" not in rr: 							return False
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )

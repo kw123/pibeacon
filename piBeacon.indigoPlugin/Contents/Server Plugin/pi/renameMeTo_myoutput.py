@@ -46,7 +46,7 @@ try:
 
             #eg reboot if you send the reboot command
             if unicode(text).find("reboot") > -1 :
-                os.system("reboot")
+                subprocess.call("reboot", shell=True)
 
 
             # if set gpoio high ..

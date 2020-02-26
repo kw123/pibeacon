@@ -233,7 +233,7 @@ class bigScreen :
 					bigScreenSize = fullScreenSize
 					self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
 					U.logger.log(20, u"Framebuffer 2.c size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
-				os.system("echo fullScreen > "+G.homeDir+"pygame.active") # after this we can not do startx, need to reboot first
+				subprocess.call("echo fullScreen > "+G.homeDir+"pygame.active", shell=True) # after this we can not do startx, need to reboot first
 
 			U.logger.log(20, u"got screen object" )
 
@@ -1378,7 +1378,7 @@ def readParams():
 		else:
 			runLoop = False
 		if not runLoop:
-			os.system("rm "+G.homeDir+"temp/display.inp > /dev/null 2>&1")
+			subprocess.call("rm "+G.homeDir+"temp/display.inp > /dev/null 2>&1", shell=True)
 			U.logger.log(30, u"exiting display, output dev display not defined")
 			try: outputDev.delPy()
 			except: pass
@@ -1641,7 +1641,7 @@ def getLightSensorValue(force=False):
 		if rr == {}:
 			time.sleep(0.1)
 			rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
-		os.system("sudo rm "+G.homeDir+"temp/lightSensor.dat")
+		subprocess.call("sudo rm "+G.homeDir+"temp/lightSensor.dat", shell=True)
 		if rr == {} or "time" not in rr: 							return False
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
@@ -1825,10 +1825,10 @@ try:
 		items=[sys.argv[1]]
 	else: 
 		items  = [json.dumps({"restoreAfterBoot": False, "resetInitial": "","scrollxy":scrollxy,"startAtDateTime":startAtDateTime})]
-		os.system("cp "+G.homeDir+"display.inp "+G.homeDir+"temp/display.inp " )
+		subprocess.call("cp "+G.homeDir+"display.inp "+G.homeDir+"temp/display.inp ", shell=True )
 except:
 	items  = [json.dumps({"restoreAfterBoot": False, "resetInitial": "","scrollxy":scrollxy,"startAtDateTime":startAtDateTime})]
-	os.system("cp "+G.homeDir+"display.inp "+G.homeDir+"temp/display.inp " )
+	subprocess.call("cp "+G.homeDir+"display.inp "+G.homeDir+"temp/display.inp ", shell=True )
 
 time.sleep(0.1)
 data = json.loads(items[0])
@@ -1865,11 +1865,11 @@ while runLoop:
 			if devType != devTypeLast :	 # restart	myself if new device type
 				U.logger.log(30, " restarting due to new device type, old="+devTypeLast+" new="+"devType")
 				time.sleep(0.2)
-				os.system("/usr/bin/python "+G.homeDir+"display.py &")
+				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 			if i2cAddress != lasti2cAddress :  # restart  myself if new device type
 				U.logger.log(30, " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress)
 				time.sleep(0.2)
-				os.system("/usr/bin/python "+G.homeDir+"display.py &")
+				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 
 			try:
 				zoom = 1.
@@ -2615,7 +2615,7 @@ while runLoop:
 						tt= time.time()
 						if tt - lastAlive > 29.:  
 							lastAlive =tt
-							os.system("echo	 "+str(tt)+" > "+G.homeDir+"temp/alive.display")
+							subprocess.call("echo	 "+str(tt)+" > "+G.homeDir+"temp/alive.display", shell=True)
 
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
 					except	Exception, e:
@@ -2623,8 +2623,8 @@ while runLoop:
 							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							U.logger.log(30, unicode(cmd))
 						except: # hard delete logfiles
-							os.system("sudo  chown -R pi:pi /var/log/*")
-							os.system("sudo echo "" >  /var/log/pibeacon.log")
+							subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
+							subprocess.call("sudo echo "" >  /var/log/pibeacon.log", shell=True)
 
 				newRead = False
 				if os.path.isfile(G.homeDir+"temp/display.inp"): break

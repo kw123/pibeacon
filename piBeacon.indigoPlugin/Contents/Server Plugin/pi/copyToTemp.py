@@ -7,9 +7,10 @@
 ##	  --- utils 
 #
 #	 
-import	sys 
-import	os 
-import	time
+import sys 
+import os 
+import time
+import subprocess
 sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import piBeaconUtils as U
@@ -22,10 +23,10 @@ if __name__ == "__main__":
 	myPID			= str(os.getpid())
 	U.killOldPgm(myPID, G.program+".py")
 
-	os.system("chmod a+w -R "+G.homeDir+"*")
-	os.system("chown -R pi:pi "+G.homeDir+"*")
+	subprocess.call("chmod a+w -R "+G.homeDir+"*", shell=True)
+	subprocess.call("chown -R pi:pi "+G.homeDir+"*", shell=True)
 	try:	
-		os.system("touch "+G.homeDir+"temp/touchFile")
+		subprocess.call("touch "+G.homeDir+"temp/touchFile", shell=True)
 		timeLastFile = os.path.getmtime(G.homeDir+"temp/touchFile") -1
 	except: 
 		timeLastFile = 0
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 				
 		elif os.path.isdir(G.homeDir+"temp"):
 				doCopy = 2
-				os.system("touch "+G.homeDir+"temp/touchFile")
+				subprocess.call("touch "+G.homeDir+"temp/touchFile", shell=True)
 
 		if not os.path.isfile(G.homeDir+"temp/parameters"):
 				doCopy = 3
@@ -49,12 +50,12 @@ if __name__ == "__main__":
 				##print G.program, doCopy
 				for fileName in G.parameterFileList:
 					if os.path.isfile(G.homeDir+fileName):
-							os.system("sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName)
+							subprocess.call("sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName, shell=True)
 				try:  
 					timeLastFile = os.path.getmtime(G.homeDir+"temp/touchFile")
 				except:	 timeLastFile = -10
-				os.system("chmod a+w -R "  +G.homeDir+"temp/*")
-				os.system("chown -R pi:pi "+G.homeDir+"temp/*")
+				subprocess.call("chmod a+w -R "  +G.homeDir+"temp/*", shell=True)
+				subprocess.call("chown -R pi:pi "+G.homeDir+"temp/*", shell=True)
 				time.sleep(10)
 
 		time.sleep(0.5)

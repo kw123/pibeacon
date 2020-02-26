@@ -341,7 +341,7 @@ def execCMDS(data):
 
 			if cmd =="general":
 				if "cmdLine" in next:
-					os.system(next["cmdLine"] )	 
+					subprocess.call(next["cmdLine"] , shell=True)	 
 					continue
 
 
@@ -356,8 +356,8 @@ def execCMDS(data):
 						f.write("{}".format(json.dumps(next["fileContents"]) )) 
 						f.close()
 						if "touchFile" in next and next["touchFile"]:
-							os.system("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" )
-						os.system("sudo chown -R  pi  "+G.homeDir)
+							subprocess.call("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" , shell=True)
+						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
 					except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
@@ -366,7 +366,7 @@ def execCMDS(data):
 			if cmd =="getBeaconParameters":
 				try:
 					if "device" not in next: continue
-					os.system("/usr/bin/python "+G.homeDir+"getBeaconParameters.py '"+next["device"]+"' &" )
+					subprocess.call("/usr/bin/python "+G.homeDir+"getBeaconParameters.py '"+next["device"]+"' &" , shell=True)
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
@@ -395,7 +395,7 @@ def execCMDS(data):
 					U.logger.log(10, unicode(data))
 					U.sendURL(data,squeeze=False)
 					time.sleep(2)
-					os.system("sudo reboot")
+					subprocess.call("sudo reboot", shell=True)
 					exit()
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -428,7 +428,7 @@ def execCMDS(data):
 					try:
 						#print "execcmd", cmdOut
 						if not U.pgmStillRunning("display.py"):
-							os.system("/usr/bin/python "+G.homeDir+"display.py &" )
+							subprocess.call("/usr/bin/python "+G.homeDir+"display.py &" , shell=True)
 						f=open(G.homeDir+"temp/display.inp","a")
 						f.write(cmdOut+"\n")
 						f.close()
@@ -446,7 +446,7 @@ def execCMDS(data):
 					try:
 						#print "execcmd", cmdOut
 						if	not U.pgmStillRunning("neopixel.py"):
-							os.system("/usr/bin/python "+G.homeDir+"neopixel.py	 &" )
+							subprocess.call("/usr/bin/python "+G.homeDir+"neopixel.py	 &" , shell=True)
 						else:
 							f=open(G.homeDir+"temp/neopixel.inp","a")
 							f.write(cmdOut+"\n")
@@ -497,7 +497,7 @@ def execCMDS(data):
 					else:
 						list = [next["device"]]
 					for pgm in list:
-						os.system("echo x > "+G.homeDir+"temp/"+pgm+".now")
+						subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".now", shell=True)
 					continue
 
 
@@ -509,7 +509,7 @@ def execCMDS(data):
 					else:
 						list = [next["device"]]
 					for pgm in list:
-						os.system("echo x > "+G.homeDir+"temp/"+pgm+".reset")
+						subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".reset", shell=True)
 					continue
 
 
@@ -523,7 +523,7 @@ def execCMDS(data):
 					else:
 						list = [next["device"]]
 					for pgm in list:
-						os.system("echo x > "+G.homeDir+"temp/"+pgm+".startCalibration")
+						subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".startCalibration", shell=True)
 					continue
 
 
@@ -539,7 +539,7 @@ def execCMDS(data):
 							U.logger.log(10,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setmcp4725.py '"+ cmdJ+"'  &"
 							U.logger.log(10," cmd= %s"%cmdOut)
-							os.system(cmdOut)
+							subprocess.call(cmdOut, shell=True)
 							if restoreAfterBoot == "1":
 								execcommands[str(int(i2cAddress)+1000)] = next
 							else:
@@ -560,7 +560,7 @@ def execCMDS(data):
 							U.logger.log(10,json.dumps(next))
 							cmdOut="python "+G.homeDir+"setPCF8591dac.py '"+ cmdJ+"'  &"
 							U.logger.log(10," cmd= %s"%cmdOut)
-							os.system(cmdOut)
+							subprocess.call(cmdOut, shell=True)
 							if restoreAfterBoot == "1":
 								execcommands[str(int(i2cAddress)+1000)] = next
 							else:
@@ -600,7 +600,7 @@ def execCMDS(data):
 						if externalGPIO:
 							cmdOut="python "+G.homeDir+"setGPIO.py '"+ cmdJD+"' &"
 							U.logger.log(10,"cmd= %s"%cmdOut)
-							os.system(cmdOut)
+							subprocess.call(cmdOut, shell=True)
 						else:
 							U.logger.log(10, "setGPIO curr_pid=%d,  command :%s" %(myPID,cmdJD) )
 							setGPIO(cmdJ)
@@ -641,7 +641,7 @@ def execCMDS(data):
 							text   = next["text"]
 							cmdOut= "/usr/bin/python "+G.homeDir+"myoutput.py "+text+"	&"
 							U.logger.log(10,"cmd= %s"%cmdOut)
-							os.system(cmdOut)
+							subprocess.call(cmdOut, shell=True)
 						except	Exception, e:
 							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						continue
@@ -657,7 +657,7 @@ def execCMDS(data):
 								U.logger.log(30, u"bad command : player not right =" + cmd)
 							if cmdOut != "":
 								U.logger.log(10,"cmd= %s"%cmdOut)
-								os.system("/usr/bin/python playsound.py '"+cmdOut+"' &" )
+								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
 						except	Exception, e:
 							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						continue
@@ -716,5 +716,5 @@ if True: #__name__ == "__main__":
 		#U.logger.log(20, u"exec cmd: killing myself at PID {}".format(myPID))
 		#U.killOldPgm(myPID, G.program, param1="",param2="")
 		time.sleep(5)
-		os.system("sudo kill -9 "+str(myPID) )
+		subprocess.call("sudo kill -9 "+str(myPID) , shell=True)
 	exit(0)

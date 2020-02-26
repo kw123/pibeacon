@@ -1797,10 +1797,10 @@ def getinput(devid):
 					newGesture	= True
 					if "action"+str(gesture) in sensors[sensor][devid] and sen["action"+(gesture)] !="": 
 						U.logger.log(10, u"action: "+str(gesture)+" " +sen["action"+str(gesture)])
-						os.system(sensors[sensor][devid]["action"+str(gesture)])
+						subprocess.call(sensors[sensor][devid]["action"+str(gesture)], shell=True)
 					if "action"+str(nearFar) in sensors[sensor][devid] and sen["action"+(nearFar)] !="": 
 						U.logger.log(10, u"action: "+str(nearFar)+" " +sen["action"+str(nearFar)])
-						os.system(sensors[sensor][devid]["action"+str(nearFar)])
+						subprocess.call(sensors[sensor][devid]["action"+str(nearFar)], shell=True)
 					sensorDev.clearGestureFIFO()
 					time.sleep(0.02)
 					sensorDev.readGesture()	 # clean out fifo
@@ -1820,9 +1820,9 @@ def getinput(devid):
 					lastGestureTime		= 0
 					if prox > lastProximityValue and "actionPROXup"	  in sen and sen["actionPROXup"] !="": 
 						U.logger.log(10, u"action:  "+sensors[sensor][devid]["actionPROXup"])
-						os.system(sensors[sensor][devid]["actionPROXup"])
+						subprocess.call(sensors[sensor][devid]["actionPROXup"], shell=True)
 					if prox < lastProximityValue and "actionPROXdown" in sen and sen["actionPROXdown"] !="" : 
-						os.system(sensors[sensor][devid]["actionPROXdown"])
+						subprocess.call(sensors[sensor][devid]["actionPROXdown"], shell=True)
 						U.logger.log(10, u"action: "+sensors[sensor][devid]["actionPROXdown"])
 					lastProximityValue	= prox
 					lastProximityTime	= tt
@@ -2098,7 +2098,7 @@ if U.getIPNumber() > 0:
 	time.sleep(10)
 	exit()
 
-os.system("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor+"	&" )
+subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor+" &", shell=True )
 
 lastData			= {}
 lastValues			= {}

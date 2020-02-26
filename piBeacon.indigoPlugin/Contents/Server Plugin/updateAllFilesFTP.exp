@@ -55,7 +55,7 @@ expect "sftp>" {  send  "put -r  * /home/pi/pibeacon/displayfiles/ \r" }
 expect "sftp>" {  send  "lcd '$piPath//all' \r" }
 expect "sftp>" {  send  "put *  /home/pi/pibeacon/ \r" }
 expect "sftp>" {  send  "rm /home/pi/pibeacon/temp/touchFile  \r" }
-sleep 1
+sleep 3
 expect "sftp>" {  send  "quit\r" }
 set timeout 0.1
 expect eof

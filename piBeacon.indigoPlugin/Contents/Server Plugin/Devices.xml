@@ -195,17 +195,14 @@ Change here or in initial setup:</Label>
 				<Label> .... queries seq. or parallel on THIS rPi:</Label>
 				<List>
 					<Option value="sequential" > run BLEconnect in sequential in one program</Option>
-					<Option value="parallel"   > run BLEconnect in parallel </Option>
 				</List>
 			</Field>
 			<Field id="BLEseriallabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-				<Label>for BLE connect each BLE device will be 'pinged' by the RPI, this can be done one after the other or in parallel for each BLE device. In parallel is in principle faster to detect UP, but increases load on RPI</Label>	
+				<Label>only serial mode is available, paralell seems to overload the RPI sometimes</Label>	
 			</Field>
 
 			<Field id="BLEHCILabel" type="label" > 
-				<Label>== Use which BLE adoptor for which task:...
-         Only for SSD op-sys version &lt; BUSTER. 
-              With Buster only use ONE BLE device, use "let the RPI decide"</Label>
+				<Label>== Use which BLE adaptor for which task:...</Label>
 			</Field>
 
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
@@ -213,21 +210,31 @@ Change here or in initial setup:</Label>
 				<List>
 					<Option value="-1"   >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
-					<Option value="USB"   >use USB = external for RPI3+</Option>
+					<Option value="USB"   >use USB = external  when using WiFi on board</Option>
 				</List>
 			</Field>
+
 			<Field id="BLEconnectUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
 				<Label> .... BLEconnect:</Label>
 				<List>
 					<Option value="-1"    >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
-					<Option value="USB"   >use USB = external</Option>
+					<Option value="USB"   >use USB = external when using WiFi on board</Option>
 				</List>
 			</Field>
-			<Field id="BLEHCILabel2" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-				<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
-(B) for RPI3plus and SSD image &gt; 2018-11  iBeacon does not work w build in BLE chip, needs USB BLE dongle. 
-The BLEconnect feature does work with the internal BLE chip</Label>	
+
+			<Field id="BLEconnectMode" type="menu"     defaultValue="socket" tooltip=" ">
+				<Label> .... use socket or commandline for BLEconnect:</Label>
+				<List>
+					<Option value="socket"       >use python socket programming</Option>
+					<Option value="commandLine"  >use commandline</Option>
+				</List>
+			</Field>
+
+			<Field id="BLEexplanationLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>Issue:  wifi on RPI together w BLE on the same hardware does not work well, use an external USB dongle, 
+set BOTH iBeacon and BLEconnect to external USB dongle, on some models you should also select to use BLEconnect through command line mode, not through pytho socket program
+</Label>	
 			</Field>
 
  
@@ -648,26 +655,11 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 			 </Field>
 
 
-			<Field id="enableVoltage"              type="label"> 
-				<Label>== Enable voltage monitoring:...</Label>
-			</Field>
-			<Field id="enableVoltageCheck"	type="menu" defaultValue="0"  >	
-				<Label> ... use method:</Label>
-				<List>
-					<Option value="0"     >dis-enable v-check, ie for pi zero</Option>
-					<Option value="file"  >enable v-check throught checking @ /sys/devices/platform/soc/soc:firmware/get_throttled"</Option>
-					<Option value="gpio"  >enable v-check throught GPIO#35, 2.choice</Option>
-				</List>
-			 </Field>
-			<Field id="enableVoltageCheckLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
-				<Label>There are 2 methods (a) checking GPIO35, if value==0 --> event. This does not work on Pi0, it will disable the pi0
-(b) checking file for values !=0
-     /sys/devices/platform/soc/soc:firmware/get_throttled</Label>
-			</Field>
 
 			<Field id="labelPIGPIOfirst"         type="label"> 
 				<Label>== use GPIO or PIGPIO for "PWM" outputs:...</Label>
 			</Field>
+
 			<Field id="typeForPWM"   type="menu" defaultValue="GPIO">
 				<Label>..set GPIO or PIGIO active on THIS RPI:</Label>
 				<List>
@@ -837,10 +829,12 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				</List>
 			</Field>
 			<Field id="newMACNumber" type="textfield"     defaultValue=""> 
-				<Label>... overwrite the current MAC number with:</Label>
+				<Label>... overwrite the current RPI-BLE-MAC number with:</Label>
 			</Field>
 			<Field id="label61" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-			<Label>Overwrite a current BLE-MAC number, Must not be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. Write MAC address of new BLE dongle here.This will then ONLY replace the BLE-MAC number and keep history of THIS device. But do NOT use an existing MAC number</Label>
+			<Label>Overwrite the current RPI-BLE-MAC number. It must NOT be equal to an existing ACTIVE device. Use this to eg replace a BLE dongle of an RPI. 
+Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MAC number and keep history of THIS device. 
+== But do NOT use a MAC number of another indigo RPI or beacon devic ==</Label>
 			</Field>
 
 
@@ -897,6 +891,18 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>last_masterStart</TriggerLabel>
 				<ControlPageLabel>last_masterStart</ControlPageLabel>
+			</State>
+
+			<State id="RPI_throttled">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RPI_throttled</TriggerLabel>
+				<ControlPageLabel>RPI_throttled</ControlPageLabel>
+			</State>
+
+			<State id="last_MessageFromRpi">
+				<ValueType>String</ValueType>
+				<TriggerLabel>last_MessageFromRpi</TriggerLabel>
+				<ControlPageLabel>last_MessageFromRpi</ControlPageLabel>
 			</State>
 
 			<State id="closestiBeacon">
@@ -962,164 +968,164 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ControlPageLabel>TxPowerSet</ControlPageLabel>
 			</State>
         
-			<State id="Pi_0_Signal">
+			<State id="Pi_00_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_0_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_0_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_00_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_00_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_0_Distance">
+			<State id="Pi_00_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_0_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_00_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_0_Time">
+			<State id="Pi_00_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_0_Time</TriggerLabel>
-				<ControlPageLabel>Pi_0_Time</ControlPageLabel>
+				<TriggerLabel>Pi_00_Time</TriggerLabel>
+				<ControlPageLabel>Pi_00_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_1_Signal">
+			<State id="Pi_01_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_1_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_1_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_01_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_01_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_1_Distance">
+			<State id="Pi_01_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_1_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_1_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_01_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_01_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_1_Time">
+			<State id="Pi_01_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_1_Time</TriggerLabel>
-				<ControlPageLabel>Pi_1_Time</ControlPageLabel>
+				<TriggerLabel>Pi_01_Time</TriggerLabel>
+				<ControlPageLabel>Pi_01_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_2_Signal">
+			<State id="Pi_02_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_2_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_2_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_02_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_02_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_2_Distance">
+			<State id="Pi_02_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_2_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_2_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_02_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_02_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_2_Time">
+			<State id="Pi_02_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_2_Time</TriggerLabel>
-				<ControlPageLabel>Pi_2_Time</ControlPageLabel>
+				<TriggerLabel>Pi_02_Time</TriggerLabel>
+				<ControlPageLabel>Pi_02_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_3_Signal">
+			<State id="Pi_03_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_3_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_3_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_03_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_03_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_3_Distance">
+			<State id="Pi_03_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_3_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_3_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_03_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_03_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_3_Time">
+			<State id="Pi_03_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_3_Time</TriggerLabel>
-				<ControlPageLabel>Pi_3_Time</ControlPageLabel>
+				<TriggerLabel>Pi_03_Time</TriggerLabel>
+				<ControlPageLabel>Pi_03_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_4_Signal">
+			<State id="Pi_04_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_4_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_4_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_04_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_04_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_4_Distance">
+			<State id="Pi_04_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_4_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_4_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_04_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_04_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_4_Time">
+			<State id="Pi_04_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_4_Time</TriggerLabel>
-				<ControlPageLabel>Pi_4_Time</ControlPageLabel>
+				<TriggerLabel>Pi_04_Time</TriggerLabel>
+				<ControlPageLabel>Pi_04_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_5_Signal">
+			<State id="Pi_05_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_5_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_5_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_05_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_05_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_5_Distance">
+			<State id="Pi_05_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_5_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_5_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_05_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_05_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_5_Time">
+			<State id="Pi_05_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_5_Time</TriggerLabel>
-				<ControlPageLabel>Pi_5_Time</ControlPageLabel>
+				<TriggerLabel>Pi_05_Time</TriggerLabel>
+				<ControlPageLabel>Pi_05_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_6_Signal">
+			<State id="Pi_06_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_6_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_6_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_06_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_06_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_6_Distance">
+			<State id="Pi_06_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_6_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_06_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_6_Time">
+			<State id="Pi_06_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_6_Time</TriggerLabel>
-				<ControlPageLabel>Pi_6_Time</ControlPageLabel>
+				<TriggerLabel>Pi_06_Time</TriggerLabel>
+				<ControlPageLabel>Pi_06_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_7_Signal">
+			<State id="Pi_07_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_7_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_7_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_07_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_07_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_7_Distance">
+			<State id="Pi_07_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_7_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_7_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_07_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_07_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_7_Time">
+			<State id="Pi_07_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_7_Time</TriggerLabel>
-				<ControlPageLabel>Pi_7_Time</ControlPageLabel>
+				<TriggerLabel>Pi_07_Time</TriggerLabel>
+				<ControlPageLabel>Pi_07_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_8_Signal">
+			<State id="Pi_08_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_8_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_8_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_08_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_08_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_8_Distance">
+			<State id="Pi_08_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_8_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_8_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_08_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_08_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_8_Time">
+			<State id="Pi_08_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_8_Time</TriggerLabel>
-				<ControlPageLabel>Pi_8_Time</ControlPageLabel>
+				<TriggerLabel>Pi_08_Time</TriggerLabel>
+				<ControlPageLabel>Pi_08_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_9_Signal">
+			<State id="Pi_09_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_9_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_9_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_09_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_09_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_9_Distance">
+			<State id="Pi_09_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_9_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_9_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_09_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_09_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_9_Time">
+			<State id="Pi_09_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_9_Time</TriggerLabel>
-				<ControlPageLabel>Pi_9_Time</ControlPageLabel>
+				<TriggerLabel>Pi_09_Time</TriggerLabel>
+				<ControlPageLabel>Pi_09_Time</ControlPageLabel>
 			</State>
 
 			<State id="Pi_10_Signal">
@@ -1217,6 +1223,124 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
 			</State>
 
+			<State id="Pi_16_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_16_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_16_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_16_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_16_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_16_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_16_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_16_Time</TriggerLabel>
+				<ControlPageLabel>Pi_16_Time</ControlPageLabel>
+			</State>
+        
+			<State id="Pi_17_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_17_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_17_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_17_Time</TriggerLabel>
+				<ControlPageLabel>Pi_17_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_18_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_18_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_18_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_18_Time</TriggerLabel>
+				<ControlPageLabel>Pi_18_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_19_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_19_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_19_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_19_Time</TriggerLabel>
+				<ControlPageLabel>Pi_19_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_16_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_16_Time</TriggerLabel>
+				<ControlPageLabel>Pi_16_Time</ControlPageLabel>
+			</State>
+        
+			<State id="Pi_17_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_17_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_17_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_17_Time</TriggerLabel>
+				<ControlPageLabel>Pi_17_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_18_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_18_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_18_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_18_Time</TriggerLabel>
+				<ControlPageLabel>Pi_18_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_19_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_19_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_19_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_19_Time</TriggerLabel>
+				<ControlPageLabel>Pi_19_Time</ControlPageLabel>
+			</State>
+
 			<State id="updateReason">
 				<ValueType>String</ValueType>
 				<TriggerLabel>updateReason</TriggerLabel>
@@ -1282,11 +1406,6 @@ The BLEconnect feature does work with the internal BLE chip</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>sensors_active</TriggerLabel>
 				<ControlPageLabel>sensors_active</ControlPageLabel>
-			</State>
-			<State id="bad_voltage_count">
-				<ValueType>String</ValueType>
-				<TriggerLabel>bad_voltage_count</TriggerLabel>
-				<ControlPageLabel>bad_voltage_count</ControlPageLabel>
 			</State>
 
 
@@ -1401,19 +1520,15 @@ Change here or in initial setup:</Label>
 			</Field>
 
 			<Field id="BLEHCILabel" type="label"   > 
-				<Label>== Use which BLE adoptor for BLE SENSOR (if used):</Label>
+				<Label>== Use which BLE adaptor for BLE SENSOR (if used):</Label>
 			</Field>
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
 				<Label> .... BLE sensor:</Label>
 				<List>
 					<Option value="-1"    >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
-					<Option value="USB"   >use USB = external for RPI3+ and RPI3 w wifi</Option>
+					<Option value="USB"   >use USB = external if WiFi on board is used</Option>
 				</List>
-			</Field>
-			<Field id="BLEHCILabel2" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-				<Label>Two issues: (A) wifi on RPI together w BLE does not work, use USB external dongle, 
-(B) for RPI3plus and SSD image &gt; 2018-11 BLEsensor does not work w build in BLE chip, needs USB BLE dongle.</Label>
 			</Field>
 
 			<Field id="label2"               type="label" > 
@@ -1806,24 +1921,6 @@ Change here or in initial setup:</Label>
 				<List class="self" filter="" method="filterTempSensorsOnThisRPI" dynamicReload="false" />
 			 </Field>
 
-
-			<Field id="enableVoltage"              type="label"> 
-				<Label>== Enable voltage monitoring:...</Label>
-			</Field>
-			<Field id="enableVoltageCheck"	type="menu" defaultValue="0"  >	
-				<Label> ... use method:</Label>
-				<List>
-					<Option value="0"     >dis-enable v-check, ie for pi zero</Option>
-					<Option value="file"  >enable v-check throught checking @ /sys/devices/platform/soc/soc:firmware/get_throttled"</Option>
-					<Option value="gpio"  >enable v-check throught GPIO#35, 2.choice</Option>
-				</List>
-			 </Field>
-			<Field id="enableVoltageCheckLabel"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
-				<Label>There are 2 methods (a) checking GPIO35, if value==0 --> event. This does not work on Pi0, it will disable the pi0
-(b) checking file for values !=0
-     /sys/devices/platform/soc/soc:firmware/get_throttled</Label>
-			</Field>
-
 			<Field id="labelGPIOfirst"               type="label"> 
 				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
 			</Field>
@@ -1999,6 +2096,14 @@ Change here or in initial setup:</Label>
 				<ControlPageLabel>online</ControlPageLabel>
 			</State>
 
+
+			<State id="last_MessageFromRpi">
+				<ValueType>String</ValueType>
+				<TriggerLabel>last_MessageFromRpi</TriggerLabel>
+				<ControlPageLabel>last_MessageFromRpi</ControlPageLabel>
+			</State>
+
+
 			<State id="i2c_active">
 				<ValueType>String</ValueType>
 				<TriggerLabel>i2c_active</TriggerLabel>
@@ -2027,6 +2132,12 @@ Change here or in initial setup:</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>last_masterStart</TriggerLabel>
 				<ControlPageLabel>last_masterStart</ControlPageLabel>
+			</State>
+
+			<State id="RPI_throttled">
+				<ValueType>String</ValueType>
+				<TriggerLabel>RPI_throttled</TriggerLabel>
+				<ControlPageLabel>RPI_throttled</ControlPageLabel>
 			</State>
 
 
@@ -2074,11 +2185,6 @@ Change here or in initial setup:</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>sensors_active</TriggerLabel>
 				<ControlPageLabel>sensors_active</ControlPageLabel>
-			</State>
-			<State id="bad_voltage_count">
-				<ValueType>String</ValueType>
-				<TriggerLabel>bad_voltage_count</TriggerLabel>
-				<ControlPageLabel>bad_voltage_count</ControlPageLabel>
 			</State>
 
 		</States>
@@ -2433,12 +2539,12 @@ this requires other plugins to subscribe to this service</Label>
 				</List>
 			</Field>
 			<Field id="newMACNumber" type="textfield"     defaultValue=""> 
-				<Label>... overwrite the current MAC number with:</Label>
+				<Label>... overwrite the current BLE-MAC number with:</Label>
 			</Field>
 
 			<Field id="label61"   type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" > 
 				<Label>Must not be equal to an existing ACTIVE device. Use this to eg replace an iBeacon with a new one. Write MAC address of new beacon here. This will then ONLY replace the MAC number and keep history of THIS device. It will set the old MAC# to IGNORE
-You can use this also to create a new iBeacon device   But do NOT use an existing MAC number</Label>
+You can use this also to create a new iBeacon device...BUT do NOT use a MAC number of an existing indigo beaacon device</Label>
 			</Field>
 		</ConfigUI>
       
@@ -2488,164 +2594,164 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</State>
 
         
-			<State id="Pi_0_Signal">
+			<State id="Pi_00_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_0_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_0_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_00_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_00_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_0_Distance">
+			<State id="Pi_00_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_0_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_00_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_0_Time">
+			<State id="Pi_00_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_0_Time</TriggerLabel>
-			<ControlPageLabel>Pi_0_Time</ControlPageLabel>
+			<TriggerLabel>Pi_00_Time</TriggerLabel>
+			<ControlPageLabel>Pi_00_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_1_Signal">
+			<State id="Pi_01_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_1_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_1_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_01_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_01_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_1_Distance">
+			<State id="Pi_01_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_1_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_1_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_01_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_01_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_1_Time">
+			<State id="Pi_01_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_1_Time</TriggerLabel>
-			<ControlPageLabel>Pi_1_Time</ControlPageLabel>
+			<TriggerLabel>Pi_01_Time</TriggerLabel>
+			<ControlPageLabel>Pi_01_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_2_Signal">
+			<State id="Pi_02_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_2_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_3_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_02_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_03_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_2_Distance">
+			<State id="Pi_02_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_2_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_2_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_02_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_02_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_2_Time">
+			<State id="Pi_02_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_2_Time</TriggerLabel>
-			<ControlPageLabel>Pi_2_Time</ControlPageLabel>
+			<TriggerLabel>Pi_02_Time</TriggerLabel>
+			<ControlPageLabel>Pi_02_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_3_Signal">
+			<State id="Pi_03_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_3_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_3_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_03_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_03_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_3_Distance">
+			<State id="Pi_03_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_3_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_3_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_03_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_03_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_3_Time">
+			<State id="Pi_03_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_3_Time</TriggerLabel>
-			<ControlPageLabel>Pi_3_Time</ControlPageLabel>
+			<TriggerLabel>Pi_03_Time</TriggerLabel>
+			<ControlPageLabel>Pi_03_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_4_Signal">
+			<State id="Pi_04_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_4_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_4_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_04_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_04_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_4_Distance">
+			<State id="Pi_04_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_4_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_4_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_04_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_04_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_4_Time">
+			<State id="Pi_04_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_4_Time</TriggerLabel>
-			<ControlPageLabel>Pi_4_Time</ControlPageLabel>
+			<TriggerLabel>Pi_04_Time</TriggerLabel>
+			<ControlPageLabel>Pi_04_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_5_Signal">
+			<State id="Pi_05_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_5_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_5_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_05_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_05_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_5_Distance">
+			<State id="Pi_05_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_5_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_5_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_05_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_05_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_5_Time">
+			<State id="Pi_05_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_5_Time</TriggerLabel>
-			<ControlPageLabel>Pi_5_Time</ControlPageLabel>
+			<TriggerLabel>Pi_05_Time</TriggerLabel>
+			<ControlPageLabel>Pi_05_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_6_Signal">
+			<State id="Pi_06_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_6_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_6_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_06_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_06_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_6_Distance">
+			<State id="Pi_06_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_6_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_06_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_6_Time">
+			<State id="Pi_06_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_6_Time</TriggerLabel>
-			<ControlPageLabel>Pi_6_Time</ControlPageLabel>
+			<TriggerLabel>Pi_06_Time</TriggerLabel>
+			<ControlPageLabel>Pi_06_Time</ControlPageLabel>
 			</State>
         
-			<State id="Pi_7_Signal">
+			<State id="Pi_07_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_7_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_7_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_07_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_07_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_7_Distance">
+			<State id="Pi_07_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_7_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_7_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_07_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_07_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_7_Time">
+			<State id="Pi_07_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_7_Time</TriggerLabel>
-			<ControlPageLabel>Pi_7_Time</ControlPageLabel>
+			<TriggerLabel>Pi_07_Time</TriggerLabel>
+			<ControlPageLabel>Pi_07_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_8_Signal">
+			<State id="Pi_08_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_8_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_8_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_08_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_08_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_8_Distance">
+			<State id="Pi_08_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_8_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_8_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_08_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_08_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_8_Time">
+			<State id="Pi_08_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_8_Time</TriggerLabel>
-			<ControlPageLabel>Pi_8_Time</ControlPageLabel>
+			<TriggerLabel>Pi_08_Time</TriggerLabel>
+			<ControlPageLabel>Pi_08_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_9_Signal">
+			<State id="Pi_09_Signal">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_9_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_9_Signal</ControlPageLabel>
+			<TriggerLabel>Pi_09_Signal</TriggerLabel>
+			<ControlPageLabel>Pi_09_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_9_Distance">
+			<State id="Pi_09_Distance">
 			<ValueType>Number</ValueType>
-			<TriggerLabel>Pi_9_Distance</TriggerLabel>
-			<ControlPageLabel>Pi_9_Distance</ControlPageLabel>
+			<TriggerLabel>Pi_09_Distance</TriggerLabel>
+			<ControlPageLabel>Pi_09_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_9_Time">
+			<State id="Pi_09_Time">
 			<ValueType>String</ValueType>
-			<TriggerLabel>Pi_9_Time</TriggerLabel>
-			<ControlPageLabel>Pi_9_Time</ControlPageLabel>
+			<TriggerLabel>Pi_09_Time</TriggerLabel>
+			<ControlPageLabel>Pi_09_Time</ControlPageLabel>
 			</State>
 
 			<State id="Pi_10_Signal">
@@ -2741,6 +2847,71 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>String</ValueType>
 				<TriggerLabel>Pi_15_Time</TriggerLabel>
 				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
+			</State>
+
+
+			<State id="Pi_16_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_16_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_16_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_16_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_16_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_16_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_16_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_16_Time</TriggerLabel>
+				<ControlPageLabel>Pi_16_Time</ControlPageLabel>
+			</State>
+        
+			<State id="Pi_17_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_17_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_17_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_17_Time</TriggerLabel>
+				<ControlPageLabel>Pi_17_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_18_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_18_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_18_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_18_Time</TriggerLabel>
+				<ControlPageLabel>Pi_18_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_19_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_19_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_19_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_19_Time</TriggerLabel>
+				<ControlPageLabel>Pi_19_Time</ControlPageLabel>
 			</State>
 
 			<State id="updateReason">
@@ -2849,22 +3020,26 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<Label>enable BLE connect search on the following rPi</Label>
 			</Field>
 
-			<Field id="rPiEnable0" type="checkbox" defaultValue="false">  <Label>rPi #0:</Label> </Field>
-			<Field id="rPiEnable1" type="checkbox" defaultValue="false">  <Label>rPi #1:</Label> </Field>
-			<Field id="rPiEnable2" type="checkbox" defaultValue="false">  <Label>rPi #2:</Label> </Field>
-			<Field id="rPiEnable3" type="checkbox" defaultValue="false">  <Label>rPi #3:</Label> </Field>
-			<Field id="rPiEnable4" type="checkbox" defaultValue="false">  <Label>rPi #4:</Label> </Field>
-			<Field id="rPiEnable5" type="checkbox" defaultValue="false">  <Label>rPi #5:</Label> </Field>
-			<Field id="rPiEnable6" type="checkbox" defaultValue="false">  <Label>rPi #6:</Label> </Field>
-			<Field id="rPiEnable7" type="checkbox" defaultValue="false">  <Label>rPi #7:</Label> </Field>
-			<Field id="rPiEnable8" type="checkbox" defaultValue="false">  <Label>rPi #8:</Label> </Field>
-			<Field id="rPiEnable9" type="checkbox" defaultValue="false">  <Label>rPi #9:</Label> </Field>
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
 			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
 			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
 			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
 			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
 			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
 			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
 
 
 
@@ -3082,164 +3257,164 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</State>
 
 
-			<State id="Pi_0_Signal">
+			<State id="Pi_00_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_0_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_0_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_00_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_00_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_0_Distance">
+			<State id="Pi_00_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_0_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_00_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_0_Time">
+			<State id="Pi_00_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_0_Time</TriggerLabel>
-				<ControlPageLabel>Pi_0_Time</ControlPageLabel>
+				<TriggerLabel>Pi_00_Time</TriggerLabel>
+				<ControlPageLabel>Pi_00_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_1_Signal">
+			<State id="Pi_01_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_1_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_1_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_01_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_01_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_1_Distance">
+			<State id="Pi_01_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_0_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_00_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_1_Time">
+			<State id="Pi_01_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_1_Time</TriggerLabel>
-				<ControlPageLabel>Pi_1_Time</ControlPageLabel>
+				<TriggerLabel>Pi_01_Time</TriggerLabel>
+				<ControlPageLabel>Pi_01_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_2_Signal">
+			<State id="Pi_02_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_2_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_3_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_02_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_03_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_2_Distance">
+			<State id="Pi_02_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_2_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_2_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_02_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_02_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_2_Time">
+			<State id="Pi_02_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_2_Time</TriggerLabel>
-				<ControlPageLabel>Pi_2_Time</ControlPageLabel>
+				<TriggerLabel>Pi_02_Time</TriggerLabel>
+				<ControlPageLabel>Pi_02_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_3_Signal">
+			<State id="Pi_03_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_3_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_3_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_03_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_03_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_3_Distance">
+			<State id="Pi_03_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_3_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_3_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_03_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_03_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_3_Time">
+			<State id="Pi_03_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_3_Time</TriggerLabel>
-				<ControlPageLabel>Pi_3_Time</ControlPageLabel>
+				<TriggerLabel>Pi_03_Time</TriggerLabel>
+				<ControlPageLabel>Pi_03_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_4_Signal">
+			<State id="Pi_04_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_4_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_4_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_04_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_04_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_4_Distance">
+			<State id="Pi_04_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_4_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_4_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_04_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_04_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_4_Time">
+			<State id="Pi_04_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_4_Time</TriggerLabel>
-				<ControlPageLabel>Pi_4_Time</ControlPageLabel>
+				<TriggerLabel>Pi_04_Time</TriggerLabel>
+				<ControlPageLabel>Pi_04_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_5_Signal">
+			<State id="Pi_05_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_5_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_5_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_05_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_05_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_5_Distance">
+			<State id="Pi_05_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_5_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_5_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_05_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_05_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_5_Time">
+			<State id="Pi_05_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_5_Time</TriggerLabel>
-				<ControlPageLabel>Pi_5_Time</ControlPageLabel>
+				<TriggerLabel>Pi_05_Time</TriggerLabel>
+				<ControlPageLabel>Pi_05_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_6_Signal">
+			<State id="Pi_06_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_6_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_6_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_06_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_06_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_6_Distance">
+			<State id="Pi_06_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_6_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_0_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_06_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_6_Time">
+			<State id="Pi_06_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_6_Time</TriggerLabel>
-				<ControlPageLabel>Pi_6_Time</ControlPageLabel>
+				<TriggerLabel>Pi_06_Time</TriggerLabel>
+				<ControlPageLabel>Pi_06_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_7_Signal">
+			<State id="Pi_07_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_7_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_7_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_07_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_07_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_7_Distance">
+			<State id="Pi_07_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_7_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_7_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_07_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_07_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_7_Time">
+			<State id="Pi_07_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_7_Time</TriggerLabel>
-				<ControlPageLabel>Pi_7_Time</ControlPageLabel>
+				<TriggerLabel>Pi_07_Time</TriggerLabel>
+				<ControlPageLabel>Pi_07_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_8_Signal">
+			<State id="Pi_08_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_8_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_8_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_08_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_08_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_8_Distance">
+			<State id="Pi_08_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_8_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_8_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_08_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_08_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_8_Time">
+			<State id="Pi_08_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_8_Time</TriggerLabel>
-				<ControlPageLabel>Pi_8_Time</ControlPageLabel>
+				<TriggerLabel>Pi_08_Time</TriggerLabel>
+				<ControlPageLabel>Pi_08_Time</ControlPageLabel>
 			</State>
 
-			<State id="Pi_9_Signal">
+			<State id="Pi_09_Signal">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_9_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_9_Signal</ControlPageLabel>
+				<TriggerLabel>Pi_09_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_09_Signal</ControlPageLabel>
 			</State>
-			<State id="Pi_9_Distance">
+			<State id="Pi_09_Distance">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Pi_9_Distance</TriggerLabel>
-				<ControlPageLabel>Pi_9_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_09_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_09_Distance</ControlPageLabel>
 			</State>
-			<State id="Pi_9_Time">
+			<State id="Pi_09_Time">
 				<ValueType>String</ValueType>
-				<TriggerLabel>Pi_9_Time</TriggerLabel>
-				<ControlPageLabel>Pi_9_Time</ControlPageLabel>
+				<TriggerLabel>Pi_09_Time</TriggerLabel>
+				<ControlPageLabel>Pi_09_Time</ControlPageLabel>
 			</State>
 
 			<State id="Pi_10_Signal">
@@ -3337,6 +3512,70 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<ValueType>String</ValueType>
 				<TriggerLabel>Pi_15_Time</TriggerLabel>
 				<ControlPageLabel>Pi_15_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_16_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_16_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_16_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_16_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_16_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_16_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_16_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_16_Time</TriggerLabel>
+				<ControlPageLabel>Pi_16_Time</ControlPageLabel>
+			</State>
+        
+			<State id="Pi_17_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_17_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_17_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_17_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_17_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_17_Time</TriggerLabel>
+				<ControlPageLabel>Pi_17_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_18_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_18_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_18_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_18_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_18_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_18_Time</TriggerLabel>
+				<ControlPageLabel>Pi_18_Time</ControlPageLabel>
+			</State>
+
+			<State id="Pi_19_Signal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Signal</TriggerLabel>
+				<ControlPageLabel>Pi_19_Signal</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Distance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pi_19_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_19_Distance</ControlPageLabel>
+			</State>
+			<State id="Pi_19_Time">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pi_19_Time</TriggerLabel>
+				<ControlPageLabel>Pi_19_Time</ControlPageLabel>
 			</State>
 
 
@@ -3453,6 +3692,26 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 				<Option value="180" > 3 minutes at most</Option>
 			</List>
 			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 
 		<States>
@@ -3574,6 +3833,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 	<States>
 			<State id="status">
@@ -3694,6 +3972,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 	<States>
@@ -3871,6 +4168,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 	<States>
 			<State id="status">
@@ -3989,6 +4305,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</List>
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 		<States>
@@ -4115,6 +4450,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -4236,6 +4590,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 		<States>
@@ -4400,6 +4773,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured Pressure(Pascal):</Label> </Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -4561,6 +4953,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 	<States>
@@ -4724,6 +5135,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 		<States>
@@ -4889,6 +5319,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -5051,6 +5500,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 		<States>
@@ -5223,6 +5691,25 @@ You can use this also to create a new iBeacon device   But do NOT use an existin
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 		<States>
@@ -5548,6 +6035,27 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -5836,6 +6344,25 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -6017,6 +6544,25 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -6181,6 +6727,25 @@ After some days of running in clean air, proposed setup is:
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 		<States>
@@ -6370,6 +6935,25 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -6534,9 +7118,28 @@ After some days of running in clean air, proposed setup is:
 				<Option value="airQuality"      >air Quality Level USA definitions</Option>
 			</List>
 			</Field>
-		</ConfigUI>
-		<States>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+		</ConfigUI>
+
+		<States>
 			<State id="status">
 				<ValueType>String</ValueType>
 				<TriggerLabel>status</TriggerLabel>
@@ -6681,7 +7284,27 @@ After some days of running in clean air, proposed setup is:
 			</List>
 			</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
+
 		<States>
 			<State id="status">
 				<ValueType>String</ValueType>
@@ -6903,7 +7526,27 @@ It measures CO2 and temp using infrared light absorption
 			</List>
 			</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
+
 		<States>
 			<State id="status">
 				<ValueType>String</ValueType>
@@ -7077,7 +7720,27 @@ It measures CO2 VOC
 			</List>
 			</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
+
 		<States>
 			<State id="status">
 				<ValueType>String</ValueType>
@@ -7293,7 +7956,28 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
+
 		<States>
 			<State id="status">
 				<ValueType>String</ValueType>
@@ -7516,6 +8200,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.4f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -7743,6 +8447,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -7854,6 +8578,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -7990,6 +8734,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -8127,6 +8891,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -8267,6 +9051,26 @@ It measures CO2 VOC
 			</Field> 
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -8358,6 +9162,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -8463,6 +9287,26 @@ It measures CO2 VOC
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -8669,6 +9513,25 @@ It measures CO2 VOC
 			</Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">	</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
 
 		</ConfigUI>
 	<States>
@@ -11443,6 +12306,26 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="offset" type="textfield"     defaultValue="0"> <Label>offset added to measured value:</Label> </Field>
 			<Field id="mult"   type="textfield"     defaultValue="1"> <Label>multiply measured value:</Label> </Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -11582,6 +12465,26 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="mult"       type="textfield"     defaultValue="1">			<Label>...multiply number by :</Label></Field>
 			<Field id="format"     type="textfield"     defaultValue="">			<Label>...format number (eg %5.1f):</Label></Field>
 			<Field id="unit"       type="textfield"     defaultValue="[mV]">			<Label>...unit:</Label></Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 
 		</ConfigUI>
 		<States>
@@ -11745,6 +12648,26 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="format"     type="textfield"     defaultValue="">			<Label>...format number (eg %5.1f):</Label></Field>
 			<Field id="unit"       type="textfield"     defaultValue="[mV]">			<Label>...unit:</Label></Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -11806,310 +12729,6 @@ For the MQ gas sensors you need to understand the required heating voltage.
 		</States>
 
 	</Device>
-
-
-
-	<Device type="sensor" id="i2cADS1x15-1">
-	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel</Name>
-	<UiDisplayStateId>status</UiDisplayStateId>
-		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
-
-
-			<Field id="infoLabeli2cADS1x15" type="label">
-			<Label>Setup ADS1x15 one channel ADC on individual rPis .. connect 3.3, GND, SDA,SCL</Label>
-			</Field>
-			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-			<Label>select rPi-server to which the ADS1x15 ADC is connect to:</Label> 
-			</Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="73"> <Label>i2c address of ADC, connect ADR to xxx :</Label>
-			<List>
-				<Option value="72"   >0x48 = 72: ADR-GND</Option>
-				<Option value="73"   >0x49 = 73: ADR-VDD (default)</Option>
-				<Option value="74"   >0x4A = 74: ADR-SDA</Option>
-				<Option value="75"   >0x4B = 75: ADR-SCL</Option>
-			</List>
-			</Field>
-			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-			<Label>use TCA9548A multiplexer for this sensor:</Label> 
-			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
-			</List>
-			</Field>
-			<Field id="resModel" type="menu"     defaultValue="1"> <Label>which ADS model:</Label>
-			<List>
-				<Option value="1"   >ADS1115 = 16 bit</Option>
-				<Option value="0"   >ADS1015 = 12 bit</Option>
-			</List>
-			</Field>
-			<Field id="gain" type="menu"     defaultValue="6144"> <Label>Gain:</Label>
-			<List>
-				<Option value="6144"   >2/3 Gain : +- 6.144V, 3mV     res default</Option>
-				<Option value="4096"   >1   Gain : +- 4.096V, 2mV     res</Option>
-				<Option value="2048"   >2   Gain : +- 2.048V, 1mV     res</Option>
-				<Option value="1024"   >4   Gain : +- 1.024V, 0.5mV   res</Option>
-				<Option value="512"    >8   Gain : +- 0.512V, 0.25mV  res</Option>
-				<Option value="256"    >16  Gain : +- 0.256V, 0.125mV res</Option>
-			</List>
-			</Field>
-
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			<Field id="displayS" type="menu"     defaultValue="INPUT_0" hidden="YES"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="INPUT_0"   >input# 0</Option>
-			</List>
-			</Field>
-			<Field id="input" type="menu"     defaultValue="0"> <Label>channel to measure:</Label>
-			<List>
-				<Option value="0"  >INPUT 0</Option>
-				<Option value="1"  >INPUT 1</Option>
-				<Option value="2"  >INPUT 2</Option>
-				<Option value="3"  >INPUT 3</Option>
-			</List>
-			</Field>
-			<Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
-			<Field id="unit"       type="textfield"     defaultValue="[mV]">			<Label>unit:</Label></Field>
-			<Field id="offset"     type="textfield"     defaultValue="0">			<Label>add offset:</Label></Field>
-			<Field id="mult"       type="textfield"     defaultValue="1">			<Label>multiply number by :</Label></Field>
-			<Field id="format"     type="textfield"     defaultValue="">			<Label>format number (eg %3.1f):</Label></Field>
-			<Field id="infodispl"  type="textfield" defaultValue="(v+off)*mult"  readonly="YES">    
-                                               								<Label> display = </Label>  </Field>
-			<Field id="logScale"   type="menu"          defaultValue="0" tooltip="display log10(R or V)+ offset)*mult">	<Label>use logscale:</Label>
-			<List>
-				<Option value="1"  >yes, use logscale</Option>
-				<Option value="0"  >no, use linear</Option>
-			</List>
-			</Field>
-
-			<Field id="resistorSensor" type="menu"          defaultValue="0" tooltip="R= (feedResistor/(feedVolt/Volt-1.)+offset)*mult">	<Label>sensor is resistor:</Label>
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >no</Option>
-			</List>
-			</Field>
-			<Field id="feedResistor"    type="textfield"    defaultValue="10000" visibleBindingId="resistorSensor"    visibleBindingValue="1">  
-                                               								<Label>value of feed resistor (Ohm):</Label></Field>
-			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="1">    
-                                               								<Label>feed Voltage(mV):</Label></Field>
-
-		</ConfigUI>
-		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="INPUT_0">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_0</TriggerLabel>
-				<ControlPageLabel>INPUT_0</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MaxToday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MinToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinToday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MaxYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-		</States>
-	</Device>
-
-
-
-	<Device type="sensor" id="i2cADS1x15">
-	<Name>INPUT-ADC-4x16bit-i2cADS1x15</Name>
-	<UiDisplayStateId>status</UiDisplayStateId>
-		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
-			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
-
-
-			<Field id="infoLabeli2cADS1x15" type="label">
-			<Label>Setup ADS1x15 4 channel ADC on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
-			</Field>
-			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-			<Label>select rPi-server to which the ADS1x15 ADC is connect to:</Label> 
-			</Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="73"> <Label>i2c address of ADC, connect ADR to xxx :</Label>
-			<List>
-				<Option value="72"   >0x48 = 72: ADR-GND</Option>
-				<Option value="73"   >0x49 = 73: ADR-VDD (default)</Option>
-				<Option value="74"   >0x4A = 74: ADR-SDA</Option>
-				<Option value="75"   >0x4B = 75: ADR-SCL</Option>
-			</List>
-			</Field>
-			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-			<Label>use TCA9548A multiplexer for this sensor:</Label> 
-			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
-			</List>
-			</Field>
-			<Field id="resModel" type="menu"     defaultValue="1"> <Label>which ADS model:</Label>
-			<List>
-				<Option value="1"   >ADS1115 = 16 bit</Option>
-				<Option value="0"   >ADS1015 = 12 bit</Option>
-			</List>
-			</Field>
-			<Field id="gain" type="menu"     defaultValue="6144"> <Label>Gain:</Label>
-			<List>
-				<Option value="6144"   >2/3 Gain : +- 6.144V, 3mV     res default</Option>
-				<Option value="4096"   >1   Gain : +- 4.096V, 2mV     res</Option>
-				<Option value="2048"   >2   Gain : +- 2.048V, 1mV     res</Option>
-				<Option value="1024"   >4   Gain : +- 1.024V, 0.5mV   res</Option>
-				<Option value="512"    >8   Gain : +- 0.512V, 0.25mV  res</Option>
-				<Option value="256"    >16  Gain : +- 0.256V, 0.125mV res</Option>
-			</List>
-			</Field>
-
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			<Field id="displayS" type="menu"     defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="INPUT_0"   >input# 0</Option>
-				<Option value="INPUT_1"   >input# 1</Option>
-				<Option value="INPUT_2"   >input# 2</Option>
-				<Option value="INPUT_3"   >input# 3</Option>
-			</List>
-			</Field>
-			<Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
-			<Field id="unit"       type="textfield"     defaultValue="[mV]">			<Label>unit:</Label></Field>
-			<Field id="offset"     type="textfield"     defaultValue="0">			<Label>add offset:</Label></Field>
-			<Field id="mult"       type="textfield"     defaultValue="1">			<Label>multiply number by :</Label></Field>
-			<Field id="format"     type="textfield"     defaultValue="">			<Label>format number (eg %3.1f):</Label></Field>
-			<Field id="infodispl"  type="textfield" defaultValue="(v+off)*mult"  readonly="YES">    
-                                               								<Label> display = </Label>  </Field>
-			<Field id="logScale"   type="menu"          defaultValue="0" tooltip="display log10(R or V)+ offset)*mult">	<Label>use logscale:</Label>
-			<List>
-				<Option value="1"  >yes, use logscale</Option>
-				<Option value="0"  >no, use linear</Option>
-			</List>
-			</Field>
-
-			<Field id="resistorSensor" type="menu"          defaultValue="0" tooltip="R= (feedResistor/(feedVolt/Volt-1.)+offset)*mult">	<Label>sensor is resistor:</Label>
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >no</Option>
-			</List>
-			</Field>
-			<Field id="feedResistor"    type="textfield"    defaultValue="10000" visibleBindingId="resistorSensor"    visibleBindingValue="1">  
-                                               								<Label>value of feed resistor (Ohm):</Label></Field>
-			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="1">    
-                                               								<Label>feed Voltage(mV):</Label></Field>
-
-		</ConfigUI>
-		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="INPUT_0">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_0</TriggerLabel>
-				<ControlPageLabel>INPUT_0</ControlPageLabel>
-			</State>
-			<State id="INPUT_1">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_1</TriggerLabel>
-				<ControlPageLabel>INPUT_1</ControlPageLabel>
-			</State>
-			<State id="INPUT_2">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_2</TriggerLabel>
-				<ControlPageLabel>INPUT_2</ControlPageLabel>
-			</State>
-			<State id="INPUT_3">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_3</TriggerLabel>
-				<ControlPageLabel>INPUT_3</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MaxToday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MinToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinToday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MaxYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-		</States>
-	</Device>
-
-
 
 	<Device type="sensor" id="spiMCP3008">
 	<Name>INPUT-ADC-8x10bit-spiMCP3008</Name>
@@ -12179,6 +12798,26 @@ For the MQ gas sensors you need to understand the required heating voltage.
                                                								<Label>value of feed resistor (Ohm):</Label></Field>
 			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="1">    
                                                								<Label>feed Voltage(mV):</Label></Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -12332,6 +12971,26 @@ For the MQ gas sensors you need to understand the required heating voltage.
                                                								<Label>value of feed resistor (Ohm):</Label></Field>
 			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="1">    
                                                								<Label>feed Voltage(mV):</Label></Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -12381,8 +13040,8 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 
-	<Device type="sensor" id="i2cPCF8591-1">
-	<Name>INPUT-ADC-4x8bit-one-channel-i2cPCF8591</Name>
+	<Device type="sensor" id="ADS1x15">
+	<Name>INPUT-ADC-4x12/16bit-one-channel-i2c-ADS1x15</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12393,73 +13052,221 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="true"></Field>
 
 
-			<Field id="infoLabeli2cPCF8591" type="label">
-			<Label>Setup i2cPCF8591 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL</Label>
+			<Field id="infoLabelADS1x15" type="label">
+			<Label>Setup i2c - ADS1x15 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL
+returns numbers 0...255</Label>
 			</Field>
+
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the INPUT is connect to:</Label> 
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c Address:</Label>
-			<List>
-				<Option value="72"   >0x48 = 72: def</Option>
-				<Option value="73"   >0x49 = 73: </Option>
-				<Option value="74"   >0x4A = 74: </Option>
-				<Option value="75"   >0x4B = 75: </Option>
-			</List>
+				<List>
+				<Option value="72"   >0x48 = 72: ADR-GND</Option>
+				<Option value="73"   >0x49 = 73: ADR-VDD (default)</Option>
+				<Option value="74"   >0x4A = 74: ADR-SDA</Option>
+				<Option value="75"   >0x4B = 75: ADR-SCL</Option>
+				</List>
 			</Field>
-			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
-			<Label>use TCA9548A multiplexer for this sensor:</Label> 
+
+			<Field id="gain" type="menu"     defaultValue="4096"> <Label>Gain:</Label>
 			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
+				<Option value="6144"   >2/3 Gain : max=6.144V, 3mV/bit     res </Option>
+				<Option value="4096"   >1   Gain : max=4.096V, 2mV/bit     res default</Option>
+				<Option value="2048"   >2   Gain : max=2.048V, 1mV/bit     res</Option>
+				<Option value="1024"   >4   Gain : max=1.024V, 0.5mV/bit   res</Option>
+				<Option value="512"    >8   Gain : max=0.512V, 0.25mV/bit  res</Option>
+				<Option value="256"    >16  Gain : max=0.256V, 0.125mV/bit res</Option>
 			</List>
 			</Field>
 
+			<Field id="resModel" type="menu"     defaultValue="16"> <Label>which ADS model:</Label>
+			<List>
+				<Option value="16"   >ADS1115 = 16 bit</Option>
+				<Option value="12"   >ADS1015 = 12 bit</Option>
+			</List>
+			</Field>
+
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
+			<Label>time between reading sensor:</Label>
+				<List>
+					<Option value="0.1" > 0.1   secs </Option>
+					<Option value="0.2" > 0.2   secs </Option>
+					<Option value="0.3" > 0.3   secs </Option>
+					<Option value="0.5" > 0.5   secs </Option>
+					<Option value="0.7" > 0.7   secs </Option>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="2"   > 2   secs</Option>
+					<Option value="3"   > 3   secs</Option>
+					<Option value="4"   > 4   secs</Option>
+					<Option value="6"   > 6   secs</Option>
+					<Option value="8"   > 8   secs</Option>
+					<Option value="10"  > 10  secs</Option>
+				</List>
+			</Field>
+
+			<Field id="sendToIndigoEvery" type="menu"     defaultValue="60" hidden="no" > 
+			<Label>Update indigo every x secs even if no trigger:</Label>
+				<List>
+					<Option value="10"  > 10  secs</Option>
+					<Option value="20"  > 20  secs</Option>
+					<Option value="30"  > 30  secs</Option>
+					<Option value="40"  > 40  secs</Option>
+					<Option value="50"  > 50  secs</Option>
+					<Option value="60"  > 60  secs</Option>
+					<Option value="70"  > 70  secs</Option>
+					<Option value="80"  > 80  secs</Option>
+					<Option value="80"  > 80  secs</Option>
+					<Option value="90"  > 90  secs</Option>
+					<Option value="120"  > 120  secs</Option>
+					<Option value="150"  > 150  secs</Option>
+					<Option value="180"  > 180  secs</Option>
+				</List>
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+			<Label>min delta secs between indigo updates:</Label>
+				<List>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="2"   > 2   secs</Option>
+					<Option value="3"   > 3   secs</Option>
+					<Option value="4"   > 4   secs</Option>
+					<Option value="6"   > 6   secs</Option>
+					<Option value="8"   > 8   secs</Option>
+					<Option value="10"  > 10  secs</Option>
+				</List>
+			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="textfield"         defaultValue="INPUT" hidden="YES"> </Field>
 			<Field id="input" type="menu"     defaultValue="0"> <Label>channel to measure:</Label>
-			<List>
-				<Option value="0"  >INPUT 0</Option>
-				<Option value="1"  >INPUT 1</Option>
-				<Option value="2"  >INPUT 2</Option>
-				<Option value="3"  >INPUT 3</Option>
-			</List>
-			</Field>
-			<Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
-			<Field id="unit"   type="textfield"       defaultValue="[mV]">	<Label>unit:</Label></Field>
-			<Field id="offset" type="textfield"       defaultValue="0">		<Label>add offset:</Label></Field>
-			<Field id="mult"   type="textfield"       defaultValue="1">		<Label>multiply number by :</Label></Field>
-			<Field id="format" type="textfield"       defaultValue="">		<Label>format number (eg %3.1f):</Label></Field>
-			<Field id="infodispl" type="textfield"    defaultValue="(v+off)*mult"  readonly="YES">						<Label> display = </Label>  </Field>
-			<Field id="logScale" type="menu"          defaultValue="0" tooltip="display log10(R or V)+ offset)*mult">	<Label>use logscale:</Label>
-			<List>
-				<Option value="1"  >yes, use logscale</Option>
-				<Option value="0"  >no, use linear</Option>
-			</List>
+				<List>
+					<Option value="0"  >INPUT 0</Option>
+					<Option value="1"  >INPUT 1</Option>
+					<Option value="2"  >INPUT 2</Option>
+					<Option value="3"  >INPUT 3</Option>
+					<Option value="0-1"  >INPUT 0 - INPUT 1</Option>
+					<Option value="2-3"  >INPUT 2 - INPUT 3</Option>
+				</List>
 			</Field>
 
-			<Field id="resistorSensor" type="menu"          defaultValue="0" tooltip="R= (feedResistor/(feedVolt/Volt-1.)+offset)*mult">	<Label>sensor is resistor:</Label>
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >no</Option>
-			</List>
+			<Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
+
+			<Field id="evalLabel" type="label" fontSize="small" >
+				<Label>
+===For all following numbers you can use simple number but also eg 1./255 or more complicated formulas - make sure you use float numbers, not integers
+The sequence of application is: 
+0. value: (raw+offset)*multiplier
+1. resistor: R = (feedResistor/(feedVolt/INPUT-1.)
+2. min/max range: SensValue = (INPUT-MinRange)(MaxRange-MinRange)
+3. 1/value if selected
+4. log: value = Log10(value)  // linear: value = value
+5. value = (value+offset2)*multiplier2
+6. format 
+7. unit added to end of string</Label>
 			</Field>
-			<Field id="feedResistor"    type="textfield"    defaultValue="10000" visibleBindingId="resistorSensor"    visibleBindingValue="1">  
-                                               								<Label>value of feed resistor (Ohm):</Label></Field>
-			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="1">    
-                                               								<Label>feed Voltage(mV):</Label></Field>
+
+
+			<Field id="offset" type="textfield"       defaultValue="0">		<Label>add offset(1):</Label></Field>
+			<Field id="mult"   type="textfield"       defaultValue="1">		<Label>multiply(1) number by:</Label></Field>
+
+			<Field id="resistorSensor" type="menu"          defaultValue="0" >	
+				<Label>sensor is resistor:</Label>
+				<List>
+					<Option value="V+"      >to V+                                                                                                                                                                                                                                                 </Option>
+					<Option value="ground"  >at ground</Option>
+					<Option value="0"  >no</Option>
+				</List>
+			</Field>
+
+
+			<Field id="resistorSensorLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="resistorSensor"    visibleBindingValue="V+,ground">
+				<Label>R = feedResistor/(feedVolt/INPUT-1.) for sensor towards ground
+R = feedResistor*(feedVolt/INPUT-1.) for sensor toward V+
+use bit max value, not actual voltage for feedVolt </Label>
+			</Field>
+
+			<Field id="feedResistor"    type="textfield"    defaultValue="10000" visibleBindingId="resistorSensor"    visibleBindingValue="V+,ground">  
+				<Label>value of feed resistor (Ohm):</Label>
+			</Field>
+
+			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="V+,ground">    
+			 	<Label>feed Voltage(= max bits):</Label>
+			</Field>
+              
+			<Field id="maxMin" type="menu"          defaultValue="0" >	
+				<Label>Sensor is in range Min..Max:</Label>
+				<List>
+					<Option value="1"  >yes</Option>
+					<Option value="0"  >no</Option>
+				</List>
+			</Field>
+
+			<Field id="maxMinLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="maxMin"    visibleBindingValue="1">
+				<Label>SensValue = (INPUT-MinRange)(MaxRange-MinRange) </Label>
+			</Field>
+
+			<Field id="MAXRange"    type="textfield"    defaultValue="90" visibleBindingId="maxMin"    visibleBindingValue="1">  
+				<Label>Max Range (also ok: 100./255):</Label>
+			</Field>
+
+			<Field id="MINRange"    type="textfield"    defaultValue="10" visibleBindingId="maxMin"    visibleBindingValue="1">  
+ 				<Label>Min range:</Label>
+			</Field>
+
+			<Field id="valueOrdivValue" type="menu"          defaultValue="value" >	
+				<Label>use value as :</Label>
+				<List>
+					<Option value="value"    >value</Option>
+					<Option value="1/value"  >1 / value</Option>
+				</List>
+			</Field>
+
+			<Field id="logScale" type="menu"          defaultValue="0" tooltip="display: log10(R or V or Range) ">	
+				<Label>use logscale:</Label>
+				<List>
+					<Option value="1"  >yes, use logscale</Option>
+					<Option value="0"  >no, use linear</Option>
+				</List>
+			</Field>
+			<Field id="logLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="logScale"    visibleBindingValue="1">
+				<Label>SensValue = log(Value)</Label>
+			</Field>
+			<Field id="linLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>SensValue = (Value+offset2)*mult2 </Label>
+			</Field>
+
+			<Field id="offset2" type="textfield"       defaultValue="0">		<Label>add offset(2):</Label></Field>
+			<Field id="mult2"   type="textfield"       defaultValue="1">		<Label>multiply number(2):</Label></Field>
+
+			<Field id="unit"   type="textfield"       defaultValue="[mV]">	<Label>unit:</Label></Field>
+			<Field id="format" type="textfield"       defaultValue="">		<Label>format number (eg %3.1f):</Label></Field>
+
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -12467,35 +13274,40 @@ For the MQ gas sensors you need to understand the required heating voltage.
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="INPUT_0">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_0</TriggerLabel>
-				<ControlPageLabel>INPUT_0</ControlPageLabel>
+			<State id="INPUT">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>INPUT</TriggerLabel>
+				<ControlPageLabel>INPUT</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MaxToday">
+			<State id="INPUT_raw">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>INPUT_raw</TriggerLabel>
+				<ControlPageLabel>INPUT_raw</ControlPageLabel>
+			</State>
+			<State id="INPUTMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>INPUT_0MaxToday</TriggerLabel>
 				<ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinToday">
+			<State id="INPUTMinToday">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinToday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+				<TriggerLabel>INPUTMinToday</TriggerLabel>
+				<ControlPageLabel>INPUTMinToday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MaxYesterday">
+			<State id="INPUTMaxYesterday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+				<ControlPageLabel>INPUTMaxYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinYesterday">
+			<State id="INPUTMinYesterday">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
+				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinYesterday">
+			<State id="INPUTMinYesterday">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
+				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -12509,9 +13321,8 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 
-
-	<Device type="sensor" id="i2cPCF8591">
-	<Name>INPUT-ADC-4x8bit-i2cPCF8591</Name>
+	<Device type="sensor" id="PCF8591">
+	<Name>INPUT-ADC-4x8bit-one-channel-i2c-PCF8591</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12522,83 +13333,221 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="true"></Field>
 
 
 			<Field id="infoLabeli2cPCF8591" type="label">
-			<Label>Setup i2cPCF8591 ADC  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+			<Label>Setup i2c PCF8591 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL
+returns numbers 0...255</Label>
 			</Field>
+
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 			<Label>select rPi-server to which the INPUT is connect to:</Label> 
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c Address:</Label>
-			<List>
-				<Option value="65"   >0x43 = 65: </Option>
-				<Option value="66"   >0x44 = 66: </Option>
-				<Option value="67"   >0x45 = 67: </Option>
-				<Option value="68"   >0x46 = 68: </Option>
-				<Option value="69"   >0x47 = 69: </Option>
-				<Option value="70"   >0x48 = 70: </Option>
-				<Option value="71"   >0x49 = 71: </Option>
-				<Option value="72"   >0x48 = 72: def = all Ax pins to ground</Option>
-				<Option value="73"   >0x49 = 73: </Option>
-				<Option value="74"   >0x4A = 74: </Option>
-				<Option value="75"   >0x4B = 75: </Option>
-				<Option value="76"   >0x4C = 76: </Option>
-				<Option value="77"   >0x4D = 77: </Option>
-				<Option value="78"   >0x4E = 78: </Option>
-				<Option value="79"   >0x4F = 79: </Option>
- 			</List>
+				<List>
+					<Option value="72"   >0x48 = 72: def</Option>
+					<Option value="73"   >0x49 = 73: </Option>
+					<Option value="74"   >0x4A = 74: </Option>
+					<Option value="75"   >0x4B = 75: </Option>
+					<Option value="76"   >0x4C = 76: </Option>
+					<Option value="77"   >0x4D = 77: </Option>
+					<Option value="78"   >0x4E = 78: </Option>
+					<Option value="79"   >0x4F = 79: </Option>
+				</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
 			<Label>use TCA9548A multiplexer for this sensor:</Label> 
-			<List>
-				<Option value="-1"    >off </Option>
-				<Option value="0"     >channel 0  </Option>
-				<Option value="1"     >channel 1  </Option>
-				<Option value="2"     >channel 2  </Option>
-				<Option value="3"     >channel 3  </Option>
-				<Option value="4"     >channel 4  </Option>
-				<Option value="5"     >channel 5  </Option>
-				<Option value="6"     >channel 6  </Option>
-				<Option value="7"     >channel 7  </Option>
-			</List>
+				<List>
+					<Option value="-1"    >off </Option>
+					<Option value="0"     >channel 0  </Option>
+					<Option value="1"     >channel 1  </Option>
+					<Option value="2"     >channel 2  </Option>
+					<Option value="3"     >channel 3  </Option>
+					<Option value="4"     >channel 4  </Option>
+					<Option value="5"     >channel 5  </Option>
+					<Option value="6"     >channel 6  </Option>
+					<Option value="7"     >channel 7  </Option>
+				</List>
 			</Field>
 
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
+			<Label>time between reading sensor:</Label>
+				<List>
+					<Option value="0.1" > 0.1   secs </Option>
+					<Option value="0.2" > 0.2   secs </Option>
+					<Option value="0.3" > 0.3   secs </Option>
+					<Option value="0.5" > 0.5   secs </Option>
+					<Option value="0.7" > 0.7   secs </Option>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="2"   > 2   secs</Option>
+					<Option value="3"   > 3   secs</Option>
+					<Option value="4"   > 4   secs</Option>
+					<Option value="6"   > 6   secs</Option>
+					<Option value="8"   > 8   secs</Option>
+					<Option value="10"  > 10  secs</Option>
+				</List>
+			</Field>
+
+			<Field id="sendToIndigoEvery" type="menu"     defaultValue="60" hidden="no" > 
+			<Label>Update indigo every x secs even if no trigger:</Label>
+				<List>
+					<Option value="10"  > 10  secs</Option>
+					<Option value="20"  > 20  secs</Option>
+					<Option value="30"  > 30  secs</Option>
+					<Option value="40"  > 40  secs</Option>
+					<Option value="50"  > 50  secs</Option>
+					<Option value="60"  > 60  secs</Option>
+					<Option value="70"  > 70  secs</Option>
+					<Option value="80"  > 80  secs</Option>
+					<Option value="80"  > 80  secs</Option>
+					<Option value="90"  > 90  secs</Option>
+					<Option value="120"  > 120  secs</Option>
+					<Option value="150"  > 150  secs</Option>
+					<Option value="180"  > 180  secs</Option>
+				</List>
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
+			<Label>min delta secs between indigo updates:</Label>
+				<List>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="2"   > 2   secs</Option>
+					<Option value="3"   > 3   secs</Option>
+					<Option value="4"   > 4   secs</Option>
+					<Option value="6"   > 6   secs</Option>
+					<Option value="8"   > 8   secs</Option>
+					<Option value="10"  > 10  secs</Option>
+				</List>
+			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			<Field id="displayS" type="menu"     defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="INPUT_0"  >INPUT 0</Option>
-				<Option value="INPUT_1"  >INPUT 1</Option>
-				<Option value="INPUT_2"  >INPUT 2</Option>
-				<Option value="INPUT_3"  >INPUT 3</Option>
-			</List>
-			</Field>
-			<Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
-			<Field id="unit"   type="textfield"             defaultValue="[mV]">	<Label>unit:</Label></Field>
-			<Field id="offset" type="textfield"             defaultValue="0">		<Label>add offset:</Label></Field>
-			<Field id="mult"   type="textfield"             defaultValue="1">		<Label>multiply number by :</Label></Field>
-			<Field id="format" type="textfield"             defaultValue="">		<Label>format number (eg %3.1f):</Label></Field>
-			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult"  readonly="YES">						<Label> display = </Label>  </Field>
-			<Field id="logScale" type="menu"          defaultValue="0" tooltip="display log10(R or V)+ offset)*mult">	<Label>use logscale:</Label>
-			<List>
-				<Option value="1"  >yes, use logscale</Option>
-				<Option value="0"  >no, use linear</Option>
-			</List>
+			<Field id="displayS" type="textfield"         defaultValue="INPUT" hidden="YES"> </Field>
+			<Field id="input" type="menu"     defaultValue="0"> <Label>channel to measure:</Label>
+				<List>
+					<Option value="0"  >INPUT 0</Option>
+					<Option value="1"  >INPUT 1</Option>
+					<Option value="2"  >INPUT 2</Option>
+					<Option value="3"  >INPUT 3</Option>
+					<Option value="0-1"  >INPUT 0 - INPUT 1</Option>
+					<Option value="2-3"  >INPUT 2 - INPUT 3</Option>
+				</List>
 			</Field>
 
-			<Field id="resistorSensor" type="menu"          defaultValue="0" tooltip="R= (feedResistor/(feedVolt/Volt-1.)+offset)*mult">	<Label>sensor is resistor:</Label>
-			<List>
-				<Option value="1"  >yes</Option>
-				<Option value="0"  >no</Option>
-			</List>
+			<Field id="infoLabelF" type="label"> <Label>    define parameters for state column:</Label> </Field>
+
+			<Field id="evalLabel" type="label" fontSize="small" >
+				<Label>
+===For all following numbers you can use simple number but also eg 1./255 or more complicated formulas - make sure you use float numbers, not integers
+The sequence of application is: 
+0. value: (raw+offset)*multiplier
+1. resistor: R = (feedResistor/(feedVolt/INPUT-1.)
+2. min/max range: SensValue = (INPUT-MinRange)(MaxRange-MinRange)
+3. 1/value if selected
+4. log: value = Log10(value)  // linear: value = value
+5. value = (value+offset2)*multiplier2
+6. format 
+7. unit added to end of string</Label>
 			</Field>
-			<Field id="feedResistor"    type="textfield"    defaultValue="10000" visibleBindingId="resistorSensor"    visibleBindingValue="1">  
-                                               								<Label>value of feed resistor (Ohm):</Label></Field>
-			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="1">    
-                                               								<Label>feed Voltage(mV):</Label></Field>
+
+			<Field id="offset" type="textfield"       defaultValue="0">		<Label>add offset(1):</Label></Field>
+			<Field id="mult"   type="textfield"       defaultValue="1">		<Label>multiply(1) number by:</Label></Field>
+
+			<Field id="resistorSensor" type="menu"          defaultValue="0" >	
+				<Label>sensor is resistor:</Label>
+				<List>
+					<Option value="V+"      >to V+                                                                                                                                                                                                                                                 </Option>
+					<Option value="ground"  >at ground</Option>
+					<Option value="0"  >no</Option>
+				</List>
+			</Field>
+
+			<Field id="resistorSensorLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="resistorSensor"    visibleBindingValue="V+,ground">
+				<Label>R = feedResistor/(feedVolt/INPUT-1.) for sensor towards ground
+R = feedResistor*(feedVolt/INPUT-1.) for sensor toward V+
+use bit max value, not actual voltage for feedVolt </Label>
+			</Field>
+
+			<Field id="feedResistor"    type="textfield"    defaultValue="10000" visibleBindingId="resistorSensor"    visibleBindingValue="V+,ground">  
+				<Label>value of feed resistor (Ohm):</Label>
+			</Field>
+
+			<Field id="feedVolt"        type="textfield"    defaultValue="3300"   visibleBindingId="resistorSensor"    visibleBindingValue="V+,ground">    
+			 	<Label>feed Voltage(= max bits):</Label>
+			</Field>
+              
+			<Field id="maxMin" type="menu"          defaultValue="0" >	
+				<Label>Sensor is in range Min..Max:</Label>
+				<List>
+					<Option value="1"  >yes</Option>
+					<Option value="0"  >no</Option>
+				</List>
+			</Field>
+
+			<Field id="maxMinLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="maxMin"    visibleBindingValue="1">
+				<Label>SensValue = (INPUT-MinRange)(MaxRange-MinRange) </Label>
+			</Field>
+
+			<Field id="MAXRange"    type="textfield"    defaultValue="90" visibleBindingId="maxMin"    visibleBindingValue="1">  
+				<Label>Max Range (also ok: 100./255):</Label>
+			</Field>
+
+			<Field id="MINRange"    type="textfield"    defaultValue="10" visibleBindingId="maxMin"    visibleBindingValue="1">  
+ 				<Label>Min range:</Label>
+			</Field>
+
+
+
+			<Field id="valueOrdivValue" type="menu"          defaultValue="value" >	
+				<Label>use value as :</Label>
+				<List>
+					<Option value="value"    >value</Option>
+					<Option value="1/value"  >1 / value</Option>
+				</List>
+			</Field>
+
+			<Field id="logScale" type="menu"          defaultValue="0" tooltip="display: log10(R or V or Range) ">	
+				<Label>use logscale:</Label>
+				<List>
+					<Option value="1"  >yes, use logscale</Option>
+					<Option value="0"  >no, use linear</Option>
+				</List>
+			</Field>
+			<Field id="logLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="logScale"    visibleBindingValue="1">
+				<Label>SensValue = log(Value)</Label>
+			</Field>
+			<Field id="linLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>SensValue = (Value+offset2)*mult2 </Label>
+			</Field>
+
+			<Field id="offset2" type="textfield"       defaultValue="0">		<Label>add offset(2):</Label></Field>
+			<Field id="mult2"   type="textfield"       defaultValue="1">		<Label>multiply number(2):</Label></Field>
+
+			<Field id="unit"   type="textfield"       defaultValue="[mV]">	<Label>unit:</Label></Field>
+			<Field id="format" type="textfield"       defaultValue="">		<Label>format number (eg %3.1f):</Label></Field>
+
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -12606,50 +13555,40 @@ For the MQ gas sensors you need to understand the required heating voltage.
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="INPUT_0">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_0</TriggerLabel>
-				<ControlPageLabel>INPUT_0</ControlPageLabel>
+			<State id="INPUT">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>INPUT</TriggerLabel>
+				<ControlPageLabel>INPUT</ControlPageLabel>
 			</State>
-			<State id="INPUT_1">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_1</TriggerLabel>
-				<ControlPageLabel>INPUT_1</ControlPageLabel>
+			<State id="INPUT_raw">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>INPUT_raw</TriggerLabel>
+				<ControlPageLabel>INPUT_raw</ControlPageLabel>
 			</State>
-			<State id="INPUT_2">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_2</TriggerLabel>
-				<ControlPageLabel>INPUT_2</ControlPageLabel>
-			</State>
-			<State id="INPUT_3">
-				<ValueType>String</ValueType>
-				<TriggerLabel>INPUT_3</TriggerLabel>
-				<ControlPageLabel>INPUT_3</ControlPageLabel>
-			</State>
-			<State id="INPUT_0MaxToday">
+			<State id="INPUTMaxToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>INPUT_0MaxToday</TriggerLabel>
 				<ControlPageLabel>INPUT_0MaxToday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinToday">
+			<State id="INPUTMinToday">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinToday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinToday</ControlPageLabel>
+				<TriggerLabel>INPUTMinToday</TriggerLabel>
+				<ControlPageLabel>INPUTMinToday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MaxYesterday">
+			<State id="INPUTMaxYesterday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MaxYesterday</ControlPageLabel>
+				<ControlPageLabel>INPUTMaxYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinYesterday">
+			<State id="INPUTMinYesterday">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
+				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinYesterday">
+			<State id="INPUTMinYesterday">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
+				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
+				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -12660,6 +13599,8 @@ For the MQ gas sensors you need to understand the required heating voltage.
 		</States>
 
 	</Device>
+
+
 
 
 
@@ -12704,7 +13645,7 @@ General info:
 
 use relay 
     1. GPIO connected relays  or 
-    2. .. wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099
+    2. .. wiki.52pi.com/index.php/DockerPi_04_Channel_Relay_SKU:_EP-0099
        relay 1 is towards +3v +5V rpi pins
 
 Default pins for dynamic mode:
@@ -12876,6 +13817,26 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			<Field id="weekRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
 			<Field id="monthRainTotal"      type="textfield"     defaultValue="0" hidden="yes"> </Field>
 			<Field id="yearRainTotal"       type="textfield"     defaultValue="0" hidden="yes"> </Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 
 		</ConfigUI>
 
@@ -13064,10 +14025,10 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 
 
 			<Field id="sensorMode" type="menu"     defaultValue="chirp"  >
-			<Label>i2c address of relay:</Label>
+			<Label>Sensor make:</Label>
 			<List>
 				<Option value="adafruit"   >adafruit </Option>
-				<Option value="chirp"      >chirp</Option>
+				<Option value="chirp-2.7"  >chirp 2.7 (2.5 and below does not work)</Option>
 			</List>
 			</Field>
 
@@ -13133,6 +14094,25 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<Option value="Temperature"     >Temperature</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
 			</Field>
 
 			</ConfigUI>
@@ -13202,6 +14182,11 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="illuminance">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>illuminance</TriggerLabel>
+				<ControlPageLabel>illuminance</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -15629,6 +16614,25 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
 
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
 		</ConfigUI>
 		<States>
 			<State id="status">
@@ -15808,6 +16812,25 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value= "lin"  >linear scale  </Option>
 				<Option value= "log"  >log scale</Option>
 				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
 			</Field>
 
 		</ConfigUI>
@@ -16006,6 +17029,25 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value= "lin"  >linear scale  </Option>
 				<Option value= "log"  >log scale</Option>
 				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
 			</Field>
 
 		</ConfigUI>
@@ -16211,6 +17253,25 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value= "lin"  >linear scale  </Option>
 				<Option value= "log"  >log scale</Option>
 				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be eveluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
 			</Field>
 
 		</ConfigUI>
@@ -17056,7 +18117,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="infoLabelOUTPUT" type="label">
 			<Label>Setup OUTPUT i2c relay  on individual rPis
-   see: wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099 for details </Label>
+   see: wiki.52pi.com/index.php/DockerPi_04_Channel_Relay_SKU:_EP-0099 for details </Label>
 			</Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 				<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
@@ -19074,7 +20135,11 @@ States:
 		</States>
 	</Device>
 
+	<Device type="sensor" id="i2cADS1x15">		<Name>INPUT-ADC-1x16bit-i2cADS1x15 - four channel deprecated, use new definition device</Name>	</Device>
+	<Device type="sensor" id="i2cADS1x15-1">	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel</Name>	</Device>
 
+	<Device type="sensor" id="i2cPCF8591-1">	<Name>i2cPCF8591-1  deprecated, use new definition device</Name>	</Device>
+	<Device type="sensor" id="i2cPCF8591"> 		<Name>i2cPCF8591  deprecated, use new definition device</Name>	</Device>
 
 	<Device type="sensor" id="mhzI2C">          <Name>mhz i2c  deprecated, use new definition device</Name>	</Device>
 	<Device type="sensor" id="rdlidar">         <Name>rdlidar deprecated, use new definition device lidar360</Name>	</Device>
