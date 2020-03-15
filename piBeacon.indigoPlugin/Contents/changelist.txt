@@ -1,3 +1,10 @@
+Added features / changes in v7.118.339 @ 2020-03-15
+===================================================
+
+1. fixed problem on RPI, stack did not restart after boot (a" instead of a ;")
+
+
+
 Added features / changes in v7.118.338 @ 2020-02-17
 ===================================================
 

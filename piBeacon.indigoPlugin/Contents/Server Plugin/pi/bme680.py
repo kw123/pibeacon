@@ -1043,7 +1043,7 @@ def getValues(devId):
 			if StateOfSensorCalibration[devId] != "calibrated":	SensorStatus = "calibrating"
 
 			if heatSt >0:   # wait at least 25secs and heat ok
-				if time.time() - startTime > 60 and StateOfSensorCalibration[devId] != "calibrated":  # wait at least 60secs and heat ok
+				if time.time() - startTime > 80 and StateOfSensorCalibration[devId] != "calibrated":  # wait at least 60secs and heat ok
 						gasBurnIn[devId].append(float(gas))
 						if len(gasBurnIn[devId])  > 2: U.logger.log(20, "StateOfSensorCalibration:{}, gas:{}, gasBaseLine:{},  delta: {}, gasBurnIn: {}".format(StateOfSensorCalibration[devId], gas, gasBaseLine[devId], abs(gasBurnIn[devId][-1]-gasBurnIn[devId][-2])/max(1,(gasBurnIn[devId][-1]+gasBurnIn[devId][-2])), gasBurnIn[devId][-3:]  ) )
 						if len(gasBurnIn[devId])  > 200: 

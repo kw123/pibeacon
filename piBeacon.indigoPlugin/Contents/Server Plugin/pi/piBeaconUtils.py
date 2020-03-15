@@ -74,6 +74,7 @@ def setLogLevel():
 
 #################################
 def killOldPgm(myPID,pgmToKill,param1="",param2="",verbose=False):
+	count = 0
 	try:
 		#print "killOldPgm ",pgmToKill,str(myPID)
 		cmd= "ps -ef | grep '{}' | grep -v grep".format(pgmToKill)
@@ -92,12 +93,14 @@ def killOldPgm(myPID,pgmToKill,param1="",param2="",verbose=False):
 			pid=int(items[1])
 			if pid == int(myPID): continue
 
-			logger.log(10, u"cBY:{:<20}  killing {}  {}  {}, pid={}".format(G.program, pgmToKill, param1, param2, pid) )
+			if verbose: logger.log(20, u"cBY:{:<20}  killing {}  {}  {}, pid={}".format(G.program, pgmToKill, param1, param2, pid) )
 			subprocess.call("sudo kill -9 {}".format(pid), shell=True)
+			count += 1
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return count
 
 #################################
 def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False):

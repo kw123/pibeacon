@@ -11030,7 +11030,7 @@ class Plugin(indigo.PluginBase):
 				self.updateSensors(piU, varJson[u"sensors"])
 
 			##
-			# update sensors
+			# update outputState
 			if u"outputs" in varJson:
 				self.updateOutput(piU, varJson[u"outputs"])
 
@@ -11895,8 +11895,9 @@ class Plugin(indigo.PluginBase):
 						try:	devId = int(devIds)
 						except: devId = 0
 						if devId == 0: continue
-						dev= indigo.devices[devId]
-						props= dev.pluginProps
+						dev = indigo.devices[devId]
+						props = dev.pluginProps
+						#self.indiLOG.log(40,u"piu:{};  dev:{};  props:{}".format(piU, dev.name, props))
 					except Exception, e:
 
 						if unicode(e).find(u"timeout waiting") > -1:
@@ -11948,7 +11949,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def OUTPUTgpio1(self, dev, props, data):
 		try:
-			if "actualGpioValue" in data:
+			if "actualGpioValue" in data and "outputType" in props:
 				actualGpioValue = unicode(data["actualGpioValue"]).lower()
 
 				self.addToStatesUpdateDict(dev.id,u"actualGpioValue", data["actualGpioValue"])

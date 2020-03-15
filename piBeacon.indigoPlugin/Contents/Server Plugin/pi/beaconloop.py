@@ -128,9 +128,13 @@ def startBlueTooth(pi):
 	try:
 		HCIs = U.whichHCI()
 		for hci in HCIs["hci"]:
-			subprocess.call(["sudo","hciconfig",hci,"down &"]) # disable bluetooth
+			cmd = "sudo hciconfig "+hci+" down &"
+			U.logger.log(10,"startBlueTooth down: {}" .format(cmd))
+			subprocess.call(cmd, shell=True) # disable bluetooth
 			time.sleep(0.2)
-			subprocess.call(["sudo","hciconfig",hci,"up &"]) # enable bluetooth
+			cmd = "sudo hciconfig "+hci+" up &"
+			U.logger.log(10,"startBlueTooth  up: {}" .format(cmd))
+			subprocess.call(cmd, shell=True) # enable bluetooth
 		time.sleep(0.3)
 
 
@@ -846,6 +850,13 @@ def execbeaconloop():
 	#kill old G.programs
 	U.setLogging()
 	U.killOldPgm(myPID,G.program+".py")
+	count = U.killOldPgm(-1,"hciconfig")
+	if count > 5:
+		U.logger.log(30,"beaconloop exit, hciconfig to many ghost processes running:{}".format(count))
+		U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
+		writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN  too many  hciconfig processes running ".format(useHCI))
+		time.sleep(10)
+		
 
 	readParams(True)
 	fixOldNames()

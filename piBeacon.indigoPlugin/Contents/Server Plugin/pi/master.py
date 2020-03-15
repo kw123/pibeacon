@@ -1480,7 +1480,7 @@ def fixRcLocal(sleepTime):
 				if sleepTime =="0":
 					test = 'subprocess.call("cd {}; nohup /bin/bash master.sh & ".format(homeDir), shell=True)'
 				else:
-					test = 'subprocess.call("sleep '+sleepTime+ '"cd {}; nohup /bin/bash master.sh & ".format(homeDir), shell=True)'
+					test = 'subprocess.call("sleep '+sleepTime+ ';cd {}; nohup /bin/bash master.sh & ".format(homeDir), shell=True)'
 				if line == test:
 					break
 				else:
