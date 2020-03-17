@@ -217,6 +217,9 @@
     <Field id="removeJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
         <Label>if you have accept new beacons on and get flodded with new beacons, this option will allow to delete them if you have not renamed gthem from the default name after one hour</Label>
     </Field>
+   <Field id="checkBeaconParametersDisabled" type="checkbox"     defaultValue="false" > 
+        <Label>disable checking beacon parameters (battery level for all beacons):</Label>
+   </Field>
 
 
    <Field id="simpleSeparator33" type="separator"/>

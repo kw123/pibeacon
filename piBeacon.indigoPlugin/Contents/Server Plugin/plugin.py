@@ -1254,7 +1254,7 @@ class Plugin(indigo.PluginBase):
 				for tType in [u"Home", u"Away"]:
 					self.varExcludeSQLList.append(self.groupCountNameDefault+group+"_"+tType)
 
-
+			self.checkBeaconParametersDisabled						= self.pluginPrefs.get(u"checkBeaconParametersDisabled", False )
 
 
 		except Exception, e:
@@ -7749,6 +7749,9 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def getBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
 		
+
+		if not force and self.checkBeaconParametersDisabled: return 
+
 		devices = {}
 
 		if  valuesDict is None: return  valuesDict
@@ -9421,6 +9424,7 @@ class Plugin(indigo.PluginBase):
 			self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
 
 
+		self.checkBeaconParametersDisabled	= valuesDict[u"checkBeaconParametersDisabled"]
 
 
 		self.myIpNumber = valuesDict[u"myIpNumber"]
@@ -10582,11 +10586,11 @@ class Plugin(indigo.PluginBase):
 		##### first check ibeacons battery updates:
 		### get battery status from ibeacon 
 		try:
-			for ii in range(len(self.checkBatteryLevelHours)):
-				if self.lastDayChecked[ii] != now.day and now.hour == self.checkBatteryLevelHours[ii]: 
-					self.getBeaconParametersCALLBACKmenu(valuesDict={"piServerNumber":"all"}, force=False)
-					self.lastDayChecked[ii] = now.day
-					return 
+				for ii in range(len(self.checkBatteryLevelHours)):
+					if self.lastDayChecked[ii] != now.day and now.hour == self.checkBatteryLevelHours[ii]: 
+						self.getBeaconParametersCALLBACKmenu(valuesDict={"piServerNumber":"all"}, force=False)
+						self.lastDayChecked[ii] = now.day
+						return 
 		except Exception, e:
 			if len(unicode(e)) > 5 :
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

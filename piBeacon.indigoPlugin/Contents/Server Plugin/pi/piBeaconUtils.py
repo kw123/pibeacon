@@ -438,6 +438,13 @@ def cleanUpSensorlist(sens, theSENSORlist):
 #################################
 def doReboot(tt=1, text="", cmd="", force=False):
 	try:
+
+		if force:
+			try: subprocess.call("sudo killall -9 python; sleep 4;sudo reboot -f", shell=True)
+			except: pass
+			try: logger.log(50, "cBY:{:<20}   rebooting / shutdown forced did not work".format(G.program))
+			except: pass
+
 		if cmd =="":
 			doCmd= G.rebootCommand
 		else:
@@ -452,11 +459,6 @@ def doReboot(tt=1, text="", cmd="", force=False):
 		time.sleep(0.1)
 		time.sleep(tt)
 
-		if force:
-			try: subprocess.call("sudo killall -9 python; sleep 4;sudo reboot -f", shell=True)
-			except: pass
-			try: logger.log(50, "cBY:{:<20}   rebooting / shutdown forced did not work".format(G.program))
-			except: pass
 
 		if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
 			try: subprocess.call("sudo killall -9 pigpiod &", shell=True)

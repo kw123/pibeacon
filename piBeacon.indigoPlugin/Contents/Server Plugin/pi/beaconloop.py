@@ -972,12 +972,13 @@ def execbeaconloop():
 				allBeaconMSGs=[]
 				try: pkt = sock.recv(255)
 				except Exception, e:
-					for ii in range(30):
+					for ii in range(10):
 						if os.path.isfile(G.homeDir+"temp/stopBLE"):
-							subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
+							U.logger.log(20,  "stopBLE is present, waiting for it to disappear")
 							time.sleep(5)
 						else:
 							break
+					subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
 					U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
 					time.sleep(1)
 					U.restartMyself(param="", reason="sock.recv error")

@@ -1,3 +1,11 @@
+Added features / changes in v7.118.340 @ 2020-03-17
+===================================================
+
+1. fixed problem on RPI:  get battery level could  stopped getting regular ibeacon message
+
+2. add option in config to disable regular get ibeacon parameters (timed 3 times a day) for all beacons
+
+
 Added features / changes in v7.118.339 @ 2020-03-15
 ===================================================
 

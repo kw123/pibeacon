@@ -56,7 +56,7 @@ def checkWiFiSetupBootDir():
 		return 
 
 	if U.checkifWifiJsonFileInBootDir():
-		doReboot(tt=10., text="restart w new wifi setup json data in /boot dir ")
+		U.doReboot(tt=10., text="restart w new wifi setup json data in /boot dir ")
 		time.sleep(30)
 	return 
 
@@ -1315,6 +1315,8 @@ def checkSystemLOG():
 						rememberLineSystemLOG.pop(0)
 					U.logger.log(10, "sending message to plugin re:" + line )
 					U.sendURL(sendAlive="alive",text="checkSystemLOG_register_dump_occured_noreboot_"+line)
+		if out.find("Out of memory:") > -1:
+			U.doReboot(tt=0., text="restart due to Out of memory:", force=True)
 			
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1785,7 +1787,10 @@ def killOldPrograms():
 
 
 		for ff in ["webserverINPUT","webserverSTATUS"]:
-				U.killOldPgm(-1, ff+".py")
+			U.killOldPgm(-1, ff+".py")
+
+		## just in case kiil getBeaconParameters if still running, that disrupts the beaconloop under certain circumstances
+		U.killOldPgm(-1, "getBeaconParameters.py")
 
 		time.sleep(1)
 		for ff in G.specialOutputList:

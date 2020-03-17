@@ -395,7 +395,7 @@ def execCMDS(data):
 					U.logger.log(10, unicode(data))
 					U.sendURL(data,squeeze=False)
 					time.sleep(2)
-					subprocess.call("sudo reboot", shell=True)
+					subprocess.call("sudo killall -9 python; sudo reboot now", shell=True)
 					exit()
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
