@@ -56,7 +56,7 @@ def readParams():
 					thisMAC = sensors[devId]["macAddress"]
 					macListNew[thisMAC]={"iPhoneRefreshDownSecs":float(sensors[devId]["iPhoneRefreshDownSecs"]),
 										 "iPhoneRefreshUpSecs":float(sensors[devId]["iPhoneRefreshUpSecs"]),
-										 "BLEtimeout":float(sensors[devId]["BLEtimeout"]),
+										 "BLEtimeout":max(1.,float(sensors[devId]["BLEtimeout"])),
 										 "up":False,
 										 "lastTesttt":time.time()-1000.,
 										 "lastMsgtt":time.time()-1000. ,
@@ -154,11 +154,12 @@ def tryToConnect(MAC,BLEtimeout,devId):
 
 #################################
 def tryToConnectCommandLine(MAC,BLEtimeout,useHCI):
-	global errCount
+	global errCount, lastConnect
 
+	if time.time() - lastConnect < 3: time.sleep( max(0,min(0.5,(3.0- (time.time() - lastConnect) ))) )
 	retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
 	try:
-		for ii in range(5):	 # wait until (wifi) sending is finsihed
+		for ii in range(5):	 # wait until (wifi) sending is finished
 			if os.path.isfile(G.homeDir + "temp/sending"):
 				#print "delaying hci"
 				time.sleep(0.5)
@@ -169,18 +170,23 @@ def tryToConnectCommandLine(MAC,BLEtimeout,useHCI):
 		#  stop:  "Device is not available."
 	  #timeout -s SIGINT 5s hcitool cc  18:65:90:6A:B9:0D; hcitool rssi 18:65:90:6A:B9:0D; hcitool tpl 18:65:90:6A:B9:0D
 	  #timeout -s SIGINT 5s hcitool cc  18:65:90:6A:B9:0D; hcitool rssi 18:65:90:6A:B9:0D; hcitool tpl 18:65:90:6A:B9:0D
-		cmd = "sudo timeout -s SIGINT {}s hcitool -i {}  cc {}; hcitool -i {} rssi {} ; hcitool -i {} tpl {}".format(BLEtimeout, useHCI, MAC, useHCI,  MAC, useHCI, MAC)
-		U.logger.log(10, cmd)
-		ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-		parts = ret[0].strip("\n").split("\n")
-		U.logger.log(10, "{}  1. try ret: {} --- err>>{}<<".format(MAC, ret[0].strip("\n"), ret[1].strip("\n")))
+		for ii in range(2):
+			cmd = "sudo timeout -s SIGINT {:.1f}s hcitool -i {}  cc {}; hcitool -i {} rssi {} ; hcitool -i {} tpl {}".format(BLEtimeout, useHCI, MAC, useHCI,  MAC, useHCI, MAC)
+			U.logger.log(10, cmd)
+			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			parts = ret[0].strip("\n").split("\n")
+			U.logger.log(10, "{}  1. try ret: {} --- err>>{}<<".format(MAC, ret[0].strip("\n"), ret[1].strip("\n")))
 
-		for line in parts:
-				if line.find("RSSI return value:") >- 1:
-					retdata["rssi"] = int(line.split("RSSI return value:")[1].strip())
-				if line.find("Current transmit power level:") > -1:
-					retdata["txPower"] = int(line.split("Current transmit power level:")[1].strip())
-
+			found = False
+			for line in parts:
+					if line.find("RSSI return value:") >- 1:
+						retdata["rssi"] = int(line.split("RSSI return value:")[1].strip())
+						found = True
+					if line.find("Current transmit power level:") > -1:
+						retdata["txPower"] = int(line.split("Current transmit power level:")[1].strip())
+						found = True
+			if found: break
+			time.sleep(1)
 
 	except  Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -201,7 +207,7 @@ def execBLEconnect():
 	global sensorList,restartBLEifNoConnect
 	global macList,oldParams
 	global oldRaw,	lastRead
-	global errCount
+	global errCount, lastConnect
 	global BLEconnectMode
 	BLEconnectMode			= "socket" # or commandLine
 	oldRaw					= ""
@@ -285,7 +291,7 @@ def execBLEconnect():
 
 
 	U.logger.log(20, "BLEconnect: using mac:{};  useHCI: {}; bus: {}; mode: {} serching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
-
+	lastConnect = time.time()
 	while True:
 
 			tt= time.time()
@@ -358,6 +364,7 @@ def execBLEconnect():
 					data0 = tryToConnect(thisMAC, macList[thisMAC]["BLEtimeout"], BLEid)
 				else:
 					data0 = tryToConnectCommandLine(thisMAC, macList[thisMAC]["BLEtimeout"], useHCI)
+				lastConnect = time.time()
 
 
 				#print	data0
