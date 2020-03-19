@@ -89,7 +89,9 @@ def readParams():
 		return False
 
 def tryToConnect(MAC,BLEtimeout,devId):
-	global errCount
+	global errCount, lastConnect
+
+	if time.time() - lastConnect < 3: time.sleep( max(0,min(0.5,(3.0- (time.time() - lastConnect) ))) )
 
 	retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
 	try:

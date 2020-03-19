@@ -1,8 +1,9 @@
-Added features / changes in v7.118.341 @ 2020-03-19
+Added features / changes in v7.118.342 @ 2020-03-19
 ===================================================
 
-1. added a delay (min time betwen probes= 3 secs) inbetween BLE probes to phone.
-   this is needed for eg pizero when wberything goes through one com dev
+1. added a delay (min time between probes= 3 secs) in between BLE probes to phone.
+   this is needed for eg pizero when everything goes through one com dev  
+
 
 
 
