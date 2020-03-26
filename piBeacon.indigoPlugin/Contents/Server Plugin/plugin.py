@@ -527,13 +527,15 @@ class Plugin(indigo.PluginBase):
 
 			else:
 				for v in self.varExcludeSQLList:
-					var = indigo.variables[v]
-					sp = var.sharedProps
-					if "sqlLoggerIgnoreChanges" not in sp  or sp["sqlLoggerIgnoreChanges"] != "true": 
-						continue
-					outONV += var.name+"; "
-					sp["sqlLoggerIgnoreChanges"] = ""
-					var.replaceSharedPropsOnServer(sp)
+					try:
+						var = indigo.variables[v]
+						sp = var.sharedProps
+						if "sqlLoggerIgnoreChanges" not in sp  or sp["sqlLoggerIgnoreChanges"] != "true": 
+							continue
+						outONV += var.name+"; "
+						sp["sqlLoggerIgnoreChanges"] = ""
+						var.replaceSharedPropsOnServer(sp)
+					except: pass
 
 			if self.decideMyLog(u"SQLSuppresslog"): 
 				self.indiLOG.log(20," \n\n")
@@ -2177,6 +2179,7 @@ class Plugin(indigo.PluginBase):
 			if self.RPI =={}: 
 				self.indiLOG.log(20, self.indigoPreferencesPluginDir + "RPIconf file does not exist or has bad data, will do a new setup ")
 
+
 			self.RPIVersion20 = (len(self.RPI) == 20) and len(self.RPI) > 0
 			if self.RPIVersion20:
 				self.indiLOG.log(30, "RPIconf adding # of rpi  from 20 ..40 ")
@@ -2328,6 +2331,7 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(10, u" ..   config read from files")
 			self.fixConfig(checkOnly = ["all","rpi","beacon","CARS","sensors","output","force"], fromPGM="readconfig") 
+			self.saveConfig()
 
 		except Exception, e:
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -2371,8 +2375,10 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 ####-------------------------------------------------------------------------####
-	def getParamsFromFile(self,newName, oldName="", default ={}): # called from read config for various input files
-			out = default
+	def getParamsFromFile(self, newName, oldName="", default={}): # called from read config for various input files
+		try:
+			out = copy.deepcopy(default)
+			#self.indiLOG.log(20,"getParamsFromFile newName:{} oldName: {}; default:{}".format(newName, oldName, unicode(default)[0:100]))
 			if os.path.isfile(newName):
 				try:
 					f = open(newName, u"r")
@@ -2382,9 +2388,9 @@ class Plugin(indigo.PluginBase):
 						subprocess.call("rm "+oldName, shell=True)
 				except Exception, e:
 					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					out ={}
+					out =copy.deepcopy(default)
 			else:
-				out = default
+				out = copy.deepcopy(default)
 			if oldName !="" and os.path.isfile(oldName):
 				try:
 					f = open(oldName, u"r")
@@ -2393,8 +2399,11 @@ class Plugin(indigo.PluginBase):
 					subprocess.call("rm "+oldName, shell=True)
 				except Exception, e:
 					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					out = default
-			return out
+					out = copy.deepcopy(default)
+			#self.indiLOG.log(20,"getParamsFromFile out:{} ".format(unicode(out)[0:100]) )
+		except Exception, e:
+			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return out
 
 ####-------------------------------------------------------------------------####
 	def savebeaconPositionsFile(self):
@@ -9212,285 +9221,288 @@ class Plugin(indigo.PluginBase):
 # noinspection SpellCheckingInspection
 	def validatePrefsConfigUi(self, valuesDict):
 
-		try: self.enableFING				= valuesDict[u"enableFING"]
-		except: self.enableFING				= "0"
-			####-----------------	 ---------
+		try:
+			try: self.enableFING				= valuesDict[u"enableFING"]
+			except: self.enableFING				= "0"
+				####-----------------	 ---------
 
-		self.debugLevel			= []
-		for d in _debugAreas:
-			if valuesDict[u"debug"+d]: self.debugLevel.append(d)
-		try:			   
-			if self.debugRPI	   != int(valuesDict[u"debugRPI"]):	   self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-			self.debugRPI			= int(valuesDict[u"debugRPI"])
-		except: pass
+			self.debugLevel			= []
+			for d in _debugAreas:
+				if valuesDict[u"debug"+d]: self.debugLevel.append(d)
+			try:			   
+				if self.debugRPI	   != int(valuesDict[u"debugRPI"]):	   self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+				self.debugRPI			= int(valuesDict[u"debugRPI"])
+			except: pass
 
-		self.setLogfile(valuesDict[u"logFileActive2"])
+			self.setLogfile(valuesDict[u"logFileActive2"])
 	 
-		self.enableBroadCastEvents					= valuesDict[u"enableBroadCastEvents"]
+			self.enableBroadCastEvents					= valuesDict[u"enableBroadCastEvents"]
 
-		try: 
-			xx = valuesDict["SQLLoggingEnable"].split("-")
-			yy = {"devices":xx[0]=="on", "variables":xx[1]=="on"}
-			if yy != self.SQLLoggingEnable:
-				self.SQLLoggingEnable = yy
-				self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
-		except Exception, e:
-			self.indiLOG.log(30,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			self.SQLLoggingEnable = {"devices":True, "variables":True}
-
-
-		try:
-			if unicode(self.acceptNewiBeacons) != unicode(valuesDict[u"acceptNewiBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-			self.acceptNewiBeacons				= int(valuesDict[u"acceptNewiBeacons"])
-		except:			   pass
-
-		if unicode(self.acceptJunkBeacons) != unicode(valuesDict[u"acceptJunkBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.acceptJunkBeacons				= valuesDict[u"acceptJunkBeacons"]
-
-		if self.sendFullUUID			   != valuesDict[u"sendFullUUID"]: self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.sendFullUUID					= valuesDict[u"sendFullUUID"]
-
-		try: self.txPowerCutoffDefault		= int(valuesDict[u"txPowerCutoffDefault"])
-		except: self.txPowerCutoffDefault	= 1.
-
-		try: self.speedUnits				= int(valuesDict[u"speedUnits"])
-		except: self.speedUnits				= 1.
-		try: self.distanceUnits				= int(valuesDict[u"distanceUnits"])
-		except: self.distanceUnits			= 1.
-		try: self.lightningTimeWindow		= float(valuesDict[u"lightningTimeWindow"])
-		except: self.lightningTimeWindow	= 10.
-		try: self.lightningNumerOfSensors		= int(valuesDict[u"lightningNumerOfSensors"])
-		except: self.lightningNumerOfSensors	= 1
-
-		self.setClostestRPItextToBlank = valuesDict[u"setClostestRPItextToBlank"] !="1"
+			try: 
+				xx = valuesDict["SQLLoggingEnable"].split("-")
+				yy = {"devices":xx[0]=="on", "variables":xx[1]=="on"}
+				if yy != self.SQLLoggingEnable:
+					self.SQLLoggingEnable = yy
+					self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
+			except Exception, e:
+				self.indiLOG.log(30,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.SQLLoggingEnable = {"devices":True, "variables":True}
 
 
-		self.pressureUnits					= valuesDict[u"pressureUnits"]	# 1 for Pascal
-		self.tempUnits						= valuesDict[u"tempUnits"]	# Celsius, Fahrenheit, Kelvin
-		self.tempDigits						= int(valuesDict[u"tempDigits"])  # 0/1/2
+			try:
+				if unicode(self.acceptNewiBeacons) != unicode(valuesDict[u"acceptNewiBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+				self.acceptNewiBeacons				= int(valuesDict[u"acceptNewiBeacons"])
+			except:			   pass
 
-		newRain								= valuesDict[u"rainUnits"]	# mm inches
-		self.rainDigits						= int(valuesDict[u"rainDigits"])  # 0/1/2
-		if newRain != self.rainUnits:
-			mult = 1.
-			if	 newRain =="inch" and self.rainUnits == "mm":	mult = 1./25.4
-			elif newRain =="inch" and self.rainUnits == "cm":	mult = 1./2.54
-			elif newRain =="mm"	  and self.rainUnits == "cm":	mult = 10.
-			elif newRain =="mm"	  and self.rainUnits == "inch": mult = 25.4
-			elif newRain =="cm"	  and self.rainUnits == "inch": mult = 2.54
-			elif newRain =="cm"	  and self.rainUnits == "mm":	mult = 0.1
-			for dev in indigo.devices.iter("props.isSensorDevice"):
-				if dev.deviceTypeId.find(u"rainSensorRG11") != -1: 
-					props = dev.pluginProps
-					for state in dev.states:
-						if state.find("Rain") >-1 or state.find("rainRate") >-1:
-							try: x = float(dev.states[state])
-							except: continue
-							self.addToStatesUpdateDict(dev.id,state, x*mult, decimalPlaces=self.rainDigits )
-					self.executeUpdateStatesDict(onlyDevID=dev.id,calledFrom="validatePrefsConfigUi")
+			if unicode(self.acceptJunkBeacons) != unicode(valuesDict[u"acceptJunkBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.acceptJunkBeacons				= valuesDict[u"acceptJunkBeacons"]
+
+			if self.sendFullUUID			   != valuesDict[u"sendFullUUID"]: self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.sendFullUUID					= valuesDict[u"sendFullUUID"]
+
+			try: self.txPowerCutoffDefault		= int(valuesDict[u"txPowerCutoffDefault"])
+			except: self.txPowerCutoffDefault	= 1.
+
+			try: self.speedUnits				= int(valuesDict[u"speedUnits"])
+			except: self.speedUnits				= 1.
+			try: self.distanceUnits				= int(valuesDict[u"distanceUnits"])
+			except: self.distanceUnits			= 1.
+			try: self.lightningTimeWindow		= float(valuesDict[u"lightningTimeWindow"])
+			except: self.lightningTimeWindow	= 10.
+			try: self.lightningNumerOfSensors		= int(valuesDict[u"lightningNumerOfSensors"])
+			except: self.lightningNumerOfSensors	= 1
+
+			self.setClostestRPItextToBlank = valuesDict[u"setClostestRPItextToBlank"] !="1"
+
+
+			self.pressureUnits					= valuesDict[u"pressureUnits"]	# 1 for Pascal
+			self.tempUnits						= valuesDict[u"tempUnits"]	# Celsius, Fahrenheit, Kelvin
+			self.tempDigits						= int(valuesDict[u"tempDigits"])  # 0/1/2
+
+			newRain								= valuesDict[u"rainUnits"]	# mm inches
+			self.rainDigits						= int(valuesDict[u"rainDigits"])  # 0/1/2
+			if newRain != self.rainUnits:
+				mult = 1.
+				if	 newRain =="inch" and self.rainUnits == "mm":	mult = 1./25.4
+				elif newRain =="inch" and self.rainUnits == "cm":	mult = 1./2.54
+				elif newRain =="mm"	  and self.rainUnits == "cm":	mult = 10.
+				elif newRain =="mm"	  and self.rainUnits == "inch": mult = 25.4
+				elif newRain =="cm"	  and self.rainUnits == "inch": mult = 2.54
+				elif newRain =="cm"	  and self.rainUnits == "mm":	mult = 0.1
+				for dev in indigo.devices.iter("props.isSensorDevice"):
+					if dev.deviceTypeId.find(u"rainSensorRG11") != -1: 
+						props = dev.pluginProps
+						for state in dev.states:
+							if state.find("Rain") >-1 or state.find("rainRate") >-1:
+								try: x = float(dev.states[state])
+								except: continue
+								self.addToStatesUpdateDict(dev.id,state, x*mult, decimalPlaces=self.rainDigits )
+						self.executeUpdateStatesDict(onlyDevID=dev.id,calledFrom="validatePrefsConfigUi")
 					   
-					for prop in ["hourRainTotal","lasthourRainTotal","dayRainTotal" ,"lastdayRainTotal","weekRainTotal","lastWeekRainTotal","monthRainTotal" ,"lastmonthRainTotal","yearRainTotal"]:
-							try:	props[prop] = float(props[prop]) * mult
-							except: pass
-					self.deviceStopCommIgnore = time.time()
-					dev.replacePluginPropsOnServer(props)
+						for prop in ["hourRainTotal","lasthourRainTotal","dayRainTotal" ,"lastdayRainTotal","weekRainTotal","lastWeekRainTotal","monthRainTotal" ,"lastmonthRainTotal","yearRainTotal"]:
+								try:	props[prop] = float(props[prop]) * mult
+								except: pass
+						self.deviceStopCommIgnore = time.time()
+						dev.replacePluginPropsOnServer(props)
 
-		self.rainUnits =   newRain
-		self.rebootHour						= int(valuesDict[u"rebootHour"])
-		self.removeJunkBeacons				= valuesDict[u"removeJunkBeacons"]==u"1"
-		xxx									= valuesDict[u"restartBLEifNoConnect"] == "1"
-		if xxx != self.restartBLEifNoConnect:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.restartBLEifNoConnect			= xxx
+			self.rainUnits =   newRain
+			self.rebootHour						= int(valuesDict[u"rebootHour"])
+			self.removeJunkBeacons				= valuesDict[u"removeJunkBeacons"]==u"1"
+			xxx									= valuesDict[u"restartBLEifNoConnect"] == "1"
+			if xxx != self.restartBLEifNoConnect:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.restartBLEifNoConnect			= xxx
 
-		try: self.enableRebootRPIifNoMessages	 = int(valuesDict[u"enableRebootRPIifNoMessages"])
-		except: self.enableRebootRPIifNoMessages = 999999999
-		try:
-			self.automaticRPIReplacement	= unicode(valuesDict[u"automaticRPIReplacement"]).lower() == u"true" 
-		except:
-			self.automaticRPIReplacement	= False 
-		try:
-			self.expTimeMultiplier	= float(valuesDict[u"expTimeMultiplier"])
-		except:
-			self.expTimeMultiplier	= 2. 
+			try: self.enableRebootRPIifNoMessages	 = int(valuesDict[u"enableRebootRPIifNoMessages"])
+			except: self.enableRebootRPIifNoMessages = 999999999
+			try:
+				self.automaticRPIReplacement	= unicode(valuesDict[u"automaticRPIReplacement"]).lower() == u"true" 
+			except:
+				self.automaticRPIReplacement	= False 
+			try:
+				self.expTimeMultiplier	= float(valuesDict[u"expTimeMultiplier"])
+			except:
+				self.expTimeMultiplier	= 2. 
 
-		try:	self.maxSocksErrorTime		= float(valuesDict[u"maxSocksErrorTime"])
-		except: self.maxSocksErrorTime		= 600.
-
-
-
-		try:
-			self.piUpdateWindow = float(valuesDict[u"piUpdateWindow"])
-		except:
-			valuesDict[u"piUpdateWindow"] = 0
-			self.piUpdateWindow = 0.
-
-
-		try:	self.beaconPositionsUpdateTime = float(valuesDict[u"beaconPositionsUpdateTime"])
-		except: pass
-		try:	self.beaconPositionsdeltaDistanceMinForImage = float(valuesDict[u"beaconPositionsdeltaDistanceMinForImage"])
-		except: pass
-		self.beaconPositionsData[u"Xscale"]				= (valuesDict[u"beaconPositionsimageXscale"])
-		self.beaconPositionsData[u"Yscale"]				= (valuesDict[u"beaconPositionsimageYscale"])
-		self.beaconPositionsData[u"Zlevels"]			= (valuesDict[u"beaconPositionsimageZlevels"])
-		self.beaconPositionsData[u"dotsY"]				= (valuesDict[u"beaconPositionsimageDotsY"])
-		self.beaconPositionsData[u"Outfile"]			= (valuesDict[u"beaconPositionsimageOutfile"])
-		self.beaconPositionsData[u"ShowRPIs"]			= (valuesDict[u"beaconPositionsimageShowRPIs"])
-		self.beaconPositionsData[u"ShowExpiredBeacons"] = (valuesDict[u"beaconShowExpiredBeacons"])
-		self.beaconPositionsData[u"ShowCaption"]		= (valuesDict[u"beaconPositionsimageShowCaption"])
-		self.beaconPositionsData[u"Text"]				= (valuesDict[u"beaconPositionsimageText"])
-		self.beaconPositionsData[u"TextColor"]			= (valuesDict[u"beaconPositionsimageTextColor"])
-		self.beaconPositionsData[u"TextPos"]			= (valuesDict[u"beaconPositionsimageTextPos"])
-		self.beaconPositionsData[u"TextSize"]			= (valuesDict[u"beaconPositionsimageTextSize"])
-		self.beaconPositionsData[u"TextRotation"]		= (valuesDict[u"beaconPositionsimageTextRotation"])
-		self.beaconPositionsData[u"compress"]			= (valuesDict[u"beaconPositionsimageCompress"])
-		self.beaconPositionsUpdated						= 2
+			try:	self.maxSocksErrorTime		= float(valuesDict[u"maxSocksErrorTime"])
+			except: self.maxSocksErrorTime		= 600.
 
 
 
-		xxx = valuesDict[u"rebootWatchDogTime"]
-		if xxx != self.rebootWatchDogTime:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.rebootWatchDogTime = xxx
-
-		self.expectTimeout = valuesDict[u"expectTimeout"]
-
-		try:
-			delH = int(valuesDict[u"deleteHistoryAfterSeconds"])
-		except:
-			delH = 86400
-		if delH != self.deleteHistoryAfterSeconds:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.deleteHistoryAfterSeconds = delH
-
-		try:
-			xx = int(valuesDict[u"rPiCommandPORT"])
-		except:
-			xx = 9999
-		if xx != self.rPiCommandPORT:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.rPiCommandPORT = xx
+			try:
+				self.piUpdateWindow = float(valuesDict[u"piUpdateWindow"])
+			except:
+				valuesDict[u"piUpdateWindow"] = 0
+				self.piUpdateWindow = 0.
 
 
-		try:
-			xx = int(valuesDict[u"indigoInputPORT"])
-		except:
-			xx = 9999
-		if xx != self.indigoInputPORT:
-			self.quitNow = u"restart needed, commnunication was switched "
-			self.indiLOG.log(20, u"switching communication, will send new config to all RPI and restart plugin")
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.indigoInputPORT = xx
-
-		try:
-			xx = (valuesDict[u"IndigoOrSocket"])
-		except:
-			xx = 9999
-		if xx != self.IndigoOrSocket:
-			self.quitNow = u"restart, commnunication was switched "
-			self.indiLOG.log(20, u"switching communication, will send new config to all RPI and restart plugin")
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.IndigoOrSocket = xx
-
-		try:
-			xx = valuesDict[u"iBeaconFolderName"]
-		except:
-			xx = u"PI_Beacons_new"
-		if xx != self.iBeaconFolderName:
-			self.iBeaconFolderName = xx
-			self.getFolderIdOfBeacons()
-		try:
-			xx = valuesDict[u"iBeaconFolderNameVariables"]
-		except:
-			xx = u"piBeacons"
-		if xx != self.iBeaconFolderNameVariables:
-			self.iBeaconFolderNameVariables = xx
-			self.getFolderIdOfBeacons()
-
-		upNames = False
-		if self.groupCountNameDefault != valuesDict[u"groupCountNameDefault"]:	   upNames = True
-		if self.ibeaconNameDefault	  != valuesDict[u"ibeaconNameDefault"]:		   upNames = True
-		self.groupCountNameDefault = valuesDict[u"groupCountNameDefault"]
-		self.ibeaconNameDefault	   = valuesDict[u"ibeaconNameDefault"]
-		if upNames:
-			self.deleteAndCeateVariables(False)
-			self.varExcludeSQLList = [ "pi_IN_"+str(ii) for ii in _rpiList]
-			self.varExcludeSQLList.append(self.ibeaconNameDefault+"With_ClosestRPI_Change")
-			self.varExcludeSQLList.append(self.ibeaconNameDefault+"Rebooting")
-			self.varExcludeSQLList.append(self.ibeaconNameDefault+"With_Status_Change")
-			for group in _GlobalConst_groupList:
-				for tType in [u"Home", u"Away"]:
-					self.varExcludeSQLList.append(self.groupCountNameDefault+group+"_"+tType)
-			self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
+			try:	self.beaconPositionsUpdateTime = float(valuesDict[u"beaconPositionsUpdateTime"])
+			except: pass
+			try:	self.beaconPositionsdeltaDistanceMinForImage = float(valuesDict[u"beaconPositionsdeltaDistanceMinForImage"])
+			except: pass
+			self.beaconPositionsData[u"Xscale"]				= (valuesDict[u"beaconPositionsimageXscale"])
+			self.beaconPositionsData[u"Yscale"]				= (valuesDict[u"beaconPositionsimageYscale"])
+			self.beaconPositionsData[u"Zlevels"]			= (valuesDict[u"beaconPositionsimageZlevels"])
+			self.beaconPositionsData[u"dotsY"]				= (valuesDict[u"beaconPositionsimageDotsY"])
+			self.beaconPositionsData[u"Outfile"]			= (valuesDict[u"beaconPositionsimageOutfile"])
+			self.beaconPositionsData[u"ShowRPIs"]			= (valuesDict[u"beaconPositionsimageShowRPIs"])
+			self.beaconPositionsData[u"ShowExpiredBeacons"] = (valuesDict[u"beaconShowExpiredBeacons"])
+			self.beaconPositionsData[u"ShowCaption"]		= (valuesDict[u"beaconPositionsimageShowCaption"])
+			self.beaconPositionsData[u"Text"]				= (valuesDict[u"beaconPositionsimageText"])
+			self.beaconPositionsData[u"TextColor"]			= (valuesDict[u"beaconPositionsimageTextColor"])
+			self.beaconPositionsData[u"TextPos"]			= (valuesDict[u"beaconPositionsimageTextPos"])
+			self.beaconPositionsData[u"TextSize"]			= (valuesDict[u"beaconPositionsimageTextSize"])
+			self.beaconPositionsData[u"TextRotation"]		= (valuesDict[u"beaconPositionsimageTextRotation"])
+			self.beaconPositionsData[u"compress"]			= (valuesDict[u"beaconPositionsimageCompress"])
+			self.beaconPositionsUpdated						= 2
 
 
-		self.checkBeaconParametersDisabled	= valuesDict[u"checkBeaconParametersDisabled"]
+
+			xxx = valuesDict[u"rebootWatchDogTime"]
+			if xxx != self.rebootWatchDogTime:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.rebootWatchDogTime = xxx
+
+			self.expectTimeout = valuesDict[u"expectTimeout"]
+
+			try:
+				delH = int(valuesDict[u"deleteHistoryAfterSeconds"])
+			except:
+				delH = 86400
+			if delH != self.deleteHistoryAfterSeconds:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.deleteHistoryAfterSeconds = delH
+
+			try:
+				xx = int(valuesDict[u"rPiCommandPORT"])
+			except:
+				xx = 9999
+			if xx != self.rPiCommandPORT:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.rPiCommandPORT = xx
 
 
-		self.myIpNumber = valuesDict[u"myIpNumber"]
-		try:
-			self.secToDown = float(valuesDict[u"secToDown"])
-		except:
-			self.secToDown = 90.
+			try:
+				xx = int(valuesDict[u"indigoInputPORT"])
+			except:
+				xx = 9999
+			if xx != self.indigoInputPORT:
+				self.quitNow = u"restart needed, commnunication was switched "
+				self.indiLOG.log(20, u"switching communication, will send new config to all RPI and restart plugin")
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.indigoInputPORT = xx
 
-		pp = valuesDict[u"myIpNumber"]
-		if pp != self.myIpNumber:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.myIpNumber = pp
+			try:
+				xx = (valuesDict[u"IndigoOrSocket"])
+			except:
+				xx = 9999
+			if xx != self.IndigoOrSocket:
+				self.quitNow = u"restart, commnunication was switched "
+				self.indiLOG.log(20, u"switching communication, will send new config to all RPI and restart plugin")
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.IndigoOrSocket = xx
 
-		pp = valuesDict[u"portOfServer"]
-		if pp != self.portOfServer:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.portOfServer = pp
+			try:
+				xx = valuesDict[u"iBeaconFolderName"]
+			except:
+				xx = u"PI_Beacons_new"
+			if xx != self.iBeaconFolderName:
+				self.iBeaconFolderName = xx
+				self.getFolderIdOfBeacons()
+			try:
+				xx = valuesDict[u"iBeaconFolderNameVariables"]
+			except:
+				xx = u"piBeacons"
+			if xx != self.iBeaconFolderNameVariables:
+				self.iBeaconFolderNameVariables = xx
+				self.getFolderIdOfBeacons()
 
-		pp = valuesDict[u"userIdOfServer"]
-		if pp != self.userIdOfServer:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.userIdOfServer = pp
-
-		pp = valuesDict[u"passwordOfServer"]
-		if pp != self.passwordOfServer:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.passwordOfServer = pp
-
-		pp = valuesDict[u"authentication"]
-		if pp != self.authentication:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.authentication = pp
-
-		pp = valuesDict[u"GPIOpwm"]
-		if pp != self.GPIOpwm:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		self.GPIOpwm = pp
-
-
-		ss = valuesDict[u"wifiSSID"]
-		pp = valuesDict[u"wifiPassword"]
-		kk = valuesDict[u"key_mgmt"]
-		eth0					= '{"on":"dontChange",	"useIP":"use"}'
-		wlan0					= '{"on":"dontChange",	"useIP":"useIf"}'
-		try:	mm  			= { "eth0":json.loads(valuesDict[u"eth0"]), "wlan0":json.loads(valuesDict["wlan0"]) }
-		except: mm  			= {"eth0":json.loads(eth0),"wlan0":json.loads(wlan0)}
-
-		if ss != self.wifiSSID or pp != self.wifiPassword or kk != self.key_mgmt or mm != self.wifiEth:
-			self.wifiSSID		= ss
-			self.wifiPassword	= pp
-			self.key_mgmt		= kk
-			self.wifiEth		= mm
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-
-		pp = int(valuesDict[u"sendAfterSeconds"])
-		if pp != self.sendAfterSeconds:
-			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-			self.sendAfterSeconds = pp
+			upNames = False
+			if self.groupCountNameDefault != valuesDict[u"groupCountNameDefault"]:	   upNames = True
+			if self.ibeaconNameDefault	  != valuesDict[u"ibeaconNameDefault"]:		   upNames = True
+			self.groupCountNameDefault = valuesDict[u"groupCountNameDefault"]
+			self.ibeaconNameDefault	   = valuesDict[u"ibeaconNameDefault"]
+			if upNames:
+				self.deleteAndCeateVariables(False)
+				self.varExcludeSQLList = [ "pi_IN_"+str(ii) for ii in _rpiList]
+				self.varExcludeSQLList.append(self.ibeaconNameDefault+"With_ClosestRPI_Change")
+				self.varExcludeSQLList.append(self.ibeaconNameDefault+"Rebooting")
+				self.varExcludeSQLList.append(self.ibeaconNameDefault+"With_Status_Change")
+				for group in _GlobalConst_groupList:
+					for tType in [u"Home", u"Away"]:
+						self.varExcludeSQLList.append(self.groupCountNameDefault+group+"_"+tType)
+				self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
 
 
-		if u"all" in self.debugLevel:
-			self.printConfig()
+			self.checkBeaconParametersDisabled	= valuesDict[u"checkBeaconParametersDisabled"]
 
-		self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="validatePrefsConfigUi")
-		self.saveValuesDict = valuesDict
-		self.saveValuesDictChanged = True
+
+			self.myIpNumber = valuesDict[u"myIpNumber"]
+			try:
+				self.secToDown = float(valuesDict[u"secToDown"])
+			except:
+				self.secToDown = 90.
+
+			pp = valuesDict[u"myIpNumber"]
+			if pp != self.myIpNumber:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.myIpNumber = pp
+
+			pp = valuesDict[u"portOfServer"]
+			if pp != self.portOfServer:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.portOfServer = pp
+
+			pp = valuesDict[u"userIdOfServer"]
+			if pp != self.userIdOfServer:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.userIdOfServer = pp
+
+			pp = valuesDict[u"passwordOfServer"]
+			if pp != self.passwordOfServer:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.passwordOfServer = pp
+
+			pp = valuesDict[u"authentication"]
+			if pp != self.authentication:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.authentication = pp
+
+			pp = valuesDict[u"GPIOpwm"]
+			if pp != self.GPIOpwm:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.GPIOpwm = pp
+
+
+			ss = valuesDict[u"wifiSSID"]
+			pp = valuesDict[u"wifiPassword"]
+			kk = valuesDict[u"key_mgmt"]
+			eth0					= '{"on":"dontChange",	"useIP":"use"}'
+			wlan0					= '{"on":"dontChange",	"useIP":"useIf"}'
+			try:	mm  			= { "eth0":json.loads(valuesDict[u"eth0"]), "wlan0":json.loads(valuesDict["wlan0"]) }
+			except: mm  			= {"eth0":json.loads(eth0),"wlan0":json.loads(wlan0)}
+
+			if ss != self.wifiSSID or pp != self.wifiPassword or kk != self.key_mgmt or mm != self.wifiEth:
+				self.wifiSSID		= ss
+				self.wifiPassword	= pp
+				self.key_mgmt		= kk
+				self.wifiEth		= mm
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+
+			pp = int(valuesDict[u"sendAfterSeconds"])
+			if pp != self.sendAfterSeconds:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+				self.sendAfterSeconds = pp
+
+
+			if u"all" in self.debugLevel:
+				self.printConfig()
+
+			self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="validatePrefsConfigUi")
+			self.saveValuesDict = valuesDict
+			self.saveValuesDictChanged = True
+		except Exception, e:
+			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return True, valuesDict
 
 ####-------------------------------------------------------------------------####

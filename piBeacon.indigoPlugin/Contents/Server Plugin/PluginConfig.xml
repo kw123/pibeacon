@@ -271,7 +271,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina, security type is used by RPI to indigo curl connection </Label>
    </Field>
    
-   <Field id="userIDOfServer"   type="textfield" defaultValue="" tooltip="only used to make executabel work under catalina" >
+   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="only used to make executabel work under catalina" >
         <Label>userid for indigo server:</Label> 
    </Field>
    
