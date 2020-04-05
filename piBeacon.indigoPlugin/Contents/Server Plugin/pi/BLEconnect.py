@@ -47,7 +47,7 @@ def readParams():
 			if "BLEconnectMode"			in inp:	 BLEconnectMode=			  (inp["BLEconnectMode"])
 
 			if "BLEconnect" not in sensorList:
-				U.logger.log(30, u" no iphoneBLE definitions supplied (1) stopping")
+				U.logger.log(30, u" no BLEconnect definitions supplied in sensorList stopping")
 				exit()
 			if "sensors"				in inp:	 sensors=					  (inp["sensors"]["BLEconnect"])
 			macListNew={}
@@ -79,7 +79,7 @@ def readParams():
 				del macList[thisMAC]
 
 			if len(macList)	   == 0:
-				U.logger.log(30, u" no BLEconnect definitions supplied stopping")
+				U.logger.log(30, u" no BLEconnect definitions supplied in MAClist (2)")
 				exit()
 
 			return True

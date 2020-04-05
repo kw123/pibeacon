@@ -140,49 +140,51 @@ def startBlueTooth(pi):
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 		HCIs = U.whichHCI()
-		#
+		if HCIs !={} and "hci" in  HCIs and HCIs["hci"] !={}:
 
-		#U.logger.log(30,"myBLEmac HCIs{}".format( HCIs))
-		useHCI,  myBLEmac, devId = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"UART")
-		if myBLEmac ==  -1:
-			U.logger.log(20,"myBLEmac wrong: myBLEmac:{}".format( myBLEmac))
-			return 0,  0, -1
-		U.logger.log(20,"Beacon Use HCINo {};  useHCI:{};  myBLEmac:{}; devId:{}" .format(G.BeaconUseHCINo, useHCI, myBLEmac, devId))
+			#U.logger.log(30,"myBLEmac HCIs{}".format( HCIs))
+			useHCI,  myBLEmac, devId = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"UART")
+			if myBLEmac ==  -1:
+				U.logger.log(20,"myBLEmac wrong: myBLEmac:{}, HCIs:{}".format( myBLEmac, HCIs))
+				return 0,  0, -1
+			U.logger.log(20,"Beacon Use HCINo {};  useHCI:{};  myBLEmac:{}; devId:{}" .format(G.BeaconUseHCINo, useHCI, myBLEmac, devId))
 			
 
-		#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
-		OGF					= " 0x08"
-		OCF					= " 0x0008"
-		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
-		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
-		MAJ					= " 00 09"
-		MIN					= " 00 "+"0%x"%(int(pi))
-		txP					= " C5 00"
-		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
-		cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCI, OGF, OCF, iBeaconPrefix, uuid, MAJ, MIN, txP)
-		U.logger.log(20,cmd) 
-		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
-		time.sleep(0.2)
-		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
-		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
-		#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
-		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
-		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
-		cmd	 = "hcitool -i {} cmd{} 0x0006 00 10 00 20 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCI, OGF)
-		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
-		U.logger.log(20,cmd) 
-		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
-		####################################LE Set Advertise Enable
-		#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
-		time.sleep(0.2)
-		cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCI, OGF)
-		U.logger.log(20,cmd) 
-		subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
-		time.sleep(0.2)
+			#ret = subprocess.Popen("hciconfig hci0 leadv 3",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate() # enable ibeacon signals, next is the ibeacon message
+			OGF					= " 0x08"
+			OCF					= " 0x0008"
+			iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
+			uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
+			MAJ					= " 00 09"
+			MIN					= " 00 "+"0%x"%(int(pi))
+			txP					= " C5 00"
+			#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
+			cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCI, OGF, OCF, iBeaconPrefix, uuid, MAJ, MIN, txP)
+			U.logger.log(20,cmd) 
+			subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+			time.sleep(0.2)
+			####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
+			#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
+			#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
+			#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
+			#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
+			cmd	 = "hcitool -i {} cmd{} 0x0006 00 10 00 20 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCI, OGF)
+			## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
+			U.logger.log(20,cmd) 
+			subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+			####################################LE Set Advertise Enable
+			#cmd	 = "hcitool -i "+useHCI+" cmd" + OGF + " 0x000a" + " 01"
+			time.sleep(0.2)
+			cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCI, OGF)
+			U.logger.log(20,cmd) 
+			subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+			time.sleep(0.2)
 
 
-		HCIs = U.whichHCI()
-		ret = HCIs["ret"]
+			HCIs = U.whichHCI()
+			ret = HCIs["ret"]
+		else:
+			ret =["",""]
 
 		if ret[1] != "":	U.logger.log(30,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
 		else:			 	
@@ -191,13 +193,18 @@ def startBlueTooth(pi):
 					if HCIs["hci"][useHCI]["upDown"] == "DOWN":
 						if downCount > 1:
 							U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
-							writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig ".format(useHCI))
+							writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCI))
 							time.sleep(10)
 						downCount +=1
 						time.sleep(10)
 						return 0,  "", -1
 				else:
 					U.logger.log(30," {}  not in hciconfig list".format(useHCI))
+					downCount +=1
+					if downCount > 1:
+						U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
+						writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCI))
+						time.sleep(10)
 					downCount +=1
 					time.sleep(10)
 					return 0,  "", -1
@@ -223,7 +230,7 @@ def startBlueTooth(pi):
 	except	Exception, e:
 		U.logger.log(30,"error accessing bluetooth device...".format(e))
 		if downCount > 2:
-			writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:".format(e))
+			writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:{} FORCE ".format(e))
 			downHCI(useHCI)
 		downCount +=1
 		return 0,  "", -1
@@ -234,10 +241,10 @@ def startBlueTooth(pi):
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		if unicode(e).find("Bad file descriptor") >-1:
-			writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged?")
+			writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged? FORCE ")
 		if unicode(e).find("Network is down") >-1:
 			if downCount > 2:
-				writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Network_is_down...need_to_reboot")
+				writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Network_is_down...need_to_reboot FORCE ")
 			downCount +=1
 		downHCI(useHCI)
 		return 0, "", -1 
@@ -852,11 +859,9 @@ def execbeaconloop():
 	U.killOldPgm(myPID,G.program+".py")
 	count = U.killOldPgm(-1,"hciconfig")
 	if count > 5:
-		U.logger.log(30,"beaconloop exit, hciconfig to many ghost processes running:{}".format(count))
-		U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
-		writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN  too many  hciconfig processes running ".format(useHCI))
+		U.logger.log(50,"beaconloop exit, hciconfig, to many ghost hciconfig processes running:{}".format(count))
+		U.sendRebootHTML("bluetooth_startup is DOWN  too many  ghost hciconfig processes running ",reboot=True, force=True)
 		time.sleep(10)
-		
 
 	readParams(True)
 	fixOldNames()
@@ -978,7 +983,7 @@ def execbeaconloop():
 							time.sleep(5)
 						else:
 							break
-					subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
+					if os.path.isfile(G.homeDir+"temp/stopBLE"): subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
 					U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
 					time.sleep(1)
 					U.restartMyself(param="", reason="sock.recv error")
@@ -991,7 +996,7 @@ def execbeaconloop():
 					try:
 						offS = 7
 						for i in range(0, num_reports):
-							if pkLen < offS + 6: 
+							if pkLen < offS + 10: 
 								U.logger.log(20, "bad data{} {} {} {}xx".format(i, num_reports, offS + 6, pkLen))
 								break
 							# build the return string: mac#, uuid-major-minor,txpower??,rssi
@@ -1009,7 +1014,7 @@ def execbeaconloop():
 
 							nBytesThisMSG		= ord(pkt[offS+6])
 							if not acceptJunkBeacons:
-								if nBytesThisMSG < 5: 
+								if nBytesThisMSG < 10: 
 									#print "reject nBytesThisMSG" 
 									continue # this is not supported ..
 						

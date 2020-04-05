@@ -126,8 +126,7 @@ programFiles=[			"beaconloop",
 						"PCF8591",
 						"ADS1x15",
 						"checkSystemLOG",
-						"copyToTemp",
-						"checkVoltage"]
+						"copyToTemp"]
 
 specialOutputList=[		"display",
 						"myoutput",

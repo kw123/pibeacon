@@ -1,3 +1,18 @@
+Added features / changes in v7.118.345 @ 2020-04--5
+===================================================
+
+1. fixed timezone setting
+2. added check for install NTP  (apt-get install ntp)
+3. suppress msg for stopBLE file not fouund 
+4. changed logging on RPI, date format and logfile now /var/log/pibeacon (no .log)
+
+
+Added features / changes in v7.118.344 @ 2020-03-27
+===================================================
+
+1. changed loggin on RPI, date format and logfile now /var/log/pibeacon (no .log)
+
+
 Added features / changes in v7.118.343 @ 2020-03-26
 ===================================================
 

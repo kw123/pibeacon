@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # feb 5 2016
-# version 0.7
+
+masterVersion			= 12.7
+
 ##
 ##	1. start beaconloop.py
 ##	2. loop and check if beaconloop is still alive , if not reboot
@@ -915,9 +917,11 @@ def checkIfRebootRequest():
 		os.remove(G.homeDir+"temp/rebootNeeded")
 		if reason.find("noreboot")>-1:
 			U.logger.log(30, " sending message to plugin re:{}".format(reason) )
-			U.sendURL(sendAlive="alive",text=reason)
+			U.sendRebootHTML(reason)
 		else:
 			U.logger.log(30, " rebooting due to request:{}".format(reason))
+			if reason.find("FORCE") >-1:
+				U.doReboot(tt=15,force=True)
 			time.sleep(50)
 			U.sendRebootHTML(reason)
 			U.doRebootThroughRUNpinReset()
@@ -1163,7 +1167,7 @@ def checkLogfiles():
 
 		if retCode in[1,2]: 	 # (need 500Mbyte free or 80% max
 			subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
-			subprocess.call("sudo echo "" >  /var/log/pibeacon.log", shell=True)
+			subprocess.call("sudo echo "" >  /var/log/pibeacon", shell=True)
 			files = subprocess.Popen("find /var/log -type f",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].split()
 			for f in files:
 				subprocess.call("sudo echo "" >  {}".format(f) , shell=True)
@@ -1185,15 +1189,15 @@ def checkLogfiles():
 				subprocess.call("tail -300 {}permanent.log > {}tempFileaa ; mv {}tempFileaa  {}permanent.log".format(G.homeDir,G.homeDir,G.homeDir,G.homeDir), shell=True)
 		except: pass
 
-		if not os.path.isfile(G.logDir+"pibeacon.log"): return 
-		nBytes = os.path.getsize(G.logDir+"pibeacon.log")
+		if not os.path.isfile(G.logDir+"pibeacon"): return 
+		nBytes = os.path.getsize(G.logDir+"pibeacon")
 		U.logger.log(10, "checking logfile size: {}".format(nBytes))
 		if nBytes > maxSizeOfLogfileOnRPI: # default 10 mBytes
 			if  os.path.isfile(G.logDir+"pibeacon-1.log"):  
-				subprocess.call("sudo rm "+G.logDir+"pibeacon-1.log ", shell=True)
-			subprocess.call("sudo cp "+G.logDir+"pibeacon.log "+G.logDir+"pibeacon-1.log ", shell=True)
+				subprocess.call("sudo rm "+G.logDir+"pibeacon-1 ", shell=True)
+			subprocess.call("sudo cp "+G.logDir+"pibeacon "+G.logDir+"pibeacon-1 ", shell=True)
 			subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
-			subprocess.call("sudo echo "" >  /var/log/pibeacon.log", shell=True)
+			subprocess.call("sudo echo "" >  /var/log/pibeacon", shell=True)
 	except	Exception, e :
 		print u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
 		return
@@ -1314,9 +1318,9 @@ def checkSystemLOG():
 					if len(rememberLineSystemLOG) > 5: # only remember the first 5 
 						rememberLineSystemLOG.pop(0)
 					U.logger.log(10, "sending message to plugin re:" + line )
-					U.sendURL(sendAlive="alive",text="checkSystemLOG_register_dump_occured_noreboot_"+line)
-		if out.find("Out of memory:") > -1:
-			U.doReboot(tt=0., text="restart due to Out of memory:", force=True)
+					U.sendURL(sendAlive="alive",text="checkSystemLOG_register_dump_occured_reboot_"+line)
+		
+					U.doReboot(tt=15, text="restart due to register dump:", force=True)
 			
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1776,21 +1780,7 @@ def killOldPrograms():
 	global myPID
 	try:
 		U.stopDisplay()
-		for ff in G.programFiles:
-			if ff == G.program:
-				U.killOldPgm(myPID,G.program+".py")
-			else:
-				U.killOldPgm(-1, ff+".py")
-
-		for ff in G.specialSensorList:
-				U.killOldPgm(-1, ff+".py")
-
-
-		for ff in ["webserverINPUT","webserverSTATUS"]:
-			U.killOldPgm(-1, ff+".py")
-
-		## just in case kiil getBeaconParameters if still running, that disrupts the beaconloop under certain circumstances
-		U.killOldPgm(-1, "getBeaconParameters.py")
+		U.killOldPgm(myPID,"python ", delList=G.programFiles+G.specialSensorList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program], verbose=False)
 
 		time.sleep(1)
 		for ff in G.specialOutputList:
@@ -1902,6 +1892,7 @@ def checkIpSTDprogramsAreRunning(lastCheckAlive):
 ####################      #########################
 def checkNTP():
 	try:
+		U.installNTP()
 		U.testNTP()
 		if G.ntpStatus != "started, working":
 			U.startNTP(mode="simple")
@@ -1993,7 +1984,6 @@ def execMaster():
 		maxSizeOfLogfileOnRPI	= 10000000
 		typeForPWM				= "GPIO"
 		ifNetworkChanges  		= "doNothing"
-		masterVersion			= 12.6
 		sundial					= ""
 		checkFSCHECKfileDone	= False
 		wifiEthCheck			= {}
@@ -2208,7 +2198,7 @@ def execMaster():
 		if changed: 
 			U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (1)")
 
-		subprocess.call("rm  "+ G.homeDir+"temp/sending		   > /dev/null 2>&1 ", shell=True)
+		subprocess.call("rm  {}temp/sending > /dev/null 2>&1 ".format(G.homeDir), shell=True)
 
 
 		U.logger.log(20,"starting loop")

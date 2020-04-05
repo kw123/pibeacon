@@ -38,12 +38,12 @@ def setLogging():
 	global streamhandler, permLogHandler
 
 	# regular logfile
-	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon.log".format(G.logDir),format='%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format='%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
 	logger = logging.getLogger(__name__)
 
 	 # permanent logfile in pibeacon directory only for serious restarts, in case log dir is ramdisk
 	permLogHandler = logging.handlers.WatchedFileHandler("{}permanent.log".format(G.homeDir))
-	permFormat = logging.Formatter('%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%d-%H:%M:%S')
+	permFormat = logging.Formatter('%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%Y-%m-%d-%H:%M:%S')
 	permLogHandler.setFormatter(permFormat)
 	permLogHandler.setLevel(logging.CRITICAL)
 	logger.addHandler(permLogHandler)
@@ -73,7 +73,7 @@ def setLogLevel():
 
 
 #################################
-def killOldPgm(myPID,pgmToKill,param1="",param2="",verbose=False):
+def killOldPgm(myPID,pgmToKill, delList=[], param1="",param2="",verbose=False):
 	count = 0
 	try:
 		#print "killOldPgm ",pgmToKill,str(myPID)
@@ -82,20 +82,35 @@ def killOldPgm(myPID,pgmToKill,param1="",param2="",verbose=False):
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
 			cmd = "{} | grep ".format(cmd,param2)
-		if verbose: logger.log(20, u"cBY:{:<20} trying to kill {}".format(G.program, cmd) )
+		if verbose: logger.log(20, u"cBY:{:<20} kill command {}, {}".format(G.program, cmd, delList) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 		lines=ret.split("\n")
 		del ret
+		xlist = ""
 		for line in lines:
 			if len(line) < 10: continue
 			items=line.split()
 			pid=int(items[1])
 			if pid == int(myPID): continue
+			if delList != []:
+				found = False
+				for dd in delList:
+					if line.find(dd+".py") > -1:
+						found = True
+						break 
+			else:
+				found = True
+			if not found: continue
 
-			if verbose: logger.log(20, u"cBY:{:<20}  killing {}  {}  {}, pid={}".format(G.program, pgmToKill, param1, param2, pid) )
-			subprocess.call("sudo kill -9 {}".format(pid), shell=True)
+			if verbose: logger.log(20, u"cBY:{:<20}  killing {}  {}  {}, pid={}, line:{}".format(G.program, pgmToKill, param1, param2, pid, (" ").join(items[8:])) )
+			xlist += str(pid)+ " "
 			count += 1
+		if verbose: 
+			logger.log(40, u"cBY:{:<20} sudo kill -9 {} ".format(G.program, xlist) )
+			print  u"cBY:{:<20} sudo kill -9 {} ".format(G.program, xlist)
+		if len(xlist) > 2:
+			subprocess.call("sudo kill -9 {}".format(xlist), shell=True)
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
@@ -501,10 +516,10 @@ def doRebootThroughRUNpinReset():
 
 
 #################################
-def sendRebootHTML(reason,reboot=True):
+def sendRebootHTML(reason,reboot=True, force=False):
 	sendURL(sendAlive="reboot", text=reason)
 	if reboot:
-	   doReboot(tt=3, text=reason)
+	   doReboot(tt=3, text=reason,force=force)
 	else:
 	   doReboot(tt=3., text=reason, cmd="sudo killall -9 python; sleep 1; shutdown -h now ")
 
@@ -1285,7 +1300,7 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 				logger.log(20, "cBY:{:<20} changing timezone from: {}:{} to: {}:{}".format(G.program, currTZC,G.timeZones[currTZC+12], setNew, G.timeZones[setNew+12]) )
 				if currTZC != iTZ:
 					logger.log(30, "cBY:{:<20} changing timezone executing".format(G.program))
-					if os.path.isfile("/usr/share/zoneinfo/{}".format(timeZones[setNew+12])):
+					if os.path.isfile("/usr/share/zoneinfo/{}".format(G.timeZones[setNew+12])):
 						subprocess.call("sudo rm /etc/localtime", shell=True)
 						subprocess.call("sudo ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(G.timeZones[setNew+12]) , shell=True)
 						logger.log(20, "cBY:{:<20} changing timezone done".format(G.program))
@@ -3168,6 +3183,14 @@ def startNTP(mode=""):
 	return
 
 #  ntpStatus		   = "not started" #   / "started, working" / "started not working" / "temp disabled" / "stopped after not working"
+
+#################################
+def installNTP():
+	if os.path.isfile("/etc/init.d/ntp"): return 
+	logger.log(30, u"cBY:{:<20} started NTP install w >>sudo apt-get -y install ntp &<<;  will be installed next time around")
+	subprocess.call("sudo apt-get -y install ntp & ", shell=True)
+	time.sleep(30)
+	return
 
 
 

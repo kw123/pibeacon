@@ -54,7 +54,9 @@ delList =[
 for dd in delList:
 	subprocess.call("rm {}{} > /dev/null 2>&1 ".format(homeDir, dd), shell=True)
 
-subprocess.call("rm -r {}logs                   >/dev/null 2>&1".format(homeDir), shell=True)
+# remove old logfiles
+subprocess.call("rm  /var/log/pibeacon*.log  >/dev/null 2>&1", shell=True) # it is now ...../pibeacon no .log
+subprocess.call("rm -r {}logs               >/dev/null 2>&1".format(homeDir), shell=True)
 
 
 exit()

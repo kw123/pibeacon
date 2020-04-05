@@ -223,7 +223,7 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="BLEconnectMode" type="menu"     defaultValue="socket" tooltip=" ">
+			<Field id="BLEconnectMode" type="menu"     defaultValue="commandLine" tooltip=" ">
 				<Label> .... use socket or commandline for BLEconnect:</Label>
 				<List>
 					<Option value="socket"       >use python socket programming</Option>
