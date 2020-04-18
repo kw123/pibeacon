@@ -3,7 +3,7 @@
 home="/home/pi/pibeacon/"
 cd $home
 
-echo "This scripts checks every 25 secs if master.py is running --  if not,  will restart it"
+echo "This scripts checks every 90 secs if master.py is running --  if not,  will restart it"
 
 # kill calling sudo bash  master.sh  and old master.sh tasks..
 #                  list of master pids    excl grep       excl myself     get pid #s from line(s) in col 2
@@ -17,26 +17,25 @@ countUpdating=0
 while true; do
 	if  ps -ef | grep master.py | grep -v grep  > /dev/null 2>&1 
 		then
-			for i in {1..60}
-				do      # a way to to myself is to create a file temp/master.stop
+			for i in {1..90}
+				do      # a way to stop master.sh is to create a file temp/master.stop
 					if [ -f $home"temp/master.stop" ] 
 						then 
-						echo "exit master.sh  -- requested by temp/master.stop file" 
-						exit
+							echo "exit master.sh  -- requested by temp/master.stop file" 
+							exit
 					fi
 					sleep 1
 					echo "loop "$i 
 				done
 		else
-			sleep 1 # test again after 1 sec
-			if [ -f $home"temp/updateing" ] && [ $countUpdating -lt 3 ]
+			sleep 1 # test is updating in procegress, if yes ()==file upating exixts), dont restart master.py .. skip max 3 times
+			if [ -f $home"temp/updating" ] && [ $countUpdating -lt 3 ]
 			then
 				countUpdating=$(($countUpdating+1))
-				#echo " incrementing "$countUpdating
 				sleep 10
 			else
 				countUpdating=0
-				rm $home"temp/updateing"
+				rm $home"temp/updating"
 				if  ps -ef | grep master.py | grep -v grep  > /dev/null 2>&1
 					then 
 						echo "master.py is running, no need to restart"

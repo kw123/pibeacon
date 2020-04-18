@@ -18,20 +18,26 @@ G.program = "getBeaconParameters"
 
 
 
-def getBeaconParameters(devices):
+def execGetParams(devices, beaconsOnline):
 	global killMyselfAtEnd
 	data ={} 
 	try:	
 		devices = json.loads(devices)
 		if len(devices) ==0: return
 		subprocess.call("echo getbeaconparameters  > {}temp/stopBLE".format(G.homeDir), shell=True)
+		cmd = "sudo /bin/hciconfig hci0 down;sudo /bin/hciconfig hci0 up"
+		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
 		U.logger.log(20,"get beacon parameters devices:{}".format(devices))
  		timeoutSecs = 15
 		for mac in devices:
 			if len(mac) < 10: continue
+			if mac not in beaconsOnline:
+				U.logger.log(20,"mac: {}; skipping, not online or not in range".format(mac) )
+				continue
 			try:
 				params		= devices[mac]
+
 				#U.logger.log(30,"params:{}".format(params))
 				state	= []
 				uuid	= []
@@ -57,11 +63,9 @@ def getBeaconParameters(devices):
 				#U.logger.log(20,"{}:  state: {}; uuid:{}; random:{}; dType:{} ".format(mac, state, uuid, random, dType ) )
 				if len(state) ==0: continue
 				for ll in range(len(state)):
-					cmd = "sudo /bin/hciconfig hci0 down"
-					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					cmd = "sudo /bin/hciconfig hci0 up; /usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -b {} {} --char-read --uuid={}".format(timeoutSecs, mac,random[ll], uuid[ll])
+					cmd = "/usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -b {} {} --char-read --uuid={}".format(timeoutSecs, mac,random[ll], uuid[ll])
 					##					                                                 /usr/bin/gatttool -b 24:da:11:26:3b:4d --char-read --uuid=2A19 -t public    
-					U.logger.log(20,"iBeacon: {};   command: {}  ".format(mac, cmd) )
+					U.logger.log(20,"cmd: {}".format(cmd) )
 					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 					check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
 					if check.find("connect error") >-1:	value = check
@@ -77,13 +81,13 @@ def getBeaconParameters(devices):
 								if dType[ll] == "str": value = str(ret2[1])
 							except:pass
 					U.logger.log(20,"... ret: {}; bits: {}; norm:{}; value: {} ".format(check, bits, norm, value) )
-					U.logger.log(10,"{}:  return: {} {} {} ".format(mac, state[ll], ret[0], value) )
+					#U.logger.log(10,"{}:  return: {} {} {} ".format(mac, state[ll], ret[0], value) )
 					if "sensors" not in data: data["sensors"] = {}
 					if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
 					if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] ={}
 					data["sensors"]["getBeaconParameters"][mac] = {state[ll]:value}
 			except Exception, e:
-					if unicode(e).find("Timeout") ==-1:
+					if unicode(e).find("Timeout") == -1:
 						U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 					else:
 						U.logger.log(20, u"Line {} has timeout".format(sys.exc_traceback.tb_lineno))
@@ -120,14 +124,15 @@ if True: #__name__ == "__main__":
 	#G.debug  = 1
 #### read exec command list for restart values, update if needed and write back
 	execcommands={}
-
+	startTime = time.time()
 	U.logger.log(10, u"exec cmd: {}".format(sys.argv[1]))
-		
-	getBeaconParameters(sys.argv[1])
+	beaconsOnline, raw = U.readJson("{}temp/beaconsOnline".format(G.homeDir))	
+	execGetParams(sys.argv[1],beaconsOnline)
+	U.logger.log(20, u"finished  after {:.1f} secs".format(time.time()-startTime))
 	time.sleep(0.5)
-	subprocess.call("/usr/bin/python "+G.homeDir+"master.py &" , shell=True)
+	subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py &" , shell=True)
 	if killMyselfAtEnd: 
 		#U.logger.log(20, u"exec cmd: killing myself at PID {}".format(myPID))
 		time.sleep(5)
-		subprocess.call("sudo kill -9 "+str(myPID), shell=True )
+		subprocess.Popen("sudo kill -9 "+str(myPID), shell=True )
 	exit(0)

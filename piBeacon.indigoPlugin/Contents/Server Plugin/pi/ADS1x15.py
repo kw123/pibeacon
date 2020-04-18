@@ -515,6 +515,7 @@ def getValues():
 		U.logger.log(30, "error sensor:{} , sensors:{}".format(sensor, sensors))
 		return {}  
 	try:
+		#U.logger.log(30, u"getValues   i2cAddress:{}".format(i2cAddress))
 		for i2c in i2cAddress:
 			for devId in i2cAddress[i2c]:
 				values[devId] = ""
@@ -524,10 +525,10 @@ def getValues():
 				if len(inp) == 2:
 					v1 =  (SENSOR[devId].readADCSingleEnded(channel=int(inp[1]), pga=gain[devId], sps=250))
 				values[devId] = {"INPUT":round(v-v1,2)}
+					#U.logger.log(30, u"getValues    devId: {:14s},  v:{}, gain[devId]:{}, conversionFactor:{}".format(devId, values[devId], gain[devId], conversionFactor))
 				
 
-		#U.logger.log(30, u"getValues    devId: {:12s},  gain:{}, i2c:{},  v:{}, dv:{}".format(devId, gain[devId], i2c, v4, v-v1))
-		#U.logger.log(30, u"getValues : input:{}, len:{};   v:{}; v1:{}".format(inp, len(inp), v, v1))
+		#U.logger.log(30, u"getValues   inp:{},  v:{}".format(inp,  values))
 		badSensor = 0
 		return values
 	except	Exception, e:
@@ -582,7 +583,8 @@ def readParams():
 
 			i2cADDR = U.getI2cAddress(sensors[sensor][devId], default ="")
 			if i2cADDR not in i2cAddress: i2cAddress[i2cADDR] =[]
-			i2cAddress[i2cADDR].append(devId)
+			if devId not in i2cAddress[i2cADDR]:
+				i2cAddress[i2cADDR].append(devId)
 
 			try:	sendToIndigoEvery = float(sensors[sensor][devId]["sendToIndigoEvery"])
 			except: pass
@@ -600,6 +602,7 @@ def readParams():
 
 			try:	gain[devId] = int(sensors[sensor][devId]["gain"])
 			except:	gain[devId] = 6144
+			if str(gain[devId]) not in ["6144","4096","2048","1024","512","256"]: gain[devId] = 6144
 
 			try: 	resModel[devId] = 0x01 if int(sensors[sensor][devId]["resModel"]) == 16 else 0x00
 			except: resModel[devId] = 0x01

@@ -7,7 +7,7 @@
 # v 2	 feb 5 2016
 
 
-import sys, os, subprocess
+import sys, os, subprocess, copy
 import time,datetime
 import struct
 import bluetooth._bluetooth as bluez
@@ -479,9 +479,9 @@ def composeMSGSensor(data):
 		
 	
 #################################
-def composeMSG(beaconsNew,timeAtLoopStart,reason):
+def composeMSG(beaconsNew,timeAtLoopStart,reasonMax):
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds
-	global myBLEmac, sendFullUUID,  mapReasonToText, downCount
+	global myBLEmac, sendFullUUID,  mapReasonToText, downCount, beaconsOnline
 	try:
 		if myBLEmac == "00:00:00:00:00:00":
 			time.sleep(2)
@@ -503,6 +503,8 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 				if beaconsNew[beaconMAC]["count"] !=0 :
 					avePower	=float("%5.0f"%(beaconsNew[beaconMAC]["txPower"]	/beaconsNew[beaconMAC]["count"]))
 					aveSignal	=float("%5.1f"%(beaconsNew[beaconMAC]["rssi"]		/beaconsNew[beaconMAC]["count"]))
+					if avePower > -200:
+						beaconsOnline[beaconMAC] = int(time.time())
 					r  = min(6,max(0,beacon_ExistingHistory[beaconMAC]["reason"]))
 					rr = mapReasonToText[r]
 					newData = {"mac":beaconMAC,"reason":rr,"uuid":uuid,"rssi":aveSignal,"txPower":avePower,"count":beaconsNew[beaconMAC]["count"],"batteryLevel":beaconsNew[beaconMAC]["bLevel"],"pktInfo":beaconsNew[beaconMAC]["pktInfo"]}
@@ -520,8 +522,16 @@ def composeMSG(beaconsNew,timeAtLoopStart,reason):
 ##		  if unicode(data).find("0C:F3:EE:00:66:15") > -1:	 print data
 
 		if len(data) >10: downCount = 0
-		data ={"msgs":data,"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":secsCollected,"reason":reason}
+		data ={"msgs":data,"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":secsCollected,"reason":mapReasonToText[reasonMax]}
 		U.sendURL(data)
+
+		# save active iBeacons for getbeaconparameters() process
+		copyBE = copy.copy(beaconsOnline)
+		for be in copyBE:
+			if time.time() - copyBE[be] > 90:
+				del beaconsOnline[be]
+		U.writeJson("{}temp/beaconsOnline".format(G.homeDir), beaconsOnline, sort_keys=False, indent=0)
+
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -820,14 +830,17 @@ def execbeaconloop():
 	global myBLEmac, BLEsensorMACs
 	global oldRaw,	lastRead
 	global UUIDtoIphone, UUIDtoIphoneReverse, mapReasonToText
-	global downCount, doNotIgnore
+	global downCount, doNotIgnore, beaconsOnline
+
+
+	beaconsOnline		= {}
 
 	downCount 			= 0
 
 	BLEsensorMACs 		= {}
 
-
-	mapReasonToText		= ["init","timer","new_beacon","fastDown","fastDown_back","beacon_is_back","delta_signal",""]
+	#						0		1		2				3			4			5				6				7			8			9
+	mapReasonToText		= ["init","timer","new_beacon","fastDown","fastDown_back","beacon_is_back","delta_signal","quickSens","newParams","",""]
 	acceptJunkBeacons	= False
 	oldRaw				= ""
 	lastRead			= 0
@@ -858,7 +871,7 @@ def execbeaconloop():
 	U.setLogging()
 	U.killOldPgm(myPID,G.program+".py")
 	count = U.killOldPgm(-1,"hciconfig")
-	if count > 5:
+	if count > 4:
 		U.logger.log(50,"beaconloop exit, hciconfig, to many ghost hciconfig processes running:{}".format(count))
 		U.sendRebootHTML("bluetooth_startup is DOWN  too many  ghost hciconfig processes running ",reboot=True, force=True)
 		time.sleep(10)
@@ -888,30 +901,31 @@ def execbeaconloop():
 		sys.exit(1)
 
 	
-	loopCount	 = 0
-	tt			 = time.time()
-	logfileCheck = tt
-	paramCheck	 = tt
+	loopCount		= 0
+	tt				= time.time()
+	logfileCheck	= tt + 10
+	paramCheck		= tt + 10
+	sensCheck 		= tt + 10
+	lastIgnoreReset = tt + 10
 
 	U.echoLastAlive(G.program)
-	lastAlive=tt
-	lastIgnoreReset =tt
-	U.logger.log(30, "starting loop")
-	G.tStart= time.time()
-	beaconsNew={}
+	lastAlive		= tt
+	G.tStart		= tt
+	beaconsNew		= {}
 
 	bleRestartCounter = 0
 	eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
 	##print "beaconloop", eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
 
-
-	lastMSGwithData1 = time.time()
-	lastMSGwithData2 = time.time()
+	lastMSGwithData1 = tt
+	lastMSGwithData2 = tt
 	maxLoopCount	 = 6000
 	restartCount	 = 0
+
+	U.logger.log(30, "starting loop")
 	try:
 		while True:
-			loopCount +=1
+			loopCount += 1
 			tt = time.time()
 			if tt - lastIgnoreReset > 600: # check once per 10 minutes
 				alreadyIgnored ={}
@@ -958,13 +972,7 @@ def execbeaconloop():
 			iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
 			while iiWhile > 0:
 				iiWhile -= 1
-				tt=time.time()
-				quick = U.checkNowFile(sensor)				  
-				if tt - paramCheck > 2:
-					newParametersFile = readParams(False)
-					paramCheck=time.time()
-					if newParametersFile: 
-						quick = True
+				tt = time.time()
 				
 				
 				if reason > 1 and tt -G.tStart > 30: break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
@@ -973,7 +981,7 @@ def execbeaconloop():
 					break # send curl msgs after collecting for xx seconds
 
 				## get new data
-	#			 allBeaconMSGs = parse_events(sock, collectMsgs,offsetUUID,batteryLevelPosition,maxParseSec ) # get the data:  get up to #collectMsgs at one time
+#				allBeaconMSGs = parse_events(sock, collectMsgs,offsetUUID,batteryLevelPosition,maxParseSec ) # get the data:  get up to #collectMsgs at one time
 				allBeaconMSGs=[]
 				try: pkt = sock.recv(255)
 				except Exception, e:
@@ -983,10 +991,16 @@ def execbeaconloop():
 							time.sleep(5)
 						else:
 							break
-					if os.path.isfile(G.homeDir+"temp/stopBLE"): subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
-					U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno, e))
+					if os.path.isfile(G.homeDir+"temp/stopBLE"): 
+						subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
+						stopBLE = "stopBLE file PRESENT"
+					else:
+						stopBLE = "stopBLE file NOT present"
+
+					U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out; {}".format(sys.exc_traceback.tb_lineno, e, stopBLE))
 					time.sleep(1)
 					U.restartMyself(param="", reason="sock.recv error")
+	
 				doP = False
 				##U.logger.log(20, "loopCount:{}  #:{}  len:{}".format(loopCount, iiWhile, len(pkt))) 
 				pkLen = len(pkt)
@@ -1154,11 +1168,15 @@ def execbeaconloop():
 						continue# skip if bad data
 
 
-				#print time.time()-timeAtLoopStart, len(beaconsNew)
 				reason, beaconsNew = checkIfFastDown(beaconsNew,reason) # send -999 if gone 
-				#if beaconMAC =="0C:F3:EE:00:66:15": print	beaconsNew
-				#sys.stdout.write( str(reason)+" ")
-				if quick: break
+
+				if tt - sensCheck > 4:
+					if U.checkNowFile(sensor): reason = 7 # quickSens
+					sensCheck = tt			  
+
+				if tt - paramCheck > 10:
+					if readParams(False): reason = 8 # new params
+					paramCheck=time.time()
 
 			
 

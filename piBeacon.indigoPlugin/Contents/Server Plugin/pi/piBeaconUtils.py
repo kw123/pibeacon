@@ -107,10 +107,10 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="",param2="",verbose=False):
 			xlist += str(pid)+ " "
 			count += 1
 		if verbose: 
-			logger.log(40, u"cBY:{:<20} sudo kill -9 {} ".format(G.program, xlist) )
-			print  u"cBY:{:<20} sudo kill -9 {} ".format(G.program, xlist)
+			logger.log(40, u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
+			print  u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist)
 		if len(xlist) > 2:
-			subprocess.call("sudo kill -9 {}".format(xlist), shell=True)
+			subprocess.call("/usr/bin/sudo kill -9 {}".format(xlist), shell=True)
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
@@ -144,9 +144,9 @@ def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False):
 	logger.log(30, cmd )
 	subprocess.call(cmd, shell=True)
 	if python3:
-		cmd = "sudo /usr/bin/python3 {}{}.py {} &".format(G.homeDir,G.program, param)
+		cmd = "/usr/bin/sudo /usr/bin/python3 {}{}.py {} &".format(G.homeDir,G.program, param)
 	else:
-		cmd = "sudo /usr/bin/python {}{}.py {} &".format(G.homeDir,G.program, param)
+		cmd = "/usr/bin/sudo /usr/bin/python {}{}.py {} &".format(G.homeDir,G.program, param)
 	logger.log(30, cmd )
 	subprocess.call(cmd, shell=True)
 	exit()
@@ -161,20 +161,20 @@ def restartMaster( reason="", doPrint= True):
 			logger.log(30, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
 	except: pass
 
-	subprocess.call("sudo /usr/bin/python {}master.py  &".format(G.homeDir), shell=True)
+	subprocess.call("/usr/bin/sudo /usr/bin/python {}master.py  &".format(G.homeDir), shell=True)
 	exit()
 	time.sleep(5)
 
 #################################
 def setStopCondition(on=True):
 	if on:
-		subprocess.call("sudo chmod 666 /dev/i2c-*", shell=True)
-		subprocess.call("sudo chmod 666 /sys/module/i2c_bcm2708/parameters/combined", shell=True)
-		subprocess.call("sudo echo -n 1 > /sys/module/i2c_bcm2708/parameters/combined", shell=True)
+		subprocess.call("/usr/bin/sudo chmod 666 /dev/i2c-*", shell=True)
+		subprocess.call("/usr/bin/sudo chmod 666 /sys/module/i2c_bcm2708/parameters/combined", shell=True)
+		subprocess.call("/usr/bin/sudo echo -n 1 > /sys/module/i2c_bcm2708/parameters/combined", shell=True)
 	else:
-		subprocess.call("sudo chmod 666 /dev/i2c-*", shell=True)
-		subprocess.call("sudo chmod 666 /sys/module/i2c_bcm2708/parameters/combined", shell=True)
-		subprocess.call("sudo echo -n N > /sys/module/i2c_bcm2708/parameters/combined", shell=True)
+		subprocess.call("/usr/bin/sudo chmod 666 /dev/i2c-*", shell=True)
+		subprocess.call("/usr/bin/sudo chmod 666 /sys/module/i2c_bcm2708/parameters/combined", shell=True)
+		subprocess.call("/usr/bin/sudo echo -n N > /sys/module/i2c_bcm2708/parameters/combined", shell=True)
 
 
 #################################################################
@@ -193,8 +193,8 @@ def checkrclocalFile():
 		f.close()
 
 	if replace:
-		subprocess.call("sudo cp {}rc.local.default /etc/rc.local ".format(G.homeDir), shell=True)
-		subprocess.call("sudo chmod a+x /etc/rc.local", shell=True)
+		subprocess.call("/usr/bin/sudo cp {}rc.local.default /etc/rc.local ".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/sudo chmod a+x /etc/rc.local", shell=True)
 		logger.log(30, u"{:<20}replacing rc.local file".format(G.program) )
 
 
@@ -447,28 +447,43 @@ def cleanUpSensorlist(sens, theSENSORlist):
 			####exit()
 			pass
 		return theSENSORlist
-	except	Exception as e :
+	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return {}
 #################################
 def doReboot(tt=1, text="", cmd="", force=False):
 	try:
 
+
+		### looks like w shell =True: /bin/sh -c /usr/bin/sudo , need to add ' ' around cmd 
+		try: logger.log(30, "cBY:{:<20}  rebooting / shutdown  delay:{}, force:{}; with cmd={}; remarks= {}".format(G.program, tt, force, cmd, text))
+		except: pass
 		if force:
-			try: subprocess.call("sudo killall -9 python; sleep 4;sudo reboot -f", shell=True)
-			except: pass
-			try: logger.log(50, "cBY:{:<20}   rebooting / shutdown forced did not work".format(G.program))
+			try: 
+				doCmd = "'/usr/bin/sudo /usr/bin/killall -9 python;/usr/bin/sudo /bin/sleep 4; /usr/bin/sudo /sbin/reboot -f'"
+				ret = subprocess.Popen(doCmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+				logger.log(50, "cBY:{:<20}  rebooting / shutdown force did not work: {}, ret :{}".format(G.program, doCmd, ret))
+			except	Exception as e:
+				try:
+					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+					logger.log(50, "cBY:{:<20}  rebooting / shutdown forced did not work, ret :{}".format(G.program, ret))
+					doCmd = "'/usr/bin/sudo /sbin/reboot -f'"
+					ret = subprocess.Popen(doCmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+					logger.log(50, "cBY:{:<20}   simple /usr/bin/sudo /sbin/reboot -f  did not work:{}, ret:{}".format(G.program, doCmd, ret))
+				except	Exception as e:
+					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+			try: logger.log(50, "cBY:{:<20}  rebooting did not work; ret:{}".format(G.program, ret))
 			except: pass
 
-		if cmd =="":
+		if cmd == "":
 			doCmd= G.rebootCommand
 		else:
 			doCmd = cmd
 		try:     G.sendThread["run"] = False
 		except: pass
-		try: logger.log(50, "cBY:{:<20}G.program  rebooting / shutdown with cmd={} .. remarks= {}".format(G.program, doCmd, text))
+		try: logger.log(50, "cBY:{:<20}  rebooting / shutdown with cmd={} .. remarks= {}".format(G.program, doCmd, text))
 		except: pass
-		subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
+		subprocess.Popen("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
 
 
 		time.sleep(0.1)
@@ -476,23 +491,30 @@ def doReboot(tt=1, text="", cmd="", force=False):
 
 
 		if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
-			try: subprocess.call("sudo killall -9 pigpiod &", shell=True)
+			cc = "sudo killall -9 pigpiod&"
+			try: logger.log(50, "cBY:{:<20} killing pigpiod cmd={}".format(G.program, cc))
 			except: pass
+			ret = subprocess.Popen(cc, shell=True)
 			time.sleep(0.1)
 
-		if cmd =="":
-			subprocess.call("{};sleep 2;sudo reboot -f".format(doCmd), shell=True)
-			time.sleep(20)
-			subprocess.call("sudo killall -9 python; sudo sync;sudo sleep 2; sudo reboot -f", shell=True)
-			subprocess.call("sudo sync;sudo halt", shell=True)
+		if cmd == "":
+			cmds = [doCmd+"; sudo sleep 2; sudo  reboot -f", "sudo  killall -9 python; sleep 4; sudo  reboot -f", "sudo sync; sudo  halt"]
+			for cc in cmds:
+				ret = subprocess.Popen(cc, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+				try: logger.log(50, "cBY:{:<20} rebooting / shutdown with cmd={} did not work, ret:{}".format(G.program, cc, ret))
+				except: pass
+				time.sleep(10)
 		else:
-			subprocess.call(doCmd, shell=True)
+			ret = subprocess.Popen(doCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			try: logger.log(50, "cBY:{:<20} rebooting / shutdown with cmd={} did not work:{}".format(G.program, doCmd, ret))
+			except: pass
 			time.sleep(20)
-			subprocess.call("sudo sync;sudo halt", shell=True)
+			subprocess.Popen("sudo sync; sudo halt",shell=True)
 
 		doRebootThroughRUNpinReset()
-	except	Exception as e :
+	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return 
 
 #################################
 def checkifRebooting():
@@ -502,7 +524,7 @@ def checkifRebooting():
 #################################
 def resetRebootingNow():
 	if os.path.isfile("{}temp/rebooting.now".format(G.homeDir)):
-		subprocess.call( "sudo rm {}temp/rebooting.now".format(G.homeDir), shell=True)
+		subprocess.call( "/usr/bin/sudo rm {}temp/rebooting.now".format(G.homeDir), shell=True)
 
 
 #################################
@@ -521,7 +543,7 @@ def sendRebootHTML(reason,reboot=True, force=False):
 	if reboot:
 	   doReboot(tt=3, text=reason,force=force)
 	else:
-	   doReboot(tt=3., text=reason, cmd="sudo killall -9 python; sleep 1; shutdown -h now ")
+	   doReboot(tt=3., text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python; sleep 1; shutdown -h now ")
 
 	return
 
@@ -571,7 +593,7 @@ def setUpRTC(useRTCnew):
 			# exit 0
 			#fi
 			removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
-			subprocess.call("sudo chmod a+x  /lib/udev/hwclock-set", shell=True)
+			subprocess.call("/usr/bin/sudo chmod a+x  /lib/udev/hwclock-set", shell=True)
 			subprocess.call("apt-get -y remove fake-hwclock", shell=True)
 			doReboot(tt=30, text="installing HW clock")
 
@@ -589,7 +611,7 @@ def setUpRTC(useRTCnew):
 			# exit 0
 			#fi
 			subprocess.call("cp {}hwclock.set.nohwclock /lib/udev/hwclock-set".format(G.homeDir), shell=True)
-			subprocess.call("sudo chmod a+x  /lib/udev/hwclock-set", shell=True)
+			subprocess.call("/usr/bin/sudo chmod a+x  /lib/udev/hwclock-set", shell=True)
 			subprocess.call("apt-get -y install fake-hwclock", shell=True)
 
 		doReboot(tt=30, text=" .. reason de installing HW clock" ,cmd="")
@@ -607,8 +629,9 @@ def getIPNumber():
 		ipAddressRead = f.read().strip(" ").strip("\n").strip(" ")
 		f.close()
 		if isValidIP(ipAddressRead):
+			if G.ipAddress != ipAddressRead:
+				logger.log(20, "cBY:{:<20} found new IP number:{}".format(G.program, ipAddressRead))
 			G.ipAddress = ipAddressRead
-			logger.log(20, "cBY:{:<20} found IP number:{}".format(G.program, ipAddressRead))
 			return 0
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -650,6 +673,8 @@ def getIPCONFIG():
 	G.wifiActive		= False
 
 	try:
+		#logger.log(20, u"cBY:{:<20} network info: G.osVersion: network info:{}".format(G.program, G.osVersion))
+
 		if G.osVersion > 7:
 			retIp = (subprocess.Popen("/sbin/ip addr show " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip().split("\n")
 
@@ -730,6 +755,9 @@ def getIPCONFIG():
 
 			G.ipOfRouter = getIPofRouter()
 
+			retwifiID = (subprocess.Popen("/sbin/iwgetid " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip()
+			if retwifiID.find(":") >-1:
+				G.wifiID = retwifiID.split(":")[1]
 			for ii in range(ind):
 				ddd = dev[ii]
 				if ddd == "eth0":
@@ -743,14 +771,15 @@ def getIPCONFIG():
 					if  ip[ii].find("169.254.") == -1:
 						G.wlan0Packets = rxPackets[ii]
 						wlan0IP 	   = ip[ii]
+						G.wifiActive  = state[ii] == "UP"
 						G.wifiEnabled = True
-						G.wifiActive  = G.wifiActive  or state[ii] == "UP"
+						if G.wifiID == "": G.wifiActive = False
+						if not G.wifiActive: 
+							G.wifiEnabled = False
 
-				retwifiID = (subprocess.Popen("/sbin/iwgetid " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip()
-				if retwifiID.find(":") >-1:
-					G.wifiID = retwifiID.split(":")[1]
 
-			#logger.log(20, u"cBY:{:<20} network info: devs:\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}".format(G.program, dev, state,  mac, ip, rxBytes, rxPackets ,txBytes, txPackets))
+			#logger.log(20, u"cBY:{:<20} network info: \ndevs:     {}\nstate:    {}\nmac:      {}\nip:       {}\nrxBytes: {}\nrxPackets:{}\ntxBytes:   {}\ntxPackets:{}".format(G.program, dev, state,  mac, ip, rxBytes, rxPackets ,txBytes, txPackets))
+			#logger.log(20, u"cBY:{:<20} network info: G.wifiID:{}, G.wifiActive:{},  G.wifiEnabled:{}".format(G.program, G.wifiID , G.wifiActive,  G.wifiEnabled))
 
 
 		else:  # pre os v 8
@@ -835,7 +864,7 @@ def getIPCONFIG():
 								eth0IP = eth0IP[1].split(" ")[0]
 						if  eth0IP.find("169.254.")>-1:
 							G.eth0Enabled =False
-							##subprocess.call("sudo ifconfig eth0 down", shell=True)
+							##subprocess.call("/usr/bin/sudo ifconfig eth0 down", shell=True)
 
 						if ifConfigSections[ii].find("RX packets ") >-1:
 							eth0Packets = ifConfigSections[ii].split("RX packets ")
@@ -916,12 +945,12 @@ def checkWhenAdhocWifistarted():
 def startAdhocWifi():
 	try:
 		logger.log(30, "cBY:{:<20}  prepAdhoc Wifi: starting wifi servers as clock  no password ".format(G.program))
-		#subprocess.call("sudo ifconfig wlan0 up", shell=True)
-		#subprocess.call("sudo iwconfig wlan0 mode ad-hoc", shell=True)
-		#subprocess.call('sudo iwconfig wlan0 essid "clock"', shell=True)
-		#subprocess.call("sudo ifconfig wlan0 192.168.5.5 netmask 255.255.255.0", shell=True)
-		subprocess.call("sudo cp /etc/network/interfaces {}interfaces-old".format(G.homeDir), shell=True)
-		subprocess.call("sudo cp {}interfaces-adhoc /etc/network/interfaces".format(G.homeDir), shell=True)
+		#subprocess.call("/usr/bin/sudo ifconfig wlan0 up", shell=True)
+		#subprocess.call("/usr/bin/sudo iwconfig wlan0 mode ad-hoc", shell=True)
+		#subprocess.call('/usr/bin/sudo iwconfig wlan0 essid "clock"', shell=True)
+		#subprocess.call("/usr/bin/sudo ifconfig wlan0 192.168.5.5 netmask 255.255.255.0", shell=True)
+		subprocess.call("/usr/bin/sudo cp /etc/network/interfaces {}interfaces-old".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/sudo cp {}interfaces-adhoc /etc/network/interfaces".format(G.homeDir), shell=True)
 		writeJson("{}adhocWifistarted.time".format(G.homeDir), {"startTime":time.time()})
 		time.sleep(2)
 		doReboot(tt=0)
@@ -933,16 +962,16 @@ def startAdhocWifi():
 def stopAdhocWifi(setwifi="manual"):
 	try:
 		if  os.path.isfile("{}adhocWifistarted.time".format(G.homeDir)):
-			subprocess.call("sudo rm {}adhocWifistarted.time".format(G.homeDir), shell=True)
+			subprocess.call("/usr/bin/sudo rm {}adhocWifistarted.time".format(G.homeDir), shell=True)
 		if os.path.isfile("{}temp/adhocWifi.stop".format(G.homeDir)):
-			subprocess.call("sudo rm {}temp/adhocWifi.stop".format(G.homeDir), shell=True)
+			subprocess.call("/usr/bin/sudo rm {}temp/adhocWifi.stop".format(G.homeDir), shell=True)
 		if os.path.isfile("{}temp/adhocWifi.start".format(G.homeDir)):
-			subprocess.call("sudo rm {}temp/adhocWifi.start".format(G.homeDir), shell=True)
+			subprocess.call("/usr/bin/sudo rm {}temp/adhocWifi.start".format(G.homeDir), shell=True)
 
 		if True:
 			logger.log(50, "cBY:{:<20}  stopAdhocwebserver Wifi: stopping wifi, restoring wifi active (dhcp) interface file and reboot".format(G.program))
-			subprocess.call('sudo cp {}interfaces-DEFAULT-wifi /etc/network/interfaces'.format(G.homeDir), shell=True)
-			subprocess.call('sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
+			subprocess.call('/usr/bin/sudo cp {}interfaces-DEFAULT-wifi /etc/network/interfaces'.format(G.homeDir), shell=True)
+			subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
 
 		time.sleep(2)
 		doReboot(tt=0)
@@ -956,27 +985,27 @@ def startWiFi():
 	try:
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
 		logger.log(20, u"cBY:{:<20} starting WiFi".format(G.program) )
-		subprocess.call("sudo rfkill unblock all", shell=True)
+		subprocess.call("/usr/bin/sudo rfkill unblock all", shell=True)
 
 
 		# new tool to be converted..  --> use ip instead if ifconfig
 		# ip link set dev wlan1 up
-		# sudo ip addr flush dev eth0
+		# /usr/bin/sudo ip addr flush dev eth0
 		time.sleep(0.5)
 		ret = []
-		ret.append((subprocess.Popen("sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 
-		ret.append((subprocess.Popen("sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		if G.osVersion < 8:
-			ret.append((subprocess.Popen("sudo ifconfig wlan0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig wlan0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
-			ret.append((subprocess.Popen("sudo /sbin/ip link set wlan0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		ret.append((subprocess.Popen("sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf & sudo dhcpcd wlan0&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set wlan0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf & /usr/bin/sudo dhcpcd wlan0&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		time.sleep(0.5)
-		ret.append((subprocess.Popen("sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		ret.append((subprocess.Popen("sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		ret.append((subprocess.Popen("sudo /etc/init.d/networking restart&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		subprocess.call('sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
+		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo /etc/init.d/networking restart&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
 		logger.log(30, u"cBY:{:<20} starting Wifi: {}".format(G.program, ret))
 		G.wifiEnabled = True
 	except	Exception as e :
@@ -988,14 +1017,14 @@ def startEth():
 	try:
 		ret = []
 		if G.wifiEth["eth0"]["on"] == "dontChange": return
-		ret.append((subprocess.Popen("sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		if G.osVersion < 8:
-			ret.append((subprocess.Popen("sudo ifconfig eth0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig eth0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
-			ret.append((subprocess.Popen("sudo /sbin/ip link set  eth0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		ret.append((subprocess.Popen("sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		ret.append((subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		subprocess.call('sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
+			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set  eth0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
 		logger.log(30,  u"cBY:{:<20} starting ETH: {}".format(G.program, ret))
 		G.eth0Enabled = True
 	except	Exception as e :
@@ -1008,11 +1037,11 @@ def stopWiFi(calledFrom=""):
 		ret = []
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
 		logger.log(30, u"cBY:{:<20} stopping WiFi: called from:{}".format(G.program, calledFrom))
-		ret.append((subprocess.Popen("sudo rfkill unblock all"    	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all"    	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		if G.osVersion < 8:
-			ret.append((subprocess.Popen("sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
-			ret.append((subprocess.Popen("sudo /sbin/ip link set wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 
 		logger.log(30, u"cBY:{:<20} stopping WiFi: {}; called from:{}".format(G.program, ret, calledFrom))
 		G.wifiEnabled = False
@@ -1024,11 +1053,11 @@ def stopEth():
 	try:
 		if G.wifiEth["eth0"]["on"] == "dontChange": return
 		ret = []
-		ret.append((subprocess.Popen("sudo rfkill unblock all"   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all"   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		if G.osVersion < 8:
-			ret.append((subprocess.Popen("sudo ifconfig eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
-			ret.append((subprocess.Popen("sudo /sbin/ip link set  eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
+			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set  eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 
 		logger.log(30, u"cBY:{:<20} stopping ETH: {}".format(G.program, ret))
 		G.eth0Enabled = False
@@ -1052,7 +1081,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "sudo /usr/bin/python {}webserverINPUT.py  {} {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile, G.sundialActive)
+			cmd = "/usr/bin/sudo /usr/bin/python {}webserverINPUT.py  {} {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile, G.sundialActive)
 			logger.log(20, u"cBY:{:<20} starting web server:{}".format( G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
@@ -1078,7 +1107,7 @@ def startwebserverSTATUS(port,useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "sudo /usr/bin/python {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
+			cmd = "/usr/bin/sudo /usr/bin/python {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
 			logger.log(20, u"cBY:{:<20} starting web server:{}".format(G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
@@ -1182,7 +1211,7 @@ def updateWebStatus(data):
 #################################
 def testForFile(fname):
 	if os.path.isfile(fname):
-		subprocess.call('sudo rm '+fname, shell=True)
+		subprocess.call('/usr/bin/sudo rm '+fname, shell=True)
 		return True
 	return False
 
@@ -1301,8 +1330,8 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 				if currTZC != iTZ:
 					logger.log(30, "cBY:{:<20} changing timezone executing".format(G.program))
 					if os.path.isfile("/usr/share/zoneinfo/{}".format(G.timeZones[setNew+12])):
-						subprocess.call("sudo rm /etc/localtime", shell=True)
-						subprocess.call("sudo ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(G.timeZones[setNew+12]) , shell=True)
+						subprocess.call("/usr/bin/sudo rm /etc/localtime", shell=True)
+						subprocess.call("/usr/bin/sudo ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(G.timeZones[setNew+12]) , shell=True)
 						logger.log(20, "cBY:{:<20} changing timezone done".format(G.program))
 
 					else:
@@ -1344,8 +1373,8 @@ def restartWifi():
 def copySupplicantFileFromBoot():
 	try:
 		if os.path.isfile("/boot/wpa_supplicant.conf"):
-			subprocess.call("sudo cp  /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
-			subprocess.call("sudo rm  /boot/wpa_supplicant.conf", shell=True)
+			subprocess.call("/usr/bin/sudo cp  /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
+			subprocess.call("/usr/bin/sudo rm  /boot/wpa_supplicant.conf", shell=True)
 			return True
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -1355,7 +1384,7 @@ def checkifWifiJsonFileInBootDir():
 	if os.path.isfile("/boot/wifiInfo.json"):
 		wifiInfo, raw = readJson("/boot/wifiInfo.json")
 		logger.log(20, 'reading wifi info file:{}'.format(raw) )
-		subprocess.call("sudo rm /boot/wifiInfo.json", shell=True)
+		subprocess.call("/usr/bin/sudo rm /boot/wifiInfo.json", shell=True)
 		if wifiInfo !={} and "SSID" in wifiInfo and  "passCode" in wifiInfo:
 			makeNewSupplicantFile(wifiInfo)
 			return True
@@ -1425,10 +1454,11 @@ def getIPNumberMaster(quiet=False):
 		try:
 			f = open("{}ipAddress".format(G.homeDir),"r")
 			ipAddressRead = f.read().strip(" ").strip("\n").strip(" ")
-			logger.log(20, "cBY:{:<20} found IP number:{}".format(G.program, ipAddressRead))
+			if not quiet: logger.log(20, "cBY:{:<20} found IP number:{}".format(G.program, ipAddressRead))
 			f.close()
 		except:
 			ipAddressRead = ""
+			if not quiet: logger.log(20, "cBY:{:<20}  no ipAddress file".format(G.program))
 
 
 		eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
@@ -1439,12 +1469,13 @@ def getIPNumberMaster(quiet=False):
 		if testROUTER() == 0: 			connected	 = True
 		if testPing(G.ipOfServer) == 0:	indigoServer = True
 
-		if changed !="" or not isValidIP(ipAddressRead):
+		if changed != "" or not isValidIP(ipAddressRead):
 			time.sleep(2)
 			eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled= getIPCONFIG()
 
 			if testROUTER() == 0: 		connected	 = True
 			if testIndigoServer()== 0:	indigoServer = True
+			
 
 		#logger.log(20,"cBY:{:<20} IP info:  xxx  wlan0>{}<; eth0>{}<;  changed:{}<<; connected:{}<<; indigoServer:{}<<, G.ipAddress:{}<;  ipAddressRead:{}<; G.wifiEth:{}<; G.wifiActive:{}".format( G.program, wlan0IP,eth0IP,changed, connected, indigoServer, G.ipAddress, ipAddressRead, G.wifiEth, G.wifiActive) )
 
@@ -1460,13 +1491,13 @@ def getIPNumberMaster(quiet=False):
 					time.sleep(20)
 				eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
 				if testROUTER() == 0: 		connected	 = True
-				if testIndigoServer()== 0:	indigoServer = True
+				if testIndigoServer() == 0:	indigoServer = True
 
 		## added "connected or" in case router is not reachable, only indigo server
 		if connected or indigoServer:
 			if  eth0IP !="" and G.eth0Active and (
 				 G.wifiEth["eth0"]["useIP"] in ["use","dontChange"] or
-				(G.wifiEth["eth0"]["useIP"] in ["useIf"] and  wlan0IP =="")
+				(G.wifiEth["eth0"]["useIP"] in ["useIf"] and  wlan0IP == "")
 				) :
 				G.ipAddress = eth0IP
 
@@ -1481,30 +1512,34 @@ def getIPNumberMaster(quiet=False):
 			if G.ipAddress != ipAddressRead:
 				#logger.log(20,"cBY:{:<20} IP info:  writing  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
 				writeIPtoFile(G.ipAddress, reason=changed)
-				logger.log(20,"cBY:{:<20} IP info: IPs#: changed:>{}<; connected:{}; IndigoServer>{}<; Router>{}<; wlan0>{}<; eth0>{}<; G.wlanActive:{}; G.eth0Active:{};  AddressFile>{}<; PKTS(eth0>{},{}<; wlan0>{},{}<, dTime:{:.1f})".format( G.program, changed, connected, G.ipOfServer, G.ipOfRouter, wlan0IP, eth0IP, G.wifiActive, G.eth0Active, ipAddressRead, G.eth0Packets, G.eth0PacketsOld, G.wlan0Packets,G .wlan0PacketsOld, min(99.9,G.packetsTime-G.packetsTimeOld)))
+				logger.log(20,"cBY:{:<20} IP info: IPs#: changed:>{}<; connected:{}; IndigoServer>{}<; Router>{}<; wlan0>{}<; eth0>{}<; G.wlanActive:{}; G.eth0Active:{};  AddressFile>{}<; PKTS(eth0>{},{}<; wlan0>{},{}<, dTime:{:.1f})".format( 
+									G.program, 			  changed, 	   connected,    G.ipOfServer, 	  G.ipOfRouter, wlan0IP,  eth0IP,   G.wifiActive,    G.eth0Active,     ipAddressRead,   G.eth0Packets, G.eth0PacketsOld, G.wlan0Packets,G .wlan0PacketsOld, min(99.9,G.packetsTime-G.packetsTimeOld)))
 				logger.log(20,"cBY:{:<20} ... Requested Config:{}".format(G.program, G.wifiEth))
 				return indigoServer, True, connected
 
 
 			else:
-				logger.log(10,"cBY:{:<20} IP info: IPs#: changed:>{}<; connected:{}; IndigoServer>{}<; Router>{}<; wlan0>{}<; eth0>{}<; G.wlanActive:{}; G.eth0Active:{}; AddressFile>{}<; PKTS(eth0>{},{}<; wlan0>{},{}<, dTime:{:.1f})".format( G.program, changed, connected, G.ipOfServer, G.ipOfRouter, wlan0IP, eth0IP, G.wifiActive, G.eth0Active, ipAddressRead, G.eth0Packets, G.eth0PacketsOld, G.wlan0Packets,G .wlan0PacketsOld, min(99.9,G.packetsTime-G.packetsTimeOld)))
-				logger.log(10,"cBY:{:<20} ... Requested Config:{}".format(G.program,G.wifiEth))
-				return indigoServer,False, connected
+				if not quiet: logger.log(20,"cBY:{:<20} IP info: IPs#: changed:>{}<; connected:{}; IndigoServer>{}<; Router>{}<; wlan0>{}<; eth0>{}<; G.wlanActive:{}; G.eth0Active:{}; AddressFile>{}<; PKTS(eth0>{},{}<; wlan0>{},{}<, dTime:{:.1f})".format( 
+											G.program, 				   changed, 	 connected, 	G.ipOfServer,  G.ipOfRouter, wlan0IP,   eth0IP,   G.wifiActive,    G.eth0Active,    ipAddressRead,  G.eth0Packets, G.eth0PacketsOld, G.wlan0Packets,G .wlan0PacketsOld, min(99.9,G.packetsTime-G.packetsTimeOld)))
+				if not quiet: logger.log(20,"cBY:{:<20} ... Requested Config:{}".format(G.program,G.wifiEth))
+				return indigoServer, False, connected
 
+		else:
+			logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(connected, indigoServer))
 
-	except	Exception as e:
+	except Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	if changed !="":
 		logger.log(20, "cBY:{:<20} bad IP number ...  old from file ipAddressRead>>{}<< not in sync with ip output: wlan0IP>>{}<<;	eth0IP>>{}<<".format( G.program, ipAddressRead, wlan0IP,eth0IP)  )
-	return indigoServer, changed, connected
+	return indigoServer, changed !="", connected
 
 #################################
 def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
 
 # G.wifiEth["eth0"]  ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 # G.wifiEth["wlan0"] ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
-#  sudo /etc/init.d/networking restart
+#  /usr/bin/sudo /etc/init.d/networking restart
 	changed	= ""
 	try:
 		if wlan0IP == "":
@@ -3074,7 +3109,7 @@ def checkIfInFile(stringItems, file):
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Read-only file system:") >-1:
-			subprocess.call("sudo reboot", shell=True)
+			subprocess.call("/usr/bin/sudo reboot", shell=True)
 	return "error"
 
 
@@ -3176,8 +3211,8 @@ def removefromFile(string, file, nLines=1):
 
 #################################
 def startNTP(mode=""):
-	if mode == "simple": subprocess.call("sudo /etc/init.d/ntp start ", shell=True)
-	else: subprocess.call("sudo /etc/init.d/ntp stop ; sudo ntpd -q -g ; sudo /etc/init.d/ntp start ", shell=True)
+	if mode == "simple": subprocess.call("/usr/bin/sudo /etc/init.d/ntp start ", shell=True)
+	else: subprocess.call("/usr/bin/sudo /etc/init.d/ntp stop ; /usr/bin/sudo ntpd -q -g ; /usr/bin/sudo /etc/init.d/ntp start ", shell=True)
 
 	testNTP()
 	return
@@ -3187,8 +3222,8 @@ def startNTP(mode=""):
 #################################
 def installNTP():
 	if os.path.isfile("/etc/init.d/ntp"): return 
-	logger.log(30, u"cBY:{:<20} started NTP install w >>sudo apt-get -y install ntp &<<;  will be installed next time around")
-	subprocess.call("sudo apt-get -y install ntp & ", shell=True)
+	logger.log(30, u"cBY:{:<20} started NTP install w >>/usr/bin/sudo apt-get -y install ntp &<<;  will be installed next time around")
+	subprocess.call("/usr/bin/sudo apt-get -y install ntp & ", shell=True)
 	time.sleep(30)
 	return
 
@@ -3274,7 +3309,7 @@ def testNTP(mode=""):
 #################################
 def stopNTP(mode=""):
 	#print " stopping NTP, mode=", mode
-	subprocess.call("sudo /etc/init.d/ntp stop &", shell=True)
+	subprocess.call("/usr/bin/sudo /etc/init.d/ntp stop &", shell=True)
 	if mode =="":
 		G.ntpStatus = "not started"
 	elif mode == "temp":

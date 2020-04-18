@@ -2196,7 +2196,7 @@ Change here or in initial setup:</Label>
 		<Name>beacon</Name>
 		<UiDisplayStateId>displayStatus</UiDisplayStateId>
 		<ConfigUI>            
-			<Field id="isBeaconDevice"       type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isBeaconDevice"       type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="label1"               type="label" > 
 				<Label>==         iBeacon parameters:         ==</Label>
@@ -3706,7 +3706,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -3846,7 +3846,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -3986,7 +3986,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -4181,7 +4181,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -4319,7 +4319,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -4463,7 +4463,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -4604,7 +4604,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -4786,7 +4786,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -4967,7 +4967,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -5149,7 +5149,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -5332,7 +5332,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -5514,7 +5514,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -5705,7 +5705,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -6049,7 +6049,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -6357,7 +6357,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -6557,7 +6557,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -6741,7 +6741,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -6948,7 +6948,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -7132,7 +7132,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -7297,7 +7297,7 @@ After some days of running in clean air, proposed setup is:
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -7539,7 +7539,7 @@ It measures CO2 and temp using infrared light absorption
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -7733,7 +7733,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -7959,9 +7959,9 @@ It measures CO2 VOC
 
 			<Field id="statusColorLabel" type="label" >
 			<Label>== set color of status column dot to </Label></Field>
-			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
-			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
-			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="x>50">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="x>10">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x>=0">	<Label>set State Indicator to RED if:</Label></Field>
 			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
 				<Label>The conditions will be passed through eval(). Examples:
   &quot;x &gt; 55&quot; 
@@ -7970,7 +7970,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -8033,6 +8033,114 @@ It measures CO2 VOC
 				<ValueType>String</ValueType>
 				<TriggerLabel>kelvin</TriggerLabel>
 				<ControlPageLabel>kelvin</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+
+	</Device>
+
+	<Device type="sensor" id="MAX44009">
+	<Name>INPUT-Lux-MAX44009</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+
+			<Field id="infoLabelMAX44009" type="label">
+			<Label>Setup MAX44009   light sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+                illuminance is shown in Lux, auto ranging is enabled, range: 0.045..188,000 Lux </Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+			<Field id="i2cAddress" type="menu"     defaultValue="74"> <Label>i2c address of device:</Label>
+			<List>
+				<Option value="74"   > 0x4A = 74, A0 to GND</Option>
+				<Option value="75"   > 0x4B = 75, A0 to V+</Option>
+			</List>
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="illuminance">illuminance [lux]</Option>
+			</List>
+			</Field>
+			<Field id="logScale" type="menu"     defaultValue="0"> 
+			<Label>show status as linear or log number:</Label> 
+			<List>
+				<Option value="0"  >linear</Option>
+				<Option value="1"  >log of number</Option>
+			</List>
+			</Field> 
+			<Field id="unit"       type="textfield"     defaultValue="[Lux]">		<Label>...unit:</Label></Field>
+			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="x>100">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="x>10">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x>=0">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="illuminance">
+				<ValueType>String</ValueType>
+				<TriggerLabel>illuminance</TriggerLabel>
+				<ControlPageLabel>illuminance</ControlPageLabel>
+			</State>
+			<State id="illuminanceMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>illuminanceMinToday</TriggerLabel>
+				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
+			</State>
+			<State id="illuminanceMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
+				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
+			</State>
+			<State id="illuminanceMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
+				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="illuminanceMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
+				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -8214,7 +8322,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -8461,7 +8569,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -8592,7 +8700,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -8748,7 +8856,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -8905,7 +9013,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -9065,7 +9173,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -9176,7 +9284,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -9301,7 +9409,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -9527,7 +9635,7 @@ It measures CO2 VOC
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -12319,7 +12427,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -12479,7 +12587,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -12556,11 +12664,11 @@ For the MQ gas sensors you need to understand the required heating voltage.
 				<Option value="67"   >0x43 = 69: A0-SCL </Option>
 			</List>
 			</Field>
-			<Field id="shuntResistor1" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 1 value</Label>
+			<Field id="shuntResistor1" type="textfield"     defaultValue="0.1"> <Label>shunt resistor 1 value</Label>
 			</Field>
-			<Field id="shuntResistor2" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 2 value</Label>
+			<Field id="shuntResistor2" type="textfield"     defaultValue="0.1"> <Label>shunt resistor 2 value</Label>
 			</Field>
-			<Field id="shuntResistor3" type="textfield"     defaultValue="0.1"> <Label>shunbt resistor 3 value:</Label>
+			<Field id="shuntResistor3" type="textfield"     defaultValue="0.1"> <Label>shunt resistor 3 value:</Label>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
 			<Label>use TCA9548A multiplexer for this sensor:</Label> 
@@ -12661,7 +12769,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -12812,7 +12920,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -12985,7 +13093,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -13057,7 +13165,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 			<Field id="infoLabelADS1x15" type="label">
 			<Label>Setup i2c - ADS1x15 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL
-returns numbers 0...255</Label>
+returns numbers 0... 12 - 16 bits</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13067,29 +13175,29 @@ returns numbers 0...255</Label>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c Address:</Label>
 				<List>
-				<Option value="72"   >0x48 = 72: ADR-GND</Option>
-				<Option value="73"   >0x49 = 73: ADR-VDD (default)</Option>
-				<Option value="74"   >0x4A = 74: ADR-SDA</Option>
-				<Option value="75"   >0x4B = 75: ADR-SCL</Option>
+					<Option value="72"   >0x48 = 72: ADR-GND</Option>
+					<Option value="73"   >0x49 = 73: ADR-VDD (default)</Option>
+					<Option value="74"   >0x4A = 74: ADR-SDA</Option>
+					<Option value="75"   >0x4B = 75: ADR-SCL</Option>
 				</List>
 			</Field>
 
 			<Field id="gain" type="menu"     defaultValue="4096"> <Label>Gain:</Label>
-			<List>
-				<Option value="6144"   >2/3 Gain : max=6.144V, 3mV/bit     res </Option>
-				<Option value="4096"   >1   Gain : max=4.096V, 2mV/bit     res default</Option>
-				<Option value="2048"   >2   Gain : max=2.048V, 1mV/bit     res</Option>
-				<Option value="1024"   >4   Gain : max=1.024V, 0.5mV/bit   res</Option>
-				<Option value="512"    >8   Gain : max=0.512V, 0.25mV/bit  res</Option>
-				<Option value="256"    >16  Gain : max=0.256V, 0.125mV/bit res</Option>
-			</List>
+				<List>
+					<Option value="6144"   >2/3 Gain : max=6.144V, 3mV/bit     res only if V+ 6V.xV </Option>
+					<Option value="4096"   >1   Gain : max=4.096V, 2mV/bit     res default, goes to max 3.29V if V+=3.3V used</Option>
+					<Option value="2048"   >2   Gain : max=2.048V, 1mV/bit     res</Option>
+					<Option value="1024"   >4   Gain : max=1.024V, 0.5mV/bit   res</Option>
+					<Option value="512"    >8   Gain : max=0.512V, 0.25mV/bit  res</Option>
+					<Option value="256"    >16  Gain : max=0.256V, 0.125mV/bit res</Option>
+				</List>
 			</Field>
 
 			<Field id="resModel" type="menu"     defaultValue="16"> <Label>which ADS model:</Label>
-			<List>
-				<Option value="16"   >ADS1115 = 16 bit</Option>
-				<Option value="12"   >ADS1015 = 12 bit</Option>
-			</List>
+				<List>
+					<Option value="16"   >ADS1115 = 16 bit</Option>
+					<Option value="12"   >ADS1015 = 12 bit</Option>
+				</List>
 			</Field>
 
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="1" hidden="no" > 
@@ -13162,9 +13270,9 @@ returns numbers 0...255</Label>
 ===For all following numbers you can use simple number but also eg 1./255 or more complicated formulas - make sure you use float numbers, not integers
 The sequence of application is: 
 0. value: (raw+offset)*multiplier
-1. resistor: R = (feedResistor/(feedVolt/INPUT-1.)
+1. resistor: R = feedResistor/(feedVolt/INPUT-1.) w sensor to Ground
 2. min/max range: SensValue = (INPUT-MinRange)(MaxRange-MinRange)
-3. 1/value if selected
+3. 1./value if selected
 4. log: value = Log10(value)  // linear: value = value
 5. value = (value+offset2)*multiplier2
 6. format 
@@ -13176,11 +13284,11 @@ The sequence of application is:
 			<Field id="mult"   type="textfield"       defaultValue="1">		<Label>multiply(1) number by:</Label></Field>
 
 			<Field id="resistorSensor" type="menu"          defaultValue="0" >	
-				<Label>sensor is resistor:</Label>
+				<Label>sensor is resistor (and feedR to 0/V+):</Label>
 				<List>
-					<Option value="V+"      >to V+                                                                                                                                                                                                                                                 </Option>
-					<Option value="ground"  >at ground</Option>
-					<Option value="0"  >no</Option>
+					<Option value="V+"      >Sensor to  V+ (feedR to 0)</Option>                                                                                                                                                                                                                                          
+					<Option value="ground"  >to ground (feedR to V+) .. normal setup</Option>
+					<Option value="0"       >no</Option>
 				</List>
 			</Field>
 
@@ -13223,7 +13331,7 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<Label>use value as :</Label>
 				<List>
 					<Option value="value"    >value</Option>
-					<Option value="1/value"  >1 / value</Option>
+					<Option value="1/value"  >1. / value</Option>
 				</List>
 			</Field>
 
@@ -13261,7 +13369,7 @@ use bit max value, not actual voltage for feedVolt </Label>
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -13443,7 +13551,7 @@ returns numbers 0...255</Label>
 ===For all following numbers you can use simple number but also eg 1./255 or more complicated formulas - make sure you use float numbers, not integers
 The sequence of application is: 
 0. value: (raw+offset)*multiplier
-1. resistor: R = (feedResistor/(feedVolt/INPUT-1.)
+1. resistor: R = feedResistor/(feedVolt/INPUT-1.) w sensor to Ground
 2. min/max range: SensValue = (INPUT-MinRange)(MaxRange-MinRange)
 3. 1/value if selected
 4. log: value = Log10(value)  // linear: value = value
@@ -13456,11 +13564,11 @@ The sequence of application is:
 			<Field id="mult"   type="textfield"       defaultValue="1">		<Label>multiply(1) number by:</Label></Field>
 
 			<Field id="resistorSensor" type="menu"          defaultValue="0" >	
-				<Label>sensor is resistor:</Label>
+				<Label>sensor is resistor (and feedR to 0/V+):</Label>
 				<List>
-					<Option value="V+"      >to V+                                                                                                                                                                                                                                                 </Option>
-					<Option value="ground"  >at ground</Option>
-					<Option value="0"  >no</Option>
+					<Option value="V+"      >Sensor to  V+ (feedR to 0)</Option>
+					<Option value="ground"  >Sensor to ground (feedR to V+) .. normal setup</Option>
+					<Option value="0"       >no</Option>
 				</List>
 			</Field>
 
@@ -13504,7 +13612,7 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<Label>use value as :</Label>
 				<List>
 					<Option value="value"    >value</Option>
-					<Option value="1/value"  >1 / value</Option>
+					<Option value="1/value"  >1. / value</Option>
 				</List>
 			</Field>
 
@@ -13542,7 +13650,7 @@ use bit max value, not actual voltage for feedVolt </Label>
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -13831,7 +13939,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -14109,7 +14217,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -16627,7 +16735,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -16827,7 +16935,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -17044,7 +17152,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -17268,7 +17376,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
   &quot;x &lt;= 33 or 66 &lt;=x&quot;
   &quot;1 &quot; to pick color 
 - The sequence is green/grey/red.
-- If one is satisfied, the others will NOT be eveluated
+- If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
 - The status column must be a single state</Label>
@@ -20052,7 +20160,7 @@ You can use up to 3 GPIO input pins to control the range of the motor
 			<Field id="label1"  type="label" >
 			<Label>Setup devices that make up the Car home/away status:
 First Beacon is a battery (eg AAA) power beacon, fixed in car
-Second Beacon is USB powered to indicate if engin is running
+Second Beacon is USB powered to indicate if engine is running
 Third .. fifths are the beacons connected to the  car key rings
 States:
 ==status: HOME if (battery or USB or (all of the Keys)
@@ -20063,24 +20171,24 @@ States:
 
 			<Field id="beaconBattery"   type="menu" defaultValue="0" tooltip="select the iBeacon that runs on battery " >
 					<List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
-			<Label>select the iBeacon that runs on battery:</Label> 
+			<Label>select the iBeacon that is in the car, independend of the car battery:</Label> 
 			</Field>
 			<Field id="beaconUSB"   type="menu" defaultValue="0" tooltip="select the iBeacon that is in the USB Port " >
 					<List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
-			<Label>select the iBeacon in the USB port:</Label> 
+			<Label>select the iBeacon in the car USB port:</Label> 
 			</Field>
 			<Field id="beaconKey0"   type="menu" defaultValue="0" tooltip="select the iBeacon that on key ring 0" >
 					<List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
-			<Label>select the iBeacon for car key0:</Label> 
+			<Label>select the iBeacon for car key1:</Label> 
 			</Field>
 			<Field id="beaconKey1"   type="menu" defaultValue="0" tooltip="select the iBeacon that on key ring 1" >
 					<List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
-			<Label>select the iBeacon for car key1:</Label> 
+			<Label>select the iBeacon for car key2:</Label> 
 			</Field>    
 
 			<Field id="beaconKey2"   type="menu" defaultValue="0" tooltip="select the iBeacon that on key ring 2" >
 					<List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
-			<Label>select the iBeacon for car key2:</Label> 
+			<Label>select the iBeacon for car key3:</Label> 
 			</Field>
 			<Field id="displayState"       type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="state"> <Label>Property to display in the State Column:</Label>
@@ -20136,7 +20244,7 @@ States:
 	</Device>
 
 	<Device type="sensor" id="i2cADS1x15">		<Name>INPUT-ADC-1x16bit-i2cADS1x15 - four channel deprecated, use new definition device</Name>	</Device>
-	<Device type="sensor" id="i2cADS1x15-1">	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel</Name>	</Device>
+	<Device type="sensor" id="i2cADS1x15-1">	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel deprecated</Name>	</Device>
 
 	<Device type="sensor" id="i2cPCF8591-1">	<Name>i2cPCF8591-1  deprecated, use new definition device</Name>	</Device>
 	<Device type="sensor" id="i2cPCF8591"> 		<Name>i2cPCF8591  deprecated, use new definition device</Name>	</Device>

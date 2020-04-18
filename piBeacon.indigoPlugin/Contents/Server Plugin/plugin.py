@@ -247,6 +247,7 @@ _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u
 						 u"PCF8591",																  #  V 4 channels
 						 u"ADS1x15",																  #  V 4 channels
 						 u"as726x",																	 # rgb yellow orange violot
+						 u"MAX44009",																# illuminance sensor
 						 u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303",	   # gyroscope
 						 u"INPgpio", u"INPUTgpio-1", u"INPUTgpio-4", u"INPUTgpio-8", u"INPUTgpio-26",		# gpio inputs
 						 u"INPUTtouch-1", u"INPUTtouch-4", u"INPUTtouch-8", u"INPUTtouch-12", u"INPUTtouch-16",		 # capacitor inputs
@@ -3252,6 +3253,7 @@ class Plugin(indigo.PluginBase):
 				"i2cADS1x15-1", "i2cADS1x15"
 				"spiMCP3008-1", "spiMCP3008",
 				"PCF8591","ADS1x15",
+				"MAX44009",
 				"i2cTCS34725", "as726x", "i2cOPT3001", "i2cVEML7700", "i2cVEML6030", "i2cVEML6040", "i2cVEML6070", "i2cVEML6075", "i2cTSL2561", 
 				"mlx90614", "amg88xx", "mlx90640","lidar360",
 				"vl503l0xDistance", "vcnl4010Distance", "vl6180xDistance", "apds9960", "ultrasoundDistance",
@@ -5501,7 +5503,7 @@ class Plugin(indigo.PluginBase):
 	def filterBeacons(self, valuesDict=None, filter="", typeId="", devId=0, action=""):
 		xList = []
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
-			xList.append((dev.id,"{}".dev.name.encode("utf8")))
+			xList.append((dev.id,"{}".format(dev.name.encode("utf8"))))
 		xList.append((0,"delete"))
 		return xList
 
@@ -11201,6 +11203,7 @@ class Plugin(indigo.PluginBase):
 					cN = closestName+"@"+unicode(closestDist)
 					if rpiDev.states["closestiBeacon"] !=cN:
 						self.addToStatesUpdateDict(unicode(rpiDev.id),u"closestiBeacon", cN)
+						self.addToStatesUpdateDict(unicode(rpiDev.id),u"closestiBeaconLast", rpiDev.states["closestiBeacon"])
 			else:
 				if rpiDev.states["closestiBeacon"] !="None":
 					self.addToStatesUpdateDict(unicode(rpiDev.id),"closestiBeacon","None")
@@ -12067,7 +12070,9 @@ class Plugin(indigo.PluginBase):
 						self.updateRGB(dev, data, whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "as726x":
+
+
+					if dev.deviceTypeId == "as726x":
 						if "green" in data:
 							data["illuminance"] = float(data["green"])*6.83
 						self.updateRGB(dev, data, whichKeysToDisplay, dispType=4)
@@ -12084,158 +12089,162 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id,u"LEDcurrent", data["LEDcurrent"], decimalPlaces=1)
 						continue
 
-					elif sensor == u"i2cVEML6070" :
+					if sensor == u"MAX44009" :
 						self.updateLight(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"i2cVEML6075" :
+					if sensor == u"i2cVEML6070" :
 						self.updateLight(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"i2cVEML6040" :
+					if sensor == u"i2cVEML6075" :
+						self.updateLight(dev, data, whichKeysToDisplay)
+						continue
+
+					if sensor == u"i2cVEML6040" :
 						self.updateLight(dev, data, whichKeysToDisplay,theType=sensor)
 						continue
 
-					elif sensor == u"i2cVEML7700" :
+					if sensor == u"i2cVEML7700" :
 						self.updateLight(dev, data, whichKeysToDisplay,theType=sensor)
 						continue
 
-					elif sensor == u"i2cVEML6030" :
+					if sensor == u"i2cVEML6030" :
 						self.updateLight(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"i2cTSL2561" :
+					if sensor == u"i2cTSL2561" :
 						self.updateLight(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"i2cIS1145" :
+					if sensor == u"i2cIS1145" :
 						self.updateLight(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"i2cOPT3001" :
+					if sensor == u"i2cOPT3001" :
 						self.updateLight(dev, data, whichKeysToDisplay, theType=sensor)
 						continue
 
-					elif sensor == u"ultrasoundDistance" :
+					if sensor == u"ultrasoundDistance" :
 						self.updateDistance(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"vl503l0xDistance" :
+					if sensor == u"vl503l0xDistance" :
 						self.updateDistance(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"vl6180xDistance" :
-						self.updateDistance(dev, data, whichKeysToDisplay)
-						self.updateLight(dev, data, whichKeysToDisplay)
-						continue
-
-					elif sensor == u"vcnl4010Distance" :
+					if sensor == u"vl6180xDistance" :
 						self.updateDistance(dev, data, whichKeysToDisplay)
 						self.updateLight(dev, data, whichKeysToDisplay)
 						continue
 
-					elif sensor == u"apds9960" :
+					if sensor == u"vcnl4010Distance" :
+						self.updateDistance(dev, data, whichKeysToDisplay)
+						self.updateLight(dev, data, whichKeysToDisplay)
+						continue
+
+					if sensor == u"apds9960" :
 						self.updateapds9960(dev, data)
 						continue
 
-					elif sensor.find(u"INPUTgpio-") >-1:
+					if sensor.find(u"INPUTgpio-") >-1:
 						self.updateINPUT(dev, data, whichKeysToDisplay, int(sensor.split("INPUTgpio-")[1]), sensor)
 						continue
 
-					elif sensor.find(u"INPUTtouch-") >-1:
+					if sensor.find(u"INPUTtouch-") >-1:
 						self.updateINPUT(dev, data, whichKeysToDisplay, int(sensor.split("INPUTtouch-")[1]), sensor)
 						continue
 
-					elif sensor.find(u"INPUTtouch12-") >-1:
+					if sensor.find(u"INPUTtouch12-") >-1:
 						self.updateINPUT(dev, data, whichKeysToDisplay, int(sensor.split("INPUTtouch12-")[1]), sensor)
 						continue
 
-					elif sensor.find(u"INPUTtouch16-") >-1:
+					if sensor.find(u"INPUTtouch16-") >-1:
 						self.updateINPUT(dev, data, whichKeysToDisplay, int(sensor.split("INPUTtouch16-")[1]), sensor)
 						continue
 
-					elif sensor == u"spiMCP3008" :
+					if sensor == u"spiMCP3008" :
 						self.updateINPUT(dev, data, whichKeysToDisplay,	 8, sensor)
 						continue
 
-					elif sensor == u"spiMCP3008-1" :
+					if sensor == u"spiMCP3008-1" :
 						self.updateINPUT(dev, data, u"INPUT_0",	 1, sensor)
 						continue
 
-					elif sensor == u"PCF8591" :
+					if sensor == u"PCF8591" :
 						self.updateINPUT(dev, data, whichKeysToDisplay, 0, sensor)
 						continue
 
-					elif sensor == u"ADS1x15" :
+					if sensor == u"ADS1x15" :
 						self.updateINPUT(dev, data, whichKeysToDisplay, 0, sensor)
 						continue
 
-					elif sensor == u"INPUTRotarySwitchAbsolute":
+					if sensor == u"INPUTRotarySwitchAbsolute":
 						self.updateINPUT(dev, data, whichKeysToDisplay, 1, sensor)
 						continue
 
-					elif sensor == u"INPUTRotarySwitchIncremental":
+					if sensor == u"INPUTRotarySwitchIncremental":
 						self.updateINPUT(dev, data, whichKeysToDisplay, 1, sensor)
 						continue
 
-					elif sensor == u"mysensors" :
+					if sensor == u"mysensors" :
 						self.indiLOG.log(20, sensor+"  into input")
 						self.updateINPUT(dev, data, whichKeysToDisplay, 10, sensor)
 						continue
 
-					elif sensor == u"myprogram" :
+					if sensor == u"myprogram" :
 						self.updateINPUT(dev, data, whichKeysToDisplay, 10, sensor)
 						continue
 
-					elif dev.deviceTypeId == "Wire18B20":
+					if dev.deviceTypeId == "Wire18B20":
 						self.updateOneWire(dev,data,whichKeysToDisplay,piU)
 						continue
 
-					elif dev.deviceTypeId == "BLEsensor":
+					if dev.deviceTypeId == "BLEsensor":
 						self.updateBLEsensor(dev,data,props,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "ina219":
+					if dev.deviceTypeId == "ina219":
 						self.updateina219(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "ina3221":
+					if dev.deviceTypeId == "ina3221":
 						self.updateina3221(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "i2cADC121":
+					if dev.deviceTypeId == "i2cADC121":
 						self.updateADC121(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "l3g4200":
+					if dev.deviceTypeId == "l3g4200":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "bno055":
+					if dev.deviceTypeId == "bno055":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "mag3110":
+					if dev.deviceTypeId == "mag3110":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "hmc5883L":
+					if dev.deviceTypeId == "hmc5883L":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "mpu6050":
+					if dev.deviceTypeId == "mpu6050":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "mpu9255":
+					if dev.deviceTypeId == "mpu9255":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId == "lsm303":
+					if dev.deviceTypeId == "lsm303":
 						self.updateGYROS(dev,data,whichKeysToDisplay)
 						continue
 
-					elif dev.deviceTypeId in ["INPUTpulse","INPUTcoincidence"]:
+					if dev.deviceTypeId in ["INPUTpulse","INPUTcoincidence"]:
 						self.updatePULSE(dev,data,whichKeysToDisplay)
 						continue
 
@@ -13905,7 +13914,7 @@ class Plugin(indigo.PluginBase):
 				if u"unit" in props: unit = props[u"unit"]
 				else:				unit = ""
 				if u"format" in props: formatN = props[u"format"]
-				else:				  formatN = "%7.2f"
+				else:				   formatN = "%7.2f"
 				logScale="0"
 				if u"logScale" in props: 
 					logScale = props[u"logScale"]
@@ -13952,7 +13961,7 @@ class Plugin(indigo.PluginBase):
 			if u"lux"		  in data: changed += self.updateRGB2(dev, u"lux",		  data, upState,unit, dispType=dispType)
 			if u"illuminance" in data: changed += self.updateRGB2(dev, u"illuminance",data, upState,unit, dispType=dispType)
 			if changed > 0:
-					dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOn)
+					if "stateGreen" not in props: dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOn)
 					if u"illuminance" in dev.states and u"illuminance" not in data:
 						il = (-0.32466 * data['red']) + (1.57837 * data['green']) + (-0.73191 * data['blue'])  # fron adafruit
 						ilUI = (u"%.1f" % il + "[Lux]").replace(u" ", u"")

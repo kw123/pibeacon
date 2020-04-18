@@ -4,13 +4,13 @@
 # feb 5 2016
 
 masterVersion			= 12.7
+## changelog: 
+# 2020-04-05 added check for NTP
+# 2020-xx-xx 
+#
+#
+#
 
-##
-##	1. start beaconloop.py
-##	2. loop and check if beaconloop is still alive , if not reboot
-##	3. check if we can ping the server, if not	reboot 
-##
-##
 
 import sys, os, subprocess, copy
 import time,datetime
@@ -1331,7 +1331,7 @@ def cycleWifi():
 	eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 	#print "master:	 is wifi enabled : "+str(G.wifiEnabled)
 	if G.wifiEnabled:
-		indigoServerOn, changed, connected = U.getIPNumberMaster()
+		indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
 		if not connected:
 			#print "master:	 cycle wlan0"
 			subprocess.call("sudo /sbin/ifconfig wlan0 down; sudo /sbin/ifconfig wlan0 up", shell=True)
@@ -1549,7 +1549,7 @@ def tryRestartNetwork():
 			ret = subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
 			logger.log(30, u"(re)starting network, response: {}".format(ret))
 			time.sleep(10)
-			indigoServerOn, changed, connected = U.getIPNumberMaster()
+			indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
 			if G.ipAddress != "":
 				U.restartMyself(reason=" ip number is back on")
 	except	Exception, e :
@@ -1825,7 +1825,7 @@ def checkFileSystem():
 def checkIfipNumberchanged(indigoServerOn, changed, connected):
 	try:
 		oldIP = G.ipAddress
-		indigoServerOn, changed, connected = U.getIPNumberMaster()
+		indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
 
 		if	G.ipAddress =="" and G.networkType !="clockMANUAL" :
 			U.doReboot(tt=10., text=" reboot due to no IP nummber")				   
@@ -1833,7 +1833,7 @@ def checkIfipNumberchanged(indigoServerOn, changed, connected):
 			subprocess.call("reboot now", shell=True)
 
 		if changed: 
-			U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (loop)")
+			U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (loop) changed:{}".format(changed))
 
 		if indigoServerOn == 0 and G.ipAddress !="":
 			U.setNetwork("on")
@@ -2196,7 +2196,7 @@ def execMaster():
 			U.setNetwork("on")
 	
 		if changed: 
-			U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (1)")
+			U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (1) changed:{}".format(changed))
 
 		subprocess.call("rm  {}temp/sending > /dev/null 2>&1 ".format(G.homeDir), shell=True)
 

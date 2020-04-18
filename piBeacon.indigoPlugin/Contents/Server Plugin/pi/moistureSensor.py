@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 ####################
+# fixed  2020-04-06:	 except Exception >>> as e<<< : was missing in several lines, only happens when error occures
 
 import sys, os, time, json, datetime,subprocess,copy
 import smbus
@@ -54,7 +55,7 @@ class MoistureChirp:
 						ret = self.bus.read_word_data(self.address, 0x05)
 						retData["temp"] =  ((ret & 0xFF) << 8) + (ret >> 8)
 						break 
-		except:
+		except Exception as e:
 			U.logger.log(30, u"in Line {} has error={} temp ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
@@ -65,7 +66,7 @@ class MoistureChirp:
 						ret = self.bus.read_word_data(self.address, 0x00)
 						retData["moisture"] = ((ret & 0xFF) << 8) + (ret >> 8) 
 						break 
-		except:
+		except Exception as e:
 			U.logger.log(30, u"in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
@@ -82,7 +83,7 @@ class MoistureChirp:
 					if il != 0: break
 					time.sleep(1)
 				retData["illuminance"] = il 
-		except:
+		except Exception as e:
 			U.logger.log(30, u"in Line {} has error={} illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		return retData

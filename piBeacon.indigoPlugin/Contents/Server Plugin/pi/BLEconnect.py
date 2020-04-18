@@ -170,10 +170,10 @@ def tryToConnectCommandLine(MAC,BLEtimeout,useHCI):
 		# Connection timed out
 		# Input/output error ok for 1. step, not ok for step 2
 		#  stop:  "Device is not available."
-	  #timeout -s SIGINT 5s hcitool cc  18:65:90:6A:B9:0D; hcitool rssi 18:65:90:6A:B9:0D; hcitool tpl 18:65:90:6A:B9:0D
-	  #timeout -s SIGINT 5s hcitool cc  18:65:90:6A:B9:0D; hcitool rssi 18:65:90:6A:B9:0D; hcitool tpl 18:65:90:6A:B9:0D
+	  #timeout -s SIGINT 5s hcitool cc  3C:22:FB:0F:D6:78; hcitool rssi 3C:22:FB:0F:D6:78; hcitool tpl 3C:22:FB:0F:D6:78
+	  #sudo timeout -s SIGINT 5s hcitool -i hci0  cc  8C:86:1E:3D:5C:66;sudo hcitool -i hci0 rssi 8C:86:1E:3D:5C:66;sudo hcitool -i hci0 tpl 8C:86:1E:3D:5C:66
 		for ii in range(2):
-			cmd = "sudo timeout -s SIGINT {:.1f}s hcitool -i {}  cc {}; hcitool -i {} rssi {} ; hcitool -i {} tpl {}".format(BLEtimeout, useHCI, MAC, useHCI,  MAC, useHCI, MAC)
+			cmd = "sudo timeout -s SIGINT {:.1f}s hcitool -i {}  cc {};sleep 0.2; hcitool -i {} rssi {} ;sleep 0.2;hcitool -i {} tpl {}".format(BLEtimeout, useHCI, MAC, useHCI,  MAC, useHCI, MAC)
 			U.logger.log(10, cmd)
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			parts = ret[0].strip("\n").split("\n")
@@ -322,14 +322,12 @@ def execBLEconnect():
 
 				if True:
 					nT= max(int(nextTest),1)
-					fTest = nextTest / nT
+					fTest = max(0.2, nextTest / nT )
 					#print "fTest",thisMAC, fTest
 					for ii in range(nT):
 						tt=time.time()
 						if fTest > 0:
-							time.sleep(fTest)  # print "time to sleep "+datetime.datetime.now().strftime("%M:%S"), macList[thisMAC]["up"], macList[thisMAC]["quickTest"], nextTest
-						#if thisMAC == "54:9F:13:3F:95:26":
-							#print thisMAC, onlyThisMAC, nowP, tt, nowTest, tt-nowTest
+							time.sleep(fTest)  
 						if not nowP and tt-nowTest > 20.:
 							quick = U.checkNowFile(sensor)				  
 							if quick:
@@ -362,7 +360,7 @@ def execBLEconnect():
 
 
 				######### here we actually get the data from the phones ###################
-				if BLEconnectMode =="socket":
+				if BLEconnectMode == "socket":
 					data0 = tryToConnect(thisMAC, macList[thisMAC]["BLEtimeout"], BLEid)
 				else:
 					data0 = tryToConnectCommandLine(thisMAC, macList[thisMAC]["BLEtimeout"], useHCI)

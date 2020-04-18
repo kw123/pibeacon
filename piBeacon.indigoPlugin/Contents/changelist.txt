@@ -1,4 +1,20 @@
-Added features / changes in v7.118.346 @ 2020-04--5
+Added features / changes in v7.118.348 @ 2020-04-18
+===================================================
+
+1. added light sensor MAX44009
+   This is a very simple fully autoscale light sensor 
+   range 0.045 .. 188,000 Lux
+    has 2 i2c address configurable
+
+3. added state: clostestiBeaconLast 
+   it inherits from clostestiBeacon when that changes
+
+3. fixed:
+   - devices edit for CAR devices, did not list choices for members. My fault, created 3 V ago
+   - some typos and menue changes
+
+
+Added features / changes in v7.118.346 @ 2020-04-05
 ===================================================
 
 1. fixed timezone setting
