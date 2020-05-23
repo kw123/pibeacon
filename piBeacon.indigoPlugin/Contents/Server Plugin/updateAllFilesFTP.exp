@@ -13,7 +13,7 @@ spawn sftp -o ConnectTimeout=10 $userID@$ipNumber
  
 if {$authKeyOrPassword == "assword"} { 
     expect {
-        "(yes/no)? " { 
+        "(yes/no" { 
             send "yes\r"
             sleep 0.1
             expect "$authKeyOrPassword" { send "$password\r"}

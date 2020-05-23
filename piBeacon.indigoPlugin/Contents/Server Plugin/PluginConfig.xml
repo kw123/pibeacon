@@ -271,11 +271,11 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina, security type is used by RPI to indigo curl connection </Label>
    </Field>
    
-   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="only used to make executabel work under catalina" >
-        <Label>userid for indigo server:</Label> 
+   <Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="only used for http connection to indigo" >
+        <Label>userid for indigo server (webserver):</Label> 
    </Field>
    
-   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, also used to make executabel work under catalina" >
+   <Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, also used to make executable work under catalina" >
         <Label>password for indigo (webserver):</Label> 
    </Field>
    <Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
@@ -585,10 +585,11 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
         =you can supply a "background.png" image in either  
           1. check: ".../Indigo x.y/Preferences/Plugins/com.karlwachs.piBeacon/plotPositions/"
           2. check: "/output image path/"  set below
-        =the x,y scale number should be measured in your distance units eg 20 by30 feet/ meter ..
-        =the xzy positions of the RPIs must be accurate as the TX power parameter of the iBeacons
-        =The position calculation is a simple trilateration starting with the highest RPI signal. 
-              Beacon device edit has an option to size the markers with the position accuracy</Label>    </Field>
+        =the y image size is used to position the ibeacon, the X image size is assumed to be ydots * xscale/yscale
+        =the x,y scale number should be measured in your distance units eg 20 by 30 feet/ meter ..
+        =the xzy positions of the RPIs must be accurate as well as the TX power parameter of the iBeacons
+        =The position calculation is a simple interpolation starting with the highest RPI signal + second highest. 
+              Beacon device edit has an option to size the markers with the position distance to the closest RPI</Label>    </Field>
     <Field    id="beaconPositionsdeltaDistanceMinForImage"   type="menu" defaultValue="10" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">
         <Label>...update position if an ibeacon moved by:</Label>
         <List>
@@ -610,23 +611,31 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
         </List>
    </Field>
    <Field    id="beaconPositionsimageXscale"   type="textfield" defaultValue="20" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
-        <Label>...X scale:</Label></Field>
+        <Label>X scale:</Label>
+	</Field>
    <Field    id="beaconPositionsimageYscale"   type="textfield" defaultValue="30" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
-        <Label>...Y scale:</Label></Field>
+        <Label>Y scale:</Label>
+	</Field>
 
    <Field    id="beaconPositionsimageZlevels"   type="textfield" defaultValue="0,5" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
-        <Label>...z levels:</Label></Field>
+        <Label>z levels:</Label>
+	</Field>
+
     <Field id="posLabelZlevel" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-    <Label>is used to set the heights / levels (z-coordinate) of your floors; enter one number for each floor eg 0,5,10 for 3 floors, then use THESE z levels in RPI device edit for the x,y,z position of the RPI</Label>    </Field>
+    <Label>is used to set the heights / levels (z-coordinate) of your floors; enter one number for each floor eg 0,5,10,15 for 4 floors, then use THESE z levels in RPI device edit for the x,y,z position of the RPI. In the image the beacons on different floors are shown with differnet hatches ( blank, //, \\ ,+)</Label> 
+    </Field>
 
 
    <Field    id="beaconPositionsimageDotsY"     type="textfield" defaultValue="600" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
-        <Label>...image size = # of y-dots:</Label></Field>
+        <Label>Image size = # of y-dots:</Label>
+	</Field>
+
+
    <Field    id="beaconPositionsimageOutfile"  type="textfield" defaultValue="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">               
-        <Label>...output image path/filename:</Label></Field>
+        <Label>Output image path/filename:</Label></Field>
 
    <Field id="beaconPositionsimageShowRPIs" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
-        <Label>... show RPIs in plot:</Label>
+        <Label>Show RPIs in plot:</Label>
         <List>
             <Option value="0"       > no</Option>
             <Option value="square"  > as square w label R-x</Option>
@@ -635,27 +644,59 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
    </Field>
 
    <Field id="beaconShowExpiredBeacons" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
-        <Label>... show expired beacons in plot:</Label>
+        <Label>Show expired beacons in plot:</Label>
         <List>
             <Option value="0"  > no</Option>
             <Option value="1"  > yes</Option>
         </List>
    </Field>
 
-   <Field id="beaconPositionsimageShowCaption" type="menu"     defaultValue="false" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
-        <Label>... show caption:</Label>
+   <Field id="beaconRandomBeacons" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>randomize beacon position a little (if they all overlap):</Label>
+        <List>
+            <Option value="0"   > no</Option>
+            <Option value="10"  > 10%</Option>
+            <Option value="20"  > 20%</Option>
+            <Option value="30"  > 30%</Option>
+            <Option value="40"  > 40%</Option>
+        </List>
+   </Field>
+
+   <Field id="beaconPositionsimageShowCaption" type="menu"     defaultValue="-1" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Show caption:</Label>
         <List>
             <Option value="0"  > do not show caption</Option>
             <Option value="1"  > at top</Option>
             <Option value="-1" > at bottom</Option>
         </List>
    </Field>
-   <Field    id="beaconPositionsimageText"     type="textfield" defaultValue="text on Top" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">   
-        <Label>...text :</Label></Field>
-   <Field    id="beaconPositionsimageTextPos"  type="textfield" defaultValue="0,0" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
-        <Label>...pos of text:</Label></Field>
-   <Field id="beaconPositionsimageTextColor" type="menu"     defaultValue="#000000" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
-        <Label>text color:</Label>
+
+   <Field id="beaconPositionsShowTimeStamp" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Show time stamp:</Label>
+        <List>
+            <Option value="0"  > no</Option>
+            <Option value="1"  > yes</Option>
+        </List>
+   </Field>
+
+   <Field    id="beaconPositionsTitleText"     type="textfield" defaultValue="text on Top" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">   
+        <Label>Title text:</Label>
+	</Field>
+
+   <Field    id="beaconPositionsTitleTextPos"  type="textfield" defaultValue="0,0" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
+        <Label>Title text Pos:</Label>
+	</Field>
+
+    <Field id="beaconPositionsTitleTextRotation" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Title text rotation:</Label>
+        <List>
+            <Option value="0"  > left to right</Option>
+            <Option value="90" > bottom up(requires an offset to the y position!)</Option>
+        </List>
+   </Field>
+
+   <Field id="beaconPositionsTitleTextColor" type="menu"     defaultValue="#000000" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Title Text color:</Label>
         <List>
             <Option value="#FF0000" >red</Option>
             <Option value="#00FF00" >green</Option>
@@ -668,8 +709,9 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="#000000" >black</Option>
         </List>
    </Field>
-   <Field id="beaconPositionsimageTextSize" type="menu"     defaultValue="12" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
-        <Label>text size [pts]:</Label>
+
+   <Field id="beaconPositionsTitleTextSize" type="menu"     defaultValue="12" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Title text size [pts]:</Label>
         <List>
             <Option value="6"  >6</Option>
             <Option value="8"  >8</Option>
@@ -681,15 +723,45 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="20" >20</Option>
             <Option value="24" >24</Option>
             <Option value="30" >30</Option>
+            <Option value="40" >40</Option>
+            <Option value="50" >50</Option>
         </List>
    </Field>
-   <Field id="beaconPositionsimageTextRotation" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
-        <Label>text rotation:</Label>
+   <Field id="beaconPositionsCaptionTextSize" type="menu"     defaultValue="12" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Caption text size [pts]:</Label>
         <List>
-            <Option value="0"  > left to right</Option>
-            <Option value="90" > bottom up(requires an offset to the y position!)</Option>
+            <Option value="6"  >6</Option>
+            <Option value="8"  >8</Option>
+            <Option value="10" >10</Option>
+            <Option value="12" >12</Option>
+            <Option value="14" >14</Option>
+            <Option value="16" >16</Option>
+            <Option value="18" >18</Option>
+            <Option value="20" >20</Option>
+            <Option value="24" >24</Option>
+            <Option value="30" >30</Option>
+            <Option value="40" >40</Option>
+            <Option value="50" >50</Option>
         </List>
    </Field>
+    <Field    id="beaconPositionsLabelTextSize"     type="menu" defaultValue="18" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
+        <Label>Label text size  [pts]:</Label>
+        <List>
+            <Option value="6"  >6</Option>
+            <Option value="8"  >8</Option>
+            <Option value="10" >10</Option>
+            <Option value="12" >12</Option>
+            <Option value="14" >14</Option>
+            <Option value="16" >16</Option>
+            <Option value="18" >18</Option>
+            <Option value="20" >20</Option>
+            <Option value="24" >24</Option>
+            <Option value="30" >30</Option>
+            <Option value="40" >40</Option>
+            <Option value="50" >50</Option>
+        </List>
+	</Field>
+
    <Field id="beaconPositionsimageCompress" type="checkbox"     defaultValue="true" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
         <Label>compress png File:</Label>
    </Field>

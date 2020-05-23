@@ -68,7 +68,7 @@ Then the rPi will start sending data to plugin
                 <Label>rPi user ID :</Label>
             </Field>
             <Field  enabledBindingId="enablePiEntries"  id="passwordPi"   type="textfield" defaultValue="pibeacon">
-                <Label>rPi password :</Label>
+                <Label>rPi password - no  ' " | # GT LT :</Label>
             </Field>
             <Field   enabledBindingId="enablePiEntries"  id="ipNumberPi"   type="textfield" defaultValue="192.168.1.x">
                 <Label>rPi IP Number:</Label>
@@ -92,7 +92,10 @@ Then the rPi will start sending data to plugin
             </Field>
             <Field  enabledBindingId="enablePiEntries"  id="confirmPiServerConfig" type="button" tooltip="" >
                 <Label>Confirm rPi Config</Label><Title>CONFIRM</Title> <CallbackMethod>buttonConfirmPiServerConfigCALLBACK</CallbackMethod>
+             <Field id="infoLabelend" type="label">
+                <Label>!!!!! do not hit ENTER or click CLOSE before CONFIRM !!!!!</Label>
             </Field>
+           </Field>
         </ConfigUI>
     </MenuItem>         
 
@@ -340,6 +343,14 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
                 <Label>Delete tracking History of</Label><Title>THIS beacon</Title>
                 <CallbackMethod>buttonConfirmMACDeleteCALLBACK</CallbackMethod>
             </Field>
+        </ConfigUI>
+    </MenuItem>
+    <MenuItem id="ignoreBeaconsHistory">
+        <Name>Delete iBeacon history files</Name>
+        <ConfigUI>
+            <Field   id="labelDeleteFAMILY" type="label">
+                <Label>If you run into too large tracking files, use this to remove old tracking info of beacons not active</Label>
+            </Field>
 <!--
             <Field   id="buttonDeleteALL" type="button"	tooltip="This will empty the internal history list">
                 <Label>Delete tracking History of</Label><Title>ALL beacons</Title>
@@ -347,7 +358,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
             </Field>
 -->
             <Field   id="buttonDeleteJunk2" type="button"	tooltip="This will empty the internal history list of beacons that have no corresponding devices">
-                <Label>Delete beacons history of deleted devices</Label><Title>delete</Title>
+                <Label>Delete beacon history of deleted devices</Label><Title>delete</Title>
                 <CallbackMethod>buttonConfirmMACDeleteOLDHISTORYCALLBACK</CallbackMethod>
             </Field>
         </ConfigUI>

@@ -106,7 +106,7 @@ def readParams():
 			switchToHigherSensitive["lowSensitive"]		= 100# int(sss["TimeSwitchSensitivityLowToMed"])
 			switchToHigherSensitive["medSensitive"]		= 100# int(sss["TimeSwitchSensitivityMedToHigh"])
 			switchToHigherSensitive["highSensitive"]	= 100# int(sss["TimeSwitchSensitivityHighToAnyRain"])
-			try: rainScaleFactor						= float(sss["rainScaleFactor"])
+			try: 	rainScaleFactor						= float(sss["rainScaleFactor"])
 			except: rainScaleFactor						= 1.
 				
 			if gpioIn != int(sss["gpioIn"]):

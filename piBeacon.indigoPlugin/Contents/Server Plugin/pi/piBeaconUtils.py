@@ -2455,7 +2455,7 @@ def getTemperatureOfRPI():
 
 
 #################################
-def chekIfThrottled():
+def checkIfThrottled():
 	try:
 		MESSAGES = {
 			0:  'E#0 Under-volt',
@@ -2534,18 +2534,19 @@ def geti2c():
 
 
 #################################
-def sendSensorAndRPiInfoToPlugin(sensDict):
+def sendSensorAndRPiInfoToPlugin(sensDict,fanOnTimePercent=""):
 	try:
 		i2cListIntHex,i2cListHex	= geti2c()
 		i2cError, sensList			= getSensorInfo(sensDict,i2cListIntHex)
 		rpiType						= getRPiType()
 		os							= getOSinfo()
 		temp						= getTemperatureOfRPI()
-		RPI_throttled				= chekIfThrottled()
+		RPI_throttled				= checkIfThrottled()
 		lastBoot					= getLastBoot()
 		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2cListHex).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp,
 			 "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart,"RPI_throttled":"{}".format(RPI_throttled)}
-		if i2cError != "": data["i2cError"] = i2cError
+		if fanOnTimePercent != "": data["fan_OnTime_Percent"] = int(fanOnTimePercent*100)
+		if i2cError != "": data["i2cError"]   = i2cError
 		##print data
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
 	except Exception as e :

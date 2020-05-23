@@ -98,7 +98,7 @@ def execGetParams(devices, beaconsOnline):
 			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	if data !={}:
-		U.sendURL(data, wait=False, squeeze=False)
+		U.sendURL(data, wait=True, squeeze=False)
 
 	subprocess.call("rm "+G.homeDir+"temp/stopBLE", shell=True)
 	killMyselfAtEnd = True
@@ -129,7 +129,7 @@ if True: #__name__ == "__main__":
 	beaconsOnline, raw = U.readJson("{}temp/beaconsOnline".format(G.homeDir))	
 	execGetParams(sys.argv[1],beaconsOnline)
 	U.logger.log(20, u"finished  after {:.1f} secs".format(time.time()-startTime))
-	time.sleep(0.5)
+	time.sleep(3.)
 	subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py &" , shell=True)
 	if killMyselfAtEnd: 
 		#U.logger.log(20, u"exec cmd: killing myself at PID {}".format(myPID))

@@ -1388,11 +1388,12 @@ def doGPIOAfterBoot():
 ####################      #########################
 def checkTempForFanOnOff(force = False):
 	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
+	global fanOnTimePercent, fanOntimeData, fanOntimePeriod
 	try:
 		#print "into checkTempForFanOnOff",fanTempName, fanTempDevId, fanEnable, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTimeTempValueChecked, lastTempValue
 		#U.logger.log(30, u"checkTempForFanOnOff fanEnable:{}  fanTempName:{}   fanGPIOPin:{}".format(fanEnable, fanTempName, fanGPIOPin))
 		if not(fanEnable =="0" or fanEnable =="1"):						return
-		if fanTempName   =="": 											return
+		if fanTempName   == "": 										return
 		if int(fanGPIOPin) < -1: 										return
 
 		tt0 = time.time()
@@ -1423,16 +1424,41 @@ def checkTempForFanOnOff(force = False):
 		#U.logger.log(30, u"checkTempForFanOnOff temp:{}  fanTempOnAtTempValue:{}".format(temp, fanTempOnAtTempValue))
 
 		if temp > fanTempOnAtTempValue: 
+			fanOntimeData.append([time.time(),1])
+
 			#print " fan on"
 			if  fanWasOn <=0: 
 				if fanEnable =="1": GPIO.output(fanGPIOPin, True)
 				if fanEnable =="0": GPIO.output(fanGPIOPin, False)
 				fanWasOn = 1
+		else:
 			#print " fan off"  .. only if 1 degree lower than target
-		elif  (fanWasOn > 0  and  temp < (fanTempOnAtTempValue - fanTempOffAtTempValue ) ) or fanWasOn == 0: 
+			if  temp < (fanTempOnAtTempValue - fanTempOffAtTempValue ): 
+				fanOntimeData.append([time.time(),0])
+			else:
+				fanOntimeData.append([time.time(),1])
+
+			if  ( fanWasOn == 1 and temp < (fanTempOnAtTempValue - fanTempOffAtTempValue ) ) or fanWasOn == 0: 
 				if fanEnable =="0": GPIO.output(fanGPIOPin, True)
 				if fanEnable =="1": GPIO.output(fanGPIOPin, False)
 				fanWasOn = -1
+
+		if True: 
+			fanOnTimePercent = ""
+			tempTime = copy.copy(fanOntimeData)
+			for tt in tempTime:
+				if time.time() - tt[0] < fanOntimePeriod: break
+				del(fanOntimeData[0])
+			#print tempTime
+			#print fanOntimeData
+			if len(fanOntimeData) > 1:
+				fanOnTimePercent = 0.
+				for nn in range(1,len(fanOntimeData)):
+					if fanOntimeData[nn-1][1]: 
+						fanOnTimePercent += fanOntimeData[nn][0] - fanOntimeData[nn-1][0]
+				fanOnTimePercent = fanOnTimePercent / max(1.,fanOntimeData[-1][0] - fanOntimeData[0][0])
+			#print fanOnTimePercent
+				
 		lastTempValue = temp
 
 	except	Exception, e :
@@ -1976,7 +2002,11 @@ def execMaster():
 		global clearHostsFile
 		global python3
 		global startingnetworkStatus
+		global fanOnTimePercent, fanOntimeData, fanOntimePeriod
 
+		fanOntimePeriod			= 180 #  ==3 minutes for building average fan on 
+		fanOntimeData			= []
+		fanOnTimePercent		= ""
 		python3					= {}
 		clearHostsFile			= False
 		xWindows				= ""
@@ -2301,7 +2331,7 @@ def execMaster():
 					U.checkrclocalFile()
 
 				if loopCount%8 == 0: 
-					U.sendSensorAndRPiInfoToPlugin(sensors)		   
+					U.sendSensorAndRPiInfoToPlugin(sensors, fanOnTimePercent=fanOnTimePercent)		   
 					if adhocWifiStarted ==0: tryRestartNetwork()
 		
 				if loopCount %4 ==0: # check network every 40 secs

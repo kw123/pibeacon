@@ -875,6 +875,13 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 				<ControlPageLabel>rpi_type</ControlPageLabel>
 			</State>
 
+			<State id="fan_OnTime_Percent">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>fan_OnTime_Percent</TriggerLabel>
+				<ControlPageLabel>fan_OnTime_Percent</ControlPageLabel>
+			</State>
+
+
 			<State id="op_sys">
 				<ValueType>String</ValueType>
 				<TriggerLabel>op_sys</TriggerLabel>
@@ -2122,6 +2129,13 @@ Change here or in initial setup:</Label>
 				<ControlPageLabel>op_sys</ControlPageLabel>
 			</State>
 
+			<State id="fan_OnTime_Percent">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>fan_OnTime_Percent</TriggerLabel>
+				<ControlPageLabel>fan_OnTime_Percent</ControlPageLabel>
+			</State>
+
+
 			<State id="last_boot">
 				<ValueType>String</ValueType>
 				<TriggerLabel>last_boot</TriggerLabel>
@@ -2375,14 +2389,15 @@ Put THAT value into this field</Label>
 			<Field id="IgnoreBeaconIfSignalLessThanLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>This is similar to the parameter for the RPI, but is used in the plugin AFTER the data is received from the RPI</Label>
 			</Field>
-			<Field id="label47"               type="label"  > 
-				<Label>== run gatttool on rpi to get iBeacon info, requires SSD 7/2018 or GT </Label>
-			</Field>
 			<Field id="SupportsBatteryLevel" type="checkbox"     defaultValue="false"  hidden="false">
-				<Label>.... supports battery level info read from iBeacon </Label>
+				<Label>==  supports battery level info read from iBeacon, either through GATT commands or as part of the msg </Label>
+			</Field>
+			<Field id="label47"               type="label"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" > 
+				<Label>... to run gatttool on rpi to get iBeacon info, requires SSD 7/2018 or GT </Label>
 			</Field>
 			<Field id="label49" type="label" fontSize="small" alignText="right" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
-				<Label>The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
+				<Label>FOR GATT COMMAND type iBeacons:
+   The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
   It will REPORT (warning log) once a day on beacons, if their last update &gt; 2 days or battery level &lt; 20%  
   The reads are send to the RPI that is closest to the beacon to be read.
   You can manually force to read all beacons w action or menu "Get Beacon param.."  
@@ -2394,7 +2409,9 @@ Put THAT value into this field</Label>
     sudo /usr/bin/gatttool -b mac# -t random --char-read --uuid=2A19   
       (replace the mac# number with yours).
  === please note during the time the RPI reads the battery level ===
- === it can not listen to iBeacon signals (&lt; 15s per beacon)  ===</Label>
+ === it can not listen to iBeacon signals (&lt; 15s per beacon)  ===
+
+There are also beacons that send Battery info as part of std msg</Label>
 			</Field>
 
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
@@ -2402,6 +2419,7 @@ Put THAT value into this field</Label>
 					<Option value="2A19-randomON-batteryLevel-int-bits=127-norm=100" >random 127bits/max100 eg XY beacons, social retail,..</Option>
 					<Option value="2A19-public-batteryLevel-int-bits=127-norm=100"   >public 127bits/max100 eg nonda/iHere</Option>
 					<Option value="2A19-public-batteryLevel-int-bits=63-norm=36"     >public 63bits/max36 eg nonda/aiko</Option>
+					<Option value="msg"    				  >yes, in std msg, not through GATT commands</Option>
 					<Option value="off"    				  >off</Option>
 				</List>
 				<Label>.... battery level cmd:</Label>
@@ -3728,20 +3746,15 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<ControlPageLabel>UUID</ControlPageLabel>
 			</State>
 
-			<State id="TxPower">
+			<State id="txPower">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>TxPower</TriggerLabel>
-				<ControlPageLabel>TxPower</ControlPageLabel>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
 			</State>
 			<State id="rssi">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>rssi</TriggerLabel>
 				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
 			</State>
 			<State id="Temperature">
 				<ValueType>Number</ValueType>
@@ -3782,6 +3795,369 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<ValueType>Number</ValueType>
 				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+	<Device type="sensor" id="BLERuuviTag">
+	<Name>BLE-RuuviTag-Sensor T-H-P-Acc</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>setup BLE BLERuuviTag. You need to supply the MAC number.
+ Easiest is to run the Ruuvi Station app on your phone and lookup the MAC address
+ The sensors do not need any config, besides power on, 
+  They broadcast iBeacon format packages (1/sec) with additional data
+ They send T, H, P, Acceleration in mG (accelleration-X,Y,Z,Total=sqrt(x*x+y*y+z*z))
+ The calculated value MAGturn is (delta x,delta y, delta z vs last values) in %.
+   it indicates a turn of the sensor, while accelerationTotal might stay constant.
+ In addition measurement count and movement count is supplied.
+ The battery level is calculated as (BatteryVolt-2900)/(3200-2900) in %
+ As the sensor sends iBeacon Signals ~1/second it 
+   can be used as a regular iBeacon device
+ check only RPIs that are installed, checked RPi that do not exist will be ignored
+</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you have many, set the repeat Freq to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="type" type="menu"     defaultValue="RuuviTag" hidden ="true">> 
+			<List>
+				<Option value="RuuviTag"          >RuuviTag:  T H P Magnetic field</Option>
+			</List>
+			<Label>type of sensor:</Label> 
+			</Field>
+
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Humidity"      >Humidity</Option>
+				<Option value="Pressure"      >Pressure</Option>
+				<Option value="Proximity"      >Proximity</Option>
+				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
+				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
+				<Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
+				<Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
+				<Option value="accelerationTotal"    >Magnetic Field total</Option>
+				<Option value="accelerationTurn"     >Magnetic Field turn </Option>
+			</List>
+			</Field>
+
+
+			<Field id="offsetTemp" type="textfield"    defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetPress" type="textfield"   defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
+
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no"> 
+				<Label>Send sensor values to Indigo at least every (repeat Freq):</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="180" > 3 minutes</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden ="no"> 
+				<Label>Send sensor values if Temp changes by:</Label>
+				<List>
+					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="1.0" > 1.0 C = 2 F</Option>
+					<Option value="1.5" > 1.5 C = 3 F</Option>
+					<Option value="2.0" > 2.0 C = 4 F</Option>
+					<Option value="2.5" > 2.5 C = 5 F</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaAcceleration"    type="menu"     defaultValue="25" hidden ="no"> 
+				<Label>Send sensor values if total Acceleration values changes by:</Label>
+				<List>
+					<Option value="10" > 10%</Option>
+					<Option value="15" > 15%</Option>
+					<Option value="20" > 20%</Option>
+					<Option value="25" > 25%</Option>
+					<Option value="30" > 30%</Option>
+					<Option value="40" > 40%</Option>
+					<Option value="50" > 50%</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaTurn"    type="menu"     defaultValue="25" hidden ="no"> 
+				<Label>Send sensor values if Acceleration Deltaxyz turn changes by:</Label>
+				<List>
+					<Option value="10" > 10%</Option>
+					<Option value="15" > 15%</Option>
+					<Option value="20" > 20%</Option>
+					<Option value="25" > 25%</Option>
+					<Option value="30" > 30%</Option>
+					<Option value="40" > 40%</Option>
+					<Option value="50" > 50%</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="Humidity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Humidity</TriggerLabel>
+				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
+			<State id="HumidityMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxToday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinToday</TriggerLabel>
+				<ControlPageLabel>HumidityMinToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="Pressure">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
+			</State>
+			<State id="PressureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
+			</State>
+			<State id="accelerationX">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationX</TriggerLabel>
+				<ControlPageLabel>accelerationX</ControlPageLabel>
+			</State>
+			<State id="accelerationY">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationY</TriggerLabel>
+				<ControlPageLabel>accelerationY</ControlPageLabel>
+			</State>
+			<State id="accelerationZ">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationZ</TriggerLabel>
+				<ControlPageLabel>accelerationZ</ControlPageLabel>
+			</State>
+			<State id="accelerationTotal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationTotal</TriggerLabel>
+				<ControlPageLabel>accelerationTotal</ControlPageLabel>
+			</State>
+			<State id="accelerationTurn">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationTurn</TriggerLabel>
+				<ControlPageLabel>accelerationTurn</ControlPageLabel>
+			</State>
+			<State id="movementCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>movementCount</TriggerLabel>
+				<ControlPageLabel>movementCount</ControlPageLabel>
+			</State>
+			<State id="measurementCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>measurementCount</TriggerLabel>
+				<ControlPageLabel>measurementCount</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
 			</State>
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
@@ -13827,7 +14203,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 				<Option value="19"   >0x13 = 19</Option>
 			</List>
 			</Field>
-			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="false"><Label>Check for gpio-relay type</Label></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="false"><Label>Do not perform i2c Check for  relay(on for 2ic type relay)</Label></Field>
 
 
 			<Field id="gpioIn"   type="menu" defaultValue="24" tooltip="select gpio pin# for the INPUT channel"  >
@@ -13869,7 +14245,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 			</List>
 			</Field>
 
--->      
+  
 			<Field id="sendMSGEverySecs" type="menu"     defaultValue="90" hidden="no" > 
 			<Label>Send Msg to indigo every:</Label>
 			<List>

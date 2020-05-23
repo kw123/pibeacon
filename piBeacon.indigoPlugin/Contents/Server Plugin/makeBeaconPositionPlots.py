@@ -13,11 +13,14 @@ import sys, os, subprocess
 import time
 import datetime 
 import json
+import random
+import math
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import logging
 import logging.handlers
 global logging, logger
+_defaultDateStampFormat				= u"%Y-%m-%d %H:%M:%S"
 
 
 
@@ -42,7 +45,7 @@ f.close()
 ### logfile setup
 logLevel = plotData["logLevel"]
 logfileName=plotData["logFile"]
-
+#logLevel = True
 
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -57,36 +60,74 @@ try:
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	tStart= time.time()
 
-	logger.log(20,"imageYscale        :"+unicode(plotData["Yscale"]) )
-	logger.log(20,"imageXscale        :"+unicode(plotData["Xscale"]) )
-	logger.log(20,"imageDotsY         :"+unicode(plotData["dotsY"]) )
-	logger.log(20,"imageText          :"+unicode(plotData["Text"]) )
-	logger.log(20,"imageTextColor     :"+unicode(plotData["TextColor"]) )
-	logger.log(20,"imageTextPos       :"+unicode(plotData["TextPos"]) )
-	logger.log(20,"imageTextRotation  :"+unicode(plotData["TextRotation"]) )
-	logger.log(20,"distanceUnits      :"+unicode(plotData["distanceUnits"]) )
-	logger.log(20,"imageOutfile       :"+unicode(plotData["Outfile"]) )
-	logger.log(20,"compressImage      :"+unicode(plotData["compress"]) )
-	logger.log(20,"Zlevels            :"+unicode(plotData["Zlevels"]) )
+	distanceUnits			= float(plotData["distanceUnits"])
+	Yscale					= float(plotData["Yscale"])
+	Xscale					= float(plotData["Xscale"])
+
+	defaultLabelTextSize 	= 12
+	try: 	labelTextSize	= int(plotData["labelTextSize"])
+	except: labelTextSize	= defaultLabelTextSize
+	labelFactor 			= float(labelTextSize)	   / defaultLabelTextSize
+
+	defaultTitleTextSize 	= 18
+	try: 	titleTextSize	= int(plotData["titleTextSize"])
+	except: titleTextSize	= defaultTitleTextSize
+	titleFactor 			= float(titleTextSize)	   / defaultTitleTextSize
+
+	defaultCaptionTextSize  = 12
+	try: captionTextSize	= int(plotData["captionTextSize"])
+	except: captionTextSize	= defaultCaptionTextSize
+	captionFactor 			= float(captionTextSize) / defaultCaptionTextSize
+
+	try: showTimeStamp		= plotData["showTimeStamp"]
+	except: showTimeStamp	= True
 
 
-
-	distanceUnits		= float(plotData["distanceUnits"])
-	Yscale				= float(plotData["Yscale"])
-	Xscale				= float(plotData["Xscale"])
-	dotsY				= int(plotData["dotsY"])
-	dotsX				= dotsY *( Xscale/Yscale) 
-	Zlevels				= plotData["Zlevels"].split(",")
-	nZlevels = min(len(Zlevels),4)
+	dotsY					= int(plotData["dotsY"])
+	dotsX					= dotsY *( Xscale/Yscale) 
+	hatches 				= ["","//","\\","+"]
+	Zlevels					= plotData["Zlevels"].split(",")
+	nZlevels 				= min(len(Zlevels),4)
 	for i in range(nZlevels):
-		Zlevels[i] = int(Zlevels[i])
-	hatches = ["","//","\\","+"]
+		Zlevels[i] 			= int(Zlevels[i])
+	
+	randomBeacons  = 0
+	try: randomBeacons	= int(plotData["randomBeacons"])
+	except: pass
 
 
-	textOffY = 4 *Yscale/ dotsY  # move 4 points 
-	logger.log(20,"textOffY          :{}".format(textOffY) )
-	textOffX = 5 *Xscale/ dotsX  # move 4 points 
-	logger.log(20,"textOffX          :{}".format(textOffX) )
+	logger.log(20,"imageYscale        :{}".format(Yscale) )
+	logger.log(20,"imageXscale        :{}".format(Xscale) )
+	logger.log(20,"imageDotsY         :{}".format(dotsY) )
+	logger.log(20,"captionTextSize    :{}".format(captionTextSize) )
+	logger.log(20,"labelTextSize      :{}".format(labelTextSize) )
+	logger.log(20,"titleTextSize      :{}".format(titleTextSize) )
+	logger.log(20,"titleText          :{}".format(plotData["titleText"]) )
+	logger.log(20,"titleTextColor     :{}".format(plotData["titleTextColor"]) )
+	logger.log(20,"titleTextPos       :{}".format(plotData["titleTextPos"]) )
+	logger.log(20,"titleTextRotation  :{}".format(plotData["titleTextRotation"]) )
+	logger.log(20,"showTimeStamp      :{}".format(showTimeStamp) )
+
+	logger.log(20,"randomBeacons      :{}".format(randomBeacons) )
+	logger.log(20,"distanceUnits      :{}".format(distanceUnits) )
+	logger.log(20,"imageOutfile       :{}".format(plotData["Outfile"]) )
+	logger.log(20,"compressImage      :{}".format(plotData["compress"]) )
+	logger.log(20,"Zlevels            :{}".format(Zlevels) )
+
+
+
+	textDeltaYLabel 	= 5. * (Yscale / dotsY) * labelFactor  # move 4 points 
+	textDeltaXLabel 	= 6. * (Xscale / dotsX) * labelFactor
+
+	textDeltaXCaption 	= 6. * (Xscale / dotsX) * captionFactor  # move xx oints
+	textDeltaYCaption 	= 5. * (Yscale / dotsY) * captionFactor  # move yy points
+
+	logger.log(20,"label delta X     :{}".format(textDeltaXLabel) )
+	logger.log(20,"label delta Y     :{}".format(textDeltaYLabel) )
+	logger.log(20,"capt delta X      :{}".format(textDeltaXCaption) )
+	logger.log(20,"capt delta Y      :{}".format(textDeltaYCaption) )
+
+
 
 	imageOutfile			= plotData["Outfile"]
 	if imageOutfile =="":
@@ -103,6 +144,7 @@ try:
 
 	#
 	logger.log(20,"time used {:4.2f} --   setup fig, ax".format((time.time()-tStart)) )
+	if labelTextSize !="": plt.rcParams.update({'font.size': int(labelTextSize)})
 	plt.figure()
 	fig = plt.gcf()
 	ax = fig.add_axes([0, 0, 1, 1], frameon=False)
@@ -142,15 +184,14 @@ try:
 
 
 	# 
-	imageText				= plotData["Text"]
-	if imageText != "": 
+	titleText				= plotData["titleText"]
+	if titleText != "": 
 		logger.log(20,"time used {:4.2f} --   adding  text".format((time.time()-tStart)) )
-		imageTextColor		= plotData["TextColor"]
-		imageTextSize		= int(plotData["TextSize"])
-		imageTextPos		= plotData["TextPos"].split(",")
-		imageTextPos		= [float(imageTextPos[0]),float(imageTextPos[1])]
-		imageTextRotation	= int(plotData["TextRotation"])
-		ax.text(imageTextPos[0],imageTextPos[1],imageText, color=imageTextColor ,size=imageTextSize, rotation=imageTextRotation,clip_on=True)
+		titleTextColor		= plotData["titleTextColor"]
+		titleTextPos		= plotData["titleTextPos"].split(",")
+		titleTextPos		= [float(titleTextPos[0]),float(titleTextPos[1])]
+		titleTextRotation	= int(plotData["titleTextRotation"])
+		ax.text(titleTextPos[0],titleTextPos[1],titleText, color=titleTextColor ,size=titleTextSize, rotation=titleTextRotation,clip_on=True)
 
 
 
@@ -166,8 +207,17 @@ try:
 				except:	alpha = 0.5
 
 				if len(pos) !=3: pos= [5,5,5]
+				
+				randx = 0
+				randy = 0
+				if this["bType"] != "RPI" and randomBeacons!=0:
+					randx =  1.+ 0.01 * (random.randint(0,randomBeacons) - randomBeacons/2.)
+					randy =  1.+ 0.01 * (random.randint(0,randomBeacons) - randomBeacons/2.)
+					pos[0] *= randx
+					pos[1] *= randy
 				pos[0] = max(0., min(pos[0], Xscale ))
 				pos[1] = max(0., min(pos[1], Yscale ))
+
 				# show the marker
 				try:	 distanceToRPI = this["distanceToRPI"] *0.5 / distanceUnits
 				except:  distanceToRPI  = 0.5 / distanceUnits
@@ -179,21 +229,21 @@ try:
 				color = this["symbolColor"]
 				if len(color)  != 7: color ="#0FF00F"
 				if symbol !="text":
-					if	  symbol =="dot":
+					if	  symbol == "dot":
 						distanceToRPI  = 0.1 / distanceUnits
-						Dtype ="circle"
+						Dtype = "circle"
 					elif	symbol =="smallcircle":
-						Dtype ="circle"
+						Dtype = "circle"
 						distanceToRPI  = 0.3 / distanceUnits
 					elif	symbol =="largecircle":
-						Dtype ="circle"
-						distanceToRPI  = 0.5* distanceToRPI / distanceUnits
+						Dtype = "circle"
+						distanceToRPI  = max(1, math.sqrt(distanceToRPI) / distanceUnits )
 					elif	symbol =="square":
-						Dtype ="square"
-						distanceToRPI  = 0.7 / distanceUnits
+						Dtype = "square"
+						distanceToRPI  = 0.6 / distanceUnits
 					elif	symbol =="square45":
-						Dtype ="square45"
-						distanceToRPI  = 0.7 / distanceUnits
+						Dtype = "square45"
+						distanceToRPI  = 0.6 / distanceUnits
 					else:
 						Dtype =""
 			
@@ -206,7 +256,7 @@ try:
 					if this["status"] == u"up":
 						edgecolor= "#000000"
 				
-					logger.log(20,"{}  {} color:{} edgecolor:{} symbol:{} type:{} distanceToRPI:{:5.1f}  hatch:{}  status:{}".format(this["name"].ljust(26) , this["nickName"].ljust(6), color.ljust(7), edgecolor.ljust(7), symbol.ljust(11), Dtype.ljust(8), distanceToRPI, hatch.ljust(2),this["status"]) )
+					logger.log(20,"{}  {} color:{} edgecolor:{} type:{} symbol:{} type:{} distanceToRPI:{:5.1f}  hatch:{}  status:{}, random:{:.3f},{:.3f}, pos:{}".format(this["name"].ljust(26) , this["nickName"].ljust(6), color.ljust(7), edgecolor.ljust(7), this["bType"][:3], symbol.ljust(11), Dtype.ljust(8), distanceToRPI, hatch.ljust(2),this["status"],randx,randy,pos) )
 
 					if   Dtype == "circle":
 							circle = plt.Circle([pos[0],pos[1]], distanceToRPI, fc=color, ec=edgecolor,alpha=alpha,hatch=hatch)
@@ -222,39 +272,43 @@ try:
 			
 				# show the label next to the marker
 				if this["nickName"] !="":
-					if symbol =="text": 
+					if symbol == "text": 
 						ax.text(pos[0] ,pos[1] ,this["nickName"], color=this["textColor"] ,size="x-small")
-						logger.log(20,"{}  {}  color:{}  status:{} edgecolor:{}".format(this["name"].ljust(26), this["nickName"].ljust(6), color.ljust(7), this["status"]) )
+						logger.log(20,"{}  {} color:{}   --text only--   status:{}".format(this["name"].ljust(26), this["nickName"].ljust(6), color.ljust(7), this["status"]) )
 					else:
-						ax.text(pos[0]+ textOffX ,pos[1]- textOffY ,this["nickName"], color=this["textColor"] ,size="x-small")
+						ax.text(pos[0] + textDeltaXLabel*1.5 ,pos[1]- textDeltaYLabel ,this["nickName"], color=this["textColor"] ,size="x-small")
 
 		except  Exception, e:
 			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
 	try:
 		if plotData["ShowCaption"] != "0":
-			textDeltaX = 6  *Xscale / dotsX  # move 8 points 
-			textDeltaY = 5  *Yscale / dotsY  # move 12 points 
-			logger.log(20,"Caption: text offset x= {:.2f};   y={:.2f}".format(textDeltaX, textDeltaY) )
-			if plotData["ShowCaption"]=="1": y = Yscale - textDeltaY
-			else:							 y = textDeltaY 
+			logger.log(20,"Caption: text offset x= {:.2f};   y={:.2f}".format(textDeltaYCaption, textDeltaYCaption) )
+			if plotData["ShowCaption"] == "1": 	y = Yscale - textDeltaYCaption*2.5
+			else:							 	y = textDeltaYCaption 
+			ax.plot(1.5* textDeltaXCaption,y+textDeltaYCaption, ms =captionTextSize, marker="o",color="#9F9F9F", markeredgecolor= "#000000")
+			ax.text(3.3* textDeltaXCaption,y,"up" ,size=captionTextSize)
 
-			ax.plot(textDeltaX,y+textOffY,marker="o",color="#9F9F9F", markeredgecolor= "#000000")
-			ax.text(textDeltaX*2,y,"up" ,size=imageTextSize-3)
+			ax.plot(7.5* textDeltaXCaption,y+textDeltaYCaption, ms =captionTextSize, marker="o",color="#9F9F9F", markeredgecolor= "#FFFFFF")
+			ax.text(9.3* textDeltaXCaption,y,"down" ,size=captionTextSize)
 
-			ax.plot(textDeltaX*5,y+textOffY,marker="o",color="#9F9F9F", markeredgecolor= "#FFFFFF")
-			ax.text(textDeltaX*6,y,"down" ,size=imageTextSize-3)
-
-			square = patches.Rectangle((textDeltaX*11,y), 0.25, 0.25,angle=45.,fc="#9F9F9F", ec="#9F9F9F")
+			square = patches.Rectangle((17.5* textDeltaXCaption,y), 0.25, 0.25,angle=45.,fc="#9F9F9F", ec="#9F9F9F")
 			ax.add_patch(square)
-			ax.text(textDeltaX*12,y,"expired" ,size=imageTextSize-3)
+			ax.text(19.3* textDeltaXCaption,y,"expired" ,size=captionTextSize)
 
-			ax.text(textDeltaX*18,y,"levels "+unicode(hatches) ,size=imageTextSize-3)
-			#ax.plot(textDeltaX*14,y+textOffY,marker="o",color="#9F9F9F", markeredgecolor= "#FFFFFF")
+			ax.text(29* textDeltaXCaption,y,"levels: {}".format(unicode(hatches).strip("[]" )) ,size=captionTextSize)
 
 
 			if plotData["ShowRPIs"] != "0":
-				ax.plot(textDeltaX*34,y+textOffY,marker="s",color=piColor)
-				ax.text(textDeltaX*35,y,"RPIs" ,size=imageTextSize-3)
+				ax.plot(54* textDeltaXCaption,y+textDeltaYCaption,marker="s",color=piColor)
+				ax.text(56* textDeltaXCaption,y,"RPIs" ,size=captionTextSize)
+
+			if showTimeStamp:
+				ax.text(62* textDeltaXCaption,y, "{}".format( datetime.datetime.now().strftime(_defaultDateStampFormat)) ,size=captionTextSize)
+
+		else:
+			if showTimeStamp:
+				y = textDeltaYCaption 
+				ax.text(5* textDeltaXCaption,y, "{}".format( datetime.datetime.now().strftime(_defaultDateStampFormat)) ,size=captionTextSize)
 
 	except  Exception, e:
 			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )

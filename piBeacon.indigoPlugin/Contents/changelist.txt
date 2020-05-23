@@ -1,3 +1,49 @@
+Added features / changes in v7.119.357 @ 2020-04-21
+===================================================
+
+1. added 3 differnt font sizes for position plot
+2. added option to randomize beacon+BLE positions by 0/10/20/30/40%
+3. added timestamp to position plot, set in config 
+4. added delay in master start from getbattery level to ensure that message was send to plugin
+5. added RuuviTag sensors
+   they are iBeacons, T,H,P Mag field and movement sensors
+   no setup of the device is needed
+   battery life is > 1 Year, but they are larger than regular iBeacon devices 
+
+
+Added features / changes in v7.119.352 @ 2020-04-20
+===================================================
+
+1. made sizes consitent, now 3 sizes:
+   title text, label,  caption
+   new config edit isrequired
+
+
+Added features / changes in v7.119.350 @ 2020-04-19
+===================================================
+
+1. add fan _onTime_percent for RPI dev states == 3 minute average of fan on time on RPI
+2. fixed logfile errro for get battery parameters
+3. clean up font size factors in position plot 
+
+
+Added features / changes in v7.119.349 @ 2020-04-18
+===================================================
+
+1. add font size config parameter for iBeacon position plot
+2. fixed get vendor info, is stored now in preference directory.
+3. prepped for new BLE- RuuviTag beacons/sensors 
+4. looking at position calculation
+
+
+Added features / changes in v7.118.349 @ 2020-04-14
+===================================================
+
+1. add ed check in print rpi config for index out of list  
+2. changed expect files to accomodate yes/no/fingerprint  propmpt 
+
+
+
 Added features / changes in v7.118.348 @ 2020-04-18
 ===================================================
 
