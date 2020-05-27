@@ -39,10 +39,10 @@ def execGetParams(devices, beaconsOnline):
 				params		= devices[mac]
 
 				#U.logger.log(30,"params:{}".format(params))
-				state	= []
-				uuid	= []
-				random	= []
-				dType	= []
+				state		= []
+				uuid		= []
+				random		= []
+				dType		= []
 
 				for xx in params:
 					yy = xx.split("-")
@@ -64,7 +64,7 @@ def execGetParams(devices, beaconsOnline):
 				if len(state) ==0: continue
 				for ll in range(len(state)):
 					cmd = "/usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -b {} {} --char-read --uuid={}".format(timeoutSecs, mac,random[ll], uuid[ll])
-					##					                                                 /usr/bin/gatttool -b 24:da:11:26:3b:4d --char-read --uuid=2A19 -t public    
+					##					                                                 /usr/bin/gatttool -b 24:da:11:27:E4:23 --char-read --uuid=2A19 -t public    
 					U.logger.log(20,"cmd: {}".format(cmd) )
 					ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 					check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()

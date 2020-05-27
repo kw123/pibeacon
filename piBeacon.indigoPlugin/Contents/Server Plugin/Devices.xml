@@ -2496,36 +2496,29 @@ There are also beacons that send Battery info as part of std msg</Label>
 					<Option value="1.0" >not transparent</Option>
 				</List>
 			</Field>
-			<Field id="showBeaconSymbolColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
+			<Field id="showBeaconSymbolColor" type="textfield"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
 				<Label>symbol color:</Label>
-				<List>
-					<Option value="#FF0000" >red</Option>
-					<Option value="#00FF00" >green</Option>
-					<Option value="#0000FF" >blue</Option>
-					<Option value="#FFFF00" >yellow</Option>
-					<Option value="#FF00FF" >mangan</Option>
-					<Option value="#00FFFF" >cyan</Option>
-					<Option value="#FFFFFF" >white</Option>
-					<Option value="#0F0F0F" >grey</Option>
-					<Option value="#000000" >black</Option>
-				</List>
 			</Field>
+
 			<Field id="showBeaconNickName" type="textfield"     defaultValue="device" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
-				<Label>label next to beacon:</Label>
+				<Label>label text next to beacon:</Label>
 			</Field>
-			<Field id="showBeaconTextColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
+
+			<Field id="showBeaconTextColor" type="textfield"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle"> 
 				<Label>label color:</Label>
-				<List>
-					<Option value="#FF0000" >red</Option>
-					<Option value="#00FF00" >green</Option>
-					<Option value="#0000FF" >blue</Option>
-					<Option value="#FFFF00" >yellow</Option>
-					<Option value="#FF00FF" >mangan</Option>
-					<Option value="#00FFFF" >cyan</Option>
-					<Option value="#FFFFFF" >white</Option>
-					<Option value="#0F0F0F" >grey</Option>
-					<Option value="#000000" >black</Option>
-				</List>
+			</Field>
+
+			<Field id="showBeaconSymbolColorlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">  
+				<Label>use 2x hex code(00..FF) to enter colors (#RRGGBB) eg:
+#FF0000 =red
+#00FF00 =green
+#0000FF =blue
+#FFFF00 =yellow
+#FF00FF =mangan
+#00FFFF =cyan
+#FFFFFF =white
+#0F0F0F =grey
+#000000 =black</Label>
 			</Field>
 
 			<Field id="sep-03" type="separator"/>
@@ -3191,36 +3184,26 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 					<Option value="1.0" >not transparent</Option>
 				</List>
 			</Field>
-			<Field id="showBeaconSymbolColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+			<Field id="showBeaconSymbolColor" type="textfield"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
 				<Label>symbol color:</Label>
-				<List>
-					<Option value="#FF0000" >red</Option>
-					<Option value="#00FF00" >green</Option>
-					<Option value="#0000FF" >blue</Option>
-					<Option value="#FFFF00" >yellow</Option>
-					<Option value="#FF00FF" >mangan</Option>
-					<Option value="#00FFFF" >cyan</Option>
-					<Option value="#FFFFFF" >white</Option>
-					<Option value="#0F0F0F" >grey</Option>
-					<Option value="#000000" >black</Option>
-				</List>
 			</Field>
-			<Field id="showBeaconNickName" type="textfield"     defaultValue="device" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
-				<Label>label next to device:</Label>
+			<Field id="showBeaconNickName" type="textfield"       defaultValue="device" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+				<Label>label text next to device:</Label>
 			</Field>
-			<Field id="showBeaconTextColor" type="menu"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
+			<Field id="showBeaconTextColor" type="textfield"     defaultValue="#FF0000"  visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">
 				<Label>label color:</Label>
-				<List>
-					<Option value="#FF0000" >red</Option>
-					<Option value="#00FF00" >green</Option>
-					<Option value="#0000FF" >blue</Option>
-					<Option value="#FFFF00" >yellow</Option>
-					<Option value="#FF00FF" >mangan</Option>
-					<Option value="#00FFFF" >cyan</Option>
-					<Option value="#FFFFFF" >white</Option>
-					<Option value="#0F0F0F" >grey</Option>
-					<Option value="#000000" >black</Option>
-				</List>
+			</Field>
+			<Field id="showBeaconSymbolColorlabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="showBeaconOnMap" visibleBindingValue="text,dot,smallCircle,largeCircle">  
+				<Label>use 2x hex code(00..FF) to enter colors (#RRGGBB) eg:
+#FF0000 =red
+#00FF00 =green
+#0000FF =blue
+#FFFF00 =yellow
+#FF00FF =mangan
+#00FFFF =cyan
+#FFFFFF =white
+#0F0F0F =grey
+#000000 =black</Label>
 			</Field>
 
 			<Field id="sep-031" type="separator"/>
@@ -3847,7 +3830,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<Field id="labelRPI"               type="label" >
 			<Label>select RPIs that should monitor this sensor, 
    check only RPIs that are installed, checked RPi that do not exist will be ignored
- if you have many, set the repeat Freq to a larger number</Label>
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
 			</Field>
 
 			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
@@ -3894,22 +3877,41 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</Field>
 
 
-			<Field id="offsetTemp" type="textfield"    defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
-			<Field id="offsetPress" type="textfield"   defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetPress" type="textfield"  defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar):</Label> </Field>
 
-			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no"> 
-				<Label>Send sensor values to Indigo at least every (repeat Freq):</Label>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
+			<Label>Min secs between indigo updates - not more often:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
 				<List>
 					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
 					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
 					<Option value="10"  >10 secs</Option>
 					<Option value="15"  >15 secs</Option>
 					<Option value="20"  >20 secs</Option>
 					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
 					<Option value="60"  >60 secs</Option>
 					<Option value="90"  >90 secs</Option>
-					<Option value="180" > 3 minutes</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
 				</List>
 			</Field>
 			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden ="no"> 
@@ -4956,7 +4958,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</List>
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured Pressure(Pascal):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
 			<Label>use local display to show values:</Label> 
 			<List>
@@ -5147,7 +5149,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</List>
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured Pressure(Pascal):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="statusColorLabel" type="label" >
 			<Label>== set color of status column dot to </Label></Field>
@@ -5319,7 +5321,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</List>
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured Pressure(Pascal):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
 			<Label>use local display to show values:</Label> 
 			<List>
@@ -5500,7 +5502,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</List>
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
 			<Label>use local display to show values:</Label> 
@@ -6056,7 +6058,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
 			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
-			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
 			<Label>use local display to show values:</Label> 
@@ -6331,7 +6333,7 @@ After some days of running in clean air, proposed setup is:
 				<Label>Changing how often the sensor is read will require a new calbration, it might take an hour to be stable</Label>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-				<Label>min delta secs between indigo updates :</Label>
+				<Label>Min secs between indigo updates - not more often :</Label>
 				<List>
 					<Option value="1"   >1   secs </Option>
 					<Option value="2"   >2   secs</Option>
@@ -6398,7 +6400,7 @@ After some days of running in clean air, proposed setup is:
 			</Field>
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
 			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
-			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 			<Field id="offsetGas" type="textfield"      defaultValue="0"> <Label>offset added to measured Gas(Ohm):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
@@ -7447,7 +7449,7 @@ After some days of running in clean air, proposed setup is:
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="10" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="2"   > 2   secs</Option>
 				<Option value="3"   > 3   secs</Option>
@@ -7625,7 +7627,7 @@ After some days of running in clean air, proposed setup is:
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates:</Label>
+			<Label>Min secs between indigo updates - not more often:</Label>
 			<List>
 				<Option value="1"   > 1   secs </Option>
 				<Option value="2"   > 2   secs</Option>
@@ -7850,7 +7852,7 @@ It measures CO2 and temp using infrared light absorption
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="20" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="20"  > 20  secs</Option>
 				<Option value="40"  > 40  secs</Option>
@@ -8060,7 +8062,7 @@ It measures CO2 VOC
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="1"   > 1   secs </Option>
 				<Option value="2"   > 2   secs</Option>
@@ -8669,7 +8671,7 @@ It measures CO2 VOC
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates:</Label>
+			<Label>Min secs between indigo updates - not more often:</Label>
 			<List>
 				<Option value="1"   > 1   secs </Option>
 				<Option value="2"   > 2   secs</Option>
@@ -9949,7 +9951,7 @@ It measures CO2 VOC
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -10176,7 +10178,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="1"   > 1   secs </Option>
 				<Option value="2"   > 2   secs</Option>
@@ -10539,7 +10541,7 @@ you can setup
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>Min delta secs between indigo updates:</Label>
+			<Label>Min secs between indigo updates - not more often:</Label>
 			<List>
 				<Option value="4"   > 4   secs</Option>
 				<Option value="6"   > 6   secs</Option>
@@ -11036,7 +11038,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="4"   > 4   secs</Option>
 				<Option value="6"   > 6   secs</Option>
@@ -11301,7 +11303,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -11478,7 +11480,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -11704,7 +11706,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -11897,7 +11899,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -12121,7 +12123,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -12353,7 +12355,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -12547,7 +12549,7 @@ you can setup
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -12907,7 +12909,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -13084,7 +13086,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>
@@ -13614,7 +13616,7 @@ returns numbers 0... 12 - 16 bits</Label>
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates:</Label>
+			<Label>Min secs between indigo updates - not more often:</Label>
 				<List>
 					<Option value="1"   > 1   secs </Option>
 					<Option value="2"   > 2   secs</Option>
@@ -13895,7 +13897,7 @@ returns numbers 0...255</Label>
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates:</Label>
+			<Label>Min secs between indigo updates - not more often:</Label>
 				<List>
 					<Option value="1"   > 1   secs </Option>
 					<Option value="2"   > 2   secs</Option>
@@ -14544,7 +14546,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="4"   > 4   secs</Option>
 				<Option value="6"   > 6   secs</Option>
@@ -18554,7 +18556,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</List>
 			</Field>
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" > 
-			<Label>min delta secs between indigo updates :</Label>
+			<Label>Min secs between indigo updates - not more often :</Label>
 			<List>
 				<Option value="0.2" > 0.2 secs </Option>
 				<Option value="0.5" > 0.5 secs </Option>

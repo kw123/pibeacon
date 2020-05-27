@@ -2469,9 +2469,9 @@ class Plugin(indigo.PluginBase):
 							if dev.states["status"] == u"expired": useSymbol = "square45"
 							else:								   useSymbol = props[u"showBeaconOnMap"]
 							if len(props[u"showBeaconSymbolColor"])!= 7: showBeaconSymbolColor = "#0F0F0F"
-							else:								   		 showBeaconSymbolColor = props[u"showBeaconSymbolColor"]
+							else:								   		 showBeaconSymbolColor = props[u"showBeaconSymbolColor"].upper()
 							if len(props[u"showBeaconTextColor"])!= 7:   showBeaconTextColor = "#0FFF0F"
-							else:								   		 showBeaconTextColor = props[u"showBeaconTextColor"]
+							else:								   		 showBeaconTextColor = props[u"showBeaconTextColor"].upper()
 							self.beaconPositionsData[u"mac"][beacon]={u"name":dev.name.encode("utf8"),
 								u"position":			[float(dev.states[u"PosX"]),float(dev.states[u"PosY"]),float(dev.states[u"PosZ"])],
 								u"nickName":			props[u"showBeaconNickName"],
@@ -2507,9 +2507,9 @@ class Plugin(indigo.PluginBase):
 							if dev.states["status"] == u"expired": useSymbol = "square45"
 							else:								   useSymbol = props[u"showBeaconOnMap"]
 							if len(props[u"showBeaconSymbolColor"])!= 7: showBeaconSymbolColor = "#0F0F0F"
-							else:								   		 showBeaconSymbolColor = props[u"showBeaconSymbolColor"]
+							else:								   		 showBeaconSymbolColor = props[u"showBeaconSymbolColor"].upper()
 							if len(props[u"showBeaconTextColor"])!= 7:   showBeaconTextColor = "#0FFF0F"
-							else:								   		 showBeaconTextColor = props[u"showBeaconTextColor"]
+							else:								   		 showBeaconTextColor = props[u"showBeaconTextColor"].upper()
 							self.beaconPositionsData[u"mac"][beacon]={u"name":dev.name.encode("utf8"),
 								u"position":			[float(dev.states[u"PosX"]),float(dev.states[u"PosY"]),float(dev.states[u"PosZ"])],
 								u"nickName":			props[u"showBeaconNickName"],
@@ -4044,14 +4044,15 @@ class Plugin(indigo.PluginBase):
 
 					else:
 						### remove if not on this pi:
-						if piU in self.RPI and u"imput" in self.RPI[piU]:
+						if piU in self.RPI and u"input" in self.RPI[piU]:
+							if typeId in self.RPI[piU][u"input"] and unicode(devId) in self.RPI[piU][u"input"][typeId]:
+								del self.RPI[piU][u"input"][typeId][unicode(devId)]
 							if typeId in self.RPI[piU][u"input"] and self.RPI[piU][u"input"][typeId] == {}:
 								del self.RPI[piU][u"input"][typeId]
 							if typeId not in self.RPI[piU][u"input"] and typeId in self.RPI[piU][u"sensorList"]:
 								self.RPI[piU][u"sensorList"] = self.RPI[piU][u"sensorList"].replace(typeId+",","")
 						continue
-
-
+ 
 					if u"BLEsensor" == typeId :
 						valuesDict[u"description"] = valuesDict[u"type"] +"-"+ valuesDict[u"mac"]
 
@@ -12425,9 +12426,7 @@ class Plugin(indigo.PluginBase):
 
 					if dev.deviceTypeId == "BLERuuviTag":
 						self.updateBLERuuviTag(dev,data,whichKeysToDisplay, pi)
-						continue
-
-
+	
 
 					if u"proximity" in data:
 						newStatus, updateProps0, doUpdate = self.setProximity(dev, props, data, whichKeysToDisplay,newStatus)
@@ -12758,10 +12757,10 @@ class Plugin(indigo.PluginBase):
 		try:
 			if "accelerationX" in data:
 				#self.indiLOG.log(20," data{},\n whichKeysToDisplay:{}".format(data,whichKeysToDisplay))
-				self.setStatusCol(dev,u"accelerationX",		data["accelerationX"],		"{} [mG]".format(data["accelerationX"]),	whichKeysToDisplay,"","",decimalPlaces=0)
-				self.setStatusCol(dev,u"accelerationY",		data["accelerationY"],		"{} [mG]".format(data["accelerationY"]),	whichKeysToDisplay,"","",decimalPlaces=0)
-				self.setStatusCol(dev,u"accelerationZ",		data["accelerationZ"],		"{} [mG]".format(data["accelerationZ"]),	whichKeysToDisplay,"","",decimalPlaces=0)
-				self.setStatusCol(dev,u"accelerationTotal",	data["accelerationTotal"],	"{} [mG]".format(data["accelerationTotal"]),whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"accelerationX",		data["accelerationX"],		"{} [mg]".format(data["accelerationX"]),	whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"accelerationY",		data["accelerationY"],		"{} [mg]".format(data["accelerationY"]),	whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"accelerationZ",		data["accelerationZ"],		"{} [mg]".format(data["accelerationZ"]),	whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"accelerationTotal",	data["accelerationTotal"],	"{} [mg]".format(data["accelerationTotal"]),whichKeysToDisplay,"","",decimalPlaces=0)
 				self.setStatusCol(dev,u"accelerationTurn",	data["accelerationTurn"],	"{} %".format(data["accelerationTurn"]),	whichKeysToDisplay,"","",decimalPlaces=0)
 				self.setStatusCol(dev,u"measurementCount",	data["measurementCount"],	"{}".format(data["measurementCount"]),		whichKeysToDisplay,"","",decimalPlaces=0)
 				self.setStatusCol(dev,u"movementCount",		data["movementCount"],		"{}".format(data["movementCount"]),			whichKeysToDisplay,"","",decimalPlaces=0)
@@ -12770,6 +12769,8 @@ class Plugin(indigo.PluginBase):
 				self.setStatusCol(dev,u"batteryLevel",		data["batteryLevel"],		"{} %".format(data["batteryLevel"]),		whichKeysToDisplay,"","",decimalPlaces=0)
 				self.setStatusCol(dev,u"batteryVoltage",	data["batteryVoltage"],		"{} [mV]".format(data["batteryVoltage"]),	whichKeysToDisplay,"","",decimalPlaces=0)
 				self.setStatusCol(dev,u"lastUpdateFromRPI",	pi,							pi,											whichKeysToDisplay,"","")
+
+
 		except Exception, e:
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			self.indiLOG.log(40, unicode(data))
@@ -13184,6 +13185,7 @@ class Plugin(indigo.PluginBase):
 
 			updateList = []
 			for state in dev.states:
+				## state  eg =  "temperatureChange1Hour"
 				if state.find(propToUpdate+"Change") == 0:
 					upU = state.split("Change")[1]
 					if len(upU) < 2: continue
@@ -13193,9 +13195,12 @@ class Plugin(indigo.PluginBase):
 					amount = upU.split(updateN)[0]
 					updateList.append( {"state":state, "unit":updateN, "deltaSecs":updateMinutes * int(amount), "pointer":0, "changed":0} )
 
+			##updateList ==[{"state":"temperatureChange1Hour", "unit":"Hour", "deltaSecs":60, "pointer":0, "changed":0}, ...] )
+
 			updateList = sorted(updateList, key = lambda x: x["deltaSecs"])				
 			if len(updateList) < 1: return False, []
 
+			## get last list
 			if propToUpdate+"list" in props: 
 				valueList = json.loads(props[propToUpdate+"list"])
 			else:
@@ -16538,7 +16543,7 @@ class Plugin(indigo.PluginBase):
 			#				  75:66:B5:0A:9F:DB beacon-75:66:B5:0A:9   expired		   0	  1346
 			if True:
 				self.myLog( text = u" ==========  defined beacons ==============", mType= "pi configuration")
-				self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig  lastBatteryUpdate/lvl     LastUp[s] ExpTime updDelay lastStatusChange    created ",
+				self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig  battery UUID    lastUpdate/level      LastUp[s] ExpTime updDelay lastStatusChange    created ",
 						   mType= "pi configuration")
 				for status in [u"up", u"down", u"expired"]:
 					for cType in _GlobalConst_typeOfBeacons:
@@ -16722,18 +16727,20 @@ class Plugin(indigo.PluginBase):
 		for beacon in self.beacons:
 			if self.beacons[beacon][u"typeOfBeacon"] != xType: continue
 			if self.beacons[beacon][u"status"] 		!= status: continue
-			batteryLevelLastUpdate =""
+			batteryLevelLastUpdate = ""
+			batteryLevelUUID = ""
 			try:
 				dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
 				name = dev.name
 				props = dev.pluginProps
 				lastStatusChange = dev.states["lastStatusChange"]
 				if "batteryLevelUUID" in props and props["batteryLevelUUID"].find("batteryLevel") >-1:
+					batteryLevelUUID = props["batteryLevelUUID"].replace("-batteryLevel-int-bits=","").replace("2A19-","").replace("-norm=","/").replace("randomON","random")
 					if "batteryLevelLastUpdate" in dev.states: 
-						batteryLevelLastUpdate = dev.states[u"batteryLevelLastUpdate"]
-						if len(batteryLevelLastUpdate) < 18: batteryLevelLastUpdate = "2000-01-01 00:00:00"
-						batteryLevelLastUpdate += "/"+str(dev.states[u"batteryLevel"])
-						batteryLevelLastUpdate = batteryLevelLastUpdate.ljust(23)
+						batteryLevelLastUpdate = dev.states[u"batteryLevelLastUpdate"][4:]
+						if len(batteryLevelLastUpdate) < 10: batteryLevelLastUpdate = "01-01 00:00:00"
+						batteryLevelLastUpdate += ",l="+str(dev.states[u"batteryLevel"])
+						batteryLevelLastUpdate = batteryLevelLastUpdate
 			except Exception, e:
 				if unicode(e).find(u"timeout waiting") > -1:
 					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -16741,7 +16748,8 @@ class Plugin(indigo.PluginBase):
 					return
 				name = " "
 				lastStatusChange = " "
-			if len(batteryLevelLastUpdate) < 23: batteryLevelLastUpdate =" ".ljust(23)
+			if len(batteryLevelUUID) != 14: batteryLevelUUID = batteryLevelUUID.ljust(14)
+			if len(batteryLevelLastUpdate) !=21: batteryLevelLastUpdate = batteryLevelLastUpdate.ljust(21)
 
 			cc += 1
 			if len(name) > 22: name = name[:21] + ".."
@@ -16752,6 +16760,7 @@ class Plugin(indigo.PluginBase):
 				   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
 				   unicode(self.beacons[beacon][u"signalDelta"]).rjust(6) + " " + \
 				   unicode(self.beacons[beacon][u"minSignalCutoff"]).rjust(6) + " " + \
+				   batteryLevelUUID +\
 				   batteryLevelLastUpdate +\
 				   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"])      ) ).rjust(13) + " " + \
 				   unicode(min(999999,   int(self.beacons[beacon][u"expirationTime"])            ) ).rjust(7)  + " " + \

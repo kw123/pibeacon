@@ -1,3 +1,15 @@
+Added features / changes in v7.119.359 @ 2020-04-27
+===================================================
+
+1. added free text color settings for device properties 
+
+
+Added features / changes in v7.119.358 @ 2020-04-23
+===================================================
+
+1. added  battery level property to print config 
+
+
 Added features / changes in v7.119.357 @ 2020-04-21
 ===================================================
 
