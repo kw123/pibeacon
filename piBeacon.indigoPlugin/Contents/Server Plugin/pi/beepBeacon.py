@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # by Karl Wachs
-# feb 5 2016
-# version 0.7 
+# May 1 2020
+# version 1.1 
 ##
 import json, sys,subprocess, os, time, datetime
 import copy
-import	pexpect
+import pexpect
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -15,11 +15,11 @@ G.program = "beepBeacon"
 
 
 
-def beepBatch(devices, beaconsOnline):
+def beepBatch(devices, beaconsOnline):  # not used anymore 
 	global killMyselfAtEnd
 	try:	
 		devices = json.loads(devices)
-		if len(devices) ==0: return
+		if len(devices) == 0: return
 		subprocess.call("echo beepBeacon  > {}temp/stopBLE".format(G.homeDir), shell=True)
 		cmd = "sudo /bin/hciconfig hci0 down;sudo /bin/hciconfig hci0 up"
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
@@ -67,7 +67,7 @@ def beep(devices, beaconsOnline):
 		U.logger.log(20,"beepBeacon devices:{}".format(devices))
 		expCommands = pexpect.spawn("gatttool -I")
 		ret = expCommands.expect(">", timeout=5)
-		U.logger.log(20,"spawn gatttool -I ret:{}".format(ret))
+		U.logger.log(10,"spawn gatttool -I ret:{}".format(ret))
  		timeoutSecs = 10
 		for mac in devices:
 			U.logger.log(30,"mac: {}".format(mac) )
@@ -80,24 +80,24 @@ def beep(devices, beaconsOnline):
 				onCMD		= params["cmdON"]
 				offCMD		= params["cmdOff"]
 				beepTime	= float(params["beepTime"])
-				U.logger.log(20,"{}:   onCMD:{};  offCMD:{};  beepTime:{} ".format(mac, onCMD, offCMD, beepTime) )
+				U.logger.log(10,"{}:   onCMD:{};  offCMD:{};  beepTime:{} ".format(mac, onCMD, offCMD, beepTime) )
 				ret = expCommands.sendline("connect {}".format(mac))
-				U.logger.log(20,"expect connect {} ret:{}".format(mac, ret))
+				U.logger.log(10,"expect connect {} ret:{}".format(mac, ret))
 				ret = expCommands.expect("Connection successful", timeout=5)
-				U.logger.log(20,"expect Connection successful >  ret:{}".format(ret))
+				U.logger.log(10,"expect Connection successful >  ret:{}".format(ret))
 				ret = expCommands.sendline( onCMD )
-				U.logger.log(20,"sendline  cmd{}  ret:{}".format( onCMD, ret))
+				U.logger.log(10,"sendline  cmd{}  ret:{}".format( onCMD, ret))
 				ret = expCommands.expect(">", timeout=5)
-				U.logger.log(20,"expect >  ret:{}".format(ret))
+				U.logger.log(10,"expect >  ret:{}".format(ret))
 				time.sleep(beepTime)
 				ret = expCommands.sendline(offCMD )
-				U.logger.log(20,"sendline  cmd{}  ret:{}".format( offCMD, ret))
+				U.logger.log(10,"sendline  cmd{}  ret:{}".format( offCMD, ret))
 				ret = expCommands.expect(">", timeout=5)
-				U.logger.log(20,"expect >  ret:{}".format(ret))
+				U.logger.log(10,"expect >  ret:{}".format(ret))
 				ret = expCommands.sendline("disconnect" )
-				U.logger.log(20,"sendline disconnect  ret:{}".format(ret))
+				U.logger.log(10,"sendline disconnect  ret:{}".format(ret))
 				ret = expCommands.expect(">", timeout=5)
-				U.logger.log(20,"expect >  ret:{}".format(ret))
+				U.logger.log(10,"expect >  ret:{}".format(ret))
 			except Exception, e:
 				U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				time.sleep(1)

@@ -3355,8 +3355,8 @@ Then there are actions in each set (steps/sleep)
         <CallbackMethod>sendBeepCommandCALLBACKaction</CallbackMethod>
         <ConfigUI>
 			<Field id="infoLabelINPUT0" type="label" >
-				<Label>slecet the beacon and the length of time for the beacon to receive the beep command
-the beacon must be able to digest the command, only qualified beacons are shown in the select list and if state == up)</Label> 
+				<Label>selecet the beacon and the length of time for the beacon to receive the beep command
+the beacon must be able to digest the command, only qualified beacons are shown in the select list and if state == up and has to be enabled in beacon device edit</Label> 
 			</Field>
              <Field id="selectbeaconForBeep"   type="menu" defaultValue="-1"  >
                <Label>select the beacon</Label>

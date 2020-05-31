@@ -1,7 +1,7 @@
-Added features / changes in v7.120.360 @ 2020-04-29
+Added features / changes in v7.120.361 @ 2020-04-29
 ===================================================
 
-1. added tagging of beacon in beaconlopp rpi code  
+1. enabled beacon beep command for specific beacons
 
 
 Added features / changes in v7.119.360 @ 2020-04-29

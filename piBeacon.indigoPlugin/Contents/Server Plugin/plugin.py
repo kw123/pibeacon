@@ -56,8 +56,8 @@ _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"la
 			   u"receivedSignals":		[{"rssi":-999, "lastSignal": 0, "distance":99999} for kk in range(_GlobalConst_numberOfiBeaconRPI)]} #  for 10 RPI
 
 _GlobalConst_knownBeaconTags={
-		 "noda_iHere":	{"pos":16, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
-		,"noda_Aiko": 	{"pos":16, "dBm":"-50", "battCmd":"2A19-public-batteryLevel-int-bits=63-norm=36",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
+		 "noda_Aiko":	{"pos":16, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
+		,"noda_iHere": 	{"pos":16, "dBm":"-50", "battCmd":"2A19-public-batteryLevel-int-bits=63-norm=36",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
 		,"radius":		{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
  		,"xy_1":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"07775DD0111B11E491910800200C9A66"}
  		,"xy_2":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"08885DD0111B11E491910800200C9A66"}
@@ -2333,7 +2333,12 @@ class Plugin(indigo.PluginBase):
 			self.rejectedByPi		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"rejected/rejectedByPi.json")
 			self.currentVersion		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"currentVersion", 			default="0")
 
-			self.knownBeaconTags 	 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags",			default=_GlobalConst_knownBeaconTags)
+
+			self.knownBeaconTags		= copy.copy(_GlobalConst_knownBeaconTags)
+			knownBeaconTagsSupplicant 	 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant")
+			for tag in knownBeaconTagsSupplicant:
+				self.knownBeaconTags[tag] 	 	= copy.copy(knownBeaconTagsSupplicant[tag])
+
 			self.beaconsUUIDtoName ={}
 			for beaconDeviceType in self.knownBeaconTags:
 				self.knownBeaconTags[beaconDeviceType]["tag"] = self.knownBeaconTags[beaconDeviceType]["tag"].upper()
@@ -7967,18 +7972,12 @@ class Plugin(indigo.PluginBase):
 		beacon  = dev.address
 		typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
 		if typeOfBeacon !="":
-			cmd = []
 			if typeOfBeacon in self.knownBeaconTags:
 				if self.knownBeaconTags[typeOfBeacon]["beepCmd"] != "off":
 					cmd 					= json.loads(self.knownBeaconTags[typeOfBeacon]["beepCmd"])
 					cmd["beepTime"] 		= float(valuesDict["beepTime"])
-					xx 						= {}
-					xx[u"cmd"]		 		= "beepBeacon"
-					xx[u"typeId"]			= json.dumps({beacon:cmd})
-					xx[u"piServerNumber"]	= piU
-
+					xx 						= {u"cmd":"beepBeacon", "piServerNumber":piU, "typeId":json.dumps({beacon:cmd})}
 					if self.decideMyLog(u"Beep"): self.indiLOG.log(20,"beep beacon requested  on pi{};  {}".format(piU, xx) )
-
 					self.setCurrentlyBooting(20, setBy="beep beacon")
 					self.setPin(xx)
 
@@ -9702,7 +9701,7 @@ class Plugin(indigo.PluginBase):
 			self.sleep(10)
 
 
-
+		
 		self.writeJson(self.pluginVersion, fName=self.indigoPreferencesPluginDir + "currentVersion")
 
 		self.initSprinkler()

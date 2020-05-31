@@ -374,7 +374,7 @@ def execCMDS(data):
 
 			if cmd =="beepBeacon":
 				try:
-					U.logger.log(40, u" next{}".format(next))
+					U.logger.log(10, u" next{}".format(next))
 					if "device" not in next: continue
 					subprocess.call("/usr/bin/python "+G.homeDir+"beepBeacon.py '"+next["device"]+"' &" , shell=True)
 				except	Exception, e:
