@@ -3350,6 +3350,35 @@ Then there are actions in each set (steps/sleep)
        </ConfigUI>
    </Action>
 
+    <Action id="beepBeacon">
+        <Name>Send a beep command to ibeacons</Name>
+        <CallbackMethod>sendBeepCommandCALLBACKaction</CallbackMethod>
+        <ConfigUI>
+			<Field id="infoLabelINPUT0" type="label" >
+				<Label>slecet the beacon and the length of time for the beacon to receive the beep command
+the beacon must be able to digest the command, only qualified beacons are shown in the select list and if state == up)</Label> 
+			</Field>
+             <Field id="selectbeaconForBeep"   type="menu" defaultValue="-1"  >
+               <Label>select the beacon</Label>
+                <List class="self" filter="" method="filterBeaconsThatCanBeep" dynamicReload="false"/>
+             </Field>
+             <Field id="beepTime"   type="menu" defaultValue="-1" tooltip="" >
+              <List>
+                    <Option value= "-1">off</Option>
+                    <Option value= "1" >1 sec</Option>
+                    <Option value= "2" >2 sec</Option>
+                    <Option value= "3" >3 sec</Option>
+                    <Option value= "4" >4 sec</Option>
+                    <Option value= "5" >5 sec</Option>
+                    <Option value= "7" >7 sec</Option>
+                    <Option value= "10" >10 sec</Option>
+                    <Option value= "15" >15 sec</Option>
+                </List>
+                <Label>Beep for xx secs:</Label>
+             </Field>
+        </ConfigUI>
+   </Action>
+
 
 
     <Action id="newCalibration">

@@ -2348,23 +2348,10 @@ use eg to track someone moving around - going from one room to the next" >
 			</Field>
 
 			<Field id="label3"               type="label"  > 
-				<Label>== Set type of beacon (for future use):</Label>
+				<Label>== Set type of beacon:</Label>
 			</Field>
-			<Field id="typeOfBeacon" type="menu"     defaultValue="other"> 
+			<Field id="typeOfBeacon" type="textfield"     defaultValue="other"> 
 				<Label>....       Beacon Type</Label>
-				<List>
-					<Option value="xy"     >xy, txPower -59 dBm</Option>
-					<Option value="radius" >radius, txPower -59 dBm</Option>
-					<Option value="tile"   >tile, txPower -67 dBm</Option>
-					<Option value="sanwo"  >sanwo, txPower -51 dBm</Option>
-					<Option value="pebbleBee">pebble Bee, txPower -67 dBm</Option>
-					<Option value="JINOU"  >JINOU, txPower -67 dBm</Option>
-					<Option value="Jaalee"  >Jaalee , txPower -67 dBm</Option>
-					<Option value="highTx"  >high tx Power, txPower 100 dBm</Option>JINOU
-					<Option value="other"   >other,  txPower 0 dBm</Option>
-					<Option value="other1"  >other1, txPower -10 dBm</Option>
-					<Option value="other2"  >other2, txPower -20 dBm</Option>
-				</List>
 			</Field>
 			<Field id="label4"               type="label"  > 
 				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
@@ -2416,11 +2403,9 @@ There are also beacons that send Battery info as part of std msg</Label>
 
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
-					<Option value="2A19-randomON-batteryLevel-int-bits=127-norm=100" >random 127bits/max100 eg XY beacons, social retail,..</Option>
-					<Option value="2A19-public-batteryLevel-int-bits=127-norm=100"   >public 127bits/max100 eg nonda/iHere</Option>
-					<Option value="2A19-public-batteryLevel-int-bits=63-norm=36"     >public 63bits/max36 eg nonda/aiko</Option>
-					<Option value="msg"    				  >yes, in std msg, not through GATT commands</Option>
-					<Option value="off"    				  >off</Option>
+					<Option value="gatttool" >use gatttool</Option>
+					<Option value="msg"    	 >yes, in std msg, not through GATT commands</Option>
+					<Option value="off"    	 >off</Option>
 				</List>
 				<Label>.... battery level cmd:</Label>
 			</Field>
@@ -2433,6 +2418,14 @@ There are also beacons that send Battery info as part of std msg</Label>
 					<Option value="off"      >off</Option>
 				</List>
 				<Label>.... TX power level info at UUID=xx.. not implemented yet:</Label>
+			</Field>
+
+			<Field id="beaconBeepUUID" type="menu"     defaultValue="off"  >
+				<List>
+					<Option value="gatttool" >enable beep</Option>
+					<Option value="off"    	  >not set up</Option>
+				</List>
+				<Label>Enable beep actions for beacon:</Label>
 			</Field>
 
 

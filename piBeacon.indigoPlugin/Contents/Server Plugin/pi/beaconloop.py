@@ -369,7 +369,7 @@ def handleHistory():
 
 def readParams(init):
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,UUIDtoIphoneReverse,  beacon_ExistingHistory, deleteHistoryAfterSeconds,ignoreMAC,signalDelta,UUIDtoIphone,offsetUUID,fastDown,maxParseSec,batteryLevelPosition,doNotIgnore
-	global acceptNewiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalCutoff, acceptJunkBeacons
+	global acceptNewiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalCutoff, acceptJunkBeacons,knownBeaconTags
 	global oldRaw,	lastRead
 	if init:
 		collectMsgs		= 10  # in parse loop collect how many messages max	  ========	all max are an "OR" : if one hits it stops
@@ -457,8 +457,30 @@ def readParams(init):
 	except:
 		InParams={}
 
-	try:		 onlyTheseMAC=InParams["onlyTheseMAC"]
-	except:		 onlyTheseMAC=[]
+	try:
+		f=open("{}knownBeaconTags".format(G.homeDir),"r")
+		knownBeaconTags=json.loads(f.read().strip("\n"))
+		f.close()
+	except:		
+		knownBeaconTags={
+		 "noda_iHere":	{"pos":16, "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
+		,"noda_Aiko": 	{"pos":16, "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
+		,"radius":		{"pos":32, "tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
+ 		,"xy_1":		{"pos":32, "tag":"07775DD0111B11E491910800200C9A66"}
+ 		,"xy_2":		{"pos":32, "tag":"08885DD0111B11E491910800200C9A66"}
+		,"xy_4":		{"pos":32, "tag":"04000000005F78000900580509585934"}
+ 		,"xy_42":		{"pos":32, "tag":"04000000005F780009F6240509585934"}
+		,"SpotyPal":	{"pos":32, "tag":"53706F747950616C5465727261636F6D1A"}
+		,"SocialRetail":{"pos":32, "tag":"E2C56DB5DFFB48D2B060D0F5a71096E0"} # need to fix pos
+		,"MiniBeacon":	{"pos":32, "tag":"FDA50693A4E24FB1AFCFC6EB07647825"}# need to fix pos
+		,"node_js":		{"pos":30, "tag":"01050D095075636B2E6A73"} ##need to fix pos
+		,"mac":			{"pos":16, "tag":"01060AFF4C001005"}
+		,"ruuvitag":	{"pos":22, "tag":"FF990405"}
+		,"tile":		{"pos":-1, "tag":"01"}  # need to fix
+		,"Tovala":		{"pos":54, "tag":"546F76616C61"}
+		}
+	try:		onlyTheseMAC=InParams["onlyTheseMAC"]
+	except:		onlyTheseMAC=[]
 
 	try:		ignoreUUID=InParams["ignoreUUID"]
 	except:		ignoreUUID=[]
@@ -806,9 +828,9 @@ def doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min):
 			domyBlueT( pkt, mac, rx, tx, nBytesThisMSG, hexData)
 			return tx, bl, UUID, Maj, Min
 
-		## check if Ruuvi tag present at right position, should be at pos 36
+		## check if Ruuvi tag present at right position, should be at pos 22
 		ruuviTagPos 	= hexData.find("FF990405") 
-		ruuviTagFound	= ruuviTagPos > 34 and ruuviTagPos < 38 # give range just in case
+		ruuviTagFound	= ruuviTagPos > 20 and ruuviTagPos < 24 # give range just in case
 
 		ruuviSensorActive = ( mac in BLEsensorMACs  and BLEsensorMACs[mac]["type"] == "RuuviTag")
 		if ruuviTagFound or ruuviSensorActive: 
@@ -1064,7 +1086,7 @@ def doRuuviTag_mac( data):
 
 def execbeaconloop():
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds,lastWriteHistory,maxParseSec,batteryLevelPosition
-	global acceptNewiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored, sendFullUUID, minSignalCutoff, acceptJunkBeacons
+	global acceptNewiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored, sendFullUUID, minSignalCutoff, acceptJunkBeacons, knownBeaconTags
 	global myBLEmac, BLEsensorMACs
 	global oldRaw,	lastRead
 	global UUIDtoIphone, UUIDtoIphoneReverse, mapReasonToText
@@ -1254,7 +1276,7 @@ def execbeaconloop():
 							# build the return string: mac#, uuid-major-minor,txpower??,rssi
 							mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
 							lastMSGwithData1 = int(time.time())
-							hexstr	 = (stringFromPacket(pkt)).upper()
+							hexstr	 = (stringFromPacket(pkt[offS:])).upper()
 						
 							if mac in badMacs: continue
 							if mac in batteryLevelPosition: blOffset= batteryLevelPosition[mac] 
@@ -1317,16 +1339,26 @@ def execbeaconloop():
 							Min	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen + 2: uuidStart+uuidLen + 4])
 							bl	 = ""	
 
+							if True:
+								for bb in knownBeaconTags:
+									if knownBeaconTags[bb]["pos"] == -1: 			continue
+									pos = hexstr.find(knownBeaconTags[bb]["tag"])
+									if pos == -1: 									continue
+									if abs(pos - knownBeaconTags[bb]["pos"]) > 10:	continue
+									#print mac, pos,pos -knownBeaconTags[bb]["pos"] , dd, UUID, Maj, Min
+									UUID =  bb
+									break
+
 							tx, bl,UUID, Maj, Min  = doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexstr, UUID, Maj, Min)
 
 							if bl == "" and mac in batteryLevelPosition:
 								try:	
-									bl	 =	"%i" % ord( pkt[ batteryLevelPosition[mac] ])
+									bl	 =	"%i" % ord( pkt[batteryLevelPosition[mac] ])
 								except: 
 									bl	 = "-"
 
 							if not acceptJunkBeacons:
-								if UUID =="" or UUID.find("0000000000") > -1: 
+								if UUID == "" or UUID.find("0000000000") > -1: 
 									#print "reject UUID" 
 									continue # this is not supported ..
 								if tx == 0 and rx == 0: 

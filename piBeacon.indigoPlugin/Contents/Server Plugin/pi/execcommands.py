@@ -16,7 +16,7 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "execcommands"
 
-allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","startCalibration","getBeaconParameters","file","BLEreport"]
+allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","startCalibration","getBeaconParameters","beepBeacon","file","BLEreport"]
 
 
 externalGPIO = False
@@ -367,6 +367,16 @@ def execCMDS(data):
 				try:
 					if "device" not in next: continue
 					subprocess.call("/usr/bin/python "+G.homeDir+"getBeaconParameters.py '"+next["device"]+"' &" , shell=True)
+				except	Exception, e:
+						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				continue
+
+
+			if cmd =="beepBeacon":
+				try:
+					U.logger.log(40, u" next{}".format(next))
+					if "device" not in next: continue
+					subprocess.call("/usr/bin/python "+G.homeDir+"beepBeacon.py '"+next["device"]+"' &" , shell=True)
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue

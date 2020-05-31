@@ -821,6 +821,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
     <Field    id="debugBatteryLevel"   type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
     <Field    id="debugSQLlogger"      type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (17) SQLlogger:</Label>  </Field>
     <Field    id="debugSQLSuppresslog" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
+    <Field    id="debugBeep"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (19) beacon Beep:</Label>  </Field>
 
     <Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (S) special debug (only for development):</Label>  </Field>
     <Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (99) all of the above .. everything:</Label>  </Field>

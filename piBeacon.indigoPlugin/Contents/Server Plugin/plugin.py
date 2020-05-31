@@ -46,7 +46,7 @@ _sqlLoggerIgnoreStates = {"isBeaconDevice":		"Pi_00_Time,Pi_01_Time,Pi_02_Time,P
 						 ,"isBLEconnectDevice":	"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,closestRPIText,closestRPITextLast,displayStatus,status,sensorvalue_ui,lastStatusChange"
 				         ,"isRPISensorDevice":	"displayStatus,status,sensorvalue_ui,lastStatusChange,last_MessageFromRpi"
 				         ,"isSensorDevice":		"displayStatus,status,sensorvalue_ui,lastStatusChange"}
-_debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","Special","PlotPositions","SocketRPI","BatteryLevel","SQLlogger","SQLSuppresslog"]
+_debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","Special","PlotPositions","SocketRPI","BatteryLevel","SQLlogger","SQLSuppresslog","Beep"]
 
 _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"lastUp": 0, u"note": u"beacon", u"expirationTime": 90,
 			   u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, u"signalDelta": 999, u"minSignalCutoff": -999,
@@ -54,20 +54,29 @@ _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"la
 			   u"fastDownMinSignal":	-999,
 			   u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
 			   u"receivedSignals":		[{"rssi":-999, "lastSignal": 0, "distance":99999} for kk in range(_GlobalConst_numberOfiBeaconRPI)]} #  for 10 RPI
-_GlobalConst_typeOfBeacons = {
-				u"xy":			u"07775dd0111b11e491910800200c9a66",
-				 u"tile":		u"01",
-				 u"sanwo":		u"fda50693a4e24fb1afcfc6eb07647825",
-				 u"radius":		u"2f234454cf6d4a0fadf2f4911ba9ffa6",
-				 u"rPI":		u"2f234454cf6d4a0fadf2f4911ba9ffa6-9",
-				 u"pebbleBee":	u"1804180f1803190002020a0808ff0e0a",
-				 u"JINOU":		u"e2c56db5dffb48d2b060d0f5a71096e0",
-				 u"Jaalee":		u"ebefd08370a247c89837e7b5634df524",
-				 u"other":		u"",
-				 u"Other1":		u"",
-				 u"Other2":		u"",
-				 u"highTx":		u"",
-				 }
+
+_GlobalConst_knownBeaconTags={
+		 "noda_iHere":	{"pos":16, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
+		,"noda_Aiko": 	{"pos":16, "dBm":"-50", "battCmd":"2A19-public-batteryLevel-int-bits=63-norm=36",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
+		,"radius":		{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
+ 		,"xy_1":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"07775DD0111B11E491910800200C9A66"}
+ 		,"xy_2":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"08885DD0111B11E491910800200C9A66"}
+		,"xy_4":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F78000900580509585934"}
+ 		,"xy_42":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F780009F6240509585934"}
+		,"SpotyPal":	{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"53706F747950616C5465727261636F6D1A"}
+		,"SocialRetail":{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"E2C56DB5DFFB48D2B060D0F5a71096E0"} # need to fix pos
+		,"MiniBeacon":	{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"FDA50693A4E24FB1AFCFC6EB07647825"}# need to fix pos
+		,"node_js":		{"pos":30, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"01050D095075636B2E6A73"} ##need to fix pos
+		,"JINOU":		{"pos":30, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"E2C56DB5DFFB48D2B060D0F5A71096E0"}
+		,"Jaalee":		{"pos":30, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"EBEFD08370A247C89837E7B5634DF524"}
+		,"sanwo":		{"pos":30, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"FDA50693A4E24FB1AFCFC6EB7647825"}
+		,"mac":			{"pos":16, "dBm":"-50", "battCmd":"off",												"beepCmd":"off",							"tag":"01060AFF4C001005"}
+		,"ruuvitag":	{"pos":22, "dBm":"-65", "battCmd":"off",												"beepCmd":"off",							"tag":"FF990405"}
+		,"tile":		{"pos":-1, "dBm":"-67", "battCmd":"off",												"beepCmd":"off",							"tag":"01"}  # need to fix
+		,"Tovala":		{"pos":54, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"546F76616C61"}
+		,"other1":		{"pos":-1, "dBm":"-60", "battCmd":"off",												"beepCmd":"off",							"tag":""}
+		,"other2":		{"pos":-1, "dBm":"0",   "battCmd":"off",												"beepCmd":"off",							"tag":""}
+		}
 _GlobalConst_emptyBeaconProps = {
 					u"note":						u"beacon",
 					u"expirationTime":				90,
@@ -216,7 +225,7 @@ _GlobalConst_beaconPlotSymbols		= [u"text", u"dot", u"smallCircle", u"largeCircl
 
 
 
-_GlobalConst_allowedCommands	   = [u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", u"getBeaconParameters", u"startCalibration", u"rampUp", u"rampDown", u"rampUpDown"]	 # commands support for GPIO pins
+_GlobalConst_allowedCommands	   = [u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", u"getBeaconParameters", u"startCalibration", u"rampUp", u"rampDown", u"rampUpDown", u"beepBeacon"]	 # commands support for GPIO pins
 
 _GlobalConst_allowedSensors		   = [u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 						 u"apds9960",															  # dist gesture
@@ -645,11 +654,6 @@ class Plugin(indigo.PluginBase):
 		try:
 			dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			##map uuid to beacon type
-			self.UUIDtoType = {}
-			for xx in _GlobalConst_typeOfBeacons:
-				if _GlobalConst_typeOfBeacons[xx] != "":
-					self.UUIDtoType[_GlobalConst_typeOfBeacons[xx]] = xx
-
 
 			self.sprinklerDeviceActive = False
 
@@ -2182,6 +2186,7 @@ class Plugin(indigo.PluginBase):
 
 			self.readTcpipSocketStats()
 
+
 			self.RPI = self.getParamsFromFile(self.indigoPreferencesPluginDir+"RPIconf")
 			if self.RPI =={}: 
 				self.indiLOG.log(20, self.indigoPreferencesPluginDir + "RPIconf file does not exist or has bad data, will do a new setup ")
@@ -2322,13 +2327,17 @@ class Plugin(indigo.PluginBase):
 			for beacon in delList:
 				del self.beacons[beacon]
 
-			self.beaconsUUIDtoName	 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoName",		oldName= self.indigoPreferencesPluginDir+"UUIDtoName")
-			self.beaconsUUIDtoIphone = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoIphone",	oldName= self.indigoPreferencesPluginDir+"UUIDtoIphone")
-			self.beaconsIgnoreUUID	 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsIgnoreUUID",		oldName= self.indigoPreferencesPluginDir+"beaconsIgnoreFamily")
-			self.rejectedByPi		 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"rejected/rejectedByPi.json")
-			self.currentVersion		 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"currentVersion", default="0")
+			#self.beaconsUUIDtoName	 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoName",		oldName= self.indigoPreferencesPluginDir+"UUIDtoName")
+			self.beaconsUUIDtoIphone 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoIphone",		oldName= self.indigoPreferencesPluginDir+"UUIDtoIphone")
+			self.beaconsIgnoreUUID		= self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsIgnoreUUID",		oldName= self.indigoPreferencesPluginDir+"beaconsIgnoreFamily")
+			self.rejectedByPi		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"rejected/rejectedByPi.json")
+			self.currentVersion		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"currentVersion", 			default="0")
 
-
+			self.knownBeaconTags 	 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags",			default=_GlobalConst_knownBeaconTags)
+			self.beaconsUUIDtoName ={}
+			for beaconDeviceType in self.knownBeaconTags:
+				self.knownBeaconTags[beaconDeviceType]["tag"] = self.knownBeaconTags[beaconDeviceType]["tag"].upper()
+				self.beaconsUUIDtoName[self.knownBeaconTags[beaconDeviceType]["tag"]] = beaconDeviceType
 
 			self.readCARS()
 
@@ -3085,6 +3094,10 @@ class Plugin(indigo.PluginBase):
 			self.writeJson( self.beaconsUUIDtoName, fName=self.indigoPreferencesPluginDir + u"beaconsUUIDtoName")
 
 		if only in ["all"]:
+			self.writeJson( self.knownBeaconTags,   	fName=self.indigoPreferencesPluginDir + u"knownBeaconTags", fmtOn=True )
+			self.writeJson( self.knownBeaconTags,   	fName=self.indigoPreferencesPluginDir + u"all/knownBeaconTags", fmtOn=True)
+
+		if only in ["all"]:
 			self.writeJson( self.beaconsIgnoreUUID, fName=self.indigoPreferencesPluginDir + u"beaconsIgnoreUUID")
 
 		if only in ["all"]:
@@ -3174,14 +3187,14 @@ class Plugin(indigo.PluginBase):
 			if u"beaconTxPower" not in props:
 				props[u"beaconTxPower"] = _GlobalConst_emptyBeacon[u"beaconTxPower"]
 				updateProps = True
-			if u"typeOfBeacon" not in props:
-				props[u"typeOfBeacon"] = _GlobalConst_emptyBeacon[u"typeOfBeacon"]
-				updateProps = True
+
 			if u"typeOfBeacon" not in props:
 				if dev.deviceTypeId ==u"beacon":
 					props[u"typeOfBeacon"] = "other"
+					updateProps = True
 				if dev.deviceTypeId == "rPI" :
 					props[u"typeOfBeacon"] = "rPI"
+					updateProps = True
 
 			if u"updateSignalValuesSeconds" not in props:
 				updateProps = True
@@ -3435,6 +3448,7 @@ class Plugin(indigo.PluginBase):
 							theDictList[0][u"newMACNumber"] = ""
 
 				dev = indigo.devices[devId]
+				props = dev.pluginProps
 
 
 				if typeId.find("rPI") >- 1:
@@ -3474,6 +3488,14 @@ class Plugin(indigo.PluginBase):
 								theDictList[0][u"newMACNumber"] = "00:00:00:00:pi:00"
 					except Exception, e:
 						self.indiLOG.log(30,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				if typeId.find("beacon") >- 1:
+					if "SupportsBatteryLevel" in props and props["SupportsBatteryLevel"]:
+						beacon = dev.address
+						if beacon in self.beacons:
+							typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
+							if typeOfBeacon in self.knownBeaconTags  and self.knownBeaconTags[typeOfBeacon]["battCmd"] not in ["msg","off"]:
+								theDictList[0][u"batteryLevelUUID"] not in ["msg","off","gatttool"]
+								theDictList[0][u"batteryLevelUUID"]  = "gatttool"
 
 				return theDictList 
 			except Exception, e:
@@ -4628,9 +4650,36 @@ class Plugin(indigo.PluginBase):
 		return
 
 ####-------------------------------------------------------------------------####
+	def filterBeaconTypes(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList=[]
+		for dd in self.knownBeaconTags:
+			xList.append((dd,dd+" txPower: "+self.knownBeaconTags[dd]["dBm"]+"dBm"))
+		return xList
+
+
+####-------------------------------------------------------------------------####
+	def filterBeaconsThatCanBeep(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList=[]
+		for dev in indigo.devices.iter("props.isBeaconDevice"):
+			props = dev.pluginProps
+			#self.indiLOG.log(40,"trying beacon: {} ".format(dev.name.encode("utf8")))
+			if "beaconBeepUUID" in props:
+				#self.indiLOG.log(40,"trying beacon:  after 1: {}".format(props["beaconBeepUUID"]))
+				if props["beaconBeepUUID"] == "gatttool":
+					if "typeOfBeacon" in props:
+						#self.indiLOG.log(40,"trying beacon:  after 2: {}".format(props["typeOfBeacon"]))
+						if props["typeOfBeacon"] != "":
+							#self.indiLOG.log(40,"trying beacon:  after 3: {}".format(self.knownBeaconTags[props["typeOfBeacon"]]))
+							if props["typeOfBeacon"] in self.knownBeaconTags and self.knownBeaconTags[props["typeOfBeacon"]]["beepCmd"] !="off":
+								#self.indiLOG.log(40,"trying beacon:  after 4")
+								xList.append( (unicode(dev.id), dev.name.encode("utf8") ) )
+		return xList
+
+
+####-------------------------------------------------------------------------####
 	def filterAllpiSimple(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList=[]
-		for piU in _rpiList:
+		for dev in _rpiList:
 			name = ""
 			try:
 				devId= int(self.RPI[piU][u"piDevId"])
@@ -6022,6 +6071,8 @@ class Plugin(indigo.PluginBase):
 			if typeId != "beacon":	return	1,uuid
 			u = uuid.split(u"-")
 			if len(u) != 3:			return -1,uuid
+			if u[0] in self.knownBeaconTags:
+					return 3, uuid
 			if u[0] in self.beaconsUUIDtoName:
 					return 0, self.beaconsUUIDtoName[u[0]] + "-" + u[1] + "-" + u[2]
 			return 1, uuid
@@ -7843,29 +7894,32 @@ class Plugin(indigo.PluginBase):
 				piU = valuesDict["piServerNumber"]
 
 			if piU not in _rpiBeaconList: continue
-
+			beacon  = dev.address
 			dd = []
-			if "SupportsBatteryLevel" in props and props["SupportsBatteryLevel"]:
-				if "batteryLevelUUID" in props  and len(props["batteryLevelUUID"]) >2 and props["batteryLevelUUID"]  not in ["off","msg"]:
-					try: 	batteryLevelLastUpdate = self.getTimetimeFromDateString(dev.states["batteryLevelLastUpdate"])
-					except: batteryLevelLastUpdate = 0
-					try: 	batteryLevel = int(dev.states["batteryLevel"])
-					except: batteryLevel = 0
-					if force or   batteryLevel < 20   or   (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 30% dont need to redo it again
-						try: 
-							dist= float( dev.states["Pi_"+piU.rjust(2,"0")+"_Distance"] )
-							if dist < 99.:
-								dd.append(props["batteryLevelUUID"])
-								minTime[piU] += 10
-								if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last sucessfull check @: {}; distance to RPI:{:4.1f};".format(piU, dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"], dist) )
-						except Exception, e:
-							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
+			if typeOfBeacon !="":
+				if "SupportsBatteryLevel" in props and props["SupportsBatteryLevel"]:
+					if typeOfBeacon in self.knownBeaconTags  and self.knownBeaconTags[typeOfBeacon]["battCmd"] not in ["msg","off"]:
+						if "batteryLevelUUID" in props  and props["batteryLevelUUID"]  not in ["off","msg"]:
+							try: 	batteryLevelLastUpdate = self.getTimetimeFromDateString(dev.states["batteryLevelLastUpdate"])
+							except: batteryLevelLastUpdate = 0
+							try: 	batteryLevel = int(dev.states["batteryLevel"])
+							except: batteryLevel = 0
+							if force or   batteryLevel < 20   or   (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 30% dont need to redo it again
+								try: 
+									dist= float( dev.states["Pi_"+piU.rjust(2,"0")+"_Distance"] )
+									if dist < 99.:
+										dd.append(self.knownBeaconTags[typeOfBeacon]["battCmd"] )
+										minTime[piU] += 10
+										if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last sucessfull check @: {}; distance to RPI:{:4.1f};".format(piU, dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"], dist) )
+								except Exception, e:
+									self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-					else:
-						if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20, "getBeaconParameters no update needed              for beacon: {:30s}; lastV: {:3d}; last sucessfull check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
+							else:
+								if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20, "getBeaconParameters no update needed              for beacon: {:30s}; lastV: {:3d}; last sucessfull check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
 
-				if "txPowerlevelUUID" in props  and len(props["txPowerlevelUUID"]) >2 and props["batteryLevelUUID"]  not in ["off","msg"]:
-					dd.append(props["txPowerlevelUUID"])
+						if False and "txPowerlevelUUID" in props  and len(props["txPowerlevelUUID"]) >2 and props["batteryLevelUUID"]  not in ["off","msg"]:
+							dd.append(props["txPowerlevelUUID"])
 					
 
 			if dd != []:
@@ -7887,6 +7941,45 @@ class Plugin(indigo.PluginBase):
 
 					if nDownAddWait: self.setCurrentlyBooting(minTime+10, setBy="getBeaconParameters (batteryLevel ..)")
 					nDownAddWait = False
+					self.setPin(xx)
+
+		return valuesDict
+
+
+
+####-------------------------------------------------------------------------####
+	def sendBeepCommandCALLBACKaction(self, action1=None, typeId="", devId=0):
+		return self.sendBeepCommandCALLBACKmenu(action1.props)
+
+####-------------------------------------------------------------------------####
+	def sendBeepCommandCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
+		
+		if  valuesDict is None: return  valuesDict
+		if self.decideMyLog(u"Beep"): self.indiLOG.log(20,"beep beacon {}".format(valuesDict) )
+
+		if "selectbeaconForBeep" not in  valuesDict: return  valuesDict
+		dev = indigo.devices[int(valuesDict["selectbeaconForBeep"])]
+		props = dev.pluginProps
+		if dev.states["status"] !="up": return valuesDict
+		piU = str(dev.states["closestRPI"])
+		if piU not in _rpiBeaconList: return valuesDict
+
+		beacon  = dev.address
+		typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
+		if typeOfBeacon !="":
+			cmd = []
+			if typeOfBeacon in self.knownBeaconTags:
+				if self.knownBeaconTags[typeOfBeacon]["beepCmd"] != "off":
+					cmd 					= json.loads(self.knownBeaconTags[typeOfBeacon]["beepCmd"])
+					cmd["beepTime"] 		= float(valuesDict["beepTime"])
+					xx 						= {}
+					xx[u"cmd"]		 		= "beepBeacon"
+					xx[u"typeId"]			= json.dumps({beacon:cmd})
+					xx[u"piServerNumber"]	= piU
+
+					if self.decideMyLog(u"Beep"): self.indiLOG.log(20,"beep beacon requested  on pi{};  {}".format(piU, xx) )
+
+					self.setCurrentlyBooting(20, setBy="beep beacon")
 					self.setPin(xx)
 
 		return valuesDict
@@ -8461,11 +8554,16 @@ class Plugin(indigo.PluginBase):
 			cmd = valuesDict[u"cmd"]
 
 			if cmd not in _GlobalConst_allowedCommands:
-				self.indiLOG.log(20, u" setPIN bad parameter: cmd bad:{}; allowed commands= {}" + format(cmd, _GlobalConst_allowedCommands))
+				self.indiLOG.log(20, u" setPIN bad parameter: cmd bad:{}; allowed commands= {}".format(cmd, _GlobalConst_allowedCommands))
 				return
 
 			if cmd == "getBeaconParameters":
 				#self.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  devices".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
+				self.sendGPIOCommand(ip, pi, valuesDict[u"typeId"], valuesDict[u"cmd"])
+				return
+
+			if cmd == "beepBeacon":
+				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(10, u"sending command to rPi at {}; port: {}; cmd:{} ;  devices:{}".format(pi, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
 				self.sendGPIOCommand(ip, pi, valuesDict[u"typeId"], valuesDict[u"cmd"])
 				return
 
@@ -14772,7 +14870,7 @@ class Plugin(indigo.PluginBase):
 								txx = float(txPower)
 								if minTxPower <	 991.: txx = minTxPower
 								distCalc = self.calcDist(  txx, (rssi+rssiOffset) )/ self.distanceUnits
-								if dev.deviceTypeId == "beacon"  and distCalc < 300*self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0"):
+								if dev.deviceTypeId == "beacon"  and distCalc < 100/self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0"):
 									beaconUpdatedIds.append([fromPiI,dev.id, distCalc])
 									self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"] = distCalc
 								newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Distance", distCalc,newStates=newStates ,decimalPlaces=1  )
@@ -14810,6 +14908,7 @@ class Plugin(indigo.PluginBase):
 							newStates = self.addToStatesUpdateDict(dev.id,"batteryLevel", int(msg["batteryLevel"]), newStates=newStates)
 							newStates = self.addToStatesUpdateDict(dev.id,"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat),newStates=newStates)
 
+				### repalce uuid number with names if available
 				if uuid != "x-x-x" and uuid !="":
 					if u"UUID" in dev.states and uuid != dev.states[u"UUID"]:
 						newStates = self.addToStatesUpdateDict(dev.id,u"UUID", uuid,newStates=newStates)
@@ -14818,53 +14917,58 @@ class Plugin(indigo.PluginBase):
 						exName = dev.description
 						ok1, un1 = self.mapUUIDtoName(uuid, typeId=dev.deviceTypeId)
 						ok2, un2 = self.mapMACtoiPhoneUUID(mac, uuid, typeId=dev.deviceTypeId)
-						if uuid.find("ruuviTag")> -1:
-							if exName != uuid:
-								dev.description = uuid
-								dev.replaceOnServer()
-								dev = indigo.devices[name]
 
-						if	ok1 ==0 or ok2==0:
-							if ok1 ==0:
+						updateProps = False
+						if	ok1 == 0 or ok1 == 3 or ok2 == 0: # ==0 found ok, everything is set 
+							if ok1 == 0 or ok1 == 3:
 								uname = un1
 							else:
 								uname = un2
+							if ok1 == 3:
+								typeOfBeacon = un1.split("-")[0]
+								if typeOfBeacon != props["typeOfBeacon"]: 
+									props["typeOfBeacon"] 			  = typeOfBeacon
+									self.beacons[mac]["typeOfBeacon"] = typeOfBeacon
+									updateProps = True
 							if exName != uname: # not already in place
-									if dev.description != uname:
-										dev.description = uname	 # update notes (= desciption)
-										dev.replaceOnServer()
-										dev = indigo.devices[name]
-									props = dev.pluginProps
-									if u"uuid" not in props:
-										props[u"uuid"] = uuid
-										self.deviceStopCommIgnore = time.time()
-										dev.replacePluginPropsOnServer(props)
-										if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, " creating UUID for " + name + " " + uuid )
-									elif props[u"uuid"] != uuid:
-										if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, "updating UUID for " + name + "from  " + props[u"uuid"] + "  to  "+ uuid)
-										props[u"uuid"] = uuid
-										self.deviceStopCommIgnore = time.time()
-										dev.replacePluginPropsOnServer(props)
-						elif  ok1 ==1 or ok2==1:
-							if ok1 ==1:
-								uname = un1
-							else:
-								uname = un2
 								if dev.description != uname:
 									dev.description = uname	 # update notes (= desciption)
 									dev.replaceOnServer()
 									dev = indigo.devices[name]
-								props = dev.pluginProps
+									props = dev.pluginProps
 								if u"uuid" not in props:
 									props[u"uuid"] = uuid
 									self.deviceStopCommIgnore = time.time()
-									dev.replacePluginPropsOnServer(props)
-									if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u" creating UUID for " + name + " " + uuid)
+									updateProps = True
+									if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, " creating UUID for " + name + " " + uuid )
 								elif props[u"uuid"] != uuid:
-									if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u"updating UUID for " + name + "from " + props[u"uuid"] + " to " + uuid)
+									if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, "updating UUID for " + name + "from  " + props[u"uuid"] + "  to  "+ uuid)
 									props[u"uuid"] = uuid
 									self.deviceStopCommIgnore = time.time()
-									dev.replacePluginPropsOnServer(props)
+									updateProps = True
+						elif  ok1 == 1 or ok2 == 1: ## found, but not in beaconsUUIDtoName
+							if ok1 == 1:
+								uname = un1
+							else:
+								uname = un2
+							if dev.description != uname:
+								dev.description = uname	 # update notes (= desciption)
+								dev.replaceOnServer()
+								dev = indigo.devices[name]
+							props = dev.pluginProps
+							if u"uuid" not in props:
+								props[u"uuid"] = uuid
+								self.deviceStopCommIgnore = time.time()
+								updateProps = True
+								if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u" creating UUID for " + name + " " + uuid)
+							elif props[u"uuid"] != uuid:
+								if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, u"updating UUID for " + name + "from " + props[u"uuid"] + " to " + uuid)
+								props[u"uuid"] = uuid
+								self.deviceStopCommIgnore = time.time()
+								updateProps = True
+						if updateProps:
+							dev.replacePluginPropsOnServer(props)
+							dev = indigo.devices[name]
 
 				if updateSignal and "note" in dev.states and dev.states[u"note"].find(u"beacon") >-1:  
 					try:
@@ -15107,6 +15211,8 @@ class Plugin(indigo.PluginBase):
 				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
 			elif cmd == "getBeaconParameters":
 				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
+			elif cmd == "beepBeacon":
+				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
 			else:
 				if typeId == "setMCP4725":
 					cmd1 = {u"device": typeId, u"command": cmd, u"i2cAddress": i2cAddress, u"values":{u"analogValue":analogValue,"rampTime":rampTime,"pulseUp":pulseUp,"pulseDown": pulseDown,"nPulses":nPulses},"restoreAfterBoot": restoreAfterBoot, u"startAtDateTime": startAtDateTime, u"devId": devId}
@@ -15257,10 +15363,13 @@ class Plugin(indigo.PluginBase):
 		f.close()
 		if len(out) > 50000:
 				self.indiLOG.log(50,"parameter file:\n{}all/beacon_parameters\n has become TOOO BIG, \nplease do menu/ignore individual beacons and reset history.\nyou might also want to switch off accept new ibeacons in config\n".format(self.indigoPreferencesPluginDir) )
+		f = open(self.indigoPreferencesPluginDir + "all/beacon_parameters", u"w")
+		f.write(out)
+		f.close()
 
 		try:
-			f = open(self.indigoPreferencesPluginDir + "all/touchFile", u"w")
-			f.write(unicode(time.time()))
+			f = open(self.indigoPreferencesPluginDir + "all/knownBeaconTags", u"w")
+			f.write(json.dumps(self.knownBeaconTags))
 			f.close()
 		except Exception, e:
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -16416,8 +16525,8 @@ class Plugin(indigo.PluginBase):
 		self.myLog( text = u"#	defined beacons-------------", mType="pi configuration")
 		self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig    LastUp[s] ExpTime updDelay created   lastStatusChange",  mType=u"pi configuration")
 		for status in [u"ignored", u""]:
-			for xType in _GlobalConst_typeOfBeacons:
-				self.printBeaconInfoLine(status, xType)
+			for beaconDeviceType in self.knownBeaconTags:
+				self.printBeaconInfoLine(status, beaconDeviceType)
 
 
 ####-------------------------------------------------------------------------####
@@ -16546,8 +16655,8 @@ class Plugin(indigo.PluginBase):
 				self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig  battery UUID    lastUpdate/level      LastUp[s] ExpTime updDelay lastStatusChange    created ",
 						   mType= "pi configuration")
 				for status in [u"up", u"down", u"expired"]:
-					for cType in _GlobalConst_typeOfBeacons:
-						self.printBeaconInfoLine(status, cType)
+					for beaconDeviceType in self.knownBeaconTags:
+						self.printBeaconInfoLine(status, beaconDeviceType)
 
 				self.myLog( text = u"", mType= u"pi configuration")
 
@@ -16726,7 +16835,7 @@ class Plugin(indigo.PluginBase):
 		cc = 0
 		for beacon in self.beacons:
 			if self.beacons[beacon][u"typeOfBeacon"] != xType: continue
-			if self.beacons[beacon][u"status"] 		!= status: continue
+			if self.beacons[beacon][u"status"] 		 != status: continue
 			batteryLevelLastUpdate = ""
 			batteryLevelUUID = ""
 			try:
