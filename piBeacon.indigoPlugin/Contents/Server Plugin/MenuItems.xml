@@ -14,14 +14,34 @@
 3.  in menu   Initial BASIC setup of rPi servers    
         set ipNumber, userID, password of RPI# x (0-19)
         
-Now wait until the first ibeacon and RPI devices show up in indigo
+4. Now wait until the first ibeacon and RPI devices show up in indigo
 If nothing happens, do a    Send Config/Restart/PGM/Sound/...     
   to send all files to RPI, then
   ssh to RPI and check programs that are running: ps -ef | grep .py
      At minimum master.py, beaconloop.py, receiveGPIOcommands.py 
          should be running
      if installLibs.py is running, it is updating op-sys files. 
-         That might take several hours</Label>
+         That might take several hours
+5. you then want to disable accept new beacons in config
+   any car driving by likely has some beacons sending messages.
+   To add new beacons set accept new beacons to eg -60  dBm
+     Put your new beacon onto the rpi, wait a minute
+        and check the new beacon(s) created
+     Then move the beacon far away and check again, 
+        find the beacon that has the signal reduced
+     Then move it back to the RPI and check if signal is high again.
+     Then set the beacon at 1m distance and note the signal strength. 
+       Edit the beacon and set TX power to that value(it is likely ~ -60). 
+       That will make the distance calulation more accurate
+
+Other details...
+Add recognized beacon types:
+- in .../Preferences/Plugins/com.karlwachs.piBeacon
+   edit knownBeaconTags.supplicant and use  .. example to set new beacon types
+   that will replace the UUID string with the name you select 
+     and also enable battery commands and beep if the beacon is capable
+
+</Label>
         </Field>
         </ConfigUI>
     </MenuItem>         
@@ -504,6 +524,8 @@ Use this to identify apple devices through their fixed UUID-MAJOR-MINOR paramete
     </MenuItem>
 
 -->
+
+
     <MenuItem id="replacebeacon">
         <Name>Replace an iBeacon (move MAC number)</Name>
         <ConfigUI>
@@ -948,6 +970,9 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
         </ConfigUI>
     </MenuItem>
 
+
+  <MenuItem id="d20o"> <Name>-------------manage/set values on output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+
     <MenuItem id="sendBeepToBeacon">
         <Name>Send a beep command to ibeacons</Name>
         <ConfigUI>
@@ -990,9 +1015,6 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
         </ConfigUI>
     </MenuItem>
 
-
-
-  <MenuItem id="d20o"> <Name>-------------manage output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
     <MenuItem id="OUTPUTgpio">
         <Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>
         <ConfigUI>

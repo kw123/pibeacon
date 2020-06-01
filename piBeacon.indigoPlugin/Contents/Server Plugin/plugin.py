@@ -2328,22 +2328,48 @@ class Plugin(indigo.PluginBase):
 			for beacon in delList:
 				del self.beacons[beacon]
 
-			#self.beaconsUUIDtoName	 = self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoName",		oldName= self.indigoPreferencesPluginDir+"UUIDtoName")
 			self.beaconsUUIDtoIphone 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsUUIDtoIphone",		oldName= self.indigoPreferencesPluginDir+"UUIDtoIphone")
 			self.beaconsIgnoreUUID		= self.getParamsFromFile(self.indigoPreferencesPluginDir+"beaconsIgnoreUUID",		oldName= self.indigoPreferencesPluginDir+"beaconsIgnoreFamily")
 			self.rejectedByPi		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"rejected/rejectedByPi.json")
 			self.currentVersion		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"currentVersion", 			default="0")
 
 
+			### knwon beacon tags section ###
 			self.knownBeaconTags		= copy.copy(_GlobalConst_knownBeaconTags)
-			knownBeaconTagsSupplicant 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant")
-			for tag in knownBeaconTagsSupplicant:
-				self.knownBeaconTags[tag] = copy.copy(knownBeaconTagsSupplicant[tag])
+			exampleFile = {
+				"thisIsTheNameOfTheTag":	{
+					"pos":-1, 
+					"dBm":"-55", 
+					"battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		
+					"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', 
+					"tag":"hexStringToTagTypeOfBeacon",
+					"this_is_not_used":"pos = position of tag in message,dBm=TX_level_at_1m, battCMD= gatttool command to get battery level: uuid-public/randomON-int/text-how many bits-normfactor,..."}
+				}
+			self.writeJson( exampleFile, fName=self.indigoPreferencesPluginDir + u"knownBeaconTags.one_item_example", fmtOn=True )
 
+			## cleanup from older version
+			if os.path.isfile(self.indigoPreferencesPluginDir+"knownBeaconTags"):
+				os.remove(self.indigoPreferencesPluginDir+"knownBeaconTags")
+			if os.path.isfile(self.indigoPreferencesPluginDir+"beaconsUUIDtoName"):
+				os.remove(self.indigoPreferencesPluginDir+"beaconsUUIDtoName")
+
+			## write empty supplicant file 
+			if not os.path.isfile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant"):
+				self.writeJson( {}, fName=self.indigoPreferencesPluginDir + u"supplicant")
+
+			## combine default with supplicant if any data
+			knownBeaconTagsSupplicant 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant")
+			if len(knownBeaconTagsSupplicant)> 0:
+				for tag in knownBeaconTagsSupplicant:
+					self.knownBeaconTags[tag] = copy.copy(knownBeaconTagsSupplicant[tag])
+			self.writeJson( self.knownBeaconTags, fName=self.indigoPreferencesPluginDir + u"knownBeaconTags.full_copy_to_use_as_example", fmtOn=True )
+
+			## this is old should be removed eventually 
 			self.beaconsUUIDtoName = {}
 			for beaconDeviceType in self.knownBeaconTags:
 				self.knownBeaconTags[beaconDeviceType]["tag"] = self.knownBeaconTags[beaconDeviceType]["tag"].upper()
 				self.beaconsUUIDtoName[self.knownBeaconTags[beaconDeviceType]["tag"]] = beaconDeviceType
+			### knwon beacon tags section END ###
 
 			self.readCARS()
 
@@ -3097,10 +3123,6 @@ class Plugin(indigo.PluginBase):
 			self.makeBeacons_parameterFile()
 
 		if only in ["all"]:
-			self.writeJson( self.beaconsUUIDtoName, fName=self.indigoPreferencesPluginDir + u"beaconsUUIDtoName")
-
-		if only in ["all"]:
-			self.writeJson( self.knownBeaconTags,   	fName=self.indigoPreferencesPluginDir + u"knownBeaconTags", fmtOn=True )
 			self.writeJson( self.knownBeaconTags,   	fName=self.indigoPreferencesPluginDir + u"all/knownBeaconTags", fmtOn=True)
 
 		if only in ["all"]:
@@ -9415,9 +9437,9 @@ class Plugin(indigo.PluginBase):
 			try: self.txPowerCutoffDefault		= int(valuesDict[u"txPowerCutoffDefault"])
 			except: self.txPowerCutoffDefault	= 1.
 
-			try: self.speedUnits				= int(valuesDict[u"speedUnits"])
+			try: self.speedUnits				= float(valuesDict[u"speedUnits"])
 			except: self.speedUnits				= 1.
-			try: self.distanceUnits				= int(valuesDict[u"distanceUnits"])
+			try: self.distanceUnits				= float(valuesDict[u"distanceUnits"])
 			except: self.distanceUnits			= 1.
 			try: self.lightningTimeWindow		= float(valuesDict[u"lightningTimeWindow"])
 			except: self.lightningTimeWindow	= 10.

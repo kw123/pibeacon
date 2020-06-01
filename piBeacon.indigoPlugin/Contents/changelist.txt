@@ -1,32 +1,44 @@
-Added features / changes in v7.120.362 @ 2020-04-31
+Added features / changes in v7.120.363 @ 2020-06-01
 ===================================================
 
 1. added some more beacon definitions ie spotyPal and Rinex
 2. take dBm value from knownBeaconTags if txPower == 999 == not set
    can still be overwritten in device edit
-3. made beacontype read only: it is either otehr of a value from known beacon tags
+3. made beacontype read only: it is either other of a value from known beacon tags
+4. fixed spotypal battery type command
+5. cleaned up menus
+6. fixed distance unit if not meter config read 
+ 
+
+Added features / changes in v7.120.362 @ 2020-05-31
+===================================================
+
+1. added some more beacon definitions ie spotyPal and Rinex
+2. take dBm value from knownBeaconTags if txPower == 999 == not set
+   can still be overwritten in device edit
+3. made beacontype read only: it is either other of a value from known beacon tags
  
 
 
-Added features / changes in v7.120.361 @ 2020-04-29
+Added features / changes in v7.120.361 @ 2020-05-29
 ===================================================
 
 1. enabled beacon beep command for specific beacons
 
 
-Added features / changes in v7.119.360 @ 2020-04-29
+Added features / changes in v7.119.360 @ 2020-05-29
 ===================================================
 
 1. added tagging of beacon in beaconlopp rpi code  
 
 
-Added features / changes in v7.119.358 @ 2020-04-23
+Added features / changes in v7.119.358 @ 2020-05-23
 ===================================================
 
 1. added  battery level property to print config 
 
 
-Added features / changes in v7.119.357 @ 2020-04-21
+Added features / changes in v7.119.357 @ 2020-05-21
 ===================================================
 
 1. added 3 differnt font sizes for position plot
@@ -39,7 +51,7 @@ Added features / changes in v7.119.357 @ 2020-04-21
    battery life is > 1 Year, but they are larger than regular iBeacon devices 
 
 
-Added features / changes in v7.119.352 @ 2020-04-20
+Added features / changes in v7.119.352 @ 2020-05-20
 ===================================================
 
 1. made sizes consitent, now 3 sizes:
@@ -47,7 +59,7 @@ Added features / changes in v7.119.352 @ 2020-04-20
    new config edit isrequired
 
 
-Added features / changes in v7.119.350 @ 2020-04-19
+Added features / changes in v7.119.350 @ 2020-05-19
 ===================================================
 
 1. add fan _onTime_percent for RPI dev states == 3 minute average of fan on time on RPI
