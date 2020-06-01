@@ -62,7 +62,9 @@ _GlobalConst_knownBeaconTags={
  		,"xy_2":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"08885DD0111B11E491910800200C9A66"}
 		,"xy_4":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F78000900580509585934"}
  		,"xy_42":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F780009F6240509585934"}
-		,"Rinex":		{"pos":26, "dBm":"-55", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"180AFF4B4D0270653A0E9DC0070969"}
+		,"Rinex":		{"pos":26, "dBm":"-55", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	
+						"beepCmd":'{"cmdON":["char-write-req  0x001B 0100","char-write-req 0x0024 A1A2A3A4","char-write-req 0x001E 02","char-write-req 0x0010 02"],"cmdOff":["char-write-req 0x0010 00"]}',
+						"tag":"180AFF4B4D0270653A0E9DC0070969"}
 		,"SpotyPal":	{"pos":32, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		
 						"beepCmd":'{"cmdON":["char-write-req 0x0021 363636363636","char-write-req 0x000B 00","char-write-req 0x000E 00","char-write-req 0x002B D007","char-write-req 0x0031 0100","char-write-req 0x000E 02"],"cmdOff":["char-write-req 0x000E 00"]}',
 						"tag":"53706F747950616C5465727261636F6D1A"}
@@ -80,6 +82,17 @@ _GlobalConst_knownBeaconTags={
 		,"other1":		{"pos":-1, "dBm":"-60", "battCmd":"off",												"beepCmd":"off",							"tag":""}
 		,"other2":		{"pos":-1, "dBm":"0",   "battCmd":"off",												"beepCmd":"off",							"tag":""}
 		}
+_exampleFileBeaconTag = {
+		"thisIsTheNameOfTheTag":	{
+			"pos":-1, 
+			"dBm":"-55", 
+			"battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		
+			"beepCmd":'{"cmdON":["char-write-cmd 0x0011 02"],"cmdOff":["char-write-cmd 0x0011 00"]}', 
+			"tag":"hexStringToTagTypeOfBeacon",
+			"this_is_not_used":"pos = position of tag in message,dBm=TX_level_at_1m, battCMD= gatttool command to get battery level: uuid-public/randomON-int/text-how many bits-normfactor,..."}
+		}
+
+
 _GlobalConst_emptyBeaconProps = {
 					u"note":						u"beacon",
 					u"expirationTime":				90,
@@ -2331,16 +2344,7 @@ class Plugin(indigo.PluginBase):
 
 			### knwon beacon tags section ###
 			self.knownBeaconTags		= copy.copy(_GlobalConst_knownBeaconTags)
-			exampleFile = {
-				"thisIsTheNameOfTheTag":	{
-					"pos":-1, 
-					"dBm":"-55", 
-					"battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		
-					"beepCmd":'{"cmdON":["char-write-cmd 0x0011 02"],"cmdOff":["char-write-cmd 0x0011 00"]}', 
-					"tag":"hexStringToTagTypeOfBeacon",
-					"this_is_not_used":"pos = position of tag in message,dBm=TX_level_at_1m, battCMD= gatttool command to get battery level: uuid-public/randomON-int/text-how many bits-normfactor,..."}
-				}
-			self.writeJson( exampleFile, fName=self.indigoPreferencesPluginDir + u"knownBeaconTags.one_item_example", fmtOn=True )
+			self.writeJson( _exampleFileBeaconTag, fName=self.indigoPreferencesPluginDir + u"knownBeaconTags.one_item_example", fmtOn=True )
 
 			## cleanup from older version
 			if os.path.isfile(self.indigoPreferencesPluginDir+"knownBeaconTags"):
@@ -5683,6 +5687,17 @@ class Plugin(indigo.PluginBase):
 				xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "-" + self.RPI[piU][u"piMAC"]])
 		return xList
 
+####-------------------------------------------------------------------------####
+	def filterPibeaconOne(self, valuesDict=None, filter="", typeId="", devId=0, action=""):
+		xList = []
+		for piU in _rpiBeaconList:
+			if self.RPI[piU][u"piOnOff"] == "0" or self.RPI[piU][u"ipNumberPi"] == "":
+				pass
+			else:
+				xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "-" + self.RPI[piU][u"piMAC"]])
+		xList.append([-1,"use closest" ])
+		return xList
+
 
 ####-------------------------------------------------------------------------####
 	def filterPiC(self, valuesDict=None, typeId="", devId=0, action=""):
@@ -7988,8 +8003,16 @@ class Plugin(indigo.PluginBase):
 		dev = indigo.devices[int(valuesDict["selectbeaconForBeep"])]
 		props = dev.pluginProps
 		if dev.states["status"] !="up": return valuesDict
-		piU = str(dev.states["closestRPI"])
+		if "piServerNumber" in valuesDict and valuesDict["piServerNumber"] != "-1":
+			piU= valuesDict["piServerNumber"]
+		else:
+			piU = str(dev.states["closestRPI"])
 		if piU not in _rpiBeaconList: return valuesDict
+		if "mustBeUp" in valuesDict and valuesDict["mustBeUp"] == "1":
+			mustBeUp = True
+		else:
+			mustBeUp = False
+
 
 		beacon  = dev.address
 		typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
@@ -7998,6 +8021,7 @@ class Plugin(indigo.PluginBase):
 				if self.knownBeaconTags[typeOfBeacon]["beepCmd"] != "off":
 					cmd 					= json.loads(self.knownBeaconTags[typeOfBeacon]["beepCmd"])
 					cmd["beepTime"] 		= float(valuesDict["beepTime"])
+					cmd["mustBeUp"] 		= mustBeUp
 					xx 						= {u"cmd":"beepBeacon", "piServerNumber":piU, "typeId":json.dumps({beacon:cmd})}
 					if self.decideMyLog(u"Beep"): self.indiLOG.log(20,"beep beacon requested  on pi{};  {}".format(piU, xx) )
 					self.setCurrentlyBooting(20, setBy="beep beacon")

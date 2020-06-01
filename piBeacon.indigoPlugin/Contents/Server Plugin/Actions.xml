@@ -3383,8 +3383,14 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
                     <Option value= "35" >35 sec</Option>
                     <Option value= "40" >40 sec</Option>
                     <Option value= "45" >45 sec</Option>
-                 <Label>Beep for xx secs:</Label>
+	            </List>
+                <Label>Beep for xx secs:</Label>
+             </Field>
+             <Field id="mustBeUp"   type="menu" defaultValue="1" tooltip="" >
+              <List>
+                    <Option value= "1">ON</Option>
               </List>
+               <Label>beacon must be UP:</Label>
              </Field>
 
         </ConfigUI>

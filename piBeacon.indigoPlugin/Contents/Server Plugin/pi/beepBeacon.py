@@ -72,16 +72,18 @@ def beep(devices, beaconsOnline):
 		for mac in devices:
 			U.logger.log(30,"mac: {}".format(mac) )
 			if len(mac) < 10: continue
-			if  mac not in beaconsOnline:
+			params		= devices[mac]
+			if "mustBeUp" in params and params["mustBeUp"]: force = False
+			else:											force = True
+			if  not force and mac not in beaconsOnline:
 				U.logger.log(20,"mac: {}; skipping, not online or not in range".format(mac) )
 				continue
 			try:
-				params		= devices[mac]
 				onCMD		= params["cmdON"]
 				offCMD		= params["cmdOff"]
 				beepTime	= float(params["beepTime"])
 				U.logger.log(20,"{}:   onCMD:{};  offCMD:{};  beepTime:{} ".format(mac, onCMD, offCMD, beepTime) )
-				for ii in range(3):
+				for ii in range(4):
 					try:
 						ret = expCommands.sendline("connect {}".format(mac))
 						U.logger.log(10,"expect connect {} ret:{}".format(mac, ret))
@@ -89,9 +91,9 @@ def beep(devices, beaconsOnline):
 						U.logger.log(10,"expect Connection successful >  ret:{}".format(ret))
 						break
 					except Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-						U.logger.log(30, u" try again")
-						time.sleep(2)
+						U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(20, u"connect error, try again")
+						time.sleep(3)
 
 
 				startbeep = time.time()
@@ -100,19 +102,19 @@ def beep(devices, beaconsOnline):
 					if time.time() - lastBeep > 10:
 						for cc in onCMD:
 							ret = expCommands.sendline( cc )
-							U.logger.log(20,"sendline  cmd{}  ret:{}".format( cc, ret))
+							U.logger.log(10,"sendline  cmd{}  ret:{}".format( cc, ret))
 							lastBeep = time.time()
 							ret = expCommands.expect(">", timeout=5)
-							U.logger.log(20,"expect >  ret:{}".format(ret))
+							U.logger.log(10,"expect >  ret:{}".format(ret))
 					if time.time() - startbeep > beepTime: break
 					time.sleep(1)
 				for cc in offCMD:
 					ret = expCommands.sendline(cc )
-					U.logger.log(20,"sendline  cmd{}  ret:{}".format( cc, ret))
+					U.logger.log(10,"sendline  cmd{}  ret:{}".format( cc, ret))
 					ret = expCommands.expect(">", timeout=5)
-					U.logger.log(20,"expect >  ret:{}".format(ret))
+					U.logger.log(10,"expect >  ret:{}".format(ret))
 				ret = expCommands.sendline("disconnect" )
-				U.logger.log(20,"sendline disconnect  ret:{}".format(ret))
+				U.logger.log(10,"sendline disconnect  ret:{}".format(ret))
 				ret = expCommands.expect(">", timeout=5)
 				U.logger.log(10,"expect >  ret:{}".format(ret))
 			except Exception, e:

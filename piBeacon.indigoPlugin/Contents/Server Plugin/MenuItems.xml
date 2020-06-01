@@ -971,7 +971,7 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
     </MenuItem>
 
 
-  <MenuItem id="d20o"> <Name>-------------manage/set values on output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
+  <MenuItem id="d20o"> <Name>-------------set values on output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
 
     <MenuItem id="sendBeepToBeacon">
         <Name>Send a beep command to ibeacons</Name>
@@ -1007,6 +1007,10 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
                     <Option value= "45" >45 sec</Option>
                  <Label>Beep for xx secs:</Label>
               </List>
+             </Field>
+             <Field id="piServerNumber"   type="menu" defaultValue="-1" tooltip="select pi- server number and then click on confirm " >
+               <Label>select rPi to use for beep or choose closest</Label>
+                <List class="self" filter="" method="filterPibeaconOne" dynamicReload="false"/>
              </Field>
 
              <Field  id="execAll" type="button"	>
@@ -1133,8 +1137,6 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 
         </ConfigUI>
     </MenuItem>         
-
-  <MenuItem id="d20r"> <Name>-------------manage output/display devices  ----------</Name><CallbackMethod>inpDummy</CallbackMethod></MenuItem>
 
     <MenuItem id="setMCP4725">
         <Name>Set output voltage of DAC-MCP4725 to.. </Name>
