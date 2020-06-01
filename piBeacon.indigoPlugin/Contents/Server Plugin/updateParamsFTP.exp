@@ -10,7 +10,7 @@ set timeout [lindex $argv 7 ]
 
 set timeout $timeout
 
-spawn sftp -o ConnectTimeout=$timeout $userID@$ipNumber
+spawn sftp -o ConnectTimeout=20 $userID@$ipNumber
  
 if {$authKeyOrPassword == "assword"} {  
     expect {

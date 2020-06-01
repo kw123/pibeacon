@@ -58,12 +58,13 @@ _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"la
 _GlobalConst_knownBeaconTags={
 		 "noda_Aiko":	{"pos":16, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
 		,"noda_iHere": 	{"pos":16, "dBm":"-50", "battCmd":"2A19-public-batteryLevel-int-bits=63-norm=36",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
-		,"radius":		{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
  		,"xy_1":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"07775DD0111B11E491910800200C9A66"}
  		,"xy_2":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"08885DD0111B11E491910800200C9A66"}
 		,"xy_4":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F78000900580509585934"}
  		,"xy_42":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F780009F6240509585934"}
-		,"SpotyPal":	{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"53706F747950616C5465727261636F6D1A"}
+		,"Rinex":		{"pos":26, "dBm":"-55", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"180AFF4B4D0270653A0E9DC0070969"}
+		,"SpotyPal":	{"pos":32, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":"off",							"tag":"53706F747950616C5465727261636F6D1A"}
+		,"radius":		{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
 		,"SocialRetail":{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"E2C56DB5DFFB48D2B060D0F5a71096E0"} # need to fix pos
 		,"MiniBeacon":	{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"FDA50693A4E24FB1AFCFC6EB07647825"}# need to fix pos
 		,"node_js":		{"pos":30, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"01050D095075636B2E6A73"} ##need to fix pos
@@ -2335,11 +2336,11 @@ class Plugin(indigo.PluginBase):
 
 
 			self.knownBeaconTags		= copy.copy(_GlobalConst_knownBeaconTags)
-			knownBeaconTagsSupplicant 	 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant")
+			knownBeaconTagsSupplicant 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant")
 			for tag in knownBeaconTagsSupplicant:
-				self.knownBeaconTags[tag] 	 	= copy.copy(knownBeaconTagsSupplicant[tag])
+				self.knownBeaconTags[tag] = copy.copy(knownBeaconTagsSupplicant[tag])
 
-			self.beaconsUUIDtoName ={}
+			self.beaconsUUIDtoName = {}
 			for beaconDeviceType in self.knownBeaconTags:
 				self.knownBeaconTags[beaconDeviceType]["tag"] = self.knownBeaconTags[beaconDeviceType]["tag"].upper()
 				self.beaconsUUIDtoName[self.knownBeaconTags[beaconDeviceType]["tag"]] = beaconDeviceType
@@ -2348,7 +2349,7 @@ class Plugin(indigo.PluginBase):
 
 			self.startUpdateRPIqueues("start")
 
-			self.checkDEvtoRPIlinks()
+			self.checkDevToRPIlinks()
 
 			self.indiLOG.log(10, u" ..   config read from files")
 			self.fixConfig(checkOnly = ["all","rpi","beacon","CARS","sensors","output","force"], fromPGM="readconfig") 
@@ -2359,7 +2360,7 @@ class Plugin(indigo.PluginBase):
 			exit(1)
 
 ####-------------------------------------------------------------------------####
-	def checkDEvtoRPIlinks(self): # called from read config for various input files
+	def checkDevToRPIlinks(self): # called from read config for various input files
 		try:
 
 			for dev in indigo.devices.iter("props.isSensorDevice"):
@@ -3200,6 +3201,10 @@ class Plugin(indigo.PluginBase):
 				if dev.deviceTypeId == "rPI" :
 					props[u"typeOfBeacon"] = "rPI"
 					updateProps = True
+
+			if props["typeOfBeacon"] in self.knownBeaconTags and int(props[u"beaconTxPower"]) == 999:
+				props["beaconTxPower"] = self.knownBeaconTags[props["typeOfBeacon"]]["dBm"]
+				updateProps = True
 
 			if u"updateSignalValuesSeconds" not in props:
 				updateProps = True

@@ -3354,14 +3354,18 @@ Then there are actions in each set (steps/sleep)
         <Name>Send a beep command to ibeacons</Name>
         <CallbackMethod>sendBeepCommandCALLBACKaction</CallbackMethod>
         <ConfigUI>
+
 			<Field id="infoLabelINPUT0" type="label" >
 				<Label>selecet the beacon and the length of time for the beacon to receive the beep command
-the beacon must be able to digest the command, only qualified beacons are shown in the select list and if state == up and has to be enabled in beacon device edit</Label> 
+the beacon must be able to digest the command, only qualified beacons are shown in the select list, and if state == up, and has to be enabled in beacon device edit
+During the time of beeping the regular ibeacon process is suspended. Very long beep times can lead to expiriation of beacons</Label> 
 			</Field>
+
              <Field id="selectbeaconForBeep"   type="menu" defaultValue="-1"  >
                <Label>select the beacon</Label>
                 <List class="self" filter="" method="filterBeaconsThatCanBeep" dynamicReload="false"/>
              </Field>
+
              <Field id="beepTime"   type="menu" defaultValue="-1" tooltip="" >
               <List>
                     <Option value= "-1">off</Option>
@@ -3373,9 +3377,16 @@ the beacon must be able to digest the command, only qualified beacons are shown 
                     <Option value= "7" >7 sec</Option>
                     <Option value= "10" >10 sec</Option>
                     <Option value= "15" >15 sec</Option>
-                </List>
-                <Label>Beep for xx secs:</Label>
+                    <Option value= "20" >20 sec</Option>
+                    <Option value= "25" >25 sec</Option>
+                    <Option value= "30" >30 sec</Option>
+                    <Option value= "35" >35 sec</Option>
+                    <Option value= "40" >40 sec</Option>
+                    <Option value= "45" >45 sec</Option>
+                 <Label>Beep for xx secs:</Label>
+              </List>
              </Field>
+
         </ConfigUI>
    </Action>
 

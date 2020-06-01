@@ -1,3 +1,13 @@
+Added features / changes in v7.120.362 @ 2020-04-29
+===================================================
+
+1. added some more beacon definitions ie spotyPal and Rinex
+2. take dBm value from knownBeaconTags if txPower == 999 == not set
+   can still be overwritten in device edit
+3. made beacontype read only: it is either otehr of a value from known beacon tags
+
+
+
 Added features / changes in v7.120.361 @ 2020-04-29
 ===================================================
 
