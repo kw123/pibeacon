@@ -60,7 +60,8 @@ try:
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	tStart= time.time()
 
-	distanceUnits			= float(plotData["distanceUnits"])
+	distanceUnits			= max(0.0254, float(plotData["distanceUnits"]))
+
 	Yscale					= float(plotData["Yscale"])
 	Xscale					= float(plotData["Xscale"])
 
@@ -219,9 +220,10 @@ try:
 				pos[1] = max(0., min(pos[1], Yscale ))
 
 				# show the marker
-				try:	 distanceToRPI = this["distanceToRPI"] *0.5 / distanceUnits
-				except:  distanceToRPI  = 0.5 / distanceUnits
-				distanceToRPI = max( min(distanceToRPI, 3./distanceUnits), 0.2/distanceUnits) 
+				try:	 distanceToRPI = this["distanceToRPI"] * 0.5
+				except:  distanceToRPI  = 1 / distanceUnits
+													     # 5 meter= 14"         0.5 m = 2"
+				distanceToRPI = max( min( distanceToRPI, 4./distanceUnits ), 0.25/distanceUnits) 
 			
 				symbol = this["symbolType"].lower()
 				edgecolor = this["symbolColor"]
@@ -232,18 +234,23 @@ try:
 					if	  symbol == "dot":
 						distanceToRPI  = 0.1 / distanceUnits
 						Dtype = "circle"
+	
 					elif	symbol =="smallcircle":
 						Dtype = "circle"
 						distanceToRPI  = 0.3 / distanceUnits
+
 					elif	symbol =="largecircle":
 						Dtype = "circle"
-						distanceToRPI  = max(1, math.sqrt(distanceToRPI) / distanceUnits )
-					elif	symbol =="square":
+						distanceToRPI  = max(1, math.sqrt(distanceToRPI*distanceUnits)/distanceUnits)
+
+					elif	symbol =="square": # mostly for RPI
 						Dtype = "square"
-						distanceToRPI  = 0.6 / distanceUnits
+						distanceToRPI  = 0.5 / distanceUnits
+
 					elif	symbol =="square45":
 						Dtype = "square45"
-						distanceToRPI  = 0.6 / distanceUnits
+						distanceToRPI  = 0.5 / distanceUnits
+
 					else:
 						Dtype =""
 			

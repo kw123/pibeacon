@@ -56,14 +56,16 @@ _GlobalConst_emptyBeacon = {u"indigoId": 0, u"ignore": 0, u"status": u"up", u"la
 			   u"receivedSignals":		[{"rssi":-999, "lastSignal": 0, "distance":99999} for kk in range(_GlobalConst_numberOfiBeaconRPI)]} #  for 10 RPI
 
 _GlobalConst_knownBeaconTags={
-		 "noda_Aiko":	{"pos":16, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
-		,"noda_iHere": 	{"pos":16, "dBm":"-50", "battCmd":"2A19-public-batteryLevel-int-bits=63-norm=36",		"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
+		 "noda_Aiko":	{"pos":16, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":'{"cmdON":["char-write-cmd  0x0011  02"],"cmdOff":["char-write-cmd 0x0011 00"]}', "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
+		,"noda_iHere": 	{"pos":16, "dBm":"-50", "battCmd":"2A19-public-batteryLevel-int-bits=63-norm=36",		"beepCmd":'{"cmdON":["char-write-cmd  0x0011  02"],"cmdOff":["char-write-cmd 0x0011 00"]}', "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
  		,"xy_1":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"07775DD0111B11E491910800200C9A66"}
  		,"xy_2":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"08885DD0111B11E491910800200C9A66"}
 		,"xy_4":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F78000900580509585934"}
  		,"xy_42":		{"pos":32, "dBm":"-59", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"04000000005F780009F6240509585934"}
 		,"Rinex":		{"pos":26, "dBm":"-55", "battCmd":"2A19-randomON-batteryLevel-int-bits=127-norm=100",	"beepCmd":"off",							"tag":"180AFF4B4D0270653A0E9DC0070969"}
-		,"SpotyPal":	{"pos":32, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		"beepCmd":"off",							"tag":"53706F747950616C5465727261636F6D1A"}
+		,"SpotyPal":	{"pos":32, "dBm":"-55", "battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		
+						"beepCmd":'{"cmdON":["char-write-req 0x0021 363636363636","char-write-req 0x000B 00","char-write-req 0x000E 00","char-write-req 0x002B D007","char-write-req 0x0031 0100","char-write-req 0x000E 02"],"cmdOff":["char-write-req 0x000E 00"]}',
+						"tag":"53706F747950616C5465727261636F6D1A"}
 		,"radius":		{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
 		,"SocialRetail":{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"E2C56DB5DFFB48D2B060D0F5a71096E0"} # need to fix pos
 		,"MiniBeacon":	{"pos":32, "dBm":"-59", "battCmd":"off",												"beepCmd":"off",							"tag":"FDA50693A4E24FB1AFCFC6EB07647825"}# need to fix pos
@@ -988,7 +990,6 @@ class Plugin(indigo.PluginBase):
 			self.selectedPiServer			= 0
 			self.statusChanged				= 0
 
-			self.maxParseSec				= "1.0"
 			self.newIgnoreMAC				= 0
 			self.lastUpdateSend				= time.time()
 			self.rejectedByPi				= {}
@@ -1064,38 +1065,32 @@ class Plugin(indigo.PluginBase):
 				self.pressureUnits			= u"hPascal"
 			if 	self.pressureUnits			== u"mbar": self.pressureUnits = u"mBar"
  
+			self.saveValuesDictChanged	= False
 			try:
-				self.saveValuesDictChanged	= False
 				self.saveValuesDict			= self.pluginPrefs.get(u"saveValuesDict", indigo.Dict())
 			except:
 				self.saveValuesDict			= indigo.Dict()
 
 			try:
-				self.distanceUnits			= float(self.pluginPrefs.get(u"distanceUnits", 1.))
+				self.distanceUnits			= max(0.0254, float(self.pluginPrefs.get(u"distanceUnits", 1.)))
 			except:
 				self.distanceUnits			= 1.0
 			try:
-				self.speedUnits				= float(self.pluginPrefs.get(u"speedUnits", 1.))
+				self.speedUnits				= max(0.01, float(self.pluginPrefs.get(u"speedUnits", 1.)))
 			except:
 				self.speedUnits				= 1.0
 
 			try:
-				self.lightningTimeWindow			 = float(self.pluginPrefs.get(u"lightningTimeWindow", 10.))
+				self.lightningTimeWindow	 = float(self.pluginPrefs.get(u"lightningTimeWindow", 10.))
 			except:
-				self.lightningTimeWindow			 = 10.0
+				self.lightningTimeWindow	 = 10.0
 
 
 			try:
-				self.lightningNumerOfSensors			 = int(self.pluginPrefs.get(u"lightningNumerOfSensors", 1))
+				self.lightningNumerOfSensors = int(self.pluginPrefs.get(u"lightningNumerOfSensors", 1))
 			except:
-				self.lightningNumerOfSensors			 = 1
+				self.lightningNumerOfSensors = 1
 
-
-
-			try:
-				self.maxParseSec			= self.pluginPrefs.get(u"maxParseSec", u"1.0")
-			except:
-				self.maxParseSec			= 1.0
 			try:
 				self.txPowerCutoffDefault	= int(self.pluginPrefs.get(u"txPowerCutoffDefault", 999.))
 			except:
@@ -1111,10 +1106,10 @@ class Plugin(indigo.PluginBase):
 
 			try:
 				self.acceptNewiBeacons		= int(self.pluginPrefs.get(u"acceptNewiBeacons", 999))
-				if self.acceptNewiBeacons  ==u"1": 
+				if self.acceptNewiBeacons  == u"1": 
 											self.pluginPrefs[u"acceptNewiBeacons"] = -999
 											self.acceptNewiBeacons  = -999
-				if self.acceptNewiBeacons  ==u"0": 
+				if self.acceptNewiBeacons  == u"0": 
 											self.pluginPrefs[u"acceptNewiBeacons"] = 999
 											self.acceptNewiBeacons  = 999
 			except:
@@ -2341,7 +2336,7 @@ class Plugin(indigo.PluginBase):
 					"pos":-1, 
 					"dBm":"-55", 
 					"battCmd":"2A19-public-batteryLevel-int-bits=127-norm=100",		
-					"beepCmd":'{"cmdON":"char-write-cmd  0x0011  02","cmdOff":"char-write-cmd 0x0011 00"}', 
+					"beepCmd":'{"cmdON":["char-write-cmd 0x0011 02"],"cmdOff":["char-write-cmd 0x0011 00"]}', 
 					"tag":"hexStringToTagTypeOfBeacon",
 					"this_is_not_used":"pos = position of tag in message,dBm=TX_level_at_1m, battCMD= gatttool command to get battery level: uuid-public/randomON-int/text-how many bits-normfactor,..."}
 				}
@@ -9437,9 +9432,9 @@ class Plugin(indigo.PluginBase):
 			try: self.txPowerCutoffDefault		= int(valuesDict[u"txPowerCutoffDefault"])
 			except: self.txPowerCutoffDefault	= 1.
 
-			try: self.speedUnits				= float(valuesDict[u"speedUnits"])
+			try: self.speedUnits				= max(0.01, float(valuesDict[u"speedUnits"]))
 			except: self.speedUnits				= 1.
-			try: self.distanceUnits				= float(valuesDict[u"distanceUnits"])
+			try: self.distanceUnits				=  max(0.0254, float(valuesDict[u"distanceUnits"]))
 			except: self.distanceUnits			= 1.
 			try: self.lightningTimeWindow		= float(valuesDict[u"lightningTimeWindow"])
 			except: self.lightningTimeWindow	= 10.
@@ -11888,7 +11883,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					if dist >= 99990. and txPower < -20:							 continue
 					if dist == "" or (dist >= 99990. and signal > -50):				 continue # fake signals with bad TXpower 
-					if dist > 50./max(self.distanceUnits,0.3) and signal > -50:		 continue # fake signals with bad TXpower 
+					if dist > 50./max(self.distanceUnits, 0.3) and signal > -50:	 continue # fake signals with bad TXpower 
 					if time.time()- piTimeUse  < expirationTime:  
 						status = "up"
 					elif (time.time()- piTimeUse < self.expTimeMultiplier*expirationTime)	and status != "up": 

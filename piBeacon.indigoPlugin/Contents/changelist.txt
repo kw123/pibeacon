@@ -1,4 +1,4 @@
-Added features / changes in v7.120.364 @ 2020-06-01
+Added features / changes in v7.120.366 @ 2020-06-01
 ===================================================
 
 1. added some more beacon definitions ie spotyPal and Rinex
@@ -10,6 +10,8 @@ Added features / changes in v7.120.364 @ 2020-06-01
 6. fixed distance unit if not meter config read 
 7. repeat beep msg to beacon if beep time > 10 secs
 8. add connect control in pexpect, try 3 times to reconnect if not successful
+9. corrected beacon plot positions circle size 
+10. added spotypal beep function
   
 
 Added features / changes in v7.120.362 @ 2020-05-31

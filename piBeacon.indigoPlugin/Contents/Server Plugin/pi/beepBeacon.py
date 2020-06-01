@@ -98,19 +98,21 @@ def beep(devices, beaconsOnline):
 				lastBeep = 0
 				for ii in range(50):
 					if time.time() - lastBeep > 10:
-						ret = expCommands.sendline( onCMD )
-						U.logger.log(10,"sendline  cmd{}  ret:{}".format( onCMD, ret))
-						lastBeep = time.time()
-						ret = expCommands.expect(">", timeout=5)
-						U.logger.log(10,"expect >  ret:{}".format(ret))
+						for cc in onCMD:
+							ret = expCommands.sendline( cc )
+							U.logger.log(20,"sendline  cmd{}  ret:{}".format( cc, ret))
+							lastBeep = time.time()
+							ret = expCommands.expect(">", timeout=5)
+							U.logger.log(20,"expect >  ret:{}".format(ret))
 					if time.time() - startbeep > beepTime: break
 					time.sleep(1)
-				ret = expCommands.sendline(offCMD )
-				U.logger.log(10,"sendline  cmd{}  ret:{}".format( offCMD, ret))
-				ret = expCommands.expect(">", timeout=5)
-				U.logger.log(10,"expect >  ret:{}".format(ret))
+				for cc in offCMD:
+					ret = expCommands.sendline(cc )
+					U.logger.log(20,"sendline  cmd{}  ret:{}".format( cc, ret))
+					ret = expCommands.expect(">", timeout=5)
+					U.logger.log(20,"expect >  ret:{}".format(ret))
 				ret = expCommands.sendline("disconnect" )
-				U.logger.log(10,"sendline disconnect  ret:{}".format(ret))
+				U.logger.log(20,"sendline disconnect  ret:{}".format(ret))
 				ret = expCommands.expect(">", timeout=5)
 				U.logger.log(10,"expect >  ret:{}".format(ret))
 			except Exception, e:
