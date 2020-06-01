@@ -2348,7 +2348,7 @@ use eg to track someone moving around - going from one room to the next" >
 			</Field>
 
 			<Field id="label3"               type="label"  > 
-				<Label>== Set type of beacon:</Label>
+				<Label>== Type of beacon:</Label>
 			</Field>
 			<Field id="typeOfBeacon" type="textfield"     defaultValue="other" readonly="Yes"> 
 				<Label>....       Beacon Type</Label>
