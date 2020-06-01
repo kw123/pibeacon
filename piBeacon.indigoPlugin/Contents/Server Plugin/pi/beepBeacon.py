@@ -80,16 +80,31 @@ def beep(devices, beaconsOnline):
 				onCMD		= params["cmdON"]
 				offCMD		= params["cmdOff"]
 				beepTime	= float(params["beepTime"])
-				U.logger.log(10,"{}:   onCMD:{};  offCMD:{};  beepTime:{} ".format(mac, onCMD, offCMD, beepTime) )
-				ret = expCommands.sendline("connect {}".format(mac))
-				U.logger.log(10,"expect connect {} ret:{}".format(mac, ret))
-				ret = expCommands.expect("Connection successful", timeout=5)
-				U.logger.log(10,"expect Connection successful >  ret:{}".format(ret))
-				ret = expCommands.sendline( onCMD )
-				U.logger.log(10,"sendline  cmd{}  ret:{}".format( onCMD, ret))
-				ret = expCommands.expect(">", timeout=5)
-				U.logger.log(10,"expect >  ret:{}".format(ret))
-				time.sleep(beepTime)
+				U.logger.log(20,"{}:   onCMD:{};  offCMD:{};  beepTime:{} ".format(mac, onCMD, offCMD, beepTime) )
+				for ii in range(3):
+					try:
+						ret = expCommands.sendline("connect {}".format(mac))
+						U.logger.log(10,"expect connect {} ret:{}".format(mac, ret))
+						ret = expCommands.expect("Connection successful", timeout=5)
+						U.logger.log(10,"expect Connection successful >  ret:{}".format(ret))
+						break
+					except Exception, e:
+						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u" try again")
+						time.sleep(2)
+
+
+				startbeep = time.time()
+				lastBeep = 0
+				for ii in range(50):
+					if time.time() - lastBeep > 10:
+						ret = expCommands.sendline( onCMD )
+						U.logger.log(10,"sendline  cmd{}  ret:{}".format( onCMD, ret))
+						lastBeep = time.time()
+						ret = expCommands.expect(">", timeout=5)
+						U.logger.log(10,"expect >  ret:{}".format(ret))
+					if time.time() - startbeep > beepTime: break
+					time.sleep(1)
 				ret = expCommands.sendline(offCMD )
 				U.logger.log(10,"sendline  cmd{}  ret:{}".format( offCMD, ret))
 				ret = expCommands.expect(">", timeout=5)
