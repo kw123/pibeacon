@@ -83,6 +83,19 @@ try:
 	try: showTimeStamp		= plotData["showTimeStamp"]
 	except: showTimeStamp	= True
 
+	SymbolSize  = 1.0
+	try: SymbolSize			= float(plotData["SymbolSize"])
+	except: pass
+
+	LargeCircleSize  = 1.0
+	try: LargeCircleSize	= float(plotData["LargeCircleSize"])
+	except: pass
+
+	textPosLargeCircle  	= "atCircle"
+	try: textPosLargeCircle	= plotData["textPosLargeCircle"]
+	except: pass
+
+
 
 	dotsY					= int(plotData["dotsY"])
 	dotsX					= dotsY *( Xscale/Yscale) 
@@ -100,6 +113,9 @@ try:
 	logger.log(20,"imageYscale        :{}".format(Yscale) )
 	logger.log(20,"imageXscale        :{}".format(Xscale) )
 	logger.log(20,"imageDotsY         :{}".format(dotsY) )
+	logger.log(20,"SymbolSize         :{}".format(SymbolSize) )
+	logger.log(20,"textPosLargeCircle :{}".format(textPosLargeCircle) )
+	logger.log(20,"LargeCircleSize    :{}".format(LargeCircleSize) )
 	logger.log(20,"captionTextSize    :{}".format(captionTextSize) )
 	logger.log(20,"labelTextSize      :{}".format(labelTextSize) )
 	logger.log(20,"titleTextSize      :{}".format(titleTextSize) )
@@ -220,36 +236,38 @@ try:
 				pos[1] = max(0., min(pos[1], Yscale ))
 
 				# show the marker
-				try:	 distanceToRPI = this["distanceToRPI"] * 0.5
-				except:  distanceToRPI  = 1 / distanceUnits
-													     # 5 meter= 14"         0.5 m = 2"
-				distanceToRPI = max( min( distanceToRPI, 4./distanceUnits ), 0.25/distanceUnits) 
+				try:	 distanceToRPI = this["distanceToRPI"] * 0.25
+				except:  distanceToRPI  = 1. / distanceUnits
+													     #1.7 meter= 6"         0.25 m = 1'
+				distanceToRPI = max( min( distanceToRPI, 1.7/distanceUnits ), 0.25/distanceUnits) 
 			
 				symbol = this["symbolType"].lower()
 				edgecolor = this["symbolColor"]
 				if len(edgecolor)  != 7: edgecolor ="#0F0FF0"
 				color = this["symbolColor"]
 				if len(color)  != 7: color ="#0FF00F"
+				LargeCircle = False
 				if symbol !="text":
 					if	  symbol == "dot":
-						distanceToRPI  = 0.1 / distanceUnits
+						distanceToRPI  = 0.1 / distanceUnits * SymbolSize
 						Dtype = "circle"
 	
 					elif	symbol =="smallcircle":
 						Dtype = "circle"
-						distanceToRPI  = 0.3 / distanceUnits
+						distanceToRPI  = 0.4 / distanceUnits * SymbolSize
 
 					elif	symbol =="largecircle":
+						LargeCircle = True
 						Dtype = "circle"
-						distanceToRPI  = max(1, math.sqrt(distanceToRPI*distanceUnits)/distanceUnits)
+						distanceToRPI  = max(1, math.sqrt(distanceToRPI*distanceUnits)/distanceUnits) * LargeCircleSize
 
 					elif	symbol =="square": # mostly for RPI
 						Dtype = "square"
-						distanceToRPI  = 0.5 / distanceUnits
+						distanceToRPI  = 0.35 / distanceUnits * SymbolSize
 
 					elif	symbol =="square45":
 						Dtype = "square45"
-						distanceToRPI  = 0.5 / distanceUnits
+						distanceToRPI  = 0.5 / distanceUnits * SymbolSize
 
 					else:
 						Dtype =""
@@ -279,11 +297,16 @@ try:
 			
 				# show the label next to the marker
 				if this["nickName"] !="":
+					dx = textDeltaXLabel*1.5
+					if LargeCircle  == "atRadius" and textPosLargeCircle:
+						dx =  distanceToRPI + textDeltaXLabel*.3 
 					if symbol == "text": 
 						ax.text(pos[0] ,pos[1] ,this["nickName"], color=this["textColor"] ,size="x-small")
 						logger.log(20,"{}  {} color:{}   --text only--   status:{}".format(this["name"].ljust(26), this["nickName"].ljust(6), color.ljust(7), this["status"]) )
 					else:
-						ax.text(pos[0] + textDeltaXLabel*1.5 ,pos[1]- textDeltaYLabel ,this["nickName"], color=this["textColor"] ,size="x-small")
+						if pos[0] + dx > Xscale:
+							dx = - textDeltaXLabel*2
+						ax.text(pos[0] + dx ,pos[1]- textDeltaYLabel ,this["nickName"], color=this["textColor"] ,size="x-small")
 
 		except  Exception, e:
 			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )

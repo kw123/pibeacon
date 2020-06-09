@@ -2348,10 +2348,22 @@ use eg to track someone moving around - going from one room to the next" >
 			</Field>
 
 			<Field id="label3"               type="label"  > 
-				<Label>== Type of beacon:</Label>
+				<Label>== Type of beacon, make sure you dont overwrite w the wrong type:</Label>
 			</Field>
-			<Field id="typeOfBeacon" type="textfield"     defaultValue="other" readonly="Yes"> 
+			<Field id="typeOfBeacon" type="menu"     defaultValue="other" readonly="Yes"> 
+                <List class="self" filter="" method="filterBeaconTagswOther" dynamicReload="false" />
 				<Label>....       Beacon Type</Label>
+			</Field>
+			<Field id="useOnlyPrioTagMessageTypes" type="menu"     defaultValue="0" readonly="Yes"> 
+				<Label>....       use only beacon specific message types</Label>
+				<List>
+					<Option value="0" >no, use all messages, eg general broadcasts (might have differnt TX) </Option>
+					<Option value="1" >yes, use only messages that are device specific  </Option>
+				</List>
+				</Field>
+ 			<Field id="useOnlyPrioTagMessageTypesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Some beacons send different message types at different TX power levels. That will cerate a problem when calculating distance.
+Setting to only accept ONE device specific message Type will avoid that.</Label>
 			</Field>
 			<Field id="label4"               type="label"  > 
 				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
@@ -2419,7 +2431,7 @@ There are also beacons that send Battery info as part of std msg</Label>
 				</List>
 				<Label>.... TX power level info at UUID=xx.. not implemented yet:</Label>
 			</Field>
-
+<!--
 			<Field id="beaconBeepUUID" type="menu"     defaultValue="off"  >
 				<List>
 					<Option value="gatttool" >enable beep</Option>
@@ -2427,7 +2439,7 @@ There are also beacons that send Battery info as part of std msg</Label>
 				</List>
 				<Label>Enable beep actions for beacon, must be configured in knownBeaconTags file:</Label>
 			</Field>
-
+-->
 
 			<Field id="label48"               type="label"  > 
 				<Label>== ignore beacons  ...  </Label>
@@ -2922,6 +2934,13 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<ValueType>String</ValueType>
 				<TriggerLabel>updateReason</TriggerLabel>
 				<ControlPageLabel>updateReason</ControlPageLabel>
+			</State>
+
+
+			<State id="isBeepable">
+				<ValueType>String</ValueType>
+				<TriggerLabel>isBeepable</TriggerLabel>
+				<ControlPageLabel>isBeepable</ControlPageLabel>
 			</State>
 
 

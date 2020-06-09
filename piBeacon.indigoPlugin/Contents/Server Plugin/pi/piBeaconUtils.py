@@ -1738,7 +1738,7 @@ def selectHCI(HCIs, useDev, default):
 			return useHCI,  myBLEmac, devId
 
 		elif len(HCIs) == 2:
-			if useDev =="USB":
+			if useDev == "USB":
 				for hh in ["hci0","hci1"]:
 					if HCIs[hh]["bus"] =="USB":
 						useHCI	= hh
@@ -1746,7 +1746,7 @@ def selectHCI(HCIs, useDev, default):
 						devId	= HCIs[hh]["numb"]
 						return useHCI,  myBLEmac, devId
 
-			elif useDev =="UART":
+			elif useDev == "UART":
 				for hh in ["hci0","hci1"]:
 					if HCIs[hh]["bus"] =="UART":
 						useHCI	= hh

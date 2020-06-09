@@ -369,7 +369,7 @@ def handleHistory():
 
 def readParams(init):
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,UUIDtoIphoneReverse,  beacon_ExistingHistory, deleteHistoryAfterSeconds,ignoreMAC,signalDelta,UUIDtoIphone,offsetUUID,fastDown,maxParseSec,batteryLevelPosition,doNotIgnore
-	global acceptNewiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalCutoff, acceptJunkBeacons,knownBeaconTags
+	global acceptNewiBeacons, acceptNewTagiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalCutoff, acceptJunkBeacons,knownBeaconTags
 	global oldRaw,	lastRead
 	if init:
 		collectMsgs		= 10  # in parse loop collect how many messages max	  ========	all max are an "OR" : if one hits it stops
@@ -398,11 +398,12 @@ def readParams(init):
 			sys.exit(3)
 		U.getGlobalParams(inp)
 
-		if "rebootSeconds"		in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
-		if "sendAfterSeconds"	in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
-		if "acceptNewiBeacons"	in inp:	 acceptNewiBeacons=	  int(inp["acceptNewiBeacons"])
-		if "sendFullUUID"		in inp:	 sendFullUUID=			 (inp["sendFullUUID"]=="1" )
-		if "acceptJunkBeacons"	in inp:	 acceptJunkBeacons=		 (inp["acceptJunkBeacons"]=="1" )
+		if "rebootSeconds"			in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
+		if "sendAfterSeconds"		in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
+		if "acceptNewiBeacons"		in inp:	 acceptNewiBeacons=	  int(inp["acceptNewiBeacons"])
+		if "acceptNewTagiBeacons"	in inp:	 acceptNewTagiBeacons=	 (inp["acceptNewTagiBeacons"])
+		if "sendFullUUID"			in inp:	 sendFullUUID=			 (inp["sendFullUUID"]=="1" )
+		if "acceptJunkBeacons"		in inp:	 acceptJunkBeacons=		 (inp["acceptJunkBeacons"]=="1" )
 
 
 		if "deleteHistoryAfterSeconds"	in inp:
@@ -451,36 +452,20 @@ def readParams(init):
 
 
 	try:
-		f=open("{}beacon_parameters".format(G.homeDir),"r")
-		InParams=json.loads(f.read().strip("\n"))
+		f = open("{}beacon_parameters".format(G.homeDir),"r")
+		InParams = json.loads(f.read().strip("\n"))
 		f.close()
 	except:
-		InParams={}
+		InParams = {}
 
 	try:
-		f=open("{}knownBeaconTags".format(G.homeDir),"r")
-		knownBeaconTags=json.loads(f.read().strip("\n"))
+		f = open("{}knownBeaconTags".format(G.homeDir),"r")
+		knownBeaconTags = json.loads(f.read().strip("\n"))
 		f.close()
 	except:		
-		knownBeaconTags={
-		 "noda_iHere":	{"pos":16, "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A"}
-		,"noda_Aiko": 	{"pos":16, "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A"}
-		,"radius":		{"pos":32, "tag":"2F234454CF6D4A0FADF2F4911BA9FFA6"}
- 		,"xy_1":		{"pos":32, "tag":"07775DD0111B11E491910800200C9A66"}
- 		,"xy_2":		{"pos":32, "tag":"08885DD0111B11E491910800200C9A66"}
-		,"xy_4":		{"pos":32, "tag":"04000000005F78000900580509585934"}
- 		,"xy_42":		{"pos":32, "tag":"04000000005F780009F6240509585934"}
-		,"SpotyPal":	{"pos":32, "tag":"53706F747950616C5465727261636F6D1A"}
-		,"SocialRetail":{"pos":32, "tag":"E2C56DB5DFFB48D2B060D0F5a71096E0"} # need to fix pos
-		,"MiniBeacon":	{"pos":32, "tag":"FDA50693A4E24FB1AFCFC6EB07647825"}# need to fix pos
-		,"node_js":		{"pos":30, "tag":"01050D095075636B2E6A73"} ##need to fix pos
-		,"mac":			{"pos":16, "tag":"01060AFF4C001005"}
-		,"ruuvitag":	{"pos":22, "tag":"FF990405"}
-		,"tile":		{"pos":-1, "tag":"01"}  # need to fix
-		,"Tovala":		{"pos":54, "tag":"546F76616C61"}
-		}
+		knownBeaconTags = {}
 	try:		onlyTheseMAC=InParams["onlyTheseMAC"]
-	except:		onlyTheseMAC=[]
+	except:		onlyTheseMAC={}
 
 	try:		ignoreUUID=InParams["ignoreUUID"]
 	except:		ignoreUUID=[]
@@ -1086,13 +1071,13 @@ def doRuuviTag_mac( data):
 
 def execbeaconloop():
 	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds,lastWriteHistory,maxParseSec,batteryLevelPosition
-	global acceptNewiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored, sendFullUUID, minSignalCutoff, acceptJunkBeacons, knownBeaconTags
+	global acceptNewiBeacons, acceptNewTagiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored, sendFullUUID, minSignalCutoff, acceptJunkBeacons, knownBeaconTags
 	global myBLEmac, BLEsensorMACs
 	global oldRaw,	lastRead
 	global UUIDtoIphone, UUIDtoIphoneReverse, mapReasonToText
 	global downCount, doNotIgnore, beaconsOnline
 
-
+	acceptNewTagiBeacons = ""
 	beaconsOnline		= {}
 
 	downCount 			= 0
@@ -1109,7 +1094,7 @@ def execbeaconloop():
 	enableiBeacons		= "1"
 	G.authentication	= "digest"
 	# get params
-	onlyTheseMAC		=[]
+	onlyTheseMAC		={}
 	ignoreUUID			=[]
 	ignoreMAC			=[]
 	doNotIgnore			=[]
@@ -1339,14 +1324,51 @@ def execbeaconloop():
 							Min	 = "%i" % returnnumberpacket(pkt[uuidStart+uuidLen + 2: uuidStart+uuidLen + 4])
 							bl	 = ""	
 
-							if True:
-								for bb in knownBeaconTags:
-									if knownBeaconTags[bb]["pos"] == -1: 			continue
-									pos = hexstr.find(knownBeaconTags[bb]["tag"])
-									if pos == -1: 									continue
-									if abs(pos - knownBeaconTags[bb]["pos"]) > 10:	continue
-									#print mac, pos,pos -knownBeaconTags[bb]["pos"] , dd, UUID, Maj, Min
-									UUID =  bb
+
+							tagFound 			= False
+							UUID1 				= ""
+							prio 				= -1
+							tag 				= "no"
+							pos 				= -10
+							dPos 				= -100
+							rejectThisMessage 	= False
+
+							### is this a know beacon with a known tag ?
+							if mac in onlyTheseMAC  and onlyTheseMAC[mac] != ["","",""]:
+								tag 			= onlyTheseMAC[mac][0]
+								prio 			= onlyTheseMAC[mac][1]
+								uuidMajMin 		= onlyTheseMAC[mac][2].split("-")
+								useOnlyPrioMsg 	= onlyTheseMAC[mac][3] == "1"
+								# right message format, if yes us main UUID
+								if  tag in knownBeaconTags:
+									tagFound 	= True
+									pos 		= hexstr.find(knownBeaconTags[tag]["tag"])
+									dPos 		= pos - knownBeaconTags[tag]["pos"]
+									if prio == 1:
+										UUID1 		= onlyTheseMAC[mac][0]
+										UUID 		= UUID1
+										## if main format force using that MAJ and Min
+										if pos == -10 or abs(dPos) > knownBeaconTags[tag]["posDelta"]:
+											# reject message if not prio message 
+											if useOnlyPrioMsg:
+												rejectThisMessage = True # only use message type of primary tag
+											elif len(uuidMajMin) == 3: 
+												Maj = uuidMajMin[2]
+												Min = uuidMajMin[1]
+							if rejectThisMessage : continue
+
+							## mac not in current list?
+							if UUID1 == "":
+								## check if in tag list
+								for tag in knownBeaconTags:
+									if knownBeaconTags[tag]["pos"] == -1: 			 continue
+									pos = hexstr.find(knownBeaconTags[tag]["tag"])
+									if pos == -1: 									 continue
+									dPos = pos - knownBeaconTags[tag]["pos"]
+									if abs(dPos) > knownBeaconTags[tag]["posDelta"]: continue
+									if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == tag:
+										tagFound = True
+										UUID = tag
 									break
 
 							tx, bl,UUID, Maj, Min  = doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexstr, UUID, Maj, Min)
@@ -1411,9 +1433,12 @@ def execbeaconloop():
 							if not iphoneUUID:
 								if checkIfIgnore(uuid,beaconMAC): continue
 
-							if not (beaconMAC in onlyTheseMAC or beaconMAC in doNotIgnore):  # this is a new one
-								if rssi < acceptNewiBeacons: continue						  # if new it must have signal > threshold
+							if not (beaconMAC in onlyTheseMAC or beaconMAC in doNotIgnore):
+								#print " new beacon: ",beaconMAC, tagFound, uuid    # this is a new one
+								if rssi < acceptNewiBeacons and not tagFound: continue						  # if new it must have signal > threshold
 
+							if mac == searchMAC:
+								print "5- === accepted"
 							if beaconMAC not in beaconsNew: # add fresh one if not in new list
 								beaconsNew[beaconMAC]={"uuid":uuid,"txPower":txPower,"rssi":rssi,"count":1,"timeSt":tt,"bLevel":bl,"pktInfo":"len:"+str(pkLen)+", type:"+beaconType, "dCount":0}# [uid-major-minor,txPower,signal strength, # of measuremnts
 								#reason = 3

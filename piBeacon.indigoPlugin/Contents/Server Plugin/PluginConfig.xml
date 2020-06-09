@@ -99,26 +99,18 @@
         <Label>this allow to extend just the time it takes to go from DOWN to EXPIRED status</Label>
     </Field>
 
-   <Field    id="txPowerCutoffDefault"   type="menu" defaultValue="999"   tooltip="default cutoff for bluetooth strength used to ignore non ibeacon devices with VERY strong signal">
-        <Label>ignore BLE devices if txPower GT:</Label>
-        <List>
-            <Option value="-20"  >-20 dBm</Option>
-            <Option value="-10"  >-10 dBm</Option>
-            <Option value="0"    >0   dBm</Option>
-            <Option value="10"   >10  dBm</Option>
-            <Option value="20"   >20  dBm</Option>
-            <Option value="50"   >50  dBm</Option>
-            <Option value="999"  >no limit</Option>
-        </List>
-   </Field>
-     <Field id="txPowerCutoffDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>use to ignore beacons that show TX power very high</Label>
+    <Field id="acceptNewiBeaconsLabel1" type="label" alignWithControl="true" >  
+        <Label>Accept new beacons if either:</Label>
     </Field>
+       <Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="-999" tooltip="if the uuid tag is a match it will accpet a new beacon with that signature">
+        <Label>Accept new iBeacons of type:</Label>
+             <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
+      </Field>
 
        <Field    id="acceptNewiBeacons"   type="menu" defaultValue="-999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
-        <Label>Accept any new iBeacons:</Label>
+        <Label>Accept any new iBeacons w signal GT:</Label>
         <List>
-            <Option value="999"  >do NOT accept any </Option>
+            <Option value="999"  >signal GT 999 dBm = no </Option>
             <Option value="-5"   >signal GT  -5 dBm </Option>
             <Option value="-10"  >signal GT -10 dBm </Option>
             <Option value="-15"  >signal GT -15 dBm </Option>
@@ -140,10 +132,12 @@
             <Option value="-999" >accept ALL</Option>
         </List>
    </Field>
-    <Field id="acceptNewiBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>use to manage new find beacons, use eg -55 and place new beacon next to RPI, or switch off to reject any new beacon</Label>
+    <Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>Either use allow new beacons of Type "x" or 
+Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
+After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x" 
+</Label>
     </Field>
-
        <Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
         <Label>reboot RPI if GT x minutes w no iBeacon messages (on RPI):</Label>
         <List>
@@ -195,10 +189,10 @@
         <Label>reject beacons that do not comply with ibeacon message standard (ie VERY short messages)</Label>
     </Field>
 
-       <Field    id="sendFullUUID"   type="menu" defaultValue="0" tooltip="short messages reduces message size by 50%">
+       <Field    id="sendFullUUID"   type="menu" defaultValue="1" tooltip="short messages reduces message size by 50%">
         <Label>RPi to send full UUID in every message or only every 10ths:</Label>
         <List>
-            <Option value="0" >short (x-x-x), only every 10th full UUID</Option>
+<!--            <Option value="0" >short (x-x-x), only every 10th full UUID</Option> -->
             <Option value="1" >always long , full UUID</Option>
         </List>
    </Field>
@@ -215,7 +209,7 @@
         </List>
    </Field>
     <Field id="removeJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>if you have accept new beacons on and get flodded with new beacons, this option will allow to delete them if you have not renamed gthem from the default name after one hour</Label>
+        <Label>if you have accept new beacons on and get flodded with new beacons, this option will allow to delete them if you have not renamed them from the default name after one hour</Label>
     </Field>
    <Field id="checkBeaconParametersDisabled" type="checkbox"     defaultValue="false" > 
         <Label>disable checking beacon parameters (battery level for all beacons):</Label>
@@ -661,6 +655,48 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="40"  > 40%</Option>
         </List>
    </Field>
+  <Field id="beaconSymbolSize" type="menu"     defaultValue="1.0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Multiply size of symbols:</Label>
+        <List>
+            <Option value="0.3"  >0.3</Option>
+            <Option value="0.4"  >0.4</Option>
+            <Option value="0.5"  >0.5</Option>
+            <Option value="0.6"  >0.6</Option>
+            <Option value="0.7"  >0.7</Option>
+            <Option value="0.8"  >0.8</Option>
+            <Option value="0.9"  >0.9</Option>
+            <Option value="1.0"  >1.0 default</Option>
+            <Option value="1.1"  >1.1</Option>
+            <Option value="1.2"  >1.2</Option>
+            <Option value="1.4"  >1.4</Option>
+            <Option value="1.6"  >1.6</Option>
+            <Option value="1.8"  >1.8</Option>
+            <Option value="2.0"  >2.0</Option>
+            <Option value="2.5"  >2.5</Option>
+            <Option value="3.0"  >3.0</Option>
+        </List>
+   </Field>
+  <Field id="beaconLargeCircleSize" type="menu"     defaultValue="1.0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+        <Label>Multiply size of large Circle symbol:</Label>
+        <List>
+            <Option value="0.3"  >0.3</Option>
+            <Option value="0.4"  >0.4</Option>
+            <Option value="0.5"  >0.5</Option>
+            <Option value="0.6"  >0.6</Option>
+            <Option value="0.7"  >0.7</Option>
+            <Option value="0.8"  >0.8</Option>
+            <Option value="0.9"  >0.9</Option>
+            <Option value="1.0"  >1.0 default</Option>
+            <Option value="1.1"  >1.1</Option>
+            <Option value="1.2"  >1.2</Option>
+            <Option value="1.4"  >1.4</Option>
+            <Option value="1.6"  >1.6</Option>
+            <Option value="1.8"  >1.8</Option>
+            <Option value="2.0"  >2.0</Option>
+            <Option value="2.5"  >2.5</Option>
+            <Option value="3.0"  >3.0</Option>
+        </List>
+   </Field>
 
    <Field id="beaconPositionsimageShowCaption" type="menu"     defaultValue="-1" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
         <Label>Show caption:</Label>
@@ -760,6 +796,13 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="40" >40</Option>
             <Option value="50" >50</Option>
         </List>
+	</Field>
+    <Field    id="beaconPositionstextPosLargeCircle"     type="menu" defaultValue="0" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
+        <Label>Label pos for LARGE circles:</Label>
+        <List>
+            <Option value="atCenter"  >at center of circle</Option>
+            <Option value="atRadius"  >at right of circle</Option>
+       </List>
 	</Field>
 
    <Field id="beaconPositionsimageCompress" type="checkbox"     defaultValue="true" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 

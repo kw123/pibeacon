@@ -1,0 +1,43 @@
+Beacon type:  properties and functionality
+====================================
+
+Name/type            v    FormFactor    hole     auto    has     isBeepable  Battery  battery                   sensors        APP
+                                        4 key    detect  beeper  byPlugin    reading  Type                                    functions
+-----------------------------------------------------------------------------------------------------------------------------------
+Nonda_Aiko          all  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no           beep, register
+Nonda_iHere         all  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no           beep, register        
+Rinex_iTrack        all  square          yes     yes     yes     yes         yes      cr2032                    no           beep, register
+Njoiii_iTrack       x    square          yes     yes     yes     yes         yes      cr2032                    no           beep, register
+Vozni_iTrack        x    square          yes     yes     yes     yes         yes      cr2032                    no           beep, register
+SpotyPal            x    square          yes     yes     yes     yes         yes      cr2032                    no           beep, register
+Innway              x    square          yes     yes     yes     yes         no       cr2032                    no           beep, register
+Cube                x    square          yes     yes     yes     yes         no       cr2032                    no           beep, register
+XY_1                1    pentagon        yes     yes     yes     yes         yes      cr2032 ~ 6+M              no           beep, register, creates several MAC numbers
+XY_2                2    pentagon        yes     yes     yes     yes         yes      cr2032 ~ 6+M              no           beep, register, creates several MAC numbers
+XY_3                3    pentagon        yes     yes     yes     yes         yes      cr2032 ~ 6+M              no           beep, register, creates several MAC numbers
+Orbit               1    round           yes     yes     yes     yes         ?        cr2032, sp tool repl Bat. no           beep, register
+NutFind             3    square          yes     yes     yes     yes         yes      cr2032                    no           beep, register
+
+
+===ibeacon + Sensors
+ruuviTag            all  round Big       no      yes     no      no          yes      cr2450 1Y                 T,H,P,accel  display of sensors
+Blue_Charmn         x    square          yes     ?       no      ?           ?        cr2032                    T            iBeacon,EddyStone, conf: TX, repeat
+
+===iBeacon types:
+MiniBeacon          x    various         no      yes     no      no          no        USB                      no           iBeacon,EddyStone
+Feasy_USB           x    USB             no      yes     no      no          no        USB                      no           iBeacon,EddyStone, conf: TX, repeat
+Feasy_Triangle      x    trinagle        yes     yes     no      no          no        cr2032                   no           iBeacon,EddyStone, conf: TX, repeat
+SocialRetail        x    USB             no      yes     no      no          no        USB                      no           iBeacon,EddyStone, conf: TX, repeat
+SocialRetail        x    BIG             no      yes     no      no          no        AAA                      no           iBeacon,EddyStone, conf: TX, repeat
+Radius              x    round           no      yes     no      no          no        cr2032 ~ 3 months        no           iBeacon, conf: TX, repeat
+Radius              x    USB             no      yes     no      no          no        USB                      no           iBeacon, conf: TX, repeat
+
+== other types
+Tovala-oven         1    Oven            no      yes     no      no          no        AC                       no           no
+OralB               1    toothbrush      no      yes     no      no          no        rechargeable             no           no
+    
+cheap ibeacon        likely working,     ?       no      no      no          no        cr2032 mostly            no           pure iBeacon, edystone..some have sig config
+
+tile                x    not working
+xy_4                4    not working
+swiftFind == ZenLif      intrusive, no actions possible 

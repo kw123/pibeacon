@@ -1,10 +1,10 @@
-Added features / changes in v7.120.368 @ 2020-06-01
+Added features / changes in v7.120.395 @ 2020-06-08
 ===================================================
 
 1. added some more beacon definitions ie spotyPal and Rinex
 2. take dBm value from knownBeaconTags if txPower == 999 == not set
    can still be overwritten in device edit
-3. made beacontype read only: it is either other of a value from known beacon tags
+3. made beacontype read only: it is either other or a value from known beacon tags
 4. fixed spotypal battery type command
 5. cleaned up menus
 6. fixed distance unit if not meter config read 
@@ -13,9 +13,28 @@ Added features / changes in v7.120.368 @ 2020-06-01
 9. corrected beacon plot positions circle size 
 10. added spotypal beep function
 11. added rinex beep function
-12. added optiuon to force beep if beacon is up or not (only in menu)
-13. added optiuon to set rpi to perform beep (only in menu), for action, always closest
-  
+12. added option to force beep if beacon is up or not (only in menu)
+13. added option to set rpi to perform beep (only in menu), for action it is always closest
+14. for cases where the beacon sends different uuid, and one of them is a known tag, use only the tag in props and description, state will still change
+15. limit beep commands repetitin, last beep command must have finished for > 20 sec before new one is accepted
+16. battery level command parameter data is now a regular dict, not string with "-" separators, easier to read and understand 
+17. disable position update for 1+minutes after beep or get battery. otherwise the beacon position jumps around as the closet RPi changes.
+18. beep beacon now uses other HCI channel (than beaconloop) if available. This will then not required to restart beaconloop after beep
+19. config parameters for position plot: multiply symbol size and multiply largecicle size parameters
+20. improved timeliness of closets RPI
+21. added state for beacons: iBeepable = YES /no, 1. it has to support beep & 2. the last end of beep must be > 50 secs ago
+22. fixed UUID tag name for "nonda" was spelled incorrectly "noda"
+23. fixed get battery, was screwd up 2 versions ago
+24. added battery / beep report 
+25. added option to accept new beacons of know types eg in config select accpet new beacons of type spotypal and any new becon with tag spotypal will be added
+26. added option to allcept "ALL" known beacons, not just one type 
+27. beacon plot position added option to put symbol text label  at center or  right side of large circle  
+28. added tag def for iTrack=njoiii, swiftFinder=zenlife, cube
+29. added tag def for innway, can beep
+29. added several tags (beacontypes)
+30. updates type of beacon property to make it more consistent
+31. added an option to accept all message types or only use tag defined message type
+32. in beacon position plot, move beacon label to the left if outside the boarder
 
 Added features / changes in v7.120.362 @ 2020-05-31
 ===================================================
