@@ -1437,8 +1437,6 @@ def execbeaconloop():
 								#print " new beacon: ",beaconMAC, tagFound, uuid    # this is a new one
 								if rssi < acceptNewiBeacons and not tagFound: continue						  # if new it must have signal > threshold
 
-							if mac == searchMAC:
-								print "5- === accepted"
 							if beaconMAC not in beaconsNew: # add fresh one if not in new list
 								beaconsNew[beaconMAC]={"uuid":uuid,"txPower":txPower,"rssi":rssi,"count":1,"timeSt":tt,"bLevel":bl,"pktInfo":"len:"+str(pkLen)+", type:"+beaconType, "dCount":0}# [uid-major-minor,txPower,signal strength, # of measuremnts
 								#reason = 3
