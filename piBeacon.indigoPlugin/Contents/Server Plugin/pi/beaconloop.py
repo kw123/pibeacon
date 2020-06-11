@@ -372,94 +372,96 @@ def readParams(init):
 	global acceptNewiBeacons, acceptNewTagiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalCutoff, acceptJunkBeacons,knownBeaconTags
 	global oldRaw,	lastRead
 	if init:
-		collectMsgs		= 10  # in parse loop collect how many messages max	  ========	all max are an "OR" : if one hits it stops
-		sendAfterSeconds= 60  # collect for xx seconds then send msg
-		loopMaxCallBLE	= 900 # max loop count	in main pgm to collect msgs
-		maxParseSec		= 2	  # stop aprse loop after xx seconds 
-		portOfServer	="8176"
-		G.ipOfServer	  =""
-		G.passwordOfServer=""
-		G.userIdOfServer  =""
-		G.myPiNumber	  ="0"
+		collectMsgs			= 10  # in parse loop collect how many messages max	  ========	all max are an "OR" : if one hits it stops
+		sendAfterSeconds	= 60  # collect for xx seconds then send msg
+		loopMaxCallBLE		= 900 # max loop count	in main pgm to collect msgs
+		maxParseSec			= 2	  # stop aprse loop after xx seconds 
+		portOfServer		= "8176"
+		G.ipOfServer	  	= ""
+		G.passwordOfServer	= ""
+		G.userIdOfServer  	= ""
+		G.myPiNumber	  	= "0"
 		deleteHistoryAfterSeconds  =72000
 
 	inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
-	if inp == "":				return False
-	if lastRead2 == lastRead:	return False
+	doParams = True
+	if inp == "":				doParams = False
+	if lastRead2 == lastRead:	doParams = False
 	lastRead   = lastRead2
-	if inpRaw == oldRaw:		return False
+	if inpRaw == oldRaw:		doParams = False
 	oldRaw	   = inpRaw
 
+	if doParams:
+		try:
+			if "enableiBeacons"		in inp:	 enableiBeacons=	   (inp["enableiBeacons"])
+			if enableiBeacons == "0":
+				U.logger.log(50," termination ibeacon scanning due to parameter file")
+				time.sleep(0.5)
+				sys.exit(3)
+			U.getGlobalParams(inp)
+
+			if "rebootSeconds"			in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
+			if "sendAfterSeconds"		in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
+			if "acceptNewiBeacons"		in inp:	 acceptNewiBeacons=	  int(inp["acceptNewiBeacons"])
+			if "acceptNewTagiBeacons"	in inp:	 acceptNewTagiBeacons=	 (inp["acceptNewTagiBeacons"])
+			if "sendFullUUID"			in inp:	 sendFullUUID=			 (inp["sendFullUUID"]=="1" )
+			if "acceptJunkBeacons"		in inp:	 acceptJunkBeacons=		 (inp["acceptJunkBeacons"]=="1" )
+
+
+			if "deleteHistoryAfterSeconds"	in inp:
+									  deleteHistoryAfterSeconds=  int(inp["deleteHistoryAfterSeconds"])
+			BLEsensorMACs = {}
+
+			if "sensors"			 in inp: 
+				sensors =			 (inp["sensors"])
+				for sensor in ["BLEsensor","BLERuuviTag"]:
+					if sensor in sensors:
+						for devId in sensors[sensor]:
+							sensD	= sensors[sensor][devId]
+							mac		= sensD["mac"]
+							BLEsensorMACs[mac]={}
+							BLEsensorMACs[mac]["type"]				   			= sensD["type"]
+							BLEsensorMACs[mac]["devId"]				   			= devId
+							try:	BLEsensorMACs[mac]["offsetPress"]   		= float(sensD["offsetPress"])
+							except: BLEsensorMACs[mac]["offsetPress"]			= 0.
+							try:	BLEsensorMACs[mac]["offsetHum"]   			= float(sensD["offsetHum"])
+							except: BLEsensorMACs[mac]["offsetHum"]				= 0.
+							try:	BLEsensorMACs[mac]["offsetTemp"]   			= float(sensD["offsetTemp"])
+							except: BLEsensorMACs[mac]["offsetTemp"]			= 0.
+							try:	BLEsensorMACs[mac]["multiplyTemp"] 			= float(sensD["multiplyTemp"])
+							except: BLEsensorMACs[mac]["multiplyTemp"] 			= 1.
+							try:	BLEsensorMACs[mac]["updateIndigoTiming"] 	= float(sensD["updateIndigoTiming"])
+							except: BLEsensorMACs[mac]["updateIndigoTiming"] 	= 10.
+							try:	BLEsensorMACs[mac]["updateIndigoDeltaAcceleration"]	= float(sensD["updateIndigoDeltaAcceleration"])/100.
+							except: BLEsensorMACs[mac]["updateIndigoDeltaAcceleration"] 	= 0.3
+							try:	BLEsensorMACs[mac]["updateIndigoDeltaTurn"] = float(sensD["updateIndigoDeltaTurn"])/100.
+							except: BLEsensorMACs[mac]["updateIndigoDeltaTurn"] = 0.3
+							try:	BLEsensorMACs[mac]["updateIndigoDeltaTemp"] = float(sensD["updateIndigoDeltaTemp"])
+							except: BLEsensorMACs[mac]["updateIndigoDeltaTemp"] = 1 # =1C 
+							try:	BLEsensorMACs[mac]["minSendDelta"] 			= float(sensD["minSendDelta"])
+							except: BLEsensorMACs[mac]["minSendDelta"] 			= 4 #  seconds betwen updates
+
+							BLEsensorMACs[mac]["accelerationTotal"]				= 0
+							BLEsensorMACs[mac]["accelerationX"]				 	= 0
+							BLEsensorMACs[mac]["accelerationY"]				 	= 0
+							BLEsensorMACs[mac]["accelerationZ"]				 	= 0
+							BLEsensorMACs[mac]["temp"]				 			= -100
+							BLEsensorMACs[mac]["lastUpdate"]				 	= 0
+
+		except	Exception, e:
+			U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+
+
 	try:
-		if "enableiBeacons"		in inp:	 enableiBeacons=	   (inp["enableiBeacons"])
-		if enableiBeacons == "0":
-			U.logger.log(50," termination ibeacon scanning due to parameter file")
-			time.sleep(0.5)
-			sys.exit(3)
-		U.getGlobalParams(inp)
-
-		if "rebootSeconds"			in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
-		if "sendAfterSeconds"		in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
-		if "acceptNewiBeacons"		in inp:	 acceptNewiBeacons=	  int(inp["acceptNewiBeacons"])
-		if "acceptNewTagiBeacons"	in inp:	 acceptNewTagiBeacons=	 (inp["acceptNewTagiBeacons"])
-		if "sendFullUUID"			in inp:	 sendFullUUID=			 (inp["sendFullUUID"]=="1" )
-		if "acceptJunkBeacons"		in inp:	 acceptJunkBeacons=		 (inp["acceptJunkBeacons"]=="1" )
-
-
-		if "deleteHistoryAfterSeconds"	in inp:
-								  deleteHistoryAfterSeconds=  int(inp["deleteHistoryAfterSeconds"])
-		BLEsensorMACs = {}
-
-		if "sensors"			 in inp: 
-			sensors =			 (inp["sensors"])
-			for sensor in ["BLEsensor","BLERuuviTag"]:
-				if sensor in sensors:
-					for devId in sensors[sensor]:
-						sensD	= sensors[sensor][devId]
-						mac		= sensD["mac"]
-						BLEsensorMACs[mac]={}
-						BLEsensorMACs[mac]["type"]				   			= sensD["type"]
-						BLEsensorMACs[mac]["devId"]				   			= devId
-						try:	BLEsensorMACs[mac]["offsetPress"]   		= float(sensD["offsetPress"])
-						except: BLEsensorMACs[mac]["offsetPress"]			= 0.
-						try:	BLEsensorMACs[mac]["offsetHum"]   			= float(sensD["offsetHum"])
-						except: BLEsensorMACs[mac]["offsetHum"]				= 0.
-						try:	BLEsensorMACs[mac]["offsetTemp"]   			= float(sensD["offsetTemp"])
-						except: BLEsensorMACs[mac]["offsetTemp"]			= 0.
-						try:	BLEsensorMACs[mac]["multiplyTemp"] 			= float(sensD["multiplyTemp"])
-						except: BLEsensorMACs[mac]["multiplyTemp"] 			= 1.
-						try:	BLEsensorMACs[mac]["updateIndigoTiming"] 	= float(sensD["updateIndigoTiming"])
-						except: BLEsensorMACs[mac]["updateIndigoTiming"] 	= 10.
-						try:	BLEsensorMACs[mac]["updateIndigoDeltaAcceleration"]	= float(sensD["updateIndigoDeltaAcceleration"])/100.
-						except: BLEsensorMACs[mac]["updateIndigoDeltaAcceleration"] 	= 0.3
-						try:	BLEsensorMACs[mac]["updateIndigoDeltaTurn"] = float(sensD["updateIndigoDeltaTurn"])/100.
-						except: BLEsensorMACs[mac]["updateIndigoDeltaTurn"] = 0.3
-						try:	BLEsensorMACs[mac]["updateIndigoDeltaTemp"] = float(sensD["updateIndigoDeltaTemp"])
-						except: BLEsensorMACs[mac]["updateIndigoDeltaTemp"] = 1 # =1C 
-						try:	BLEsensorMACs[mac]["minSendDelta"] 			= float(sensD["minSendDelta"])
-						except: BLEsensorMACs[mac]["minSendDelta"] 			= 4 #  seconds betwen updates
-
-						BLEsensorMACs[mac]["accelerationTotal"]				 			= 0
-						BLEsensorMACs[mac]["accelerationX"]				 			= 0
-						BLEsensorMACs[mac]["accelerationY"]				 			= 0
-						BLEsensorMACs[mac]["accelerationZ"]				 			= 0
-						BLEsensorMACs[mac]["temp"]				 			= -100
-						BLEsensorMACs[mac]["lastUpdate"]				 	= 0
-
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-
-
-
-	try:
-		f = open("{}beacon_parameters".format(G.homeDir),"r")
+		f = open("{}temp/beacon_parameters".format(G.homeDir),"r")
 		InParams = json.loads(f.read().strip("\n"))
 		f.close()
 	except:
 		InParams = {}
 
 	try:
-		f = open("{}knownBeaconTags".format(G.homeDir),"r")
+		f = open("{}temp/knownBeaconTags".format(G.homeDir),"r")
 		knownBeaconTags = json.loads(f.read().strip("\n"))
 		f.close()
 	except:		
@@ -511,7 +513,7 @@ def readParams(init):
 	U.logger.log(0,"ignoreMAC:           {}".format(ignoreMAC))
 	U.logger.log(0,"UUIDtoIphone:        {}".format(UUIDtoIphone))
 	U.logger.log(0,"UUIDtoIphoneReverse: {}".format(UUIDtoIphoneReverse))
-	return	True
+	return
 
 
 def composeMSGSensor(data):
@@ -810,8 +812,7 @@ def doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min):
 	try:
 
 		if mac in BLEsensorMACs and BLEsensorMACs[mac]["type"] == "myBLUEt":  								
-			domyBlueT( pkt, mac, rx, tx, nBytesThisMSG, hexData)
-			return tx, bl, UUID, Maj, Min
+			return domyBlueT( pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min)
 
 		## check if Ruuvi tag present at right position, should be at pos 22
 		ruuviTagPos 	= hexData.find("FF990405") 
@@ -823,10 +824,10 @@ def doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min):
 
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return tx, bl, UUID, Maj, Min
+	return tx, bl, UUID, Maj, Min, False
 
 #################################
-def domyBlueT(pkt, mac, rx, tx, nBytesThisMSG, hexData):
+def domyBlueT(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min):
 	global BLEsensorMACs
 	try:
 		RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
@@ -845,8 +846,10 @@ def domyBlueT(pkt, mac, rx, tx, nBytesThisMSG, hexData):
 			data[sensor][devId] = {"temp":temp, "type":BLEsensorMACs[mac]["type"],"mac":mac,"rssi":float(rx),"txPower":float(tx)}
 			composeMSGSensor(data)
 			BLEsensorMACs[mac]["lastUpdate"] = time.time()
+		return tx, "", "myBlueT", mac, "sensor",True
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return tx, "", UUID, Maj, Min, False
 		#print RawData				
 	""" from the sensor web site:
 		private void submitScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
@@ -875,7 +878,6 @@ def domyBlueT(pkt, mac, rx, tx, nBytesThisMSG, hexData):
 			}
 		}
 	"""						   
-	return
 
 
 #################################
@@ -919,7 +921,7 @@ offset	Allowed Values		description
 
 		if not ruuviSensorActive: # we have found the ruuvitag, just the sensor is active on this RPI, but the iBeacon is
 			# overwrite UUID etc for this ibeacon if used later
-			return str(txPower), str(batteryLevel), UUID, Maj, Min
+			return str(txPower), str(batteryLevel), UUID, Maj, Min, False
 
 		# sensor is active, get all data and send if conditions ok
 
@@ -978,14 +980,15 @@ offset	Allowed Values		description
 			BLEsensorMACs[mac]["temp"] 					= temp
 
 		# overwrite UUID etc for this ibeacon if used later
-		return str(txPower), str(batteryLevel), UUID, Maj, Min
+		return str(txPower), str(batteryLevel), UUID, Maj, Min, True
 
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	# return incoming parameetrs
-	return tx, "", UUID, Maj, Min
+	return tx, "", UUID, Maj, Min, False
 
 
+#################################
 def doRuuviTag_temperature( data):
 	"""Return temperature in celsius"""
 	if data[1:2] == 0x7FFF:
@@ -994,6 +997,7 @@ def doRuuviTag_temperature( data):
 	temperature = twos_complement((data[1] << 8) + data[2], 16) / 200
 	return round(temperature, 2)
 
+#################################
 def doRuuviTag_humidity( data):
 	"""Return humidity %"""
 	if data[3:4] == 0xFFFF:
@@ -1002,6 +1006,7 @@ def doRuuviTag_humidity( data):
 	humidity = ((data[3] & 0xFF) << 8 | data[4] & 0xFF) / 400
 	return round(humidity, 2)
 
+#################################
 def doRuuviTag_pressure( data):
 	"""Return air pressure hPa"""
 	if data[5:6] == 0xFFFF:
@@ -1010,6 +1015,7 @@ def doRuuviTag_pressure( data):
 	pressure = ((data[5] & 0xFF) << 8 | data[6] & 0xFF) + 50000
 	return round(pressure, 1)
 
+#################################
 def doRuuviTag_magValues( data):
 	"""Return mageration mG"""
 	if (data[7:8] == 0x7FFF or
@@ -1022,6 +1028,7 @@ def doRuuviTag_magValues( data):
 	acc_z = twos_complement((data[11] << 8) + data[12], 16)
 	return math.sqrt(acc_x * acc_x + acc_y * acc_y + acc_z * acc_z), acc_x, acc_y, acc_z
 
+#################################
 def doRuuviTag_powerinfo( data):
 	"""Return battery voltage and tx power"""
 	power_info = (data[13] & 0xFF) << 8 | (data[14] & 0xFF)
@@ -1037,15 +1044,65 @@ def doRuuviTag_powerinfo( data):
 	return (battery_voltage, tx_power)
 
 
+#################################
 def doRuuviTag_movementcounter( data):
 	return data[15] & 0xFF
 
+#################################
 def doRuuviTag_measurementsequencenumber( data):
 	measurementSequenceNumber = (data[16] & 0xFF) << 8 | data[17] & 0xFF
 	return measurementSequenceNumber
 
+#################################
 def doRuuviTag_mac( data):
 	return ''.join('{:02x}'.format(x) for x in data[18:24])
+
+#################################
+# this compares the tag string with the incoming hex strin:
+# 
+# if "RMAC########" in tag string replace it w reverse mac
+# if "MAC#########" in tag string repalce it w plan mac
+# if x/X in tag string replace char in incoming hex strin w X and 
+# then do a find 
+## 12020106030202180AFF4B4D0XRMAC########
+###
+
+def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, printMac):
+	global knownBeaconTags
+	try:
+		testString 	= copy.copy(hexstring)
+		tagPos 		= int(knownBeaconTags[tag]["pos"])
+		tagString 	= copy.copy(knownBeaconTags[tag]["tag"]).upper()
+		if tagString.find("X") >-1:
+			indexes = [n for n, v in enumerate(tagString) if v == 'X'] 
+			if  mac == printMac:
+				print "com1- ",mac,"indexes:",indexes,"  xrepl  testString:",testString
+			testString 	= list(testString.upper())
+			for ii in indexes:
+				if ii+tagPos < len(testString):
+					testString[ii+tagPos] = "X"
+				else: return -1,100
+
+			testString = ("").join(testString)
+			if  mac == printMac:
+				print "com2- ",mac,"indexes:",indexes," xrepl new testString:",testString
+		if tagString.find("RMAC########") >-1:
+			tagString = tagString.replace("RMAC########", macplainReverse)
+			if  mac == printMac:
+				print "com3- ",mac," revMac:",macplainReverse,"; new tagString:",tagString
+		elif tagString.find("MAC#########") >-1:
+			tagString = tagString.replace("MAC#########", macplain)
+			if  mac == printMac:
+				print "com4- ",mac," Mac:",macplain,"; new tagString:",tagString
+		posFound 	= testString.find(tagString)
+		dPos 		= posFound - tagPos
+		if  mac == printMac:
+			print "com5- ",mac,"; posFound:" ,posFound, "; dPos:",dPos,"; tag:",tag, "; ", knownBeaconTags[tag]["tag"],"; tagString",tagString
+		return posFound, dPos
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30,u"Mac#:{}".format(mac))
+	return -1,100 
 
 #################################
 #################################
@@ -1259,10 +1316,12 @@ def execbeaconloop():
 								U.logger.log(20, "bad data{} {} {} {}xx".format(i, num_reports, offS + 6, pkLen))
 								break
 							# build the return string: mac#, uuid-major-minor,txpower??,rssi
-							mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
-							lastMSGwithData1 = int(time.time())
-							hexstr	 = (stringFromPacket(pkt[offS:])).upper()
-						
+							mac	 				= (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
+							lastMSGwithData1 	= int(time.time())
+							hexstr	 			= (stringFromPacket(pkt[offS:])).upper()
+							macplainReverse 	= hexstr[0:12]
+							macplain 			= mac.replace(":","")
+			
 							if mac in badMacs: continue
 							if mac in batteryLevelPosition: blOffset= batteryLevelPosition[mac] 
 							else:							blOffset= 0
@@ -1290,20 +1349,18 @@ def execbeaconloop():
 								AD2Start		= AD1Start
 
 						
-							uuidStart		= AD2Start ##  (-Maj-Min-batteryLength-TX-RSSI)
-							uuidLen			= msgStart+nBytesThisMSG-uuidStart-2-2-1-offsetU
+							uuidStart			= AD2Start ##  (-Maj-Min-batteryLength-TX-RSSI)
+							uuidLen				= msgStart+nBytesThisMSG-uuidStart-2-2-1-offsetU
 							if uuidStart > pkLen - 2 or  uuidStart < 12:
-								uuidLen			 = min(nBytesThisMSG - 5, 16)
-								uuidStart		 = AD1Start + 2
+								uuidLen			= min(nBytesThisMSG - 5, 16)
+								uuidStart		= AD1Start + 2
 
 							if uuidStart >= pkLen or uuidStart+uuidLen > pkLen : continue
 							UUID = stringFromPacket(pkt[uuidStart : uuidStart+uuidLen])
 						
 						
-												 #  03 = URI beacon == nBytes = 03
-												 #  
 							mfgID = stringFromPacket(pkt[msgStart+5])+stringFromPacket(pkt[msgStart+6])  # 4C00 = ibeacon apple
-							pType = stringFromPacket(pkt[msgStart+7])  # 02  = procimity beacon; BE  = ALT beacon nBytes = nBytes = 27
+							pType = stringFromPacket(pkt[msgStart+7])  # 02  = procimity beacon; BE  = ALT beacon nBytes  = 27
 							beaconType = stringFromPacket(pkt[msgStart+4]).upper()  #  FF = iBeacon
 							beaconType += "-"+pType.upper() 
 							uuidstart2 = msgStart+8
@@ -1329,67 +1386,72 @@ def execbeaconloop():
 							UUID1 				= ""
 							prio 				= -1
 							tag 				= "no"
-							pos 				= -10
 							dPos 				= -100
 							rejectThisMessage 	= False
+		
+							printMac ="xx55:AA:47:C5:2E:A4"
+							if mac == printMac:
+								print "0-    ",mac,"; UUID:",UUID, "; Maj:",Maj, "; Min:",Min, ";  hex:",hexstr
 
 							### is this a know beacon with a known tag ?
-							if mac in onlyTheseMAC  and onlyTheseMAC[mac] != ["","",""]:
+							if mac in onlyTheseMAC  and onlyTheseMAC[mac] != ["",0,"",""]:
 								tag 			= onlyTheseMAC[mac][0]
 								prio 			= onlyTheseMAC[mac][1]
 								uuidMajMin 		= onlyTheseMAC[mac][2].split("-")
 								useOnlyPrioMsg 	= onlyTheseMAC[mac][3] == "1"
+								if mac == printMac:
+									print "1-    ",mac,"; tag:",tag, "; prio:",prio,"; uuidMajMin:",uuidMajMin,"; useOnlyPrioMsg:",useOnlyPrioMsg
 								# right message format, if yes us main UUID
 								if  tag in knownBeaconTags:
-									tagFound 	= True
-									pos 		= hexstr.find(knownBeaconTags[tag]["tag"])
-									dPos 		= pos - knownBeaconTags[tag]["pos"]
-									if prio == 1:
-										UUID1 		= onlyTheseMAC[mac][0]
-										UUID 		= UUID1
-										## if main format force using that MAJ and Min
-										if pos == -10 or abs(dPos) > knownBeaconTags[tag]["posDelta"]:
-											# reject message if not prio message 
-											if useOnlyPrioMsg:
-												rejectThisMessage = True # only use message type of primary tag
-											elif len(uuidMajMin) == 3: 
-												Maj = uuidMajMin[2]
-												Min = uuidMajMin[1]
+									UUID1 	= onlyTheseMAC[mac][0]
+									UUID 	= UUID1
+									Maj 	= uuidMajMin[1]
+									Min 	= uuidMajMin[2]
+									tagFound = True
+									if useOnlyPrioMsg:
+										posFound, dPos = testComplexTag(hexstr, tag, mac, macplain, macplainReverse, printMac)
+										if posFound == -1 or abs(dPos) > knownBeaconTags[tag]["posDelta"]:
+											rejectThisMessage = True
+											tagFound = False
+
+
+							if  mac == printMac:
+								print "5-    ",mac,"; rejectThisMessage:" ,rejectThisMessage, "; UUID:",UUID, Maj, Min
 							if rejectThisMessage : continue
 
 							## mac not in current list?
 							if UUID1 == "":
 								## check if in tag list
 								for tag in knownBeaconTags:
-									if knownBeaconTags[tag]["pos"] == -1: 			 continue
-									pos = hexstr.find(knownBeaconTags[tag]["tag"])
-									if pos == -1: 									 continue
-									dPos = pos - knownBeaconTags[tag]["pos"]
-									if abs(dPos) > knownBeaconTags[tag]["posDelta"]: continue
+									if knownBeaconTags[tag]["pos"] == -1: 			 	continue
+									posFound, dPos = testComplexTag(hexstr, tag, mac, macplain, macplainReverse, printMac)
+									if posFound == -1: 									continue
+									if abs(dPos) > knownBeaconTags[tag]["posDelta"]: 	continue
 									if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == tag:
 										tagFound = True
 										UUID = tag
 									break
 
-							tx, bl,UUID, Maj, Min  = doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexstr, UUID, Maj, Min)
+							if  mac == printMac:
+								print "9-    ",mac, "tagFound",tagFound, "; UUID:",UUID
 
-							if bl == "" and mac in batteryLevelPosition:
-								try:	
-									bl	 =	"%i" % ord( pkt[batteryLevelPosition[mac] ])
-								except: 
-									bl	 = "-"
+							tx, bl,UUID, Maj, Min, isSensor  = doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexstr, UUID, Maj, Min)
+							if not isSensor:
+								if bl == "" and mac in batteryLevelPosition:
+									try:	
+										bl	 =	"%i" % ord( pkt[batteryLevelPosition[mac] ])
+									except: 
+										bl	 = "-"
 
-							if not acceptJunkBeacons:
-								if UUID == "" or UUID.find("0000000000") > -1: 
-									#print "reject UUID" 
-									continue # this is not supported ..
-								if tx == 0 and rx == 0: 
-									#print "reject rxtx" 
-									continue # this is not supported ..
+								if not acceptJunkBeacons:
+									if UUID == "" or UUID.find("0000000000") > -1: 
+										#print "reject UUID" 
+										continue # this is not supported ..
+									if tx == 0 and rx == 0: 
+										#print "reject rxtx" 
+										continue # this is not supported ..
 								
 							
-							sensorData=0
-						
 							lastMSGwithData2 = int(time.time())
 						
 

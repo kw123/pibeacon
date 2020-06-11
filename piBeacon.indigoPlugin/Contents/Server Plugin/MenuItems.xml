@@ -214,13 +214,18 @@ Then the rPi will start sending data to plugin
             </Field>
             <Field id="buttonGetiBeacon0List" type="button" tooltip="if you use HCI0 (uart / dongle); output in plugin.log; will restart master.py on RPI, using   cd /home/pi/pibeacon; sudo hciconfig hci0 down;sudo hciconfig hci0 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
                 <Label>click to</Label>
-                <Title>get ibeacon list (using hci0 from rPi); will collect data for 30secs</Title>
+                <Title>get ibeacon list (using lescan hci0 from rPi); will collect data for 30secs</Title>
                 <CallbackMethod>buttonGetiBeaconList0CALLBACK</CallbackMethod>
             </Field>
             <Field id="buttonGetiBeacon1List" type="button" tooltip="if you use HCI1 (uart / dongle); output in plugin.log; will restart master.py on RPI, using   cd /home/pi/pibeacon; sudo hciconfig hci1 down;sudo hciconfig hci1 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
                 <Label>click to</Label>
-                <Title>get ibeacon list (using hci1 from rPi); will collect data for 30secs</Title>
+                <Title>get ibeacon list (using lescan hci1 from rPi); will collect data for 30secs</Title>
                 <CallbackMethod>buttonGetiBeaconList1CALLBACK</CallbackMethod>
+            </Field>
+            <Field id="buttonGetiBeaconList" type="button" tooltip="if you use HCI1 (uart / dongle); output in plugin.log; will restart master.py on RPI, using   cd /home/pi/pibeacon; sudo hciconfig hci1 down;sudo hciconfig hci1 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
+                <Label>click to</Label>
+                <Title>get ibeacon list (using bluetoothctl from rPi); will collect data for 30secs</Title>
+                <CallbackMethod>buttonGetiBeaconListbluetoothctlCALLBACK</CallbackMethod>
             </Field>
             <Field id="logsEnd" type="label">
                 <Label> -------- other </Label>
@@ -237,7 +242,7 @@ Then the rPi will start sending data to plugin
             </Field>
             <Field id="buttonStopConfig" type="button" tooltip=" stop any send activity ">
                 <Label>click to</Label>
-                <Title>STOP any send/action in progress</Title>
+                <Title>==== STOP any send/action in progress ====</Title>
                 <CallbackMethod>buttonStopConfigCALLBACK</CallbackMethod>
             </Field>
             <Field id="anycmd" type="label">
@@ -401,7 +406,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
                 <Label>Manage families of beacons, you can select the first 12 characters of beacons UUID, then select if you want them to be (un)ignored, the received messages from the ignored beacons are stored in ~/documents/iBeacon/rejects</Label>
             </Field>
             <Field id="ignoreMACfamily" type="menu" defaultValue="0">
-                <Label>familily of beacons:</Label>
+                <Label>family of beacons:</Label>
                 <List class="self" filter="" method="filterMACfamilies" dynamicReload="true" />
             </Field>
             <Field id="buttonDeleteFAMILY" type="button" tooltip="This will confirm to ignore future messages from beacons which UUID starts with the same 12 characters of the UUID">
@@ -798,7 +803,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
             </Field>
             <Field id="label1printBLEreport" type="label">
                 <Label>The command will stop any BLE activity on the RPI (kill master.py , beaconloop.py ...), 
-then it will collect LESCAN info for 20 secs and simple SCAN for 25 secs 
+then it will collect bluetoothctl scan on info for 15 secs and hcitool SCAN for 25 secs 
 then it will reboot the RPI  
 PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
             </Field>

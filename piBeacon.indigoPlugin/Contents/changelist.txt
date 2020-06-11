@@ -1,3 +1,18 @@
+Added features / changes in v7.120.399 @ 2020-06-09
+===================================================
+1. cleanup debug and finished beacons, configs
+
+Added features / changes in v7.120.397 @ 2020-06-09
+===================================================
+1. added beacom smarttracker 
+2. added option to have mac and reverse mac in uuid field to tag beacon and ignore single characters
+
+
+
+1. added some more beacon definitions ie spotyPal and Rinex
+2. take dBm value from knownBeaconTags if txPower == 999 == not set
+
+
 Added features / changes in v7.120.396 @ 2020-06-08
 ===================================================
 

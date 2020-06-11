@@ -179,7 +179,8 @@ specialSensorList =[ 	"amg88xx",
 
 parameterFileList  =[	"patterns",
 						"beacon_parameters",
-						"parameters"]
+						"parameters",
+						"knownBeaconTags"]
 
 python3Apps			=[ "moistureSensor"]
 

@@ -383,29 +383,35 @@ def execCMDS(data):
 
 			if cmd =="BLEreport":
 				try:
-					U.killOldPgm(-1,"master.py")
-					U.killOldPgm(-1,"beaconloop.py")
-					U.killOldPgm(-1,"BLEconnect.py")
+					U.logger.log(20, "BLEreport: stopping master and BLE programs")
+					U.killOldPgm(-1,"master.sh", verbose=True)
+					U.killOldPgm(-1,"master.py", verbose=True)
+					U.killOldPgm(-1,"beaconloop.py", verbose=True)
+					U.killOldPgm(-1,"BLEconnect.py", verbose=True)
 					U.getIPNumber()
 					data   = {"BLEreport":{},"pi":str(G.myPiNumber)}
-					
 					cmd = "sudo hciconfig "
 					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					U.logger.log(10, unicode(dataW))
+					U.logger.log(20, "{}".format(dataW[0]))
 					data   = {"BLEreport":{}}
 					data["BLEreport"]["hciconfig"]			  = dataW
-					cmd = "sudo hciconfig hci0 down; sudo hciconfig hci0 up ; sudo timeout -s SIGINT 15s hcitool lescan "
+					cmd = "sudo hciconfig hci0 down; sudo hciconfig hci0 up; sudo hciconfig hci0 up"
 					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					U.logger.log(10, unicode(dataW))
+
+					cmd = "sudo timeout -s SIGINT 20s bluetoothctl scan on"
+					U.logger.log(20, "{}".format(cmd))
+					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+					cmd = "sudo timeout -s SIGINT 25s hcitool scan "
+					U.logger.log(20, "bluetoothctl scan:\n{}\n{}\n now:{}".format(dataW[0],dataW[1],cmd))
 					data["BLEreport"]["hcitool lescan"]		  = dataW
 					cmd = "sudo timeout -s SIGINT 25s hcitool scan "
 					dataW = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-					U.logger.log(10, unicode(dataW)) 
+					U.logger.log(20, "scan:\n{}\n{}".format(dataW[0],dataW[1])) 
 					data["BLEreport"]["hcitool scan"]		  = dataW
-					U.logger.log(10, unicode(data))
+					U.logger.log(20, "finished:\n{}\n{}".format(dataW[0],dataW[1]))
 					U.sendURL(data,squeeze=False)
 					time.sleep(2)
-					subprocess.call("sudo killall -9 python; sudo reboot now", shell=True)
+					#subprocess.call("sudo python master.py&", shell=True)
 					exit()
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
