@@ -41,7 +41,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 			if execGeneral(next): continue
 
 			cmdJ = json.dumps(next)
-			U.logger.log(20,"cmd= "+cmdJ)
+			#U.logger.log(20,"cmd= "+cmdJ)
 			#print cmdJ
 			cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
 			subprocess.call(cmdOut, shell=True)

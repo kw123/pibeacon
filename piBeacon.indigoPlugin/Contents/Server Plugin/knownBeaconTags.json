@@ -1,0 +1,533 @@
+{
+  "Jaalee": {
+    "battCmd": "msg:pos=-3,norm=255", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 12, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
+
+  }, 
+  "BlackCard": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1X020104030225FAXXFF0E05A00033E2"
+  }, 
+  "BlueCharm_BC011": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
+  }, 
+  "BlueCharm_BC0631": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061"
+  }, 
+  "Cube": {
+    "battCmd": "off", 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-cmd  0x0022 55AA01100202ED"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x0022 55AA01100200ED"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "0F020106030300F007094355424500"
+  }, 
+  "Feasy_Triangle": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1E0201061AFF4C000215D546DF97475747EFBE093E2DCB"
+  }, 
+  "Feasy_USB": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-40", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1B0201060303AAFE1316AAFE10EB03676F6F2E676C2F50"
+  }, 
+  "Feasy_AAA": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-40", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1A0201060303AAFE1116AAFE20000C"
+  }, 
+  "Innway": {
+    "battCmd": "off", 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-cmd 0x0012 EE030000"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x0012 EE030000"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "13020106030301E00B09496E6E7761"
+  }, 
+  "MiniBeacon": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 0, 
+    "msg": [],
+    "tag": "FDA50693A4E24FB1AFCFC6EB07647825"
+  }, 
+  "Njoiii_iTrack": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "ramdom", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x001B 0100", 
+        "char-write-req 0x0024 A1A2A3A4", 
+        "char-write-req 0x001E 02", 
+        "char-write-req 0x0010 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0010 00"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-55", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1A020105030202180AFF4B4D22"
+  }, 
+  "Nonda_Aiko": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-cmd  0x0011  02"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x0011 00"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-55", 
+    "pos": 16, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
+  }, 
+  "Nonda_iHere": {
+    "battCmd": {
+      "bits": 63, 
+      "norm": 36, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-cmd  0x0011  02"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x0011 00"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-50", 
+    "pos": 16, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
+  }, 
+  "NutFinder": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x0025 04"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0025 03"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-61", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1C0201060303031805FFD20000xxx9160A18MAC#########"
+  }, 
+  "OralB": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 0, 
+    "msg": [],
+    "tag": "120201050EFFDC000201"
+  }, 
+  "Orbit": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 0, 
+    "msg": [],
+    "tag": "0F020106030300F007094F52"
+  }, 
+  "Radius": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "2F234454CF6D4A0FADF2F4911BA9FFA6"
+  }, 
+  "Rinex_iTrack": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x001B 0100", 
+        "char-write-req 0x0024 A1A2A3A4", 
+        "char-write-req 0x001E 02", 
+        "char-write-req 0x0010 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0010 00"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-55", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1A020105030202180AFF4B4D32RMAC########"     
+  }, 
+  "Smart_tracker": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-cmd  0x0023  01"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x0023 00"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-50", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "14020106070304180F18C0FF020A0005"
+  }, 
+  "SocialRetail": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 0, 
+    "msg": [],
+    "tag": "E2C56DB5DFFB48D2B060D0F5a71096E0"
+  }, 
+  "SpotyPal": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x0021 363636363636", 
+        "char-write-req 0x000B 00", 
+        "char-write-req 0x000E 00", 
+        "char-write-req 0x002B D007", 
+        "char-write-req 0x0031 0100", 
+        "char-write-cmd 0x000E 02"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x000E 00"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-55", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "53706F747950616C5465727261636F"
+  }, 
+  "SwiftFinder": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "0F02010603030A18070953"
+  }, 
+  "Tovala": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 54, 
+    "posDelta": 0, 
+    "prio": 0, 
+    "msg": [],
+    "tag": "546F76616C61"
+  }, 
+  "Vozni_iTrack": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x0034 0100", 
+        "char-write-req 0x0039 0100", 
+        "char-write-req 0x0043 A1A2A3A4", 
+        "char-write-req x003D 02", 
+        "char-write-cmd 0x0011 02"
+      ], 
+      "cmdOff": [
+        "char-write-cmd 0x0011 00"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-55", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "12020106030202180AFF4B4D0xRMAC########"
+  }, 
+  "XY_1": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
+        "char-write-req 0x003B 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
+        "char-write-req 0x003B FF"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-59", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "07775DD0111B11E491910800200C9A66"
+  }, 
+  "XY_2": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
+        "char-write-req 0x003B 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
+        "char-write-req 0x003B FF"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-59", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "08885DD0111B11E491910800200C9A66"
+  }, 
+  "XY_3": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
+        "char-write-req 0x003B 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
+        "char-write-req 0x003B FF"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-59", 
+    "pos": 32, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "04000000005F78000900580509585934"
+  }, 
+  "XY_4": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
+        "char-write-req 0x003B 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
+        "char-write-req 0x003B FF"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-59", 
+    "pos": 12, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1F0201061106A44EACF40104000000005F78002599A405095859"
+  }, 
+  "myblueT": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 1, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "myBlueT"
+  }, 
+  "other": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": -1, 
+    "posDelta": 0, 
+    "prio": -1, 
+    "msg": [],
+    "tag": "xx"
+  }, 
+  "ruuviTag": {
+    "battCmd": "msg", 
+    "beepCmd": "off", 
+    "dBm": "-65", 
+    "pos": 22, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "FF990405"
+  }, 
+  "unknown": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": -1, 
+    "posDelta": 0, 
+    "prio": -1, 
+    "msg": [],
+    "tag": "xx"
+  }
+}

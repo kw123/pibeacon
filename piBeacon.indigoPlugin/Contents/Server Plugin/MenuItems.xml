@@ -212,21 +212,7 @@ Then the rPi will start sending data to plugin
                 <Title>get rPi system stats to logfile</Title>
                 <CallbackMethod>buttonGetSystemParametersCALLBACK</CallbackMethod>
             </Field>
-            <Field id="buttonGetiBeacon0List" type="button" tooltip="if you use HCI0 (uart / dongle); output in plugin.log; will restart master.py on RPI, using   cd /home/pi/pibeacon; sudo hciconfig hci0 down;sudo hciconfig hci0 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
-                <Label>click to</Label>
-                <Title>get ibeacon list (using lescan hci0 from rPi); will collect data for 30secs</Title>
-                <CallbackMethod>buttonGetiBeaconList0CALLBACK</CallbackMethod>
-            </Field>
-            <Field id="buttonGetiBeacon1List" type="button" tooltip="if you use HCI1 (uart / dongle); output in plugin.log; will restart master.py on RPI, using   cd /home/pi/pibeacon; sudo hciconfig hci1 down;sudo hciconfig hci1 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
-                <Label>click to</Label>
-                <Title>get ibeacon list (using lescan hci1 from rPi); will collect data for 30secs</Title>
-                <CallbackMethod>buttonGetiBeaconList1CALLBACK</CallbackMethod>
-            </Field>
-            <Field id="buttonGetiBeaconList" type="button" tooltip="if you use HCI1 (uart / dongle); output in plugin.log; will restart master.py on RPI, using   cd /home/pi/pibeacon; sudo hciconfig hci1 down;sudo hciconfig hci1 up; sudo hcitool lescan &amp; sleep 30  &amp;&amp; sudo pkill --signal SIGINT hcitool;sudo python master.py">
-                <Label>click to</Label>
-                <Title>get ibeacon list (using bluetoothctl from rPi); will collect data for 30secs</Title>
-                <CallbackMethod>buttonGetiBeaconListbluetoothctlCALLBACK</CallbackMethod>
-            </Field>
+
             <Field id="logsEnd" type="label">
                 <Label> -------- other </Label>
             </Field>
@@ -579,6 +565,133 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
             </Field>
         </ConfigUI>
     </MenuItem>
+    <MenuItem id="getBatteryLevels">
+        <Name>Get iBeacon battery level from rPi</Name>
+        <ConfigUI>
+            <Field id="infoLabelINPUT1" type="label">
+                <Label>Get update for ALL beacons</Label>
+            </Field>
+            <Field id="piServerNumber" type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm ">
+                <Label>select rPi to use for query, use ALL for optimized distribution</Label>
+                <List class="self" filter="" method="filterPiBLE" dynamicReload="false" />
+            </Field>
+            <Field id="execAll" type="button">
+                <Label> ....after selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>getBeaconParametersCALLBACKmenu</CallbackMethod>
+            </Field>
+            <Field id="infoLabelINPUT2" type="label">
+                <Label>OR get update for ONE specific beacon</Label>
+            </Field>
+            <Field id="devIdOfBeacon" type="menu" defaultValue="">
+                <Label>select beacon from list</Label>
+                <List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false" />
+            </Field>
+            <Field id="execBeacon" type="button">
+                <Label> ....after selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>getONEBeaconParametersCALLBACKmenu</CallbackMethod>
+            </Field>
+            <Field id="execReport" type="button">
+                <Label>Print report of current beacon battery levels</Label>
+                <Title>PRINT</Title>
+                <CallbackMethod>makeBatteryLevelReportCALLBACKmenu</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+    <MenuItem id="sendBeepToBeacon">
+        <Name>Send a beep command to ibeacons</Name>
+        <ConfigUI>
+            <Field id="infoLabelINPUT0" type="label">
+                <Label>Selecet the beacon and the length of time for the beacon to receive the beep command
+the beacon must be able to digest the command, only qualified beacons are shown in the select list, and if state == up, and has to be enabled in beacon device edit
+During the time of beeping the regular ibeacon process is suspended. Very long beep times can lead to expiration of beacons
+the state isBeepable shows if is enabled, or buys or YES</Label>
+            </Field>
+            <Field id="selectbeaconForBeep" type="menu" defaultValue="-1">
+                <Label>select the beacon</Label>
+                <List class="self" filter="" method="filterBeaconsThatCanBeep" dynamicReload="false" />
+            </Field>
+            <Field id="beepTime" type="menu" defaultValue="-1" tooltip="">
+                <List>
+                    <Option value="-1">off</Option>
+                    <Option value="1">1 sec</Option>
+                    <Option value="2">2 sec</Option>
+                    <Option value="3">3 sec</Option>
+                    <Option value="4">4 sec</Option>
+                    <Option value="5">5 sec</Option>
+                    <Option value="7">7 sec</Option>
+                    <Option value="10">10 sec</Option>
+                    <Option value="15">15 sec</Option>
+                    <Option value="20">20 sec</Option>
+                    <Option value="25">25 sec</Option>
+                    <Option value="30">30 sec</Option>
+                    <Option value="35">35 sec</Option>
+                    <Option value="40">40 sec</Option>
+                    <Option value="45">45 sec</Option>
+                    <Label>Beep for xx secs:</Label>
+                </List>
+            </Field>
+            <Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number and then click on confirm ">
+                <Label>select rPi to use for beep or choose closest</Label>
+                <List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
+            </Field>
+            <Field id="execAll" type="button">
+                <Label> ....after selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>sendBeepCommandCALLBACKmenu</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+    <MenuItem id="Detectnewbeacontools">
+        <Name>Detect (new) beacon tool</Name>
+        <ConfigUI>
+            <Field id="printBLEreportLabel" type="label">
+                <Label>Print all beacon-BLE info received at one RPI 
+Put your new beacon next to the selected RPI, then execute. It will run: 
+hcitool lescan, hcidump --dump, bluetoothctl scan on  
+for 30 secs 
+Then print a consolidated report of (un)known beacons to the plugin.log file
+This can be used to get the MAC# of new beacons to be added or 
+  create a new entry in knownBeaconTags file
+You should not run it more often than once a minute</Label>
+            </Field>
+            <Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
+                <List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
+                <Label>Select rPi-server to request report:</Label>
+            </Field>
+            <Field id="minRSSI" type="menu" defaultValue="-60" tooltip=" the low (higher - number), the more beacons will be used">
+                <List>
+                    <Option value="-40">-40 dBm, use only if you put your beacon VERY close to the RPI</Option>
+                    <Option value="-45">-45 dBm</Option>
+                    <Option value="-50">-50 dBm</Option>
+                    <Option value="-55">-55 dBm</Option>
+                    <Option value="-60">-60 dBm default, should catch everything in 20cm range</Option>
+                    <Option value="-65">-65 dBm</Option>
+                    <Option value="-70">-70 dBm</Option>
+                    <Option value="-75">-75 dBm</Option>
+                    <Option value="-80">-80 dBm</Option>
+                    <Option value="-85">-85 dBm</Option>
+                    <Option value="-90">-90 dBm  .. this should catch everything in range</Option>
+                    <Label>Signal level (RSSI) cutoff (signal must be GT):</Label>
+                </List>
+            </Field>
+            <Field id="execprintBLEAnalysisCALLBACK" type="button">
+                <Label>After selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>printBLEAnalysisCALLBACKmenu</CallbackMethod>
+            </Field>
+            <Field id="printBLEreportLabel2" type="label">
+                <Label>the raw output of 
+hcitool lescan, hcidump --dump, bluetoothctl scan on
+is on your RPI in ~/pibeacon/temp/:
+hcidump.data, lescan.data, bluetoothctl.data</Label>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+
     <MenuItem id="d19">
         <Name>-------------fix indigo webserver -----------------</Name>
         <CallbackMethod>inpDummy</CallbackMethod>
@@ -683,7 +796,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
                 <Label>pick min change of signal to log [dBm]</Label>
                 <List>
                     <Option value="9999,-">  off</Option>
-                    <Option value="5,x">  5  dBm exclude ON-off/off-ON</Option>
+                    <Option value="5,x" >  5  dBm exclude ON-off/off-ON</Option>
                     <Option value="10,x">  10 dBm exclude ON-off/off-ON</Option>
                     <Option value="15,x">  15 dBm exclude ON-off/off-ON</Option>
                     <Option value="20,x">  20 dBm exclude ON-off/off-ON</Option>
@@ -693,7 +806,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
                     <Option value="40,x">  40 dBm exclude ON-off/off-ON</Option>
                     <Option value="45,x">  45 dBm exclude ON-off/off-ON</Option>
                     <Option value="50,x">  50 dBm exclude ON-off/off-ON</Option>
-                    <Option value="5,i">  5  dBm include ON-off/off-ON</Option>
+                    <Option value="5,i" >  5  dBm include ON-off/off-ON</Option>
                     <Option value="10,i">  10 dBm include ON-off/off-ON</Option>
                     <Option value="15,i">  15 dBm include ON-off/off-ON</Option>
                     <Option value="20,i">  20 dBm include ON-off/off-ON</Option>
@@ -794,27 +907,6 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
                 <Label> ....after selection click</Label>
                 <Title>EXECUTE</Title>
                 <CallbackMethod>printDeviceDictCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="printBLEreportLabel0" type="label">
-                <Label></Label>
-            </Field>
-            <Field id="printBLEreportLabel" type="label">
-                <Label>Print BLE info from RPI to logfile...</Label>
-            </Field>
-            <Field id="label1printBLEreport" type="label">
-                <Label>The command will stop any BLE activity on the RPI (kill master.py , beaconloop.py ...), 
-then it will collect bluetoothctl scan on info for 15 secs and hcitool SCAN for 25 secs 
-then it will reboot the RPI  
-PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
-            </Field>
-            <Field id="configurePi" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
-                <List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
-                <Label>...select rPi-server to request report:</Label>
-            </Field>
-            <Field id="execprintBLEreportCALLBACK" type="button">
-                <Label> ....after selection click</Label>
-                <Title>EXECUTE</Title>
-                <CallbackMethod>printBLEreportCALLBACK</CallbackMethod>
             </Field>
         </ConfigUI>
     </MenuItem>
@@ -1028,87 +1120,9 @@ PLEASE DO NOT CLICK on EXECUTE twice for the same RPI</Label>
             </Field>
         </ConfigUI>
     </MenuItem>
-    <MenuItem id="getBatteryLevels">
-        <Name>Get iBeacon battery level from rPi</Name>
-        <ConfigUI>
-            <Field id="infoLabelINPUT1" type="label">
-                <Label>Get update for ALL beacons</Label>
-            </Field>
-            <Field id="piServerNumber" type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm ">
-                <Label>select rPi to use for query, use ALL for optimized distribution</Label>
-                <List class="self" filter="" method="filterPiBLE" dynamicReload="false" />
-            </Field>
-            <Field id="execAll" type="button">
-                <Label> ....after selection click</Label>
-                <Title>EXECUTE</Title>
-                <CallbackMethod>getBeaconParametersCALLBACKmenu</CallbackMethod>
-            </Field>
-            <Field id="infoLabelINPUT2" type="label">
-                <Label>OR get update for ONE specific beacon</Label>
-            </Field>
-            <Field id="devIdOfBeacon" type="menu" defaultValue="">
-                <Label>select beacon from list</Label>
-                <List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false" />
-            </Field>
-            <Field id="execBeacon" type="button">
-                <Label> ....after selection click</Label>
-                <Title>EXECUTE</Title>
-                <CallbackMethod>getONEBeaconParametersCALLBACKmenu</CallbackMethod>
-            </Field>
-            <Field id="execReport" type="button">
-                <Label>Print report of current beacon battery levels</Label>
-                <Title>PRINT</Title>
-                <CallbackMethod>makeBatteryLevelReportCALLBACKmenu</CallbackMethod>
-            </Field>
-        </ConfigUI>
-    </MenuItem>
     <MenuItem id="d20o">
         <Name>-------------set values on output/display devices  ----------</Name>
         <CallbackMethod>inpDummy</CallbackMethod>
-    </MenuItem>
-    <MenuItem id="sendBeepToBeacon">
-        <Name>Send a beep command to ibeacons</Name>
-        <ConfigUI>
-            <Field id="infoLabelINPUT0" type="label">
-                <Label>Selecet the beacon and the length of time for the beacon to receive the beep command
-the beacon must be able to digest the command, only qualified beacons are shown in the select list, and if state == up, and has to be enabled in beacon device edit
-During the time of beeping the regular ibeacon process is suspended. Very long beep times can lead to expiration of beacons
-the state isBeepable shows if is enabled, or buys or YES</Label>
-            </Field>
-            <Field id="selectbeaconForBeep" type="menu" defaultValue="-1">
-                <Label>select the beacon</Label>
-                <List class="self" filter="" method="filterBeaconsThatCanBeep" dynamicReload="false" />
-            </Field>
-            <Field id="beepTime" type="menu" defaultValue="-1" tooltip="">
-                <List>
-                    <Option value="-1">off</Option>
-                    <Option value="1">1 sec</Option>
-                    <Option value="2">2 sec</Option>
-                    <Option value="3">3 sec</Option>
-                    <Option value="4">4 sec</Option>
-                    <Option value="5">5 sec</Option>
-                    <Option value="7">7 sec</Option>
-                    <Option value="10">10 sec</Option>
-                    <Option value="15">15 sec</Option>
-                    <Option value="20">20 sec</Option>
-                    <Option value="25">25 sec</Option>
-                    <Option value="30">30 sec</Option>
-                    <Option value="35">35 sec</Option>
-                    <Option value="40">40 sec</Option>
-                    <Option value="45">45 sec</Option>
-                    <Label>Beep for xx secs:</Label>
-                </List>
-            </Field>
-            <Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number and then click on confirm ">
-                <Label>select rPi to use for beep or choose closest</Label>
-                <List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
-            </Field>
-            <Field id="execAll" type="button">
-                <Label> ....after selection click</Label>
-                <Title>EXECUTE</Title>
-                <CallbackMethod>sendBeepCommandCALLBACKmenu</CallbackMethod>
-            </Field>
-        </ConfigUI>
     </MenuItem>
     <MenuItem id="OUTPUTgpio">
         <Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>

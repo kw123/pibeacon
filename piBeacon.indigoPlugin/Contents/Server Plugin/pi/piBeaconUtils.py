@@ -17,7 +17,7 @@ import RPi.GPIO as GPIO
 import threading
 try: import Queue
 except: import queue as Queue
-
+import zlib
 
 
 ##
@@ -395,7 +395,9 @@ def getGlobalParams(inp):
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
 
 		if u"enableRebootCheck"		in inp:	 G.enableRebootCheck=			(inp["enableRebootCheck"])
-
+		if u"compressRPItoPlugin"	in inp:	 
+			try:	G.compressRPItoPlugin =			int(inp["compressRPItoPlugin"])
+			except: G.compressRPItoPlugin = 99999999
 
 		if u"wifiEth"				in inp:
 			xxx = inp["wifiEth"]
@@ -1849,7 +1851,7 @@ def execSend():
 			while not G.sendThread["queue"].empty():
 				try:
 					all 		= G.sendThread["queue"].get()
-					logger.log(10, u"cBY:{:<20} send queue data {}".format(G.program, all) )
+					#logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, unicode(all)[0:100] )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
 					text 		= all["text"]
@@ -1925,8 +1927,16 @@ def execSend():
 					else:  ## do socket comm
 								MSGwasSend = False
 								for ii in range(3): # try max 3 times.
-									data0 = json.dumps(data, separators=(',',':'))
-									if squeeze: data0 = data0.replace(" ","")
+									dataC = json.dumps(data, separators=(',',':'))
+									if squeeze: dataC = dataC.replace(" ","")
+									if  len(dataC) > G.compressRPItoPlugin: 
+										data0 = "++compressed=="+zlib.compress(dataC)
+										compressed = True
+										logger.log(10, "cBY:{:<20}  socket send compressed data lengths: before:{}; after:{} ".format(G.program,len(dataC),len(data0)))
+									else: 
+										data0 = dataC
+										compressed = False
+
 									sendData= "{}x-6-a{}x-6-a{}".format(len(data0), name, data0)
 									try:
 										soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -1961,10 +1971,10 @@ def execSend():
 
 								if MSGwasSend:
 											logger.log(10, "cBY:{:<20}  msg: {}\n".format(G.program, sendData) )
-											subprocess.call("echo '{}{}: send --  {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "), G.program, data0, G.homeDir) , shell=True)
+											subprocess.call("echo '{}{}: send --  {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "), G.program, dataC, G.homeDir) , shell=True)
 								else:
 											logger.log(10, "cBY:{:<20}  msg not send ".format(G.program, sendData))
-											subprocess.call("echo '{}{}: NOT successfully send -- {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "), G.program,data0, G.homeDir) , shell=True)
+											subprocess.call("echo '{}{}: NOT successfully send -- {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "), G.program,dataC, G.homeDir) , shell=True)
 								try:	soc.shutdown(socket.SHUT_RDWR)
 								except: pass
 								try:	soc.close()

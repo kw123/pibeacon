@@ -236,7 +236,6 @@ Socket communication will go directly through socket communication to plugin tha
         <Label>use RPI to indigo web server or RPI to indigo through sockets:</Label> 
    </Field>
 
-
    <Field id="portOfServer"   type="textfield" defaultValue="8176" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
         <Label>define IP-PORT of default Indigo web server:</Label> 
    </Field>
@@ -257,8 +256,23 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
             <Option value="1200" >20 minute </Option>
             <Option value="3600" >1 hour </Option>
         </List>    
-
    </Field>
+   <Field id="compressRPItoPlugin"   type="menu" defaultValue="999999999" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+        <List>
+            <Option value="200"      >msg GT 200 bytes</Option>
+            <Option value="600"      >msg GT 600 bytes</Option>
+            <Option value="2000"     >msg GT 2   KB </Option>
+            <Option value="10000"    >msg GT 10  KB </Option>
+            <Option value="50000"    >msg GT 50  KB </Option>
+            <Option value="100000"   >msg GT 100 KB </Option>
+            <Option value="999999999" >off </Option>
+        </List>    
+        <Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
+   </Field>
+    <Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>use if you have a slow connection iw wifi and large packages dont come through</Label>
+    </Field>
+
 
    <Field id="infoLabeluserID" type="label" fontSize="small" >
         <Label>

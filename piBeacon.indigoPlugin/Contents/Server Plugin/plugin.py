@@ -21,6 +21,7 @@ import Queue
 import cProfile
 import pstats
 import logging
+import zlib
 
 import MACMAP.MAC2Vendor as M2Vclass
 #import pydevd_pycharm
@@ -60,6 +61,13 @@ _debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","Updat
 ## ID packet Type                                        APPLE                                                                    
 ## 04 3E 2A 02 01 00 00 6B 5F 24 32 DA A4 1E 02 01 06 1A FF 4C 00 02 15 53 70 6F 74 79 50 61 6C 54 65 72 72 61 63 6F 6D 1A DD D6 24 CA AF 
 
+## black card
+## 0E:05:A0:00:33:E2 -->         pos 12   19 02 01 04 03 02 25 FA 11 FF 0E 05 A0 00 33 E2 82 40 00 1F 16
+## 04 3E 25 02 01 00 00 E2 33 00 A0 05 0E 19 02 01 04 03 02 25 FA 11 FF 0E 05 A0 00 33 E2 82 40 00 1F 16 00 3E 0F 04 0B E1 
+##                      E2 33 00 A0 05 0E 10 02 01 04 03 02 25 FA 08 FF 0E 05 A0 00 33 E2 93 E1
+##                      E2 33 00 A0 05 0E 1X 02 01 04 03 02 25 FA XX FF 0E 05 A0 00 33 E2  
+
+
 ##   ORBIT :                              pos=12-----------------------------                                    
 ## 04 3E 1B 02 01 00 00 1C B8 08 10 00 00 0F 02 01 06 03 03 00 F0 07 09 4F 52 42 49 54 00 BC  
 
@@ -75,6 +83,15 @@ _debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","Updat
 ## 04 3E 2A 02 01 03 00 38 04 F2 D8 63 E3 1E 02 01 04 1A FF 4C 00 02 15 E2 C5 6D B5 DF FB 48 D2 B0 60 D0 F5 A7 10 96 E0 01 00 02 00 C5 B4 
 
 ## feasy
+## big round 2 aaa bat
+## DC:0D:30:92:E3:1F -->1F E3 92 30 0D DC
+## 04 3E 26 02 01 04 00 1F E3 92 30 0D DC 1A 0E 16 F0 FF 1B 02 09 02 DC 0D 30 92 E3 1F 64 0A 09 46 53 43 5F 42 50 31 30 34 F0 
+##                      1F E3 92 30 0D DC 1A 0E 16 F0 FF 1B 02 09 02 MA C# ## ## ## ## 64 0A 09 46 53 43 5F 42 50 31 30 34 F0 
+## msg2
+## 04 3E 26 02 01 00 00 1F E3 92 30 0D DC 1A 02 01 06 03 03 AA FE 11 16 AA FE 20 00 0C 9E 80 00 00 00 00 9F 00 00 08 18 00 E4 
+
+
+##
 ## DD:0D:30:46:3E:E1 BP109
 ## 04 3E 2A 02 01 00 01 E1 3E 46 30 0D DD 1E 02 01 06 1A FF 4C 00 02 15 FD A5 06 93 A4 E2 4F B1 AF CF C6 EB 07 64 78 25 27 51 65 C1 FD BC  # 2 different messages
 ## 04 3E 2A 02 01 00 00 FB F0 00 30 0D DC 1E 02 01 06 1A FF 4C 00 02 15 D5 46 DF 97 47 57 47 EF BE 09 3E 2D CB DD 0C 77 30 00 F0 FB B5 BB  # could use mac # but only 4 pairs not 6, and last 4 
@@ -87,6 +104,12 @@ _debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","Updat
 ## 04 3E 1E 02 01 00 00 2C 20 19 32 DA A4 12 02 01 05 03 02 02 18 0A FF 4B 4D 00 2C 20 19 32 DA A4 C2 
 ##                                        12 02 01 06 03 02 02 18 0A FF 4B 4D 0x RM AC ## ## ## ##
 ## 04 3E 1E 02 01 00 00 F0 D8 18 32 DA A4 12 02 01 05 03 02 02 18 0A FF 4B 4D 00 F0 D8 18 32 DA A4 CD
+
+
+
+##rinex:
+## 04 3E 26 02 01 00 01 3A D4 E2 B3 F0 F1 1A 02 01 05 03 02 02 18 0A FF 4B 4D 32 3A D4 E2 B3 F0 F1 07 09 69 54 72 61 63 6B EC 
+##                                        1A 02 01 05 03 02 02 18 0A FF 4B 4D 32 MA C# ## ## ## ## 
 
 
 ## DD:33:0A:11:15:E3 = E3 15 11 0A 33 DD    Bluecharm     
@@ -446,7 +469,8 @@ _GlobalConst_beaconPlotSymbols = [
 
 
 _GlobalConst_allowedCommands = [
-	u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", u"getBeaconParameters", u"startCalibration", u"rampUp", u"rampDown", u"rampUpDown", u"beepBeacon"]	 # commands support for GPIO pins
+	u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", 
+	u"getBeaconParameters", u"startCalibration","BLEAnalysis", u"rampUp", u"rampDown", u"rampUpDown", u"beepBeacon"]	 # commands support for GPIO pins
 
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
@@ -1161,6 +1185,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.deviceStopCommIgnore 		= 0
 			self.cameraImagesDir			= self.indigoPreferencesPluginDir+"cameraImages/"
+			self.knownBeaconTags 			= {}
 
 			self.setLogfile(self.pluginPrefs.get("logFileActive2", "standard"))
 
@@ -1377,6 +1402,7 @@ class Plugin(indigo.PluginBase):
 			self.dataStats					= {u"startTime": time.time()}
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get(u"maxSocksErrorTime", u"600.")) 
 			except: self.maxSocksErrorTime	= 600.
+			self.compressRPItoPlugin		= self.pluginPrefs.get(u"compressRPItoPlugin", u"99999999")
 			self.portOfServer				= self.pluginPrefs.get(u"portOfServer", u"8176")
 			self.userIdOfServer				= self.pluginPrefs.get(u"userIdOfServer", u"")
 			self.passwordOfServer			= self.pluginPrefs.get(u"passwordOfServer", u"")
@@ -2563,8 +2589,14 @@ class Plugin(indigo.PluginBase):
 			if os.path.isfile(self.indigoPreferencesPluginDir+"beaconsUUIDtoName"):
 				os.remove(self.indigoPreferencesPluginDir+"beaconsUUIDtoName")
 
-
-			self.knownBeaconTags = copy.deepcopy(_GlobalConst_knownBeaconTags)
+			self.knownBeaconTags = {}
+			try:
+				f = open(self.pathToPlugin + "knownBeaconTags.json", u"r")
+				self.knownBeaconTags = json.loads(f.read())
+				f.close()
+			except:
+				try:f.close()
+				except: pass
 
 			## write empty supplicant file 
 			if not os.path.isfile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant"):
@@ -2586,7 +2618,7 @@ class Plugin(indigo.PluginBase):
 							self.knownBeaconTags[tag][item] = copy.copy(knownBeaconTagsSupplicant[tag][item])
 							self.indiLOG.log(20, u"added  item from knownBeaconTags.supplicant: {} {}".format(item,knownBeaconTagsSupplicant[tag][item] ))
 						
-			self.writeJson( self.knownBeaconTags, fName=self.indigoPreferencesPluginDir + u"knownBeaconTags.full_copy_to_use_as_example", fmtOn=True )
+			self.writeJson( self.knownBeaconTags, fName=self.indigoPreferencesPluginDir + u"knownBeaconTags.full_copy_to_use_as_example", fmtOn=True,  toLog=False )
 			self.writeJson( self.knownBeaconTags, fName=self.indigoPreferencesPluginDir + u"all/knownBeaconTags", fmtOn=True )
 
 
@@ -3320,7 +3352,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def writeJson(self,data, fName="", fmtOn=False ):
+	def writeJson(self,data, fName="", fmtOn=False, toLog=False):
 		try:
 
 			if format:
@@ -3329,6 +3361,7 @@ class Plugin(indigo.PluginBase):
 				out = json.dumps(data)
 
 			if fName !="":
+				if toLog: self.indiLOG.log(20,"json writing data:\n{}\n to fname:{}".format(data, fName))
 				f=open(fName,u"w")
 				f.write(out)
 				f.close()
@@ -3811,8 +3844,7 @@ class Plugin(indigo.PluginBase):
 						beacon = dev.address
 						if beacon in self.beacons:
 							typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
-							if typeOfBeacon in self.knownBeaconTags  and self.knownBeaconTags[typeOfBeacon]["battCmd"] not in ["msg","off"]:
-								theDictList[0][u"batteryLevelUUID"] not in ["msg","off","gatttool"]
+							if typeOfBeacon in self.knownBeaconTags and type("") != type(self.knownBeaconTags[typeOfBeacon]["battCmd"]):
 								theDictList[0][u"batteryLevelUUID"]  = "gatttool"
 
 				return theDictList 
@@ -4844,17 +4876,6 @@ class Plugin(indigo.PluginBase):
 
 		return valuesDict
 
-####-------------------------------------------------------------------------####
-	def printBLEreportCALLBACK(self, valuesDict=None, typeId=""):
-
-		self.setCurrentlyBooting(80, setBy="printBLEreportCALLBACK")
-		piU = valuesDict[u"configurePi"]
-		if piU ==u"": return
-		out= json.dumps([{u"command":"BLEreport"}])
-		self.presendtoRPI(piU,out)
-
-		return valuesDict
-
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmchangeLogfile(self, valuesDict=None, typeId="", devId=0):
@@ -5672,19 +5693,6 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def buttonbuttonGetpiBeaconLogCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		return self.execButtonConfig(valuesDict, level="0,", action=[u"getLogFileSSH"], Text="get pibeacon logfile from rpi")
-
-####------------------------------------------------------------------------####
-	def buttonGetiBeaconList0CALLBACK(self, valuesDict=None, typeId="", devId=0):
-		return self.execButtonConfig(valuesDict, level="0,", action=[u"getiBeaconList0SSH"], Text="get stats from rpi")
-
-####------------------------------------------------------------------------####
-	def buttonGetiBeaconList1CALLBACK(self, valuesDict=None, typeId="", devId=0):
-		return self.execButtonConfig(valuesDict, level="0,", action=[u"getiBeaconList1SSH"], Text="get stats from rpi")
-
-####------------------------------------------------------------------------####
-	def buttonGetiBeaconListbluetoothctlCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		return self.execButtonConfig(valuesDict, level="0,", action=[u"getiBeaconListbluetoothctlSSH"], Text="get stats from rpi")
-
 
 ####-------------------------------------------------------------------------####
 	def execButtonConfig(self, valuesDict, level="0,", action=[], Text=""):
@@ -8222,93 +8230,95 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def getBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
 		
+		try:
+			if not force and self.checkBeaconParametersDisabled: return 
 
-		if not force and self.checkBeaconParametersDisabled: return 
+			devices = {}
 
-		devices = {}
-
-		if  valuesDict is None: return  valuesDict
-		beacon = ""
-		if valuesDict["piServerNumber"] not in["all","999"]:
-			if devId != 0: 
-				try: 
-					beaconDev = indigo.devices[devId]
-					beacon =  beaconDev.address
-					valuesDict["piServerNumber"]  = "all"
-				except:
-					pass
+			if  valuesDict is None: return  valuesDict
+			beacon = ""
+			if valuesDict["piServerNumber"] not in["all","999"]:
+				if devId != 0: 
+					try: 
+						beaconDev = indigo.devices[devId]
+						beacon =  beaconDev.address
+						valuesDict["piServerNumber"]  = "all"
+					except:
+						pass
 
 
-		if "piServerNumber" not in  valuesDict: return  valuesDict
-		if valuesDict["piServerNumber"]  == "-1": return  valuesDict
-		for piU in _rpiBeaconList:
-			if valuesDict["piServerNumber"] == piU or valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
-				devices[piU] = {} 
+			if "piServerNumber" not in  valuesDict: return  valuesDict
+			if valuesDict["piServerNumber"]  == "-1": return  valuesDict
+			for piU in _rpiBeaconList:
+				if valuesDict["piServerNumber"] == piU or valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
+					devices[piU] = {} 
 
-		minTime ={}
-		for piU2 in _rpiList:
-			minTime[piU2] = 0 
+			minTime ={}
+			for piU2 in _rpiList:
+				minTime[piU2] = 0 
 
-		for dev in indigo.devices.iter("props.isBeaconDevice"):
-			props = dev.pluginProps
-			if dev.states["status"] !="up": continue
-			if beacon != "" and (dev.address != beacon or devId != dev.id): continue
-			if valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
-				piU = str(dev.states["closestRPI"])
-			else:
-				piU = valuesDict["piServerNumber"]
+			for dev in indigo.devices.iter("props.isBeaconDevice"):
+				props = dev.pluginProps
+				if dev.states["status"] !="up": continue
+				if beacon != "" and (dev.address != beacon or devId != dev.id): continue
+				if valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
+					piU = str(dev.states["closestRPI"])
+				else:
+					piU = valuesDict["piServerNumber"]
 
-			if piU not in _rpiBeaconList: continue
-			mac  = dev.address
-			dd = {}
-			typeOfBeacon = self.beacons[mac]["typeOfBeacon"]
-			if typeOfBeacon !="":
-				if "SupportsBatteryLevel" in props and props["SupportsBatteryLevel"]:
-					if typeOfBeacon in self.knownBeaconTags  and self.knownBeaconTags[typeOfBeacon]["battCmd"] not in ["msg","off"]:
-						if "batteryLevelUUID" in props  and props["batteryLevelUUID"]  not in ["off","msg"]:
-							try: 	batteryLevelLastUpdate = self.getTimetimeFromDateString(dev.states["batteryLevelLastUpdate"])
-							except: batteryLevelLastUpdate = 0
-							try: 	batteryLevel = int(dev.states["batteryLevel"])
-							except: batteryLevel = 0
-							if force or   batteryLevel < 20   or   (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 30% dont need to redo it again
-								try: 
-									dist = float( dev.states["Pi_"+piU.rjust(2,"0")+"_Distance"] )
-									if dist < 99.:
-										dd={"battCmd":self.knownBeaconTags[typeOfBeacon]["battCmd"]}
-										minTime[piU] += 10
-										self.beacons[mac]["lastBusy"] = time.time() + 90
-										dev.updateStateOnServer("isBeepable","busy")
+				if piU not in _rpiBeaconList: continue
+				mac  = dev.address
+				dd = {}
+				typeOfBeacon = self.beacons[mac]["typeOfBeacon"]
+				if typeOfBeacon !="":
+					if "SupportsBatteryLevel" in props and props["SupportsBatteryLevel"]:
+						if typeOfBeacon in self.knownBeaconTags and type("") != type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) :
+							if "batteryLevelUUID" in props  and props["batteryLevelUUID"]  not in ["off","msg"]:
+								try: 	batteryLevelLastUpdate = self.getTimetimeFromDateString(dev.states["batteryLevelLastUpdate"])
+								except: batteryLevelLastUpdate = 0
+								try: 	batteryLevel = int(dev.states["batteryLevel"])
+								except: batteryLevel = 0
+								if force or   batteryLevel < 20   or   (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 30% dont need to redo it again
+									try: 
+										dist = float( dev.states["Pi_"+piU.rjust(2,"0")+"_Distance"] )
+										if dist < 99.:
+											dd={"battCmd":self.knownBeaconTags[typeOfBeacon]["battCmd"]}
+											minTime[piU] += 10
+											self.beacons[mac]["lastBusy"] = time.time() + 90
+											dev.updateStateOnServer("isBeepable","busy")
 
-										if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last successful check @: {}; distance to RPI:{:4.1f};".format(piU, dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"], dist) )
-									if (time.time() - batteryLevelLastUpdate) > (3600*24*3): # error message if last update > 3 days ago
-										 self.errorLog( "Battery level update outdated  for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
-								except Exception, e:
-									self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+											if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last successful check @: {}; distance to RPI:{:4.1f};".format(piU, dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"], dist) )
+										if (time.time() - batteryLevelLastUpdate) > (3600*24*3): # error message if last update > 3 days ago
+											 self.errorLog( "Battery level update outdated  for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
+									except Exception, e:
+										self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-							else:
-								if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20, "getBeaconParameters no update needed              for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
+								else:
+									if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20, "getBeaconParameters no update needed              for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
 					
 
-			if dd !={}:
-				devices[piU][dev.address] = dd
+				if dd !={}:
+					devices[piU][dev.address] = dd
 
-		minTime    = max(list(minTime.values()))
-		nDownAddWait = True
-		for piU2 in devices:
-				if devices[piU2] == {}: 
-					if valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
-						if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"no active/requested beacons on rpi#{}".format(piU2) )
-				else:
-					xx						= {}
-					xx[u"cmd"]		 		= "getBeaconParameters"
-					xx[u"typeId"]			= json.dumps(devices[piU2])
-					xx[u"piServerNumber"]	= piU2
+			minTime    = max(list(minTime.values()))
+			nDownAddWait = True
+			for piU2 in devices:
+					if devices[piU2] == {}: 
+						if valuesDict["piServerNumber"] == "all" or valuesDict["piServerNumber"] == "999":
+							if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"no active/requested beacons on rpi#{}".format(piU2) )
+					else:
+						xx						= {}
+						xx[u"cmd"]		 		= "getBeaconParameters"
+						xx[u"typeId"]			= json.dumps(devices[piU2])
+						xx[u"piServerNumber"]	= piU2
 
-					if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters request list for pi{};  {}".format(piU2, xx) )
+						if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters request list for pi{};  {}".format(piU2, xx) )
 
-					if nDownAddWait: self.setCurrentlyBooting(minTime+10, setBy="getBeaconParameters (batteryLevel ..)")
-					nDownAddWait = False
-					self.setPin(xx)
+						if nDownAddWait: self.setCurrentlyBooting(minTime+10, setBy="getBeaconParameters (batteryLevel ..)")
+						nDownAddWait = False
+						self.setPin(xx)
+		except Exception, e:
+			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 		return valuesDict
 
@@ -8392,6 +8402,12 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def startCalibrationCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
 		valuesDict[u"cmd"]		 = "startCalibration"
+		self.setPin(valuesDict)
+
+####-------------------------------------------------------------------------####
+	def printBLEAnalysisCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+		valuesDict[u"cmd"]	 			= "BLEAnalysis"
+		valuesDict[u"typeId"]	 		= valuesDict[u"minRSSI"]
 		self.setPin(valuesDict)
 
 ####-------------------------------------------------------------------------####
@@ -8866,7 +8882,8 @@ class Plugin(indigo.PluginBase):
 				return
 
 			ip = self.RPI[piU][u"ipNumberPi"]
-			typeId = valuesDict[u"typeId"]
+			if "typeId" in valuesDict:	typeId = valuesDict[u"typeId"]
+			else:						typeId = ""
 
 			startAtDateTime = 0
 			if u"startAtDateTime" in valuesDict:
@@ -8997,6 +9014,10 @@ class Plugin(indigo.PluginBase):
 					return
 
 				if True:  self.indiLOG.log(20, u"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(piU, self.rPiCommandPORT, valuesDict[u"cmd"], valuesDict[u"typeId"]) )
+				self.sendGPIOCommand(ip, pi, typeId, valuesDict[u"cmd"])
+				return
+			if cmd == "BLEAnalysis":
+				if True:  self.indiLOG.log(20, u"sending command to rPi at {}; port: {}; cmd:{} ".format(ip, self.rPiCommandPORT, valuesDict[u"cmd"]) )
 				self.sendGPIOCommand(ip, pi, typeId, valuesDict[u"cmd"])
 				return
 
@@ -9880,6 +9901,7 @@ class Plugin(indigo.PluginBase):
 
 			try:	self.maxSocksErrorTime		= float(valuesDict[u"maxSocksErrorTime"])
 			except: self.maxSocksErrorTime		= 600.
+			self.compressRPItoPlugin			= valuesDict[u"compressRPItoPlugin"]
 
 
 
@@ -10697,21 +10719,6 @@ class Plugin(indigo.PluginBase):
 						for piU in self.RPI:
 							if u"getLogFileSSH" in self.RPI[piU][u"piUpToDate"]:
 								self.sshToRPI(piU,fileToSend="getLogFileSSH.exp")
-
-					if self.findTaskPi(u"piUpToDate","getiBeaconList1SSH"):
-						for piU in self.RPI:
-							if u"getiBeaconList1SSH" in self.RPI[piU][u"piUpToDate"]:
-								self.sshToRPI(piU,fileToSend="getiBeaconList1SSH.exp")
-
-					if self.findTaskPi(u"piUpToDate","getiBeaconList0SSH"):
-						for piU in self.RPI:
-							if u"getiBeaconList0SSH" in self.RPI[piU][u"piUpToDate"]:
-								self.sshToRPI(piU,fileToSend="getiBeaconList0SSH.exp")
-
-					if self.findTaskPi(u"piUpToDate","getiBeaconListbluetoothctlSSH"):
-						for piU in self.RPI:
-							if u"getiBeaconListbluetoothctlSSH" in self.RPI[piU][u"piUpToDate"]:
-								self.sshToRPI(piU,fileToSend="getiBeaconListbluetoothctlSSH.exp")
 
 					if self.findTaskPi(u"piUpToDate","shutdownSSH"):
 						for piU in self.RPI:
@@ -11641,6 +11648,11 @@ class Plugin(indigo.PluginBase):
 					self.BLEconnectupdateAll(piU, varJson[u"sensors"])
 				self.updateSensors(piU, varJson[u"sensors"])
 
+			# print BLE report 
+			if  u"BLEAnalysis" in varJson:
+				#self.indiLOG.log(30,varNameIN+"  " + varUnicode[0:100])
+				self.printBLEAnalysis(piU, varJson[u"BLEAnalysis"])
+
 			##
 			# update outputState
 			if u"outputs" in varJson:
@@ -11665,7 +11677,7 @@ class Plugin(indigo.PluginBase):
 
 		except Exception, e:
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			self.indiLOG.log(40,varNameIN+     + varUnicode[0:30])
+			self.indiLOG.log(40,varNameIN+"  " + varUnicode[0:30])
 
 
 ####-------------------------------------------------------------------------####
@@ -11963,6 +11975,45 @@ class Plugin(indigo.PluginBase):
 		except Exception, e:
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
+
+
+####-------------------------------------------------------------------------####
+	def printBLEAnalysis(self, piU, report):
+		name = ""
+		try:
+			out = u"\n\nBLEAnalysis received for beacons with signal (rssi) > {}; from RPI#:{}".format(report["rssiCutoff"], piU)
+			#self.indiLOG.log(20, u"BLEAnalysis :{}".format(report))
+			for existing in ["new_Beacons","existing_Beacons"]:
+				out+= u"\n================================ {} ============================================".format(existing)
+				rr = report[existing]
+				name = ""
+				for mac in rr:
+					if existing == "existing_Beacons":
+						if mac in self.beacons and self.beacons[mac]["indigoId"] >0:
+							indigoId = int(self.beacons[mac]["indigoId"])
+							try: 	
+								name = "-"+indigo.devices[indigoId].name
+							except Exception, e:
+								self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								indigo.server.log("printBLEAnalysis error(1) in device name")
+								indigo.server.log(name)
+					out += "\n===MAC# "+mac+"  "+name+" == ; raw data:\n"
+					for item in ["n_of_MSG_Types", "raw_data","mfg_info","MSG_in_10Secs","beaconType","max_rssi","max_TX","pos_of_reverse_MAC_in_UUID","pos_of_MAC_in_UUID","possible_knownTag_options"]:
+						if item == "raw_data":
+							out += "raw data:\n"
+							for ii in rr[mac][item]:
+								out+= "- {}\n".format(ii)
+						elif item == "possible_knownTag_options":
+							out += "possible knownTag options:\n"
+							for ii in rr[mac][item]:
+								out+= "-- {}\n".format(ii)
+						else:
+							out += "{:28s}: {}\n".format(item, rr[mac][item])
+			self.myLog(text= out)
+		except Exception, e:
+			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			indigo.server.log("printBLEAnalysis error in device name")
+			indigo.server.log(name)
 
 ####-------------------------------------------------------------------------####
 	def checkI2c(self, piU, i2c):
@@ -15708,15 +15759,17 @@ class Plugin(indigo.PluginBase):
 		cmd1 =""
 		try:
 			if	 cmd == "newMessage":
-				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
+				cmd1 = {u"device": typeId,  u"command":cmd, u"startAtDateTime": startAtDateTime}
 			elif cmd == "startCalibration":
-				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
+				cmd1 = {u"device": typeId,  u"command":cmd, u"startAtDateTime": startAtDateTime}
+			elif cmd == "BLEAnalysis":
+				cmd1 = {u"minRSSI": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
 			elif cmd == "resetDevice":
-				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
+				cmd1 = {u"device": typeId,  u"command":cmd, u"startAtDateTime": startAtDateTime}
 			elif cmd == "getBeaconParameters":
-				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
+				cmd1 = {u"device": typeId,  u"command":cmd, u"startAtDateTime": startAtDateTime}
 			elif cmd == "beepBeacon":
-				cmd1 = {u"device": typeId, u"command":cmd, u"startAtDateTime": startAtDateTime}
+				cmd1 = {u"device": typeId,  u"command":cmd, u"startAtDateTime": startAtDateTime}
 			else:
 				if typeId == "setMCP4725":
 					cmd1 = {u"device": typeId, u"command": cmd, u"i2cAddress": i2cAddress, u"values":{u"analogValue":analogValue,"rampTime":rampTime,"pulseUp":pulseUp,"pulseDown": pulseDown,"nPulses":nPulses},"restoreAfterBoot": restoreAfterBoot, u"startAtDateTime": startAtDateTime, u"devId": devId}
@@ -15953,6 +16006,7 @@ class Plugin(indigo.PluginBase):
 				out[u"sendAfterSeconds"]		  = unicode(self.sendAfterSeconds)
 				out[u"ipOfServer"]				  = self.myIpNumber
 				out[u"portOfServer"]			  = self.portOfServer
+				out[u"compressRPItoPlugin"]		  = self.compressRPItoPlugin
 				out[u"userIdOfServer"]			  = self.userIdOfServer
 				out[u"indigoInputPORT"]			  = self.indigoInputPORT
 				out[u"IndigoOrSocket"]			  = self.IndigoOrSocket
@@ -16867,10 +16921,20 @@ class Plugin(indigo.PluginBase):
 			prompt = self.getPrompt(piU, fileToSend)
 
 			if fileToSend.find(u"getiBeaconList") >-1: 
-				if fileToSend.find(u"getiBeaconListbluetoothctlSSH") >-1: 
+				if fileToSend.find(u"getiBeaconListbluetoothctSSH") >-1: 
 					ff =fileToSend
 					cmd = "/usr/bin/expect '" + self.pathToPlugin + ff+"' " + " " + self.RPI[piU][u"userIdPi"] + " " + self.RPI[piU][u"passwordPi"] + " " + prompt+  "  "+ self.RPI[piU][u"ipNumberPiSendTo"]+ " "+self.expectTimeout
 					self.indiLOG.log(20, u"getting iBeacon list with bluetoothctl scan on from PI# {} .. this will take > 30 secs \ncmd:{}".format(piU, cmd) )
+
+				elif fileToSend.find(u"getiBeaconListhcidumpSSH") >-1: 
+					ff =fileToSend
+					cmd = "/usr/bin/expect '" + self.pathToPlugin + ff+"' " + " " + self.RPI[piU][u"userIdPi"] + " " + self.RPI[piU][u"passwordPi"] + " " + prompt+  "  "+ self.RPI[piU][u"ipNumberPiSendTo"]+ " "+self.expectTimeout
+					self.indiLOG.log(20, u"getting iBeacon list with bluetoothctl scan on from PI# {} .. this will take > 30 secs \ncmd:{}".format(piU, cmd) )
+
+				elif fileToSend.find(u"getiBeaconListbluetoothctAndhcidumpSSH") >-1: 
+					ff =fileToSend
+					cmd = "/usr/bin/expect '" + self.pathToPlugin + ff+"' " + " " + self.RPI[piU][u"userIdPi"] + " " + self.RPI[piU][u"passwordPi"] + " " + prompt+  "  "+ self.RPI[piU][u"ipNumberPiSendTo"]+ " "+self.expectTimeout
+					self.indiLOG.log(20, u"getting iBeacon list with bluetoothctl scan on from PI# {} .. this will take > 2x30 secs \ncmd:{}".format(piU, cmd) )
 
 				elif fileToSend.find(u"1") >-1:
 					hci="0"
@@ -16917,13 +16981,32 @@ class Plugin(indigo.PluginBase):
 
 				return 0, ret
 
-			if fileToSend.find(u"getiBeaconListbluetoothctlSSH") >-1: 
+			if fileToSend.find(u"getiBeaconListbluetoothctSSH") >-1: 
 				try:
 					if ret[0].find("error")> -1:
 						ret1= ret[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
 						self.indiLOG.log(20, u"\nibeaconList bluetoothctl form Pi# {} error,  END ====".format(piU, tag, ret1, tag) )
 					else:
 						ret1= "Discovery started\n"+(ret[0].split(u"Discovery started")[-1]).replace(u"[[0;93m", u"[").replace(u"[[0;92m", u"[").replace(u"[0m", u"").replace(u"\n", tag).split("- nohup:")[0]
+						self.indiLOG.log(20, u"\nibeaconList form Pi# {} collected over 20 secs ==============:  {}{}{}bluetoothctl scan  END         ===================================".format(piU, tag, ret1, tag) )
+				except:
+					self.indiLOG.log(20, u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
+
+				return 0, ret
+
+			if fileToSend.find(u"getiBeaconListbluetoothctAndhcidumpSSH") >-1: 
+				try:
+					if ret[0].find("error")> -1:
+						ret1= ret[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
+						self.indiLOG.log(20, u"\nibeaconList bluetoothctl form Pi# {} error,  END ====".format(piU, tag, ret1, tag) )
+					else:
+						ret1= "Discovery started\n"+(ret[0].split(u"hcidump --raw")[-1]).replace(u"[[0;93m", u"[").replace(u"[[0;92m", u"[").replace(u"[0m", u"").replace(u"\n", tag).split("- nohup:")[0]
+ 						xx= ret[0].replace(u"\nPi#"+piU+" - ", u"")
+						xx= ret[0].replace(u"Pi#"+piU+" - ", u"")
+						ret1 =""
+						for line in xx:
+ 							if line.find(">") > 0: continue
+			
 						self.indiLOG.log(20, u"\nibeaconList form Pi# {} collected over 20 secs ==============:  {}{}{}bluetoothctl scan  END         ===================================".format(piU, tag, ret1, tag) )
 				except:
 					self.indiLOG.log(20, u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
@@ -18333,9 +18416,10 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
 			# 3 secs should be enough even for slow network mostly one package, should all be send in one package
 			self.request.settimeout(5) 
-
+			seqN = 0
 			try: # to catch timeout 
 				while True: # until end of message
+					seqN +=1
 					buff = self.request.recv(4096)#  max observed is ~ 3000 bytes
 					if not buff or len(buff) == 0:#	 or len(buff) < 4096: 
 						break
@@ -18343,13 +18427,22 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					len0  = len(data0)
 
 					### check if package is complete:
-					dataS = data0.split(u"x-6-a")
+					test = data0[:30].split(u"x-6-a")
+					try: 
+						nBytes = int(test[0])
+						name   = test[2]
+						startOfData = len(str(nBytes)) + 2*len(u"x-6-a") + len(test[1])
+						dataS = [test[0],test[1],data0[startOfData:]]
+					except Exception, e:
+						indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+						break
+
 					if len(dataS) == 3 and int(dataS[0]) == len(dataS[2]): 
 						break
 
 					#safety valves
 					if time.time() - tStart > 15: break 
-					if	len0 > 13000: # check for overflow = 12 packages
+					if	len0 > 40*4096: # check for overflow = 40 packages
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,u"unknown",u"errBuffOvfl" )
 						self.request.close()
 						return 
@@ -18394,6 +18487,8 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					else:
 						# check if we received a complete package + extra
 						package1 = dataS[2][:expLength]
+						if package1[0:14].find("++compressed==") != -1:
+							package1 = zlib.decompress(package1[14:])          
 						try:
 							json.loads(package1)
 							dataS[2] = package1
@@ -18416,6 +18511,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				return
 
 			try: 
+				if dataS[2][0:14] == "++compressed==":
+					dataS[2] = zlib.decompress(dataS[2][14:])          
+					if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(10,u"TCPIP socket  listener uncompressedfile len:{}".format(len(dataS[2])) )
 				dataJ = json.loads(dataS[2])  # dataJ = json object for data
 			except Exception, e:
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  json error; len of data: {0:d}  {1}     time used: {2:5.1f}".format(len0, unicode(threading.currentThread()), time.time()-tStart )  )

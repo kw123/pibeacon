@@ -1,3 +1,79 @@
+Added features / changes in v7.121.406 @ 2020-06-20
+===================================================
+1. added compression of data when #bytes > xxbytes (set in config)
+2. there was a limnit in # of bytes to be received from RPIs at ~ 30k, was lifted to 120kbytes
+running beacon scan with very low cutoff RSSI could produced much more data 
+3. added beacon report for new and existing beacons
+ start from menu and send request to ONE rpi, set RSSI cutoff  to accpet all/many/some/ony very close beacons:
+BLEAnalysis received for beacons with signal (rssi) > -70; from RPI#:11
+================================ existing_Beacons ============================================
+===MAC# DC:0D:30:92:E3:1F  -b-feasy-aaa == ; raw data:
+n_of_MSG_Types              : 4
+raw data:
+- 043E26020100001FE392300DDC1A0201060303AAFE1116AAFE20000C6F80000005E43F000414A4
+- 043E26020104001FE392300DDC1A0E16F0FF1B020902DC0D3092E31F640A094653435F42503130
+- 043E2A020100001FE392300DDC1E0201061AFF4C000215FDA50693A4E24FB1AFCFC6EB07647825275165C1
+- 043E27020100001FE392300DDC1B0201060303AAFE1316AAFE10D403676F6F2E676C2F50484E5364
+mfg_info                    : FSC_BP104
+MSG_in_10Secs               : 4.0
+beaconType                  : [u'Feasy_AAA', u'MiniBeacon']
+max_rssi                    : -53
+max_TX                      : 109
+pos_of_reverse_MAC_in_UUID  : []
+pos_of_MAC_in_UUID          : []
+possible knownTag options:
+-- use:Feasy_AAA
+-- use:MiniBeacon
+
+================================ new_Beacons ============================================
+===MAC# FF:FF:C2:28:06:C3   == ; raw data:
+n_of_MSG_Types              : 2
+raw data:
+- 043E1702010000C30628C2FFFF0B0201060302E0FF030954
+- 043E1A02010400C30628C2FFFF0E0DFFFFFFC22806C315FB757117
+mfg_info                    : TF
+MSG_in_10Secs               : 5.3
+beaconType                  : [u'', u'']
+max_rssi                    : -60
+max_TX                      : 70
+pos_of_reverse_MAC_in_UUID  : [-1, -1]
+pos_of_MAC_in_UUID          : [-1, 18]
+possible knownTag options:
+-- "name_here":{"battCmd":"off","beepCmd":"off","dBm":"-61","prio":1,"pos":12,"posDelta":0,"tag":"0B0201060302"}
+-- "name_here":{"battCmd":"off","beepCmd":"off","dBm":"-61","prio":1,"pos":12,"posDelta":0,"tag":"0E0DFFMAC#########"}
+
+4. added debug option on RPI do 
+   cd pibeacon 
+   echo "A4:DA:32:24:5F:6B" > temp/beaconloop.trackmac
+will create output like for 10 beacon message, it will give you frequence, some raw info and if accepted or rejected 
+START  A4:DA:32:24:5F:6B 30:20.899144  logCount: 10  hex: 6B5F2432DAA41E0201061AFF4C00021553706F747950616C5465727261636F6D1ADDD624CACA
+0-     A4:DA:32:24:5F:6B ; UUID: 53706f747950616c5465727261636f6d ; Maj: 6877 ; Min: 54820
+1-     A4:DA:32:24:5F:6B ; tag: SpotyPal ; prio: 1 ; uuidMajMin: [u'SpotyPal', u'6877', u'54820'] ; useOnlyPrioMsg: True
+tag-   A4:DA:32:24:5F:6B ; posFound: 32 ; dPos: 0 ; tag: SpotyPal ;  53706F747950616C5465727261636F ; tagString 53706F747950616C5465727261636F
+5-     A4:DA:32:24:5F:6B ; rejectThisMessage: False ; UUID: SpotyPal 6877 54820
+9-     A4:DA:32:24:5F:6B ; tagFound True ; UUID: SpotyPal
+11-    A4:DA:32:24:5F:6B ; added to beaconMSG
+99     A4:DA:32:24:5F:6B ; accepted
+START  A4:DA:32:24:5F:6B 30:24.911548  logCount: 9  hex: 6B5F2432DAA41E0201061AFF4C00021553706F747950616C5465727261636F6D1ADDD624CACB
+0-     A4:DA:32:24:5F:6B ; UUID: 53706f747950616c5465727261636f6d ; Maj: 6877 ; Min: 54820
+1-     A4:DA:32:24:5F:6B ; tag: SpotyPal ; prio: 1 ; uuidMajMin: [u'SpotyPal', u'6877', u'54820'] ; useOnlyPrioMsg: True
+tag-   A4:DA:32:24:5F:6B ; posFound: 32 ; dPos: 0 ; tag: SpotyPal ;  53706F747950616C5465727261636F ; tagString 53706F747950616C5465727261636F
+5-     A4:DA:32:24:5F:6B ; rejectThisMessage: False ; UUID: SpotyPal 6877 54820
+9-     A4:DA:32:24:5F:6B ; tagFound True ; UUID: SpotyPal
+11-    A4:DA:32:24:5F:6B ; added to beaconMSG
+99     A4:DA:32:24:5F:6B ; accepted
+
+Added features / changes in v7.120.402 @ 2020-06-18
+===================================================
+1. fixed selection of RPI, only RPI11 was working
+2. added option to set RSSI cutoff for detect new beacons  -40 .. -90 dBm
+
+
+Added features / changes in v7.120.401 @ 2020-06-17
+===================================================
+1. added menu for detailed detect beacon in "manage beacons" menu
+
+
 Added features / changes in v7.120.399 @ 2020-06-09
 ===================================================
 1. cleanup debug and finished beacons, configs
