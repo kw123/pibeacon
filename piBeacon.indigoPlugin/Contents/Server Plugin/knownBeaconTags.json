@@ -182,8 +182,8 @@
   }, 
   "Nonda_iHere": {
     "battCmd": {
-      "bits": 63, 
-      "norm": 36, 
+      "bits": 127, 
+      "norm": 100, 
       "random": "public", 
       "uuid": "2A19"
     }, 
@@ -280,7 +280,7 @@
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
-    "tag": "1A020105030202180AFF4B4D32RMAC########"     
+    "tag": "1A020105030202180AFF4B4DXXRMAC########" 
   }, 
   "Smart_tracker": {
     "battCmd": {

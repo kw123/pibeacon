@@ -32,12 +32,13 @@ def execGetParams(devices, beaconsOnline):
  		timeoutSecs = 15
 		for mac in devices:
 			if len(mac) < 10: continue
-			if mac not in beaconsOnline:
+			if False and mac not in beaconsOnline:
 				U.logger.log(20,"mac: {}; skipping, not online or not in range".format(mac) )
 				continue
 			try:
 				params		= devices[mac]["battCmd"]
 				U.logger.log(20,"params:{}".format(params))
+				if type(params) != type({}): continue
 
 				if params["random"] == "randomON":	random = " -t random "
 				else:				    			random = " "
@@ -51,22 +52,23 @@ def execGetParams(devices, beaconsOnline):
 				U.logger.log(20,"cmd: {}".format(cmd) )
 				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 				check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
-				if check.find("connect error") >-1:	value = check
-				elif check.find("killed") >-1:		value = "timeout"
-				elif check.find("error") >-1: 		value = check
+				if check.find("connect error") >-1:	valueF = check
+				elif check.find("killed") >-1:		valueF = "timeout"
+				elif check.find("error") >-1: 		valueF = check
 				else: 
-					value = -2
+					valueF = -2
 					ret2 = ret[0].split("value: ")
 					if len(ret2) == 2:  
 						try:
-							value = int(((int(ret2[1].strip(),16) & bits ) *100)/norm)
+							valueI = int(ret2[1].strip(),16) 
+							valueB = valueI & bits 
+							valueF = int( ( valueB *100. )/norm )
 						except:pass
-				U.logger.log(20,"... ret: {}; bits: {}; norm:{}; value: {} ".format(check, bits, norm, value) )
-				#U.logger.log(10,"{}:  return: {} {} ".format(mac, ret[0], value) )
+				U.logger.log(20,"... ret: {}; bits: {}; norm:{}; value-I: {}; -B: {};  -F: {} ".format(check, bits, norm, valueI, valueB, valueF) )
 				if "sensors" not in data: data["sensors"] = {}
 				if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
 				if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] ={}
-				data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":value}
+				data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
 			except Exception, e:
 				if unicode(e).find("Timeout") == -1:
 					U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

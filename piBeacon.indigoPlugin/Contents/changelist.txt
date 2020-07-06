@@ -1,4 +1,19 @@
-Added features / changes in v7.121.406 @ 2020-06-20
+Added features / changes in v7.121.416 @ 2020-07-05
+===================================================
+1. cosmetic changes for new beacon reports
+2. increased data collection time for new beacon report from 15secs to 25 secs.
+3. fixed action reboot rpi# through ssh
+4. improved speed of car devices status changes 
+5. improved new beacon report
+
+
+Added features / changes in v7.121.412 @ 2020-06-29
+===================================================
+1. added track mac menu option. instead of manually launching it on the rpi you now can do it through a menu command in the plugin.
+the output will be in plugin.log
+2. added battery level for Jaalee beacons
+
+Added features / changes in v7.121.407 @ 2020-06-20
 ===================================================
 1. added compression of data when #bytes > xxbytes (set in config)
 2. there was a limnit in # of bytes to be received from RPIs at ~ 30k, was lifted to 120kbytes

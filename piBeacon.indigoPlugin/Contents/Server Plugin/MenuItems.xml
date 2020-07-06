@@ -673,9 +673,11 @@ You should not run it more often than once a minute</Label>
                     <Option value="-75">-75 dBm</Option>
                     <Option value="-80">-80 dBm</Option>
                     <Option value="-85">-85 dBm</Option>
-                    <Option value="-90">-90 dBm  .. this should catch everything in range</Option>
-                    <Label>Signal level (RSSI) cutoff (signal must be GT):</Label>
+                    <Option value="-90">-90 dBm</Option>
+                    <Option value="-95">-95 dBm</Option>
+                    <Option value="-99">-99 dBm  .. this should catch everything in range</Option>
                 </List>
+               <Label>Signal level (RSSI) cutoff (signal must be GT):</Label>
             </Field>
             <Field id="execprintBLEAnalysisCALLBACK" type="button">
                 <Label>After selection click</Label>
@@ -687,6 +689,42 @@ You should not run it more often than once a minute</Label>
 hcitool lescan, hcidump --dump, bluetoothctl scan on
 is on your RPI in ~/pibeacon/temp/:
 hcidump.data, lescan.data, bluetoothctl.data</Label>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
+
+    <MenuItem id="tarckMacOnRpi">
+        <Name>Track MAC on RPI</Name>
+        <ConfigUI>
+            <Field id="printBLEreportLabel0" type="label">
+                <Label>Print detailed information received and anlyzed for sepecific beacon - mac#</Label>
+            </Field>
+             <Field id="msg" type="textfield" defaultValue="" tooltip="" readonly="yes">
+                    <Label>msg from plugin</Label>
+            </Field>
+           <Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
+                <List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
+                <Label>Select rPi-server to request report from:</Label>
+            </Field>
+            <Field id="printBLEreportLabel1" type="label">
+                <Label>select mac # from either an existing beacon(a) or any mac# you like(b)
+(B) will overwrite (a)</Label>
+            </Field>
+            <Field id="existingMAC" type="menu" defaultValue="0" tooltip="Select the  beacon[MAC#] that will replace the old one   ">
+                <Label>a) Select existing beacon with the MAC#:</Label>
+                <List class="self" filter="" method="filterMACs" dynamicReload="true" />
+            </Field>
+             <Field id="mac" type="textfield" defaultValue="" tooltip="">
+                    <Label>b) mac # eg: aa:bb:cc:12:34:56</Label>
+            </Field>
+            <Field id="execprintBLEAnalysisCALLBACK" type="button">
+                <Label>After selection click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>printtrackMacCALLBACKmenu</CallbackMethod>
+            </Field>
+            <Field id="printBLEreportLabel3" type="label">
+                <Label>the data received and decission in beaconloop for sepecific mac # are printed to plugin.log after ~ 1 minute </Label>
             </Field>
         </ConfigUI>
     </MenuItem>

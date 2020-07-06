@@ -8,16 +8,18 @@ Name/type     recom v  FormFactor      hole    auto    has     isBeepable  Batte
 Nonda_Aiko       10 x  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register
 Nonda_iHere      10 x  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register        
 Smart_tracker    10 X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register
-== repl battery, beep and Battery readin g
-Rinex_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
+
+== repl battery, beep and Battery reading
 Njoiii_iTrack    10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
 Vozni_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
 SpotyPal         10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
 NutFind 3        10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
- == Nutale       10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, registerlooks very nice
+ == Nutale       10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice
 XY_1             10 1  pentagon        yes     yes     yes     yes         yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper
 XY_2             10 2  pentagon        yes     yes     yes     yes         yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper
 XY_3             10 3  pentagon        yes     yes     yes     yes         yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper
+
+Rinex_iTrack      4 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, seems unstable
 
                        == repl battery, beep no battery reading ===
 Innway            7 x  square          yes     yes     yes     yes         no       cr2032                    no       no      beep, register

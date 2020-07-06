@@ -17,7 +17,7 @@ import	piBeaconGlobals as G
 G.program = "execcommands"
 
 allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice",
-				"startCalibration","getBeaconParameters","beepBeacon","file","BLEreport","BLEAnalysis"]
+				"startCalibration","getBeaconParameters","beepBeacon","file","BLEreport","BLEAnalysis","trackMac"]
 
 
 externalGPIO = False
@@ -386,6 +386,13 @@ def execCMDS(data):
 					if "minRSSI" not in next: minRSSI = "-61"
 					else:					  minRSSI = next["minRSSI"]
 					subprocess.call("echo "+minRSSI+" > "+G.homeDir+"temp/beaconloop.BLEAnalysis", shell=True)
+					continue
+
+			if	cmd == "trackMac":
+					if "mac" in next: 
+						subprocess.call("echo '"+next["mac"]+"' > "+G.homeDir+"temp/beaconloop.trackmac", shell=True)
+					else:
+						U.logger.log(30, u"trackMac, no mac number supplied")
 					continue
 
 
