@@ -4015,7 +4015,7 @@ class Plugin(indigo.PluginBase):
 						self.beacons[beacon][u"updateSignalValuesSeconds"]	= float(valuesDict[u"updateSignalValuesSeconds"])
 						self.beacons[beacon][u"beaconTxPower"] 				= int(valuesDict[u"beaconTxPower"])
 						self.beacons[beacon][u"ignore"] 					= int(valuesDict[u"ignore"])
-						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
+						self.addToStatesUpdateDict(dev.id,"TxPowerSet", int(valuesDict[u"beaconTxPower"]))
 
 					self.RPI[thisPi][u"sendToIndigoSecs"] 					= valuesDict[u"sendToIndigoSecs"]	
 					self.RPI[thisPi][u"sensorRefreshSecs"] 					= valuesDict[u"sensorRefreshSecs"]
@@ -4141,11 +4141,12 @@ class Plugin(indigo.PluginBase):
 						self.beacons[beacon][u"expirationTime"] = float(valuesDict[u"expirationTime"])
 						self.beacons[beacon][u"updateSignalValuesSeconds"] = float(valuesDict[u"updateSignalValuesSeconds"])
 						self.beacons[beacon][u"beaconTxPower"] = int(valuesDict[u"beaconTxPower"])
-						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
+						self.addToStatesUpdateDict(dev.id,"TxPowerSet", int(valuesDict[u"beaconTxPower"]))
 						self.beacons[beacon][u"ignore"] = int(valuesDict[u"ignore"])
 
 						self.beacons[beacon][u"note"] = "beacon-" + valuesDict[u"typeOfBeacon"]
 						self.addToStatesUpdateDict(dev.id,"note", self.beacons[beacon][u"note"])
+
 
 						self.beacons[beacon][u"showBeaconOnMap"]		 = valuesDict[u"showBeaconOnMap"]
 						self.beacons[beacon][u"typeOfBeacon"]			 = valuesDict[u"typeOfBeacon"]
@@ -4159,7 +4160,7 @@ class Plugin(indigo.PluginBase):
 								memberList += group+"/"
 						memberList = memberList.strip(u"/")
 						if dev.states[u"groupMember"] != memberList:
-							dev.updateStateOnServer(u"groupMember",memberList)
+							self.addToStatesUpdateDict(dev.id,"groupMember", memberList)
 						self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 				except Exception, e:
 					self.indiLOG.log(40,"setting up iBeacon Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -4173,7 +4174,7 @@ class Plugin(indigo.PluginBase):
 			if typeId ==u"BLEconnect":
 				try:
 					if len(valuesDict[u"macAddress"]) == len(u"01:02:03:04:05:06"):
-						dev.updateStateOnServer(u"TxPowerSet",int(valuesDict[u"beaconTxPower"]))
+						self.addToStatesUpdateDict(dev.id,"TxPowerSet", int(valuesDict[u"beaconTxPower"]))
 						valuesDict[u"macAddress"] = valuesDict[u"macAddress"].upper()
 					else:
 						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
@@ -4388,14 +4389,13 @@ class Plugin(indigo.PluginBase):
 					else:
 						pinMappings += "(u" + unicode(n) + ":-);"
 					if "inverse" in dev.states:
-						if (dev.states["inverse"]) != (new[n][u"outType"]=="1"): 
-							dev.updateStateOnServer("inverse", new[n][u"outType"]=="1" )
+						if (dev.states["inverse"]) != (new[n][u"outType"]=="1"): 				 self.addToStatesUpdateDict(dev.id,"inverse", new[n][u"outType"]=="1" )
 					elif "inverse_{:2d}".format(n) in dev.states:
-						if (dev.states["inverse_{:2d}".format(n)]) != (new[n][u"outType"]=="1"): dev.updateStateOnServer("inverse_{:2d}".format(n), new[n][u"outType"]=="1" )
+						if (dev.states["inverse_{:2d}".format(n)]) != (new[n][u"outType"]=="1"): self.addToStatesUpdateDict(dev.id,"inverse_{:2d}".format(n), new[n][u"outType"]=="1")
 					if "initial" in dev.states:
-						if dev.states["initial"] != new[n][u"initialValue"]: dev.updateStateOnServer("initial", new[n][u"initialValue"])
+						if dev.states["initial"] != new[n][u"initialValue"]: 					 self.addToStatesUpdateDict(dev.id,"initial", new[n][u"initialValue"] )
 					elif "initial{:2d}".format(n) in dev.states:
-						if dev.states["initial{:2d}".format(n)] != new[n][u"initialValue"]: dev.updateStateOnServer("initial{:2d}".format(n), new[n][u"initialValue"] )
+						if dev.states["initial{:2d}".format(n)] != new[n][u"initialValue"]: 	 self.addToStatesUpdateDict(dev.id,"initial{:2d}".format(n), new[n][u"initialValue"] )
 					
 				valuesDict[u"description"] = pinMappings
 
@@ -4458,8 +4458,7 @@ class Plugin(indigo.PluginBase):
 
 
 					if	typeId	in ["mhzCO2"]:
-						dev.updateStateOnServer("CO2calibration",valuesDict["CO2normal"])
-
+						self.addToStatesUpdateDict(dev.id,"CO2calibration", valuesDict["CO2normal"] )
 
 					if	typeId	=="rainSensorRG11":
 							valuesDict[u"description"] = "INP:"+valuesDict[u"gpioIn"]+"-SW5:"+valuesDict[u"gpioSW5"]+"-SW2:"+valuesDict[u"gpioSW2"]+"-SW1:"+valuesDict[u"gpioSW1"]+"-SW12V:"+valuesDict[u"gpioSWP"]
@@ -4477,8 +4476,7 @@ class Plugin(indigo.PluginBase):
 
 					if	typeId =="Wire18B20" : # update serial number in states in case we jumped around with dev types. 
 						if len(dev.states["serialNumber"]) < 5  and dev.description.find("sN= 28")>-1:
-							dev.updateStateOnServer("serialNumber", dev.description.split("sN= ")[1])
-
+							self.addToStatesUpdateDict(dev.id,"serialNumber", dev.description.split("sN= ")[1] )
 					if	typeId.find(u"DHT") >-1:
 						if u"gpioPin" in valuesDict:
 							valuesDict[u"description"] = "GPIO-PIN: " +valuesDict[u"gpioPin"]+"; type: "+valuesDict[u"dhtType"]
@@ -17685,7 +17683,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 
 
-	def addToStatesUpdateDict(self,devId,key,value,newStates="",decimalPlaces="",uiValue="", force=False):
+	def addToStatesUpdateDict(self,devId, key, value,newStates="",decimalPlaces="",uiValue="", force=False):
 		devId=unicode(devId)
 		try:
 			try:

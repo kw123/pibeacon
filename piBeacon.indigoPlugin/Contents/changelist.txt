@@ -1,10 +1,12 @@
-Added features / changes in v7.121.416 @ 2020-07-05
+Added features / changes in v7.121.417 @ 2020-07-07
 ===================================================
 1. cosmetic changes for new beacon reports
 2. increased data collection time for new beacon report from 15secs to 25 secs.
 3. fixed action reboot rpi# through ssh
 4. improved speed of car devices status changes 
 5. improved new beacon report
+6. fixed update to states in devcies edit does not work anymore, changed to batch update
+  ie group members was impacted, need to edit and save all devices / beacons if problem
 
 
 Added features / changes in v7.121.412 @ 2020-06-29

@@ -2346,6 +2346,18 @@ use eg to track someone moving around - going from one room to the next" >
  			<Field id="minSignalCutoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>use this to cut off UP-signals for weak signals. This value is used on the RPI, before info is send to the plugin</Label>
 			</Field>
+			<Field id="labelGroup5"               type="label"  > 
+				<Label>== Member of groups:</Label>
+			</Field>
+			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>Member of Family:</Label>			</Field>
+			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>Member of Guests:</Label>			</Field>
+			<Field id="memberOfOther1" type="checkbox"   defaultValue="false"> <Label>Member of Other-1:</Label>		</Field>
+			<Field id="memberOfOther2" type="checkbox"   defaultValue="false"> <Label>Member of Other-2:</Label>		</Field>
+			<Field id="labelgroup2" type="label" fontSize="small" alignText="right" >
+				<Label>Adding a beacon to a group
+will add this beacon to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
 
 			<Field id="label3"               type="label"  > 
 				<Label>== Type of beacon, make sure you dont overwrite w the wrong type:</Label>
@@ -2365,6 +2377,24 @@ use eg to track someone moving around - going from one room to the next" >
 				<Label>Some beacons send different message types at different TX power levels. That will cerate a problem when calculating distance.
 Setting to only accept ONE device specific message Type will avoid that.</Label>
 			</Field>
+
+			<Field id="label5"               type="label"  > 
+				<Label>== How often should we update the signal and distance states:</Label>
+			</Field>
+			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300"> 
+				<Label>....      min Interval:</Label>
+				<List>
+					<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
+					<Option value="30"  >after  30 secs</Option>
+					<Option value="60"  >after  1 minute</Option>
+					<Option value="120" >after  2 minutes</Option>
+					<Option value="300" >after  5 minutes (default)</Option>
+					<Option value="600" >after 10 minutes</Option>
+					<Option value="1200">after 20 minutes</Option>
+				</List>
+			</Field>
+
+
 			<Field id="label4"               type="label"  > 
 				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
 			</Field>
@@ -2421,17 +2451,17 @@ There are also beacons that send Battery info as part of std msg</Label>
 				</List>
 				<Label>.... battery level cmd:</Label>
 			</Field>
-
+<!--
 			<Field id="txPowerlevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
-<!--					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons, social retail,..</Option>
+					<Option value="2A07-randomON-txPowerLevel-int"  >read  tx power level w UUID=2A07 random ON  for eg XY beacons, social retail,..</Option>
 					<Option value="2A07-public-txPowerLevel-int" >read  tx power level w UUID=2A07 public     for eg nonda/aiko/iHere</Option>
--->
+
 					<Option value="off"      >off</Option>
 				</List>
 				<Label>.... TX power level info at UUID=xx.. not implemented yet:</Label>
 			</Field>
-<!--
+-->
 			<Field id="beaconBeepUUID" type="menu"     defaultValue="off"  >
 				<List>
 					<Option value="gatttool" >enable beep</Option>
@@ -2439,7 +2469,7 @@ There are also beacons that send Battery info as part of std msg</Label>
 				</List>
 				<Label>Enable beep actions for beacon, must be configured in knownBeaconTags file:</Label>
 			</Field>
--->
+
 
 			<Field id="label48"               type="label"  > 
 				<Label>== ignore beacons  ...  </Label>
@@ -2456,25 +2486,6 @@ There are also beacons that send Battery info as part of std msg</Label>
 				<Label>if you want to only use certain beacons to trigger on closest beacon to RPI set the others to off</Label>
 			</Field>
 
-			<Field id="label5"               type="label"  > 
-				<Label>== How often should we update the signal and distance states:</Label>
-			</Field>
-			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300"> 
-				<Label>....      min Interval:</Label>
-				<List>
-					<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
-					<Option value="30"  >after  30 secs</Option>
-					<Option value="60"  >after   minute</Option>
-					<Option value="120" >after  2 minutes</Option>
-					<Option value="300" >after  5 minutes (default)</Option>
-					<Option value="600" >after 10 minutes</Option>
-					<Option value="1200">after 20 minutes</Option>
-				</List>
-			</Field>
-			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>Member of Family:</Label>			</Field>
-			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>Member of Guests:</Label>			</Field>
-			<Field id="memberOfOther1" type="checkbox"   defaultValue="false"> <Label>Member of Other-1:</Label>		</Field>
-			<Field id="memberOfOther2" type="checkbox"   defaultValue="false"> <Label>Member of Other-2:</Label>		</Field>
 
 
 			<Field id="simpleSeparator53" type="separator"/>
