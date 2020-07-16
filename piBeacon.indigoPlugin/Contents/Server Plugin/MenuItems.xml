@@ -359,6 +359,8 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
                 <Title>IGNORE THIS beacon</Title>
                 <CallbackMethod>buttonConfirmMACIgnoreCALLBACK</CallbackMethod>
             </Field>
+            <Field id="printSep" type="textfield" defaultValue="----------------------------" >
+            </Field>
             <Field id="buttonDelete" type="button" tooltip="This will delete the tracking history of this beacon , internal list, can be seen in print config">
                 <Label>Delete tracking History of</Label>
                 <Title>THIS beacon</Title>
@@ -569,22 +571,14 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
         <Name>Get iBeacon battery level from rPi</Name>
         <ConfigUI>
             <Field id="infoLabelINPUT1" type="label">
-                <Label>Get update for ALL beacons</Label>
+                <Label>Get update for beacons from PiServer:</Label>
             </Field>
             <Field id="piServerNumber" type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm ">
                 <Label>select rPi to use for query, use ALL for optimized distribution</Label>
                 <List class="self" filter="" method="filterPiBLE" dynamicReload="false" />
             </Field>
-            <Field id="execAll" type="button">
-                <Label> ....after selection click</Label>
-                <Title>EXECUTE</Title>
-                <CallbackMethod>getBeaconParametersCALLBACKmenu</CallbackMethod>
-            </Field>
-            <Field id="infoLabelINPUT2" type="label">
-                <Label>OR get update for ONE specific beacon</Label>
-            </Field>
             <Field id="devIdOfBeacon" type="menu" defaultValue="">
-                <Label>select beacon from list</Label>
+                <Label>select beacon from list (or all):</Label>
                 <List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false" />
             </Field>
             <Field id="execBeacon" type="button">
@@ -592,6 +586,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
                 <Title>EXECUTE</Title>
                 <CallbackMethod>getONEBeaconParametersCALLBACKmenu</CallbackMethod>
             </Field>
+   			<Field id="simpleSeparator33" type="separator"/>
             <Field id="execReport" type="button">
                 <Label>Print report of current beacon battery levels</Label>
                 <Title>PRINT</Title>

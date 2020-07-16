@@ -3328,23 +3328,16 @@ Then there are actions in each set (steps/sleep)
         </ConfigUI>
      </Action>
 
-    <Action id="getiBeaconParameters">
-        <Name>Get iBeacons parameters from rPi ie battery levels</Name>
-               <CallbackMethod>getBeaconParametersCALLBACKaction</CallbackMethod>
+    <Action id="getONEiBeaconParameters">
+        <Name>Get battery level for ONE/All beacons</Name>
+               <CallbackMethod>getONEBeaconParametersCALLBACKaction</CallbackMethod>
         <ConfigUI>
               <Field id="piServerNumber"   type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm " >
                <Label>select rPi to use for query, use ALL for optimized distribution</Label>
                 <List class="self" filter="" method="filterPiBLE" dynamicReload="false"/>
              </Field>
-       </ConfigUI>
-   </Action>
-
-    <Action id="getONEiBeaconParameters">
-        <Name>Get ONE iBeacon parameters from rPi ie battery levels</Name>
-               <CallbackMethod>getONEBeaconParametersCALLBACKaction</CallbackMethod>
-        <ConfigUI>
              <Field id="devIdOfBeacon"   type="menu" defaultValue=""  >
-                <Label>select beacon from list</Label>
+                <Label>select one/all beacon(s) from list</Label>
                 <List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false"/>
              </Field>
        </ConfigUI>

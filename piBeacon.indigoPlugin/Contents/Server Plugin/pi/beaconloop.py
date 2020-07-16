@@ -1117,6 +1117,7 @@ def BLEAnalysis(hci):
 		subprocess.Popen("sudo rm "+G.homeDir+"temp/bluetoothctl.data",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		subprocess.Popen("sudo rm "+G.homeDir+"temp/BLEAnalysis-new.json",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		subprocess.Popen("sudo rm "+G.homeDir+"temp/BLEAnalysis-existing.json",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		subprocess.Popen("sudo rm "+G.homeDir+"temp/BLEAnalysis-rejected.json",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 		## now listen to BLE
 		starttime = time.time()
@@ -1157,10 +1158,12 @@ def BLEAnalysis(hci):
 				linesAccepted +=1
 
 				data = line.split(" Device ")[1]
+				items = data.split(" ")
+				mac = items[0]
+				#if mac == "DD:33:0A:11:15:E3": print "bluetoothctl found DD:33:0A:11:15:E3", line
 
 				if " RSSI: " in data:
 					items = data.split(" RSSI: ")
-					mac = items[0]
 					#print mac, items
 					if mac not in MACs: 
 						linesDevices +=1
@@ -1169,7 +1172,6 @@ def BLEAnalysis(hci):
 					except: pass
 				else:
 					items = data.split(" ")
-					mac = items[0]
 					#print mac, items
 					if mac not in MACs: 
 						linesDevices +=1
@@ -1178,14 +1180,18 @@ def BLEAnalysis(hci):
 					except: pass
 			U.logger.log(20, "finished  bluetoothctl:lines -in: {:4d}, accepted: {:4d},  n-devices: {:4d}".format(linesIn,linesAccepted,linesDevices ))
 		if True: # hcidump
-		##reverse mac#:         xx xx xx xx xx xx              
-		##                                                                                    TX RX  
+		##                                                                                    
 		##  tag-pos: =MACstart  0  2  4  6  8  1  1  1  1  1  2  2  2  2  2  3  3  3  3  3  4  4  4  4  4  5  ... 
 		##                      0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0 
-		##                                                                                                                                  RX TX
-		## ID packet Type                                        APPLE                                                                    
+		##                      MA C# ## ## ## ##                                                                                                            RX TX
 		## 04 3E 2A 02 01 00 00 6B 5F 24 32 DA A4 1E 02 01 06 1A FF 4C 00 02 15 53 70 6F 74 79 50 61 6C 54 65 72 72 61 63 6F 6D 1A DD D6 24 CA AF 
-		## 01234567891123456789212345678931234567894123456789512345678961234567897
+		## 01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67 89 41 23 45 67 89 51 23 45 67 89 61 23 45 67 89 7 # seq # 
+		## 01234567891123456789212345678931234567894123456789512345678961234567897 # seq # 
+		## 04 3E 27 02 01 00 00 1F E3 92 30 0D DC 1B 02 01 06 03 03 AA FE 13 16 AA FE 10 D4 03 67 6F 6F 2E 67 6C 2F 50 48 4E 53 64", 
+		## 04 3E 26 02 01 04 00 1F E3 92 30 0D DC 1A 0E 16 F0 FF 1B 02 09 02 DC 0D 30 92 E3 1F 64 0A 09 46 53 43 5F 42 50 31 30", 
+		##                                                       FF 4C                                                                    
+		## ID packet Type                                        APPLE                                                                    
+		## 
 			f = open(G.homeDir+"temp/hcidump.data","r")
 			xxx = f.read()
 			f.close()
@@ -1202,6 +1208,7 @@ def BLEAnalysis(hci):
 				items = line.split()
 				mac = (items[7:13])[::-1]
 				mac = ":".join(mac)
+				#if mac =="DD:33:0A:11:15:E3": print "hcidump found DD:33:0A:11:15:E3", line
 				if mac not in MACs: 
 					MACs[mac] = {"max_rssi":-99, "max_TX": -99,"MSG_in_10Secs": 0,"mfg_info":"","n_of_MSG_Types":0,"beaconType":[],"beaconType-msg#":[],"raw_data":[],"pos_of_MAC_in_UUID":[],"pos_of_reverse_MAC_in_UUID":[], "possible_knownTag_options":[]}
 				#print mac, "present:>{}<".format(line[2:-3])
@@ -1224,6 +1231,7 @@ def BLEAnalysis(hci):
 				MACs[mac]["MSG_in_10Secs"] +=1
 				MACs[mac]["max_rssi"] 	= rssi
 				MACs[mac]["max_TX"] 	= max_TX
+				if mac =="DD:33:0A:11:15:E3": print "hcidump found DD:33:0A:11:15:E3", MACs[mac]
 			out+= "\nhcidump\n" 
 			out+= xxx
 			U.logger.log(20, "finished  hcidump:     lines -in: {:4d}, accepted: {:4d},  n-devices: {:4d}".format(linesIn,linesAccepted,linesDevices ))
@@ -1245,6 +1253,7 @@ def BLEAnalysis(hci):
 					mac = items[0]
 					#print mac, items
 					linesAccepted +=1
+					#if mac =="DD:33:0A:11:15:E3": print "lescan found DD:33:0A:11:15:E3", items[1]
 					if mac not in MACs: 
 						MACs[mac] = {"max_rssi":-99, "max_TX": -99,"MSG_in_10Secs": 0,"mfg_info":"","n_of_MSG_Types":0,"beaconType":[],"beaconType-msg#":[],"raw_data":[],"pos_of_MAC_in_UUID":[],"pos_of_reverse_MAC_in_UUID":[], "possible_knownTag_options":[]}
 						linesDevices +=1
@@ -1255,6 +1264,7 @@ def BLEAnalysis(hci):
 		# clean up 
 		delMAC = {}
 		for mac in MACs:
+			#if mac =="DD:33:0A:11:15:E3": print "macs    DD:33:0A:11:15:E3"
 			if MACs[mac]["raw_data"]  == []:  
 				delMAC[mac] = "Reason: no_raw_data, " + str(MACs[mac])
 			if MACs[mac]["max_rssi"] < rssiCutoff: 
@@ -1265,10 +1275,10 @@ def BLEAnalysis(hci):
 
 		out1 ="\n MACs not accepted:\n"
 		for mac in delMAC:
-			#print "deleting:", mac, MACs[mac]
+			#if mac =="DD:33:0A:11:15:E3": print "deleting:", mac,  delMAC[mac]
 			out1 += "{}: {}\n".format(mac, delMAC[mac])
 			del MACs[mac]
-		U.logger.log(20, out1)
+		#U.logger.log(20, out1)
 		
 		knownMACS = {}
 		newMACs   = {}
@@ -1277,9 +1287,10 @@ def BLEAnalysis(hci):
 
 		## now combine the 3 results in to known and new 
 		for mac in MACs:
-			#U.logger.log(20, "tagging mac: : {} ".format(mac)) 
+			#print  "tagging mac: : {} ".format(mac)
 			MACs[mac]["MSG_in_10Secs"] = "{:.1f}".format(10.* float(MACs[mac]["MSG_in_10Secs"])/dataCollectionTime) #  of messages in 10 secs
 			if mac in onlyTheseMAC:
+				#print  "tagging      in onlyTheseMAC"
 				knownMACS[mac] = copy.deepcopy(MACs[mac])
 				nmsg = 0
 				for msg in knownMACS[mac]["raw_data"]:
@@ -1297,13 +1308,14 @@ def BLEAnalysis(hci):
 
 							
 			else:
+				#print  "tagging  not in onlyTheseMAC"
 				newMACs[mac] = copy.deepcopy(MACs[mac])
 				nmsg = 0
 				for msg in newMACs[mac]["raw_data"]:
 					nmsg += 1
-					hexStr = msg.replace(" ","")[14:]
-					macPos = hexStr[12:].find(mac.replace(":",""))	
-					RmacPos = hexStr[12:].find(hexStr[0:12])		
+					hexStr = msg.replace(" ","")[14:] # this starts w MAC # no spaces
+					macPos = hexStr[12:].find(mac.replace(":","")) #check if mac # present afetr mac #
+					RmacPos = hexStr[12:].find(hexStr[0:12])	  # check if reverse mac# repsent after mac 
 					if macPos  >-1: macPos  += 12
 					if RmacPos >-1: RmacPos += 12
 					newMACs[mac]["possible_knownTag_options"].append('"name_here":{"battCmd": "off", "beepCmd": "off", "dBm": "-61","prio": 1, "pos": 12,"posDelta": 0,"tag":"'+hexStr[12:-10]+'"}')

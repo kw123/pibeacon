@@ -2419,20 +2419,21 @@ Put THAT value into this field</Label>
 				<Label>This is similar to the parameter for the RPI, but is used in the plugin AFTER the data is received from the RPI</Label>
 			</Field>
 			<Field id="SupportsBatteryLevel" type="checkbox"     defaultValue="false"  hidden="false">
-				<Label>==  supports battery level info read from iBeacon, either through GATT commands or as part of the msg </Label>
+				<Label>==  supports battery level info read from iBeacon, either through GATT commands or as part of the ibeacon std msg </Label>
 			</Field>
 			<Field id="label47"               type="label"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" > 
 				<Label>... to run gatttool on rpi to get iBeacon info, requires SSD 7/2018 or GT </Label>
 			</Field>
 			<Field id="label49" type="label" fontSize="small" alignText="right" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
-				<Label>FOR GATT COMMAND type iBeacons:
-   The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
+				<Label>FOR GATT COMMAND type iBeacons (check knownBeaconTags.json file):
+  The properties should be set automatically, this option allows to overwrite the default for type of beacon
+  The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
   It will REPORT (warning log) once a day on beacons, if their last update &gt; 2 days or battery level &lt; 20%  
-  The reads are send to the RPI that is closest to the beacon to be read.
-  You can manually force to read all beacons w action or menu "Get Beacon param.."  
+  The cmds are send to the RPI that is closest to the beacon to be read.
+  You can manually force to read all beacons w action or menu "Get iBeacon battery level.."  
   There are different types of beacons that require differnt methods.   
   Not all beacons support the read of battery level.  
-  You can test your iBeaon on the rpi with the following line commands   
+  You can test your iBeacon on the rpi with the following line commands   
     sudo /bin/hciconfig hci0 down;sudo /bin/hciconfig hci0 up  
     sudo /usr/bin/gatttool -b mac# -t public --char-read --uuid=2A19  
     sudo /usr/bin/gatttool -b mac# -t random --char-read --uuid=2A19   
