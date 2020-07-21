@@ -28,7 +28,7 @@ while true; do
 					echo "loop "$i 
 				done
 		else
-			sleep 1 # test is updating in procegress, if yes ()==file upating exixts), dont restart master.py .. skip max 3 times
+			sleep 1 # test is updating in progress, if yes ()==file upating exixts), dont restart master.py .. skip max 3 times
 			if [ -f $home"temp/updating" ] && [ $countUpdating -lt 3 ]
 			then
 				countUpdating=$(($countUpdating+1))

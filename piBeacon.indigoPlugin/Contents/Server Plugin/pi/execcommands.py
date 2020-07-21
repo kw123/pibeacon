@@ -353,7 +353,7 @@ def execCMDS(data):
 						m = "w"
 						if "fileMode" in next and next["fileMode"].lower() =="a": m="a"
 						#print "write to",next["fileName"], json.dumps(next["fileContents"]), m
-						f=open(next["fileName"],m)
+						f = open(next["fileName"],m)
 						f.write("{}".format(json.dumps(next["fileContents"]) )) 
 						f.close()
 						if "touchFile" in next and next["touchFile"]:
@@ -366,8 +366,10 @@ def execCMDS(data):
 
 			if cmd =="getBeaconParameters":
 				try:
-					if "device" not in next: continue
-					subprocess.call("/usr/bin/python "+G.homeDir+"getBeaconParameters.py '"+next["device"]+"' &" , shell=True)
+						U.logger.log(20, u"execcmd. getBeaconParameters, write: ={}".format(next["device"]))
+						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
+						f.write(next[u"device"]) 
+						f.close()
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue
@@ -375,9 +377,10 @@ def execCMDS(data):
 
 			if cmd =="beepBeacon":
 				try:
-					U.logger.log(10, u" next{}".format(next))
-					if "device" not in next: continue
-					subprocess.call("/usr/bin/python "+G.homeDir+"beepBeacon.py '"+next["device"]+"' &" , shell=True)
+						U.logger.log(20, u"execcmd. beep, write: ={}".format(next["device"]))
+						f = open(G.homeDir+"temp/beaconloop.beep","w")
+						f.write(next["device"]) 
+						f.close()
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				continue

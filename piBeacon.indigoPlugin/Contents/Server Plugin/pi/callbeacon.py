@@ -49,7 +49,7 @@ delList =[
 		"beacon_minSignalCutoff", "beacon_onlyTheseMAC", "beacon_signalDelta",  "rejects.*", 
 		"logfile", "logfile-1", "call-log",  "errlog", "logfile", "master.log", 
 		"alive", "interface", "beaconloop",
-		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py" 
+		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "getBeaconParameters.py", "beepBeacon.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py" 
 		"moistureSensorAdafruit","checkAdfruitInclude.py","checkForInclude.py"]
 for dd in delList:
 	subprocess.call("rm {}{} > /dev/null 2>&1 ".format(homeDir, dd), shell=True)

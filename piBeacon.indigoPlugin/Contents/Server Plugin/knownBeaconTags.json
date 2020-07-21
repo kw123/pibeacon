@@ -3,7 +3,7 @@
     "battCmd": "msg:pos=-3,norm=255", 
     "beepCmd": "off", 
     "dBm": "-61", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
     "msg": [],
@@ -19,7 +19,7 @@
     }, 
     "beepCmd": "off", 
     "dBm": "-61", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -34,7 +34,7 @@
     }, 
     "beepCmd": "off", 
     "dBm": "-61", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -49,7 +49,7 @@
     }, 
     "beepCmd": "off", 
     "dBm": "-61", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -67,7 +67,7 @@
       "random": "public"
     }, 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -77,7 +77,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -87,7 +87,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-40", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -97,7 +97,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-40", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -115,7 +115,7 @@
       "random": "public"
     }, 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -125,37 +125,11 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 0, 
     "msg": [],
     "tag": "FDA50693A4E24FB1AFCFC6EB07647825"
-  }, 
-  "Njoiii_iTrack": {
-    "battCmd": {
-      "bits": 127, 
-      "norm": 100, 
-      "random": "ramdom", 
-      "uuid": "2A19"
-    }, 
-    "beepCmd": {
-      "cmdON": [
-        "char-write-req 0x001B 0100", 
-        "char-write-req 0x0024 A1A2A3A4", 
-        "char-write-req 0x001E 02", 
-        "char-write-req 0x0010 02"
-      ], 
-      "cmdOff": [
-        "char-write-req 0x0010 00"
-      ], 
-      "random": "randomON"
-    }, 
-    "dBm": "-55", 
-    "pos": 12, 
-    "posDelta": 0, 
-    "prio": 1, 
-    "msg": [],
-    "tag": "1A020105030202180AFF4B4D22"
   }, 
   "Nonda_Aiko": {
     "battCmd": {
@@ -174,7 +148,7 @@
       "random": "public"
     }, 
     "dBm": "-55", 
-    "pos": 16, 
+    "pos": 4, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -197,7 +171,7 @@
       "random": "public"
     }, 
     "dBm": "-50", 
-    "pos": 16, 
+    "pos": 4, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -220,7 +194,7 @@
       "random": "public"
     }, 
     "dBm": "-61", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -230,7 +204,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 0, 
     "msg": [],
@@ -240,7 +214,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 0, 
     "msg": [],
@@ -250,38 +224,13 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
     "tag": "2F234454CF6D4A0FADF2F4911BA9FFA6"
   }, 
-  "Rinex_iTrack": {
-    "battCmd": {
-      "bits": 127, 
-      "norm": 100, 
-      "random": "randomON", 
-      "uuid": "2A19"
-    }, 
-    "beepCmd": {
-      "cmdON": [
-        "char-write-req 0x001B 0100", 
-        "char-write-req 0x0024 A1A2A3A4", 
-        "char-write-req 0x001E 02", 
-        "char-write-req 0x0010 02"
-      ], 
-      "cmdOff": [
-        "char-write-req 0x0010 00"
-      ], 
-      "random": "randomON"
-    }, 
-    "dBm": "-55", 
-    "pos": 12, 
-    "posDelta": 0, 
-    "prio": 1, 
-    "msg": [],
-    "tag": "1A020105030202180AFF4B4DXXRMAC########" 
-  }, 
+
   "Smart_tracker": {
     "battCmd": {
       "bits": 127, 
@@ -299,7 +248,7 @@
       "random": "public"
     }, 
     "dBm": "-50", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -309,7 +258,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 0, 
     "msg": [],
@@ -337,7 +286,7 @@
       "random": "public"
     }, 
     "dBm": "-55", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -347,7 +296,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -357,7 +306,7 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 54, 
+    "pos": 42, 
     "posDelta": 0, 
     "prio": 0, 
     "msg": [],
@@ -384,11 +333,37 @@
       "random": "public"
     }, 
     "dBm": "-55", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
-    "tag": "12020106030202180AFF4B4D0xRMAC########"
+    "tag": "1X02010X030202180AFF4B4D02RMAC########-" 
+  }, 
+  "Rinex_Njoii_iTrack": {
+    "battCmd": {
+      "bits": 127, 
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x001B 0100", 
+        "char-write-req 0x0024 A1A2A3A4", 
+        "char-write-req 0x001E 02", 
+        "char-write-req 0x0010 02"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0010 00"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-55", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1A020105030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
   "XY_1": {
     "battCmd": {
@@ -409,7 +384,7 @@
       "random": "randomON"
     }, 
     "dBm": "-59", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -434,7 +409,7 @@
       "random": "randomON"
     }, 
     "dBm": "-59", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -459,7 +434,7 @@
       "random": "randomON"
     }, 
     "dBm": "-59", 
-    "pos": 32, 
+    "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -484,7 +459,7 @@
       "random": "randomON"
     }, 
     "dBm": "-59", 
-    "pos": 12, 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
@@ -514,7 +489,7 @@
     "battCmd": "msg", 
     "beepCmd": "off", 
     "dBm": "-65", 
-    "pos": 22, 
+    "pos": 10, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],

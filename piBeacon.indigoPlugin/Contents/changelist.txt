@@ -1,6 +1,13 @@
+Added features / changes in v7.121.420 @ 2020-07-21
+===================================================
+1. rewrote get battery level and peeb functions.
+2. added more tagging features for beacons
+3. RINEX and NJOII are now the same type of beacon
+   if you have a RINEX or NJOII you need to edit and set beacon type
+
 Added features / changes in v7.121.418 @ 2020-07-16
 ===================================================
-1. clearified menues for get battery levels for ibeacons
+1. clarified menues for get battery levels for ibeacons
    normally battery level gets executed 3 times a day, if last update is older than 16 hours for each individula beacon.
 2. for new beacosn battery parameters are now automatically set, for existing beacons you need to edit and save beacon device.
 
