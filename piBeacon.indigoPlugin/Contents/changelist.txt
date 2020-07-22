@@ -1,9 +1,10 @@
-Added features / changes in v7.121.420 @ 2020-07-21
+Added features / changes in v7.121.421 @ 2020-07-21
 ===================================================
 1. rewrote get battery level and peeb functions.
 2. added more tagging features for beacons
 3. RINEX and NJOII are now the same type of beacon
    if you have a RINEX or NJOII you need to edit and set beacon type
+
 
 Added features / changes in v7.121.418 @ 2020-07-16
 ===================================================
