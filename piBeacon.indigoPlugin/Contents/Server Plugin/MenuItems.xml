@@ -690,10 +690,11 @@ hcidump.data, lescan.data, bluetoothctl.data</Label>
 
 
     <MenuItem id="tarckMacOnRpi">
-        <Name>Track MAC on RPI</Name>
+        <Name>Track MAC(s) on RPI</Name>
         <ConfigUI>
             <Field id="printBLEreportLabel0" type="label">
-                <Label>Print detailed information received and anlyzed for sepecific beacon - mac#</Label>
+                <Label>Print detailed information received on RPI and anlyzed for sepecific beacon - mac#
+If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 messages or max 10 seconds</Label>
             </Field>
              <Field id="msg" type="textfield" defaultValue="" tooltip="" readonly="yes">
                     <Label>msg from plugin</Label>
@@ -704,14 +705,14 @@ hcidump.data, lescan.data, bluetoothctl.data</Label>
             </Field>
             <Field id="printBLEreportLabel1" type="label">
                 <Label>select mac # from either an existing beacon(a) or any mac# you like(b)
-(B) will overwrite (a)</Label>
+(b) will overwrite (a)</Label>
             </Field>
             <Field id="existingMAC" type="menu" defaultValue="0" tooltip="Select the  beacon[MAC#] that will replace the old one   ">
                 <Label>a) Select existing beacon with the MAC#:</Label>
                 <List class="self" filter="" method="filterMACs" dynamicReload="true" />
             </Field>
              <Field id="mac" type="textfield" defaultValue="" tooltip="">
-                    <Label>b) mac # eg: aa:bb:cc:12:34:56</Label>
+                    <Label>b) mac # eg: aa:bb:cc:12:34:56 or * for all</Label>
             </Field>
             <Field id="execprintBLEAnalysisCALLBACK" type="button">
                 <Label>After selection click</Label>

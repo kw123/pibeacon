@@ -1916,13 +1916,13 @@ def execSend():
 									if ret.find("This resource can be found at") == -1:
 										logger.log(30, "cBY:{:<20} curl err:{}".format(G.program,ret))
 										logger.log(30, "cBY:{:<20} curl err:{}".format(G.program,reterr))
-										subprocess.call("echo '{}: NOT successfully send -- {}' > {}temp/messageSend".format(G.program, data0, G.homeDir), shell=True)
+										echoToMessageSend(data, "++msg NOT send ++")
 									else:
-										subprocess.call("echo '{}{}: send --  {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "),G.program,data0, G.homeDir) , shell=True)
+										echoToMessageSend(data, "msg send --")
 								else:
 									cmd.append(" &")
 									subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-									subprocess.call("echo '{}{}: sending --  {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "),G.program,data0, G.homeDir) , shell=True)
+									echoToMessageSend(data, "msg send --")
 
 					else:  ## do socket comm
 								MSGwasSend = False
@@ -1970,11 +1970,9 @@ def execSend():
 									data["ts"]			= {"time":round(time.time(),2),"tz":tz}
 
 								if MSGwasSend:
-											logger.log(10, "cBY:{:<20}  msg: {}\n".format(G.program, sendData) )
-											subprocess.call("echo '{}{}: send --  {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "), G.program, dataC, G.homeDir) , shell=True)
+									echoToMessageSend(dataC, "msg send --")
 								else:
-											logger.log(10, "cBY:{:<20}  msg not send ".format(G.program, sendData))
-											subprocess.call("echo '{}{}: NOT successfully send -- {}' > {}temp/messageSend".format(datetime.datetime.now().strftime("%H:%M:%S "), G.program,dataC, G.homeDir) , shell=True)
+									echoToMessageSend(dataC, "++ msg not send ++")
 								try:	soc.shutdown(socket.SHUT_RDWR)
 								except: pass
 								try:	soc.close()
@@ -1996,6 +1994,17 @@ def execSend():
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	return
+
+######## un decode i2c ether from in or from hex
+def echoToMessageSend(data, wasSend):
+	try:
+		if len(data) > 7000: data = data[0:7000]+"..."
+		logger.log(10, "cBY:{:<20}  {} {}\n".format(G.program, wasSend, data) )
+		f = open("{}temp/messageSend".format(G.homeDir),"w")
+		f.write("{} {} {}: {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"), wasSend, G.program , data) )
+		f.close()
+	except	Exception as e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 
 ######## un decode i2c ether from in or from hex

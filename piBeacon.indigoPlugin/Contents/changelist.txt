@@ -1,9 +1,13 @@
 Added features / changes in v7.121.421 @ 2020-07-21
 ===================================================
-1. rewrote get battery level and peeb functions.
-2. added more tagging features for beacons
-3. RINEX and NJOII are now the same type of beacon
+1. re-wrote get battery level, beep functions, BLE analysis, get new beacon info.
+   also added a beaconloop restart after any of the above functions to avoid a hanging BLE stack
+2. fixed battery level calculation for Aiko beacons (it uses a range value:64 = 0% .. value:100 =100 %)
+3. added more tagging features for beacons
+4. RINEX and NJOII are now the same type of beacon
    if you have a RINEX or NJOII you need to edit and set beacon type
+5. some samller menue changes
+6. some smaller program changes
 
 
 Added features / changes in v7.121.418 @ 2020-07-16

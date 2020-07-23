@@ -8419,6 +8419,7 @@ class Plugin(indigo.PluginBase):
 					if type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) != type({}): continue
 					if "uuid" not in self.knownBeaconTags[typeOfBeacon]["battCmd"]: 	continue
 					if "bits" not in self.knownBeaconTags[typeOfBeacon]["battCmd"]: 	continue
+					if "shift" not in self.knownBeaconTags[typeOfBeacon]["battCmd"]: 	continue
 					
 					if "batteryLevelUUID" in props  and props["batteryLevelUUID"]  == "gatttool":
 								try: 	batteryLevelLastUpdate = self.getTimetimeFromDateString(dev.states["batteryLevelLastUpdate"])
@@ -8429,12 +8430,12 @@ class Plugin(indigo.PluginBase):
 									try: 
 										dist = float( dev.states["Pi_"+piU.rjust(2,"0")+"_Distance"] )
 										if dist < 99.:
-											dd={"battCmd":self.knownBeaconTags[typeOfBeacon]["battCmd"]}
+											dd = {"battCmd":self.knownBeaconTags[typeOfBeacon]["battCmd"]}
 											minTime[piU] += 10
 											self.beacons[mac]["lastBusy"] = time.time() + 90
 											dev.updateStateOnServer("isBeepable","busy")
 
-											if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last successful check @: {}; distance to RPI:{:4.1f};".format(piU, dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"], dist) )
+											if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last successful check @: {}; distance to RPI:{:4.1f}; cmd:{}".format(piU, dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"], dist, dd) )
 										if (time.time() - batteryLevelLastUpdate) > (3600*24*3): # error message if last update > 3 days ago
 											 self.indiLOG.log(30, "Battery level update outdated  for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name.encode("utf8"), dev.states["batteryLevel"], dev.states["batteryLevelLastUpdate"] ) )
 									except Exception, e:
@@ -8565,14 +8566,14 @@ class Plugin(indigo.PluginBase):
 
 		mac = valuesDict[u"mac"].upper()
 		existingMAC = valuesDict[u"existingMAC"].upper()
-		if not self.isValidMAC(mac):
-			if not self.isValidMAC(existingMAC):
-				valuesDict[u"msg"]	= "bad MAC number"
-				return valuesDict
-			else:
-				valuesDict[u"typeId"]	= existingMAC
-		else:
-			valuesDict[u"typeId"]	= mac
+		valuesDict[u"typeId"] = mac
+		if mac != "*":
+			if not self.isValidMAC(mac):
+				if not self.isValidMAC(existingMAC):
+					valuesDict[u"msg"]	= "bad MAC number"
+					return valuesDict
+				else:
+					valuesDict[u"typeId"]	= existingMAC
 				
 
 		valuesDict[u"cmd"]	 	= "trackMac"
