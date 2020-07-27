@@ -1,4 +1,9 @@
-Added features / changes in v7.121.421 @ 2020-07-21
+Added features / changes in v7.123.423 @ 2020-07-26
+===================================================
+1. for ADSxx ADC devices alsoways show INPUT as ststaus (was INPUT_x)
+
+
+Added features / changes in v7.123.422 @ 2020-07-23
 ===================================================
 1. re-wrote get battery level, beep functions, BLE analysis, get new beacon info.
    also added a beaconloop restart after any of the above functions to avoid a hanging BLE stack

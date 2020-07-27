@@ -3961,31 +3961,32 @@ class Plugin(indigo.PluginBase):
 		try:
 	
 
-			if typeId == "car":						retCode, errorDict, valuesDict = self.validateDeviceConfigUi_Cars(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			if typeId == "car":						retCode, valuesDict, errorDict = self.validateDeviceConfigUi_Cars(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId == "sprinkler":				retCode, errorDict, valuesDict = self.validateDeviceConfigUi_Sprinkler(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId == "sprinkler":				retCode, valuesDict, errorDict = self.validateDeviceConfigUi_Sprinkler(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId ==u"BLEconnect":			retCode, errorDict, valuesDict = self.validateDeviceConfigUi_BLEconnect(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId ==u"BLEconnect":			retCode, valuesDict, errorDict = self.validateDeviceConfigUi_BLEconnect(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId == "rPI-Sensor":			retCode, errorDict, valuesDict = self.validateDeviceConfigUi_rPISensor(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId == "rPI-Sensor":			retCode, valuesDict, errorDict = self.validateDeviceConfigUi_rPISensor(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId == "rPI":					retCode, errorDict, valuesDict = self.validateDeviceConfigUi_rPI(			 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId == "rPI":					retCode, valuesDict, errorDict = self.validateDeviceConfigUi_rPI(			 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId == "beacon":				retCode, errorDict, valuesDict = self.validateDeviceConfigUi_beacon(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId == "beacon":				retCode, valuesDict, errorDict = self.validateDeviceConfigUi_beacon(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId.find(u"INPUTgpio")>-1 or typeId.find(u"INPUTtouch")>-1:
-													retCode, errorDict, valuesDict = self.validateDeviceConfigUi_INPUTG(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_INPUTG(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId.find(u"INPUTRotatary")>-1 :	retCode, errorDict, valuesDict = self.validateDeviceConfigUi_INPUTRotatary(valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId.find(u"INPUTRotatary")>-1 :	retCode, valuesDict, errorDict = self.validateDeviceConfigUi_INPUTRotatary(valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId.find(u"OUTPUTgpio-") > -1 or typeId.find(u"OUTPUTi2cRelay") > -1:
-													retCode, errorDict, valuesDict = self.validateDeviceConfigUi_OUTPUTG(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_OUTPUTG(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId in _GlobalConst_allowedSensors:
-													retCode, errorDict, valuesDict = self.validateDeviceConfigUi_sensors(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_sensors(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId in _GlobalConst_allowedOUTPUT:
-													retCode, errorDict, valuesDict = self.validateDeviceConfigUi_output(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_output(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+
 
 			if retCode:	
 				self.updateNeeded += " fixConfig "
@@ -4401,6 +4402,7 @@ class Plugin(indigo.PluginBase):
 					valuesDict[u"description"] +=  ";"+valuesDict[u"minMoisture"]+"<V<"+ valuesDict[u"maxMoisture"]
 
 				if typeId in [u"PCF8591","ADS1x15"]:
+					if "displayS" 	in valuesDict:  			 		valuesDict[u"displayS"] 	= "INPUT"
 					if "input" 		in valuesDict:  			 		valuesDict[u"description"] 	+= " C#="+valuesDict[u"input"]+";"
 					if "resModel" 	in valuesDict:  			 		valuesDict[u"description"] 	+= "M="+valuesDict[u"resModel"]+";"
 					if "gain" 		in valuesDict:  			 		valuesDict[u"description"] 	+= "G="+valuesDict[u"gain"]+";"
@@ -4866,7 +4868,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setErrorCode(self,valuesDict,errorDict, error):
+	def setErrorCode(self,valuesDict, errorDict, error):
 		valuesDict[u"MSG"] = error
 		errorDict[u"MSG"]  = error
 		self.indiLOG.log(40,"validateDeviceConfigUi "+error)
@@ -11492,7 +11494,6 @@ class Plugin(indigo.PluginBase):
 					if self.checkDevToPi(piU, devId, dev.name, u"input",  u"in",  sensor, _GlobalConst_allowedSensors): anyChange= True
 					#indigo.server.log("syncSensors A01: "+ unicode(anyChange)+"  "+ unicode(time.time() - ss))
 					if self.checkDevToPi(piU, devId, dev.name, u"output", u"out", sensor, _GlobalConst_allowedOUTPUT):  anyChange= True
-					#indigo.server.log("syncSensors A02: "+ unicode(anyChange)+"  "+ unicode(time.time() - ss))
 
 				if u"description" in props and	props[u"description"] !="" and props[u"description"] != dev.description:
 					dev.description =  props[u"description"] 
