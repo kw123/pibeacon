@@ -882,13 +882,19 @@ def readParams():
 				gasBaseLine[devId] = setCalibrationToFixedValue[devId]
 				StateOfSensorCalibration[devId] = "baseline set"
 		
-			old = U.getI2cAddress(sensors[sensor][devId], default ="")
+
+			old = ""
+			i2cAddress = 119	 
+			startUp = True  
+			if sensor in sensorsOld and devId in sensorsOld[sensor]:
+				old = U.getI2cAddress(sensorsOld[sensor][devId], default="")
+				startUp = False
 			try:
 				if "i2cAddress" in sensors[sensor][devId]:
-					i2cAddress = float(sensors[sensor][devId]["i2cAddress"])
-			except:
-				i2cAddress = 119	   
-			if old != i2cAddress:  restart = True 
+					i2cAddress = int(sensors[sensor][devId]["i2cAddress"])
+			except: pass
+			if not startUp and old != i2cAddress:  restart = True 
+
 
 			try:
 				if devId not in deltaX: deltaX[devId]  = 0.1
@@ -1014,7 +1020,6 @@ def startSensor(devId):
 #################################
 def getValues(devId):
 	global sensor, sensors,	 BMEsensor, badSensor
-	global startTime
 	global startTime, gasBurnIn, gasBaseLine, lastMeasurement, sendToIndigoSecs, calibrationReadFromFile
 	global calibrateSetting, recalibrateIfGT,  setCalibrationToFixedValue, StateOfSensorCalibration
 
@@ -1137,8 +1142,8 @@ output						= {}
 badSensor					= 0
 sensorActive				= False
 rawOld						= ""
-BMEsensor					={}
-deltaX				  = {}
+BMEsensor					= {}
+deltaX						= {}
 displayEnable				= 0
 myPID		= str(os.getpid())
 U.setLogging()

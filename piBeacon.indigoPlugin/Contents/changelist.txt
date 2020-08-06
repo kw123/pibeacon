@@ -1,3 +1,8 @@
+Added features / changes in v7.124.423 @ 2020-08-06
+===================================================
+1. added sensor bosch BMP388 high precision pressure
+   accurancy equivalent = 0.8m altitude change
+
 Added features / changes in v7.123.423 @ 2020-07-26
 ===================================================
 1. for ADSxx ADC devices alsoways show INPUT as ststaus (was INPUT_x)

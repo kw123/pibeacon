@@ -350,7 +350,7 @@ _GlobalConst_emptyrPiProps	  ={
 	u"rssiOffset" :					0,
 	u"shutDownPinOutput" :			u"-1" }
 
-_GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC","INPUT_0","rainRate","Moisture","INPUT"]
+_GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Altitude","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC","INPUT_0","rainRate","Moisture","INPUT"]
 
 _GlobalConst_emptyRPI =	  {
 	u"rpiType":					u"rPi",
@@ -479,6 +479,7 @@ _GlobalConst_allowedSensors = [
 	 u"i2cBMExx",															 # temp / press/ hum /
 	 u"BLERuuviTag",
 	 u"bme680",																   # temp / press/ hum / gas
+	 u"bmp388",																   # temp / press/ alt
 	 u"tmp006",																   # temp rmote infrared
 	 u"tmp007",																   # temp rmote infrared
 	 u"max31865",																# platinum temp resistor 
@@ -514,7 +515,7 @@ _GlobalConst_lightSensors = [
 	"i2cVEML6075","i2cIS1145","i2cOPT3001","i2cTCS34725","i2cTSL2561","i2cVEML6070","i2cVEML6040","i2cVEML7700"]
 
 _GlobalConst_i2cSensors	  = [
-	"si7021","bme680","amg88xx","mlx90640",	"ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935","moistureSensor", "PCF8591","ADS1x15",
+	"si7021","bme680","bmp388","amg88xx","mlx90640",	"ccs811",u"sgp30", u"mlx90614",	 "ina219","ina3221","as726x","as3935","moistureSensor", "PCF8591","ADS1x15",
 	u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960","MAX44009"]
 
 _GlobalConst_allowedOUTPUT = [
@@ -3611,7 +3612,7 @@ class Plugin(indigo.PluginBase):
 			if self.pluginState == "init":
 
 				doSensorValueAnalog =["Wire18B20","DHT","i2cTMP102","i2cMCP9808","i2cLM35A","i2cT5403",
-				"i2cMS5803","i2cBMPxx","tmp006","tmp007","i2cSHT21""i2cAM2320","i2cBMExx","bme680","si7021",
+				"i2cMS5803","i2cBMPxx","tmp006","tmp007","i2cSHT21""i2cAM2320","i2cBMExx","bme680","bmp388","si7021",
 				"BLERuuviTag",
 				"max31865",
 				"pmairquality",
@@ -3960,8 +3961,16 @@ class Plugin(indigo.PluginBase):
 
 		try:
 	
+			# fix STATUS state, INPUT_x was split into several devices, each has "INPUT" not INPUT_0/1/2/3/4..  
+			if "displayS" in valuesDict and valuesDict[u"displayS"].find("INPUT_") >-1: 
+				fix = True
+				for state in dev.states:
+					if state.find("INPUT_") >- 1: 
+						fix = False 
+						break
+				if fix: valuesDict[u"displayS"] = "INPUT"
 
-			if typeId == "car":						retCode, valuesDict, errorDict = self.validateDeviceConfigUi_Cars(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			if typeId   == "car":					retCode, valuesDict, errorDict = self.validateDeviceConfigUi_Cars(		 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId == "sprinkler":				retCode, valuesDict, errorDict = self.validateDeviceConfigUi_Sprinkler(	 valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
@@ -4400,6 +4409,7 @@ class Plugin(indigo.PluginBase):
 					else:											        valuesDict[u"description"] += ", recalib if > "+valuesDict["recalibrateIfGT"]+"%"
 				if typeId.find(u"moistureSensor") >-1:
 					valuesDict[u"description"] +=  ";"+valuesDict[u"minMoisture"]+"<V<"+ valuesDict[u"maxMoisture"]
+
 
 				if typeId in [u"PCF8591","ADS1x15"]:
 					if "displayS" 	in valuesDict:  			 		valuesDict[u"displayS"] 	= "INPUT"
@@ -13250,6 +13260,13 @@ class Plugin(indigo.PluginBase):
 
 
 					if u"press" in data:
+						if False and u"Altitude" in dev.states and "temp" in data:
+							#indigo.server.log("Altitude    "+unicode(data["press"])+"  "+ unicode(props))
+							x, UI, decimalPlaces, useFormat  = self.convAlt(data[u"press"], props, data[u"temp"])
+							newStatus = self.setStatusCol( dev, u"Altitude", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "Altitude", useFormat, whichKeysToDisplay, decimalPlaces)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
 						newStatus, updateProps0, doUpdate = self.setPressureDisplay(dev, props, data, whichKeysToDisplay,newStatus)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
@@ -15006,6 +15023,50 @@ class Plugin(indigo.PluginBase):
 		return -99, u"",self.tempDigits, useFormat
 
 
+####-------------------------------------------------------------------------####
+	def convAlt(self, press, props, temp):
+		try:
+			offsetAlt = 0.
+			if "offsetAlt" in props:
+				try: offsetAlt = float(props["offsetAlt"])
+				except: pass
+			pAtSeeLevel = 101325.0 # in pascal 
+
+			alt = ((temp + 273.15)/0.0065)  *  ( 1. - pow( pAtSeeLevel / press, 0.1902843) ) + offsetAlt
+
+			useFormat 	= "{:.1f}"
+			suff 		= "[m]"
+			cString 	= "%.1f"
+			aD 			= 1
+			alt = float(alt)
+			if self.distanceUnits == u"0.01":
+				alt *= 100.
+				suff = u" cm"
+				cString = "%.0f"
+				aD = 0
+			elif self.distanceUnits == u"0.0254":
+				alt /= 0.0254
+				suff = u' inch'
+				cString = "%.0f"
+				aD = 0
+			elif self.distanceUnits == u"0.348":
+				alt /= 2.54
+				suff = u" feet"
+				cString = "%.1f"
+				aD = 1
+			elif self.distanceUnits == u"0.9144":
+				alt /= 0.9144
+				suff = u" y"
+				cString = "%.2f"
+				aD = 1
+			else:
+				pass
+			altU = (cString % alt).strip()
+			return round(alt,aD) , altU + suff,aD, useFormat
+		except:pass
+		return -99, u"",aD, useFormat
+
+
 
 ####-------------------------------------------------------------------------####
 	def convHum(self, hum):
@@ -16604,6 +16665,7 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multiplyTemp")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multTemp")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetTemp")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetAlt")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"enableCalibration")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multiplyPress")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetPress")

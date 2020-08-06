@@ -5655,6 +5655,181 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 
 		</States>
 	</Device>
+    
+	<Device type="sensor" id="bmp388">
+	<Name>INPUT-Temp+Press-i2c-BMP388</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isTempSensor"    type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup i2cBMP388 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+			<Field id="i2cAddress" type="menu"     defaultValue="119"> <Label>i2c address of device:</Label>
+			<List>
+				<Option value="119"   >0x77 = 119 </Option>
+			</List>
+			</Field>
+			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
+			<Label>use TCA9548A multiplexer for this sensor:</Label> 
+			<List>
+				<Option value="-1"    >off </Option>
+				<Option value="0"     >channel 0  </Option>
+				<Option value="1"     >channel 1  </Option>
+				<Option value="2"     >channel 2  </Option>
+				<Option value="3"     >channel 3  </Option>
+				<Option value="4"     >channel 4  </Option>
+				<Option value="5"     >channel 5  </Option>
+				<Option value="6"     >channel 6  </Option>
+				<Option value="7"     >channel 7  </Option>
+			</List>
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Pressure"      >Pressure</Option>
+				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp"  type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+
+			<State id="Pressure">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
+			</State>
+			<State id="PressureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
+			</State>
+
+
+
+
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+
+		</States>
+	</Device>
   
 	<Device type="sensor" id="i2cSHT21">
 	<Name>INPUT-Temp+Hum-i2cSHT21</Name>
@@ -6243,6 +6418,10 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<TriggerLabel>PressureChange12Hours</TriggerLabel>
 				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
+
+
+
+
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastSensorChange</TriggerLabel>
@@ -6610,6 +6789,8 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>PressureChange12Hours</TriggerLabel>
 				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
+
+
 
 			<State id="GasResistance">
 				<ValueType>number</ValueType>
