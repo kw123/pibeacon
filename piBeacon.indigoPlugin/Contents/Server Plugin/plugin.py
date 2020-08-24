@@ -6089,9 +6089,9 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as SupportsBatteryLevel is not enabled in device edit" )
 				continue
 			if "batteryLevelUUID"     not in props or props["batteryLevelUUID"] != "gatttool": 	
-				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as gattool is not enabled in device edit..  props:{}".format(props) )
+				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as gattool is not enabled in device edit..")
 				continue
-			xList.append((dev.id, "{} - {}".format(dev.name, dev.address) ))
+			xList.append((dev.id, "{} - {}".format(dev.name.encode("utf8"), dev.address) ))
 		xList.append(["0","all"])
 		return xList
 

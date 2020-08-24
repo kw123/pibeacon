@@ -1,6 +1,11 @@
-Added features / changes in v7.124.425 @ 2020-08-24
+Added features / changes in v7.124.428 @ 2020-08-24
 ===================================================
-1. can now chneg battery command in device edit ( will only be set at first open)
+1. fixed some issues w get battery levels when devices were not properly defined, ...
+
+
+Added features / changes in v7.124.427 @ 2020-08-24
+===================================================
+1. can now changed battery command in device edit ( will only be set at first open)
 
 Added features / changes in v7.124.426 @ 2020-08-24
 ===================================================
