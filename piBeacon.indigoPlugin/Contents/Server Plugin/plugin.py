@@ -6076,11 +6076,16 @@ class Plugin(indigo.PluginBase):
 	def filterBeaconsWithBattery(self, valuesDict=None, filter="", typeId="", devId=0, action=""):
 		xList = []
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
+			if self.decideMyLog(u"Special"):  
+				try: self.indiLOG.log(20, u"filterBeaconsWithBattery: checking:  {}".format(dev.name) )
+				except: indigo.server.log(dev.name)
 			props = dev.pluginProps
-			if "SupportsBatteryLevel" not in props: 		continue
-			if not props["SupportsBatteryLevel"]: 			continue
-			if "batteryLevelUUID" not in props : 			continue
-			if  props["batteryLevelUUID"] != "gatttool": 	continue
+			if "SupportsBatteryLevel" not in props or not props["SupportsBatteryLevel"]: 
+				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as SupportsBatteryLevel is not enabled in device edit" )
+				continue
+			if "batteryLevelUUID"     not in props or props["batteryLevelUUID"] != "gatttool": 	
+				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as gattool is not enabled in device edit" )
+				continue
 			xList.append((dev.id, "{} - {}".format(dev.name.encode("utf8"), dev.address) ))
 		xList.append(["0","all"])
 		return xList
@@ -6158,10 +6163,10 @@ class Plugin(indigo.PluginBase):
 	def filterPiC(self, valuesDict=None, typeId="", devId=0, action=""):
 		xList = []
 		for piU in _rpiBeaconList:
-			if self.RPI[piU][u"piOnOff"] == "0" or	self.RPI[piU][u"ipNumberPi"] == "": continue
+			if self.RPI[piU][u"piOnOff"] == "0" or self.RPI[piU][u"ipNumberPi"] == "": continue
 			xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "-" + self.RPI[piU][u"piMAC"]])
 		for piU in _rpiSensorList:
-			if self.RPI[piU][u"piOnOff"] == "0" or	self.RPI[piU][u"ipNumberPi"] == "": continue
+			if self.RPI[piU][u"piOnOff"] == "0" or self.RPI[piU][u"ipNumberPi"] == "": continue
 			xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "- Sensor Only"])
 		xList.append([-1, u"off"])
 		return xList
@@ -6171,7 +6176,7 @@ class Plugin(indigo.PluginBase):
 	def filterPiBLE(self, valuesDict=None, typeId="", devId=0, action=""):
 		xList = []
 		for piU in _rpiBeaconList:
-			if self.RPI[piU][u"piOnOff"] == "0" or	self.RPI[piU][u"ipNumberPi"] == "": continue
+			if self.RPI[piU][u"piOnOff"] == "0" or self.RPI[piU][u"ipNumberPi"] == "": continue
 			xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "-" + self.RPI[piU][u"piMAC"]])
 		xList.append([999, u"all"])
 		return xList
@@ -6181,10 +6186,10 @@ class Plugin(indigo.PluginBase):
 	def filterPi(self, valuesDict=None, typeId="", devId=0, action=""):
 		xList = []
 		for piU in _rpiBeaconList:
-			if self.RPI[piU][u"piOnOff"] == "0" or	self.RPI[piU][u"ipNumberPi"] == "": continue
+			if self.RPI[piU][u"piOnOff"] == "0" or self.RPI[piU][u"ipNumberPi"] == "": continue
 			xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "-" + self.RPI[piU][u"piMAC"]])
 		for piU in _rpiSensorList:
-			if self.RPI[piU][u"piOnOff"] == "0" or	self.RPI[piU][u"ipNumberPi"] == "": continue
+			if self.RPI[piU][u"piOnOff"] == "0" or self.RPI[piU][u"ipNumberPi"] == "": continue
 			xList.append([piU, piU + "-" + self.RPI[piU][u"ipNumberPi"] + "- Sensor Only"])
 		xList.append([999, u"all"])
 		return xList
@@ -8515,18 +8520,24 @@ class Plugin(indigo.PluginBase):
 				mac  = dev.address
 				typeOfBeacon = self.beacons[mac]["typeOfBeacon"]
 
-				bl  = "         off"
+				batlevel  = "         off"
 				if typeOfBeacon in self.knownBeaconTags:
 					if self.knownBeaconTags[typeOfBeacon]["battCmd"] != "off":
-						bl = "{:12d}".format(dev.states["batteryLevel"])
+						batlevel = "{:12d}".format(dev.states["batteryLevel"])
 
-				try: 	bel = dev.states["isBeepable"]
-				except:	bel = "not capable"
+				benabled = "not capable"
+				try: 	benabled = dev.states["isBeepable"]
+				except:	pass
 
-				st = dev.states["status"]
-				lU = dev.states["batteryLevelLastUpdate"]
-			
-				out += "\n{:45s}  {:18s} {:15s}  {:15s}  {:6s}  {:11s} {:12s} {} ".format( dev.name.encode("utf8"), mac, typeOfBeacon, st, piU, bel, bl, lU)
+				lastU = "xxx"
+				try:
+					if dev.enabled:
+						lastU = dev.states["batteryLevelLastUpdate"]
+					else:
+						lastU = "disabled"
+				except: pass
+
+				out += "\n{:45s}  {:18s} {:15s}  {:15s}  {:6s}  {:11s} {:12s} {} ".format( dev.name.encode("utf8"), mac, typeOfBeacon, dev.states["status"], piU, benabled, batlevel, lastU)
 			indigo.server.log(out)
 		except Exception, e:
 			if unicode(e) != "None":
@@ -14299,7 +14310,7 @@ class Plugin(indigo.PluginBase):
 			if not ok: return 
 
 			x = self.getNumber(ss)
-			if self.decideMyLog(u"Special"):self.indiLOG.log(20,"setStateColor for dev {}, x={};  eval syntax: {}".format(dev.name.encode("utf8"), x, commands) )
+			#if self.decideMyLog(u"Special"):self.indiLOG.log(20,"setStateColor for dev {}, x={};  eval syntax: {}".format(dev.name.encode("utf8"), x, commands) )
 			for col in ["green","grey","red"]:
 				try: 
 					if len(commands[col]) == 0: continue
@@ -17247,8 +17258,8 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(20, u"UpdateRPI seems to have been completed for pi# {}  {}".format(piU, fileToSend) )
 					return 0, ["ok",""]
 				else:
-					self.indiLOG.log(30, u"setup pi response (2) message>>>> \n{}\n<<<<<<".format(ret[0].strip("\n")) )
-					self.indiLOG.log(30, u"setup pi response (2) error>>>>>> \n{}\n<<<<<<".format(ret[1].strip("\n")) )
+					self.indiLOG.log(20, u"setup pi response (2) message>>>> \n{}\n<<<<<<".format(ret[0].strip("\n")) )
+					self.indiLOG.log(20, u"setup pi response (2) error>>>>>> \n{}\n<<<<<<".format(ret[1].strip("\n")) )
 					return 1, ["offline",""]
 			return 0, ret
 		except Exception, e:

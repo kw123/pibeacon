@@ -42,6 +42,10 @@
 					<Option value="13" >13</Option>
 					<Option value="14" >14</Option>
 					<Option value="15" >15</Option>
+					<Option value="16" >16</Option>
+					<Option value="17" >17</Option>
+					<Option value="18" >18</Option>
+					<Option value="19" >19</Option>
 				</List>
 			</Field>
 			<Field id="RPINumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -1448,11 +1452,6 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 			<Field id="RPINumber" type="menu"    enabledBindingId="enablePiNumberMenu"  defaultValue=""> 
 				<Label>... RPi #:(only use undefined RPIs)</Label>
 				 <List>
-					<Option value="15" >15</Option>
-					<Option value="16" >16</Option>
-					<Option value="17" >17</Option>
-					<Option value="18" >18</Option>
-					<Option value="19" >19</Option>
 					<Option value="20" >20</Option>
 					<Option value="21" >21</Option>
 					<Option value="22" >22</Option>
