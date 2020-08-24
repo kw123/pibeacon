@@ -62,6 +62,11 @@ ADV_SCAN_IND=0x02
 ADV_NONCONN_IND=0x03
 ADV_SCAN_RSP=0x04
 
+def stringFromPacket(pkt):
+	myString = ""
+	for c in pkt:
+		myString +=	 "%02x" %struct.unpack("B",c)[0]
+	return myString 
 
 def returnnumberpacket(pkt):
 	myInteger = 0
@@ -287,11 +292,13 @@ def readParams(init):
 		G.myPiNumber	  ="0"
 
 	inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
-	if inp == "":				return False
-	if lastRead2 == lastRead:	return False
+	doParams = True
+	if inp == "":				doParams = False
+	if lastRead2 == lastRead:	doParams = False
 	lastRead   = lastRead2
-	if inpRaw == oldRaw:		return False
+	if inpRaw == oldRaw:		doParams = False
 	oldRaw	   = inpRaw
+	if not doParams: return 
 
 	try:
 		U.getGlobalParams(inp)
@@ -299,29 +306,47 @@ def readParams(init):
 		if "rebootSeconds"		in inp:	 rebootSeconds=		  int(inp["rebootSeconds"])
 		if "sendAfterSeconds"	in inp:	 sendAfterSeconds=	  int(inp["sendAfterSeconds"])
 
-		BLEsensorMACs = {}
-		sensor		  = "BLEsensor"
-		if "sensors"			 in inp: 
-			sensors =				 (inp["sensors"])
-			if sensor in sensors:
-				for devId in sensors[sensor]:
-					sensD	= sensors[sensor][devId]
-					mac		= sensD["mac"]
-					BLEsensorMACs[mac]={}
-					BLEsensorMACs[mac]["type"]						 = sensD["type"]
-					BLEsensorMACs[mac]["devId"]						 = devId
-					try:	BLEsensorMACs[mac]["offsetTemp"]		 = float(sensD["offsetTemp"])
-					except: BLEsensorMACs[mac]["offsetTemp"]		 = 0.
-					try:	BLEsensorMACs[mac]["multiplyTemp"]		 = float(sensD["multiplyTemp"])
-					except: BLEsensorMACs[mac]["multiplyTemp"]		 = 1.
-					try:	BLEsensorMACs[mac]["offsetWind"]		 = float(sensD["offsetWind"])
-					except: BLEsensorMACs[mac]["offsetWind"]		 = 0.
-					try:	BLEsensorMACs[mac]["multiplyWind"]		 = float(sensD["multiplyWind"])
-					except: BLEsensorMACs[mac]["multiplyWind"]		 = 1.
-					try:	BLEsensorMACs[mac]["updateIndigoTiming"] = float(sensD["updateIndigoTiming"])
-					except: BLEsensorMACs[mac]["updateIndigoTiming"] = 0.
-					BLEsensorMACs[mac]["lastUpdate"]				 = -1
-		U.logger.log(30, "BLE sensors found: {}".format(BLEsensorMACs) )
+		try:
+			if "sensors"			 in inp: 
+				sensors =			 (inp["sensors"])
+				for sensor in ["BLEsensor","BLERuuviTag"]:
+					if sensor in sensors:
+						for devId in sensors[sensor]:
+							sensD	= sensors[sensor][devId]
+							mac		= sensD["mac"]
+							if mac not in BLEsensorMACs: BLEsensorMACs[mac] = {}
+							
+							BLEsensorMACs[mac]["type"] 							= sensD["type"]
+							BLEsensorMACs[mac]["devId"] 						= devId
+							try:	BLEsensorMACs[mac]["offsetPress"]   		= float(sensD["offsetPress"])
+							except: BLEsensorMACs[mac]["offsetPress"]			= 0.
+							try:	BLEsensorMACs[mac]["offsetHum"]   			= float(sensD["offsetHum"])
+							except: BLEsensorMACs[mac]["offsetHum"]				= 0.
+							try:	BLEsensorMACs[mac]["offsetTemp"]   			= float(sensD["offsetTemp"])
+							except: BLEsensorMACs[mac]["offsetTemp"]			= 0.
+							try:	BLEsensorMACs[mac]["multiplyTemp"] 			= float(sensD["multiplyTemp"])
+							except: BLEsensorMACs[mac]["multiplyTemp"] 			= 1.
+							try:	BLEsensorMACs[mac]["updateIndigoTiming"] 	= float(sensD["updateIndigoTiming"])
+							except: BLEsensorMACs[mac]["updateIndigoTiming"] 	= 10.
+							try:	BLEsensorMACs[mac]["updateIndigoDeltaAccelVector"]	= float(sensD["updateIndigoDeltaAccelVector"])
+							except: BLEsensorMACs[mac]["updateIndigoDeltaAccelVector"] = 30. # % total abs of vector change
+							try:	BLEsensorMACs[mac]["updateIndigoDeltaMaxXYZ"] = float(sensD["updateIndigoDeltaMaxXYZ"])
+							except: BLEsensorMACs[mac]["updateIndigoDeltaMaxXYZ"] = 30. # N/s*s *1000 
+							try:	BLEsensorMACs[mac]["updateIndigoDeltaTemp"] = float(sensD["updateIndigoDeltaTemp"])
+							except: BLEsensorMACs[mac]["updateIndigoDeltaTemp"] = 1 # =1C 
+							try:	BLEsensorMACs[mac]["minSendDelta"] 			= float(sensD["minSendDelta"])
+							except: BLEsensorMACs[mac]["minSendDelta"] 			= 4 #  seconds betwen updates
+							if "accelerationTotal" not in BLEsensorMACs[mac]:
+								BLEsensorMACs[mac]["accelerationTotal"]				= 0
+								BLEsensorMACs[mac]["accelerationX"]				 	= 0
+								BLEsensorMACs[mac]["accelerationY"]				 	= 0
+								BLEsensorMACs[mac]["accelerationZ"]				 	= 0
+								BLEsensorMACs[mac]["temp"]				 			= -100
+								BLEsensorMACs[mac]["lastUpdate"]				 	= 0
+
+			U.logger.log(30, "BLE sensors found: {}".format(BLEsensorMACs) )
+		except	Exception, e:
+			U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -329,10 +354,30 @@ def readParams(init):
 	return	True
 
 		
+def doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min):
+	global BLEsensorMACs
+	bl = ""
+	try:
+
+		if mac in BLEsensorMACs and BLEsensorMACs[mac]["type"] == "myBLUEt":  								
+			return domyBlueT( pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min)
+
+		## check if Ruuvi tag present at right position, should be at pos 22
+		ruuviTagPos 	= hexData.find("FF990405") 
+		ruuviTagFound	= ruuviTagPos > 20 and ruuviTagPos < 24 # give range just in case
+		ruuviSensorActive = ( mac in BLEsensorMACs  and BLEsensorMACs[mac]["type"] == "RuuviTag")
+		#if mac == "ED:1B:05:6E:CA:59":
+		#	U.logger.log(30,u"ruuvitag -1 mac:{};  pos={}; ruuviSensorActive:{}, hexData:{}".format(mac, ruuviTagPos, ruuviSensorActive, hexData))
+		if ruuviTagFound or ruuviSensorActive: 
+			return  doRuuviTag(pkt, mac, rx, tx, nBytesThisMSG, hexData, ruuviTagPos, ruuviSensorActive, UUID, Maj, Min)
+
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return tx, bl, UUID, Maj, Min, False
 
 
 #################################
-def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
+def domyBlueT(pkt,UUID,Maj,Min,mac,rx,tx):
 	global BLEsensorMACs, sensor
 	try:
 		data ={sensor:{}}
@@ -344,7 +389,7 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 		BLEsensorMACs[mac]["lastUpdate"] = time.time()
 		devId		= BLEsensorMACs[mac]["devId"]
 		data		= {sensor:{devId:{}}}
-		if BLEsensorMACs[mac]["type"] =="myBLUEt":
+		if BLEsensorMACs[mac]["type"] == "myBLUEt":
 			RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
 			if RawData[2] != 0: tSign = 0x10000 # == 65536 == 2<<15
 			else:				tSign = 0
@@ -434,6 +479,248 @@ def doSensors(pkt,UUID,Maj,Min,mac,rx,tx):
 
 	"""						   
 	return
+#################################
+def domyBlueT(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min):
+	global BLEsensorMACs
+	try:
+		RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
+		if RawData[2] != 0: tSign = 0x10000 # == 65536 == 2<<15
+		else:				tSign = 0
+		r8				= RawData[1] << 8 
+		sensorData		= ( r8 + RawData[0] - tSign ) /100.
+		sensor			= "BLEsensor"
+		devId			= BLEsensorMACs[mac]["devId"]
+		try:	temp  	= (sensorData + BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multiplyTemp"]
+		except: temp  	= sensorData
+		U.logger.log(10, "{}   RX:{}; TX:{}; temp:{}; nBytes:{}".format(mac, rx, tx, temp, nBytesThisMSG) )
+		# print "raw, tSign, t1<<8, sensorData, sensorData*9./5 +32.", RawData, tSign, r8, temp, sensorData, sensorData*9./5 +32.
+		if time.time() - BLEsensorMACs[mac]["lastUpdate"]  > BLEsensorMACs[mac]["updateIndigoTiming"]: 
+			data   = {sensor:{devId:{}}}
+			data[sensor][devId] = {"temp":temp, "type":BLEsensorMACs[mac]["type"],"mac":mac,"rssi":float(rx),"txPower":float(tx)}
+			U.sendURL({"sensors":data})
+			BLEsensorMACs[mac]["lastUpdate"] = time.time()
+		return tx, "", "myBlueT", mac, "sensor", True
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return tx, "", UUID, Maj, Min, True
+		#print RawData				
+	""" from the sensor web site:
+		private void submitScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
+		{
+			int temp;
+			 // device has hw address and name, signal strength in rssi, raw packet in scanRecord
+
+			// temperature in C (* 100) appears to be in bytes 17 and 18, maybe 19..
+			// TODO no official docs on this (?)
+			// this seems to cover usable range
+			if ((0xff & scanRecord[19]) == 0xff)
+			{
+				temp = (0xff & scanRecord[18]) * 256;
+				temp += (0xff & scanRecord[17]);
+				temp = temp - 0x10000;
+			}
+			else
+			{
+				temp = (0xff & scanRecord[18]) * 256;
+				temp += (0xff & scanRecord[17]);
+			}
+			if (this.resultReceiver != null) {
+				Bundle b = new Bundle();
+				b.putString("scanResult", device.getAddress() + ": " + (temp / 100.0)+	" C / " + ((temp / 100.0) * 9.0 / 5.0 + 32.0) + " F");
+				this.resultReceiver.send(0, b);
+			}
+		}
+	"""						   
+
+
+#################################
+#################################
+## Ruuvi ########################
+#################################
+def doRuuviTag(pkt, mac, rx, tx, nBytesThisMSG,hexData, ruuviTagPos, ruuviSensorActive, UUID, Maj, Min):
+	global BLEsensorMACs, sensors
+
+	""" ruuvi data format: https://github.com/ruuvi/ruuvi-sensor-protocols/blob/master/dataformat_05.md
+offset	Allowed Values		description
+0		5					Data format (8bit)
+1-2		-32767 ... 32767	Temperature in 0.005 degrees
+3-4		0 ... 40 000		Humidity (16bit unsigned) in 0.0025% (0-163.83% range, though realistically 0-100%)
+5-6		0 ... 65534			Pressure (16bit unsigned) in 1 Pa units, with offset of -50 000 Pa
+7-8		-32767 ... 32767	Acceleration-X (Most Significant Byte first)
+9-10	-32767 ... 32767	Acceleration-Y (Most Significant Byte first)
+11-12	-32767 ... 32767	Acceleration-Z (Most Significant Byte first)
+13-14	0...2046, 0...30	Power info (11+5bit unsigned), first 11 bits is the battery voltage above 1.6V, in millivolts (1.6V to 3.646V range). 
+							Last 5 bits unsigned are the TX power above -40dBm, in 2dBm steps. (-40dBm to +20dBm range)
+15		0 ... 254			Movement counter (8 bit unsigned), incremented by motion detection interrupts from accelerometer
+16-17	0 ... 65534			Measurement sequence number (16 bit unsigned), each time a measurement is taken, this is incremented by one, used for measurement de-duplication. 
+							Depending on the transmit interval, multiple packets with the same measurements can be sent, and there may be measurements that never were sent.
+18-23	Any valid mac		48bit MAC address, should be same as in message  (==mac)
+	"""
+
+	try:
+		
+		if len(hexData) < ruuviTagPos+24:  # 24 = number of bytes for ruuvi data required
+			return tx, "", UUID, Maj, Min, False
+
+		UUID 						= "ruuviTag"
+		Maj  						= mac
+		Min  						= "sensor"
+		sensor 						= "BLERuuviTag"
+		# make data into right format (bytes)
+		byte_data 					= bytearray.fromhex(hexData[ruuviTagPos + 6:])
+		# umpack the first set of data
+
+		if not ruuviSensorActive: # we have found the ruuvitag, but the sensor is not active on this RPI, but the iBeacon is
+			# overwrite UUID etc for this ibeacon if used later
+			return tx, "", UUID, Maj, Min, False
+
+		# sensor is active, get all data and send if conditions ok
+
+
+		# unpack  rest of sensor data 
+		accelerationTotal, accelerationX, accelerationY, accelerationZ 	= doRuuviTag_magValues(byte_data)
+		temp 					= doRuuviTag_temperature(byte_data)
+		batteryVoltage, txPower = doRuuviTag_powerinfo(byte_data)
+		battreyLowVsTemp		= (1. + min(0,temp-8)/100.) * 2900 # (changes to 2871 @ -2C; to = 2842 @-12C )
+		batteryLevel 			= int(min(100,max(0,100* (batteryVoltage - battreyLowVsTemp)/(3200.-battreyLowVsTemp))))
+		# make deltas compared to last send 
+		dX 			= abs(BLEsensorMACs[mac]["accelerationX"]		- accelerationX)
+		dY 			= abs(BLEsensorMACs[mac]["accelerationY"]		- accelerationY)
+		dZ 			= abs(BLEsensorMACs[mac]["accelerationZ"]		- accelerationZ)
+		dTot 		= math.sqrt(dX*dX +dY*dY +dZ*dZ) # in N/s**2 *1000
+		deltaXYZ	= int(max(dX, dY, dZ))  # in N/s**2 *1000
+
+		deltatemp 	= abs(BLEsensorMACs[mac]["temp"] - temp)  
+		deltaTime 	= time.time() - BLEsensorMACs[mac]["lastUpdate"]
+
+		# check if we should send data to indigo
+		trigMinTime	= deltaTime 	> BLEsensorMACs[mac]["minSendDelta"] 				# dont send too often
+		trigTime 	= deltaTime 	> BLEsensorMACs[mac]["updateIndigoTiming"]  			# send min every xx secs
+		trigTemp 	= deltatemp 	> BLEsensorMACs[mac]["updateIndigoDeltaTemp"] 			# temp change triggers
+		trigAccel 	= dTot			> BLEsensorMACs[mac]["updateIndigoDeltaAccelVector"] 	# acceleration change triggers 
+		trigDeltaXZY= deltaXYZ		> BLEsensorMACs[mac]["updateIndigoDeltaMaxXYZ"]			# acceleration-turn change triggers 
+		trig = ""
+		if trigTime:		trig += "Time/"
+		else:
+			if trigTemp: 	trig += "Temp/"
+			if trigAccel:	trig += "Accel-Total/"
+			if trigDeltaXZY:trig += "Accel-Max-xyz/"
+		#U.logger.log(20, "mac:{}    trigMinTime:{} deltaXYZ:{}, trig:{}".format(mac, trigMinTime, deltaXYZ, trig) )
+
+		if trigMinTime and	( trigTime or trigTemp or trigAccel or trigDeltaXZY ):
+			dd={   # the data dict to be send 
+				'data_format': 5,
+				'hum': 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac]["offsetHum"]),
+				'temp': 				round(temp							 + BLEsensorMACs[mac]["offsetTemp"],2),
+				'press': 				round(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac]["offsetPress"],1),
+				'accelerationTotal': 	int(accelerationTotal),
+				'accelerationX': 		int(accelerationX),
+				'accelerationY': 		int(accelerationY),
+				'accelerationZ': 		int(accelerationZ),
+				'accelerationXYZMaxDelta':int(deltaXYZ),
+				'accelerationVectorDelta':int(dTot),
+				'batteryLevel': 		int(batteryLevel),
+				'batteryVoltage': 		int(batteryVoltage),
+				'movementCount': 		int(doRuuviTag_movementcounter(byte_data)),
+				'measurementCount': 	int(doRuuviTag_measurementsequencenumber(byte_data)),
+				'trigger': 				trig.strip("/"),
+				'txPower': 				int(txPower),
+				"rssi":					int(rx),
+			}
+			#U.logger.log(20, " .... sending  data:{}".format( dd ) )
+
+			## compose complete message
+			U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
+
+			# remember last values
+			BLEsensorMACs[mac]["lastUpdate"] 			= time.time()
+			BLEsensorMACs[mac]["accelerationTotal"] 	= accelerationTotal
+			BLEsensorMACs[mac]["accelerationX"] 		= accelerationX
+			BLEsensorMACs[mac]["accelerationY"] 		= accelerationY
+			BLEsensorMACs[mac]["accelerationZ"] 		= accelerationZ
+			BLEsensorMACs[mac]["temp"] 					= temp
+
+		# overwrite UUID etc for this ibeacon if used later
+		return str(txPower), str(batteryLevel), UUID, Maj, Min, False
+
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	# return incoming parameetrs
+	return tx, "", UUID, Maj, Min, False
+
+
+#################################
+def doRuuviTag_temperature( data):
+	"""Return temperature in celsius"""
+	if data[1:2] == 0x7FFF:
+		return 0
+
+	temperature = twos_complement((data[1] << 8) + data[2], 16) / 200
+	return round(temperature, 2)
+
+#################################
+def doRuuviTag_humidity( data):
+	"""Return humidity %"""
+	if data[3:4] == 0xFFFF:
+		return 0
+
+	humidity = ((data[3] & 0xFF) << 8 | data[4] & 0xFF) / 400
+	return round(humidity, 2)
+
+#################################
+def doRuuviTag_pressure( data):
+	"""Return air pressure hPa"""
+	if data[5:6] == 0xFFFF:
+		return 0
+
+	pressure = ((data[5] & 0xFF) << 8 | data[6] & 0xFF) + 50000
+	return round(pressure, 1)
+
+#################################
+def doRuuviTag_magValues( data):
+	"""Return mageration mG"""
+	if (data[7:8] == 0x7FFF or
+			data[9:10] == 0x7FFF or
+			data[11:12] == 0x7FFF):
+		return (0, 0, 0)
+
+	acc_x = twos_complement((data[7] << 8) + data[8], 16)
+	acc_y = twos_complement((data[9] << 8) + data[10], 16)
+	acc_z = twos_complement((data[11] << 8) + data[12], 16)
+	return math.sqrt(acc_x * acc_x + acc_y * acc_y + acc_z * acc_z), acc_x, acc_y, acc_z
+
+#################################
+def doRuuviTag_powerinfo( data):
+	"""Return battery voltage and tx power"""
+	power_info = (data[13] & 0xFF) << 8 | (data[14] & 0xFF)
+	battery_voltage = rshift(power_info, 5) + 1600
+	tx_power = (power_info & 0b11111) * 2 - 40
+
+	if rshift(power_info, 5) == 0b11111111111:
+		battery_voltage = 0
+	if (power_info & 0b11111) == 0b11111:
+		tx_power = -9999
+	#print  (round(battery_voltage, 3), tx_power)
+
+	return (battery_voltage, tx_power)
+
+
+#################################
+def doRuuviTag_movementcounter( data):
+	return data[15] & 0xFF
+
+#################################
+def doRuuviTag_measurementsequencenumber( data):
+	measurementSequenceNumber = (data[16] & 0xFF) << 8 | data[17] & 0xFF
+	return measurementSequenceNumber
+
+#################################
+def doRuuviTag_mac( data):
+	return ''.join('{:02x}'.format(x) for x in data[18:24])
+
+#################################
+## Ruuvi  END   #################
+#################################
 
 
 ####### main pgm / loop ############
@@ -557,8 +844,7 @@ def execBLEsensor():
 								break
 							# build the return string: mac#, uuid-major-minor,txpower??,rssi
 							mac	 = (packed_bdaddr_to_string(pkt[offS :offS + 6])).upper()
-							if mac not in BLEsensorMACs: 
-								continue
+							hexData	 			= (stringFromPacket(pkt[offS:])).upper()
 							
 							pkLen				= len(pkt)
 							nBytesThisMSG		= ord(pkt[offS+6])
@@ -590,9 +876,8 @@ def execBLEsensor():
 							tx	 = "%i" % struct.unpack("b", pkt[ -2 ])
 							rx	 = "%i" % struct.unpack("b", pkt[ -1 ])
 
-							doSensors(pkt,UUID,Maj,Min,mac,rx,tx)
+							doSensors(pkt, mac, rx, tx, nBytesThisMSG, hexData, UUID, Maj, Min)
 							time.sleep(1)
-
 							break
 
 

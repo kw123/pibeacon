@@ -311,24 +311,26 @@ def startNEOPIXEL(setClock = ""):
 
 def updatewebserverStatus():
 	global eth0IP, wifi0IP, LEDintensityFactor, clockLightSetOverWrite, clockLightSet, timeZone, lightSensorValue
-	statusData		= []
-	statusData.append( "Neopixel CLOCK current Status, updated every 3 secs ")
-	statusData.append( "time........... = "+ datetime.datetime.now().strftime(u"%H:%M:%S") )
-	statusData.append( "time zone...... = "+ str(timeZone))
-	statusData.append( "IP-Number..eth. = "+ eth0IP )
-	statusData.append( "IP-Number..wifi = "+ wifi0IP )
-	statusData.append( "WiFi enabled... = "+ str(G.wifiEnabled) )
-	statusData.append( "ClockLightSet.. = "+ str(clockLightSet) )
-	statusData.append( "LightSensorRaw. = "+ str(lightSensorValue) )
-	statusData.append( "LightSensor.... = "+ str(LEDintensityFactor) )
-	statusData.append( "LightOveride... = "+ str(clockLightSetOverWrite) )
-	statusData.append( "Marks-HH....... = "+ str(clockDict["marks"]["HH"]) )
-	statusData.append( "Marks-MM....... = "+ str(clockDict["marks"]["MM"]) )
-	statusData.append( "Marks-SS....... = "+ str(clockDict["marks"]["SS"]) )
-	statusData.append( "Ticks-HH....... = "+ str(clockDict["ticks"]["HH"]) )
-	statusData.append( "Ticks-MM....... = "+ str(clockDict["ticks"]["MM"]) )
-	statusData.append( "Ticks-SS....... = "+ str(clockDict["ticks"]["SS"]) )
-	U.updateWebStatus(json.dumps(statusData) )
+	statusData	= ""
+	statusData +='<br>'
+	statusData += "Neopixel CLOCK current Status, updated every 3 secs<br> "
+	statusData += "time........... = "+ datetime.datetime.now().strftime(u"%H:%M:%S") +"<br>"
+	statusData += "time zone...... = "+ str(timeZone) +"<br>"
+	statusData += "IP-Number..eth. = "+ eth0IP  +"<br>"
+	statusData += "IP-Number..wifi = "+ wifi0IP  +"<br>"
+	statusData += "WiFi enabled... = "+ str(G.wifiEnabled)  +"<br>"
+	statusData += "ClockLightSet.. = "+ str(clockLightSet)  +"<br>"
+	statusData += "LightSensorRaw. = "+ str(lightSensorValue)  +"<br>"
+	statusData += "LightSensor.... = "+ str(LEDintensityFactor)  +"<br>"
+	statusData += "LightOveride... = "+ str(clockLightSetOverWrite)  +"<br>"
+	statusData += "Marks-HH....... = "+ str(clockDict["marks"]["HH"])  +"<br>"
+	statusData += "Marks-MM....... = "+ str(clockDict["marks"]["MM"])  +"<br>"
+	statusData += "Marks-SS....... = "+ str(clockDict["marks"]["SS"])  +"<br>"
+	statusData += "Ticks-HH....... = "+ str(clockDict["ticks"]["HH"])  +"<br>"
+	statusData += "Ticks-MM....... = "+ str(clockDict["ticks"]["MM"])  +"<br>"
+	statusData += "Ticks-SS....... = "+ str(clockDict["ticks"]["SS"])  +"<br>"
+	statusData += '<br>'
+	U.updateWebStatus(statusData)
 
 
 
@@ -963,36 +965,45 @@ def setLightfromSensor():
 
 		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"): return
 		t = os.path.getmtime(G.homeDir+"temp/lightSensor.dat")
+		U.logger.log(20, "setLightfromSensor  == reading sensor ==")
 	
 		lightSensorValueREAD = ""
 		maxRange = 10000.
-		sensor =""
-		rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
-		if rr =={}: 			return
-		if "light" not in rr: 	return
-		try:
-				lightSensorValueREAD = rr["light"]
-				sensor				 = rr["sensor"]
-				tt					 = rr["time"]
-				if sensor == "i2cTSL2561":
-					maxRange = 12000.
-				elif sensor == "i2cOPT3001":
-					maxRange =	2000.
-				elif sensor == "i2cVEML6030":
-					maxRange =	700.
-				elif sensor == "i2cIS1145":
-					maxRange =	2000.
-			
-				#print "lastTimeStampSensorFile, tt", lastTimeStampSensorFile, tt
-				if lastTimeStampSensorFile == tt: return 
+		sensor = ""
+		xx, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
+		U.logger.log(20, "setLightfromSensor  == reading sensor ==:{}".format(xx))
+		if xx == {}: 				return
+		if "sensors" not in xx: 	return
+		if "time" not in xx: 	return
+		tt		= xx["time"]
+		sensors = xx["sensors"]
+		if lastTimeStampSensorFile == tt: return 
+		lastTimeStampSensorFile = tt
+		for sensor in sensors:
+			yy = sensors[sensor]
+			try:
+				for sensorId in yy: 
+					rr = yy[sensorId]
+					U.logger.log(20, "setLightfromSensor  == reading sensor ==:{}".format(rr))
+					lightSensorValueREAD = rr["light"]
+					if sensor == "i2cTSL2561":
+						maxRange = 12000.
+					elif sensor == "i2cOPT3001":
+						maxRange =	20000.
+					elif sensor == "i2cVEML6030":
+						maxRange =	4000.
+					elif sensor == "i2cIS1145":
+						maxRange =	2000.
+		
+					#print "lastTimeStampSensorFile, tt", lastTimeStampSensorFile, tt
 
-				lastTimeStampSensorFile = tt
 		
 			
-		except:
-			U.logger.log(30, "error reading light sensor")
-			return
-		if lightSensorValueREAD =="" : return 
+			except:
+				U.logger.log(30, "error reading light sensor")
+				return
+		if lightSensorValueREAD == "" : return 
+		U.logger.log(20, "setLightfromSensor  == read sensor ==")
 
 		#print "lightSensorValueREAD, lightSensorValueLast", lightSensorValueREAD, lightSensorValueLast
 		##	check if 0 , must be 2 in a row.
@@ -1002,13 +1013,13 @@ def setLightfromSensor():
 		lightSensorValueLast = lightSensorValueREAD
 
 
-		lightSensorValue = lightSensorValueREAD * clockLightSensor *100000./ maxRange
+		lightSensorValue = lightSensorValueREAD * clockLightSensor *(100000./maxRange)
 		if	 lightSensorValue < 80:		   CLS ="offoff"  
 		elif lightSensorValue < 120:	   CLS ="nightoff"  
 		elif lightSensorValue < 400:	   CLS ="nightdim"  
 		elif lightSensorValue < 2700:	   CLS ="daylow"	   
 		elif lightSensorValue < 16000:	   CLS ="daymedium" 
-		else						:	   CLS ="dayhigh"   
+		else:							   CLS ="dayhigh"   
 		
 		restartstartNEOPIXEL = True 
 		if LEDintensityFactorOld  != CLS:
@@ -1024,7 +1035,7 @@ def setLightfromSensor():
 		if restartstartNEOPIXEL:
 			startNEOPIXEL()
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor) 
-		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
+		U.logger.log(20, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
 ##20181122-02:17:22 setting  lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, clockLightSet, LEDintensityFactor:6.0  50.0 daymedium  12000.0 offoff  offoff
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1137,7 +1148,7 @@ newDate						= ""
 resetGPIO					= False
 lightSensorValueLast		= -1
 lightSensorValue			= -1
-clockLightSensor			= 0
+clockLightSensor			= 1
 clockLightSetOverWrite		= "daymedium"
 clockLightSetOverWriteOld	= ""
 LEDintensityFactorOld		= ""
@@ -1215,9 +1226,11 @@ lastRESETTest	 = -1
 
 
 U.testNetwork()
+
 U.getIPNumber() 
 eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 
+U.logger.log(30,"wifiStarted:{}; networkStatus:{}; ipOfRouter{}".format(wifiStarted, G.networkStatus, G.ipOfRouter)) 
 
 networkIndicatorON = -1
 if wifiStarted < 0:

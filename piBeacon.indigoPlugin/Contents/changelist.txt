@@ -1,3 +1,11 @@
+Added features / changes in v7.124.424 @ 2020-08-23
+===================================================
+1. several small fixes, typos, menus ..
+2. fixed some properties of ruuvi tag sensor and settings
+3. added option in ibeacon device edit to not run get beattery level for individual beacon at 4 am, as eg 
+   nutale beacons beep for 5 secs when get beacon runs (they beep when connection to a host is lost) 
+
+
 Added features / changes in v7.124.423 @ 2020-08-06
 ===================================================
 1. added sensor bosch BMP388 high precision pressure
@@ -5,7 +13,7 @@ Added features / changes in v7.124.423 @ 2020-08-06
   
 Added features / changes in v7.123.423 @ 2020-07-26
 ===================================================
-1. for ADSxx ADC devices alsoways show INPUT as ststaus (was INPUT_x)
+1. for ADSxx ADC devices alsways show INPUT as status (was INPUT_x)
 
 
 Added features / changes in v7.123.422 @ 2020-07-23

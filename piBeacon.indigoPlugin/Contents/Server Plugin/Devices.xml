@@ -2452,6 +2452,17 @@ There are also beacons that send Battery info as part of std msg</Label>
 				</List>
 				<Label>.... battery level cmd:</Label>
 			</Field>
+
+			<Field id="batteryLevelCheckhours" type="menu"     defaultValue="4/12/20"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
+				<List>
+					<Option value="4/12/20" >do all</Option>
+					<Option value="12/20"   >skip 4am</Option>
+				</List>
+				<Label>.... check battery level at which hours(4/12/20):</Label>
+			</Field>
+			<Field id="batteryLevelCheckhourslabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
+				<Label>some (ie nutale) beacons beep when battery level is checked. This option can disallow the std check at 4 am</Label>
+			</Field>
 <!--
 			<Field id="txPowerlevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
@@ -3877,6 +3888,27 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
+			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
+			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
+			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
+			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
+			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
+			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
+			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
+			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
+			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
+			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
+			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
+			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
+			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
+			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
+			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
+			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
+			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
+			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
+			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
 
 			<Field id="type" type="menu"     defaultValue="RuuviTag" hidden ="true">> 
 			<List>
@@ -3893,10 +3925,12 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<Option value="Proximity"      >Proximity</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
-				<Option value="Temperature/Humidity/Pressure"     >Temperature/Humidity/Pressure</Option>
+				<Option value="Temperature/Humidity/Pressure"   >Temperature/Humidity/Pressure</Option>
 				<Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
-				<Option value="accelerationTotal"    >Magnetic Field total</Option>
-				<Option value="accelerationTurn"     >Magnetic Field turn </Option>
+				<Option value="accelerationTotal"     >Acc  total = sqrt(xx+yy+zz)</Option>
+				<Option value="accelerationX"     >Acc X </Option>
+				<Option value="accelerationY"     >Acc Y </Option>
+				<Option value="accelerationZ"     >Acc Z </Option>
 			</List>
 			</Field>
 
@@ -3907,7 +3941,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
-			<Label>Min secs between indigo updates - not more often:</Label>
+			<Label>Min secs between indigo updates - not more often than:</Label>
 			<List>
 				<Option value="1"   > 1   secs </Option>
 				<Option value="2"   > 2   secs</Option>
@@ -3948,28 +3982,48 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 					<Option value="2.5" > 2.5 C = 5 F</Option>
 				</List>
 			</Field>
-			<Field id="updateIndigoDeltaAcceleration"    type="menu"     defaultValue="25" hidden ="no"> 
-				<Label>Send sensor values if total Acceleration values changes by:</Label>
+			<Field id="updateIndigoDeltaAccelVector"    type="menu"     defaultValue="5" hidden ="no"> 
+				<Label>Send sensor values if total Acceleration values changes by(1000*N/s**2):</Label>
 				<List>
-					<Option value="10" > 10%</Option>
-					<Option value="15" > 15%</Option>
-					<Option value="20" > 20%</Option>
-					<Option value="25" > 25%</Option>
-					<Option value="30" > 30%</Option>
-					<Option value="40" > 40%</Option>
-					<Option value="50" > 50%</Option>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
 				</List>
 			</Field>
-			<Field id="updateIndigoDeltaTurn"    type="menu"     defaultValue="25" hidden ="no"> 
-				<Label>Send sensor values if Acceleration Deltaxyz turn changes by:</Label>
+			<Field id="updateIndigoDeltaMaxXYZ"    type="menu"     defaultValue="50" hidden ="no"> 
+				<Label>Send sensor values if Acceleration max(dx,dy,dz) changes by(1000*N/s**2):</Label>
 				<List>
-					<Option value="10" > 10%</Option>
-					<Option value="15" > 15%</Option>
-					<Option value="20" > 20%</Option>
-					<Option value="25" > 25%</Option>
-					<Option value="30" > 30%</Option>
-					<Option value="40" > 40%</Option>
-					<Option value="50" > 50%</Option>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
 				</List>
 			</Field>
 
@@ -4135,6 +4189,11 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<TriggerLabel>PressureChange12Hours</TriggerLabel>
 				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
+			<State id="accelerationVectorDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
+				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
+			</State>
 			<State id="accelerationX">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>accelerationX</TriggerLabel>
@@ -4155,10 +4214,15 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<TriggerLabel>accelerationTotal</TriggerLabel>
 				<ControlPageLabel>accelerationTotal</ControlPageLabel>
 			</State>
-			<State id="accelerationTurn">
+			<State id="accelerationXYZMaxDelta">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>accelerationTurn</TriggerLabel>
-				<ControlPageLabel>accelerationTurn</ControlPageLabel>
+				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
+				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="movementCount">
 				<ValueType>Number</ValueType>

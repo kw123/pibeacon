@@ -910,6 +910,7 @@ def getIPofRouter():
 		#192.168.1.0/24 dev eth0 proto dhcp scope link src 192.168.1.22 metric 202
 		for line in retRoute:
 			lineItems = line.split()
+			#logger.log(20, u"cBY:{:<20} lineItems:{}".format(G.program, lineItems))
 			if len(lineItems) > 1 and lineItems[0] == "default" and isValidIP(lineItems[2]):
 				return  lineItems[2]
 				break
@@ -1104,7 +1105,7 @@ def stopwebserverINPUT():
 def startwebserverSTATUS(port,useIP="", force=False):
 	try:
 		if checkIfStartwebserverSTATUS() and not force: return
-		outFile	= "{}temp/showOnwebserver".format(G.homeDir)
+		outFile	= "{}temp/webserverSTATUS.show".format(G.homeDir)
 		ip = G.ipAddress
 		if useIP !="":
 			ip = useIP
@@ -1204,8 +1205,17 @@ def checkIfwebserverINPUTrunning():
 
 #################################
 def updateWebStatus(data):
-	logger.log(10, "cBY:{:<20} updating web status ".format(G.program, data))
-	f=open("{}temp/showOnwebserver".format(G.homeDir),"w")
+	logger.log(10, "cBY:{:<20} updating web status {}".format(G.program, data))
+	f = open("{}temp/webserverSTATUS.show".format(G.homeDir),"w")
+	f.write(data)
+	f.close()
+	return
+
+
+#################################
+def updateWebINPUT(data):
+	logger.log(10, "cBY:{:<20} updating web INPUT {}".format(G.program, data))
+	f = open("{}temp/webserverINPUT.show".format(G.homeDir),"w")
 	f.write(data)
 	f.close()
 	return
@@ -3380,18 +3390,14 @@ def testPing(ipToPing):
 ################################
 def testROUTER():
 	try:
+		G.ipOfRouter = getIPofRouter()
 		if isValidIP(G.ipOfRouter):
-			G.ipOfRouter = getIPofRouter()
-			if not isValidIP(G.ipOfRouter):
-				logger.log(20, u"cBY:{:<20} no router info".format(G.program))
-				return 1
-
 			logger.log(10, u"cBY:{:<20} router info ip:>{}<".format(G.program,G.ipOfRouter))
-			ret =testPing(G.ipOfRouter)
-			if	ret ==0:
+			ret = testPing(G.ipOfRouter)
+			if	ret == 0:
 				logger.log(10, u"cBY:{:<20} ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
 				return 0
-			if ret ==-1:
+			if ret == -1:
 				logger.log(30, u"cBY:{:<20} still waiting for installLibs to finish".format(G.program))
 				time.sleep(30)
 				return 1
@@ -3404,7 +3410,9 @@ def testROUTER():
 					return 0
 			logger.log(20, u"cBY:{:<20}  ROUTER server NOT reachable at:{}".format(G.program,G.ipOfRouter))
 			return 1
-
+		else:
+			logger.log(20, u"cBY:{:<20} ipOfRouter not valid:".format(G.ipOfRouter))
+			return 1
 
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -3471,7 +3479,7 @@ def testNetwork(force=False):
 
 
 	except	Exception as e :
-		toLog (-1, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	G.networkStatus = "local"
 	return
 

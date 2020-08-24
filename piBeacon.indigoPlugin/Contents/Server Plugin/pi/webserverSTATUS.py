@@ -31,15 +31,17 @@ class GetHandler(BaseHTTPRequestHandler):
 		self.send_header("Content-type", "text/html")
 		self.end_headers()
 
-		data ={}
+		data = ""
 		try:
-			f= open(dataFile,"r")
-			ddd = f.read()
-			data = json.loads(ddd)
+			f = open(dataFile,"r")
+			data = f.read()
 			f.close()
-		except	Exception, e:
-			U.logger.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+"   html data", data)
+		except Exception, e:
+			U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return 
+		if len(data) < 2: 
+			U.logger.log(40, u"data read {}".format(data))
+
 		#print "webserverSTATUS", data
 		x('<!DOCTYPE html>')
 		x('<html>')
@@ -52,9 +54,12 @@ class GetHandler(BaseHTTPRequestHandler):
 		x('   <style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>')
 		x('</head>')
 		x('<body style="background-color:rgb(30, 0,30); color:rgb(0, 255,0); font-family:Courier;">')
-		x(	'<b>'+data[0]+'</b><br>')
-		for nn in range(1,len(data)):
-			x(	data[nn] +'<br>')
+		x(	'<b>')
+		try:
+			if len(data) > 0:
+				x(data)
+		except: 
+			U.logger.log(20," web server nn:{}; data {}".format(data) )
 		x(	'</body>')
 		x('</html>')
  
@@ -62,7 +67,7 @@ global pid, dataFile
 G.program= "webserverSTATUS"
 U.setLogging()
 
-dataFile	= G.homeDir+"temp/showOnWebServer"
+dataFile	= G.homeDir+"temp/webserverSTATUS.show"
 try:
 	ipNumber	= sys.argv[1]
 	port		= int(sys.argv[2])
