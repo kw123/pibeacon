@@ -956,6 +956,8 @@ class Plugin(indigo.PluginBase):
 						upd = True
 
 					if (dev.deviceTypeId.lower()) =="rpi":
+						if "isBeaconDevice" in props:
+							del props["isBeaconDevice"]
 						props[u"isRPIDevice"] = True
 						props[u"typeOfBeacon"] = u"rPI"
 						upd = True
@@ -3880,18 +3882,19 @@ class Plugin(indigo.PluginBase):
 								theDictList[0][u"newMACNumber"] = "00:00:00:00:pi:00"
 					except Exception, e:
 						self.indiLOG.log(30,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				### disbabled
+
 				if typeId.find("beacon") >- 1:
 						beacon = dev.address
 						if beacon in self.beacons:
 							typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
-							if typeOfBeacon in self.knownBeaconTags:
-								if  type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) == type({}) and "uuid" in self.knownBeaconTags[typeOfBeacon]["battCmd"]:
-									theDictList[0][u"SupportsBatteryLevel"]  = True
-									theDictList[0][u"batteryLevelUUID"]  	 = "gatttool"
-								if  type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) == type("") and "msg"  in self.knownBeaconTags[typeOfBeacon]["battCmd"]:
-									theDictList[0][u"SupportsBatteryLevel"]  = True
-									theDictList[0][u"batteryLevelUUID"]  	 = "msg"
+							if "batteryLevelUUID" not in theDictList[0]: # only for new devices
+								if typeOfBeacon in self.knownBeaconTags:
+									if  type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) == type({}) and "uuid" in self.knownBeaconTags[typeOfBeacon]["battCmd"]:
+										theDictList[0][u"SupportsBatteryLevel"]  = True
+										theDictList[0][u"batteryLevelUUID"]  	 = "gatttool"
+									if  type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) == type("") and "msg"  in self.knownBeaconTags[typeOfBeacon]["battCmd"]:
+										theDictList[0][u"SupportsBatteryLevel"]  = True
+										theDictList[0][u"batteryLevelUUID"]  	 = "msg"
 
 				return theDictList 
 			except Exception, e:
@@ -3914,6 +3917,7 @@ class Plugin(indigo.PluginBase):
 		beacon 	= "xx"
 		thisPi 	= "-1"
 		piU 	= "-1"
+		retCode = False
 		try: 
 			dev = indigo.devices[devId]
 			props = dev.pluginProps	
@@ -4002,7 +4006,8 @@ class Plugin(indigo.PluginBase):
 
 			if retCode:	
 				self.updateNeeded += " fixConfig "
-				return (True, valuesDict)
+				return True, valuesDict
+
 			else: 				
 				return (False, valuesDict, errorDict )
 
@@ -6084,9 +6089,9 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as SupportsBatteryLevel is not enabled in device edit" )
 				continue
 			if "batteryLevelUUID"     not in props or props["batteryLevelUUID"] != "gatttool": 	
-				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as gattool is not enabled in device edit" )
+				if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"filterBeaconsWithBattery:  ... rejected as gattool is not enabled in device edit..  props:{}".format(props) )
 				continue
-			xList.append((dev.id, "{} - {}".format(dev.name.encode("utf8"), dev.address) ))
+			xList.append((dev.id, "{} - {}".format(dev.name, dev.address) ))
 		xList.append(["0","all"])
 		return xList
 

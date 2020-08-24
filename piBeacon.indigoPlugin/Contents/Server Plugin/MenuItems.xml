@@ -52,7 +52,6 @@ Other remarks...
     </MenuItem>
     <MenuItem id="d03">
         <Name>-------------setup RPI  ---------------------------</Name>
-        <CallbackMethod>inpDummy</CallbackMethod>
     </MenuItem>
     <MenuItem id="setupPiServer">
         <Name>Initial BASIC setup of rPi servers, Do this to create rPi devices</Name>
@@ -337,7 +336,6 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 -->
     <MenuItem id="d10">
         <Name>-------------manage iBeacons--------------------</Name>
-        <CallbackMethod>inpDummy</CallbackMethod>
     </MenuItem>
     <MenuItem id="ignoreBeacons">
         <Name>(un) Ignore INDIVIDUAL iBeacons</Name>
@@ -567,7 +565,12 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
             </Field>
         </ConfigUI>
     </MenuItem>
-    <MenuItem id="getBatteryLevels">
+ 
+    <MenuItem id="execOnRPI">
+        <Name>    ... get from / send to rpi</Name>
+    </MenuItem>
+
+   <MenuItem id="getBatteryLevels">
         <Name>Get iBeacon battery level from rPi</Name>
         <ConfigUI>
             <Field id="infoLabelINPUT1" type="label">
@@ -595,7 +598,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
         </ConfigUI>
     </MenuItem>
     <MenuItem id="sendBeepToBeacon">
-        <Name>Send a beep command to ibeacons</Name>
+        <Name>Send a beep command to RPI to ibeacons</Name>
         <ConfigUI>
             <Field id="infoLabelINPUT0" type="label">
                 <Label>Selecet the beacon and the length of time for the beacon to receive the beep command
@@ -638,9 +641,9 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
             </Field>
         </ConfigUI>
     </MenuItem>
-
+ 
     <MenuItem id="Detectnewbeacontools">
-        <Name>Detect (new) beacon tool</Name>
+        <Name>Detect (new) beacon tool on RPI</Name>
         <ConfigUI>
             <Field id="printBLEreportLabel" type="label">
                 <Label>Print all beacon-BLE info received at one RPI 
@@ -689,8 +692,8 @@ hcidump.data, lescan.data, bluetoothctl.data</Label>
     </MenuItem>
 
 
-    <MenuItem id="tarckMacOnRpi">
-        <Name>Track MAC(s) on RPI</Name>
+    <MenuItem id="trackMacOnRpi">
+        <Name>Track beacons (MACs) on RPI</Name>
         <ConfigUI>
             <Field id="printBLEreportLabel0" type="label">
                 <Label>Print detailed information received on RPI and anlyzed for sepecific beacon - mac#
@@ -728,7 +731,6 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 
     <MenuItem id="d19">
         <Name>-------------fix indigo webserver -----------------</Name>
-        <CallbackMethod>inpDummy</CallbackMethod>
     </MenuItem>
     <MenuItem id="changeIndigoconnFileID">
         <Name>Replace Indigowebserver file by reduced Logging option version</Name>
@@ -750,7 +752,6 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
     </MenuItem>
     <MenuItem id="d15">
         <Name>-------------print configs etc ---------------------</Name>
-        <CallbackMethod>inpDummy</CallbackMethod>
     </MenuItem>
     <MenuItem id="enableLoggingStuff">
         <Name>Enable special logging</Name>
@@ -917,7 +918,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
                 <Title>execute</Title>
                 <CallbackMethod>buttonPrintStatsCALLBACK</CallbackMethod>
             </Field>
-            <Field id="printignorediBeacons" type="button" tooltip="">
+            <Field id="resetStats" type="button" tooltip="">
                 <Label>... Reset Stats</Label>
                 <Title>execute</Title>
                 <CallbackMethod>resetStatsMenu</CallbackMethod>
@@ -942,11 +943,10 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
                 <Title>EXECUTE</Title>
                 <CallbackMethod>printDeviceDictCALLBACK</CallbackMethod>
             </Field>
-        </ConfigUI>
+       </ConfigUI>
     </MenuItem>
     <MenuItem id="d20">
         <Name>-------------manage sensor   devices  ----------</Name>
-        <CallbackMethod>inpDummy</CallbackMethod>
     </MenuItem>
     <MenuItem id="resetGPIOCount">
         <Name>Reset counter of channel of GPIO/TOUCH/PULSE devices</Name>
@@ -1156,7 +1156,6 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
     </MenuItem>
     <MenuItem id="d20o">
         <Name>-------------set values on output/display devices  ----------</Name>
-        <CallbackMethod>inpDummy</CallbackMethod>
     </MenuItem>
     <MenuItem id="OUTPUTgpio">
         <Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>
