@@ -1,4 +1,4 @@
-Added features / changes in v7.124.428 @ 2020-08-24
+Added features / changes in v7.124.429 @ 2020-08-24
 ===================================================
 1. fixed some issues w get battery levels when devices were not properly defined, ...
 

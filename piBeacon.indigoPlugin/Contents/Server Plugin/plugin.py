@@ -10820,19 +10820,21 @@ class Plugin(indigo.PluginBase):
 			for beacon in self.beacons:
 				if "lastBusy" not in self.beacons[beacon] or self.beacons[beacon]["lastBusy"] < 20000:
 					self.beacons[beacon]["lastBusy"] = time.time() - 1000
-
-				if self.beacons[beacon]["lastBusy"] > 10000:
-					if self.beacons[beacon]["lastBusy"] > 0:
-						if time.time() - self.beacons[beacon]["lastBusy"] > -5:
-							dev = indigo.devices[self.beacons[beacon]["indigoId"]]
-							if not dev.enabled: continue
-							if "isBeepable" not in dev.states: continue # wait until created, next reload
-							tag = dev.states["UUID"].split("-")[0]
-							if tag in self.knownBeaconTags and self.knownBeaconTags[tag]["beepCmd"] != "off":
-								dev.updateStateOnServer("isBeepable","YES")
-								self.beacons[beacon]["lastBusy"] = time.time() - 1000
-							else:
-								dev.updateStateOnServer("isBeepable","not capable")
+				if self.beacons[beacon]["indigoId"] > 0: 
+					if self.beacons[beacon]["note"].find("beacon") > -1: 
+						if self.beacons[beacon]["lastBusy"] > 10000:
+							if self.beacons[beacon]["lastBusy"] > 0:
+								if time.time() - self.beacons[beacon]["lastBusy"] > -5:
+									try: dev = indigo.devices[self.beacons[beacon]["indigoId"]]
+									except: continue
+									if dev.enabled: 
+										if "isBeepable" in dev.states:  # wait until created, next reload
+											tag = dev.states["UUID"].split("-")[0]
+											if tag in self.knownBeaconTags and self.knownBeaconTags[tag]["beepCmd"] != "off":
+												dev.updateStateOnServer("isBeepable","YES")
+												self.beacons[beacon]["lastBusy"] = time.time() - 1000
+											else:
+												dev.updateStateOnServer("isBeepable","not capable")
 
 		except Exception, e:
 			if unicode(e) != "None":
@@ -14204,7 +14206,7 @@ class Plugin(indigo.PluginBase):
 									if state == "batteryLevel" and "batteryLevelLastUpdate" in dev.states: 
 											if  len(dev.states["batteryLevelLastUpdate"] ) < 10:
 												self.addToStatesUpdateDict(indigoId, "batteryLevelLastUpdate", "2000-01-01 00:00:00")
-											if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(20,"GetBeaconParameters update received pi:{}  beacon:{} .. error msg: {}; last update was {}, current batterylevel status: {}".format(pi,beacon, data[beacon][state].find("error"), dev.states["batteryLevelLastUpdate"], dev.states["batteryLevel"] ) )
+											if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(20,"GetBeaconParameters update received pi:{}  beacon:{} .. error msg: {}; last update was {}, current batterylevel status: {}".format(pi,beacon, data[beacon][state], dev.states["batteryLevelLastUpdate"], dev.states["batteryLevel"] ) )
 									else:
 										if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(20,"GetBeaconParameters update received pi:{} beacon:{} .. error msg: {}".format(pi,beacon, data[beacon][state] ) )
 								else:
