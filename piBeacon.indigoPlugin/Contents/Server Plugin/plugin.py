@@ -325,6 +325,10 @@ _GlobalConst_emptyBeaconProps = {
 	u"memberOfGuests":				0,
 	u"memberOfOther1":				0,
 	u"memberOfOther2":				0,
+	u"isBeaconDevice":				True,
+	u"SupportsStatusRequest":		False,
+	u"AllowOnStateChange":			False,
+	u"AllowSensorValueChange":		False,
 	u"ignore":						0,
 	u"enableBroadCastEvents":		"0",
 	u"batteryLevelCheckhours":		"4/12/20",
@@ -340,6 +344,9 @@ _GlobalConst_emptyrPiProps	  ={
 	u"sendToIndigoSecs":			90,
 	u"sensorRefreshSecs":			90,
 	u"deltaChangedSensor":			5,
+	u"SupportsStatusRequest":		False,
+	u"AllowOnStateChange":			False,
+	u"AllowSensorValueChange":		False,
 	u"PosXYZ":						u"0.,0.,0.",
 	u"BLEserial":					u"sequential",
 	u"shutDownPinInput" :			u"-1",
@@ -9810,6 +9817,9 @@ class Plugin(indigo.PluginBase):
 											u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
 											u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
 											u"isRPIDevice":				  True,
+											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
+											u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
+											u"AllowSensorValueChange":    _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
 											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
 											}
 										)
@@ -9858,6 +9868,9 @@ class Plugin(indigo.PluginBase):
 											u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
 											u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
 											u"isRPIDevice":				  True,
+											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
+											u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
+											u"AllowSensorValueChange":    _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
 											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
 											}
 										)
@@ -9908,6 +9921,9 @@ class Plugin(indigo.PluginBase):
 										   u"minSignalCutoff" : "-999",
 										   u"expirationTime" : "90",
 										   u"isRPISensorDevice" : True,
+											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
+											u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
+											u"AllowSensorValueChange":    _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
 										   u"fastDown" : "0",
 										   u"ipNumberPi":ipn}
 									)
@@ -9941,6 +9957,9 @@ class Plugin(indigo.PluginBase):
 											   u"expirationTime" : "90",
 											   u"fastDown" : "0",
 											   u"isRPISensorDevice" : True,
+											   u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
+											   u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
+											   u"AllowSensorValueChange":     _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
 											   u"ipNumberPi":ipn}
 										)
 									self.addToStatesUpdateDict(dev.id,"created",dateString)

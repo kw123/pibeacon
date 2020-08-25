@@ -2210,6 +2210,8 @@ Change here or in initial setup:</Label>
 		<UiDisplayStateId>displayStatus</UiDisplayStateId>
 		<ConfigUI>            
 			<Field id="isBeaconDevice"       type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsStatusRequest"       type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="AllowOnStateChange"       type="checkbox"     defaultValue="false" hidden="true"> </Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="label1"               type="label" > 
 				<Label>==         iBeacon parameters:         ==</Label>

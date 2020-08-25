@@ -1,15 +1,9 @@
-Added features / changes in v7.124.429 @ 2020-08-24
+Added features / changes in v7.124.430 @ 2020-08-24
 ===================================================
-1. fixed some issues w get battery levels when devices were not properly defined, ...
+1. rectified difference in beacon .. device type models is allows sensor change, updates.. now fixed at startup
+2. can now change battery command in device edit (will only be set to default at first edit device)
+3. added check in print battery report and adding special debug for selecting beacons in get battery level
 
-
-Added features / changes in v7.124.427 @ 2020-08-24
-===================================================
-1. can now changed battery command in device edit ( will only be set at first open)
-
-Added features / changes in v7.124.426 @ 2020-08-24
-===================================================
-1.added check in print battery report and adding special debug for selecting beacons in get battery level
 
 
 Added features / changes in v7.124.424 @ 2020-08-23
