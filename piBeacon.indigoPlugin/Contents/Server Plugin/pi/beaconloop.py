@@ -2072,18 +2072,19 @@ def execbeaconloop():
 								if rejectThisMessage: continue
 								#print "5", mac
 
-								if bl == "" and tag in knownBeaconTags:
-									if type(knownBeaconTags[tag]["battCmd"]) != type({}) and knownBeaconTags[tag]["battCmd"].find("msg:") >-1:
+								if bl == "" and UUID1 in knownBeaconTags:
+									if type(knownBeaconTags[UUID1]["battCmd"]) != type({}) and knownBeaconTags[UUID1]["battCmd"].find("msg:") >-1:
 										# parameter format:     "battCmd": "msg:pos=-3,norm=255", 
 										try:
-											params	=  knownBeaconTags[tag]["battCmd"]
+											params	=  knownBeaconTags[UUID1]["battCmd"]
 											params	= params.split("msg:")[1]
 											if mac == trackMac and logCountTrackMac >0:
 												writeTrackMac(  "Bat-1 ","params:{}".format( params), mac )
 											params	= params.split(",")
 											batPos	= int(params[0].split("=")[1])*2
 											norm	= float(params[1].split("=")[1])
-											bl	 	= "{:.0f}".format( 100.* int(hexstr[batPos:batPos+2],16)/norm )
+											batHexStr = hexstr[12:]
+											bl	 	= "{:.0f}".format( 100.* int(batHexStr[batPos:batPos+2],16)/norm )
 											if mac == trackMac and logCountTrackMac >0:
 												writeTrackMac(  "Batl-2 ","params:{}, batpos:{}, norm:{}, bl:{}".format(params, batPos, norm, bl), mac )
 										except	Exception, e:

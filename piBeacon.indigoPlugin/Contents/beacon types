@@ -34,6 +34,7 @@ ruuviTag          8 x  round Big       no      yes     no      no          yes  
 myBueT            4 x  oval small      yes     yes     no      no          no       cr2032 3 M                T        yes     no app, only send ibeacon msg w T
 
 ++ pure iBeacon types ===
+Minew 01..08      8 x  ?               yes     yes     no      no          yes      ??		                  no       yes     iBeacon,EddyStone, conf: TX, repeat
 BlueCharm-BC011   7 x  square          yes     yes     no      no          yes      cr2032                    no       yes     iBeacon,EddyStone, conf: TX, repeat
 MiniBeacon        5 x  various         no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone
 Feasy_USB        10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone, conf: TX, repeat !! LOOONG range

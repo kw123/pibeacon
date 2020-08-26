@@ -1,3 +1,7 @@
+Added features / changes in v7.125.431 @ 2020-08-26
+===================================================
+1. added several "Minew" type beacons w battery level support in std message
+
 Added features / changes in v7.124.431 @ 2020-08-25
 ===================================================
 1. added menu option to reload known beacon tags (for dev)

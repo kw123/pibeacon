@@ -8,8 +8,57 @@
     "prio": 1, 
     "msg": [],
     "tag": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
-
   }, 
+  "Minew-01-Battery-TH": {
+    "battCmd": "msg:pos=14,norm=64", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
+},
+  "Minew-03-Battery-XYZ": {
+    "battCmd": "msg:pos=14,norm=64", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
+},
+  "Minew-05-Battery-Light": {
+    "battCmd": "msg:pos=14,norm=64", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
+},
+  "Minew-07": {
+    "battCmd": "", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "180201060303E1FFXX16E1FFA107RMAC########"
+},
+  "Minew-08-Battery": {
+    "battCmd": "msg:pos=14,norm=64", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "180201060303E1FFXX16E1FFA108XXRMAC########"
+},
   "BlackCard": {
     "battCmd": {
       "bits": 127, 
