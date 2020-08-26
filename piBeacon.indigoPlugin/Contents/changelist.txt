@@ -1,3 +1,10 @@
+Added features / changes in v7.124.431 @ 2020-08-25
+===================================================
+1. added menu option to reload known beacon tags (for dev)
+2. added some debug statements for get battery 
+3. fixed known beacon tag for mini beacon, there was a space in the hex number string, (fat finger)
+
+
 Added features / changes in v7.124.430 @ 2020-08-24
 ===================================================
 1. rectified difference in beacon .. device type models is allows sensor change, updates.. now fixed at startup

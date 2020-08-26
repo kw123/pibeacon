@@ -1627,7 +1627,8 @@ def getBeaconParameters(useHCI):
 							elif shift < 0:	valueC /= -shift
 							valueD = max(0,valueC + offset)
 							valueF = min(100, int( ( valueD *100. )/norm ))
-						except:pass
+						except Exception, e:
+							U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				U.logger.log(20,"... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
 				if "sensors" not in data: data["sensors"] = {}
 				if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}

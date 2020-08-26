@@ -532,6 +532,23 @@ Use this to identify apple devices through their fixed UUID-MAJOR-MINOR paramete
     </MenuItem>
 
 -->
+    <MenuItem id="reloadKnownBeacons">
+        <Name>Reload KnownBeacon tags from file</Name>
+        <ConfigUI>
+            <Field id="label0" type="label">
+                <Label>this is a tool mostly for developement</Label>
+            </Field>
+          <Field id="buttonExecutereloadKnownBeaconsTags" type="button" tooltip="">
+                <Label>click to </Label>
+                <Title>execute</Title>
+                <CallbackMethod>buttonExecuteReloadKnownBeaconsTagsCALLBACK</CallbackMethod>
+            </Field>
+            <Field id="msg" type="textfield" default="">
+                <Label>msg from Plugin:</Label>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
     <MenuItem id="replacebeacon">
         <Name>Replace an iBeacon (move MAC number)</Name>
         <ConfigUI>
@@ -730,7 +747,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 
 
     <MenuItem id="d19">
-        <Name>-------------fix indigo webserver -----------------</Name>
+        <Name>-------------fix indigo webserver  (for indigo v less than 7.4)-----------------</Name>
     </MenuItem>
     <MenuItem id="changeIndigoconnFileID">
         <Name>Replace Indigowebserver file by reduced Logging option version</Name>
