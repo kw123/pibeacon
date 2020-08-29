@@ -1,4 +1,9 @@
-Added features / changes in v7.125.431 @ 2020-08-26
+Added features / changes in v7.126.432 @ 2020-08-28
+===================================================
+1. added several "feasy" type beacons w battery level support in std message
+
+
+Added features / changes in v7.125.432 @ 2020-08-27
 ===================================================
 1. added several "Minew" type beacons w battery level support in std message
 

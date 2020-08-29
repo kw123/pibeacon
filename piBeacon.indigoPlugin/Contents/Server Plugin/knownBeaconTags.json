@@ -10,7 +10,7 @@
     "tag": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
   }, 
   "Minew-01-Battery-TH": {
-    "battCmd": "msg:pos=14,norm=64", 
+    "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
@@ -20,7 +20,7 @@
     "tag": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
 },
   "Minew-03-Battery-XYZ": {
-    "battCmd": "msg:pos=14,norm=64", 
+    "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
@@ -30,7 +30,7 @@
     "tag": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
 },
   "Minew-05-Battery-Light": {
-    "battCmd": "msg:pos=14,norm=64", 
+    "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
@@ -50,7 +50,7 @@
     "tag": "180201060303E1FFXX16E1FFA107RMAC########"
 },
   "Minew-08-Battery": {
-    "battCmd": "msg:pos=14,norm=64", 
+    "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
@@ -128,35 +128,35 @@
     "msg": [],
     "tag": "0F020106030300F007094355424500"
   }, 
-  "Feasy_Triangle": {
-    "battCmd": "off", 
+  "Feasy_BP103-Triangle": {
+    "battCmd": "msg:pos=15,norm=100", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
     "msg": [],
-    "tag": "1E0201061AFF4C000215D546DF97475747EFBE093E2DCB"
+    "tag":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
   }, 
-  "Feasy_USB": {
-    "battCmd": "off", 
+  "Feasy_BP109-USB": {
+    "battCmd": "msg:pos=19,norm=101", 
     "beepCmd": "off", 
     "dBm": "-40", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
-    "msg": [],
-    "tag": "1B0201060303AAFE1316AAFE10EB03676F6F2E676C2F50"
+    "msg": [],           
+    "tag": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
   }, 
-  "Feasy_AAA": {
-    "battCmd": "off", 
+  "Feasy_BP104-AAA": {
+    "battCmd": "msg:pos=15,norm=100", 
     "beepCmd": "off", 
     "dBm": "-40", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
-    "msg": [],
-    "tag": "1A0201060303AAFE1116AAFE20000C"
+    "msg": [],              
+    "tag": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034"
   }, 
   "Innway": {
     "battCmd": "off", 
@@ -277,7 +277,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 0, 
+    "prio": 1, 
     "msg": [],
     "tag": "0F020106030300F007094F52"
   }, 
@@ -290,6 +290,16 @@
     "prio": 1, 
     "msg": [],
     "tag": "2F234454CF6D4A0FADF2F4911BA9FFA6"
+  }, 
+  "rPI": {
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 20, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
   }, 
 
   "Smart_tracker": {
@@ -373,7 +383,7 @@
     "dBm": "-59", 
     "pos": 42, 
     "posDelta": 0, 
-    "prio": 0, 
+    "prio": 1, 
     "msg": [],
     "tag": "546F76616C61"
   }, 

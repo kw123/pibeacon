@@ -49,264 +49,10 @@ _sqlLoggerIgnoreStates = {"isBeaconDevice":		"Pi_00_Time,Pi_01_Time,Pi_02_Time,P
 				         ,"isSensorDevice":		"displayStatus,status,sensorvalue_ui,lastStatusChange"}
 _debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","UpdateRPI","OfflineRPI","Fing","BLE","CAR","BC","all","Socket","StartSocket","Special","PlotPositions","SocketRPI","BatteryLevel","SQLlogger","SQLSuppresslog","Beep"]
 
-
-
-# BLE  raw package examples for TAG and Postion
-
-##reverse mac#:         xx xx xx xx xx xx              
-##                                                                                    TX RX  
-##  tag-pos: =MACstart  0  2  4  6  8  1  1  1  1  1  2  2  2  2  2  3  3  3  3  3  4  4  4  4  4  5  ... 
-##                      0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0 
-##                                                                                                                                  RX TX
-## ID packet Type                                        APPLE                                                                    
-## 04 3E 2A 02 01 00 00 6B 5F 24 32 DA A4 1E 02 01 06 1A FF 4C 00 02 15 53 70 6F 74 79 50 61 6C 54 65 72 72 61 63 6F 6D 1A DD D6 24 CA AF 
-
-## black card
-## 0E:05:A0:00:33:E2 -->         pos 12   19 02 01 04 03 02 25 FA 11 FF 0E 05 A0 00 33 E2 82 40 00 1F 16
-## 04 3E 25 02 01 00 00 E2 33 00 A0 05 0E 19 02 01 04 03 02 25 FA 11 FF 0E 05 A0 00 33 E2 82 40 00 1F 16 00 3E 0F 04 0B E1 
-##                      E2 33 00 A0 05 0E 10 02 01 04 03 02 25 FA 08 FF 0E 05 A0 00 33 E2 93 E1
-##                      E2 33 00 A0 05 0E 1X 02 01 04 03 02 25 FA XX FF 0E 05 A0 00 33 E2  
-
-
-##   ORBIT :                              pos=12-----------------------------                                    
-## 04 3E 1B 02 01 00 00 1C B8 08 10 00 00 0F 02 01 06 03 03 00 F0 07 09 4F 52 42 49 54 00 BC  
-
-## spoty pal tag:                                                       pos=32--------------------------------------
-## 04 3E 2A 02 01 00 00 6B 5F 24 32 DA A4 1E 02 01 06 1A FF 4C 00 02 15 53 70 6F 74 79 50 61 6C 54 65 72 72 61 63 6F 6D 1A    DD D6 24 CA B1 
-
-## oral B
-## 04 3E 1E 02 01 03 00 5C 2D CA 79 EC 7C 12 02 01 05 0E FF DC 00 02 01 06 03 00 00 02 01 01 86 04 B9 
-
-
-##cube:
-## 04 3E 1B 02 01 00 00 38 04 F2 D8 63 E3 0F 02 01 06 03 03 00 F0 07 09 43 55 42 45 00 00 BE 
-## 04 3E 2A 02 01 03 00 38 04 F2 D8 63 E3 1E 02 01 04 1A FF 4C 00 02 15 E2 C5 6D B5 DF FB 48 D2 B0 60 D0 F5 A7 10 96 E0 01 00 02 00 C5 B4 
-
-## feasy
-## big round 2 aaa bat
-## DC:0D:30:92:E3:1F -->1F E3 92 30 0D DC
-## 04 3E 26 02 01 04 00 1F E3 92 30 0D DC 1A 0E 16 F0 FF 1B 02 09 02 DC 0D 30 92 E3 1F 64 0A 09 46 53 43 5F 42 50 31 30 34 F0 
-##                      1F E3 92 30 0D DC 1A 0E 16 F0 FF 1B 02 09 02 MA C# ## ## ## ## 64 0A 09 46 53 43 5F 42 50 31 30 34 F0 
-## msg2
-## 04 3E 26 02 01 00 00 1F E3 92 30 0D DC 1A 02 01 06 03 03 AA FE 11 16 AA FE 20 00 0C 9E 80 00 00 00 00 9F 00 00 08 18 00 E4 
-
-
-##
-## DD:0D:30:46:3E:E1 BP109
-## 04 3E 2A 02 01 00 01 E1 3E 46 30 0D DD 1E 02 01 06 1A FF 4C 00 02 15 FD A5 06 93 A4 E2 4F B1 AF CF C6 EB 07 64 78 25 27 51 65 C1 FD BC  # 2 different messages
-## 04 3E 2A 02 01 00 00 FB F0 00 30 0D DC 1E 02 01 06 1A FF 4C 00 02 15 D5 46 DF 97 47 57 47 EF BE 09 3E 2D CB DD 0C 77 30 00 F0 FB B5 BB  # could use mac # but only 4 pairs not 6, and last 4 
-##                         triangle       1E 02 01 06 1A FF 4C 00 02 15 D5 46 DF 97 47 57 47 EF BE 09 3E 2D CB DD
-
-## 04 3E 27 02 01 00 01 E1 3E 46 30 0D DD 1B 02 01 06 03 03 AA FE 13 16 AA FE 10 EB 03 67 6F 6F 2E 67 6C 2F 50 48 4E 53 64 6D CF 
-##                         USB            1B 02 01 06 03 03 AA FE 13 16 AA FE 10 EB 03 67 6F 6F 2E 67 6C 2F 50
-
-## vozni
-## 04 3E 1E 02 01 00 00 2C 20 19 32 DA A4 12 02 01 05 03 02 02 18 0A FF 4B 4D 00 2C 20 19 32 DA A4 C2 
-##                                        12 02 01 06 03 02 02 18 0A FF 4B 4D 0x RM AC ## ## ## ##
-## 04 3E 1E 02 01 00 00 F0 D8 18 32 DA A4 12 02 01 05 03 02 02 18 0A FF 4B 4D 00 F0 D8 18 32 DA A4 CD
-
-
-
-##rinex:
-## 04 3E 26 02 01 00 01 3A D4 E2 B3 F0 F1 1A 02 01 05 03 02 02 18 0A FF 4B 4D 32 3A D4 E2 B3 F0 F1 07 09 69 54 72 61 63 6B EC 
-##                                        1A 02 01 05 03 02 02 18 0A FF 4B 4D 32 MA C# ## ## ## ## 
-
-
-## DD:33:0A:11:15:E3 = E3 15 11 0A 33 DD    Bluecharm     
-## 04 3E 25 02 01 00 00 E3 15 11 0A 33 DD 19 02 01 06 03 03 AA FE 11 16 AA FE 20 00 0D 4A 20 00 00 00 00 78 00 00 E1 C8 BC                  eddystone
-## 04 3E 2A 02 01 00 00 E3 15 11 0A 33 DD 1E 02 01 06 1A FF 4C 00 02 15 42 6C 75 65 43 68 61 72 6D 42 65 61 63 6F 6E 73 0E FE 13 55 C5 BF   iBeacon used only
-##                      06 3D 31 85 F8 FA 1A 02 01 04 09 09 36 30 44 33 38 46 41 46 07 16 09 18 1C 09 00 FE 04 16 0F 18 00 B7
-##                                                          36 30 44 33 38 46 41 46 07 16 09 18 13 09 00 FE
-
-##5B:87:47:B6:D5:BF nut
-# 55:AA:47:C5:2E:A4
-## A4 2E C5 47 AA 55 
-## BF D5 B6 47 87 5B
-## 04 3E 28 02 01 00 00 BF D5 B6 47 87 5B 1C 02 01 06 03 03 03 18 05 FF D2 00 00 3C 09 16 0A 18 5B 87 47 B6 D5 BF 04 09 6E 75 74 B9
-## 04 3E 28 02 01 00 00 A4 2E C5 47 AA 55 1C 02 01 06 03 03 03 18 05 FF D2 00 00 3C 09 16 0A 18 55 AA 47 C5 2E A4 04 09 6E 75 74 C1 
-## 04 3E 28 02 01 00 00 1E 82 70 45 71 1F 1C 02 01 06 03 03 03 18 05 FF D2 00 00 33 09 16 0A 18 1F 71 45 70 82 1E 04 09 6E 75 74 B8 
-##                                        1C 02 01 06 03 03 03 18 05 FF D2 00 00 33 09 16 0A 18 MA C# ## ## ## ##
-
-_GlobalConst_knownBeaconTags={
-	 "Nonda_Aiko":		{"pos":16, "prio":1, "posDelta":0, "tag":"01061107C8A5005B0200239BE11102D1001C000003190002020A",
-						"dBm":"-55",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},
-						"beepCmd":{"random":"public",  "cmdON":["char-write-cmd  0x0011  02"],"cmdOff":["char-write-cmd 0x0011 00"]}
-						} 
-	,"Nonda_iHere": 	{"pos":16, "prio":1, "posDelta":0, "tag":"01061107C7A5005B0200239BE11102D1001C000003190002020A",
-						"dBm":"-50",
-						"battCmd":{"uuid":"2A19","random":"public","bits":63,"norm":36},
-						"beepCmd":{"random":"public",  "cmdON":["char-write-cmd  0x0011  02"],"cmdOff":["char-write-cmd 0x0011 00"]}
-						}
-	,"Smart_tracker": 	{"pos":12, "prio":1, "posDelta":0, "tag":"14020106070304180F18C0FF020A0005",
-						"dBm":"-50",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},
-						"beepCmd":{"random":"public",  "cmdON":["char-write-cmd  0x0023  01"],"cmdOff":["char-write-cmd 0x0023 00"]}
-						}
-	,"BlueCharm_BC011":	{"pos":12, "prio":1, "posDelta":0, "tag":"1E0201061AFF4C000215426C7565436861726D426561636F6E73",
-						"dBm":"-61",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},
-						"beepCmd":"off"
-						}															   
-	,"BlueCharm_BC0631":{"pos":12, "prio":1, "posDelta":0, "tag":"1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061",
-						"dBm":"-61",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},
-						"beepCmd":"off"
-						}
-	,"NutFinder": 		{"pos":12, "prio":1, "posDelta":0, "tag":"1C0201060303031805FFD20000xxx9160A18MAC#########",
-						"dBm":"-61",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},
-						"beepCmd":{"random":"public",  "cmdON":["char-write-req 0x0025 04"],"cmdOff":["char-write-req 0x0025 03"]}
-						}
-	,"Innway":			{"pos":12, "prio":1, "posDelta":0, "tag":"13020106030301E00B09496E6E7761",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":{"random":"public","cmdON":["char-write-cmd 0x0012 EE030000"],"cmdOff":["char-write-cmd 0x0012 EE030000"]}
-						}	
-	,"Cube":			{"pos":12, "prio":1, "posDelta":0, "tag":"0F020106030300F007094355424500",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":{"random":"public","cmdON":["char-write-cmd  0x0022 55AA01100202ED"],"cmdOff":["char-write-cmd 0x0022 55AA01100200ED"]} # if cube
-						}											  
-	,"Feasy_USB":		{"pos":12, "prio":1, "posDelta":0, "tag":"1B0201060303AAFE1316AAFE10EB03676F6F2E676C2F50",
-						"dBm":"-40",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-	,"Feasy_Triangle":	{"pos":12, "prio":1, "posDelta":0, "tag":"1E0201061AFF4C000215D546DF97475747EFBE093E2DCB",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-	,"XY_1":			{"pos":32, "prio":1, "posDelta":0, "tag":"07775DD0111B11E491910800200C9A66",
-						"dBm":"-59",
-						"battCmd":{"uuid":"2A19","random":"randomON","bits":127,"norm":100},
-						"beepCmd":{"random":"randomON","cmdON":["char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680","char-write-req 0x003B 02"],"cmdOff":["char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ","char-write-req 0x003B FF"]}
-						}  
-	,"XY_2":			{"pos":32, "prio":1, "posDelta":0, "tag":"08885DD0111B11E491910800200C9A66",
-						"dBm":"-59",                            
-						"battCmd":{"uuid":"2A19","random":"randomON","bits":127,"norm":100},
-						"beepCmd":{"random":"randomON","cmdON":["char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680","char-write-req 0x003B 02"],"cmdOff":["char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ","char-write-req 0x003B FF"]}
-						}
-	,"XY_3":			{"pos":32, "prio":1, "posDelta":0, "tag":"04000000005F78000900580509585934",
-						"dBm":"-59",
-						"battCmd":{"uuid":"2A19","random":"randomON","bits":127,"norm":100},
-						"beepCmd":{"random":"randomON","cmdON":["char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680","char-write-req 0x003B 02"],"cmdOff":["char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ","char-write-req 0x003B FF"]}
-						} 
-	,"SpotyPal":		{"pos":32, "prio":1, "posDelta":0, "tag":"53706F747950616C5465727261636F",
-						"dBm":"-55",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},		
-						"beepCmd":{"random":"public","cmdON":["char-write-req 0x0021 363636363636","char-write-req 0x000B 00","char-write-req 0x000E 00","char-write-req 0x002B D007","char-write-req 0x0031 0100","char-write-cmd 0x000E 02"],"cmdOff":["char-write-cmd 0x000E 00"]}
-						}
-	,"SwiftFinder":		{"pos":12, "prio":1, "posDelta":0, "tag":"0F02010603030A18070953",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}	
-	,"Vozni_iTrack":	{"pos":12, "prio":1, "posDelta":0, "tag":"12020106030202180AFF4B4D0xRMAC########",
-						"dBm":"-55",
-						"battCmd":{"uuid":"2A19","random":"public","bits":127,"norm":100},		
-						"beepCmd":{"random":"public","cmdON":["char-write-req 0x0034 0100","char-write-req 0x0039 0100","char-write-req 0x0043 A1A2A3A4","char-write-req x003D 02","char-write-cmd 0x0011 02"],   "cmdOff":["char-write-cmd 0x0011 00"]}
-						}			
-	,"Rinex_Njoii_iTrack":	{"pos":26, "prio":1, "posDelta":0, "tag":"180AFF4B4D0270653A0E9DC",
-						"dBm":"-55",
-						"battCmd":{"uuid":"2A19","random":"randomON","bits":127,"norm":100},	
-						"beepCmd":{"random":"randomON","cmdON":["char-write-req 0x001B 0100","char-write-req 0x0024 A1A2A3A4","char-write-req 0x001E 02","char-write-req 0x0010 02"],   "cmdOff":["char-write-req 0x0010 00"]}
-						}
-	,"Orbit":			{"pos":12, "prio":1, "posDelta":0, "tag":"0F020106030300F007094F",
-						"dBm":"-60",
-						"battCmd":"off",
-						"beepCmd":{"random":"public",  "cmdON":["char-write-req 0x0022 55AA01100202EB"],"cmdOff":["char-write-req 0x0022 55AA01100200ED"]}
-						}
-	,"Radius":			{"pos":32, "prio":1, "posDelta":0, "tag":"2F234454CF6D4A0FADF2F4911BA9FFA6",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-	,"SocialRetail":	{"pos":32, "prio":0, "posDelta":0, "tag":"E2C56DB5DFFB48D2B060D0F5a71096E0",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-	,"MiniBeacon":		{"pos":32, "prio":0, "posDelta":0, "tag":"FDA50693A4E24FB1AFCFC6EB07647825",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}	
-	,"ruuviTag":		{"pos":22, "prio":1, "posDelta":0, "tag":"FF990405",
-						"dBm":"-65",
-						"battCmd":"msg",
-						"beepCmd":"off"
-						}
-	,"Tovala":			{"pos":54, "prio":0, "posDelta":0, "tag":"546F76616C61",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}						
-	,"Orbit":			{"pos":12, "prio":0, "posDelta":0, "tag":"0F020106030300F007094F52",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}		
-	,"OralB":			{"pos":12, "prio":0, "posDelta":0, "tag":"120201050EFFDC000201",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}		
-	,"myblueT":			{"pos":1, "prio":1, "posDelta":0, "tag":"myBlueT",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}		
-	,"other":			{"pos":-1, "prio":-1, "posDelta":0, "tag":"xx",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-	,"unknown":			{"pos":-1, "prio":-1, "posDelta":0, "tag":"xx",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-		}
-
-"""						
-		,"node_js":		{"pos":30, "prio":0, "posDelta":8, "tag":"01050D095075636B2E6A73",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-		,"JINOU":		{"pos":30, "prio":0, "posDelta":8, "tag":"E2C56DB5DFFB48D2B060D0F5A71096E0",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"}
-		,"Jaalee":		{"pos":30, "prio":0, "posDelta":8, "tag":"EBEFD08370A247C89837E7B5634DF524",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-		,"sanwo":		{"pos":30, "prio":0, "posDelta":8, "tag":"FDA50693A4E24FB1AFCFC6EB7647825",
-						"dBm":"-59",
-						"battCmd":"off",
-						"beepCmd":"off"
-						}
-#		,"mac":			{"pos":16, "prio":0, "posDelta":0, "tag":"01060AFF4C001005",
-#						"dBm":"-50",
-#						"battCmd":"off",
-#						"beepCmd":"off"
-#						}
-"""
-
-
-
-
-_exampleFileBeaconTag = {"example":copy.deepcopy(_GlobalConst_knownBeaconTags["other"])}
-
-
 _GlobalConst_emptyBeacon = {
 	u"indigoId": 0, u"ignore": 0, u"status": u"up", u"lastUp": 0, u"note": u"beacon", u"expirationTime": 90,
 	u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, u"signalDelta": 999, u"minSignalCutoff": -999,
-	u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other","useOnlyPrioTagMessageTypes":"1", u"uuid": u"", u"beaconTxPower": +999, u"fastDown": u"0",
+	u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other","useOnlyPrioTagMessageTypes":"0", u"uuid": u"", u"beaconTxPower": +999, u"fastDown": u"0",
 	u"lastBusy":20000,
 	u"fastDownMinSignal":	-999,
 	u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
@@ -356,6 +102,8 @@ _GlobalConst_emptyrPiProps	  ={
 	u"fastDown" :					u"0",
 	u"enableBroadCastEvents":		"0",
 	u"rssiOffset" :					0,
+	u"useOnlyPrioTagMessageTypes":  "0",
+	u"typeOfBeacon":  				"rPI",
 	u"shutDownPinOutput" :			u"-1" }
 
 _GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Altitude","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC","INPUT_0","rainRate","Moisture","INPUT"]
@@ -916,12 +664,14 @@ class Plugin(indigo.PluginBase):
 			######## fix  battery prop	and signal if not used 
 			try:
 				for dev in indigo.devices.iter(self.pluginId):
-					if dev.deviceTypeId == u"beacon" or (dev.deviceTypeId.lower()) ==u"rpi":
+					if dev.deviceTypeId == u"beacon" or (dev.deviceTypeId.lower()) == u"rpi":
 						for piU in _rpiBeaconList:
 							try: 
 								if len(dev.states[u"Pi_"+piU.rjust(2,"0")+"_Time"]) < 5 or dev.states[u"Pi_"+piU.rjust(2,"0")+u"_Time"] is None :
 									if unicode(dev.states[u"Pi_"+piU.rjust(2,"0")+u"_Signal"]) == "0":
 										self.addToStatesUpdateDict(dev.id,u"Pi_"+piU.rjust(2,"0")+u"_Signal",-999)
+								if dev.states[u"UUID"].split("-") != 3:
+									self.addToStatesUpdateDict(dev.id,u"UUID","1-2-3")
 							except:
 								if not self.RPIVersion20:
 									self.indiLOG.log(30, u"{}  error pi#: {}, state missing ignored/disabled device?".format(dev.name.encode("utf8"), piU) )
@@ -962,11 +712,13 @@ class Plugin(indigo.PluginBase):
 						props[u"isOutputDevice"] = True
 						upd = True
 
+
 					if (dev.deviceTypeId.lower()) =="rpi":
 						if "isBeaconDevice" in props:
 							del props["isBeaconDevice"]
 						props[u"isRPIDevice"] = True
 						props[u"typeOfBeacon"] = u"rPI"
+						props[u"useOnlyPrioTagMessageTypes"] = u"0"
 						upd = True
 						if props[u"address"] in self.beacons:
 							self.beacons[props[u"address"]][u"typeOfBeacon"] = u"rPI"
@@ -1296,6 +1048,13 @@ class Plugin(indigo.PluginBase):
 				self.enableRebootRPIifNoMessages  = int(self.pluginPrefs.get(u"enableRebootRPIifNoMessages", 999999999))
 			except:
 				self.enableRebootRPIifNoMessages  = 999999999
+
+			try:
+				self.rpiDataAcquistionMethod  = int(self.pluginPrefs.get(u"rpiDataAcquistionMethod", "cmd"))
+			except:
+				self.rpiDataAcquistionMethod  = "cmd"
+
+
 
 			try:
 				self.tempUnits				= self.pluginPrefs.get(u"tempUnits", u"Celsius")
@@ -3711,7 +3470,7 @@ class Plugin(indigo.PluginBase):
 				updProps = False
 				if dev.deviceTypeId == "beacon":
 					if u"useOnlyPrioTagMessageTypes" not in props:
-						props["useOnlyPrioTagMessageTypes"] ="1"
+						props["useOnlyPrioTagMessageTypes"] = "0"
 						updProps = True
 					if u"typeOfBeacon" not in props:
 						props["typeOfBeacon"] = "other"
@@ -3752,7 +3511,7 @@ class Plugin(indigo.PluginBase):
 				updProps = False
 				if dev.deviceTypeId == "beacon":
 					if u"useOnlyPrioTagMessageTypes" not in props:
-						props["useOnlyPrioTagMessageTypes"] ="1"
+						props["useOnlyPrioTagMessageTypes"] = "0"
 						updProps = True
 					if u"typeOfBeacon" not in props:
 						props["typeOfBeacon"] = "other"
@@ -10205,8 +9964,12 @@ class Plugin(indigo.PluginBase):
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			self.restartBLEifNoConnect				= xxx
 
+
 			try: self.enableRebootRPIifNoMessages	 = int(valuesDict[u"enableRebootRPIifNoMessages"])
 			except: self.enableRebootRPIifNoMessages = 999999999
+
+			try: self.rpiDataAcquistionMethod	 	= valuesDict[u"rpiDataAcquistionMethod"]
+			except: self.rpiDataAcquistionMethod 	= "rpiDataAcquistionMethod"
 			try:
 				self.automaticRPIReplacement		= unicode(valuesDict[u"automaticRPIReplacement"]).lower() == u"true" 
 			except:
@@ -15452,6 +15215,8 @@ class Plugin(indigo.PluginBase):
 							u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
 							u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
 							u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
+							u"useOnlyPrioTagMessageTypes":_GlobalConst_emptyrPiProps[u"useOnlyPrioTagMessageTypes"],
+							u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
 							u"isRPIDevice":				  True,
 							u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
 							}
@@ -15835,7 +15600,7 @@ class Plugin(indigo.PluginBase):
 								newStates = self.addToStatesUpdateDict(dev.id,"batteryLevel", int(msg["batteryLevel"]), newStates=newStates)
 								newStates = self.addToStatesUpdateDict(dev.id,"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat),newStates=newStates)
 							except: pass
-				### repalce uuid number with names if available
+				### replace uuid number with names if available
 				if uuid != "x-x-x" and uuid !="":
 					if dev.deviceTypeId != "rPI":
 						dev = indigo.devices[name]
@@ -16324,7 +16089,11 @@ class Plugin(indigo.PluginBase):
 					if self.beacons[beacon]["typeOfBeacon"] != "other" and self.beacons[beacon]["indigoId"] > 0:
 						tag = self.beacons[beacon]["typeOfBeacon"]
 						xx2[beacon][0] = tag
-						xx2[beacon][2] = self.beacons[beacon]["uuid"]
+						if len(self.beacons[beacon]["uuid"].split("-")) == 3: 
+							xx2[beacon][2] = self.beacons[beacon]["uuid"]
+						else:
+							xx2[beacon][2] = "1-2-3"
+
 						xx2[beacon][3] = self.beacons[beacon]["useOnlyPrioTagMessageTypes"]
 						if tag in self.knownBeaconTags:
 							xx2[beacon][1] = self.knownBeaconTags[tag]["prio"]
@@ -16441,6 +16210,7 @@ class Plugin(indigo.PluginBase):
 				out[u"acceptNewiBeacons"]		  = self.acceptNewiBeacons
 				out[u"acceptNewTagiBeacons"]	  = self.acceptNewTagiBeacons
 				out[u"acceptJunkBeacons"]		  = self.acceptJunkBeacons
+				out[u"rpiDataAcquistionMethod"]	  = self.rpiDataAcquistionMethod
 				out[u"rebootHour"]				  = -1
 				out[u"sendAfterSeconds"]		  = unicode(self.sendAfterSeconds)
 				out[u"ipOfServer"]				  = self.myIpNumber
