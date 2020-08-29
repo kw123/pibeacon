@@ -67,10 +67,11 @@ _GlobalConst_emptyBeaconProps = {
 	u"minSignalCutoff":				-999,
 	u"typeOfBeacon":				u"unknown",
 	u"beaconTxPower":				999,
-	u"memberOfFamily":				0,
-	u"memberOfGuests":				0,
-	u"memberOfOther1":				0,
-	u"memberOfOther2":				0,
+	u"memberOfFamily":				False,
+	u"memberOfGuests":				False,
+	u"memberOfOther1":				False,
+	u"memberOfOther2":				False,
+	u"useOnlyPrioTagMessageTypes":	"0",
 	u"isBeaconDevice":				True,
 	u"SupportsStatusRequest":		False,
 	u"AllowOnStateChange":			False,
@@ -78,6 +79,7 @@ _GlobalConst_emptyBeaconProps = {
 	u"ignore":						0,
 	u"enableBroadCastEvents":		"0",
 	u"batteryLevelCheckhours":		"4/12/20",
+	u"beaconBeepUUID":				"off",
 	u"fastDownMinSignal":			-999,
 	u"showBeaconOnMap": 			u"0",u"showBeaconNickName": u"",u"showBeaconSymbolType": u",",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
 	u"fastDown": 					u"0"}
@@ -1050,9 +1052,9 @@ class Plugin(indigo.PluginBase):
 				self.enableRebootRPIifNoMessages  = 999999999
 
 			try:
-				self.rpiDataAcquistionMethod  = int(self.pluginPrefs.get(u"rpiDataAcquistionMethod", "cmd"))
+				self.rpiDataAcquistionMethod  = int(self.pluginPrefs.get(u"rpiDataAcquistionMethod", "socket"))
 			except:
-				self.rpiDataAcquistionMethod  = "cmd"
+				self.rpiDataAcquistionMethod  = "socket"
 
 
 
@@ -9968,8 +9970,12 @@ class Plugin(indigo.PluginBase):
 			try: self.enableRebootRPIifNoMessages	 = int(valuesDict[u"enableRebootRPIifNoMessages"])
 			except: self.enableRebootRPIifNoMessages = 999999999
 
-			try: self.rpiDataAcquistionMethod	 	= valuesDict[u"rpiDataAcquistionMethod"]
-			except: self.rpiDataAcquistionMethod 	= "rpiDataAcquistionMethod"
+			xxx = valuesDict[u"rpiDataAcquistionMethod"]
+			if xxx != self.rpiDataAcquistionMethod:
+				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.rpiDataAcquistionMethod = xxx
+
+
 			try:
 				self.automaticRPIReplacement		= unicode(valuesDict[u"automaticRPIReplacement"]).lower() == u"true" 
 			except:
@@ -15193,6 +15199,9 @@ class Plugin(indigo.PluginBase):
 
 				if newRPI != "found":
 					self.indiLOG.log(20, u"creating new pi (3.)  -- fromPI: {};   piNR: {};   piMACSend: {};   ipAddress: {} " .format(fromPiU, piNReceived, piMACSend, ipAddress) )
+					newProps = copy.copy(_GlobalConst_emptyrPiProps)
+					newProps[u"isRPIDevice"] = True
+
 					indigo.device.create(
 						protocol		= indigo.kProtocol.Plugin,
 						address			= piMACSend,
@@ -15201,25 +15210,7 @@ class Plugin(indigo.PluginBase):
 						pluginId		= self.pluginId,
 						deviceTypeId	= "rPI",
 						folder			= self.piFolderId,
-						props		= {
-							u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
-							u"updateSignalValuesSeconds": _GlobalConst_emptyrPiProps[u"updateSignalValuesSeconds"],
-							u"beaconTxPower":			  _GlobalConst_emptyrPiProps[u"beaconTxPower"],
-							u"SupportsBatteryLevel":	  _GlobalConst_emptyrPiProps[u"SupportsBatteryLevel"],
-							u"sendToIndigoSecs":		  _GlobalConst_emptyrPiProps[u"sendToIndigoSecs"],
-							u"shutDownPinInput":		  _GlobalConst_emptyrPiProps[u"shutDownPinInput"],
-							u"shutDownPinOutput" :		  _GlobalConst_emptyrPiProps[u"shutDownPinOutput"],
-							u"PosXYZ":					  _GlobalConst_emptyrPiProps[u"PosXYZ"],
-							u"signalDelta" :			  _GlobalConst_emptyrPiProps[u"signalDelta"],
-							u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
-							u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
-							u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
-							u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
-							u"useOnlyPrioTagMessageTypes":_GlobalConst_emptyrPiProps[u"useOnlyPrioTagMessageTypes"],
-							u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
-							u"isRPIDevice":				  True,
-							u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
-							}
+						props			= newProps
 						)
 
 					try:
@@ -15372,6 +15363,7 @@ class Plugin(indigo.PluginBase):
 						typeOfBeacon = uuidTag
 						SupportsBatteryLevel = False
 						batteryLevelUUID	 = "off"
+						beaconBeepUUID 		 = "off"
 						if typeOfBeacon in self.knownBeaconTags:
 							if  type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) == type({}) and "uuid" in self.knownBeaconTags[typeOfBeacon]["battCmd"]:
 								SupportsBatteryLevel = True
@@ -15379,6 +15371,17 @@ class Plugin(indigo.PluginBase):
 							if  type(self.knownBeaconTags[typeOfBeacon]["battCmd"]) == type("") and "msg"  in self.knownBeaconTags[typeOfBeacon]["battCmd"]:
 								SupportsBatteryLevel = True
 								batteryLevelUUID	 = "msg"
+							if  type(self.knownBeaconTags[typeOfBeacon]["beepCmd"]) == type({}):
+								beaconBeepUUID = "gatttool"
+				
+
+						newprops = copy.copy(_GlobalConst_emptyBeaconProps)
+						newprops[u"typeOfBeacon"] 			= typeOfBeacon
+						newprops[u"version"] 				= uuid # this is for firmware field
+						newprops[u"SupportsBatteryLevel"] 	= SupportsBatteryLevel
+						newprops[u"batteryLevelUUID"] 		= batteryLevelUUID
+						newprops[u"uuid"]					= uuid
+						newprops[u"beaconBeepUUID"]			= beaconBeepUUID
 						indigo.device.create(
 							protocol		= indigo.kProtocol.Plugin,
 							address			= mac,
@@ -15387,19 +15390,7 @@ class Plugin(indigo.PluginBase):
 							pluginId		= self.pluginId,
 							deviceTypeId	= "beacon",
 							folder			= self.piFolderId,
-							props			= {
-								   u"typeOfBeacon":				 typeOfBeacon,
-								   u"updateSignalValuesSeconds": _GlobalConst_emptyBeaconProps[u"updateSignalValuesSeconds"],
-								   u"expirationTime":			 _GlobalConst_emptyBeaconProps[u"expirationTime"],
-								   u"fastDown":					 _GlobalConst_emptyBeaconProps[u"fastDown"],
-								   u"signalDelta":				 _GlobalConst_emptyBeaconProps[u"signalDelta"],
-								   u"minSignalCutoff":			 _GlobalConst_emptyBeaconProps[u"minSignalCutoff"],
-								   u"beaconTxPower":			 _GlobalConst_emptyBeaconProps[u"beaconTxPower"],
-								   u"version":			         uuid, # this is for firmware field
-								   u"isBeaconDevice":			 True,
-								   u"SupportsBatteryLevel":		 SupportsBatteryLevel,
-								   u"batteryLevelUUID":		 	 batteryLevelUUID,
-								   u"uuid":						 uuid}
+							props			= newprops
 							)
 						try:
 							dev = indigo.devices[u"beacon_" + mac]

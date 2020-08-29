@@ -185,7 +185,7 @@ def startBlueTooth(pi):
 			U.logger.log(20,"Beacon Use HCINo {};  useHCI:{};  myBLEmac:{}; devId:{}" .format(G.BeaconUseHCINo, useHCI, myBLEmac, devId))
 			
 
-			if 	rpiDataAcquistionMethod == "cmd":
+			if 	rpiDataAcquistionMethod == "hcidump":
 				cmd	 = "sudo hciconfig {} leadv 3".format(useHCI)
 				U.logger.log(20,cmd) 
 				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
@@ -209,7 +209,7 @@ def startBlueTooth(pi):
 				time.sleep(0.2)
 
 
-			if 	rpiDataAcquistionMethod == "cmd":
+			if 	rpiDataAcquistionMethod == "hcidump":
 				cmd	 = "sudo hcitool -i {} lescan > /dev/null 2>&1 &".format(useHCI)
 				U.logger.log(20,cmd) 
 				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
@@ -280,7 +280,7 @@ def startBlueTooth(pi):
 		time.sleep(0.2)
 		return 0, "", -5, useHCI
 
-	if rpiDataAcquistionMethod == "cmd":
+	if rpiDataAcquistionMethod == "hcidump":
 		return "", myBLEmac, 0, useHCI
 
 
@@ -569,6 +569,7 @@ def readParams(init):
 			if enableiBeacons == "0":
 				U.logger.log(50," termination ibeacon scanning due to parameter file")
 				time.sleep(0.5)
+				stopHCUIDUMPlistener()
 				sys.exit(3)
 			U.getGlobalParams(inp)
 
@@ -580,12 +581,12 @@ def readParams(init):
 			if "acceptJunkBeacons"		in inp:	 acceptJunkBeacons=		 (inp["acceptJunkBeacons"]=="1" )
 
 			if "rpiDataAcquistionMethod"				in inp:	 
-				xx =		 	 		(inp["rpiDataAcquistionMethod"])
+				xx =		 	 										(inp["rpiDataAcquistionMethod"])
 				if xx != rpiDataAcquistionMethod and rpiDataAcquistionMethod != "":
-					U.restartMyself(param="", reason="new datamethod")
+					U.restartMyself(param="", reason="new data aquisition method")
 				rpiDataAcquistionMethod = xx
 			else:
-				rpiDataAcquistionMethod = "cmd"
+				rpiDataAcquistionMethod = "socket"
 
 
 			if "deleteHistoryAfterSeconds"	in inp:
@@ -2000,7 +2001,7 @@ def execbeaconloop():
 	if U.getIPNumber() > 0:
 		U.logger.log(30, " no ip number ")
 		time.sleep(10)
-		exit(2)
+		return
 
 
 	# get history
@@ -2014,13 +2015,15 @@ def execbeaconloop():
 		time.sleep(3)
 	if retCode != 0: 
 		U.logger.log(30,"beaconloop exit, recode from getting BLE stack >0, after 3 tries:")
-		sys.exit(1)
+		return
 
-	if rpiDataAcquistionMethod == "cmd":
+	if rpiDataAcquistionMethod == "hcidump":
 		retCode = startHCUIDUMPlistener(useHCI)
 		if retCode != "":
-			print "=== error in starting HCIdump listener, exit beaconloop ==="
-			exit()
+			U.logger.log(30,"beaconloop exit, === error in starting HCIdump listener, exit beaconloop ===")
+			return
+
+	U.logger.log(30,"using >{}< for data read method".format(rpiDataAcquistionMethod))
 	
 	loopCount		= 0
 	tt				= time.time()
@@ -2131,7 +2134,7 @@ def execbeaconloop():
 						time.sleep(1)
 						U.restartMyself(param="", reason="sock.recv error")
 				
-				if rpiDataAcquistionMethod == "cmd":
+				if rpiDataAcquistionMethod == "hcidump":
 					Msgs = readHCUIDUMPlistener()
 				#U.logger.log(20, "Msgs :{}- {}".format(len(Msgs), Msgs))
 				nMsgs = len(Msgs)
@@ -2415,6 +2418,7 @@ def execbeaconloop():
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		U.logger.log(30, "  exiting loop due to error\n restarting "+G.program)
+		stopHCUIDUMPlistener()
 		time.sleep(20)
 		subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 	try: 	G.sendThread["run"] = False; time.sleep(1)
@@ -2422,6 +2426,6 @@ def execbeaconloop():
 
 U.echoLastAlive(G.program)
 execbeaconloop()
-
+stopHCUIDUMPlistener()
 U.logger.log(30,"end of beaconloop.py ") 
 sys.exit(0)		   

@@ -1,5 +1,6 @@
-Added features / changes in v7.126.432 @ 2020-08-28
+Added features / changes in v7.126.433 @ 2020-08-28
 ===================================================
+0. added new method (option) to read beacons using hcidump & lescan instead of python socket calls
 1. added several "feasy" type beacons w battery level support in std message
 
 

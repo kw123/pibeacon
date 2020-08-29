@@ -591,7 +591,11 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
         <Name>Get iBeacon battery level from rPi</Name>
         <ConfigUI>
             <Field id="infoLabelINPUT1" type="label">
-                <Label>Send commands to PiServer(s) to get update for beacons:</Label>
+                <Label>Send commands to PiServer(s) to get update for beacons
+it is for "gatttool" type of beacons, that have to be asked for the battery level.
+  like iHere, Aiko, Nutale,..
+Other beacons that send the battery level every second
+ like  feasy, minew, ruuvitag are not part of this:</Label>
             </Field>
             <Field id="piServerNumber" type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm ">
                 <Label>select rPi to use for query, use ALL for optimized distribution</Label>

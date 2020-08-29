@@ -462,11 +462,11 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="3"   > 300 Hz</Option>
         </List>
     </Field>
-   <Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="cmd">
+   <Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="socket">
         <Label>Use which method on RPIs for beacon scanning read:</Label>
         <List>
-            <Option value="cmd"    > using HCIdump and lescan</Option>
-            <Option value="socket" > using python socket reading</Option>
+            <Option value="hcidump" > using hcidump and lescan</Option>
+            <Option value="socket"  > using python socket reading (old method)</Option>
         </List>
    </Field>
 
