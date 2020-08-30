@@ -147,6 +147,9 @@ def hci_le_set_scan_parameters(sock):
 
 def startBlueTooth(pi):
 	global myBLEmac, downCount
+	global lastLESCANrestart
+	global rpiDataAcquistionMethod
+
 
 	useHCI	 = ""
 	myBLEmac = ""
@@ -210,12 +213,7 @@ def startBlueTooth(pi):
 
 
 			if 	rpiDataAcquistionMethod == "hcidump":
-				cmd	 = "sudo hcitool -i {} lescan > /dev/null 2>&1 &".format(useHCI)
-				U.logger.log(20,cmd) 
-				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
-				U.logger.log(20,"ret:{}".format(ret) )
-				time.sleep(0.2)
-				U.killOldPgm(-1,"sudo hcitool") # will kill the launching sudo parent process, lescan still running
+				restartLESCAN(useHCI)
 
 
 
@@ -312,6 +310,29 @@ def startBlueTooth(pi):
 
 	return sock, myBLEmac, 0, useHCI
 
+
+
+#################################
+def restartLESCAN(useHCI):
+	global rpiDataAcquistionMethod
+	global lastLESCANrestart
+	try:
+		if rpiDataAcquistionMethod != "hcidump": return 
+		if time.time() - lastLESCANrestart  > 500:
+			lastLESCANrestart = time.time()
+			U.killOldPgm(-1,"lescan") # will kill the launching sudo parent process, lescan still running
+			#cmd = "sudo hciconfig {} reset".format(useHCI)
+			#U.logger.log(20,cmd) 
+			#ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
+			cmd	 = "sudo hcitool -i {} lescan --duplicates  > /dev/null 2>&1 &".format(useHCI,G.homeDir)
+			U.logger.log(20,cmd) 
+			ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
+			U.logger.log(20,"ret:{}".format(ret) )
+			time.sleep(0.2)
+			U.killOldPgm(-1,"sudo hcitool") # will kill the launching sudo parent process, lescan still running
+	except	Exception, e:
+		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return
 #################################
 def writeFile(outFile, text):
 	try:
@@ -760,8 +781,8 @@ def composeMSG(beaconsNew,timeAtLoopStart,reasonMax):
 
 
 #################################
-def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG, beaconsNew):
-	global collectMsgs, sendAfterSeconds, loopMaxCallBLE, ignoreUUID,	 beacon_ExistingHistory, deleteHistoryAfterSeconds,signalDelta,fastDown, minSignalCutoff
+def checkIfNewOrDeltaSignalOrWasMissing(beaconMAC, beaconMSG, beaconsNew, reason):
+	global collectMsgs, sendAfterSeconds, loopMaxCallBLE, ignoreUUID, beacon_ExistingHistory, deleteHistoryAfterSeconds,signalDelta,fastDown, minSignalCutoff
 	global onlyTheseMAC
  
 	t=time.time()
@@ -816,8 +837,6 @@ def checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG, beaconsNew):
 					#U.logger.log(30, "signalDelta C) mac:{} rssi: {} , dc:{};; hist c:{} - rssiAv{}".format(beaconMAC, beaconMSG[2], beaconsNew[beaconMAC]["dCount"], beacon_ExistingHistory[beaconMAC]["count"], beacon_ExistingHistory[beaconMAC]["rssi"]) )
 					beaconsNew[beaconMAC]["dCount"]    = 0
 					beaconsNew[beaconMAC]["rssiLast"]  = -999
-
-
 
 		beacon_ExistingHistory[beaconMAC]["reason"] = max(1,beacon_ExistingHistory[beaconMAC]["reason"])
 		beacon_ExistingHistory[beaconMAC]["timeSt"] = t
@@ -877,24 +896,23 @@ def setUUIDcompare(uuid, constantUUIDmajMIN,lenOfUUID):
 
 	
 #################################
-def checkIfFastDown(beaconsNew,reason):
-	global fastDown,beacon_ExistingHistory
+def checkIfFastDown(beaconsNew, reason):
+	global fastDown, beacon_ExistingHistory
 	try:
 	## ----------  check if this is a fast down device
 		tt= time.time()
 		for beacon in fastDown:
 			##print " test " 
-			if beacon not in beacon_ExistingHistory:		   continue # not in history never had an UP signal is already gone
+			if beacon not in beacon_ExistingHistory: continue # not in history never had an UP signal is already gone
 
 			if beacon in beaconsNew:
 				if tt- beaconsNew[beacon]["timeSt"] < fastDown[beacon]["seconds"]: 
 					#print "test if FD" +beacon+"  dt:"+str(t- beacon_ExistingHistory[beacon]["timeSt"]) +" fd:"+ str( fastDown[beacon])+" ;rssi: "+ str(beaconsNew[beacon]["rssi"])
-					beacon_ExistingHistory[beacon]["rssi"]		=beaconsNew[beacon]["rssi"]
-					beacon_ExistingHistory[beacon]["timeSt"]	=tt
-					beacon_ExistingHistory[beacon]["txPower"]	=beaconsNew[beacon]["txPower"]
-					beacon_ExistingHistory[beacon]["uuid"]		=beaconsNew[beacon]["uuid"]
-					beacon_ExistingHistory[beacon]["count"]		=beaconsNew[beacon]["count"]
-					beacon_ExistingHistory[beacon]["pkLen"]		=beaconsNew[beacon]["pkLen"]
+					beacon_ExistingHistory[beacon]["rssi"]		= beaconsNew[beacon]["rssi"]
+					beacon_ExistingHistory[beacon]["timeSt"]	= tt
+					beacon_ExistingHistory[beacon]["txPower"]	= beaconsNew[beacon]["txPower"]
+					beacon_ExistingHistory[beacon]["uuid"]		= beaconsNew[beacon]["uuid"]
+					beacon_ExistingHistory[beacon]["count"]		= beaconsNew[beacon]["count"]
 					continue 
 
 				if tt- beacon_ExistingHistory[beacon]["timeSt"] <	fastDown[beacon]["seconds"]: continue		#  shorter trigger
@@ -904,33 +922,33 @@ def checkIfFastDown(beaconsNew,reason):
 				 
 			reason = 3
 			beacon_ExistingHistory[beacon]["timeSt"]= tt
-			beacon_ExistingHistory[beacon]["rssi"]= -999
+			beacon_ExistingHistory[beacon]["rssi"]	= -999
 			beacon_ExistingHistory[beacon]["reason"]= reason
-			if "pkLen" not in beacon_ExistingHistory: 
-				beacon_ExistingHistory[beacon]["pkLen"]=""
 			beaconsNew[beacon]={
 				"uuid":beacon_ExistingHistory[beacon]["uuid"],
 				"txPower":beacon_ExistingHistory[beacon]["txPower"],
 				"rssi":-999,
 				"timeSt":tt,
 				"bLevel":"",
-				"pkLen":beacon_ExistingHistory[beacon]["pkLen"],
 				"count":1}# [uid-major-minor,txPower,signal strength, # of measuremnts
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-				
 	return reason, beaconsNew
 
 #################################, check if signal strength is acceptable for fastdown 
-def checkIfFastDownMinSignal(beaconMAC,rssi,fastDown):
+def checkIfFastDownMinSignal(beaconMAC, rssi, reason):
+	global fastDown, trackMac, logCountTrackMac
 	try:
-		if	beaconMAC in fastDown:
+		if beaconMAC in fastDown:
 			if "fastDownMinSignal" in fastDown[beaconMAC]:
-				if fastDown[beaconMAC]["fastDownMinSignal"] > rssi: return True
+				if rssi < fastDown[beaconMAC]["fastDownMinSignal"]: 
+					if  (beaconMAC == trackMac or trackMac == "*") and logCountTrackMac >0:
+						writeTrackMac( "23-   ", "checkIfFastDownMinSignal ", beaconMAC)
+					return max(3, reason)
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return False
+	return reason
 		
 #################################
 def checkIfIgnore(uuid,beaconMAC):
@@ -1324,7 +1342,7 @@ def BLEAnalysis(hci):
 		U.logger.log(20, u"sudo hciconfig {} reset".format(hci))
 		subprocess.Popen("sudo hciconfig "+hci+" reset",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan")
-		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan > "+G.homeDir+"temp/lescan.data &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan --duplicates > "+G.homeDir+"temp/lescan.data &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		time.sleep(0.3)
 		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D'")
 		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D' > "+G.homeDir+"temp/hcidump.data &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -1910,6 +1928,164 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse ):
 	return -1,100 
 
 
+#################################
+def doLoopCheck(tt, sc, pc, sensor, useHCI, r):
+	try:		
+		sensCheck  = copy.copy(sc) 
+		paramCheck = copy.copy(pc) 
+		reason 	   = copy.copy(r) 
+		if tt - sensCheck > 2:
+			sensCheck = tt		
+
+			checkIFtrackMacIsRequested()
+
+			if U.checkNowFile(sensor): reason = 7 # quickSens
+
+			if BLEAnalysis(useHCI):
+				U.restartMyself(param="", reason="BLE analysis")
+
+			if beep(useHCI):
+				U.restartMyself(param="", reason="beep")
+
+			if getBeaconParameters(useHCI):
+				U.restartMyself(param="", reason="get battery levels")
+
+
+		if tt - paramCheck > 10:
+			if readParams(False): reason = 8 # new params
+			paramCheck=time.time()
+
+		return sensCheck, paramCheck, reason 
+
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return sensCheck, paramCheck, reason 
+
+
+#################################
+def checkForBatteryInfo( UUID1, tagFound, mac, hexstr ):
+	global trackMac, knownBeaconTags
+	try:
+		bl = ""
+		if UUID1 in knownBeaconTags and tagFound == "found":
+			if type(knownBeaconTags[UUID1]["battCmd"]) != type({}) and knownBeaconTags[UUID1]["battCmd"].find("msg:") >-1:
+				# parameter format:     "battCmd": "msg:pos=-3,norm=255", 
+				try:
+					params	=  knownBeaconTags[UUID1]["battCmd"]
+					params	= params.split("msg:")[1]
+					if mac == trackMac and logCountTrackMac >0:
+						writeTrackMac(  "Bat-1 ","params:{}".format(params), mac )
+					params	= params.split(",")
+					batPos	= int(params[0].split("=")[1])*2
+					norm	= float(params[1].split("=")[1])
+					batHexStr = hexstr[12:]
+					bl	 	= "{:.0f}".format( 100.* int(batHexStr[batPos:batPos+2],16)/norm )
+					if mac == trackMac and logCountTrackMac >0:
+						writeTrackMac(  "Bat-2 ", "params:{}, batpos:{}, hex:{}, norm:{}, bl:{}".format(params, batPos, batHexStr[batPos:batPos+2], norm, bl),  mac )
+				except	Exception, e:
+					if mac == trackMac and logCountTrackMac >0:
+						writeTrackMac("", u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), mac)
+					bl	= ""
+
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return bl
+
+
+#################################
+def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, hexstr, blIn, rssi):
+	global trackMac, logCountTrackMac, onlyTheseMAC, knownBeaconTags, acceptJunkBeacons
+	try:
+		prio  				= -1
+		dPos  				= -100
+		UUID1 				= ""
+		tagFound 			= "notTested"
+		rejectThisMessage 	= False
+		mac 				= copy.copy(mac)
+		bl  				= copy.copy(blIn)
+
+
+		### is this a know beacon with a known tag ?
+		if mac in onlyTheseMAC  and onlyTheseMAC[mac] != ["",0,"",""]:
+			tag 			= onlyTheseMAC[mac][0]
+			prio 			= onlyTheseMAC[mac][1] # this is from knownbeacons
+			uuidMajMin 		= onlyTheseMAC[mac][2].split("-")
+			useOnlyPrioMsg 	= onlyTheseMAC[mac][3] == "1" # this is from props, device edit setiings
+			if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+				writeTrackMac( "1-    ", "tag:"+tag+ ", prio:"+str(prio)+", uuidMajMin:"+str(uuidMajMin)+", useOnlyPrioMsg: "+str(useOnlyPrioMsg), mac)
+			# right message format, if yes us main UUID
+			if  tag in knownBeaconTags:
+				UUID1 	= onlyTheseMAC[mac][0]
+				UUID 	= UUID1
+				Maj 	= uuidMajMin[1]
+				Min 	= uuidMajMin[2]
+				tagFound = "notTested"
+				posFound, dPos = testComplexTag(hexstr[12:-2], tag, mac, macplain, macplainReverse)
+				if posFound == -1 or abs(dPos) > knownBeaconTags[tag]["posDelta"]:
+					tagFound = "failed"
+					if useOnlyPrioMsg:
+						rejectThisMessage = True
+				else: 
+					tagFound = "found"
+		else:
+			rejectThisMessage 	= True
+
+
+		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+			writeTrackMac( "5-    ", "rejectThisMessage:" +str(rejectThisMessage)+ ", UUID: "+UUID +"  "+ str(Maj)+"  "+ str(Min),mac)
+
+		## mac not in current list?
+		if UUID1 == "" and (acceptNewTagiBeacons !="off" or trackMac != ""):
+			## check if in tag list
+		
+			for tag in knownBeaconTags:
+				if knownBeaconTags[tag]["pos"] == -1: 			 	continue
+				posFound, dPos = testComplexTag(hexstr[12:-2], tag, mac, macplain, macplainReverse)
+				if posFound == -1: 									continue
+				if abs(dPos) > knownBeaconTags[tag]["posDelta"]: 	continue
+				if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == tag:
+					tagFound = "found"
+					UUID = tag
+					UUID1 = tag
+					rejectThisMessage 	= False
+				break
+
+		if UUID1 == "": rejectThisMessage = True
+
+		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+			#print mac, tag, tag in knownBeaconTags
+			writeTrackMac( "9-    ", "isOnlySensor:"+str(isOnlySensor)+", checking bat: "+str(knownBeaconTags[tag]["battCmd"]) +" tagFound: "+str(tagFound)+ ", UUID: "+UUID+ ", rejectThisMessage: "+str(rejectThisMessage) ,mac)
+
+		if not acceptJunkBeacons:
+			if UUID == "": 
+				#print "reject UUID" 
+				if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+					writeTrackMac( "10    ", "reject bad uuid", mac)
+				rejectThisMessage = True
+
+		if rejectThisMessage: # unknow beacon.. accept if RSSI > accept
+			if mac not in onlyTheseMAC  and mac not in doNotIgnore:
+				if rssi > acceptNewiBeacons: 
+					writeTrackMac( "12-   ", "accept rssi > accept new  and !tagfound", mac)
+					rejectThisMessage = False
+
+		if bl == "": 
+			bl = checkForBatteryInfo( UUID1, tagFound, mac, hexstr )
+
+
+		iphoneUUID, imac = checkIfIphone(UUID, mac)
+		if not iphoneUUID:
+			#if checkIfIgnore(uuid, mac): 
+			#	if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+			#		writeTrackMac( "12-   ", "reject checkIfIgnore ", mac) 
+			pass
+		else:
+			rejectThisMessage = False
+			mac = imac
+
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return mac, tagFound, rejectThisMessage, UUID, UUID1, Maj, Min, bl
 
 #################################
 #################################
@@ -1928,7 +2104,7 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse ):
 ####### main pgm / loop ############
 
 def execbeaconloop():
-	global	 collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds,lastWriteHistory,maxParseSec,batteryLevelPosition
+	global collectMsgs, sendAfterSeconds, loopMaxCallBLE,	 ignoreUUID,  beacon_ExistingHistory, deleteHistoryAfterSeconds,lastWriteHistory,maxParseSec,batteryLevelPosition
 	global acceptNewiBeacons, acceptNewTagiBeacons, onlyTheseMAC,enableiBeacons,offsetUUID,alreadyIgnored, sendFullUUID, minSignalCutoff, acceptJunkBeacons, knownBeaconTags
 	global myBLEmac, BLEsensorMACs
 	global oldRaw,	lastRead
@@ -1938,7 +2114,10 @@ def execbeaconloop():
 	global readBufferSize
 	global readbuffer
 	global ListenProcessFileHandle
+	global lastLESCANrestart
 
+
+	lastLESCANrestart	= 0
 	ListenProcessFileHandle =""
 	readbuffer			= []
 	readBufferSize		= 4096*8
@@ -2042,8 +2221,8 @@ def execbeaconloop():
 	eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
 	##print "beaconloop", eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
 
-	lastMSGwithData1 = tt
-	lastMSGwithData2 = tt
+	lastMSGwithDataPlain = tt
+	lastMSGwithDataPassed = tt
 	maxLoopCount	 = 6000
 	restartCount	 = 0
 	logCountTrackMac = 0 
@@ -2113,6 +2292,7 @@ def execbeaconloop():
 
 				if nMsgs > 2: time.sleep(0.4)
 				hexstr = ""
+
 				if rpiDataAcquistionMethod == "socket":
 					try: 
 						pkt = sock.recv(255)
@@ -2136,8 +2316,9 @@ def execbeaconloop():
 				
 				if rpiDataAcquistionMethod == "hcidump":
 					Msgs = readHCUIDUMPlistener()
-				#U.logger.log(20, "Msgs :{}- {}".format(len(Msgs), Msgs))
+
 				nMsgs = len(Msgs)
+				oneValid = False
 				for hexstr in Msgs: 
 					nCharThisMessage	= len(hexstr)
 	
@@ -2148,8 +2329,7 @@ def execbeaconloop():
 						break
 					try:
 						# build the return string: mac#, uuid-major-minor,txpower??,rssi
-						lastMSGwithData1 	= int(time.time())
-
+						lastMSGwithDataPlain = int(time.time())
 					
 						macplainReverse 	= hexstr[0:12]
 						mac 				= macplainReverse[10:12]+":"+macplainReverse[8:10]+":"+macplainReverse[6:8]+":"+macplainReverse[4:6]+":"+macplainReverse[2:4]+":"+macplainReverse[0:2]
@@ -2165,145 +2345,48 @@ def execbeaconloop():
 								logCountTrackMac  = -1
 								trackMac = ""
 								U.sendURL(data={"trackMac":trackMacText}, squeeze=False)
-						########  track mac  ############
 
-							
 
 						if not acceptJunkBeacons:
 							if nCharThisMessage < 20: 
-								#print "reject nCharThisMessage" 
 								continue # this is not supported ..
-				
-						#print "1", mac, hexstr
 
+						# set prelim variables, default settings ..
 						msgStart		= 14
 						majEnd 			= len(hexstr) - 12	
 						uuidLen 		= min( 32, (majEnd - msgStart))
 						UUID 			= hexstr[-uuidLen-12:-12]
 						Maj	 			= str(int(hexstr[-12:-8],16))
 						Min	 			= str(int(hexstr[-8:-4],16))
-						bl3	 			= str(signedIntfromString(hexstr[-6:-4]))
-						tx	 			= str(signedIntfromString(hexstr[-4:-2]))
-						rx				= str(signedIntfromString(hexstr[-2:]))
+						tx		 		= str(signedIntfromString(hexstr[-4:-2]))
+						rssi			= signedIntfromString(hexstr[-2:])
+						rx  			= str(rssi)
 						mfgID			= hexstr[msgStart+10:msgStart+14]
 						pType 			= hexstr[msgStart+14:msgStart+16]  # 02  = procimity beacon, BE  = ALT beacon nBytes  = 27
 						beaconType 		= hexstr[msgStart+8:msgStart+10]  #  FF = iBeacon
 						beaconType 		+= "-"+pType.upper() 
 
-
-						#print mac, hexstr, UUID, Maj, Min, bl3,tx, rx, beaconType, mfgID
-
-						rejectThisMessage 		= True
-
-						tx, bl,UUID, Maj, Min, isOnlySensor  = doSensors( mac, rx, tx, nCharThisMessage, hexstr, UUID, Maj, Min)
+						tx, bl, UUID, Maj, Min, isOnlySensor  = doSensors( mac, rx, tx, nCharThisMessage, hexstr, UUID, Maj, Min)
 
 						if isOnlySensor:
 							rejectThisMessage 	= True
+							lastMSGwithDataPassed = int(time.time())
+							continue
 
-						else:
-							rejectThisMessage 	= False
-							tagFound 			= "notTested"
-							UUID1 				= ""
-							prio 				= -1
-							tag 				= "no"
-							dPos 				= -100
-
-							if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-								writeTrackMac( "0-    ", "UUID: "+UUID+ ", Maj: "+str(Maj)+", Min: "+str(Min) +", RX:"+str(rx)+", TX:"+str(tx)+",  Last-3:"+str(bl3)+"[int]" ,mac)
-
-							### is this a know beacon with a known tag ?
-							if mac in onlyTheseMAC  and onlyTheseMAC[mac] != ["",0,"",""]:
-								tag 			= onlyTheseMAC[mac][0]
-								prio 			= onlyTheseMAC[mac][1] # this is from knownbeacons
-								uuidMajMin 		= onlyTheseMAC[mac][2].split("-")
-								useOnlyPrioMsg 	= onlyTheseMAC[mac][3] == "1" # this is from props, device edit setiings
-								if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-									writeTrackMac( "1-    ", "tag:"+tag+ ", prio:"+str(prio)+", uuidMajMin:"+str(uuidMajMin)+", useOnlyPrioMsg: "+str(useOnlyPrioMsg) ,mac)
-								# right message format, if yes us main UUID
-								if  tag in knownBeaconTags:
-									UUID1 	= onlyTheseMAC[mac][0]
-									UUID 	= UUID1
-									Maj 	= uuidMajMin[1]
-									Min 	= uuidMajMin[2]
-									tagFound = "notTested"
-									posFound, dPos = testComplexTag(hexstr[12:-2], tag, mac, macplain, macplainReverse)
-									if posFound == -1 or abs(dPos) > knownBeaconTags[tag]["posDelta"]:
-										tagFound = "failed"
-										if useOnlyPrioMsg:
-											rejectThisMessage = True
-									else: 
-										tagFound = "found"
-							else:
-								rejectThisMessage 	= True
-
-
-							if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-								writeTrackMac( "5-    ", "rejectThisMessage:" +str(rejectThisMessage)+ ", UUID: "+UUID +"  "+ str(Maj)+"  "+ str(Min ),mac)
-
-							## mac not in current list?
-							if UUID1 == "" and (acceptNewTagiBeacons !="off" or trackMac != ""):
-								## check if in tag list
-							
-								for tag in knownBeaconTags:
-									if knownBeaconTags[tag]["pos"] == -1: 			 	continue
-									posFound, dPos = testComplexTag(hexstr[12:-2], tag, mac, macplain, macplainReverse)
-									if posFound == -1: 									continue
-									if abs(dPos) > knownBeaconTags[tag]["posDelta"]: 	continue
-									if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == tag:
-										tagFound = "found"
-										UUID = tag
-										UUID1 = tag
-										rejectThisMessage 	= False
-									break
-
-							if UUID1 == "": rejectThisMessage = True
-
-							if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-								#print mac, tag, tag in knownBeaconTags
-								writeTrackMac( "9-    ", "isOnlySensor:"+str(isOnlySensor)+", checking bat: "+str(knownBeaconTags[tag]["battCmd"]) +" tagFound: "+str(tagFound)+ ", UUID: "+UUID+ ", rejectThisMessage: "+str(rejectThisMessage) ,mac)
-							#print "4", mac
-							if rejectThisMessage: continue
-							#print "5", mac
-
-							if bl == "" and UUID1 in knownBeaconTags and tagFound == "found":
-								if type(knownBeaconTags[UUID1]["battCmd"]) != type({}) and knownBeaconTags[UUID1]["battCmd"].find("msg:") >-1:
-									# parameter format:     "battCmd": "msg:pos=-3,norm=255", 
-									try:
-										params	=  knownBeaconTags[UUID1]["battCmd"]
-										params	= params.split("msg:")[1]
-										if mac == trackMac and logCountTrackMac >0:
-											writeTrackMac(  "Bat-1 ","params:{}".format(params), mac )
-										params	= params.split(",")
-										batPos	= int(params[0].split("=")[1])*2
-										norm	= float(params[1].split("=")[1])
-										batHexStr = hexstr[12:]
-										bl	 	= "{:.0f}".format( 100.* int(batHexStr[batPos:batPos+2],16)/norm )
-										if mac == trackMac and logCountTrackMac >0:
-											writeTrackMac(  "Bat-2 ", "params:{}, batpos:{}, hex:{}, norm:{}, bl:{}".format(params, batPos, batHexStr[batPos:batPos+2], norm, bl),  mac )
-									except	Exception, e:
-										if mac == trackMac and logCountTrackMac >0:
-											writeTrackMac("", u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), mac)
-										bl		= ""
-
-							if not acceptJunkBeacons:
-								if UUID == "": 
-									#print "reject UUID" 
-									if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-										writeTrackMac( "10    ", "reject bad uuid", mac)
-									continue # this is not supported ..
-
-						lastMSGwithData2 = int(time.time())
-						#print "6", mac, rejectThisMessage
+						if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+							writeTrackMac( "0-    ", "UUID: "+UUID+ ", Maj: "+str(Maj)+", Min: "+Min +", RX:"+rx+", TX:"+tx ,mac)
+						mac, tagFound, rejectThisMessage, UUID, UUID1, Maj, Min, bl = checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, hexstr, bl, rssi )
 
 						if rejectThisMessage: continue
-						#print "7", mac
+
+
+						lastMSGwithDataPassed = int(time.time())
+
 						if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-							writeTrackMac( "11-   ", "added to beaconMSG", mac)
+							writeTrackMac( "21-   ", "added to beaconMSG", mac)
+
+						# compose message
 						beaconMSG = [mac, UUID+"-"+Maj+"-"+Min, rx, tx, bl, beaconType, nCharThisMessage]
-
-						#U.logger.log(10, "{} {}-{}-{}  RX:{}, TX:{}, BL:{}, bTp:{}, pType:{}, lUUID:{},  nBytes:{}".format(mac, UUID, Maj, Min, rx, tx, bl, bType,  pType, lUUID, nCharThisMessage) )
-						if  (mac == trackMac or trackMac =="*")  and logCountTrackMac >0:U.logger.log(10, "{}  {}-{}-{}  RX:{}, TX:{},  TXx:{}, BL:{}, bType:{} , mfgId:{},   nBytes:{:2d},  pktl:{:2d}".format(mac, UUID.ljust(33), Maj.rjust(6), Min.ljust(6), rx.ljust(4), tx.ljust(4),  tx, bl, beaconType, mfgID, nCharThisMessage, pkLen) ,mac )
-
 
 						try: 
 							beaconMAC	= mac
@@ -2311,7 +2394,6 @@ def execbeaconloop():
 							rssi		= float(rx)
 							txPower		= float(tx)
 							bLevel		= bl
-							pkLen		= nCharThisMessage
 						except	Exception, e:
 							U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							U.logger.log(30, "bad data >> "+unicode(beaconMSG)+"  <<beaconMSG")
@@ -2319,37 +2401,20 @@ def execbeaconloop():
 
 						### if in fast down lost and signal < xx ignore this signal= count as not there 
 						if beaconMAC in fastDown : sendAfter = min(45., sendAfterSeconds)
-						if checkIfFastDownMinSignal(beaconMAC,rssi,fastDown): 
-							if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-								writeTrackMac( "12-   ", "checkIfFastDownMinSignal ", mac)
-							continue
 
-						iphoneUUID, beaconMAC = checkIfIphone(uuid,beaconMAC)
-						if not iphoneUUID:
-							if checkIfIgnore(uuid,beaconMAC): 
-								if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-									writeTrackMac( "13-   ", "reject checkIfIgnore ", mac) 
-								continue
-
-						if not (beaconMAC in onlyTheseMAC or beaconMAC in doNotIgnore):
-							#print " new beacon: ",beaconMAC, tagFound, uuid    # this is a new one
-							if rssi < acceptNewiBeacons and tagFound != "found": 
-								if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-									writeTrackMac( "14-   ", "reject rssi <  and !tagFound  ", mac)
-								continue						  # if new it must have signal > threshold
+						reason = checkIfFastDownMinSignal(beaconMAC, rssi, reason)
 
 						if beaconMAC not in beaconsNew: # add fresh one if not in new list
-							beaconsNew[beaconMAC]={"uuid":uuid,"txPower":txPower,"rssi":rssi,"count":1,"timeSt":tt,"bLevel":bLevel,"pktInfo":"len:"+str(pkLen)+", type:"+beaconType, "dCount":0}# [uid-major-minor,txPower,signal strength, # of measuremnts
-							#reason = 3
+							beaconsNew[beaconMAC]={"uuid":uuid,"txPower":txPower,"rssi":rssi,"count":1,"timeSt":tt,"bLevel":bLevel,"pktInfo":"len:"+str(nCharThisMessage)+", type:"+beaconType, "dCount":0}# [uid-major-minor,txPower,signal strength, # of measuremnts
 					
 						else:  # increment averages and counters
 							beaconsNew[beaconMAC]["rssi"]	 += rssi # signal
 							beaconsNew[beaconMAC]["count"]	 += 1  # count for calculating averages
 							beaconsNew[beaconMAC]["txPower"] += txPower # transmit power
-							beaconsNew[beaconMAC]["timeSt"]	 = tt  # count for calculating averages
+							beaconsNew[beaconMAC]["timeSt"]	 = tt  
 							if bLevel != "":
 								beaconsNew[beaconMAC]["bLevel"]	 = bLevel # battery level 
-						reason= checkIfNewOrDeltaSignalOrWasMissing(reason,beaconMAC,beaconMSG,beaconsNew)
+						reason = checkIfNewOrDeltaSignalOrWasMissing(beaconMAC, beaconMSG, beaconsNew, reason)
 						if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 							writeTrackMac( "99    ", "accepted", mac)
 						####if beaconMAC =="0C:F3:EE:00:66:15": print  beaconsNew
@@ -2362,49 +2427,32 @@ def execbeaconloop():
 						except: pass
 						continue# skip if bad data
 
+					reason, beaconsNew = checkIfFastDown(beaconsNew, reason) # send -999 if gone 
 
-					reason, beaconsNew = checkIfFastDown(beaconsNew,reason) # send -999 if gone 
+					sensCheck, paramCheck, reason = doLoopCheck(tt, sensCheck, paramCheck, sensor, useHCI, reason )
+					oneValid = True
 
-					if tt - sensCheck > 2:
-						sensCheck = tt		
-
-						checkIFtrackMacIsRequested()
-
-						if U.checkNowFile(sensor): reason = 7 # quickSens
-	  
-						if BLEAnalysis(useHCI):
-							U.restartMyself(param="", reason="BLE analysis")
-
-						if beep(useHCI):
-							U.restartMyself(param="", reason="beep")
-
-						if getBeaconParameters(useHCI):
-							U.restartMyself(param="", reason="get battery levels")
-
-
-					if tt - paramCheck > 10:
-						if readParams(False): reason = 8 # new params
-						paramCheck=time.time()
-
-			
+				# only needed if no valid msgs in loop
+				if not oneValid:
+					sensCheck, paramCheck, reason = doLoopCheck(tt, sensCheck, paramCheck, sensor, useHCI, reason )
 
 			if rpiDataAcquistionMethod == "socket":
 				sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
 
 			#print "reason",datetime.datetime.now(), reason
-			composeMSG(beaconsNew,timeAtLoopStart,reason)
+			composeMSG(beaconsNew, timeAtLoopStart, reason)
 			handleHistory() 
 			U.echoLastAlive(G.program)
+			#restartLESCAN(useHCI)
 
-
-			dt1 = int(time.time() - lastMSGwithData1)
-			dt2 = int(time.time() - lastMSGwithData2)
+			dt1 = int(time.time() - lastMSGwithDataPlain)
+			dt2 = int(time.time() - lastMSGwithDataPassed)
 			if dt1 > G.rebootIfNoMessagesSeconds:
 				if dt1 > 90 or dt2 > 90:
 					G.debug = 10
 					maxLoopCount = 20
 					restartCount +=1
-					U.logger.log(30, u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1,dt2,loopCount,restartCount))
+					U.logger.log(30, u" time w/out any message .. anydata: %6d[secs];  okdata: %6d[secs];   loopCount:%d;  restartCount:%d"%(dt1, dt2, loopCount, restartCount))
 					if dt2 > 400 :
 						time.sleep(20)
 						U.restartMyself(param="", reason="bad BLE (2),restart")

@@ -1510,9 +1510,9 @@ def fixRcLocal(sleepTime):
 		for line in callbeacon:
 			if line.find("master.sh ")>-1 and writeOut =="":
 				if sleepTime =="0":
-					test = 'subprocess.call("cd {}; nohup /bin/bash master.sh & ".format(homeDir), shell=True)'
+					test = 'subprocess.call("cd {}; nohup /bin/bash master.sh > /dev/null 2>&1 & ".format(homeDir), shell=True)'
 				else:
-					test = 'subprocess.call("sleep '+sleepTime+ ';cd {}; nohup /bin/bash master.sh & ".format(homeDir), shell=True)'
+					test = 'subprocess.call("sleep '+sleepTime+ ';cd {}; nohup /bin/bash master.sh > /dev/null 2>&1 & ".format(homeDir), shell=True)'
 				if line == test:
 					break
 				else:
@@ -1533,7 +1533,7 @@ def fixRcLocal(sleepTime):
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
-
+ 
 
 
 ####################      #########################
@@ -2108,7 +2108,7 @@ def execMaster():
 		killOldPrograms()
 
 		subprocess.call("/usr/bin/python "+G.homeDir+"copyToTemp.py", shell=True)
-		subprocess.call("nohup sudo /bin/bash "+G.homeDir+"master.sh", shell=True)
+		subprocess.call("nohup sudo /bin/bash "+G.homeDir+"master.sh > /dev/null 2>&1 ", shell=True)
 		time.sleep(1)
 
 		checkIfclearHostsFile()
@@ -2118,6 +2118,7 @@ def execMaster():
 
 		checkWiFiSetupBootDir()
 
+		subprocess.Popen("sudo rm {}nohup.out > /dev/null 2>&1".format(G.homeDir),shell=True)
 
 		checkLogfiles()
 
@@ -2342,7 +2343,7 @@ def execMaster():
 
 					#check if fallback "master.sh"  is running, if not restart 
 					if not U.pgmStillRunning("master.sh"):
-						subprocess.call("nohup sudo /bin/bash "+G.homeDir+"master.sh", shell=True)
+						subprocess.call("nohup sudo /bin/bash "+G.homeDir+"master.sh > /dev/null 2>&1 ", shell=True)
 					## check if we have network back
 				
 				delayAndWatchDog()

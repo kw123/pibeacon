@@ -39,7 +39,7 @@ subprocess.call("rm {}restartCount > 			/dev/null 2>&1 ".format(homeDir), shell=
 #subprocess.call("rm  /var/log/piBeacon.log >	/dev/null 2>&1 ")
 
 ## call main program
-subprocess.call("cd {}; nohup /bin/bash master.sh & ".format(homeDir), shell=True)
+subprocess.call("cd {}; nohup /bin/bash master.sh > /dev/null 2>&1 & ".format(homeDir), shell=True)
 
 
 # remove old files 

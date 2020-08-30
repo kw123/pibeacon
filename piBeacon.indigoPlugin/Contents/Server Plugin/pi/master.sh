@@ -42,7 +42,7 @@ while true; do
 					else 
 						#echo " restarting master"
 						echo "$(date '+%Y-%m-%d %H:%M:%S') master.sh: master.py not running restarting with  >>sudo /usr/bin/python master.py<<" >> permanent.log
-						nohup sudo /usr/bin/python master.py &
+						nohup sudo /usr/bin/python master.py > /dev/null 2>&1 &
 				fi
 			fi
 	fi

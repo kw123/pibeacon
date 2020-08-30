@@ -9,7 +9,7 @@
     "msg": [],
     "tag": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
   }, 
-  "Minew-01-Battery-TH": {
+  "Minew_01_Battery_TH": {
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
@@ -19,7 +19,7 @@
     "msg": [],
     "tag": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
 },
-  "Minew-03-Battery-XYZ": {
+  "Minew_03_Battery_XYZ": {
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
@@ -29,7 +29,7 @@
     "msg": [],
     "tag": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
 },
-  "Minew-05-Battery-Light": {
+  "Minew_05_Battery_Light": {
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
@@ -39,7 +39,7 @@
     "msg": [],
     "tag": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
 },
-  "Minew-07": {
+  "Minew_07": {
     "battCmd": "", 
     "beepCmd": "off", 
     "dBm": "-61", 
@@ -49,7 +49,7 @@
     "msg": [],
     "tag": "180201060303E1FFXX16E1FFA107RMAC########"
 },
-  "Minew-08-Battery": {
+  "Minew_08_Battery": {
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
@@ -128,7 +128,7 @@
     "msg": [],
     "tag": "0F020106030300F007094355424500"
   }, 
-  "Feasy_BP103-Triangle": {
+  "Feasy_BP103_Triangle": {
     "battCmd": "msg:pos=15,norm=100", 
     "beepCmd": "off", 
     "dBm": "-59", 
@@ -138,7 +138,7 @@
     "msg": [],
     "tag":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
   }, 
-  "Feasy_BP109-USB": {
+  "Feasy_BP109_USB": {
     "battCmd": "msg:pos=19,norm=101", 
     "beepCmd": "off", 
     "dBm": "-40", 
@@ -148,7 +148,7 @@
     "msg": [],           
     "tag": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
   }, 
-  "Feasy_BP104-AAA": {
+  "Feasy_BP104_AAA": {
     "battCmd": "msg:pos=15,norm=100", 
     "beepCmd": "off", 
     "dBm": "-40", 
@@ -444,6 +444,16 @@
     "msg": [],
     "tag": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
+  "ruuviTag": {
+    "battCmd": "msg", 
+    "beepCmd": "off", 
+    "dBm": "-65", 
+    "pos": 10, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "msg": [],
+    "tag": "FF990405"
+  }, 
   "XY_1": {
     "battCmd": {
       "bits": 127, 
@@ -571,16 +581,6 @@
     "prio": -1, 
     "msg": [],
     "tag": "xx"
-  }, 
-  "ruuviTag": {
-    "battCmd": "msg", 
-    "beepCmd": "off", 
-    "dBm": "-65", 
-    "pos": 10, 
-    "posDelta": 0, 
-    "prio": 1, 
-    "msg": [],
-    "tag": "FF990405"
   }, 
   "unknown": {
     "battCmd": "off", 
