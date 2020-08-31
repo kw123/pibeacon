@@ -15268,6 +15268,7 @@ class Plugin(indigo.PluginBase):
 					except: rssi = -999.
 					txPower = msg["txPower"]
 					lCount	= msg["count"]
+					rssiOffset = 0
 					if rssi ==-999 : 
 						txPower=0
 					else: 

@@ -2103,9 +2103,11 @@ def execMaster():
 
 		G.last_masterStart = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
-		
 		killOldPrograms()
+
+		# just in case the file is present, is created by calling master w nohup. it is terminal output, can be Gbytes
+		subprocess.Popen("sudo rm {}nohup.out > /dev/null 2>&1".format(G.homeDir),shell=True)
+
 
 		subprocess.call("/usr/bin/python "+G.homeDir+"copyToTemp.py", shell=True)
 		subprocess.call("nohup sudo /bin/bash "+G.homeDir+"master.sh > /dev/null 2>&1 ", shell=True)
@@ -2118,7 +2120,6 @@ def execMaster():
 
 		checkWiFiSetupBootDir()
 
-		subprocess.Popen("sudo rm {}nohup.out > /dev/null 2>&1".format(G.homeDir),shell=True)
 
 		checkLogfiles()
 

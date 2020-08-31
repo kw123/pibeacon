@@ -1148,8 +1148,8 @@ offset	Allowed Values		description
 		accelerationTotal, accelerationX, accelerationY, accelerationZ 	= doRuuviTag_magValues(byte_data)
 		temp 					= doRuuviTag_temperature(byte_data)
 		batteryVoltage, txPower = doRuuviTag_powerinfo(byte_data)
-		battreyLowVsTemp		= (1. + min(0,temp-8)/100.) * 2900 # (changes to 2871 @ -2C; to = 2842 @-12C )
-		batteryLevel 			= int(min(100,max(0,100* (batteryVoltage - battreyLowVsTemp)/(3200.-battreyLowVsTemp))))
+		battreyLowVsTemp		= (1. + min(0,temp-10)/100.) * 2900 # (changes to 0.9* 2900 @ 0C; to = 0.8*2900 @-10C )
+		batteryLevel 			= int(min(100,max(0,100* (batteryVoltage - battreyLowVsTemp)/(3100.-battreyLowVsTemp))))
 		# make deltas compared to last send 
 		dX 			= abs(BLEsensorMACs[mac]["accelerationX"]		- accelerationX)
 		dY 			= abs(BLEsensorMACs[mac]["accelerationY"]		- accelerationY)
