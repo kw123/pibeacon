@@ -54,6 +54,7 @@ _GlobalConst_emptyBeacon = {
 	u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, u"signalDelta": 999, u"minSignalCutoff": -999,
 	u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other","useOnlyPrioTagMessageTypes":"0", u"uuid": u"", u"beaconTxPower": +999, u"fastDown": u"0",
 	u"lastBusy":20000,
+	u"enabled": True,
 	u"fastDownMinSignal":	-999,
 	u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
 	u"receivedSignals":		[{"rssi":-999, "lastSignal": 0, "distance":99999} for kk in range(_GlobalConst_numberOfiBeaconRPI)]} #  for 10 RPI
@@ -2881,6 +2882,7 @@ class Plugin(indigo.PluginBase):
 									props[u"description"] =""
 									dev.replaceOnServer()
 									updateProps = True
+							
 
 						if dev.deviceTypeId.find(u"rPI") >-1: 
 							props= dev.pluginProps
@@ -3025,6 +3027,7 @@ class Plugin(indigo.PluginBase):
 									self.beacons[beacon][u"beaconTxPower"]			 = props[u"beaconTxPower"]
 									self.beacons[beacon][u"created"]				 = dev.states[u"created"]
 									self.beacons[beacon][u"uuid"]				 	 = dev.states[u"UUID"]
+									self.beacons[beacon][u"enabled"]				 = dev.enabled
 									try:
 										self.beacons[beacon][u"showBeaconOnMap"]	 = props[u"showBeaconOnMap"] 
 									except: pass
@@ -3537,6 +3540,7 @@ class Plugin(indigo.PluginBase):
 				if beacon in self.beacons:
 					self.beacons[beacon]["typeOfBeacon"] = tag
 					self.beacons[beacon]["useOnlyPrioTagMessageTypes"] = props["useOnlyPrioTagMessageTypes"]
+				self.beacons[beacon]["enabled"] = dev.enabled
 
 			if dev.deviceTypeId.find("rPI") > -1:
 				piNo = dev.states["note"].split("-")
@@ -3594,6 +3598,11 @@ class Plugin(indigo.PluginBase):
 				piNo = dev.states["note"].split("-")
 				try: 	self.RPI[str(int(piNo[-1]))]["piOnOff"] ="0"
 				except: pass
+
+			if dev.deviceTypeId.find("beacon") > -1:
+				if dev.address in self.beacons:
+					self.beacons[dev.address]["enabled"] = False
+
 
 		except Exception, e:
 			if unicode(e) != "None":
@@ -10889,8 +10898,8 @@ class Plugin(indigo.PluginBase):
 			if time.time()< self.currentlyBooting:
 				return
 			for dev in indigo.devices.iter("props.isBLEconnectDevice"):
+				if not dev.enabled: continue
 				if self.queueListBLE == "update": self.sleep(0.1)
-
 				lastStatusChangeDT = 99999
 				props = dev.pluginProps
 				try:
@@ -10904,6 +10913,7 @@ class Plugin(indigo.PluginBase):
 					status = "up"
 				elif dt <= self.expTimeMultiplier * expirationTime:
 					status = "down"
+
 
 				if dev.states[u"status"] != status or self.initStatesOnServer or force:
 					if "lastStatusChange" in dev.states: 
@@ -11038,7 +11048,10 @@ class Plugin(indigo.PluginBase):
 					self.lastUPtoDown  = time.time()+90
 				return False # noting for the next x minutes due to reboot 
 			anyChange = False
-			for beacon in self.beacons :
+			for beacon in self.beacons:
+				if not self.beacons[beacon][u"enabled"]: continue
+				if self.beacons[beacon][u"ignore"] > 0 : continue
+
 				if len(self.beacons[beacon][u"receivedSignals"]) < len(_rpiBeaconList):  
 					self.fixBeaconPILength(beacon, u"receivedSignals")
 
@@ -12612,6 +12625,7 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(20, u"BLEconnectupdate devId not defined in devices pi:{}; devId={}; info:{}".format( piU, devId, info))
 					continue
 				props = dev.pluginProps
+				if not dev.enabled: continue
 				data={}
 				for mac in info[devId]:
 					if mac.upper() != props[u"macAddress"].upper() : continue
@@ -15308,9 +15322,9 @@ class Plugin(indigo.PluginBase):
 						self.beacons[mac][u"lastUp"]  = time.time()
 						self.beacons[mac][u"ignore"] = -1
 						self.indiLOG.log(20, u"new beacon from type ID (2)  rssi:{}<{};   pi:{}; typeID:{}; beaconMSG:{} ".format(rssi, self.acceptNewiBeacons, fromPiU, self.acceptNewTagiBeacons, msg))
+					if not self.beacons[mac][u"enabled"]: continue
 
 				if self.beacons[mac][u"ignore"] > 0: continue
-
 
 
 				## found valid msg and beacon, update indigo etc
@@ -15425,6 +15439,8 @@ class Plugin(indigo.PluginBase):
 						self.beacons[mac][u"created"] = dateString
 						self.beacons[mac][u"expirationTime"] = self.secToDown
 						self.beacons[mac][u"lastUp"] = time.time()
+						self.beacons[mac][u"enabled"] = True
+
 						dev = indigo.devices[u"beacon_" + mac]
 						props = dev.pluginProps
 						self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="updateBeaconStates new beacon")
@@ -16072,7 +16088,7 @@ class Plugin(indigo.PluginBase):
 				if self.beacons[beacon][u"ignore"] >= 1:  xx1.append(beacon)
 				if self.beacons[beacon][u"ignore"] == -1: xx3.append(beacon)
 
-				if self.beacons[beacon][u"ignore"] == 0:
+				if self.beacons[beacon][u"ignore"] == 0 and self.beacons[beacon][u"enabled"]:
 					xx2[beacon] = [ "", 0,"",""]
 					if self.beacons[beacon]["typeOfBeacon"] != "other" and self.beacons[beacon]["indigoId"] > 0:
 						tag = self.beacons[beacon]["typeOfBeacon"]

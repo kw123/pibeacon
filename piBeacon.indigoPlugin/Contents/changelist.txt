@@ -1,3 +1,9 @@
+Added features / changes in v7.126.437 @ 2020-08-31
+===================================================
+0. fixed buffer overflow in new hcidump method
+
+
+
 Added features / changes in v7.126.436 @ 2020-08-31
 ===================================================
 0. added new method (option) to read beacons using hcidump & lescan instead of python socket calls

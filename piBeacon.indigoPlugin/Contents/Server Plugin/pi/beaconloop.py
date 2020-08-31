@@ -417,7 +417,8 @@ def readHCUIDUMPlistener():
 		lines = os.read(ListenProcessFileHandle.stdout.fileno(),readBufferSize) 
 		if len(lines) == 0: return []
 		messages = combineLines(lines)
-		#U.logger.log(20, u"readHCUIDUMPlistener lines:\n{},\nmessages\n{}".format(lines, messages))
+		#U.logger.log(20, u"readHCUIDUMPlistener lines:\n{}".format(lines))
+		#U.logger.log(20, u"readHCUIDUMPlistener messages\n{}".format(json.dumps(messages).replace(",","\n")))
 		return messages
 	except	Exception, e:
 		if unicode(e).find("[Errno 35]") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
@@ -483,7 +484,9 @@ def combineLines(lines):
 			readbuffer = MSGs[-1]
 			#U.logger.log(20, u"readHCUIDUMPlistener leftover>{}<, >{}<".format(readbuffer,MSGs[-1] ))
 			del MSGs[-1]
-			
+		else:
+			readbuffer = ""		
+	
 		return MSGs	
 	except	Exception, e:
 		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
