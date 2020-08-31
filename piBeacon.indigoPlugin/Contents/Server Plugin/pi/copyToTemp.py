@@ -48,9 +48,12 @@ if __name__ == "__main__":
 		###print G.program, doCopy 
 		if doCopy >0:
 				##print G.program, doCopy
+				U.logger.log(30,u"copying to files to temp dir files={}".format(G.parameterFileList))
 				for fileName in G.parameterFileList:
 					if os.path.isfile(G.homeDir+fileName):
-							subprocess.call("sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName, shell=True)
+							cmd = "sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName
+							subprocess.call(cmd, shell=True)
+							#U.logger.log(30,cmd)
 				try:  
 					timeLastFile = os.path.getmtime(G.homeDir+"temp/touchFile")
 				except:	 timeLastFile = -10

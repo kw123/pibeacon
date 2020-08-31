@@ -1052,7 +1052,7 @@ class Plugin(indigo.PluginBase):
 				self.enableRebootRPIifNoMessages  = 999999999
 
 			try:
-				self.rpiDataAcquistionMethod  = int(self.pluginPrefs.get(u"rpiDataAcquistionMethod", "socket"))
+				self.rpiDataAcquistionMethod  =  self.pluginPrefs.get(u"rpiDataAcquistionMethod", "socket")
 			except:
 				self.rpiDataAcquistionMethod  = "socket"
 
@@ -15584,13 +15584,9 @@ class Plugin(indigo.PluginBase):
 						self.updateCARS(mac,dev,newStates)
 
 
-				if batteryLevel != "":
-					if "batteryLevel" in dev.states:
-						if unicode(dev.states[u"batteryLevel"]) != unicode(msg["batteryLevel"]):
-							try:
-								newStates = self.addToStatesUpdateDict(dev.id,"batteryLevel", int(msg["batteryLevel"]), newStates=newStates)
-								newStates = self.addToStatesUpdateDict(dev.id,"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat),newStates=newStates)
-							except: pass
+				if batteryLevel != "" and type(batteryLevel) == type(1) and  "batteryLevel" in dev.states:
+						newStates = self.addToStatesUpdateDict(dev.id,"batteryLevel", int(msg["batteryLevel"]), newStates=newStates)
+						newStates = self.addToStatesUpdateDict(dev.id,"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat),newStates=newStates)
 				### replace uuid number with names if available
 				if uuid != "x-x-x" and uuid !="":
 					if dev.deviceTypeId != "rPI":
