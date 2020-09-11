@@ -2,14 +2,24 @@
 <PluginConfig>
 
     <Field id="infoLabel1" type="label">
-        <Label>RaspberryPi (rPi) Presence and Sensor app for Indigo           Developed by Karl Wachs</Label>
+        <Label>RaspberryPi (rPi) Presence and Sensor plugin for Indigo              Developed by Karl Wachs </Label>
+    </Field>
+
+    <Field id="infoLabel01" type="label" fontColor="orange" >
+<Label>This plugin can 
+-Detect BLE beacons (on/off/ present), BLE signals from iphones, 
+-BLE sensors (temp, hum, pressure, light, IR, accelleration..)
+-Read various sensors through Serial, i2c, SPI, GPIO  on/off/touch sensors
+  T,H,P,Light, RGB,IR,UV, Accel, Current, Voltage, Distance, Movements, switch positions, ... 
+-Send commands to relays, analog DAC, Radio ....
+-Send text, images, clocks, thermometers .. to attached displays (mini, full HDMI), LED chains </Label>
     </Field>
 
 
    <Field id="simpleSeparatorfoldernames" type="separator"/>
 
-    <Field id="folderLabel" type="label">
-        <Label>Names for Indigo device/variables </Label>
+    <Field id="folderLabel" type="label" fontColor="green" >
+        <Label>== Names for Indigo device/variables, general parameters </Label>
     </Field>
 
        <Field    id="iBeaconFolderName"   type="textfield" defaultValue="Pi_Beacons_new" >
@@ -31,7 +41,7 @@
    </Field>
 
     <Field    id="SQLLoggingEnable"   type="menu" defaultValue="on-on" tooltip="">
-        <Label>Configure SQL logger for specific variables and devices (not) log</Label>
+        <Label>...Configure SQL logger for specific variables and devices (not) log</Label>
         <List>
             <Option value="on-on"   >log normal = log everything </Option>
             <Option value="off-on"  >disable devices/states -  enable variables</Option>
@@ -49,7 +59,7 @@
             <Option value="all"        >ENABLE ALL:   for all devices that have an up/ down status</Option>
             <Option value="individual" >ENABLE INDIVIDUAL:  individual devices must be enabled in device edit</Option>
         </List>
-        <Label>Enable BC of up/ down status:</Label>
+        <Label>Enable indigo BC of up/ down status:</Label>
     </Field>
     <Field    id="enableFING"   type="menu" defaultValue="0" tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
         <Label>Trigger FINGSCAN:</Label>
@@ -61,8 +71,8 @@
 
 
    <Field id="simpleSeparator22" type="separator"/>
-   <Field id="infoLabel22" type="label">
-        <Label>Parameters for iBeacons, might be overwritten for individual ibeacons</Label>
+   <Field id="infoLabel22" type="label" fontColor="green" >
+        <Label>== Parameters for iBeacons, might be overwritten for individual ibeacons</Label>
    </Field>
    <Field    id="secToDown"   type="menu" defaultValue="80" tooltip="this is the default value, can be overwritten in each device edit">
         <Label>Status goes from UP to DOWN  if no signal in:</Label>
@@ -81,64 +91,8 @@
             <Option value="180" >  3 Minutes </Option>
         </List>
    </Field>
-   <Field    id="expTimeMultiplier"   type="menu" defaultValue="2" tooltip="eg UP to down is 60secs choosing 3, then down to expired is 180 secs ">
-        <Label>Status goes from DOWN to EXP after x times UP to DOWN time:</Label>
-        <List>
-            <Option value="1.5" > 1.5</Option>
-            <Option value="2"   > 2</Option>
-            <Option value="2.5" > 2.5</Option>
-            <Option value="3"   > 3</Option>
-            <Option value="3.5" > 3.5</Option>
-            <Option value="4"   > 4</Option>
-            <Option value="5"   > 5</Option>
-            <Option value="7"   > 7</Option>
-            <Option value="10"  >10 </Option>
-        </List>
-   </Field>
-    <Field id="expTimeMultiplierLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>this allow to extend just the time it takes to go from DOWN to EXPIRED status</Label>
-    </Field>
 
-    <Field id="acceptNewiBeaconsLabel1" type="label" alignWithControl="true" >  
-        <Label>Accept new beacons if either:</Label>
-    </Field>
-       <Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="-999" tooltip="if the uuid tag is a match it will accpet a new beacon with that signature">
-        <Label>Accept new iBeacons of type:</Label>
-             <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
-      </Field>
-
-       <Field    id="acceptNewiBeacons"   type="menu" defaultValue="-999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
-        <Label>Accept any new iBeacons w signal GT:</Label>
-        <List>
-            <Option value="999"  >signal GT 999 dBm = no </Option>
-            <Option value="-5"   >signal GT  -5 dBm </Option>
-            <Option value="-10"  >signal GT -10 dBm </Option>
-            <Option value="-15"  >signal GT -15 dBm </Option>
-            <Option value="-20"  >signal GT -20 dBm </Option>
-            <Option value="-25"  >signal GT -25 dBm </Option>
-            <Option value="-30"  >signal GT -30 dBm </Option>
-            <Option value="-35"  >signal GT -35 dBm </Option>
-            <Option value="-40"  >signal GT -40 dBm </Option>
-            <Option value="-45"  >signal GT -45 dBm </Option>
-            <Option value="-50"  >signal GT -50 dBm </Option>
-            <Option value="-55"  >signal GT -55 dBm </Option>
-            <Option value="-60"  >signal GT -60 dBm </Option>
-            <Option value="-65"  >signal GT -65 dBm </Option>
-            <Option value="-70"  >signal GT -70 dBm </Option>
-            <Option value="-75"  >signal GT -75 dBm </Option>
-            <Option value="-80"  >signal GT -80 dBm </Option>
-            <Option value="-85"  >signal GT -85 dBm </Option>
-            <Option value="-90"  >signal GT -90 dBm </Option>
-            <Option value="-999" >accept ALL</Option>
-        </List>
-   </Field>
-    <Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>Either use allow new beacons of Type "x" or 
-Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
-After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x" 
-</Label>
-    </Field>
-       <Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
+    <Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
         <Label>reboot RPI if GT x minutes w no iBeacon messages (on RPI):</Label>
         <List>
             <Option value="60"    >reboot after 1 minute  w no ibeacon signal </Option>
@@ -151,38 +105,11 @@ After you have added new beacon, switch off "accept any new beacon" and  "beacon
         <Label>use if you experience instability, if you have just rpi and no beacon is home and no road near do not set to reboot</Label>
     </Field>
 
-   <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
-        <Label>reboot RPI if GT xx empty beacon messages received (from plugin):</Label>
-        <List>
-            <Option value="999999999"  > disable </Option>
-            <Option value="1"   > 1  for testing</Option>
-            <Option value="2"   > 2  for testing</Option>
-            <Option value="3"   > 3  for testing</Option>
-            <Option value="5"   > 5  </Option>
-            <Option value="10"  > 10 </Option>
-            <Option value="20"  > 20 </Option>
-            <Option value="50"  > 50 </Option>
-            <Option value="100" > 100 </Option>
-        </List>    
-   </Field>
-    <Field id="enableRebootRPIifNoMessagesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>after xx seconds the plugin will connect to RPI and reboot</Label>
-    </Field>
-
-
    <Field    id="setClostestRPItextToBlank"   type="menu" defaultValue="1" tooltip="">
         <Label>set clostestRPItext(dev-State) to blank when iBeacon down:</Label>
         <List>
             <Option value="1" >keep last RPi device name</Option>
             <Option value="0" >set to blank </Option>
-        </List>
-   </Field>
-
-       <Field    id="acceptJunkBeacons"   type="menu" defaultValue="0" tooltip=" eg tx=rx=0, uuid =empty or 00000000, ">
-        <Label>Accept "junk" Beacons:</Label>
-        <List>
-            <Option value="0" >do NOT accept </Option>
-            <Option value="1" >accept </Option>
         </List>
    </Field>
    <Field id="sacceptJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
@@ -212,13 +139,13 @@ After you have added new beacon, switch off "accept any new beacon" and  "beacon
         <Label>if you have accept new beacons on and get flodded with new beacons, this option will allow to delete them if you have not renamed them from the default name after one hour</Label>
     </Field>
    <Field id="checkBeaconParametersDisabled" type="checkbox"     defaultValue="false" > 
-        <Label>disable checking beacon parameters (battery level for all beacons):</Label>
+        <Label>Disable checking beacon battery level for all beacons:</Label>
    </Field>
 
 
    <Field id="simpleSeparator33" type="separator"/>
-   <Field id="infoLabel33" type="label">
-        <Label>Parameters for ALL rPi servers</Label>
+   <Field id="infoLabel33" type="label" fontColor="green" >
+        <Label>== Parameters for ALL rPi servers</Label>
    </Field>
    <Field    id="myIpNumber"   type="textfield" defaultValue="192.168.1.x">
         <Label>IP Number of indigo MAC server:</Label>
@@ -319,6 +246,25 @@ WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~
 EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
    </Field>
 
+   <Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
+        <Label>reboot RPI if GT xx empty beacon messages received (from plugin):</Label>
+        <List>
+            <Option value="999999999"  > disable </Option>
+            <Option value="1"   > 1  for testing</Option>
+            <Option value="2"   > 2  for testing</Option>
+            <Option value="3"   > 3  for testing</Option>
+            <Option value="5"   > 5  </Option>
+            <Option value="10"  > 10 </Option>
+            <Option value="20"  > 20 </Option>
+            <Option value="50"  > 50 </Option>
+            <Option value="100" > 100 </Option>
+        </List>    
+   </Field>
+    <Field id="enableRebootRPIifNoMessagesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>after xx seconds the plugin will connect to RPI and reboot</Label>
+    </Field>
+
+
    <Field id="infoLabel45" type="label" fontSize="small" >
 		<Label>- Setup Wifi(wlan0) vs cable (eth0)
     on/off: ON/On if other off/off/do not change
@@ -371,31 +317,6 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
    </Field>
 
 
-
-   <Field id="deleteHistoryAfterSeconds"   type="menu" defaultValue="86400" tooltip="this will tell the rPis to stop sending updates for beacons that do not show up anymore" >
-        <Label>after what time of no messages should an iBeacon be ignored:</Label> 
-        <List>
-            <Option value="21600"  >6 hours </Option>
-            <Option value="43200"  >12 hours </Option>
-            <Option value="86400"  >1 day </Option>
-            <Option value="172800" >2 days </Option>
-        </List>
-   </Field>
-   <Field id="sendAfterSeconds"   type="menu" defaultValue="60" tooltip="this determines how LONG the BLUEZ system will be asked before data is send. This will collect the data and send in one package, use small number for a lot of updates ; is an or with the number of loops" >
-        <Label>How many SECONDS before rPi will send iBeacon data:</Label> 
-        <List>
-            <Option value="10"  >10 seconds </Option>
-            <Option value="30"  >30 seconds </Option>
-            <Option value="45"  >45 seconds </Option>
-            <Option value="60"  >60 seconds </Option>
-            <Option value="70"  >70 seconds </Option>
-            <Option value="80"  >80 seconds </Option>
-            <Option value="90"  >90 seconds </Option>
-            <Option value="100" >100 seconds </Option>
-            <Option value="120" >120 seconds </Option>
-            <Option value="180" >180 seconds </Option>
-        </List>
-   </Field>
    <Field id="rebootSeconds"   type="menu" defaultValue="9999999999999" tooltip="set reboot vs restart loop in setup rPi " >
         <Label>Should the rPi systems reboot/restart loop after:</Label>
         <List>
@@ -472,7 +393,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 
    <Field id="simpleSeparatorSensors" type="separator"/>
 
-    <Field id="SensorsLabel" type="label">  <Label>Sensor parameters, units etc </Label>    </Field>
+    <Field id="SensorsLabel" type="label" fontColor="green" >
+	  <Label>== Sensor parameters, units etc </Label>    </Field>
 
    <Field    id="tempUnits"   type="menu" defaultValue="Celsius">
         <Label>Temperature displayed in:</Label>
@@ -582,7 +504,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 
 
    <Field id="simpleSeparatorplotbeacons" type="separator"/>
-    <Field id="posLabel" type="label">  <Label>Create png file of x,y,z positions of iBeacons</Label>    </Field>
+    <Field id="posLabel" type="label" fontColor="green" >  
+		<Label>== Create png file of x,y,z positions of iBeacons</Label>    </Field>
     
     <Field    id="beaconPositionsUpdateTime"   type="menu" defaultValue="-1" >
         <Label>...enable iBeacon position Plot:</Label>
@@ -843,9 +766,11 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 
     <Field id="simpleSeparator57" type="separator"/>
 
-    <Field id="infoLabel97" type="label">  <Label>debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
+    <Field id="infoLabel97" type="label" fontColor="green" >  
+	<Label>== Debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
 
 
+    <Field id="infoLabeldebRPI" type="label"> <Label>Debug option ON RPI:</Label>  </Field>
 
     <Field id="maxSizeOfLogfileOnRPI"   type = "menu" defaultValue = "10000000" tooltip="One copy will be kept: pibeacon-1.log; if you use ramdisk, please use less than 21MB"  >
         <Label>Debug...max pibeacon logfile size on RPI:</Label>
@@ -896,7 +821,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/plugin.log </Option>
         </List>
     </Field>
-    <Field id="infoLabel227" type="label"> <Label>.                     for DETAILED time tracking set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>
+    <Field id="infoLabel227" type="label"> <Label>DETAILED cpu-time tracking;  set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>
     <Field    id="do_cProfile" type="textfield"  defaultValue="on/off/print"  readonly="yes"     > 
         <Label>... enable or stop or  print intermediate results use on/off/print:</Label>  
     </Field>

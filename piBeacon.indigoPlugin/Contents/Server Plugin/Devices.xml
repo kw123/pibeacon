@@ -1363,20 +1363,25 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 				<TriggerLabel>note</TriggerLabel>
 				<ControlPageLabel>note</ControlPageLabel>
 			</State>
-			<State id="UUID">
+			<State id="typeOfBeacon">
 				<ValueType>String</ValueType>
-				<TriggerLabel>UUID</TriggerLabel>
-				<ControlPageLabel>UUID</ControlPageLabel>
+				<TriggerLabel>typeOfBeacon</TriggerLabel>
+				<ControlPageLabel>typeOfBeacon</ControlPageLabel>
+			</State>
+			<State id="iBeacon">
+				<ValueType>String</ValueType>
+				<TriggerLabel>iBeacon</TriggerLabel>
+				<ControlPageLabel>iBeacon</ControlPageLabel>
+			</State>
+			<State id="mfg_info">
+				<ValueType>String</ValueType>
+				<TriggerLabel>mfg_info</TriggerLabel>
+				<ControlPageLabel>mfg_info</ControlPageLabel>
 			</State>
 			<State id="created">
 				<ValueType>String</ValueType>
 				<TriggerLabel>created</TriggerLabel>
 				<ControlPageLabel>created</ControlPageLabel>
-			</State>
-			<State id="pktInfo">
-				<ValueType>String</ValueType>
-				<TriggerLabel>pktInfo</TriggerLabel>
-				<ControlPageLabel>pktInfo</ControlPageLabel>
 			</State>
 			<State id="lastStatusChange">
 				<ValueType>String</ValueType>
@@ -2212,11 +2217,14 @@ Change here or in initial setup:</Label>
 			<Field id="isBeaconDevice"       type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="SupportsStatusRequest"       type="checkbox"     defaultValue="false" hidden="true"> </Field>
 			<Field id="AllowOnStateChange"       type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="label1"               type="label" alignText="center" fontColor="orange" > 
+				<Label>================    Set iBeacon parameters    ================</Label>
+			<Field id="simpleSeparator6" type="separator"/> </Field>
+
+
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-			<Field id="label1"               type="label" > 
-				<Label>==         iBeacon parameters:         ==</Label>
-			</Field>
-			<Field id="label14"               type="label" > 
+
+			<Field id="label14"               type="label" fontColor="green" > 
 				<Label>== Transition from UP to Down to Expired:</Label>
 			</Field>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
@@ -2241,61 +2249,34 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 			<Field id="expirationTimeLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>This will overwrite the default setting in config. for normal beacon operation, if no signal is received a beaconafter "expirationTime" willl be set to DOWN and after another "expirationTime" it will go to EXPIRED
-the time up --> down  vs down --> expired can be changed in config for all ibeacons eg times 2 etc</Label>
+				<Label>This will overwrite the default setting in config. For normal beacon operation, if no signal is received a beacon after "expirationTime" willl be set to DOWN and after another "expirationTime" it will go to EXPIRED </Label>
 			</Field>
-			<Field id="label11"               type="label" > 
+			<Field id="label11"               type="label"  fontColor="green" > 
 				<Label>== Fast UP to down mode:</Label>
 			</Field>
-			<Field id="fastDown" type="menu"     defaultValue="0" tooltip="if in a iBeacon does not send a signal within xx seconds  it is set to down (set signal to -999) ; all RPI must send down" > 
+			<Field id="fastDown" type="menu"     defaultValue="0" tooltip="if in a iBeacon does not send a signal within xx seconds  it is set to down (set signal to -999)" > 
 				<Label>... send msg to indigo if xx Seconds no signal</Label>
 				<List>
 					<Option value="0"   >do not enable </Option>
-					<Option value="1"   >1 for testing </Option>
-					<Option value="2"   >2 for testing </Option>
-					<Option value="3"   >3 for testing </Option>
-					<Option value="4"   >4 for testing </Option>
-					<Option value="5"   >5 might work </Option>
-					<Option value="10"  >10 if you have many RPI</Option>
+					<Option value="10"  >10 for testing</Option>
 					<Option value="15"  >15 </Option>
 					<Option value="20"  >20 </Option>
-					<Option value="25"  >25  if you have one RPI</Option>
+					<Option value="25"  >25</Option>
+					<Option value="30"  >30</Option>
+					<Option value="40"  >40 </Option>
+					<Option value="50"  >50 </Option>
 				</List>
 			</Field>
-			<Field id="fastDownMinSignal" type="menu"     defaultValue="-999" tooltip="interprete a signal less than xx dBm as no signal, good if you go away from rpi eg leave the room "> 
-				<Label>... no signal = dBm less than:</Label>
-				<List>
-					<Option value="-60" >-60 dBm </Option>
-					<Option value="-65" >-65 dBm </Option>
-					<Option value="-70" >-70 dBm </Option>
-					<Option value="-72" >-72 dBm </Option>
-					<Option value="-74" >-74 dBm</Option>
-					<Option value="-76" >-76 dBm</Option>
-					<Option value="-78" >-78 dBm</Option>
-					<Option value="-80" >-80 dBm</Option>
-					<Option value="-82" >-82 dBm</Option>
-					<Option value="-84" >-84 dBm</Option>
-					<Option value="-86" >-86 dBm</Option>
-					<Option value="-88" >-88 dBm</Option>
-					<Option value="-90" >-90 dBm</Option>
-					<Option value="-92" >-92 dBm</Option>
-					<Option value="-94" >-94 dBm</Option>
-					<Option value="-96" >-96 dBm</Option>
-					<Option value="-98" >-98 dBm</Option>
-					<Option value="-999" >signal must be off = no signal</Option>
-				</List>
-			</Field>
- 			<Field id="fastDownMinLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>For normal beacons: RPIs will send an update once every minute: If no signal == no message will be send. Then the expiration timer process will determine UP to Down after yy seconds w/o signal. 
-For FASTDOWN beacons: the RPIs will send a message "NO SIGNAL" outside the one minutes schedule if no signal was received from the beacon for xx seconds. Then the plugin will set the status to Down IMMEDIATELY</Label>
+ 			<Field id="fastDownLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>use this to be able to react fast to leaving beacons, used eg in CAR device</Label>
 			</Field>
            
-			<Field id="label22"               type="label" > 
+			<Field id="label22"               type="label"  fontColor="green" > 
 				<Label>== Send msg to indigo ... </Label>
 			</Field>
 			<Field id="signalDelta"   type="menu" defaultValue="999" tooltip="rPI will send a message to indigo if the signal strength changes by more than xx dBm, 
 use eg to track someone moving around - going from one room to the next" >
-				<Label>....      If signal change greater than:</Label> 
+				<Label>....      If signal CHANGE greater than:</Label> 
 				<List>
 					<Option value="4"  >4 dBm </Option>
 					<Option value="6"  >6 dBm </Option>
@@ -2311,56 +2292,69 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="26" >26 dBm</Option>
 					<Option value="28" >28 dBm</Option>
 					<Option value="30" >30 dBm</Option>
-					<Option value="999" >do not use</Option>
+					<Option value="999" >do not use, regular sending of messages</Option>
 				</List>
 			</Field>
  			<Field id="signalDeltaLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>use this to detect beacons that eg leave a room and you want to know quickly</Label>
+				<Label>use this to detect beacons that eg leave or enter a room and you want to know quickly</Label>
 			</Field>
-			<Field id="minSignalCutoff"   type="menu" defaultValue="-999" tooltip="if the beaocn is UP: use any signal, if beacon is down, ignore if less than cutoff to stop up/down/up if it has a weak signal" >
-				<Label>.... do NOT send if signal less than xx for down to UP:</Label> 
+
+           
+			<Field id="labelONoff"               type="label"  fontColor="green" > 
+				<Label>== Accept Signal as ON/Off ... </Label>
+			</Field>
+			<Field id="minSignalOn"   type="menu" defaultValue="-999" tooltip="" >
+				<Label>.... ON if RSSI GT :</Label> 
 				<List>
-					<Option value="-60" >-60 dBm </Option>
-					<Option value="-64" >-64 dBm </Option>
-					<Option value="-66" >-66 dBm </Option>
-					<Option value="-68" >-68 dBm </Option>
-					<Option value="-70" >-70 dBm </Option>
-					<Option value="-72" >-72 dBm </Option>
-					<Option value="-70" >-70 dBm </Option>
-					<Option value="-72" >-72 dBm </Option>
-					<Option value="-74" >-74 dBm</Option>
-					<Option value="-76" >-76 dBm</Option>
-					<Option value="-78" >-78 dBm</Option>
-					<Option value="-80" >-80 dBm</Option>
-					<Option value="-82" >-82 dBm</Option>
-					<Option value="-84" >-84 dBm</Option>
-					<Option value="-86" >-86 dBm</Option>
-					<Option value="-88" >-88 dBm</Option>
-					<Option value="-90" >-90 dBm</Option>
-					<Option value="-92" >-92 dBm</Option>
-					<Option value="-94" >-94 dBm</Option>
-					<Option value="-96" >-96 dBm</Option>
-					<Option value="-98" >-98 dBm</Option>
-					<Option value="-999" >do not use</Option>
+					<Option value="-40" >-40 dBm  (10 cm)</Option>
+					<Option value="-45" >-45 dBm </Option>
+					<Option value="-50" >-50 dBm  (30 cm)</Option>
+					<Option value="-55" >-55 dBm </Option>
+					<Option value="-60" >-60 dBm  (1 m for most beacons)</Option>
+					<Option value="-65" >-65 dBm </Option>
+					<Option value="-70" >-70 dBm  (3.5 m) </Option>
+					<Option value="-80" >-80 dBm (10 m)</Option>
+					<Option value="-85" >-85 dBm</Option>
+					<Option value="-999" >any signal switches on</Option>
 				</List>
 			</Field>
- 			<Field id="minSignalCutoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>use this to cut off UP-signals for weak signals. This value is used on the RPI, before info is send to the plugin</Label>
+
+			<Field id="minSignalOff"   type="menu" defaultValue="-999" tooltip="" >
+				<Label>.... off if RSSI LT :</Label> 
+				<List>
+					<Option value="-60" >-60 dBm  (1 m for most beacons)</Option>
+					<Option value="-65" >-65 dBm </Option>
+					<Option value="-70" >-70 dBm (3.5 m)</Option>
+					<Option value="-75" >-75 dBm</Option>
+					<Option value="-80" >-80 dBm (10 m)</Option>
+					<Option value="-85" >-85 dBm</Option>
+					<Option value="-90" >-90 dBm (30 m)</Option>
+					<Option value="-95" >-95 dBm</Option>
+					<Option value="-999" >only if no signal = switch off</Option>
+				</List>
 			</Field>
-			<Field id="labelGroup5"               type="label"  > 
+ 			<Field id="SignalONoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Use this to apply a hystersis factor:
+- requires a high Signal to switch on = has to be close to RPI
+- needs a low Signal to switch off = stay on longer
+eg: on=-60dBm, off=-80dBm walk by the rpi to switch on, stays on as long as in room
+only after leaving the room signal drops below -80 then normal expiration timer for down/ expired</Label>
+			</Field>
+
+			<Field id="labelGroup5"               type="label"  fontColor="green"  > 
 				<Label>== Member of groups:</Label>
 			</Field>
 			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>Member of Family:</Label>			</Field>
 			<Field id="memberOfGuests" type="checkbox"   defaultValue="false"> <Label>Member of Guests:</Label>			</Field>
 			<Field id="memberOfOther1" type="checkbox"   defaultValue="false"> <Label>Member of Other-1:</Label>		</Field>
 			<Field id="memberOfOther2" type="checkbox"   defaultValue="false"> <Label>Member of Other-2:</Label>		</Field>
-			<Field id="labelgroup2" type="label" fontSize="small" alignText="right" >
+			<Field id="labelgroup2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>Adding a beacon to a group
 will add this beacon to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="label3"               type="label"  > 
+			<Field id="label3"               type="label"  fontColor="green"  > 
 				<Label>== Type of beacon, make sure you dont overwrite w the wrong type:</Label>
 			</Field>
 			<Field id="typeOfBeacon" type="menu"     defaultValue="other" readonly="Yes"> 
@@ -2379,7 +2373,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 Setting to only accept ONE device specific message Type will avoid that.</Label>
 			</Field>
 
-			<Field id="label5"               type="label"  > 
+			<Field id="label5"               type="label"   fontColor="green" > 
 				<Label>== How often should we update the signal and distance states:</Label>
 			</Field>
 			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300"> 
@@ -2396,7 +2390,7 @@ Setting to only accept ONE device specific message Type will avoid that.</Label>
 			</Field>
 
 
-			<Field id="label4"               type="label"  > 
+			<Field id="label4"               type="label"   fontColor="green" > 
 				<Label>== Set txPower, use a number to overwrite received value or set to 999 to not overwrite</Label>
 			</Field>
 			<Field id="beaconTxPower" type="textfield"     defaultValue="999"> 
@@ -2409,24 +2403,15 @@ Put THAT value into this field</Label>
 			</Field>
 
 
-			<Field id="label41"               type="label"  > 
-				<Label>== Use min signal if you want to only detect iBeacons that are in the same room as the RPI, 
-          might lead to false negatives .. try a range -80..-90  </Label>
+			<Field id="labelbat0"               type="label"   fontColor="green" > 
+				<Label>== Set Battery parameters enable/ disable, type .. </Label>
 			</Field>
-			<Field id="IgnoreBeaconIfSignalLessThan" type="textfield"     defaultValue="-999"> 
-				<Label>.... ignore if signal less than   Minimum:</Label>
-			</Field>
-			<Field id="IgnoreBeaconIfSignalLessThanLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>This is similar to the parameter for the RPI, but is used in the plugin AFTER the data is received from the RPI</Label>
-			</Field>
-			<Field id="SupportsBatteryLevel" type="checkbox"     defaultValue="false"  hidden="false">
-				<Label>==  supports battery level info read from iBeacon, either through GATT commands or as part of the ibeacon std msg </Label>
-			</Field>
-			<Field id="label47"               type="label"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" > 
-				<Label>... to run gatttool on rpi to get iBeacon info, requires SSD 7/2018 or GT </Label>
+			<Field id="SupportsBatteryLevel" type="checkbox"     defaultValue="false"  >
+				<Label>... show options</Label>
 			</Field>
 			<Field id="label49" type="label" fontSize="small" alignText="right" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
-				<Label>FOR GATT COMMAND type iBeacons (check knownBeaconTags.json file):
+				<Label>To be able to use gatttool on rpi requires SSD 7/2018 or GT 
+FOR GATT COMMAND type iBeacons (check knownBeaconTags.json file):
   The properties should be set automatically, this option allows to overwrite the default for type of beacon
   The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
   It will REPORT (warning log) once a day on beacons, if their last update &gt; 2 days or battery level &lt; 20%  
@@ -2451,13 +2436,13 @@ There are also beacons that send Battery info as part of std msg</Label>
 					<Option value="msg"    	 >yes, in std msg, not through GATT commands (ie ruuviutag)</Option>
 					<Option value="off"    	 >off</Option>
 				</List>
-				<Label>.... battery level cmd:</Label>
+				<Label>.... battery level on/off/type:</Label>
 			</Field>
 
 			<Field id="batteryLevelCheckhours" type="menu"     defaultValue="4/12/20"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
 					<Option value="4/12/20" >do all</Option>
-					<Option value="12/20"   >skip 4am</Option>
+					<Option value="12/20"   >skip 4am (some beacons beep when battery query runs)</Option>
 				</List>
 				<Label>.... check battery level at which hours(4/12/20):</Label>
 			</Field>
@@ -2475,34 +2460,21 @@ There are also beacons that send Battery info as part of std msg</Label>
 				<Label>.... TX power level info at UUID=xx.. not implemented yet:</Label>
 			</Field>
 -->
+			<Field id="labelbeep"               type="label"   fontColor="green" > 
+				<Label>== enable / disbale BEEP function</Label>
+			</Field>
 			<Field id="beaconBeepUUID" type="menu"     defaultValue="off"  >
 				<List>
 					<Option value="gatttool" >enable beep</Option>
 					<Option value="off"    	  >not set up</Option>
 				</List>
-				<Label>Enable beep actions for beacon, must be configured in knownBeaconTags file:</Label>
-			</Field>
-
-
-			<Field id="label48"               type="label"  > 
-				<Label>== ignore beacons  ...  </Label>
-			</Field>
-
-			<Field id="IgnoreBeaconForClosestToRPI" type="menu"     defaultValue="0"> 
-				<Label>.. Ignore THIS beacon for closest iBeacon to RPI:</Label>
-				<List>
-					<Option value="0"     >use it </Option>
-					<Option value="1"     >do NOT use THIS iBeacon</Option>
-				</List>
-			</Field>
-			<Field id="IgnoreBeaconForClosestToRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>if you want to only use certain beacons to trigger on closest beacon to RPI set the others to off</Label>
+				<Label>Must be pre-configured in knownBeaconTags file:</Label>
 			</Field>
 
 
 
 			<Field id="simpleSeparator53" type="separator"/>
-			<Field id="label53"               type="label"  > 
+			<Field id="label53"               type="label"   fontColor="green" > 
 				<Label>== Show beacon position on map, 
                 first setup the general parameters in config, then enable this beacon.</Label>
 			</Field>
@@ -2551,8 +2523,11 @@ There are also beacons that send Battery info as part of std msg</Label>
 			</Field>
 
 			<Field id="sep-03" type="separator"/>
+			<Field id="labelBC"               type="label"   fontColor="green" > 
+				<Label>== Broadcast signals to other plugins</Label>
+			</Field>
 			<Field   id="enableBroadCastEvents"  type="menu"  defaultValue="0" tooltip="this will enable plugin-plugin bc of status changes ie to EVENTS plugin" >
-				<Label>== Send broadcasts to other plugins for status up/x changes</Label>
+				<Label>Send broadcasts to other plugins for status up/x changes</Label>
 				<List>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
@@ -2566,12 +2541,46 @@ this requires other plugins to subscribe to this service</Label>
 
 
 			<Field id="simpleSeparator6" type="separator"/>
-			<Field id="label6"               type="label"  > 
+			<Field id="label6"               type="label"  fontColor="green" > 
 				<Label>EXPERTS ONLY!! </Label>
 			</Field>
 
+			<Field id="label48"               type="label"  fontColor="green"  > 
+				<Label>== Ignore beacons  ...  </Label>
+			</Field>
+
+			<Field id="IgnoreBeaconForClosestToRPI" type="menu"     defaultValue="0"> 
+				<Label>.. Ignore THIS beacon for CLOSEST iBeacon to RPI:</Label>
+				<List>
+					<Option value="0"     >use it </Option>
+					<Option value="1"     >do NOT use THIS iBeacon</Option>
+				</List>
+			</Field>
+			<Field id="IgnoreBeaconForClosestToRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>if you want to only use certain beacons to trigger on closest beacon to RPI set the others to off</Label>
+			</Field>
+
+			<Field id="IgnoreBeaconIfSignalLessThan" type="menu"     defaultValue="-999"> 
+				<Label>.... ignore if signal less than:</Label>
+				<List>
+					<Option value="-60" >-60 dBm  (1 m)</Option>
+					<Option value="-65" >-65 dBm </Option>
+					<Option value="-70" >-70 dBm (3.5 m)</Option>
+					<Option value="-75" >-75 dBm</Option>
+					<Option value="-80" >-80 dBm (10 m)</Option>
+					<Option value="-85" >-85 dBm</Option>
+					<Option value="-90" >-90 dBm (30 m)</Option>
+					<Option value="-95" >-95 dBm</Option>
+					<Option value="-999">do not ignore</Option>
+				</List>
+			</Field>
+			<Field id="IgnoreBeaconIfSignalLessThanLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>This is similar to the parameter for the RPI, but is used in the plugin AFTER the data is received from the RPI</Label>
+			</Field>
+
+
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
-				<Label>... Ignore state of this beacon:</Label>
+				<Label>... Fully Ignore state of this beacon:</Label>
 				<List>
 					<Option value="0" >keep or make active = normal</Option>
 					<Option value="1" >set to short term ignore</Option>
@@ -2978,15 +2987,20 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<TriggerLabel>created</TriggerLabel>
 			<ControlPageLabel>created</ControlPageLabel>
 			</State>
-			<State id="UUID">
-			<ValueType>String</ValueType>
-			<TriggerLabel>UUID</TriggerLabel>
-			<ControlPageLabel>UUID</ControlPageLabel>
+			<State id="typeOfBeacon">
+				<ValueType>String</ValueType>
+				<TriggerLabel>typeOfBeacon</TriggerLabel>
+				<ControlPageLabel>typeOfBeacon</ControlPageLabel>
 			</State>
-			<State id="pktInfo">
-			<ValueType>String</ValueType>
-			<TriggerLabel>pktInfo</TriggerLabel>
-			<ControlPageLabel>pktInfo</ControlPageLabel>
+			<State id="iBeacon">
+				<ValueType>String</ValueType>
+				<TriggerLabel>iBeacon</TriggerLabel>
+				<ControlPageLabel>iBeacon</ControlPageLabel>
+			</State>
+			<State id="mfg_info">
+				<ValueType>String</ValueType>
+				<TriggerLabel>mfg_info</TriggerLabel>
+				<ControlPageLabel>mfg_info</ControlPageLabel>
 			</State>
 
 			<State id="closestRPI">
@@ -3663,8 +3677,8 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 
 
  
-	<Device type="sensor" id="BLEsensor">
-	<Name>BLE-sensor</Name>
+	<Device type="sensor" id="BLEmyBLUEt">
+	<Name>BLE-myBLUE temp Sensor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -3691,13 +3705,6 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<Label>enter MAC number for this device: </Label>
 			</Field>
 
-			<Field id="type" type="menu"     defaultValue="myBLUEt"> 
-			<List>
-				<Option value="myBLUEt"          >myBLUEt</Option>
-				<!-- ><Option value="blueRadio"        >blueRadio</Option> -->
-			</List>
-			<Label>type of sensor:</Label> 
-			</Field>
 
 			<Field id="label01"               type="label" >
 			<Label>enable BLE sensor search on the following rPi</Label>
@@ -4234,6 +4241,1339 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<ValueType>Number</ValueType>
 				<TriggerLabel>measurementCount</TriggerLabel>
 				<ControlPageLabel>measurementCount</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+	<Device type="sensor" id="BLEiBS03T">
+	<Name>BLE-iBS03TP Sensor Temp</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>To Setup 
+-find the MAC number  through discover new beacons
+-enter MAC number, select RPI(s)
+save
+</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
+			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
+			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
+			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
+			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
+			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
+			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
+			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
+			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
+			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
+			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
+			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
+			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
+			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
+			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
+			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
+			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
+			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
+			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
+			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  >Temperature</Option>
+			</List>
+			</Field>
+
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
+			<Label>Min secs between indigo updates - not more often than:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden ="no"> 
+				<Label>Send sensor values if Temp changes by:</Label>
+				<List>
+					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="1.0" > 1.0 C = 2 F</Option>
+					<Option value="1.5" > 1.5 C = 3 F</Option>
+					<Option value="2.0" > 2.0 C = 4 F</Option>
+					<Option value="2.5" > 2.5 C = 5 F</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+	<Device type="sensor" id="BLEiBS03TP">
+	<Name>BLE-iBS03TP Temp Prob-Temp </Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>To Setup 
+-find the MAC number  through discover new beacons
+- enter MAC number, select RPI(s), which temp to show in status Field
+save
+</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
+			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
+			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
+			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
+			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
+			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
+			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
+			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
+			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
+			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
+			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
+			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
+			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
+			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
+			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
+			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
+			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
+			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
+			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
+			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  		 >Temperature</Option>
+				<Option value="AmbientTemperature"   >Ambient - Probe Temperature</Option>
+			</List>
+			</Field>
+
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
+			<Label>Min secs between indigo updates - not more often than:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden ="no"> 
+				<Label>Send sensor values if Temp changes by:</Label>
+				<List>
+					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="1.0" > 1.0 C = 2 F</Option>
+					<Option value="1.5" > 1.5 C = 3 F</Option>
+					<Option value="2.0" > 2.0 C = 4 F</Option>
+					<Option value="2.5" > 2.5 C = 5 F</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="AmbientTemperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+	<Device type="sensor" id="BLEminewE8">
+	<Name>BLE-minew-E8 XYZ Acceleration</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>setup BLE Minew E8 XYZ Accceleration beacon w  BeaconSet+ app on phone
+set all slots to off, besides acceleration (#6)
+set adv freq to 5000 mSec
+set trigger on, advertise for 5 secs
+set Always advertise on, Adv interval  1000 mSec
+save
+exit app
+find MAC number either on back of beacon or use the plugin tool detect new beacons</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
+			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
+			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
+			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
+			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
+			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
+			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
+			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
+			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
+			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
+			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
+			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
+			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
+			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
+			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
+			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
+			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
+			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
+			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
+			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
+				<Option value="accelerationX"     >Acc X </Option>
+				<Option value="accelerationY"     >Acc Y </Option>
+				<Option value="accelerationZ"     >Acc Z </Option>
+			</List>
+			</Field>
+
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
+			<Label>Min secs between indigo updates - not more often than:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaAccelVector"    type="menu"     defaultValue="5" hidden ="no"> 
+				<Label>Send sensor values if total Acceleration values changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaMaxXYZ"    type="menu"     defaultValue="50" hidden ="no"> 
+				<Label>Send sensor values if Acceleration max(dx,dy,dz) changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+			<State id="accelerationVectorDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
+				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
+			</State>
+			<State id="accelerationX">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationX</TriggerLabel>
+				<ControlPageLabel>accelerationX</ControlPageLabel>
+			</State>
+			<State id="accelerationY">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationY</TriggerLabel>
+				<ControlPageLabel>accelerationY</ControlPageLabel>
+			</State>
+			<State id="accelerationZ">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationZ</TriggerLabel>
+				<ControlPageLabel>accelerationZ</ControlPageLabel>
+			</State>
+			<State id="accelerationTotal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationTotal</TriggerLabel>
+				<ControlPageLabel>accelerationTotal</ControlPageLabel>
+			</State>
+			<State id="accelerationXYZMaxDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
+				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+	<Device type="sensor" id="BLEiBS03RG">
+	<Name>BLE-iBS03RG XYZ Acceleration</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>Find MAC number either on back of beacon or use the plugin tool detect new beacon</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
+			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
+			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
+			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
+			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
+			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
+			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
+			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
+			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
+			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
+			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
+			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
+			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
+			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
+			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
+			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
+			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
+			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
+			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
+			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
+				<Option value="accelerationX"     >Acc X </Option>
+				<Option value="accelerationY"     >Acc Y </Option>
+				<Option value="accelerationZ"     >Acc Z </Option>
+			</List>
+			</Field>
+
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
+			<Label>Min secs between indigo updates - not more often than:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaAccelVector"    type="menu"     defaultValue="5" hidden ="no"> 
+				<Label>Send sensor values if total Acceleration values changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaMaxXYZ"    type="menu"     defaultValue="50" hidden ="no"> 
+				<Label>Send sensor values if Acceleration max(dx,dy,dz) changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="move">
+				<ValueType>String</ValueType>
+				<TriggerLabel>move</TriggerLabel>
+				<ControlPageLabel>move</ControlPageLabel>
+			</State>
+
+			<State id="button">
+				<ValueType>String</ValueType>
+				<TriggerLabel>button</TriggerLabel>
+				<ControlPageLabel>button</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+			<State id="accelerationVectorDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
+				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
+			</State>
+			<State id="accelerationX">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationX</TriggerLabel>
+				<ControlPageLabel>accelerationX</ControlPageLabel>
+			</State>
+			<State id="accelerationY">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationY</TriggerLabel>
+				<ControlPageLabel>accelerationY</ControlPageLabel>
+			</State>
+			<State id="accelerationZ">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationZ</TriggerLabel>
+				<ControlPageLabel>accelerationZ</ControlPageLabel>
+			</State>
+			<State id="accelerationTotal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationTotal</TriggerLabel>
+				<ControlPageLabel>accelerationTotal</ControlPageLabel>
+			</State>
+			<State id="accelerationXYZMaxDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
+				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+	<Device type="sensor" id="BLEiBS02">
+	<Name>BLE-iBS02-Sensor IR on/off</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>This sensor is on /off if the IR sensor fires"</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="onOffState" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="onOffState"  >onOffState</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="5"   >  5 secs, only for testing</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+<!--
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="irOnOff">
+				<ValueType>String</ValueType>
+				<TriggerLabel>irOnOff</TriggerLabel>
+				<ControlPageLabel>irOnOff</ControlPageLabel>
+			</State>
+-->
+			<State id="currentOffEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOffEvent</TriggerLabel>
+				<ControlPageLabel>currentOffEvent</ControlPageLabel>
+			</State>
+			<State id="previousOffEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOffEvent</TriggerLabel>
+				<ControlPageLabel>previousOffEvent</ControlPageLabel>
+			</State>
+			<State id="currentOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+			<State id="previousOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOnEvent</TriggerLabel>
+				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+
+	<Device type="sensor" id="BLEiBS03">
+	<Name>BLE-iBS03-Sensor button, mag switch</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>This sensor has 2 button(onOff) and mag(onOff1)
+find MAC number w detect new beacons tool"</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="button" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="magSwitch"  >mag switch </Option>
+				<Option value="button"     >button </Option>
+			</List>
+			</Field>
+
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="5"   >  5 secs, only for testing</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+<!--
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="irOnOff">
+				<ValueType>String</ValueType>
+				<TriggerLabel>irOnOff</TriggerLabel>
+				<ControlPageLabel>irOnOff</ControlPageLabel>
+			</State>
+-->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="button">
+				<ValueType>String</ValueType>
+				<TriggerLabel>button</TriggerLabel>
+				<ControlPageLabel>button</ControlPageLabel>
+			</State>
+			<State id="magSwitch">
+				<ValueType>String</ValueType>
+				<TriggerLabel>magSwitch</TriggerLabel>
+				<ControlPageLabel>magSwitch</ControlPageLabel>
+			</State>
+
+
+			<State id="currentOffEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOffEvent</TriggerLabel>
+				<ControlPageLabel>currentOffEvent</ControlPageLabel>
+			</State>
+			<State id="previousOffEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOffEvent</TriggerLabel>
+				<ControlPageLabel>previousOffEvent</ControlPageLabel>
+			</State>
+			<State id="currentOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+			<State id="previousOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOnEvent</TriggerLabel>
+				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 			<State id="batteryLevel">
 				<ValueType>Number</ValueType>
@@ -11108,7 +12448,7 @@ you can setup
 				<Label>blank: create image in 
 .../Preferences/Plugins/
    com.karlwachs.piBeacon/
-   Lidar360Images/devName.png</Label>	
+   Lidar360Images/mfg_info.png</Label>	
 			</Field>
 
 			<Field id="infoLabelColor" type="label">
@@ -11152,7 +12492,7 @@ you can setup
 				<Option value="0"   >off</Option>
 				<Option value="1"   >ON</Option>
 			</List>
-			<Label>Save raw pixel data to variable devName_data:</Label> 
+			<Label>Save raw pixel data to variable mfg_info_data:</Label> 
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
@@ -20838,6 +22178,21 @@ States:
 					<List class="self" filter="" method="filterBeacons" dynamicReload="false"/>
 			<Label>select the iBeacon for car key3:</Label> 
 			</Field>
+
+
+			<Field id="setFastDown"   type="menu" defaultValue="0" >
+			<Label>set the selected beacons to react fast to going down / away:</Label> 
+			<List>
+				<Option value="-1"     >dont chnage current setting</Option>
+				<Option value="0"      >no, let them expired in the regular time</Option>
+				<Option value="20"     >yes after 20 secs w/o signal beacons will go to down</Option>
+				<Option value="30"     >yes after 30 secs w/o signal beacons will go to down</Option>
+				<Option value="40"     >yes after 40 secs w/o signal beacons will go to down</Option>
+				<Option value="50"     >yes after 50 secs w/o signal beacons will go to down</Option>
+			</List>
+			</Field>
+
+
 			<Field id="displayState"       type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="state"> <Label>Property to display in the State Column:</Label>
 			<List>
@@ -20890,6 +22245,8 @@ States:
 			</State>
 		</States>
 	</Device>
+
+	<Device type="sensor" id="BLEsensor">      <Name> deprecated, use  myBlueT sensor</Name>	</Device>
 
 	<Device type="sensor" id="i2cADS1x15">		<Name>INPUT-ADC-1x16bit-i2cADS1x15 - four channel deprecated, use new definition device</Name>	</Device>
 	<Device type="sensor" id="i2cADS1x15-1">	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel deprecated</Name>	</Device>

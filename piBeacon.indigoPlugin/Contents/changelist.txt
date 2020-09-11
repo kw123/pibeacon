@@ -1,8 +1,21 @@
-Added features / changes in v7.126.437 @ 2020-08-31
+Added features / changes in v7.127.443 @ 2020-09-11
+===================================================
+0. cleaned up some code 
+1. rearanged some menu items, clearer structure 
+2. added several blue tooth sensorss:
+	INGICS:
+		iBS02: PIR presence ir IR object detection
+		iBS03: Has 2 on/off sensors Button and magent 
+		iBS03G: Movement detection of beacon on/off
+		iBS03T: on board temp sensor
+		iBS03TP: on board temp sensor + temp sensor probe
+		iBS03RG: x-y-z acceleration/ gravity sensor
+    Minew 
+		E8: x-y-z acceleration/ gravity sensor
+
+Added features / changes in v7.126.438 @ 2020-08-31
 ===================================================
 0. fixed buffer overflow in new hcidump method
-
-
 
 Added features / changes in v7.126.436 @ 2020-08-31
 ===================================================

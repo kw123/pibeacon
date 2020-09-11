@@ -337,6 +337,63 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
     <MenuItem id="d10">
         <Name>-------------manage iBeacons--------------------</Name>
     </MenuItem>
+
+    <MenuItem id="AcceptNewBeacons">
+        <Name>Accept/reject new Beacons</Name>
+        <ConfigUI>
+            <Field id="printBLEreportLabel" type="label">
+                <Label></Label>
+            </Field>
+            <Field id="MSG" type="textfield" defaultValue="">
+                <Label> message from Plugin:</Label>
+            </Field>
+
+    <Field id="acceptNewiBeaconsLabel1" type="label" alignWithControl="true" >  
+        <Label>Accept/reject new beacons if either:</Label>
+    </Field>
+       <Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="off" tooltip="if the type of beacon tag is a match it will accpet a new beacon with that signature">
+        <Label>Accept new iBeacons of type:</Label>
+             <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
+      </Field>
+
+       <Field    id="acceptNewiBeacons"   type="menu" defaultValue="999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
+        <Label>Accept any new iBeacons w signal GT:</Label>
+        <List>
+            <Option value="999"  >signal GT 999 dBm = no </Option>
+            <Option value="-5"   >signal GT  -5 dBm </Option>
+            <Option value="-10"  >signal GT -10 dBm </Option>
+            <Option value="-15"  >signal GT -15 dBm </Option>
+            <Option value="-20"  >signal GT -20 dBm </Option>
+            <Option value="-25"  >signal GT -25 dBm </Option>
+            <Option value="-30"  >signal GT -30 dBm </Option>
+            <Option value="-35"  >signal GT -35 dBm </Option>
+            <Option value="-40"  >signal GT -40 dBm </Option>
+            <Option value="-45"  >signal GT -45 dBm </Option>
+            <Option value="-50"  >signal GT -50 dBm </Option>
+            <Option value="-55"  >signal GT -55 dBm </Option>
+            <Option value="-60"  >signal GT -60 dBm </Option>
+            <Option value="-65"  >signal GT -65 dBm </Option>
+            <Option value="-70"  >signal GT -70 dBm </Option>
+            <Option value="-75"  >signal GT -75 dBm </Option>
+            <Option value="-80"  >signal GT -80 dBm </Option>
+            <Option value="-85"  >signal GT -85 dBm </Option>
+            <Option value="-90"  >signal GT -90 dBm </Option>
+            <Option value="-999" >accept ALL</Option>
+        </List>
+   </Field>
+    <Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+        <Label>Either use allow new beacons of Type "x" or 
+Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
+After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x" </Label>
+            </Field>
+            <Field id="execAcceptNewBeaconsCALLBACK" type="button">
+                <Label>After selections click</Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>execAcceptNewBeaconsCALLBACKmenu</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
     <MenuItem id="ignoreBeacons">
         <Name>(un) Ignore INDIVIDUAL iBeacons</Name>
         <ConfigUI>
@@ -385,153 +442,44 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
             </Field>
         </ConfigUI>
     </MenuItem>
-    <MenuItem id="ignoreFamily">
-        <Name>(un) Ignore FAMILY of iBeacons</Name>
+    <MenuItem id="setALLBeaconsTo">
+        <Name>Set all Beacons to ...</Name>
         <ConfigUI>
-            <Field id="labelDeleteFAMILY" type="label">
-                <Label>Manage families of beacons, you can select the first 12 characters of beacons UUID, then select if you want them to be (un)ignored, the received messages from the ignored beacons are stored in ~/documents/iBeacon/rejects</Label>
+            <Field id="MSG" type="textfield" defaultValue="">
+                <Label> message from Plugin:</Label>
             </Field>
-            <Field id="ignoreMACfamily" type="menu" defaultValue="0">
-                <Label>family of beacons:</Label>
-                <List class="self" filter="" method="filterMACfamilies" dynamicReload="true" />
+            <Field id="info" type="textfield" defaultValue="">
+                <Label>Set parameters for ALL beacons:</Label>
             </Field>
-            <Field id="buttonDeleteFAMILY" type="button" tooltip="This will confirm to ignore future messages from beacons which UUID starts with the same 12 characters of the UUID">
-                <Label>click to </Label>
-                <Title>Ignore Family</Title>
-                <CallbackMethod>buttonConfirmMACIgnoreFamilyCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="buttonUnDeleteFAMILY" type="button" tooltip="This will confirm to un-ignore future messages from beacons which UUID that start with the same 12 characters of the UUID">
-                <Label>click to </Label>
-                <Title>Un-Ignore Family</Title>
-                <CallbackMethod>buttonConfirmMACunIgnoreFamilyCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="buttonemptyFAMILY" type="button" tooltip="All beacons will be looked at again, only usefull if accept new ibeacon = true">
-                <Label>Erase ignore list</Label>
-                <Title>Empty Family List</Title>
-                <CallbackMethod>buttonConfirmMACemptyFamilyCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="buttonSetAllExistingDevicesToActive" type="button" tooltip="use this if all ibeacons are expired and went to ignore due to ...??wtf?? ">
-                <Label>Set all ALL existing iBeacon devices to active</Label>
-                <Title>Set All to Active</Title>
+
+
+            <Field id="buttonSetAllExistingDevicesToActive" type="button" tooltip="use this if all ibeacons are expired and went to ignore  ">
+                <Label>SET active</Label>
+                <Title>Execute</Title>
                 <CallbackMethod>buttonSetAllExistingDevicesToActiveCALLBACK</CallbackMethod>
             </Field>
-        </ConfigUI>
-    </MenuItem>
-    <MenuItem id="defineIphoneUUIDtoMAC">
-        <Name>Define iPhone/iPad - UUID link</Name>
-        <ConfigUI>
-            <Field id="labeldefineIphoneUUIDtoMAC" type="label">
-                <Label>Define which UUID belongs to which iPhone/iPad/... device
-Use this to identify apple devices through their fixed UUID-MAJOR-MINOR parameters </Label>
+            <Field id="buttonSetAllbeaconsTonoFastDown" type="button" tooltip=" ">
+                <Label>OFF: fastDown</Label>
+                <Title>Execute</Title>
+                <CallbackMethod>buttonSetAllbeaconsTonoFastDownCALLBACK</CallbackMethod>
             </Field>
-            <Field id="constantUUIDmajMIN" type="menu" defaultValue="no" tooltip=" special selections">
-                <Label>select devices where:</Label>
-                <List>
-                    <Option value="uuid--"> uuid is fixed</Option>
-                    <Option value="uuid-maj-"> uuid-maj is fixed</Option>
-                    <Option value="uuid--min"> uuid--min fixed</Option>
-                    <Option value="uuid-maj-min"> uuid-maj-min is fixed</Option>
-                </List>
+            <Field id="buttonSetAllbeaconsTonoSignalDelta" type="button" tooltip=" ">
+                <Label>OFF: signal delta</Label>
+                <Title>Execute</Title>
+                <CallbackMethod>buttonSetAllbeaconsTonoSignalDeltaCALLBACK</CallbackMethod>
             </Field>
-            <Field id="lenOfUUID" type="menu" defaultValue="no" tooltip="">
-                <Label>and devices where:</Label>
-                <List>
-                    <Option value="1"> uuid is 1  char long eg: 1</Option>
-                    <Option value="2"> uuid is 2  char long eg: 10</Option>
-                    <Option value="3"> uuid is 3  char long eg: 101</Option>
-                    <Option value="4"> uuid is 4  char long eg: 1010</Option>
-                    <Option value="5"> uuid is 5  char long </Option>
-                    <Option value="6"> uuid is 6  char long </Option>
-                    <Option value="7"> uuid is 7  char long </Option>
-                    <Option value="8"> uuid is 8  char long </Option>
-                    <Option value="9"> uuid is 9  char long </Option>
-                    <Option value="10"> uuid is 10 char long ie: 010607ff4c (ie iphone)</Option>
-                    <Option value="11"> uuid is 11 char long  </Option>
-                    <Option value="12"> uuid is 12 char long  </Option>
-                    <Option value="14"> uuid is 14 char long  </Option>
-                    <Option value="15"> uuid is 15 char long  </Option>
-                    <Option value="16"> uuid is 16 char long  </Option>
-                    <Option value="17"> uuid is 17 char long  </Option>
-                    <Option value="18"> uuid is 18 char long ie: 011a0bff4c00090603 (eg appleTV)</Option>
-                    <Option value="19"> uuid is 19 char long </Option>
-                    <Option value="20"> uuid is 20 char long </Option>
-                    <Option value="21"> uuid is 21 char long </Option>
-                    <Option value="22"> uuid is 22 char long </Option>
-                    <Option value="23"> uuid is 23 char long</Option>
-                    <Option value="24"> uuid is 24 char long</Option>
-                    <Option value="25"> uuid is 25 char long</Option>
-                    <Option value="26"> uuid is 26 char long</Option>
-                    <Option value="27"> uuid is 27 char long</Option>
-                    <Option value="28"> uuid is 28 char long</Option>
-                    <Option value="29"> uuid is 29 char long</Option>
-                    <Option value="30"> uuid is 30 char long</Option>
-                    <Option value="31"> uuid is 31 char long</Option>
-                    <Option value="32"> uuid is 32 char long eg: d5a50200baafe211a88400f9e13906ff = std length</Option>
-                </List>
+            <Field id="buttonSetAllbeaconsTonominSignalOn" type="button" tooltip=" ">
+                <Label>OFF: min signal ON</Label>
+                <Title>Execute</Title>
+                <CallbackMethod>buttonSetAllbeaconsTonominSignalOnCALLBACK</CallbackMethod>
             </Field>
-            <Field id="idbuttonconfirmPreselect" type="button" tooltip="">
-                <Label>click to </Label>
-                <Title>confirm preselection</Title>
-                <CallbackMethod>buttonconfirmPreselectCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="selectUUIDiphone" type="menu" defaultValue="0">
-                <Label>iPhone/iPad/appleTV candidates:</Label>
-                <List class="self" filter="" method="filterUUIDiphone" dynamicReload="true" />
-            </Field>
-            <Field id="idbuttonconfirmUUIDiphoneName" type="button" tooltip="">
-                <Label>click to </Label>
-                <Title>confirm device</Title>
-                <CallbackMethod>buttonconfirmUUIDiphoneNameCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="nameForIphone" type="textfield" tooltip="option to overwrite UUID with name">
-                <Label>overwrite UUID with nick-name if desired</Label>
-            </Field>
-            <Field id="buttonSelectIphoneUUIDtoMAC" type="button" tooltip=" once you add the link, a mapping file will be send to each rPi. For this UUID-Major-Minor it will ignore the MAC number but will use the UUID to id the device">
-                <Label>click to </Label>
-                <Title>Establish UUID-iPhone link</Title>
-                <CallbackMethod>buttonConfirmSelectIphoneUUIDtoMACCALLBACK</CallbackMethod>
-            </Field>
-            <Field id="buttonDeleteIphoneUUIDtoMAC" type="button" tooltip="if you remove the linke the mapping file have the uuid-iphone map removed and send to each rPi">
-                <Label>click to </Label>
-                <Title>remove UUID-iPhone link</Title>
-                <CallbackMethod>buttonConfirmDeleteUUIDtoMACCALLBACK</CallbackMethod>
+            <Field id="buttonSetAllbeaconsTonominSignalOff" type="button" tooltip=" ">
+                <Label>OFF: signal delta off</Label>
+                <Title>Execute</Title>
+                <CallbackMethod>buttonSetAllbeaconsTonominSignalOffCALLBACK</CallbackMethod>
             </Field>
         </ConfigUI>
     </MenuItem>
-    <!--
-    <MenuItem id="defineUUIDtoName">
-        <Name>Map UUID to a NAME</Name>
-        <ConfigUI>
-            <Field   id="label" type="label">
-                <Label>Map UUID to a name (for Display in Notes field only)</Label>
-            </Field>
-            <Field id="selectUUID" type="menu" defaultValue="0">
-                <Label>UUID:</Label>
-                <List class="self" filter="" method="filterUUIDName" dynamicReload="true"/>
-            </Field>
-            <Field   id="uuidtoName" type="textfield" >
-                <Label>enter Name to be used </Label>
-            </Field>
-            <Field   id="buttonSelectUUIDtoName" type="button"	tooltip=" once you add the map the name will be used instead of the UUID to show in the Notes field">
-                <Label>click to </Label><Title>Add UUID-Name map</Title>
-                <CallbackMethod>buttonConfirmSelectUUIDtoNameCALLBACK</CallbackMethod>
-            </Field>
-            <Field   id="label2" type="label">
-                <Label>Remove Map UUID to a name (for Display in Notes field only)</Label>
-            </Field>
-            <Field id="selectUUIDexistingMap" type="menu" defaultValue="0">
-                <Label>UUID:</Label>
-                <List class="self" filter="" method="filterUUIDNameExisting" dynamicReload="true"/>
-            </Field>
-            <Field   id="buttonDeleteUUIDtoName" type="button"	tooltip="remove the map and use the UUID again">
-                <Label>click to </Label><Title>remove UUID-Name map</Title>
-                <CallbackMethod>buttonConfirmDeleteUUIDtoNameCALLBACK</CallbackMethod>
-            </Field>
-      
-        </ConfigUI>
-    </MenuItem>
-
--->
     <MenuItem id="reloadKnownBeacons">
         <Name>Reload KnownBeacon tags from file</Name>
         <ConfigUI>
@@ -663,6 +611,11 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
         </ConfigUI>
     </MenuItem>
  
+
+    <MenuItem id="d15">
+        <Name>-------------print / log configs detect/id beacons ... ---------------------</Name>
+    </MenuItem>
+
     <MenuItem id="Detectnewbeacontools">
         <Name>Detect (new) beacon tool on RPI</Name>
         <ConfigUI>
@@ -747,32 +700,6 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
                 <Label>the data received and decission in beaconloop for sepecific mac # are printed to plugin.log after ~ 1 minute </Label>
             </Field>
         </ConfigUI>
-    </MenuItem>
-
-
-    <MenuItem id="d19">
-        <Name>-------------fix indigo webserver  (for indigo v less than 7.4)-----------------</Name>
-    </MenuItem>
-    <MenuItem id="changeIndigoconnFileID">
-        <Name>Replace Indigowebserver file by reduced Logging option version</Name>
-        <ConfigUI>
-            <Field id="lableLogfile" type="label">
-                <Label>Replace/restore Indigowebserver file by reduced Logging option version... you will need to restart indigo SERVER to activate the change, </Label>
-            </Field>
-            <Field id="exeLogfile" type="button">
-                <Label>click to </Label>
-                <Title>EXECUTE</Title>
-                <CallbackMethod>buttonConfirmchangeLogfile</CallbackMethod>
-            </Field>
-            <Field id="exeReverse" type="button">
-                <Label>click to </Label>
-                <Title>REVERSE</Title>
-                <CallbackMethod>buttonConfirmReversechangeLogfile</CallbackMethod>
-            </Field>
-        </ConfigUI>
-    </MenuItem>
-    <MenuItem id="d15">
-        <Name>-------------print configs etc ---------------------</Name>
     </MenuItem>
     <MenuItem id="enableLoggingStuff">
         <Name>Enable special logging</Name>
@@ -966,6 +893,29 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
             </Field>
        </ConfigUI>
     </MenuItem>
+
+    <MenuItem id="d19">
+        <Name>-------------fix indigo webserver  (for indigo v less than 7.4)-----------------</Name>
+    </MenuItem>
+    <MenuItem id="changeIndigoconnFileID">
+        <Name>Replace Indigowebserver file by reduced Logging option version</Name>
+        <ConfigUI>
+            <Field id="lableLogfile" type="label">
+                <Label>Replace/restore Indigowebserver file by reduced Logging option version... you will need to restart indigo SERVER to activate the change, </Label>
+            </Field>
+            <Field id="exeLogfile" type="button">
+                <Label>click to </Label>
+                <Title>EXECUTE</Title>
+                <CallbackMethod>buttonConfirmchangeLogfile</CallbackMethod>
+            </Field>
+            <Field id="exeReverse" type="button">
+                <Label>click to </Label>
+                <Title>REVERSE</Title>
+                <CallbackMethod>buttonConfirmReversechangeLogfile</CallbackMethod>
+            </Field>
+        </ConfigUI>
+    </MenuItem>
+
     <MenuItem id="d20">
         <Name>-------------manage sensor   devices  ----------</Name>
     </MenuItem>

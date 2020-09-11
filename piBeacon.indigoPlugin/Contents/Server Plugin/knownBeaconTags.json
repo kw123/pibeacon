@@ -1,65 +1,134 @@
 {
-  "Jaalee": {
+  "iBSxx":  {
+    "text":"INGISCS_iBS01-03x",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg:pos=10,norm=320,len=2,reverse=1", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 2, 
+    "posDelta": 0, 
+    "prio": 1, 
+    "sequence":0,
+    "msg": [],
+    "hexCode": "0201061XFF0D008XBC"
+  }, 
+  "Jaalee":  {
+    "text":"Jaalee",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=-3,norm=255", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
+    "hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
   }, 
-  "Minew_01_Battery_TH": {
+  "Minew_E8":  {
+    "text":"Minew_E8 xyz-Accel, disab all but accel. in beaconSET+ app",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
-},
-  "Minew_03_Battery_XYZ": {
+    "hexCode":"1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########"
+ },
+  "Minew_01_Battery_TH":  {
+    "text":"Minew_07 w Battery  & Humidity",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
+    "hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
 },
-  "Minew_05_Battery_Light": {
+  "Minew_03_Battery_XYZ":  {
+    "text":"Minew_07 w Battery  & xyz acceleration",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
+    "hexCode": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
 },
-  "Minew_07": {
+  "Minew_05_Battery_Light":  {
+    "text":"Minew_07 w Battery  & Light info",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg:pos=14,norm=100", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "sequence":0,
+    "msg": [],
+    "hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
+},
+  "Minew_07":  {
+    "text":"Minew_07 plain",
+    "Maj":"",
+    "Min":"",
     "battCmd": "", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "180201060303E1FFXX16E1FFA107RMAC########"
+    "hexCode": "180201060303E1FFXX16E1FFA107RMAC########"
 },
-  "Minew_08_Battery": {
+  "Minew_08_Battery":  {
+    "text":"Minew_08 w Battery info",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "180201060303E1FFXX16E1FFA108XXRMAC########"
+    "hexCode": "180201060303E1FFXX16E1FFA108XXRMAC########"
 },
-  "BlackCard": {
+  "Minibeacon":  {
+    "text":"Minibeacon",
+    "Maj":"UUID:26-29:int",
+    "Min":"UUID:29-31:int",
+    "battCmd": "msg:pos=8,norm=100", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "prio": 1, 
+    "sequence":0,
+    "msg": [],
+    "hexCode": "1E020A040816F0FFXXXXXXXXXX11094D696E69426561636F6E5F"
+},
+  "BlackCard":  {
+    "text":"BlackCard",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -73,10 +142,14 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1X020104030225FAXXFF0E05A00033E2"
+    "hexCode": "1X020104030225FAXXFF0E05A00033E2"
   }, 
-  "BlueCharm_BC011": {
+  "BlueCharm_BC011":  {
+    "text":"BlueCharm_BC011",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -90,10 +163,14 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
+    "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
   }, 
-  "BlueCharm_BC0631": {
+  "BlueCharm_BC0631":  {
+    "text":"BlueCharm_BC0631",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -107,10 +184,14 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061"
+    "hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061"
   }, 
-  "Cube": {
+  "Cube":  {
+    "text":"Cube",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": {
       "cmdON": [
@@ -125,40 +206,56 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "0F020106030300F007094355424500"
+    "hexCode": "0F020106030300F007094355424500"
   }, 
-  "Feasy_BP103_Triangle": {
+  "Feasy_BP103_Triangle":  {
+    "text":"Feasy_BP103_Triangle",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=15,norm=100", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
+    "hexCode":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
   }, 
-  "Feasy_BP109_USB": {
+  "Feasy_BP109_USB":  {
+    "text":"Feasy_BP109_USB",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=19,norm=101", 
     "beepCmd": "off", 
     "dBm": "-40", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],           
-    "tag": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
+    "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
   }, 
-  "Feasy_BP104_AAA": {
+  "Feasy_BP104_AAA":  {
+    "text":"Feasy_BP104_AAA",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg:pos=15,norm=100", 
     "beepCmd": "off", 
     "dBm": "-40", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],              
-    "tag": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034"
+    "hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034"
   }, 
-  "Innway": {
+  "Innway":  {
+    "text":"Innway",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": {
       "cmdON": [
@@ -173,20 +270,14 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "13020106030301E00B09496E6E7761"
+    "hexCode": "13020106030301E00B09496E6E7761"
   }, 
-  "MiniBeacon": {
-    "battCmd": "off", 
-    "beepCmd": "off", 
-    "dBm": "-59", 
-    "pos": 20, 
-    "posDelta": 0, 
-    "prio": 0, 
-    "msg": [],
-    "tag": "FDA50693A4E24FB1AFCFC6EB07647825"
-  }, 
-  "Nonda_Aiko": {
+  "Nonda_Aiko":  {
+    "text":"Nonda_Aiko ",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -208,10 +299,14 @@
     "pos": 4, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
+    "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
   }, 
-  "Nonda_iHere": {
+  "Nonda_iHere":  {
+    "text":"Nonda_iHere",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -233,10 +328,14 @@
     "pos": 4, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
+    "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
   }, 
-  "NutFinder": {
+  "NutFinder":  {
+    "text":"Nut3, nutale",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -258,51 +357,71 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1C0201060303031805FFD20000xxx9160A18MAC#########"
+    "hexCode": "1C0201060303031805FFD20000xxx9160A18MAC#########"
   }, 
-  "OralB": {
+  "OralB":  {
+    "text":"OralB toothbrush",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 0, 
+    "sequence":0,
     "msg": [],
-    "tag": "120201050EFFDC000201"
+    "hexCode": "120201050EFFDC000201"
   }, 
-  "Orbit": {
+  "Orbit":  {
+    "text":"Orbit",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "0F020106030300F007094F52"
+    "hexCode": "0F020106030300F007094F52"
   }, 
-  "Radius": {
+  "Radius":  {
+    "text":"Radius",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "2F234454CF6D4A0FADF2F4911BA9FFA6"
+    "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6"
   }, 
-  "rPI": {
+  "rPI":  {
+    "text":"rPI",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
+    "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
   }, 
 
-  "Smart_tracker": {
+  "Smart_tracker":  {
+    "text":"Smart tracker",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -324,20 +443,28 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "14020106070304180F18C0FF020A0005"
+    "hexCode": "14020106070304180F18C0FF020A0005"
   }, 
-  "SocialRetail": {
+  "SocialRetail":  {
+    "text":"SocialRetail",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
     "prio": 0, 
+    "sequence":0,
     "msg": [],
-    "tag": "E2C56DB5DFFB48D2B060D0F5a71096E0"
+    "hexCode": "E2C56DB5DFFB48D2B060D0F5a71096E0"
   }, 
-  "SpotyPal": {
+  "SpotyPal":  {
+    "text":"SpotyPal",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -364,30 +491,42 @@
     "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "53706F747950616C5465727261636F"
+    "hexCode": "53706F747950616C5465727261636F"
   }, 
-  "SwiftFinder": {
+  "SwiftFinder":  {
+    "text":"SwiftFinder",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "0F02010603030A18070953"
+    "hexCode": "0F02010603030A18070953"
   }, 
-  "Tovala": {
+  "Tovala":  {
+    "text":"Tovala oven",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 42, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "546F76616C61"
+    "hexCode": "546F76616C61"
   }, 
-  "Vozni_iTrack": {
+  "Vozni_iTrack":  {
+    "text":"Vozni - iTrack",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -413,10 +552,14 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1X02010X030202180AFF4B4D02RMAC########-" 
+    "hexCode": "1X02010X030202180AFF4B4D02RMAC########-" 
   }, 
-  "Rinex_Njoii_iTrack": {
+  "Rinex_Njoii_iTrack":  {
+    "text":"Rinex & Njoii - iTrack",
+    "Maj":"",
+    "Min":"",
     "battCmd": {
       "bits": 127, 
       "shift": 0,
@@ -441,155 +584,134 @@
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
+    "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
-  "ruuviTag": {
+  "ruuviTag":  {
+    "text":"ruuviTag sensor",
+    "Maj":"",
+    "Min":"",
     "battCmd": "msg", 
     "beepCmd": "off", 
     "dBm": "-65", 
     "pos": 10, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "FF990405"
+    "hexCode": "FF990405"
   }, 
-  "XY_1": {
-    "battCmd": {
-      "bits": 127, 
-      "shift": 0,
-      "offset": 0,
-      "norm": 100, 
-      "random": "randomON", 
-      "uuid": "2A19"
-    }, 
-    "beepCmd": {
-      "cmdON": [
-        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
-        "char-write-req 0x003B 02"
-      ], 
-      "cmdOff": [
-        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
-        "char-write-req 0x003B FF"
-      ], 
-      "random": "randomON"
-    }, 
+  "XY_1":  {
+    "text":"XY_1",
+    "Maj":"",
+    "Min":"",
+    "battCmd":"off", 
+    "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "07775DD0111B11E491910800200C9A66"
+    "hexCode": "07775DD0111B11E491910800200C9A66"
   }, 
-  "XY_2": {
-    "battCmd": {
-      "bits": 127, 
-      "shift": 0,
-      "offset": 0,
-      "norm": 100, 
-      "random": "randomON", 
-      "uuid": "2A19"
-    }, 
-    "beepCmd": {
-      "cmdON": [
-        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
-        "char-write-req 0x003B 02"
-      ], 
-      "cmdOff": [
-        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
-        "char-write-req 0x003B FF"
-      ], 
-      "random": "randomON"
-    }, 
+  "XY_2":  {
+    "text":"XY_2",
+    "Maj":"",
+    "Min":"",
+    "battCmd":"off", 
+    "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "08885DD0111B11E491910800200C9A66"
+    "hexCode": "08885DD0111B11E491910800200C9A66"
   }, 
-  "XY_3": {
-    "battCmd": {
-      "bits": 127, 
-      "shift": 0,
-      "offset": 0,
-      "norm": 100, 
-      "random": "randomON", 
-      "uuid": "2A19"
-    }, 
-    "beepCmd": {
-      "cmdON": [
-        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
-        "char-write-req 0x003B 02"
-      ], 
-      "cmdOff": [
-        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
-        "char-write-req 0x003B FF"
-      ], 
-      "random": "randomON"
-    }, 
+  "XY_3":  {
+    "text":"XY_3",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off", 
+    "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "04000000005F78000900580509585934"
+    "hexCode": "04000000005F78000900580509585934"
   }, 
-  "XY_4": {
-    "battCmd": {
-      "bits": 127, 
-      "shift": 0,
-      "offset": 0,
-      "norm": 100, 
-      "random": "randomON", 
-      "uuid": "2A19"
-    }, 
-    "beepCmd": {
-      "cmdON": [
-        "char-write-req  0x0012 2FBEA20752FEBF311DAC5DFA7D777680", 
-        "char-write-req 0x003B 02"
-      ], 
-      "cmdOff": [
-        "char-write-req 0x0012 2FBEA20752FEBF311DAC5DFA7D777680 ", 
-        "char-write-req 0x003B FF"
-      ], 
-      "random": "randomON"
-    }, 
+  "XY_4":  {
+    "text":"XY_4",
+    "Maj":"",
+    "Min":"",
+    "battCmd":"off", 
+    "beepCmd":"off", 
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "1F0201061106A44EACF40104000000005F78002599A405095859"
+    "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859"
   }, 
-  "myblueT": {
+  "myblueT":  {
+    "text":"myblueT",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
     "pos": 1, 
     "posDelta": 0, 
     "prio": 1, 
+    "sequence":0,
     "msg": [],
-    "tag": "myBlueT"
+    "hexCode": "myBlueT"
   }, 
-  "other": {
+  "ANKHMAWAY":  {
+    "text":"ANKHMAWAY iB001/2/5 w iBeacon setup",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": -1, 
-    "posDelta": 0, 
+    "pos": 19, 
+    "posDelta": 1, 
     "prio": -1, 
+    "sequence":0,
     "msg": [],
-    "tag": "xx"
+    "hexCode": "EBEFD08370A247C89837E7B5634DF524"
   }, 
-  "unknown": {
+  "iBeacon":  {
+    "text":"all std iBeacons accepted",
+    "Maj":"",
+    "Min":"",
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": -1, 
+    "pos": 8, 
+    "posDelta": 2, 
+    "prio": -1, 
+    "sequence":2,
+    "msg": [],
+    "hexCode": "1AFF4C000215"
+  }, 
+  "other":  {
+    "text":"other",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 0, 
     "posDelta": 0, 
     "prio": -1, 
+    "sequence":3,
     "msg": [],
-    "tag": "xx"
+    "hexCode": "X"
   }
 }
