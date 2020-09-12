@@ -632,10 +632,13 @@ def readParams(init):
 								BLEsensorMACs[mac]["accelerationY"]				 	= 0
 								BLEsensorMACs[mac]["accelerationZ"]				 	= 0
 								BLEsensorMACs[mac]["lastUpdate"]				 	= 0
+								BLEsensorMACs[mac]["hum"]				 			= -100
 								BLEsensorMACs[mac]["temp"]				 			= -100
 								BLEsensorMACs[mac]["AmbientTemperature"] 			= -100
 								BLEsensorMACs[mac]["onOff"]		 					= False
 								BLEsensorMACs[mac]["onOff1"]		 				= False
+								BLEsensorMACs[mac]["onOff2"]		 				= False
+								BLEsensorMACs[mac]["onOff3"]		 				= False
 
 		except	Exception, e:
 			U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -808,7 +811,7 @@ def fillHistory(mac):
 
 
 #################################
-def checkMinMaxSignal(mac, rssi):
+def checkMinMaxSignalAcceptMessage(mac, rssi):
 	global beacon_ExistingHistory, minSignalOff, minSignalOn
 	try:
 		#returns true signal accepted
@@ -1075,7 +1078,7 @@ def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
 			return tx, "", UUID, Maj, Min, False
 
 		#U.logger.log(20, "mac:{}   subTypeHexpos:{} ".format(mac, HexStr.find("02010612FF0D0083BC")) )
-		if not ( HexStr.find("02010612FF0D0083BC") == 2 or HexStr.find("02010619FF0D0081BC") == 2): 
+		if not ( HexStr.find("02010612FF0D0083BC") == 2 or HexStr.find("02010619FF0D0081BC") == 2 or HexStr.find("02010612FF590080BC") ==2 ): 
 			return tx, "", UUID, Maj, Min, False
 
 		sensor				= sensorType
@@ -1088,14 +1091,24 @@ def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
 
 		data   = {sensor:{devId:{}}}
 		data[sensor][devId] ={"batteryVoltage":batteryVoltage,"batteryLevel":batteryLevel,"type":sensorType,"mac":mac,"rssi":float(rx),"txPower":-60}
-		#      0       1            2                  3               4
-		# pos  234567890123456789  >0123< >45< >6789< >0123< 4567 >89< 012345
-		# bits 02010612FF0D0083BC   2901   00   4409   4309  0000 >17< 030000
+
+		# iBS01T:  	02010612FF590080BCbbbbxxFFFFFFFFFFFFFFFFFFFF
+		#  			
+		# iBS01-G:  02010612FF590080BC   bbbb   xx FFFFFFFFFFFFFFFFFFFF
+		# iBS01RG:	02010619FF590081BC   bbbb   xxxxyyyyzzzzxxxxyyyyzzzzxxxxyyyyzzzz
+		#                   1 2 3 4 5    6 7    8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+		#      		0       1            2                  3               4
+		# pos 		234567890123456789  >0123< >45< >6789< >0123< 4567 >89< 012345
+		# bits 		02010612FF0D0083BC   2901   00   4409   4309  0000 >17< 030000
 		#                           volt   0/1  
-		if HexStr.find("02010619FF0D0081BC") == 2:
-			subTypeHex 			= "RG"
+		if   HexStr.find("02010619FF0D0081BC") == 2:
+			subTypeHex 	= "RG"
+		elif   HexStr.find("02010612FF590080BC") == 2 and HexStr.find("FFFFFFFFFFFFFFFFFFFF") >1:
+			subTypeHex 	= "iBS01"
+		elif HexStr.find("02010612FF590080BC") == 2 and HexStr.find("FFFFFFFFFFFF") >1:
+			subTypeHex 	= "iBS01T"
 		else:
-			subTypeHex 			= HexStr[38:40]
+			subTypeHex 	= HexStr[38:40]
 		#U.logger.log(20, "mac:{}   subTypeHex:{}, sensorType:{}".format(mac, subTypeHex, sensorType ) )
 
 
@@ -2617,7 +2630,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 
 		fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, batteryLevel, typeOfBeacon)
 
-		if not checkMinMaxSignal(mac, rssi): rejectThisMessage = True
+		if not checkMinMaxSignalAcceptMessage(mac, rssi): rejectThisMessage = True
 
 		if not rejectThisMessage and mac in beaconsThisReadCycle: fillHistory(mac)
 

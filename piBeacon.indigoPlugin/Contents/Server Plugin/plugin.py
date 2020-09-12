@@ -66,7 +66,7 @@ _GlobalConst_emptyBeaconProps = {
 	u"signalDelta":					999,
 	u"fastDown":				    0,
 	u"minSignalOn":				    -999,
-	u"minSignalOff":				-999,
+	u"minSignalOff":				999,
 	u"typeOfBeacon":				u"unknown",
 	u"beaconTxPower":				999,
 	u"memberOfFamily":				False,
@@ -4056,9 +4056,11 @@ class Plugin(indigo.PluginBase):
 			if beacon in self.beacons and beacon.find("00:00:00:00") ==-1:
 				self.beacons[beacon][u"expirationTime"] = float(valuesDict[u"expirationTime"])
 				self.beacons[beacon][u"updateSignalValuesSeconds"] = float(valuesDict[u"updateSignalValuesSeconds"])
-				self.beacons[beacon][u"beaconTxPower"] = int(valuesDict[u"beaconTxPower"])
+				try: 	self.beacons[beacon][u"beaconTxPower"] = int(valuesDict[u"beaconTxPower"])
+				except:	self.beacons[beacon][u"beaconTxPower"] = 999
 				self.addToStatesUpdateDict(dev.id,"TxPowerSet", int(valuesDict[u"beaconTxPower"]))
-				self.beacons[beacon][u"ignore"] = int(valuesDict[u"ignore"])
+				try:	self.beacons[beacon][u"ignore"] = int(valuesDict[u"ignore"])
+				except:	self.beacons[beacon][u"ignore"] = 0
 
 				self.beacons[beacon][u"note"] = "beacon-" + valuesDict[u"typeOfBeacon"]
 				self.addToStatesUpdateDict(dev.id,"note", self.beacons[beacon][u"note"])
@@ -4066,10 +4068,14 @@ class Plugin(indigo.PluginBase):
 
 				self.beacons[beacon][u"showBeaconOnMap"]		 = valuesDict[u"showBeaconOnMap"]
 				self.beacons[beacon][u"typeOfBeacon"]			 = valuesDict[u"typeOfBeacon"]
-				self.beacons[beacon][u"signalDelta"]			 = int(valuesDict[u"signalDelta"])
-				self.beacons[beacon][u"minSignalOn"]		 	 = int(valuesDict[u"minSignalOn"])
-				self.beacons[beacon][u"minSignalOff"]		 	 = int(valuesDict[u"minSignalOff"])
-				self.beacons[beacon][u"fastDown"]				 = int(valuesDict[u"fastDown"])
+				try:	self.beacons[beacon][u"signalDelta"]			 = int(valuesDict[u"signalDelta"])
+				except:	self.beacons[beacon][u"signalDelta"]			 = 999
+				try:	self.beacons[beacon][u"fastDown"]		 	 	 = int(valuesDict[u"fastDown"])
+				except:	self.beacons[beacon][u"fastDown"]				 = -999
+				try:	self.beacons[beacon][u"minSignalOn"]		 	 = int(valuesDict[u"minSignalOn"])
+				except:	self.beacons[beacon][u"minSignalOn"]		 	 = -999
+				try:	self.beacons[beacon][u"minSignalOff"]		 	 = int(valuesDict[u"minSignalOff"])
+				except:	self.beacons[beacon][u"minSignalOff"]		 	 = 999
 				memberList =""
 				for group in _GlobalConst_groupList:
 					if unicode(valuesDict[u"memberOf"+group]).lower() == "true":
@@ -15851,29 +15857,27 @@ class Plugin(indigo.PluginBase):
 							xx2[beacon]["prio"] = self.knownBeaconTags[tag]["prio"]
 
 				try:
-					if float(self.beacons[beacon][u"signalDelta"]) < 200:
-						xx4[beacon] = self.beacons[beacon][u"signalDelta"]
+					if int(self.beacons[beacon][u"signalDelta"]) < 200:
+						xx4[beacon] = int(self.beacons[beacon][u"signalDelta"])
 				except:pass
 				try:
-					if float(self.beacons[beacon][u"minSignalOn"]) >-120:
-						xx5[beacon] = self.beacons[beacon][u"minSignalOn"]
+					if int(self.beacons[beacon][u"minSignalOn"]) >-200:
+						xx5[beacon] = int(self.beacons[beacon][u"minSignalOn"])
 				except:	pass
 				try:
-					if float(self.beacons[beacon][u"minSignalOff"]) >-120:
-						xx5[beacon] = self.beacons[beacon][u"minSignalOff"]
+					if int(self.beacons[beacon][u"minSignalOff"]) >200:
+						xx5[beacon] = int(self.beacons[beacon][u"minSignalOff"])
 				except:
 					pass
-				if u"fastDown"	 in self.beacons[beacon]: 
-					try:
-						fDSecs	= self.beacons[beacon][u"fastDown"]
-						if float(fDSecs) != 0.0:
-							xx8[beacon] = {u"seconds":float(fDSecs)}
-					except:
-						pass
+				try:	
+					if int(self.beacons[beacon][u"fastDown"]) >0: 
+						xx8[beacon] = {u"seconds":int(self.beacons[beacon][u"fastDown"])}
+				except:	pass
+
 			out["ignoreMAC"]			= xx1
 			out["onlyTheseMAC"]			= xx2
 			out["signalDelta"]			= xx4
-			out["minSignalOnf"]			= xx5
+			out["minSignalOn"]			= xx5
 			out["minSignalOff"]			= xx6
 			out["fastDownList"]			= xx8
 

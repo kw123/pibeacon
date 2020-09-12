@@ -2319,9 +2319,10 @@ use eg to track someone moving around - going from one room to the next" >
 				</List>
 			</Field>
 
-			<Field id="minSignalOff"   type="menu" defaultValue="-999" tooltip="" >
+			<Field id="minSignalOff"   type="menu" defaultValue="999" tooltip="" >
 				<Label>.... off if RSSI LT :</Label> 
 				<List>
+					<Option value="999" >only if no signal = switch off</Option>
 					<Option value="-60" >-60 dBm  (1 m for most beacons)</Option>
 					<Option value="-65" >-65 dBm </Option>
 					<Option value="-70" >-70 dBm (3.5 m)</Option>
@@ -2330,7 +2331,6 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="-85" >-85 dBm</Option>
 					<Option value="-90" >-90 dBm (30 m)</Option>
 					<Option value="-95" >-95 dBm</Option>
-					<Option value="-999" >only if no signal = switch off</Option>
 				</List>
 			</Field>
  			<Field id="SignalONoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
