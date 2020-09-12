@@ -2409,7 +2409,7 @@ class Plugin(indigo.PluginBase):
 				self.knownBeaconTags = json.loads(f.read())
 				f.close()
 				for tag in self.knownBeaconTags:
-					self.knownBeaconTags["tag"]["hexCode"] = self.knownBeaconTags["tag"]["hexCode"].upper()
+					self.knownBeaconTags[tag]["hexCode"] = self.knownBeaconTags[tag]["hexCode"].upper()
 			except Exception, e:
 				if unicode(e) != "None":
 					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

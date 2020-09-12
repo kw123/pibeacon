@@ -1,4 +1,4 @@
-Added features / changes in v7.127.446 @ 2020-09-12
+Added features / changes in v7.127.447 @ 2020-09-12
 ===================================================
 0. added .upper() for hexCode in knownbeacon tags
 
