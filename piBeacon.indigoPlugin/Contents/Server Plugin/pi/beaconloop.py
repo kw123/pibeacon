@@ -2304,9 +2304,9 @@ def getBeaconParameters(useHCI):
 def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj, Min ):
 	global knownBeaconTags, logCountTrackMac, trackMac
 	try:
-		inputString 	= copy.copy(hexstring)
+		inputString = copy.copy(hexstring)
 		tagPos 		= int(knownBeaconTags[tag]["pos"])
-		tagString 	= copy.copy(knownBeaconTags[tag]["hexCode"]).upper()
+		tagString 	= knownBeaconTags[tag]["hexCode"].upper()
 
 		if tagString.find("-") >-1: # 
 			tagString = tagString[:-1]
