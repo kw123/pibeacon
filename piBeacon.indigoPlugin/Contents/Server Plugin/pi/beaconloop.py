@@ -936,7 +936,7 @@ def composeMSGForThisMacOnly(mac):
 
 #################################
 def checkIfDeltaSignal(mac):
-	global collectMsgs, loopMaxCallBLE, signalDelta, fastDownList, minSignalOff
+	global collectMsgs, loopMaxCallBLE, signalDelta
 	global onlyTheseMAC, beaconsThisReadCycle, beacon_ExistingHistory
  	global reasonMax
 
@@ -1143,6 +1143,19 @@ def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
 			data[sensor][devId]["onOff"] = onOff
 
 
+		elif subTypeHex in ["iBS01"]	and sensorType == "BLEiBS01": 	
+			p = 24 # start of on/off
+			onOff = HexStr[p:p+2] == "01"
+			if BLEsensorMACs[mac]["onOff"] != onOff : Trig += "switch/"
+			data[sensor][devId]["onOff"] 		= onOff
+			onOff = HexStr[p:p+2] == "02"
+			if BLEsensorMACs[mac]["onOff1"] != onOff: Trig += "switch1/"
+			data[sensor][devId]["onOff1"] 		= onOff
+			onOff = HexStr[p:p+2] == "04"
+			if BLEsensorMACs[mac]["onOff2"] != onOff: Trig += "switch2/"
+			data[sensor][devId]["onOff2"] 		= onOff
+
+
 		elif subTypeHex in ["10"]	and sensorType == "BLEiBS03": 	
 			p = 24 # start of on/off
 			onOff = HexStr[p:p+2] == "01"
@@ -1172,6 +1185,19 @@ def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
 			AmbientTemperature = signedIntfromString16( HexStr[p+2:p+4] + HexStr[p:p+2] )/100.
 			if abs(BLEsensorMACs[mac]["AmbientTemperature"] - AmbientTemperature) >=1: Trig +=  "ambient-temp/"
 			data[sensor][devId]["AmbientTemperature"] = AmbientTemperature
+
+
+		elif subTypeHex in ["iBS01T"]	and sensorType == "BLEiBS01T": 	
+			p = 26# start of temp
+			temp = signedIntfromString16( HexStr[p+2:p+4] + HexStr[p:p+2] )/100.
+			if abs(BLEsensorMACs[mac]["temp"] - temp) >=1: Trig +=  "temp/"
+			data[sensor][devId]["temp"] 		= temp
+			batteryLevel 						= batLevelTempCorrection(batteryVoltage, temp)
+			data[sensor][devId]["batteryLevel"] = batteryLevel
+			p = 30# start of temp probe
+			hum = signedIntfromString16( HexStr[p+2:p+4] + HexStr[p:p+2] )/100.
+			if abs(BLEsensorMACs[mac]["hum"] - AmbientTemperature) >=1: Trig +=  "hum/"
+			data[sensor][devId]["hum"] = hum
 
 
 		elif subTypeHex in ["RG"]	and sensorType == "BLEiBS03RG":

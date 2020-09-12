@@ -2278,10 +2278,10 @@ Change here or in initial setup:</Label>
 use eg to track someone moving around - going from one room to the next" >
 				<Label>....      If signal CHANGE greater than:</Label> 
 				<List>
-					<Option value="4"  >4 dBm </Option>
-					<Option value="6"  >6 dBm </Option>
+					<Option value="4"  >4 dBm  triggers almost every time, in the noise level</Option>
+					<Option value="6"  >6 dBm  likely to sensitive</Option>
 					<Option value="8"  >8 dBm </Option>
-					<Option value="10" >10 dBm</Option>
+					<Option value="10" >10 dBm ~ move 1m to 10 meter distance</Option>
 					<Option value="12" >12 dBm</Option>
 					<Option value="14" >14 dBm</Option>
 					<Option value="16" >16 dBm</Option>
@@ -2306,31 +2306,31 @@ use eg to track someone moving around - going from one room to the next" >
 			<Field id="minSignalOn"   type="menu" defaultValue="-999" tooltip="" >
 				<Label>.... ON if RSSI GT :</Label> 
 				<List>
-					<Option value="-40" >-40 dBm  (10 cm)</Option>
+					<Option value="-40" >-40 dBm  (~10 cm)</Option>
 					<Option value="-45" >-45 dBm </Option>
-					<Option value="-50" >-50 dBm  (30 cm)</Option>
+					<Option value="-50" >-50 dBm  (~30 cm)</Option>
 					<Option value="-55" >-55 dBm </Option>
-					<Option value="-60" >-60 dBm  (1 m for most beacons)</Option>
+					<Option value="-60" >-60 dBm  (~1 m for most beacons)</Option>
 					<Option value="-65" >-65 dBm </Option>
-					<Option value="-70" >-70 dBm  (3.5 m) </Option>
-					<Option value="-80" >-80 dBm (10 m)</Option>
+					<Option value="-70" >-70 dBm  (~3.5 m) </Option>
+					<Option value="-80" >-80 dBm  (~10 m)</Option>
 					<Option value="-85" >-85 dBm</Option>
 					<Option value="-999" >any signal switches on</Option>
 				</List>
 			</Field>
 
-			<Field id="minSignalOff"   type="menu" defaultValue="999" tooltip="" >
+			<Field id="minSignalOff"   type="menu" defaultValue="-999" tooltip="" >
 				<Label>.... off if RSSI LT :</Label> 
 				<List>
-					<Option value="999" >only if no signal = switch off</Option>
-					<Option value="-60" >-60 dBm  (1 m for most beacons)</Option>
+					<Option value="-60" >-60 dBm  (~1 m for most beacons)</Option>
 					<Option value="-65" >-65 dBm </Option>
-					<Option value="-70" >-70 dBm (3.5 m)</Option>
+					<Option value="-70" >-70 dBm  (~3.5 m)</Option>
 					<Option value="-75" >-75 dBm</Option>
-					<Option value="-80" >-80 dBm (10 m)</Option>
+					<Option value="-80" >-80 dBm  (~10 m)</Option>
 					<Option value="-85" >-85 dBm</Option>
-					<Option value="-90" >-90 dBm (30 m)</Option>
+					<Option value="-90" >-90 dBm  (~30 m)</Option>
 					<Option value="-95" >-95 dBm</Option>
+					<Option value="-999" >only if no signal = switch off</Option>
 				</List>
 			</Field>
  			<Field id="SignalONoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -5547,6 +5547,167 @@ find MAC number w detect new beacons tool"</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>magSwitch</TriggerLabel>
 				<ControlPageLabel>magSwitch</ControlPageLabel>
+			</State>
+
+
+			<State id="currentOffEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOffEvent</TriggerLabel>
+				<ControlPageLabel>currentOffEvent</ControlPageLabel>
+			</State>
+			<State id="previousOffEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOffEvent</TriggerLabel>
+				<ControlPageLabel>previousOffEvent</ControlPageLabel>
+			</State>
+			<State id="currentOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+			<State id="previousOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOnEvent</TriggerLabel>
+				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="batteryLevel">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryLevel</TriggerLabel>
+				<ControlPageLabel>batteryLevel</ControlPageLabel>
+			</State>
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+	<Device type="sensor" id="BLEiBS01">
+	<Name>BLE-iBS03-Sensor button, mag switch, movement</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden ="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden ="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" >
+			<Label>This sensor has button(onOff) and mag(onOff1) movement(onOff2)
+find MAC number w detect new beacons tool"</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="button" hidden ="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="magSwitch"  >mag switch </Option>
+				<Option value="button"     >button </Option>
+			</List>
+			</Field>
+
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden ="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="5"   >  5 secs, only for testing</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+<!--
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="irOnOff">
+				<ValueType>String</ValueType>
+				<TriggerLabel>irOnOff</TriggerLabel>
+				<ControlPageLabel>irOnOff</ControlPageLabel>
+			</State>
+-->
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="button">
+				<ValueType>String</ValueType>
+				<TriggerLabel>button</TriggerLabel>
+				<ControlPageLabel>button</ControlPageLabel>
+			</State>
+			<State id="magSwitch">
+				<ValueType>String</ValueType>
+				<TriggerLabel>magSwitch</TriggerLabel>
+				<ControlPageLabel>magSwitch</ControlPageLabel>
+			</State>
+			<State id="movement">
+				<ValueType>String</ValueType>
+				<TriggerLabel>movement</TriggerLabel>
+				<ControlPageLabel>movement</ControlPageLabel>
 			</State>
 
 

@@ -226,7 +226,7 @@ _GlobalConst_allowedCommands = [
 	u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", 
 	u"getBeaconParameters", u"startCalibration","BLEAnalysis","trackMac", u"rampUp", u"rampDown", u"rampUpDown", u"beepBeacon"]	 # commands support for GPIO pins
 
-_BLEsensorTypes =["BLERuuviTag", "BLEiBS02", "BLEiBS03", "BLEiBS03T", "BLEiBS03TP2", "BLEiBS03G", "BLEminewE8", "BLEiBS03RG"]
+_BLEsensorTypes =["BLERuuviTag", "BLEiBS02", "BLEiBS03", "BLEiBS03T", "BLEiBS03TP2", "BLEiBS03G", "BLEminewE8", "BLEiBS03RG", "BLEiBS01RG", "BLEiBS01", "BLEiBS01T"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 	 u"apds9960",															  # dist gesture
@@ -4075,7 +4075,7 @@ class Plugin(indigo.PluginBase):
 				try:	self.beacons[beacon][u"minSignalOn"]		 	 = int(valuesDict[u"minSignalOn"])
 				except:	self.beacons[beacon][u"minSignalOn"]		 	 = -999
 				try:	self.beacons[beacon][u"minSignalOff"]		 	 = int(valuesDict[u"minSignalOff"])
-				except:	self.beacons[beacon][u"minSignalOff"]		 	 = 999
+				except:	self.beacons[beacon][u"minSignalOff"]		 	 = -999
 				memberList =""
 				for group in _GlobalConst_groupList:
 					if unicode(valuesDict[u"memberOf"+group]).lower() == "true":
@@ -10797,11 +10797,11 @@ class Plugin(indigo.PluginBase):
 						self.beacons[beacon][u"updateFING"] = 1
 						#self.indiLOG.log(20,	u" up to down secs: delta= " + unicode(delta) + " expT: " + unicode(expT) + "  " + beacon)
 						changed = True
-					if delta >  expT:
+					if delta >  2*expT:
 						self.beacons[beacon][u"status"] = u"expired"
 						changed = True 
 				elif self.beacons[beacon][u"status"] == u"down" :
-					if delta >  expT:
+					if delta >  2*expT:
 						self.beacons[beacon][u"status"] = u"expired"
 						changed = True
 					if delta < expT and self.beacons[beacon][u"fastDown"] != "0":
@@ -12899,17 +12899,18 @@ class Plugin(indigo.PluginBase):
 					if dev.deviceTypeId == "BLEiBS03G":
 						self.updateBLEiBS03G(dev,data,whichKeysToDisplay, pi)
 
-					if dev.deviceTypeId == "BLEiBS03T":
-						self.updateBLEiBS03T(dev,data,whichKeysToDisplay, pi)
+					if dev.deviceTypeId == "BLEiBS01":
+						self.updateBLEiBS01(dev,data,whichKeysToDisplay, pi)
 
-					if dev.deviceTypeId == "BLEiBS03TP":
-						self.updateBLEiBS03T(dev,data,whichKeysToDisplay, pi)
-
-					if dev.deviceTypeId == "BLEiBS03RG":
+					if dev.deviceTypeId in ["BLEiBS03RG","BLEiBS01RG"]:
 						self.updateBLEiBS03RG(dev,data,whichKeysToDisplay, pi)
 
 					if dev.deviceTypeId == "BLEminewE8":
 						self.updateBLEminewE8(dev,data,whichKeysToDisplay, pi)
+
+				
+					if dev.deviceTypeId in ["BLEiBS03T","BLEiBS01T","BLEiBS03TP"]:
+						self.updateBLEiBS03T(dev,data,whichKeysToDisplay, pi)
 	
 					if u"proximity" in data:
 						newStatus, updateProps0, doUpdate = self.setProximity(dev, props, data, whichKeysToDisplay,newStatus)
@@ -13381,6 +13382,56 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id,"currentOnEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
 				else:
 					if not data["onOff1"]: 
+						self.addToStatesUpdateDict(dev.id,"previousOffEvent", dev.states["currentOffEvent"]) 
+						self.addToStatesUpdateDict(dev.id,"currentOffEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+
+
+		except Exception, e:
+			if unicode(e) != "None":
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(40, unicode(data))
+		return
+
+
+
+###-------------------------------------------------------------------------####
+	def updateBLEiBS01(self, dev, data, whichKeysToDisplay,pi):
+		try:
+			if "onOff" in data:
+				self.addToStatesUpdateDict(dev.id,"onOffState",  data["onOff"]) 
+				self.setStatusCol(dev,u"rssi",					 data["rssi"],					 	  	 "{} [dBm]".format(data["rssi"]),				whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"batteryLevel",			 data["batteryLevel"],					 "{} %".format(data["batteryLevel"]),			whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"batteryVoltage",		 data["batteryVoltage"],				 "{} [mV]".format(data["batteryVoltage"]),		whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"magSwitch",		 		 data["onOff"],				 			 data["onOff"],									whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"button",		 		 data["onOff1"],				 		 data["onOff1"],								whichKeysToDisplay,"","",decimalPlaces=0)
+				self.setStatusCol(dev,u"movement",		 		 data["onOff2"],				 		 data["onOff2"],									whichKeysToDisplay,"","",decimalPlaces=0)
+				self.addToStatesUpdateDict(dev.id,"lastUpdateFromRPI", pi) 
+
+				if not dev.states["button"]:
+					if data["onOff"]: 
+						self.addToStatesUpdateDict(dev.id,"previousOnEvent", dev.states["currentOnEvent"]) 
+						self.addToStatesUpdateDict(dev.id,"currentOnEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+				else:
+					if not data["onOff"]: 
+						self.addToStatesUpdateDict(dev.id,"previousOffEvent", dev.states["currentOffEvent"]) 
+						self.addToStatesUpdateDict(dev.id,"currentOffEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+
+				if not dev.states["magSwitch"]:
+					if data["onOff1"]: 
+						self.addToStatesUpdateDict(dev.id,"previousOnEvent", dev.states["currentOnEvent"]) 
+						self.addToStatesUpdateDict(dev.id,"currentOnEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+				else:
+					if not data["onOff1"]: 
+						self.addToStatesUpdateDict(dev.id,"previousOffEvent", dev.states["currentOffEvent"]) 
+						self.addToStatesUpdateDict(dev.id,"currentOffEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+
+
+				if not dev.states["movement"]:
+					if data["onOff2"]: 
+						self.addToStatesUpdateDict(dev.id,"previousOnEvent", dev.states["currentOnEvent"]) 
+						self.addToStatesUpdateDict(dev.id,"currentOnEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+				else:
+					if not data["onOff2"]: 
 						self.addToStatesUpdateDict(dev.id,"previousOffEvent", dev.states["currentOffEvent"]) 
 						self.addToStatesUpdateDict(dev.id,"currentOffEvent", datetime.datetime.now().strftime(_defaultDateStampFormat)) 
 
