@@ -14,11 +14,11 @@
 			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" hidden ="true"></Field>
 			<Field id="enablePiNumberMenu" 		type="checkbox" defaultValue="true"  hidden ="true"></Field>
-			<Field id="label1"  type="label" >
+			<Field id="label1"  type="label" fontColor="orange" >
 			<Label>Parameters for rPi devices</Label>
 			</Field>
  
-			<Field id="infoLabel55" type="label">
+			<Field id="infoLabel55" type="label" fontColor="green">
 				<Label>== Setup basic network params for RPI, use this or set parameters in "initial setup of RPI" menu"</Label>
 			</Field>
 
@@ -100,7 +100,7 @@ Change here or in initial setup:</Label>
 			</Field>
 
 
-			<Field id="label14"               type="label" > 
+			<Field id="label14"               type="label"  fontColor="green"> 
 				<Label>
 == iBeacon related:...</Label>
 			</Field>
@@ -193,7 +193,7 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="BLELabel" type="label" >  
+			<Field id="BLELabel" type="label" fontColor="green" >  
 				<Label>== BLEconnect:...</Label>	</Field>
 			<Field id="BLEserial" type="menu"     defaultValue="sequential" tooltip=" ">
 				<Label> .... queries seq. or parallel on THIS rPi:</Label>
@@ -205,7 +205,7 @@ Change here or in initial setup:</Label>
 				<Label>only serial mode is available, paralell seems to overload the RPI sometimes</Label>	
 			</Field>
 
-			<Field id="BLEHCILabel" type="label" > 
+			<Field id="BLEHCILabel" type="label"  fontColor="green"> 
 				<Label>== Use which BLE adaptor for which task:...</Label>
 			</Field>
 
@@ -242,7 +242,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			</Field>
 
  
-			<Field id="memberOfLabel" type="label" >  
+			<Field id="memberOfLabel" type="label" fontColor="green">  
 				<Label>== Make this RPI member of group:...</Label>	
 			</Field>
 			<Field id="memberOfFamily" type="checkbox"   defaultValue="false"> <Label>...Family:</Label>  
@@ -262,7 +262,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 				</List>
 			</Field>
 
-			<Field id="label2"               type="label" > 
+			<Field id="label2"               type="label" fontColor="green" > 
 				<Label>== For attached sensors:...</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
@@ -355,7 +355,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			</Field>
 
 
-			<Field id="label3"               type="label" > 
+			<Field id="label3"               type="label" fontColor="green" > 
 				<Label>== Hardware/reboot/UPS configs:...</Label>
 			</Field>
 
@@ -521,7 +521,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 
 
 
-			<Field id="labelhwr4"               type="label" > 
+			<Field id="labelhwr4"               type="label" fontColor="green"> 
 				<Label>== General reboot options:...</Label>
 			</Field>
 
@@ -574,7 +574,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 				</List>
 			</Field>
 
-			<Field id="labelwebAdhoc0"               type="label" > 
+			<Field id="labelwebAdhoc0"               type="label"  fontColor="green" > 
 				<Label>== Webserver options:...</Label>
 			</Field>
 			<Field id="pin_webAdhoc"   type="menu" defaultValue="10" tooltip="mostly used for fresh SSD, but can also be used later. Connect GPIO to ground to activae for &gt; 10 secs to start. Will start a WiFi signal w SSID = clock123. will then be assesible whith SSH and a webserver will be launched where you can enter SSID, password and timezone of your home network.">
@@ -584,7 +584,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 
 
 			<Field id="labelFan0"              type="label"> <Label></Label></Field>
-			<Field id="labelFan1"              type="label"> 
+			<Field id="labelFan1"              type="label"  fontColor="green" > 
 				<Label>== Enable temp driven FAN (connect fan/driver to a GPIO):...</Label>
 			</Field>
 
@@ -660,7 +660,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 
 
 
-			<Field id="labelPIGPIOfirst"         type="label"> 
+			<Field id="labelPIGPIOfirst"         type="label" fontColor="green" > 
 				<Label>== use GPIO or PIGPIO for "PWM" outputs:...</Label>
 			</Field>
 
@@ -673,7 +673,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			</Field>
 
 			<Field id="labelGPIOfirst0"              type="label"> <Label></Label></Field>
-			<Field id="labelGPIOfirst"               type="label"> 
+			<Field id="labelGPIOfirst"               type="label" fontColor="green" > 
 				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
 			</Field>
 			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
@@ -709,7 +709,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 				<Label>..select GPIO-pin B:</Label>
 			</Field>
 
-			<Field id="labelram"               type="label" > <Label>== Special parameters ...</Label></Field>
+			<Field id="labelram"               type="label"  fontColor="green" > <Label>== Special parameters ...</Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 				<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
@@ -760,8 +760,13 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			</Field>
 
 
-			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info ">
-				<Label>== start web server on RPi @ ip#:80 to show status:</Label>
+			<Field id="labelwebserversfirst"         type="label" fontColor="green" > 
+				<Label>== Webservers:...</Label>
+			</Field>
+
+
+			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info " fontColor="green" >
+				<Label>...start web server on RPi @ ip#:80 to show status:</Label>
 				<List>
 					<Option value="0"  >do not start web server</Option>
 					<Option value="80" >start webserver port 80</Option>
@@ -769,8 +774,8 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 					<Option value="8002" >start webserver port 8002</Option>
 				</List>
 			</Field>
-			<Field id="startWebServerINPUT"   type="menu" defaultValue="0" tooltip="to enab;e input of wifi .. data ">
-				<Label>== start web server on RPi @ ip#:8000 to enable input of wifi ... config:</Label>
+			<Field id="startWebServerINPUT"   type="menu" defaultValue="0" tooltip="to enab;e input of wifi .. data " fontColor="green" >
+				<Label>...start web server on RPi @ ip#:8000 to enable input of wifi ... config:</Label>
 				<List>
 					<Option value="0"  >do not start web server</Option>
 					<Option value="8010" >start webserver port 8010</Option>
@@ -779,8 +784,12 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 				</List>
 			</Field>
 
-			<Field id="infoLabel45" type="label">
-				<Label>== Setup Wifi(wlan0) vs cable (eth0)
+
+			<Field id="labelwififirst"         type="label" fontColor="green" > 
+				<Label>== WiFi:...</Label>
+			</Field>
+			<Field id="infoLabel45" type="label" alignText="right">
+				<Label>.. setup Wifi(wlan0) vs cable (eth0)
     on/off: ON/On if other off/off/do not change
     use IP: which IP# to send to Indigo to ID raspberry
     if you have both ON the RPI might send packages to indigo from 2 different IP numbers
@@ -817,10 +826,8 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 
 
 
-
-			<Field id="simpleSeparator6" type="separator"/>
-			<Field id="label6"               type="label"  > 
-				<Label>EXPERTS ONLY!!---------------- </Label>
+			<Field id="label6"               type="label" fontColor="green"  > 
+				<Label>EXPERTS ONLY!! ================================================= </Label>
 			</Field>
 
 
@@ -1445,12 +1452,12 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="enablePiNumberMenu" 		type="checkbox" defaultValue="true"  hidden="true"></Field>
 
-			<Field id="label1"  type="label" >
+			<Field id="label1"  type="label" fontColor="orange"  >
 			<Label>Parameters for rPi Sensors types only -- not used for ibeacons or BLE connect devices</Label>
 			</Field>
 
  
-			<Field id="infoLabel55" type="label">
+			<Field id="infoLabel55" type="label" fontColor="green" >
 				<Label>== Setup basic network params for RPI, use this or set parameters in "initial setup of RPI" menu"</Label>
 			</Field>
 
@@ -1530,7 +1537,7 @@ Change here or in initial setup:</Label>
 			<Label>start up x-windows with master:</Label>
 			</Field>
 
-			<Field id="BLEHCILabel" type="label"   > 
+			<Field id="BLEHCILabel" type="label"  fontColor="green" > 
 				<Label>== Use which BLE adaptor for BLE SENSOR (if used):</Label>
 			</Field>
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
@@ -1542,7 +1549,7 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="label2"               type="label" > 
+			<Field id="label2"               type="label"  fontColor="green" > 
 				<Label>== For attached sensors - if not set in sensor device edit:...</Label>
 			</Field>
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20">
@@ -1634,7 +1641,7 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="label3"               type="label" > 
+			<Field id="label3"               type="label"  fontColor="green" > 
 				<Label>== Hardware/reboot configs:...</Label>
 			</Field>
 
@@ -1799,7 +1806,7 @@ Change here or in initial setup:</Label>
 
 
 
-			<Field id="labelhwr4"               type="label" > <Label>== General reboot options .....</Label></Field>
+			<Field id="labelhwr4"               type="label"  fontColor="green" > <Label>== General reboot options .....</Label></Field>
 
 			<Field id="rebootAtMidnight"   type="menu" defaultValue="1" >
 				<Label>...overwrite default reboot at midnight:</Label>
@@ -1860,7 +1867,7 @@ Change here or in initial setup:</Label>
 
 
 			<Field id="labelFan0"              type="label"> <Label></Label></Field>
-			<Field id="labelFan1"              type="label"> 
+			<Field id="labelFan1"              type="label" fontColor="green" > 
 				<Label>== Enable temp driven FAN (connect fan/driver to a GPIO):...</Label>
 			</Field>
 
@@ -1932,7 +1939,7 @@ Change here or in initial setup:</Label>
 				<List class="self" filter="" method="filterTempSensorsOnThisRPI" dynamicReload="false" />
 			 </Field>
 
-			<Field id="labelGPIOfirst"               type="label"> 
+			<Field id="labelGPIOfirst"               type="label" fontColor="green" > 
 				<Label>== If you like to set GPIOs directly after boot - before master.py starts:...</Label>
 			</Field>
 			<Field id="GPIOTypeAfterBoot1"   type="menu" defaultValue="off">
@@ -1968,7 +1975,7 @@ Change here or in initial setup:</Label>
 				<Label>..select GPIO-pin B:</Label>
 			</Field>
 
-			<Field id="labelram"               type="label" > <Label>=== Special parameters</Label></Field>
+			<Field id="labelram"               type="label"  fontColor="green" > <Label>== Special parameters</Label></Field>
 
 			<Field id="useRamDiskForLogfiles"   type="menu" defaultValue="0" tooltip="pibeacon specific logfiles are in run/user/1000/pibeacon. this is for /var/log/...">
 				<Label>...use Ram Disk for SYSTEM Logfiles on this rPi:</Label>
@@ -2025,7 +2032,7 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock">
+			<Field id="networkType"   type="menu" defaultValue="fullIndigo" tooltip="use for eg neopixelClock" fontColor="green" >
 				<Label>== Enable RPI to run independently from Indigo for some special apps:</Label>
 				<List>
 					<Option value="fullIndigo" > normal Indigo mode</Option>
@@ -2033,8 +2040,13 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info ">
-				<Label>== start web server on RPi @ ip#:80 to show status:</Label>
+			<Field id="labelwebserversfirst"         type="label" fontColor="green" > 
+				<Label>== Webservers:...</Label>
+			</Field>
+
+
+			<Field id="startWebServerSTATUS"   type="menu" defaultValue="0" tooltip="to show various statsu info " fontColor="green" >
+				<Label>...start web server on RPi @ ip#:80 to show status:</Label>
 				<List>
 					<Option value="0"  >do not start web server</Option>
 					<Option value="80" >start webserver port 80</Option>
@@ -2042,8 +2054,8 @@ Change here or in initial setup:</Label>
 					<Option value="8002" >start webserver port 8002</Option>
 				</List>
 			</Field>
-			<Field id="startWebServerINPUT"   type="menu" defaultValue="0" tooltip="to enab;e input of wifi .. data ">
-				<Label>== start web server on RPi @ ip#:8000 to enable input of wifi ... config:</Label>
+			<Field id="startWebServerINPUT"   type="menu" defaultValue="0" tooltip="to enab;e input of wifi .. data " fontColor="green" >
+				<Label>...start web server on RPi @ ip#:8000 to enable input of wifi ... config:</Label>
 				<List>
 					<Option value="0"  >do not start web server</Option>
 					<Option value="8010" >start webserver port 8010</Option>
@@ -2052,8 +2064,12 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="infoLabel45" type="label">
-				<Label>== Setup Wifi(wlan0) vs cable (eth0)
+
+			<Field id="labelwififirst"         type="label" fontColor="green" > 
+				<Label>== WiFi:...</Label>
+			</Field>
+			<Field id="infoLabel45" type="label" alignText="right">
+				<Label>.. setup Wifi(wlan0) vs cable (eth0)
     on/off: ON/On if other off/off/do not change
     use IP: which IP# to send to Indigo to ID raspberry
     if you have both ON the RPI might send packages to indigo from 2 different IP numbers
@@ -2230,10 +2246,7 @@ Change here or in initial setup:</Label>
 			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
 				<Label>....      After seconds:</Label>
 				<List>
-					<Option value="10" >10</Option>
-					<Option value="20" >20</Option>
-					<Option value="30" >30</Option>
-					<Option value="45" >45</Option>
+					<Option value="10" >10 only for testing</Option>
 					<Option value="60" >60</Option>
 					<Option value="65" >65</Option>
 					<Option value="70" >70</Option>

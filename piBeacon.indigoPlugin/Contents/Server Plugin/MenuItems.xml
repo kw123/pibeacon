@@ -758,12 +758,12 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
             </Field>
             <Field id="idselectBEACON" type="button" tooltip="">
                 <Label>click to </Label>
-                <Title>select</Title>
+                <Title>START tracking</Title>
                 <CallbackMethod>buttonConfirmSelectBeaconCALLBACK</CallbackMethod>
             </Field>
             <Field id="idstopselectBEACON" type="button" tooltip="">
                 <Label>click to </Label>
-                <Title>delete all tracking</Title>
+                <Title>STOP all tracking</Title>
                 <CallbackMethod>buttonConfirmStopSelectBeaconCALLBACK</CallbackMethod>
             </Field>
             <Field id="labeltrackSignalStrengthIfGeaterThan0" type="label">

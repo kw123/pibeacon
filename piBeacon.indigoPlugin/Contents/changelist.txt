@@ -1,22 +1,31 @@
 Added features / changes in v7.127.447 @ 2020-09-12
 ===================================================
-0. added .upper() for hexCode in knownbeacon tags
 
 
-Added features / changes in v7.127.445 @ 2020-09-12
+Added features / changes in v7.127.448 @ 2020-09-12
 ===================================================
 0. cleaned up some code 
-1. rearanged some menu items, clearer structure 
-2. added several blue tooth sensorss:
+1. rearanged some menu items, clearer structure, using some color for menu items
+2. added several blue tooth sensors, very easy to setup
 	INGICS:
+		iBS01: Has 3 on/off sensors- Button and magent, movement 
+		iBS01T: hase Temp and humidity
+		iBS01RG: x-y-z acceleration/ gravity sensor
 		iBS02: PIR presence ir IR object detection
-		iBS03: Has 2 on/off sensors Button and magent 
+		iBS03: Has 2 on/off sensors- Button and magent 
 		iBS03G: Movement detection of beacon on/off
 		iBS03T: on board temp sensor
 		iBS03TP: on board temp sensor + temp sensor probe
 		iBS03RG: x-y-z acceleration/ gravity sensor
     Minew 
 		E8: x-y-z acceleration/ gravity sensor
+3. made "fastDown" work nicely, If you have more than 2 RPi you can probably go down to 10 secs
+   that means if the beacons leaves the house you will know in ~ 10+3 secs
+  if you have just one RPI and have it connected to something that moves around in the house it is likely not a good idea
+  but for eg a beacon that is connected to a bike that arrives in a dedicated space and has a good connection tot the RPi it shouldd work well
+
+4. added .upper() for hexCode in knownbeacon tags
+
 
 Added features / changes in v7.126.438 @ 2020-08-31
 ===================================================

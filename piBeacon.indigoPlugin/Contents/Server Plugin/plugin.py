@@ -10755,7 +10755,7 @@ class Plugin(indigo.PluginBase):
 					self.fixBeaconPILength(beacon, u"receivedSignals")
 
 				if beacon.find("00:00:00:00") ==0: continue
-				dev =""
+				dev = ""
 				if self.selectBeaconsLogTimer !={}: 
 					for sMAC in self.selectBeaconsLogTimer:
 						if beacon.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
@@ -10793,6 +10793,7 @@ class Plugin(indigo.PluginBase):
 						continue
 
 				delta = time.time()- self.beacons[beacon][u"lastUp"]  ##  no !! - self.beacons[beacon][u"updateSignalValuesSeconds"]
+
 				if self.beacons[beacon][u"status"] == u"up" :
 					if delta > expT :
 						self.beacons[beacon][u"status"] = u"down"
@@ -15370,29 +15371,38 @@ class Plugin(indigo.PluginBase):
 				updateSignal = False
 
 				if newStates[u"status"] == "up" and rssi == -999.:	## check for fast down signal ==-999
-
 					if self.decideMyLog(u"CAR") and self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, "testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, dev.states[u"Pi_"+fromPiU.rjust(2,"0")+"_Signal"], dev.states[u"status"]))
+
+					newStates= self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0")  + "_Signal", -999, newStates=newStates)
+					self.beacons[mac][u"receivedSignals"][int(fromPiU)]["lastSignal"] = time.time() - 999
+
+					noneUp = []
+					for pixx in range(_GlobalConst_numberOfiBeaconRPI):
+						if ( time.time() - self.beacons[mac][u"receivedSignals"][pixx]["lastSignal"] < 60 and  
+							 dev.states["Pi_" + str(pixx).rjust(2,"0")  + "_Signal"] > -999 ):
+							noneUp = [pixx] #.append([pixx,time.time() - self.beacons[mac][u"receivedSignals"][pixx]["lastSignal"] ])
+
 					if self.selectBeaconsLogTimer !={}: 
 						for sMAC in self.selectBeaconsLogTimer:
 							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-								self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-1  - :{};  Signl-last:{}; time-last:{}".format(mac,ssss,tttt))
+								self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-1  - :{} -999 received, rpi still w signal:{}".format(mac, noneUp))
 
-					updateSignal = True
-					if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)	# only for regluar ibeacons..
-					newStates = self.addToStatesUpdateDict(dev.id,u"status", u"down",newStates=newStates)
-					self.beacons[mac][u"status"] = "down"
-					self.beacons[mac][u"updateFING"] = 1
-					updateFINGnow = True
-					self.beacons[mac][u"lastUp"] = -time.time()
-					newStates = self.addToStatesUpdateDict(dev.id,"closestRPI", -1,newStates=newStates)
-					if self.setClostestRPItextToBlank: newStates = newStates = self.addToStatesUpdateDict(dev.id,"closestRPIText", "",newStates=newStates)
-					if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
-					if self.selectBeaconsLogTimer !={}: 
-						for sMAC in self.selectBeaconsLogTimer:
-							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-								self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-2  - :{};  set status to down; newStates:{}".format(mac,newStates ))
+					if noneUp == []:
+						updateSignal = True
+						if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)	# only for regluar ibeacons..
+						newStates = self.addToStatesUpdateDict(dev.id,u"status", u"down",newStates=newStates)
+						self.beacons[mac][u"status"] = "down"
+						self.beacons[mac][u"updateFING"] = 1
+						updateFINGnow = True
+						self.beacons[mac][u"lastUp"] = -time.time()
+						newStates = self.addToStatesUpdateDict(dev.id,"closestRPI", -1,newStates=newStates)
+						if self.setClostestRPItextToBlank: newStates = newStates = self.addToStatesUpdateDict(dev.id,"closestRPIText", "",newStates=newStates)
+						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
+						if self.selectBeaconsLogTimer !={}: 
+							for sMAC in self.selectBeaconsLogTimer:
+								if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+									self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-2  - :{};  set status to down\nnewStates:{}".format(mac, unicode(newStates).replace("\n","") ))
 
-					newStates= self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0")  + "_Signal", -999,newStates=newStates)
 
 
 
@@ -18070,7 +18080,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-####-----------------  calc # of blnaks to be added to state column to make things look better aligned. ---------
+####-----------------  calc # of blanks to be added to state column to make things look better aligned. ---------
 	def padDisplay(self,status):
 		if	 status == "up":		return status.ljust(11)
 		elif status == "expired":	return status.ljust(8)
