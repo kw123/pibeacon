@@ -2310,13 +2310,13 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="
 	try:
 		inputString = copy.copy(hexstring)
 		if tag != ""		: tagPos 		= int(knownBeaconTags[tag]["pos"])
-		if tagString = ""	: tagString 	= knownBeaconTags[tag]["hexCode"].upper()
+		if tagString == ""	: tagString 	= knownBeaconTags[tag]["hexCode"].upper()
 
 		if tagString.find("-") >-1: # 
 			tagString = tagString[:-1]
 		lTag = len(tagString)
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			if tag ="":
+			if tag =="":
 				writeTrackMac("tst-0 ","tagPos:{}; tagPos:{}; lTag:{} tagString: {}; ".format(tagPos, tagPos, lTag, tagString ), mac)
 			else:
 				writeTrackMac("tst-0 ","tagPos:{}; tag:{}; tagPos:{}; lTag:{} tagString: {}; ".format(tagPos, tag, tagPos, lTag, tagString ), mac)
