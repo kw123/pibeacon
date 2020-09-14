@@ -19,12 +19,14 @@
 			</Field>
  
 			<Field id="infoLabel55" type="label" fontColor="green">
-				<Label>== Setup basic network params for RPI, use this or set parameters in "initial setup of RPI" menu"</Label>
+				<Label>== Setup basic network params for RPI, use this AFTER you have set parameters in "initial setup of RPI menu"
+The initial setup will create a connection to teh RPI and will push new software and confiig to the RPI. 
+In this device  you can setup the details on how the RPI reacts, reboots, setup a web server etc </Label>
 			</Field>
 
  
 			<Field id="RPINumber" type="menu"    enabledBindingId="enablePiNumberMenu"  defaultValue=""> 
-				<Label>... RPi #:(only use undefined RPIs)</Label>
+				<Label>... RPi #:</Label>
 				<List>
 					<Option value="0" >0</Option>
 					<Option value="1" >1</Option>
@@ -104,20 +106,17 @@ Change here or in initial setup:</Label>
 				<Label>
 == iBeacon related:...</Label>
 			</Field>
-			<Field id="expirationTime"               type="menu"     defaultValue="90"> 
+			<Field id="expirationTime"               type="menu"     defaultValue="120"> 
 				<Label>.... Transition from UP to Down to Expired after seconds:</Label>
 				<List>
-					<Option value="10" >10</Option>
-					<Option value="20" >20</Option>
-					<Option value="30" >30</Option>
-					<Option value="45" >45</Option>
+					<Option value="10" >10 (only for testing)</Option>
 					<Option value="60" >60</Option>
 					<Option value="65" >65</Option>
 					<Option value="70" >70</Option>
 					<Option value="80" >80</Option>
-					<Option value="90" >90 (default)</Option>
+					<Option value="90" >90 </Option>
 					<Option value="95" >95</Option>
-					<Option value="120" >2 minutes</Option>
+					<Option value="120" >2 minutes(default) </Option>
 					<Option value="180" >3 minutes</Option>
 					<Option value="240" >4 minutes</Option>
 					<Option value="360" >5 minutes</Option>
@@ -1537,17 +1536,6 @@ Change here or in initial setup:</Label>
 			<Label>start up x-windows with master:</Label>
 			</Field>
 
-			<Field id="BLEHCILabel" type="label"  fontColor="green" > 
-				<Label>== Use which BLE adaptor for BLE SENSOR (if used):</Label>
-			</Field>
-			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
-				<Label> .... BLE sensor:</Label>
-				<List>
-					<Option value="-1"    >let the RPi decide</Option>
-					<Option value="UART"  >use UART = internal</Option>
-					<Option value="USB"   >use USB = external if WiFi on board is used</Option>
-				</List>
-			</Field>
 
 			<Field id="label2"               type="label"  fontColor="green" > 
 				<Label>== For attached sensors - if not set in sensor device edit:...</Label>
@@ -2271,7 +2259,10 @@ Change here or in initial setup:</Label>
 				<Label>... send msg to indigo if xx Seconds no signal</Label>
 				<List>
 					<Option value="0"   >do not enable </Option>
+					<Option value="5"   >5  for testing</Option>
+					<Option value="7"   >7  for testing</Option>
 					<Option value="10"  >10 for testing</Option>
+					<Option value="12"  >12 </Option>
 					<Option value="15"  >15 </Option>
 					<Option value="20"  >20 </Option>
 					<Option value="25"  >25</Option>
@@ -2281,7 +2272,9 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
  			<Field id="fastDownLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>use this to be able to react fast to leaving beacons, used eg in CAR device</Label>
+				<Label>use this to be able to react fast to leaving beacons, used eg in CAR device
+when When no signal is received on the RPI for xx seconds, it sends a "down" message to the plugin. When all RPI that had an "up" signal have send a "down" the beacon will go to down status
+If set too short an RPI might miss one or 2 messages (timing or signal weak)  and will send a down signal, give it enough time to make sure the beacon is really gone</Label>
 			</Field>
            
 			<Field id="label22"               type="label"  fontColor="green" > 
@@ -2289,7 +2282,7 @@ Change here or in initial setup:</Label>
 			</Field>
 			<Field id="signalDelta"   type="menu" defaultValue="999" tooltip="rPI will send a message to indigo if the signal strength changes by more than xx dBm, 
 use eg to track someone moving around - going from one room to the next" >
-				<Label>....      If signal CHANGE greater than:</Label> 
+				<Label>....      If signal strength (rssi) CHANGE greater than:</Label> 
 				<List>
 					<Option value="4"  >4 dBm  triggers almost every time, in the noise level</Option>
 					<Option value="6"  >6 dBm  likely to sensitive</Option>
@@ -2343,7 +2336,7 @@ use eg to track someone moving around - going from one room to the next" >
 					<Option value="-85" >-85 dBm</Option>
 					<Option value="-90" >-90 dBm  (~30 m)</Option>
 					<Option value="-95" >-95 dBm</Option>
-					<Option value="-999" >only if no signal = switch off</Option>
+					<Option value="-999" >only if no signal received</Option>
 				</List>
 			</Field>
  			<Field id="SignalONoffLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -2371,32 +2364,32 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>== Type of beacon, make sure you dont overwrite w the wrong type:</Label>
 			</Field>
 			<Field id="typeOfBeacon" type="menu"     defaultValue="other" readonly="Yes"> 
-                <List class="self" filter="" method="filterBeaconTagswOther" dynamicReload="false" />
+                <List class="self" filter="" method="filterBeaconTypes" dynamicReload="false" />
 				<Label>....       Beacon Type</Label>
 			</Field>
 			<Field id="useOnlyPrioTagMessageTypes" type="menu"     defaultValue="0" readonly="Yes"> 
-				<Label>....       use only beacon specific message types</Label>
+				<Label>....       use which beacon message types:</Label>
 				<List>
-					<Option value="0" >no, use all messages, eg general broadcasts (might have differnt TX) </Option>
-					<Option value="1" >yes, use only messages that are device specific  </Option>
+					<Option value="0" >ALL message types</Option>
+					<Option value="1" >ONLY "TAG" message types</Option>
 				</List>
 				</Field>
  			<Field id="useOnlyPrioTagMessageTypesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>Some beacons send different message types at different TX power levels. That will cerate a problem when calculating distance.
-Setting to only accept ONE device specific message Type will avoid that.</Label>
+Setting to only accept the ONE device specific message type from knowBeaconTag file will avoid that.</Label>
 			</Field>
 
 			<Field id="label5"               type="label"   fontColor="green" > 
-				<Label>== How often should we update the signal and distance states:</Label>
+				<Label>== How often should we update the signal and distance states in the plugin:</Label>
 			</Field>
-			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="300"> 
+			<Field id="updateSignalValuesSeconds" type="menu"     defaultValue="120"> 
 				<Label>....      min Interval:</Label>
 				<List>
 					<Option value="0"   >as soon as we receive a new message, use this for fast down and CAR models</Option>
 					<Option value="30"  >after  30 secs</Option>
 					<Option value="60"  >after  1 minute</Option>
-					<Option value="120" >after  2 minutes</Option>
-					<Option value="300" >after  5 minutes (default)</Option>
+					<Option value="120" >after  2 minutes (default)</Option>
+					<Option value="300" >after  5 minutes</Option>
 					<Option value="600" >after 10 minutes</Option>
 					<Option value="1200">after 20 minutes</Option>
 				</List>
@@ -2425,7 +2418,7 @@ Put THAT value into this field</Label>
 			<Field id="label49" type="label" fontSize="small" alignText="right" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
 				<Label>To be able to use gatttool on rpi requires SSD 7/2018 or GT 
 FOR GATT COMMAND type iBeacons (check knownBeaconTags.json file):
-  The properties should be set automatically, this option allows to overwrite the default for type of beacon
+  The properties should be set automatically, this option allows to overwrite the default for this beacon
   The plugin will READ each beacon every 8 hours: if last successful read &gt;17H, or lastBat. level &lt; 20%  
   It will REPORT (warning log) once a day on beacons, if their last update &gt; 2 days or battery level &lt; 20%  
   The cmds are send to the RPI that is closest to the beacon to be read.
@@ -2445,11 +2438,11 @@ There are also beacons that send Battery info as part of std msg</Label>
 
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
-					<Option value="gatttool" >use gatttool IF configured in knownBeaconTags file</Option>
-					<Option value="msg"    	 >yes, in std msg, not through GATT commands (ie ruuviutag)</Option>
-					<Option value="off"    	 >off</Option>
+					<Option value="gatttool" >YES, use gatttool IF configured in knownBeaconTags file</Option>
+					<Option value="msg"    	 >YES, use std msg, not through GATT commands (ie ruuviutag)</Option>
+					<Option value="off"    	 >OFF</Option>
 				</List>
-				<Label>.... battery level on/off/type:</Label>
+				<Label>.... get battery level:</Label>
 			</Field>
 
 			<Field id="batteryLevelCheckhours" type="menu"     defaultValue="4/12/20"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
@@ -2474,12 +2467,12 @@ There are also beacons that send Battery info as part of std msg</Label>
 			</Field>
 -->
 			<Field id="labelbeep"               type="label"   fontColor="green" > 
-				<Label>== enable / disbale BEEP function</Label>
+				<Label>== Enable / disable BEEP function</Label>
 			</Field>
 			<Field id="beaconBeepUUID" type="menu"     defaultValue="off"  >
 				<List>
 					<Option value="gatttool" >enable beep</Option>
-					<Option value="off"    	  >not set up</Option>
+					<Option value="off"    	 >not set up</Option>
 				</List>
 				<Label>Must be pre-configured in knownBeaconTags file:</Label>
 			</Field>
@@ -2535,6 +2528,7 @@ There are also beacons that send Battery info as part of std msg</Label>
 #000000 =black</Label>
 			</Field>
 
+
 			<Field id="sep-03" type="separator"/>
 			<Field id="labelBC"               type="label"   fontColor="green" > 
 				<Label>== Broadcast signals to other plugins</Label>
@@ -2570,35 +2564,20 @@ this requires other plugins to subscribe to this service</Label>
 				</List>
 			</Field>
 			<Field id="IgnoreBeaconForClosestToRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>if you want to only use certain beacons to trigger on closest beacon to RPI set the others to off</Label>
+				<Label>if you want to only use certain beacons to trigger on closest beacon to RPI set the others to off.
+Or if you want to exclude a specific beacon that is stationary and want to see whcih move around beacon is closest</Label>
 			</Field>
-
-			<Field id="IgnoreBeaconIfSignalLessThan" type="menu"     defaultValue="-999"> 
-				<Label>.... ignore if signal less than:</Label>
-				<List>
-					<Option value="-60" >-60 dBm  (1 m)</Option>
-					<Option value="-65" >-65 dBm </Option>
-					<Option value="-70" >-70 dBm (3.5 m)</Option>
-					<Option value="-75" >-75 dBm</Option>
-					<Option value="-80" >-80 dBm (10 m)</Option>
-					<Option value="-85" >-85 dBm</Option>
-					<Option value="-90" >-90 dBm (30 m)</Option>
-					<Option value="-95" >-95 dBm</Option>
-					<Option value="-999">do not ignore</Option>
-				</List>
-			</Field>
-			<Field id="IgnoreBeaconIfSignalLessThanLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>This is similar to the parameter for the RPI, but is used in the plugin AFTER the data is received from the RPI</Label>
-			</Field>
-
 
 			<Field id="ignore" type="menu"     defaultValue="0" tooltip=" if you want to set this specific device to active or just ignored or junk"> 
 				<Label>... Fully Ignore state of this beacon:</Label>
 				<List>
-					<Option value="0" >keep or make active = normal</Option>
-					<Option value="1" >set to short term ignore</Option>
-					<Option value="2" >set to long term ignore (= delete = junk)</Option>
+					<Option value="0" >NORMAL, keep or make active</Option>
+					<Option value="1" >short term ignore, will be kept, but not active</Option>
+					<Option value="2" >long term ignore</Option>
 				</List>
+			</Field>
+			<Field id="ignoreLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>If you want to set this specific device to active or just temporarily ignored or permanentely delete (or use delete indigo device for that), but device hsitory will be kept and will not be re-discovered when you do accept new beacons</Label>
 			</Field>
 			<Field id="newMACNumber" type="textfield"     defaultValue=""> 
 				<Label>... overwrite the current BLE-MAC number with:</Label>
@@ -3909,27 +3888,6 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
-			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
-			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
-			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
-			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
-			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
-			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
-			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
-			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
-			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
-			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
-			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
-			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
-			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
-			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
-			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
-			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
-			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
-			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
-			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
-			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
-			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
 
 			<Field id="type" type="menu"     defaultValue="RuuviTag" hidden ="true">> 
 			<List>
@@ -4336,27 +4294,7 @@ save
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
-			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
-			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
-			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
-			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
-			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
-			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
-			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
-			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
-			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
-			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
-			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
-			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
-			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
-			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
-			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
-			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
-			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
-			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
-			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
-			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
-			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
+
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden ="no"> <Label>Property to display in the State Column:</Label>
 			<List>
 				<Option value="Temperature"  >Temperature</Option>
@@ -4576,27 +4514,7 @@ save
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
-			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
-			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
-			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
-			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
-			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
-			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
-			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
-			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
-			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
-			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
-			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
-			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
-			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
-			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
-			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
-			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
-			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
-			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
-			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
-			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
-			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
+
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden ="no"> <Label>Property to display in the State Column:</Label>
 			<List>
 				<Option value="Temperature"  		 >Temperature</Option>
@@ -4859,27 +4777,6 @@ find MAC number either on back of beacon or use the plugin tool detect new beaco
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
-			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
-			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
-			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
-			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
-			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
-			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
-			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
-			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
-			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
-			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
-			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
-			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
-			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
-			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
-			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
-			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
-			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
-			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
-			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
-			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
-			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
 
 			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden ="no"> <Label>Property to display in the State Column:</Label>
 			<List>
@@ -5108,27 +5005,6 @@ find MAC number either on back of beacon or use the plugin tool detect new beaco
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
-			<Field id="rPiEnable20" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
-			<Field id="rPiEnable21" type="checkbox" defaultValue="false">  <Label>rPi #21:</Label> </Field>
-			<Field id="rPiEnable22" type="checkbox" defaultValue="false">  <Label>rPi #22:</Label> </Field>
-			<Field id="rPiEnable23" type="checkbox" defaultValue="false">  <Label>rPi #23:</Label> </Field>
-			<Field id="rPiEnable24" type="checkbox" defaultValue="false">  <Label>rPi #24:</Label> </Field>
-			<Field id="rPiEnable25" type="checkbox" defaultValue="false">  <Label>rPi #25:</Label> </Field>
-			<Field id="rPiEnable26" type="checkbox" defaultValue="false">  <Label>rPi #26:</Label> </Field>
-			<Field id="rPiEnable27" type="checkbox" defaultValue="false">  <Label>rPi #27:</Label> </Field>
-			<Field id="rPiEnable28" type="checkbox" defaultValue="false">  <Label>rPi #28:</Label> </Field>
-			<Field id="rPiEnable29" type="checkbox" defaultValue="false">  <Label>rPi #29:</Label> </Field>
-			<Field id="rPiEnable30" type="checkbox" defaultValue="false">  <Label>rPi #30:</Label> </Field>
-			<Field id="rPiEnable31" type="checkbox" defaultValue="false">  <Label>rPi #31:</Label> </Field>
-			<Field id="rPiEnable32" type="checkbox" defaultValue="false">  <Label>rPi #32:</Label> </Field>
-			<Field id="rPiEnable33" type="checkbox" defaultValue="false">  <Label>rPi #33:</Label> </Field>
-			<Field id="rPiEnable34" type="checkbox" defaultValue="false">  <Label>rPi #34:</Label> </Field>
-			<Field id="rPiEnable35" type="checkbox" defaultValue="false">  <Label>rPi #35:</Label> </Field>
-			<Field id="rPiEnable36" type="checkbox" defaultValue="false">  <Label>rPi #36:</Label> </Field>
-			<Field id="rPiEnable37" type="checkbox" defaultValue="false">  <Label>rPi #37:</Label> </Field>
-			<Field id="rPiEnable38" type="checkbox" defaultValue="false">  <Label>rPi #38:</Label> </Field>
-			<Field id="rPiEnable39" type="checkbox" defaultValue="false">  <Label>rPi #39:</Label> </Field>
-			<Field id="rPiEnable40" type="checkbox" defaultValue="false">  <Label>rPi #40:</Label> </Field>
 
 			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden ="no"> <Label>Property to display in the State Column:</Label>
 			<List>

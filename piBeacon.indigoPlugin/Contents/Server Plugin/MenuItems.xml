@@ -424,18 +424,13 @@ After you have added new beacon, switch off "accept any new beacon" and  "beacon
         </ConfigUI>
     </MenuItem>
     <MenuItem id="ignoreBeaconsHistory">
-        <Name>Delete iBeacon history files</Name>
+        <Name>Delete iBeacon history files - (ignored beacons)</Name>
         <ConfigUI>
             <Field id="labelDeleteFAMILY" type="label">
-                <Label>If you run into too large tracking files, use this to remove old tracking info of beacons not active</Label>
+                <Label>If you run into too large tracking files, use this to remove old tracking info of beacons not active. 
+The history files also contain the beacons that were deleted. They are marked as ignored and will NOT be rediscovered when you accept new beacons. Use this option to be able to re-discover / add them</Label>
             </Field>
-            <!--
-            <Field   id="buttonDeleteALL" type="button"	tooltip="This will empty the internal history list">
-                <Label>Delete tracking History of</Label><Title>ALL beacons</Title>
-                <CallbackMethod>buttonConfirmMACDeleteALLCALLBACK</CallbackMethod>
-            </Field>
--->
-            <Field id="buttonDeleteJunk2" type="button" tooltip="This will empty the internal history list of beacons that have no corresponding devices">
+            <Field id="buttonDeleteJunk2" type="button" >
                 <Label>Delete beacon history of deleted devices</Label>
                 <Title>delete</Title>
                 <CallbackMethod>buttonConfirmMACDeleteOLDHISTORYCALLBACK</CallbackMethod>

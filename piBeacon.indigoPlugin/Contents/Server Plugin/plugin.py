@@ -51,8 +51,8 @@ _debugAreas = ["Logic","DevMgmt","BeaconData","SensorData","OutputDevice","Updat
 
 _GlobalConst_emptyBeacon = {
 	u"indigoId": 0, u"ignore": 0, u"status": u"up", u"lastUp": 0, u"note": u"beacon", u"expirationTime": 90,
-	u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, u"signalDelta": 999, u"minSignalCutoff": -999,
-	u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other","useOnlyPrioTagMessageTypes":"0", u"beaconTxPower": +999, u"fastDown": u"0",
+	u"created": 0, u"updateFING": 0, u"updateWindow": 0, u"updateSignalValuesSeconds": 0, 
+	u"PosX": 0., u"PosY": 0., u"PosZ": 0., u"typeOfBeacon": u"other","useOnlyPrioTagMessageTypes":"0", u"beaconTxPower": +999,
 	u"lastBusy":20000,
 	u"enabled": True,
 	u"showBeaconOnMap": 		u"0","showBeaconNickName": u"",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
@@ -63,11 +63,11 @@ _GlobalConst_emptyBeaconProps = {
 	u"expirationTime":				90,
 	u"created":						0,
 	u"updateSignalValuesSeconds":	0,
-	u"signalDelta":					999,
-	u"fastDown":				    0,
-	u"minSignalOn":				    -999,
-	u"minSignalOff":				999,
-	u"typeOfBeacon":				u"unknown",
+	u"signalDelta":					"999",
+	u"fastDown":				    "0",
+	u"minSignalOn":				    "-999",
+	u"minSignalOff":				"-999",
+	u"typeOfBeacon":				u"other",
 	u"beaconTxPower":				999,
 	u"memberOfFamily":				False,
 	u"memberOfGuests":				False,
@@ -82,8 +82,11 @@ _GlobalConst_emptyBeaconProps = {
 	u"enableBroadCastEvents":		"0",
 	u"batteryLevelCheckhours":		"4/12/20",
 	u"beaconBeepUUID":				"off",
-	u"showBeaconOnMap": 			u"0",u"showBeaconNickName": u"",u"showBeaconSymbolType": u",",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b",
-	u"fastDown": 					u"0"}
+	u"SupportsBatteryLevel":		False,
+	u"version":					 	u"",	
+	u"batteryLevelUUID":			u"off",
+	u"showBeaconOnMap": 			u"0",u"showBeaconNickName": u"",u"showBeaconSymbolType": u",",u"showBeaconSymbolAlpha": u"0.5",u"showBeaconSymboluseErrorSize": u"1",u"showBeaconSymbolColor": u"b"
+	}
 
 _GlobalConst_emptyrPiProps	  ={
 	u"typeOfBeacon":		u"rPI",
@@ -99,12 +102,10 @@ _GlobalConst_emptyrPiProps	  ={
 	u"PosXYZ":						u"0.,0.,0.",
 	u"BLEserial":					u"sequential",
 	u"shutDownPinInput" :			u"-1",
-	u"signalDelta" :				u"999",
-	u"minSignalCutoff" :			u"-999",
 	u"expirationTime" :				u"90",
-	u"fastDown" :					u"0",
 	u"enableBroadCastEvents":		"0",
 	u"rssiOffset" :					0,
+	u"isRPIDevice" :				True,
 	u"useOnlyPrioTagMessageTypes":  "0",
 	u"typeOfBeacon":  				"rPI",
 	u"shutDownPinOutput" :			u"-1" }
@@ -729,16 +730,6 @@ class Plugin(indigo.PluginBase):
 						props[u"isRPISensorDevice"] = True
 						upd = True
 
-					if dev.deviceTypeId =="beacon":
-						props[u"isBeaconDevice"] = True
-						upd = True
-						if "fastDown" in props:
-							try: 
-								p =  int(props["fastDown"])
-								if p !=0 and p <25:
-									props[u"fastDown"] = "30"
-									self.beacon[dev.address]["fastDown"] = 30
-							except: pass
 
 					if dev.deviceTypeId =="car":
 						props[u"isCARDevice"] = True
@@ -1431,7 +1422,6 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def triggerEvent(self, eventId):
 		if	time.time() < self.currentlyBooting: # no triggering in the first 100+ secs after boot 
-			#self.indiLOG.log(10, u"triggerEvent: %s suppressed due to reboot" % eventId)
 			return
 		for trigId in self.triggerList:
 			trigger = indigo.triggers[trigId]
@@ -2470,7 +2460,7 @@ class Plugin(indigo.PluginBase):
 						if typeId not in self.RPI[piU]["input"]:
 							self.RPI[piU]["input"][typeId] = {}
 						if str(dev.id) not in self.RPI[piU]["input"][typeId]:
-							self.indiLOG.log(30,"adding back input sensor {} to RPI:{}".format(dev.name.encode("utf8"), piU))
+							self.indiLOG.log(30,"adding back input sensor {:20s}  type:{:30s} to RPI:{:1s}".format(dev.name.encode("utf8"), dev.deviceTypeId, piU))
 							self.RPI[piU]["input"][typeId][str(dev.id)] = {}
 
 
@@ -3019,8 +3009,6 @@ class Plugin(indigo.PluginBase):
 									try:
 										self.beacons[beacon][u"status"]					 = dev.states[u"status"]
 										self.beacons[beacon][u"note"]					 = dev.states[u"note"]
-										self.beacons[beacon][u"signalDelta"]			 = props[u"signalDelta"]
-										self.beacons[beacon][u"minSignalCutoff"]		 = props[u"minSignalCutoff"]
 										self.beacons[beacon][u"typeOfBeacon"]			 = props[u"typeOfBeacon"]
 										self.beacons[beacon][u"beaconTxPower"]			 = props[u"beaconTxPower"]
 										self.beacons[beacon][u"created"]				 = dev.states[u"created"]
@@ -3030,10 +3018,9 @@ class Plugin(indigo.PluginBase):
 
 									dev.updateStateOnServer(u"TxPowerSet",int(props[u"beaconTxPower"]))
 									if u"fastDown" in props: # not for RPI
-										self.beacons[beacon][u"fastDown"]			 = props[u"fastDown"]
+										pass
 									else:
 										self.indiLOG.log(20, dev.name.encode("utf8")+" has no fastDown")
-										self.beacons[beacon][u"fastDown"]			 = "0"
 
 									if u"updateSignalValuesSeconds" in props: # not for RPIindigoIdindigoIdindigoIdindigoIdindigoId
 										self.beacons[beacon][u"updateSignalValuesSeconds"] = float(props[u"updateSignalValuesSeconds"])
@@ -3287,7 +3274,7 @@ class Plugin(indigo.PluginBase):
 
 			if u"typeOfBeacon" not in props:
 				if dev.deviceTypeId ==u"beacon":
-					props[u"typeOfBeacon"] = "other"
+					props[u"typeOfBeacon"] = _GlobalConst_emptyBeacon[u"typeOfBeacon"]
 					updateProps = True
 				if dev.deviceTypeId == "rPI" :
 					props[u"typeOfBeacon"] = "rPI"
@@ -3302,19 +3289,19 @@ class Plugin(indigo.PluginBase):
 				if (dev.deviceTypeId.lower()) == "rpi" :
 					props[u"updateSignalValuesSeconds"] = 300
 				else:
-					props[u"updateSignalValuesSeconds"] = 0
+					props[u"updateSignalValuesSeconds"] = _GlobalConst_emptyBeaconProps["updateSignalValuesSeconds"]
 			if u"signalDelta" not in props:
 				updateProps = True
-				props[u"signalDelta"] = 999
+				props[u"signalDelta"] = _GlobalConst_emptyBeaconProps["signalDelta"]
 			if u"minSignalOff" not in props:
 				updateProps = True
-				props[u"minSignalOff"] = -999
+				props[u"minSignalOff"] = _GlobalConst_emptyBeaconProps["minSignalOff"]
 			if u"minSignalOn" not in props:
 				updateProps = True
-				props[u"minSignalOn"] = -999
+				props[u"minSignalOn"] = _GlobalConst_emptyBeaconProps["minSignalOn"]
 			if u"fastDown" not in props:
 				updateProps = True
-				props[u"fastDown"] = "0"
+				props[u"fastDown"] = _GlobalConst_emptyBeaconProps["fastDown"]
 
 			try:
 				created = dev.states[u"created"]
@@ -3357,11 +3344,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.beacons[beacon][u"useOnlyPrioTagMessageTypes"]	= "1"
 			self.beacons[beacon][u"beaconTxPower"]	  = int(props[u"beaconTxPower"])
-			self.beacons[beacon][u"signalDelta"]	  = int(props[u"signalDelta"])
-			self.beacons[beacon][u"minSignalOff"]  	  = int(props[u"minSignalOff"])
-			self.beacons[beacon][u"minSignalOn"]  	  = int(props[u"minSignalOn"])
 			self.beacons[beacon][u"expirationTime"]	  = float(props[u"expirationTime"])
-			self.beacons[beacon][u"fastDown"]		  = float(props[u"fastDown"])
 			self.beacons[beacon][u"updateSignalValuesSeconds"] = float(props[u"updateSignalValuesSeconds"])
 
 		except Exception, e:
@@ -3842,7 +3825,7 @@ class Plugin(indigo.PluginBase):
 			active=""
 			for piU in _rpiBeaconList:
 				pi = int(piU)
-				if valuesDict[u"rPiEnable"+piU] and self.RPI[piU]["pidev.id"] >0:
+				if valuesDict[u"rPiEnable"+piU] and self.RPI[piU]["piDevId"] >0:
 					if typeId not in self.RPI[piU][u"input"]:
 						self.RPI[piU][u"input"][typeId]={}
 					if unicode(dev.id) not in self.RPI[piU][u"input"][typeId]:
@@ -4070,14 +4053,6 @@ class Plugin(indigo.PluginBase):
 
 				self.beacons[beacon][u"showBeaconOnMap"]		 = valuesDict[u"showBeaconOnMap"]
 				self.beacons[beacon][u"typeOfBeacon"]			 = valuesDict[u"typeOfBeacon"]
-				try:	self.beacons[beacon][u"signalDelta"]			 = int(valuesDict[u"signalDelta"])
-				except:	self.beacons[beacon][u"signalDelta"]			 = 999
-				try:	self.beacons[beacon][u"fastDown"]		 	 	 = int(valuesDict[u"fastDown"])
-				except:	self.beacons[beacon][u"fastDown"]				 = -999
-				try:	self.beacons[beacon][u"minSignalOn"]		 	 = int(valuesDict[u"minSignalOn"])
-				except:	self.beacons[beacon][u"minSignalOn"]		 	 = -999
-				try:	self.beacons[beacon][u"minSignalOff"]		 	 = int(valuesDict[u"minSignalOff"])
-				except:	self.beacons[beacon][u"minSignalOff"]		 	 = -999
 				memberList =""
 				for group in _GlobalConst_groupList:
 					if unicode(valuesDict[u"memberOf"+group]).lower() == "true":
@@ -4907,8 +4882,6 @@ class Plugin(indigo.PluginBase):
 				vv = v.split(".exp")[0]
 				if vv in self.RPI[piU][item]:
 					self.RPI[piU][item].remove(vv)
-
-
 		return
 
 
@@ -4918,25 +4891,17 @@ class Plugin(indigo.PluginBase):
 		for dd in self.knownBeaconTags:
 			if self.knownBeaconTags[dd]["pos"] >= 0:
 				xList.append((dd,self.knownBeaconTags[dd]["text"]))
-		xList = sorted(xList)
+		xList = sorted(xList, key=lambda tup: tup[1])
 		xList.append(("all","USE ALL KNOWN"))
 		xList.append(("off","none = OFF"))
 		return xList
-
-####-------------------------------------------------------------------------####
-	def filterBeaconTagswOther(self, filter="", valuesDict=None, typeId="", devId=""):
-		xList=[]
-		for dd in self.knownBeaconTags:
-				xList.append((dd,self.knownBeaconTags[dd]["text"]))
-		xList = sorted(xList)
-		return xList
-
 
 ####-------------------------------------------------------------------------####
 	def filterBeaconTypes(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList=[]
 		for dd in self.knownBeaconTags:
 			xList.append((dd,self.knownBeaconTags[dd]["text"]+" txPower: "+self.knownBeaconTags[dd]["dBm"]+"dBm"))
+		xList = sorted(xList, key=lambda tup: tup[1])
 		return xList
 
 
@@ -6389,18 +6354,7 @@ class Plugin(indigo.PluginBase):
 				pluginId		= self.pluginId,
 				deviceTypeId	= "beacon",
 				folder			= self.piFolderId,
-				props		   = {
-					   u"typeOfBeacon":				 _GlobalConst_emptyBeaconProps[u"typeOfBeacon"],
-					   u"updateSignalValuesSeconds": _GlobalConst_emptyBeaconProps[u"updateSignalValuesSeconds"],
-					   u"expirationTime":			 _GlobalConst_emptyBeaconProps[u"expirationTime"],
-					   u"fastDown":					 _GlobalConst_emptyBeaconProps[u"fastDown"],
-					   u"signalDelta":				 _GlobalConst_emptyBeaconProps[u"signalDelta"],
-					   u"minSignalCutoff":			 _GlobalConst_emptyBeaconProps[u"minSignalCutoff"],
-					   u"beaconTxPower":			 _GlobalConst_emptyBeaconProps[u"beaconTxPower"],
-					   u"isBeaconDevice" :			 True,
-					   u"SupportsBatteryLevel":		 False,
-					   u"batteryLevelUUID":			 u"off",
-					   u"version":					 u""}
+				props		    = copy.deepcopy(_GlobalConst_emptyBeaconProps_)
 				)
 			self.beacons[mac][u"indigoId"] = dev.id
 
@@ -6576,7 +6530,7 @@ class Plugin(indigo.PluginBase):
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
 			try:
 				props = dev.pluginProps
-				props["minSignalOn"] = "-999"
+				props["minSignalOn"] = _GlobalConst_emptyBeaconProps["minSignalOn"]
 				dev.replacePluginPropsOnServer(props)
 			except:
 				pass
@@ -8954,7 +8908,7 @@ class Plugin(indigo.PluginBase):
 					elif cmd == "analogWrite":
 						out = cmd + "," + unicode(analogValue)
 					outN = int(output)
-					if "OUTPUT_%0.2d"%outN in dev.states: self.addToStatesUpdateDict(dev.id,"OUTPUT_%0.2d"%outN, out)
+					if "OUTPUT_{:02d}".format(outN) in dev.states: self.addToStatesUpdateDict(dev.id,"OUTPUT_{:02d}".format(outN), out)
 					if "OUTPUT" in dev.states and ( "writeOutputToState" not in props or ("writeOutputToState" in props and props["writeOutputToState"] == "1") ): self.addToStatesUpdateDict(dev.id,"OUTPUT", out)
 				except Exception, e:
 					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -9352,26 +9306,7 @@ class Plugin(indigo.PluginBase):
 										pluginId		= self.pluginId,
 										deviceTypeId	= "rPI",
 										folder			= self.piFolderId,
-										props		= {
-											u"typeOfBeacon":			  _GlobalConst_emptyrPiProps[u"typeOfBeacon"],
-											u"updateSignalValuesSeconds": _GlobalConst_emptyrPiProps[u"updateSignalValuesSeconds"],
-											u"beaconTxPower":			  _GlobalConst_emptyrPiProps[u"beaconTxPower"],
-											u"SupportsBatteryLevel":	  _GlobalConst_emptyrPiProps[u"SupportsBatteryLevel"],
-											u"sendToIndigoSecs":		  _GlobalConst_emptyrPiProps[u"sendToIndigoSecs"],
-											u"shutDownPinInput":		  _GlobalConst_emptyrPiProps[u"shutDownPinInput"],
-											u"shutDownPinOutput" :		  _GlobalConst_emptyrPiProps[u"shutDownPinOutput"],
-											u"PosXYZ":					  _GlobalConst_emptyrPiProps[u"PosXYZ"],
-											u"signalDelta" :			  _GlobalConst_emptyrPiProps[u"signalDelta"],
-											u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
-											u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
-											u"fastDown" :				  _GlobalConst_emptyrPiProps[u"fastDown"],
-											u"BLEserial":				  _GlobalConst_emptyrPiProps[u"BLEserial"],
-											u"isRPIDevice":				  True,
-											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
-											u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
-											u"AllowSensorValueChange":    _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
-											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
-											}
+										props			= copy.deepcopy(_GlobalConst_emptyrPiProps)
 										)
 
 									try:
@@ -9407,22 +9342,7 @@ class Plugin(indigo.PluginBase):
 										pluginId		= self.pluginId,
 										deviceTypeId	= "rPI",
 										folder			= self.piFolderId,
-										props		= {
-											u"updateSignalValuesSeconds": _GlobalConst_emptyrPiProps[u"updateSignalValuesSeconds"],
-											u"beaconTxPower":			  _GlobalConst_emptyrPiProps[u"beaconTxPower"],
-											u"SupportsBatteryLevel":	  _GlobalConst_emptyrPiProps[u"SupportsBatteryLevel"],
-											u"sendToIndigoSecs":		  _GlobalConst_emptyrPiProps[u"sendToIndigoSecs"],
-											u"shutDownPinInput":		  _GlobalConst_emptyrPiProps[u"shutDownPinInput"],
-											u"shutDownPinOutput" :		  _GlobalConst_emptyrPiProps[u"shutDownPinOutput"],
-											u"signalDelta" :			  _GlobalConst_emptyrPiProps[u"signalDelta"],
-											u"minSignalCutoff" :		  _GlobalConst_emptyrPiProps[u"minSignalCutoff"],
-											u"expirationTime" :			  _GlobalConst_emptyrPiProps[u"expirationTime"],
-											u"isRPIDevice":				  True,
-											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
-											u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
-											u"AllowSensorValueChange":    _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
-											u"rssiOffset":				  _GlobalConst_emptyrPiProps[u"rssiOffset"]
-											}
+										props			= copy.deepcopy(_GlobalConst_emptyrPiProps)
 										)
 									self.RPI[piU][u"piMAC"] = "00:00:00:00:pi:{:02d}".format(pi)
 									self.RPI[piU][u"piDevId"] = dev.id
@@ -9467,8 +9387,6 @@ class Plugin(indigo.PluginBase):
 										   u"sendToIndigoSecs": 90,
 										   u"shutDownPinInput" : "-1",
 										   u"shutDownPinOutput" : "-1",
-										   u"signalDelta" : "999",
-										   u"minSignalCutoff" : "-999",
 										   u"expirationTime" : "90",
 										   u"isRPISensorDevice" : True,
 											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
@@ -9500,17 +9418,17 @@ class Plugin(indigo.PluginBase):
 										deviceTypeId	= "rPI-Sensor",
 										folder			= self.piFolderId,
 										props		= {
-											   u"typeOfBeacon": u"rPi-Sensor",
-											   u"sendToIndigoSecs": 90,
-											   u"shutDownPinInput" : "-1",
-											   u"signalDelta" : "999",
-											   u"expirationTime" : "90",
-											   u"fastDown" : "0",
-											   u"isRPISensorDevice" : True,
-											   u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
-											   u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
-											   u"AllowSensorValueChange":     _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
-											   u"ipNumberPi":ipn}
+										   u"typeOfBeacon": u"rPi-Sensor",
+										   u"sendToIndigoSecs": 90,
+										   u"shutDownPinInput" : "-1",
+										   u"shutDownPinOutput" : "-1",
+										   u"expirationTime" : "90",
+										   u"isRPISensorDevice" : True,
+											u"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps[u"SupportsStatusRequest"],
+											u"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps[u"AllowOnStateChange"],
+											u"AllowSensorValueChange":    _GlobalConst_emptyrPiProps[u"AllowSensorValueChange"],
+										   u"fastDown" : "0",
+										   u"ipNumberPi":ipn}
 										)
 									self.addToStatesUpdateDict(dev.id,"created",dateString)
 									self.addToStatesUpdateDict(dev.id,u"note", u"Pi-" + piU)
@@ -10610,7 +10528,7 @@ class Plugin(indigo.PluginBase):
 				dt = time.time() - self.getTimetimeFromDateString(lastUp)
 				if dt <= 1 * expirationTime:
 					status = "up"
-				elif dt <= self.expTimeMultiplier:
+				elif dt <= 2 * expirationTime:
 					status = "down"
 
 
@@ -10795,26 +10713,18 @@ class Plugin(indigo.PluginBase):
 				delta = time.time()- self.beacons[beacon][u"lastUp"]  ##  no !! - self.beacons[beacon][u"updateSignalValuesSeconds"]
 
 				if self.beacons[beacon][u"status"] == u"up" :
-					if delta > expT :
+					if delta >  2*expT:
+						self.beacons[beacon][u"status"] = u"expired"
+					elif delta > expT :
 						self.beacons[beacon][u"status"] = u"down"
 						self.beacons[beacon][u"updateFING"] = 1
 						#self.indiLOG.log(20,	u" up to down secs: delta= " + unicode(delta) + " expT: " + unicode(expT) + "  " + beacon)
 						changed = True
-					if delta >  2*expT:
-						self.beacons[beacon][u"status"] = u"expired"
 						changed = True 
 				elif self.beacons[beacon][u"status"] == u"down" :
 					if delta >  2*expT:
 						self.beacons[beacon][u"status"] = u"expired"
 						changed = True
-					if delta < expT and self.beacons[beacon][u"fastDown"] != "0":
-						self.beacons[beacon][u"status"] = "up"
-						#self.indiLOG.log(20,	u" down to up secs: delta= " + unicode(delta) + " expT: " + unicode(expT) + "  " + beacon)
-						self.beacons[beacon][u"updateFING"] = 1
-						changed = True
-				elif self.beacons[beacon][u"status"] == u"expired" and delta <  expT and self.beacons[beacon][u"fastDown"] != u"0":
-					self.beacons[beacon][u"status"] = u"up"
-					changed = True
 				elif self.beacons[beacon][u"status"] == u"":
 					self.beacons[beacon][u"status"] = u"expired"
 					changed = True
@@ -11785,7 +11695,7 @@ class Plugin(indigo.PluginBase):
 									break
 							if not alreadyUnderway:
 								self.actionList.append({u"action":"setTime","value":piU})
-								self.indiLOG.log(20, u"rPi "+piU+u" do a time sync MAC --> RPI, time off by: %5.1f"%(time.time()-ts)+u"[secs]"  )
+								self.indiLOG.log(20, u"rPi {} do a time sync MAC --> RPI, time off by: {5.1f}[secs]".format(piU, time.time()-ts) )
 					except: pass
 
 
@@ -12786,11 +12696,11 @@ class Plugin(indigo.PluginBase):
 
 					if sensor in [u"sgp30",u"ccs811"]:
 						try:
-							x, UI  = int(float(data[u"CO2"])),  u"CO2 %d[ppm] "%(float(data[u"CO2"]))
+							x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm] ".format(float(data[u"CO2"]))
 							newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
 							updateProps0, doUpdate =  self.updateChangedValues(dev, x, props, "CO2", "{:d}%", whichKeysToDisplay, 0)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
-							x, UI  = int(float(data[u"VOC"])),  u"VOC %d[ppb]"%(float(data[u"VOC"]))
+							x, UI  = int(float(data[u"VOC"])),  u"VOC {:.0f}[ppb]".format(float(data[u"VOC"]))
 							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
 							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "VOC", "{:d}%", whichKeysToDisplay, 0)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
@@ -12809,7 +12719,7 @@ class Plugin(indigo.PluginBase):
 							elif data[u"eventType"]	 == "measurement":
 								self.addToStatesUpdateDict(dev.id,"eventType", "measurement") 
 								if data[u"lightning"]  == "lightning detected":
-									x, UI  = int(float(data[u"distance"])),	  "Distance %d[km] "%(float(data[u"distance"]))
+									x, UI  = int(float(data[u"distance"])),	  "Distance {:.0f}[km]".format(float(data[u"distance"]))
 									newStatus = self.setStatusCol( dev, u"distance", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
 									self.addToStatesUpdateDict(dev.id,"energy", float(data[u"energy"])) 
 									newStatus = self.setStatusCol( dev, u"lightning", data[u"lightning"], "lightning "+datetime.datetime.now().strftime("%m-%d %H:%M:%S"), whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus)
@@ -12840,7 +12750,7 @@ class Plugin(indigo.PluginBase):
 
 					if sensor in["mhzCO2"]:
 						try:
-							x, UI  = int(float(data[u"CO2"])),  u"CO2 %d[ppm] "%(float(data[u"CO2"]))
+							x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm]".format(float(data[u"CO2"]))
 							newStatus   = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
 							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, "CO2", "{:d}%", whichKeysToDisplay, 0)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
@@ -12927,13 +12837,13 @@ class Plugin(indigo.PluginBase):
 
 					if u"Vertical" in data:
 						try:
-							x, UI  = float(data[u"Vertical"]),  "%7.3f"%(float(data[u"Vertical"]))
+							x, UI  = float(data[u"Vertical"]),  "{:7.3f}".format(float(data[u"Vertical"]))
 							newStatus = self.setStatusCol( dev, u"VerticalMovement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 3)
 						except: pass
 
 					if u"Horizontal" in data:
 						try:
-							x, UI  = float(data[u"Horizontal"]),   "%7.3f"%(float(data[u"Horizontal"]))
+							x, UI  = float(data[u"Horizontal"]),   "{:7.3f}".format(float(data[u"Horizontal"]))
 							newStatus = self.setStatusCol( dev, u"HorizontalMovement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 3)
 						except: pass
 
@@ -12957,19 +12867,19 @@ class Plugin(indigo.PluginBase):
 
 					if u"MovementAbs" in data:
 						try:
-							x, UI  = float(data[u"MovementAbs"]), "%5.2f"%(float(data[u"MovementAbs"]))
+							x, UI  = float(data[u"MovementAbs"]), "{:5.2f}".format(float(data[u"MovementAbs"]))
 							newStatus = self.setStatusCol( dev, u"MovementAbs", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 2)
 						except: pass
 
 					if u"Movement" in data:
 						try:
-							x, UI  = float(data[u"Movement"]), "%5.2f"%(float(data[u"Movement"]))
+							x, UI  = float(data[u"Movement"]), "{:5.2f}".format(float(data[u"Movement"]))
 							newStatus = self.setStatusCol( dev, u"Movement", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 2)
 						except: pass
 
 					if u"Uniformity" in data:
 						try:
-							x, UI  = float(data[u"Uniformity"]), "%5.1f"%(float(data[u"Uniformity"]))
+							x, UI  = float(data[u"Uniformity"]), "{:5.1f}".format(float(data[u"Uniformity"]))
 							newStatus = self.setStatusCol( dev, u"Uniformity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
 						except: pass
 
@@ -13454,7 +13364,7 @@ class Plugin(indigo.PluginBase):
 				if cc in data:
 					if cc.find("pm") >-1: units = "ug/m3"
 					else:				  units = "C/0.1L"
-					x, UI  = int(float(data[cc])), cc+"=%d["%(int(float(data[cc])))+units+"]"
+					x, UI  = int(float(data[cc])), "{}={:.0f}[{}]".format(cc,float(data[cc]),units)
 
 					self.setStatusCol(dev,cc,x,UI,whichKeysToDisplay,"","",decimalPlaces=0)
 
@@ -13923,11 +13833,11 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(20, "updateTEA5767 sensor: "+sensor+"  "+unicode(channels))
 					freq   = channels[u"freq"]
 					Signal = channels[u"Signal"]
-					ch = "Channel-"+"%02d"%iii
+					ch = "Channel-{02d}".format(iii)
 					self.addToStatesUpdateDict(devId,ch,"f="+unicode(freq)+"; Sig="+unicode(Signal))
 					iii+=1
 				for ii in range(iii,41):
-					ch = "Channel-"+"%02d"%ii
+					ch = "Channel-{02d}".format(ii)
 					self.addToStatesUpdateDict(devId,ch,"")
 			except Exception, e:
 				if unicode(e) != "None":
@@ -13997,7 +13907,7 @@ class Plugin(indigo.PluginBase):
 				INPUT_raw = False
 
 				if nInputs >10:
-						inputState = "INPUT_%0.2d" % (ii+addToInputName)
+						inputState = "INPUT_{:02d}" .format(ii+addToInputName)
 				elif nInputs == 1 and  u"INPUT" in dev.states:
 						inputState = u"INPUT"
 						upState	   = u"INPUT"
@@ -14005,7 +13915,7 @@ class Plugin(indigo.PluginBase):
 						inputState = u"INPUT"
 						if u"INPUT_raw" in dev.states: 
 							INPUT_raw = True
-				else:	inputState = u"INPUT_" + unicode(ii+addToInputName)
+				else:	inputState = u"INPUT_{}".format(ii+addToInputName)
 
 
 				if self.decideMyLog(u"SensorData"): self.indiLOG.log(20,"updateINPUT: {};  sensor: {};  upState: {}; inputState: {};  data: {}".format(dev.name.encode("utf8"), sensor, upState, inputState, data) )
@@ -14370,7 +14280,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id,u"status", out.strip(u","))
 
 				if u"XYZSumSQ" in dev.states and (input ==u"GYR" or input ==u"accelerationZ"):  
-					xys= (u"%7.2f"%math.sqrt(XYZSumSQ)).strip()
+					xys= "{:7.2f}".format(math.sqrt(XYZSumSQ)).strip()
 					self.addToStatesUpdateDict(dev.id,"XYZSumSQ",xys)
 					if upState == "XYZSumSQ":
 						self.addToStatesUpdateDict(dev.id,u"status", xys)
@@ -14436,19 +14346,19 @@ class Plugin(indigo.PluginBase):
 				if units == "cm":
 					ud = " [cm]"
 					dist = distR
-					dist0 = (u"%.1f"%(distR))+ud
+					dist0 = "{:.1f}{}".format(distR, ud)
 				elif units == "m":
 					ud = " [m]"
 					dist = distR*0.01
-					dist0 = (u"%.2f"%(dist))+ud
+					dist0 = "{:}.2f}{}".format(dist, ud)
 				elif units == "inches":
 					ud = ' "'
 					dist = distR*0.3937
-					dist0 = (u"%.1f"%(dist))+ud
+					dist0 = "{:.1f}{}".format(dist, ud)
 				elif units == "feet":
 					ud = " '"
 					dist = distR*0.03280839895
-					dist0 = (u"%.2f"%(dist))+ud
+					dist0 = "{:.2f}{}".format(dist, ud)
 				self.setStatusCol(dev, u"distance", dist, dist0, whichKeysToDisplay, u"","", decimalPlaces = 2)
 
 				self.addToStatesUpdateDict(dev.id,"measuredNumber", raw)
@@ -14875,8 +14785,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def convHum(self, hum):
 		try:
-			humU = (u"%3d" %float(hum)).strip()
-			return int(float(hum)), humU + u"%",0
+			return int(float(hum)), u"{:0f}%".format(float(hum)) ,0
 		except:
 			return -99, u"",0
 
@@ -14886,12 +14795,12 @@ class Plugin(indigo.PluginBase):
 		try:
 			bad = False
 			try:
-					GasResistance	 = (u"%.0f" % (float(GasIN["GasResistance"])/1000.)).strip()+ u"KOhm"
+					GasResistance	 = u"{:.0f}KOhm" .format(float(GasIN["GasResistance"])/1000.)
 					GasResistanceInt = int(float(GasIN[u"GasResistance"]))
 			except: 
 					bad = True
 			try:
-					AirQuality	  = (u"%.0f "% (float(GasIN["AirQuality"]))).strip()+u"%"
+					AirQuality	  = u"{:.0f}%".format(float(GasIN["AirQuality"]))
 					AirQualityInt = int(float(GasIN[u"AirQuality"]) )
 					AirQualityTextItems = props.get("AirQuality0-100ToTextMapping","90=Good/70=Average/55=little bad/40=bad/25=worse/0=very bad").split("/")
 					ok = False
@@ -14951,6 +14860,157 @@ class Plugin(indigo.PluginBase):
 		else:
 			return "status"
 
+###-------------------------------------------------------------------------####
+	def checkForFastDown(self, mac, piMACSend, dev, props, rssi, fromPiU, newStates):
+		try:
+			updateSignal = False
+			updateFINGnow = False
+			if newStates[u"status"] == "up" and rssi == -999. and time.time() > self.currentlyBooting:	## check for fast down signal ==-999
+				if self.decideMyLog(u"CAR") and self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, "testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, dev.states[u"Pi_"+fromPiU.rjust(2,"0")+"_Signal"], dev.states[u"status"]))
+
+				newStates= self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0")  + "_Signal", -999, newStates=newStates)
+				self.beacons[mac][u"receivedSignals"][int(fromPiU)]["lastSignal"] = time.time() - 999
+
+				noneUp = []
+				for pixx in range(_GlobalConst_numberOfiBeaconRPI):
+					if ( time.time() - self.beacons[mac][u"receivedSignals"][pixx][u"lastSignal"] < 60 and  
+						 dev.states[u"Pi_" + str(pixx).rjust(2,"0")  + u"_Signal"] > -999 ):
+						noneUp.append(pixx) #.append([pixx,time.time() - self.beacons[mac][u"receivedSignals"][pixx]["lastSignal"] ])
+
+				if self.selectBeaconsLogTimer !={}: 
+					for sMAC in self.selectBeaconsLogTimer:
+						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+							self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-1  - :{} -999 received, rpi still w signal:{}".format(mac, noneUp))
+
+				if noneUp == []:
+					updateSignal = True
+					if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)	# only for regluar ibeacons..
+					newStates = self.addToStatesUpdateDict(dev.id,u"status", u"down",newStates=newStates)
+					self.beacons[mac][u"status"] = "down"
+					self.beacons[mac][u"updateFING"] = 1
+					updateFINGnow = True
+					self.beacons[mac][u"lastUp"] = -time.time()
+					newStates = self.addToStatesUpdateDict(dev.id,"closestRPI", -1,newStates=newStates)
+					if self.setClostestRPItextToBlank: newStates = newStates = self.addToStatesUpdateDict(dev.id,"closestRPIText", "",newStates=newStates)
+					if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
+					if self.selectBeaconsLogTimer !={}: 
+						for sMAC in self.selectBeaconsLogTimer:
+							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+								self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-2  - :{};  set status to down\nnewStates:{}".format(mac, unicode(newStates).replace("\n","") ))
+			return updateSignal, updateFINGnow, newStates 
+
+		except Exception, e:
+
+			if unicode(e).find(u"timeout waiting") > -1:
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.indiLOG.log(40,u"communication to indigo is interrupted")
+				return 
+			if e != None	and unicode(e).find(u"not found in database") ==-1:
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return updateSignal, updateFINGnow, newStates 
+
+
+###-------------------------------------------------------------------------####
+	def handleBeaconRealSignal(self, mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, updateSignal, updateFINGnow, dateString ):
+
+		try:
+			fromPiI = int(fromPiU)
+			logTRUEfromChangeOFRPI = False
+			updateSignal = False
+			updateFINGnow = False
+			closestRPI = -1
+			oldRPI = -1
+
+			if dev.deviceTypeId == "beacon": 
+				try:	oldRPI = int(dev.states[u"closestRPI"])
+				except: oldRPI =-1
+
+			try:     distCalc = float(dev.states[u"Pi_" + fromPiU.rjust(2,"0")  + "_Distance"])
+			except:  distCalc = 99999
+
+			if rssi != -999.:
+				if self.selectBeaconsLogTimer !={}: 
+					for sMAC in self.selectBeaconsLogTimer:
+						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+							self.indiLOG.log(20, u"sel.beacon logging: newMSG    up  - :{}; set status up, rssi:{}".format(mac, rssi))
+
+				if ( self.beacons[mac][u"lastUp"] > -1) :
+					self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"]  = rssi
+					self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"]  = time.time()
+					self.beacons[mac][u"lastUp"] = time.time()
+					distCalc = 9999
+					closestRPI = -1
+					try:
+						minTxPower = float(self.beacons[mac][u"beaconTxPower"])
+					except:
+						minTxPower = 99999.
+					if dev.deviceTypeId in ["beacon","rPI"]: 
+						txx = float(txPower)
+						if minTxPower <	 991.: 
+							txx = minTxPower
+							distCalc = self.calcDist(  txx, (rssi+rssiOffset) )/ self.distanceUnits
+							self.beacons[mac][u"receivedSignals"][fromPiI]["distance"]  = distCalc
+						closestRPI = self.findClosestRPI(mac, dev)
+
+					if	( time.time()- self.beacons[mac][u"updateWindow"] > self.beacons[mac][ "updateSignalValuesSeconds"] or
+						  time.time()- self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"] > 100. ):  # ==0 or xx seconds updates for 75 seconds, this RPI msg older than 100 secs then xx secs no update for next time
+						self.beacons[mac][u"updateWindow"] = time.time()
+
+					if (dev.deviceTypeId == "beacon" and closestRPI != oldRPI) and self.trackSignalChangeOfRPI:
+						logTRUEfromChangeOFRPI = True
+
+					try: newStates[u"Pi_" + fromPiU.rjust(2,"0") + "_Signal"] 
+					except: self.indiLOG.log(40,"{} no state {}".format(dev.name.encode("utf8") ,u"Pi_" + fromPiU.rjust(2,"0") + "_Signal"))
+
+					if (self.beacons[mac][u"status"] != "up" or					 # was down now up
+						time.time() - self.beacons[mac][u"updateWindow"] < 70 or			 # update for 70 seconds then break 
+						newStates[u"Pi_" + fromPiU.rjust(2,"0") + "_Signal"] == -999 or	# was down now up
+						abs(newStates[u"Pi_" + fromPiU.rjust(2,"0")+ "_Signal"] - self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"]) >20 or # signal change large
+						(dev.deviceTypeId == "beacon" and closestRPI != newStates[u"closestRPI"])):				   # clostest RPi has changed
+							updateSignal = True
+							newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Signal", int(rssi-rssiOffset),newStates=newStates)
+							newStates = self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",float(txPower),newStates=newStates)
+
+							if dev.deviceTypeId == "beacon"  and distCalc < 100/self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0"):
+								beaconUpdatedIds.append([fromPiI,dev.id, distCalc])
+								self.beacons[mac][u"receivedSignals"][fromPiI]["distance"] = distCalc
+							newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Distance", distCalc,newStates=newStates ,decimalPlaces=1  )
+							newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Time", dateString,newStates=newStates)
+					if newStates[u"status"] != "up":  
+						if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						newStates=self.addToStatesUpdateDict(dev.id,u"status", u"up",newStates=newStates)
+						self.beacons[mac][u"updateFING"] = 1
+						updateFINGnow = True
+						self.beacons[mac][u"status"] = "up"
+						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =5
+
+					if dev.deviceTypeId == "beacon" or dev.deviceTypeId == "rPI": 
+						if closestRPI != dev.states["closestRPI"]:
+							if unicode(dev.states[u"closestRPI"]) !="-1":
+								self.addToStatesUpdateDict(dev.id,u"closestRPILast", dev.states["closestRPI"])
+								self.addToStatesUpdateDict(dev.id,u"closestRPITextLast", dev.states["closestRPIText"])
+						newStates = self.addToStatesUpdateDict(dev.id,"closestRPI",     closestRPI,newStates=newStates)
+						newStates = self.addToStatesUpdateDict(dev.id,"closestRPIText", self.getRPIdevName((closestRPI)),newStates=newStates)
+
+				self.beacons[mac][u"indigoId"] = dev.id
+				self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"]  = rssi
+				self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"]  = time.time()
+				self.beacons[mac][u"lastUp"] = time.time()
+
+				if self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"] != rssi+rssiOffset:
+					self.beacons[mac][u"receivedSignals"][fromPiI] = {"rssi":rssi+rssiOffset, "lastSignal":time.time(), "distance":distCalc}
+			return updateSignal, updateFINGnow, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
+
+
+		except Exception, e:
+
+			if unicode(e).find(u"timeout waiting") > -1:
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.indiLOG.log(40,u"communication to indigo is interrupted")
+				return 
+			if e != None	and unicode(e).find(u"not found in database") ==-1:
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return updateSignal, updateFINGnow, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
 
 ####-------------------------------------------------------------------------####
 	def updateBeaconStates(self, fromPi, piNReceived, ipAddress, piMACSend, nOfSecs, msgs):
@@ -15116,8 +15176,6 @@ class Plugin(indigo.PluginBase):
 
 				if newRPI != "found":
 					self.indiLOG.log(20, u"creating new pi (3.)  -- fromPI: {};   piNR: {};   piMACSend: {};   ipAddress: {} " .format(fromPiU, piNReceived, piMACSend, ipAddress) )
-					newProps = copy.copy(_GlobalConst_emptyrPiProps)
-					newProps[u"isRPIDevice"] = True
 
 					indigo.device.create(
 						protocol		= indigo.kProtocol.Plugin,
@@ -15127,7 +15185,7 @@ class Plugin(indigo.PluginBase):
 						pluginId		= self.pluginId,
 						deviceTypeId	= "rPI",
 						folder			= self.piFolderId,
-						props			= newProps
+						props			=  copy.deepcopy(_GlobalConst_emptyrPiProps)
 						)
 
 					try:
@@ -15368,52 +15426,10 @@ class Plugin(indigo.PluginBase):
 
 				self.addToStatesUpdateDict(dev.id,u"updateReason", reason)
 
-				updateSignal = False
-
-				if newStates[u"status"] == "up" and rssi == -999.:	## check for fast down signal ==-999
-					if self.decideMyLog(u"CAR") and self.decideMyLog(u"BeaconData"): self.indiLOG.log(10, "testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, dev.states[u"Pi_"+fromPiU.rjust(2,"0")+"_Signal"], dev.states[u"status"]))
-
-					newStates= self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0")  + "_Signal", -999, newStates=newStates)
-					self.beacons[mac][u"receivedSignals"][int(fromPiU)]["lastSignal"] = time.time() - 999
-
-					noneUp = []
-					for pixx in range(_GlobalConst_numberOfiBeaconRPI):
-						if ( time.time() - self.beacons[mac][u"receivedSignals"][pixx]["lastSignal"] < 60 and  
-							 dev.states["Pi_" + str(pixx).rjust(2,"0")  + "_Signal"] > -999 ):
-							noneUp = [pixx] #.append([pixx,time.time() - self.beacons[mac][u"receivedSignals"][pixx]["lastSignal"] ])
-
-					if self.selectBeaconsLogTimer !={}: 
-						for sMAC in self.selectBeaconsLogTimer:
-							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-								self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-1  - :{} -999 received, rpi still w signal:{}".format(mac, noneUp))
-
-					if noneUp == []:
-						updateSignal = True
-						if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)	# only for regluar ibeacons..
-						newStates = self.addToStatesUpdateDict(dev.id,u"status", u"down",newStates=newStates)
-						self.beacons[mac][u"status"] = "down"
-						self.beacons[mac][u"updateFING"] = 1
-						updateFINGnow = True
-						self.beacons[mac][u"lastUp"] = -time.time()
-						newStates = self.addToStatesUpdateDict(dev.id,"closestRPI", -1,newStates=newStates)
-						if self.setClostestRPItextToBlank: newStates = newStates = self.addToStatesUpdateDict(dev.id,"closestRPIText", "",newStates=newStates)
-						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
-						if self.selectBeaconsLogTimer !={}: 
-							for sMAC in self.selectBeaconsLogTimer:
-								if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-									self.indiLOG.log(20, u"sel.beacon logging: newMSG-999-2  - :{};  set status to down\nnewStates:{}".format(mac, unicode(newStates).replace("\n","") ))
-
-
+				updateSignal, updateFINGnow, newStates = self.checkForFastDown(mac, piMACSend, dev, props, rssi, fromPiU, newStates)
 
 
 				# thsi enables better / faster location bounding to only specific room/ rpi
-				IgnoreBeaconIfSignalLessThan = -999
-				if u"IgnoreBeaconIfSignalLessThan" in props:
-					try:
-						IgnoreBeaconIfSignalLessThan = float(props[u"IgnoreBeaconIfSignalLessThan"])
-					except: ##IgnoreBeaconIfSignalLessThan value not set 
-						IgnoreBeaconIfSignalLessThan = -999
-
 				logTRUEfromSignal = False	   
 				if self.trackSignalStrengthIfGeaterThan[0] <99.:
 					try:
@@ -15428,83 +15444,10 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 						logTRUEfromSignal = False
 
-				logTRUEfromChangeOFRPI = False
-				if dev.deviceTypeId == "beacon": 
-					try:	oldRPI = int(dev.states[u"closestRPI"])
-					except: oldRPI =-1
-
-				try:     distCalc = float(dev.states[u"Pi_" + fromPiU.rjust(2,"0")  + "_Distance"])
-				except:  distCalc = 99999
 
 
-				if rssi != -999.  and rssi > IgnoreBeaconIfSignalLessThan:
-					if self.selectBeaconsLogTimer !={}: 
-						for sMAC in self.selectBeaconsLogTimer:
-							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-								self.indiLOG.log(20, u"sel.beacon logging: newMSG    up  - :{}; set status up, rssi:".format(mac, rssi))
+				updateSignal, updateFINGnow, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds = self.handleBeaconRealSignal(mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, updateSignal, updateFINGnow, dateString )
 
-					if ( self.beacons[mac][u"lastUp"] > -1) :
-						self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"]  = rssi
-						self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"]  = time.time()
-						self.beacons[mac][u"lastUp"] = time.time()
-						distCalc = 9999
-						closestRPI = -1
-						try:
-							minTxPower = float(self.beacons[mac][u"beaconTxPower"])
-						except:
-							minTxPower = 99999.
-						if dev.deviceTypeId in ["beacon","rPI"]: 
-							txx = float(txPower)
-							if minTxPower <	 991.: 
-								txx = minTxPower
-								distCalc = self.calcDist(  txx, (rssi+rssiOffset) )/ self.distanceUnits
-								self.beacons[mac][u"receivedSignals"][fromPiI]["distance"]  = distCalc
-							closestRPI = self.findClosestRPI(mac,dev)
-
-						if	( time.time()- self.beacons[mac][u"updateWindow"] > self.beacons[mac][ "updateSignalValuesSeconds"] or
-							  time.time()- self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"] > 100. ):  # ==0 or xx seconds updates for 75 seconds, this RPI msg older than 100 secs then xx secs no update for next time
-							self.beacons[mac][u"updateWindow"] = time.time()
-
-						if (dev.deviceTypeId == "beacon" and closestRPI != oldRPI) and self.trackSignalChangeOfRPI:
-							logTRUEfromChangeOFRPI = True
-
-						try: newStates[u"Pi_" + fromPiU.rjust(2,"0") + "_Signal"] 
-						except: self.indiLOG.log(40,"{} no state {}".format(dev.name.encode("utf8") ,u"Pi_" + fromPiU.rjust(2,"0") + "_Signal"))
-
-						if (self.beacons[mac][u"status"] != "up" or					 # was down now up
-							time.time()- self.beacons[mac][u"updateWindow"] < 70 or			 # update for 70 seconds then break 
-							newStates[u"Pi_" + fromPiU.rjust(2,"0") + "_Signal"] == -999 or	# was down now up
-							abs(newStates[u"Pi_" + fromPiU.rjust(2,"0")+ "_Signal"] - self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"]) >20 or # signal change large
-							(dev.deviceTypeId == "beacon" and closestRPI != newStates[u"closestRPI"])):				   # clostest RPi has changed
-								updateSignal = True
-								newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Signal", int(rssi-rssiOffset),newStates=newStates)
-								newStates = self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",float(txPower),newStates=newStates)
-
-								if dev.deviceTypeId == "beacon"  and distCalc < 100/self.distanceUnits and not ("IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0"):
-									beaconUpdatedIds.append([fromPiI,dev.id, distCalc])
-									self.beacons[mac][u"receivedSignals"][fromPiI]["lastSignal"] = distCalc
-								newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Distance", distCalc,newStates=newStates ,decimalPlaces=1  )
-								newStates = self.addToStatesUpdateDict(dev.id,u"Pi_" + fromPiU.rjust(2,"0") + "_Time", dateString,newStates=newStates)
-								if newStates[u"status"] != "up":  
-									if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-									newStates=self.addToStatesUpdateDict(dev.id,u"status", u"up",newStates=newStates)
-									self.beacons[mac][u"updateFING"] = 1
-									updateFINGnow = True
-									self.beacons[mac][u"status"] = "up"
-									if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =5
-
-						if dev.deviceTypeId == "beacon" or dev.deviceTypeId == "rPI": 
-							if closestRPI != dev.states["closestRPI"]:
-								if unicode(dev.states[u"closestRPI"]) !="-1":
-									self.addToStatesUpdateDict(dev.id,u"closestRPILast", dev.states["closestRPI"])
-									self.addToStatesUpdateDict(dev.id,u"closestRPITextLast", dev.states["closestRPIText"])
-							newStates = self.addToStatesUpdateDict(dev.id,"closestRPI",     closestRPI,newStates=newStates)
-							newStates = self.addToStatesUpdateDict(dev.id,"closestRPIText", self.getRPIdevName((closestRPI)),newStates=newStates)
-
-					self.beacons[mac][u"indigoId"] = dev.id
-
-				if rssi != -999. or self.beacons[mac][u"receivedSignals"][fromPiI]["rssi"] != rssi+rssiOffset:
-					self.beacons[mac][u"receivedSignals"][fromPiI] = {"rssi":rssi+rssiOffset, "lastSignal":time.time(), "distance":distCalc}
 
 				if self.selectBeaconsLogTimer !={}: 
 					for sMAC in self.selectBeaconsLogTimer:
@@ -15909,32 +15852,34 @@ class Plugin(indigo.PluginBase):
 			xx8 = {}
 			for beacon in self.beacons:
 				if self.beacons[beacon][u"ignore"] >= 1 or self.beacons[beacon][u"ignore"] == -1:  xx1.append(beacon)
-
-				if self.beacons[beacon][u"ignore"] == 0 and self.beacons[beacon][u"enabled"]:
+				devId = self.beacons[beacon][u"indigoId"]
+				if devId >0:
+					try:	dev = indigo.devices[devId]
+					except: continue
+				props = dev.pluginProps
+				if self.beacons[beacon][u"ignore"] == 0 and dev.enabled:
 					xx2[beacon] = { "typeOfBeacon":"", "prio": 0, "useOnlyIfTagged":""}
-					if self.beacons[beacon]["indigoId"] > 0:
-						tag = self.beacons[beacon]["typeOfBeacon"]
-						xx2[beacon]["typeOfBeacon"] = tag
-						xx2[beacon]["useOnlyIfTagged"] = self.beacons[beacon]["useOnlyPrioTagMessageTypes"]
-						if tag in self.knownBeaconTags:
-							xx2[beacon]["prio"] = self.knownBeaconTags[tag]["prio"]
+					tag = self.beacons[beacon]["typeOfBeacon"]
+					xx2[beacon]["typeOfBeacon"] = tag
+					xx2[beacon]["useOnlyIfTagged"] = self.beacons[beacon]["useOnlyPrioTagMessageTypes"]
+					if tag in self.knownBeaconTags:
+						xx2[beacon]["prio"] = self.knownBeaconTags[tag]["prio"]
 
 				try:
-					if int(self.beacons[beacon][u"signalDelta"]) < 200:
-						xx4[beacon] = int(self.beacons[beacon][u"signalDelta"])
+					if int(props[u"signalDelta"]) < 200:
+						xx4[beacon] = int(props[u"signalDelta"])
 				except:pass
 				try:
-					if int(self.beacons[beacon][u"minSignalOn"]) >-200:
-						xx5[beacon] = int(self.beacons[beacon][u"minSignalOn"])
+					if int(props[u"minSignalOn"]) >-200:
+						xx5[beacon] = int(props[u"minSignalOn"])
 				except:	pass
 				try:
-					if int(self.beacons[beacon][u"minSignalOff"]) >200:
-						xx5[beacon] = int(self.beacons[beacon][u"minSignalOff"])
-				except:
-					pass
+					if int(props[u"minSignalOff"]) >200:
+						xx5[beacon] = int(props[u"minSignalOff"])
+				except:	pass
 				try:	
-					if int(self.beacons[beacon][u"fastDown"]) >0: 
-						xx8[beacon] = {u"seconds":int(self.beacons[beacon][u"fastDown"])}
+					if int(props[u"fastDown"]) >0: 
+						xx8[beacon] = {u"seconds":int(props[u"fastDown"])}
 				except:	pass
 
 			out["ignoreMAC"]			= xx1
@@ -15944,6 +15889,7 @@ class Plugin(indigo.PluginBase):
 			out["minSignalOff"]			= xx6
 			out["fastDownList"]			= xx8
 
+			##self.indiLOG.log(40,"out: {}".format(out))
 
 			out = json.dumps(out, sort_keys=True, indent=2)
 			f = open(self.indigoPreferencesPluginDir + "all/beacon_parameters", u"w")
@@ -17288,13 +17234,15 @@ class Plugin(indigo.PluginBase):
 
 					self.myLog( text = out, mType= u"pi configuration")
 				self.myLog( text = u"", mType= u"pi configuration")
-
-			############## list of beacons in history
-			#				  1234567890123456	1234567890123456789012 1234567890 123456 123456789
-			#				  75:66:B5:0A:9F:DB beacon-75:66:B5:0A:9   expired		   0	  1346
+				"""
+configuration         - ==========  defined beacons ==============
+  08:31:46 pi configuration         -#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min on/off battery UUIDlastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created 
+  08:31:46 pi configuration         -1  24:DA:11:27:E5:D4 b-iHere_black-C          1940213429 up       True         Nonda_iHere   -55      0      0    999 -999/-999                                              45     120        0 2019-01-09 23:58:14 2020-09-14 08:06:47
+  08:31:46 pi configuration         -6  00:EA:23:11:2B:E4 b-xy-Mazda -red-1-2        60052985 up       True                XY_1   -59      0      0    999 -999/-999random127/100 -09-05 09:20:18,l=0             45      90        0 2017-09-07 23:44:36 2020-09-14 08:07:49
+				"""
 			if True:
 				self.myLog( text = u" ==========  defined beacons ==============", mType= "pi configuration")
-				self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt on/off-Sg battery UUID   lastUpdate/level       LastUp[s] ExpTime updDelay lastStatusChange    created ",
+				self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ",
 						   mType= "pi configuration")
 				for status in [u"up", u"down", u"expired"]:
 					for beaconDeviceType in self.knownBeaconTags:
@@ -17449,99 +17397,102 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def printBeaconInfoLine(self, status, xType):
 
-		cc = 0
-		for beacon in self.beacons:
-			if self.beacons[beacon][u"typeOfBeacon"] != xType: continue
-			if self.beacons[beacon][u"status"] 		 != status: continue
-			batteryLevelLastUpdate = ""
-			batteryLevelUUID = ""
-			try:
-				dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
-				name = dev.name
-				props = dev.pluginProps
-				lastStatusChange = dev.states["lastStatusChange"]
-				if "batteryLevelUUID" in props and props["batteryLevelUUID"].find("batteryLevel") >-1:
-					batteryLevelUUID = props["batteryLevelUUID"].replace("-batteryLevel-int-bits=","").replace("2A19-","").replace("-norm=","/").replace("randomON","random")
-					if "batteryLevelLastUpdate" in dev.states: 
-						batteryLevelLastUpdate = dev.states[u"batteryLevelLastUpdate"][4:]
-						if len(batteryLevelLastUpdate) < 10: batteryLevelLastUpdate = "01-01 00:00:00"
-						batteryLevelLastUpdate += ",l="+str(dev.states[u"batteryLevel"])
-						batteryLevelLastUpdate = batteryLevelLastUpdate
-			except Exception, e:
-				if unicode(e).find(u"timeout waiting") > -1:
-					self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					self.indiLOG.log(40, u"communication to indigo is interrupted")
-					return
-				name = " "
-				lastStatusChange = " "
-			if len(batteryLevelUUID) != 14: batteryLevelUUID = batteryLevelUUID.ljust(14)
-			if len(batteryLevelLastUpdate) !=21: batteryLevelLastUpdate = batteryLevelLastUpdate.ljust(21)
-
-			cc += 1
-			if len(name) > 22: name = name[:21] + ".."
-			line = unicode(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +  unicode(self.beacons[beacon][u"indigoId"]).rjust(10) + " "+\
-				   self.beacons[beacon][u"status"].ljust(8) +\
-				   unicode(dev.enabled).rjust(5) + \
-				   self.beacons[beacon][u"typeOfBeacon"].rjust(20)+\
-				   unicode(self.beacons[beacon][u"beaconTxPower"]).rjust(6) + " " + \
-				   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
-				   unicode(self.beacons[beacon][u"fastDown"]).rjust(6) + " " + \
-				   unicode(self.beacons[beacon][u"signalDelta"]).rjust(6) + " " + \
-				   unicode(self.beacons[beacon][u"minSignalON"]).rjust(4) +"/"+unicode(self.beacons[beacon][u"minSignalOff"]).rjust(4) + \
-				   batteryLevelUUID +\
-				   batteryLevelLastUpdate +\
-				   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"])      ) ).rjust(13) + " " + \
-				   unicode(min(999999,   int(self.beacons[beacon][u"expirationTime"])            ) ).rjust(7)  + " " + \
-				   unicode(min(9999999,  int(self.beacons[beacon][u"updateSignalValuesSeconds"]) ) ).rjust(8)  + " " + \
-				   unicode(self.beacons[beacon][u"created"]).ljust(19) +" "+\
-				   lastStatusChange.ljust(19)
-			self.myLog( text = line, mType= "pi configuration")
-
-		if status == u"ignored":
+		try:
+			cc = 0
 			for beacon in self.beacons:
-				if self.beacons[beacon][u"typeOfBeacon"] != type: continue
-				if self.beacons[beacon][u"status"] != status: continue
-				if self.beacons[beacon][u"ignore"] == 1:
+				if self.beacons[beacon][u"typeOfBeacon"] != xType: continue
+				if self.beacons[beacon][u"status"] 		 != status: continue
+				batteryLevelLastUpdate = ""
+				batteryLevelUUID = ""
+				try:
+					dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
+					name = dev.name
+					props = dev.pluginProps
+					if "minSignalOn" not in props: continue # old device
+					lastStatusChange = dev.states["lastStatusChange"]
+					if "batteryLevelUUID" in props and props["batteryLevelUUID"].find("batteryLevel") >-1:
+						batteryLevelUUID = props["batteryLevelUUID"].replace("-batteryLevel-int-bits=","").replace("2A19-","").replace("-norm=","/").replace("randomON","random")
+						if "batteryLevelLastUpdate" in dev.states: 
+							batteryLevelLastUpdate = dev.states[u"batteryLevelLastUpdate"][4:]
+							if len(batteryLevelLastUpdate) < 10: batteryLevelLastUpdate = "01-01 00:00:00"
+							batteryLevelLastUpdate += ",l="+str(dev.states[u"batteryLevel"])
+							batteryLevelLastUpdate = batteryLevelLastUpdate
+				except Exception, e:
+					if unicode(e).find(u"timeout waiting") > -1:
+						self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.indiLOG.log(40, u"communication to indigo is interrupted")
+						return
 					name = " "
-					cc += 1
-					line = unicode(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +" ".ljust(10) + " "+ \
-						   self.beacons[beacon][u"status"].ljust(8)  + \
-						   unicode(dev.enabled).rjust(5) + \
-						   self.beacons[beacon][u"typeOfBeacon"].rjust(20)  + \
-						   unicode(self.beacons[beacon][u"beaconTxPower"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"fastDown"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"signalDelta"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"minSignalCutoff"]).rjust(6) + " " + \
-						   unicode("-").rjust(23) +\
-						   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"]))).rjust(13) + " " + \
-						   unicode(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
-						   unicode(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
-						   unicode(self.beacons[beacon][u"created"]).ljust(19)
-					self.myLog( text = line, mType=	 u"pi configuration")
-			for beacon in self.beacons:
-				if self.beacons[beacon][u"typeOfBeacon"] != type: continue
-				if self.beacons[beacon][u"status"] != status:	  continue
-				if self.beacons[beacon][u"ignore"] == 2:
-					name = " "
-					cc += 1
-					line = unicode(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +" ".ljust(10) + " "+ \
-						   self.beacons[beacon][u"status"].ljust(8) + \
-						   "     "  + \
-						   self.beacons[beacon][u"typeOfBeacon"].rjust(10) + " " + \
-						   unicode(self.beacons[beacon][u"beaconTxPower"]).rjust(6)  + \
-						   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"fastDown"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"signalDelta"]).rjust(6) + " " + \
-						   unicode(self.beacons[beacon][u"minSignalCutoff"]).rjust(6) + " " + \
-						   unicode("-").rjust(23) +\
-						   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"]))).rjust(12) + " " + \
-						   unicode(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
-						   unicode(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
-						   unicode(self.beacons[beacon][u"created"]).ljust(19)
-					self.myLog( text = line, mType= "pi configuration")
+					lastStatusChange = " "
+				if len(batteryLevelUUID) != 14: batteryLevelUUID = batteryLevelUUID.ljust(14)
+				if len(batteryLevelLastUpdate) !=21: batteryLevelLastUpdate = batteryLevelLastUpdate.ljust(21)
+
+				cc += 1
+				if len(name) > 22: name = name[:21] + ".."
+				line = unicode(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +  unicode(self.beacons[beacon][u"indigoId"]).rjust(10) + " "+\
+					   self.beacons[beacon][u"status"].ljust(8) +\
+					   unicode(dev.enabled).rjust(5) + \
+					   self.beacons[beacon][u"typeOfBeacon"].rjust(20)+\
+					   unicode(self.beacons[beacon][u"beaconTxPower"]).rjust(6) + " " + \
+					   unicode(self.beacons[beacon][u"ignore"]).rjust(6) + " " + \
+					   unicode(props[u"fastDown"]).rjust(6) + " " + \
+					   unicode(props[u"signalDelta"]).rjust(6) + " " + \
+					   unicode(props[u"minSignalOn"]).rjust(4) +"/"+unicode(props[u"minSignalOff"]).rjust(4) + \
+					   batteryLevelUUID +\
+					   batteryLevelLastUpdate +\
+					   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"])      ) ).rjust(13) + " " + \
+					   unicode(min(999999,   int(self.beacons[beacon][u"expirationTime"])            ) ).rjust(7)  + " " + \
+					   unicode(min(9999999,  int(self.beacons[beacon][u"updateSignalValuesSeconds"]) ) ).rjust(8)  + " " + \
+					   unicode(self.beacons[beacon][u"created"]).ljust(19) +" "+\
+					   lastStatusChange.ljust(19)
+				self.myLog( text = line, mType= "pi configuration")
+
+			if status == u"ignored":
+				for beacon in self.beacons:
+					if self.beacons[beacon][u"typeOfBeacon"] != type: continue
+					if self.beacons[beacon][u"status"] != status: continue
+					if self.beacons[beacon][u"ignore"] == 1:
+						name = " "
+						cc += 1
+						line = unicode(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +" ".ljust(10) + " "+ \
+							   self.beacons[beacon][u"status"].ljust(8)  + \
+							   unicode(dev.enabled).rjust(5) + \
+							   self.beacons[beacon][u"typeOfBeacon"].rjust(20)  + \
+							   " ".rjust(6) + " " + \
+							   " ".rjust(6) + " " + \
+							   " ".rjust(6) + " " + \
+							   " ".rjust(6) + " " + \
+							   unicode("-").rjust(23) +\
+							   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"]))).rjust(13) + " " + \
+							   unicode(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
+							   unicode(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
+							   unicode(self.beacons[beacon][u"created"]).ljust(19)
+						self.myLog( text = line, mType=	 u"pi configuration")
+				for beacon in self.beacons:
+					if self.beacons[beacon][u"typeOfBeacon"] != type: continue
+					if self.beacons[beacon][u"status"] != status:	  continue
+					if self.beacons[beacon][u"ignore"] == 2:
+						name = " "
+						cc += 1
+						line = unicode(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +" ".ljust(10) + " "+ \
+							   self.beacons[beacon][u"status"].ljust(8) + \
+							   "     "  + \
+							   self.beacons[beacon][u"typeOfBeacon"].rjust(10) + " " + \
+							   unicode(self.beacons[beacon][u"beaconTxPower"]).rjust(6)  + \
+							   " ".rjust(6) + " " + \
+							   " ".rjust(6) + " " + \
+							   " ".rjust(6) + " " + \
+							   unicode("-").rjust(23) +\
+							   unicode(min(999999999,int(time.time() - self.beacons[beacon][u"lastUp"]))).rjust(12) + " " + \
+							   unicode(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
+							   unicode(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
+							   unicode(self.beacons[beacon][u"created"]).ljust(19)
+						self.myLog( text = line, mType= "pi configuration")
 
 
+		except Exception, e:
+			if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
+			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 
@@ -18182,7 +18133,7 @@ class Plugin(indigo.PluginBase):
 						os.rename(fn + ".log", fn + "-2.log")
 						os.remove(fn + "-1.log")
 					os.rename(fn + ".log", fn + "-1.log")
-					indigo.server.log(" reset logfile due to size > %.1f [MB]" %(self.maxLogFileSize/1024./1024.) )
+					indigo.server.log(" reset logfile due to size > {:.1f} [MB]".format(self.maxLogFileSize/1024./1024.) )
 		except	Exception, e:
 				self.indiLOG.log(50, u"checkLogFiles Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			

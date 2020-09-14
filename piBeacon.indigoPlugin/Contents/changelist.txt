@@ -2,7 +2,7 @@ Added features / changes in v7.127.447 @ 2020-09-12
 ===================================================
 
 
-Added features / changes in v7.127.448 @ 2020-09-12
+Added features / changes in v7.127.449 @ 2020-09-12
 ===================================================
 0. cleaned up some code 
 1. rearanged some menu items, clearer structure, using some color for menu items
@@ -24,7 +24,9 @@ Added features / changes in v7.127.448 @ 2020-09-12
   if you have just one RPI and have it connected to something that moves around in the house it is likely not a good idea
   but for eg a beacon that is connected to a bike that arrives in a dedicated space and has a good connection tot the RPi it shouldd work well
 
-4. added .upper() for hexCode in knownbeacon tags
+4. added .upper() for hexCode in knownbeacon tags, to make sure that eg aB is seenas AB in the hex string
+
+5. fixed some issues w fast down and BLEconnect
 
 
 Added features / changes in v7.126.438 @ 2020-08-31

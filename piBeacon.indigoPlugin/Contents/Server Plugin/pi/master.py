@@ -646,19 +646,6 @@ def startBLEconnect():
 	return
 
 
-####################      #########################
-def startBLEsensor():
-	global sensors
-	try:
-		if "BLEsensor" not in sensors:
-			U.killOldPgm(-1, "BLEsensor.py")
-			return
-		if not U.pgmStillRunning("BLEsensor.py"):
-			startProgam("BLEsensor.py", params="", reason="")
-	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return
-
 	
 ########## check if programs are running	 
 	
@@ -1879,8 +1866,6 @@ def checkIpSTDprogramsAreRunning(lastCheckAlive):
 	try:
 		if "BLEconnect" in sensors:
 			startBLEconnect()
-		if enableiBeacons == "0" and "BLEsensor" in sensors:
-			startBLEsensor()
 
 		if time.time() - lastCheckAlive > 100:
 			lastCheckAlive = time.time()

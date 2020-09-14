@@ -1043,7 +1043,7 @@ def checkIfBLErestart():
 ######## BLE SENSORS ############
 #################################
 #################################
-def doSensors( mac, rx, tx, hexData, UUID, Maj, Min):
+def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 	global BLEsensorMACs
 	bl = ""
 	try:
@@ -1058,10 +1058,10 @@ def doSensors( mac, rx, tx, hexData, UUID, Maj, Min):
 			return  doRuuviTag( mac, rx, tx, hexData, UUID, Maj, Min)
 
 		if BLEsensorMACs[mac]["type"].find("BLEiBS") >-1:
-			return  doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, BLEsensorMACs[mac]["type"])
+			return  doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, BLEsensorMACs[mac]["type"])
 
 		if BLEsensorMACs[mac]["type"].find("BLEminewE8") >-1:
-			return  doBLEminewE8( mac, rx, tx, hexData, UUID, Maj, Min)
+			return  doBLEminewE8( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min)
 
 
 	except	Exception, e:
@@ -1070,7 +1070,7 @@ def doSensors( mac, rx, tx, hexData, UUID, Maj, Min):
 
 
 #################################
-def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
+def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensorType):
 	global BLEsensorMACs
 	try:
 		HexStr 				= hexData[12:]
@@ -1078,7 +1078,9 @@ def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
 			return tx, "", UUID, Maj, Min, False
 
 		#U.logger.log(20, "mac:{}   subTypeHexpos:{} ".format(mac, HexStr.find("02010612FF0D0083BC")) )
-		if not ( HexStr.find("02010612FF0D0083BC") == 2 or HexStr.find("02010619FF0D0081BC") == 2 or HexStr.find("02010612FF590080BC") ==2 ): 
+		posFound, dPos, x, y =  testComplexTag(hexstring, "", mac, macplain, macplainReverse, Maj="", Min="", tagPos=2, tagString="0201061XFF0D008XBC",checkMajMin=False )
+
+		if posFound !=2:
 			return tx, "", UUID, Maj, Min, False
 
 		sensor				= sensorType
@@ -1101,6 +1103,8 @@ def doBLEiBSxx( mac, rx, tx, hexData, UUID, Maj, Min, sensorType):
 		# pos 		234567890123456789  >0123< >45< >6789< >0123< 4567 >89< 012345
 		# bits 		02010612FF0D0083BC   2901   00   4409   4309  0000 >17< 030000
 		#                           volt   0/1  
+
+		testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="", tagPos="", tagString="" )
 		if   HexStr.find("02010619FF0D0081BC") == 2:
 			subTypeHex 	= "RG"
 		elif   HexStr.find("02010612FF590080BC") == 2 and HexStr.find("FFFFFFFFFFFFFFFFFFFF") >1:
@@ -1343,7 +1347,7 @@ def domyBlueT( mac, rx, tx, hexData, UUID, Maj, Min):
 #################################
 ## minew E8 ########################
 #################################
-def doBLEminewE8(mac, rx, tx, hexData, UUID, Maj, Min):
+def doBLEminewE8(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 	global BLEsensorMACs, sensors
 
 	""" format:
@@ -2301,18 +2305,21 @@ def getBeaconParameters(useHCI):
 # hexstring starts after mac#
 ###
 
-def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj, Min ):
+def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="", tagPos="", tagString="",checkMajMin=True ):
 	global knownBeaconTags, logCountTrackMac, trackMac
 	try:
 		inputString = copy.copy(hexstring)
-		tagPos 		= int(knownBeaconTags[tag]["pos"])
-		tagString 	= knownBeaconTags[tag]["hexCode"].upper()
+		if tag != ""		: tagPos 		= int(knownBeaconTags[tag]["pos"])
+		if tagString = ""	: tagString 	= knownBeaconTags[tag]["hexCode"].upper()
 
 		if tagString.find("-") >-1: # 
 			tagString = tagString[:-1]
 		lTag = len(tagString)
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac("tst-0 ","tagPos:{}; tag:{}; tagPos:{}; lTag:{} tagString: {}; ".format(tagPos, tag, tagPos, lTag, tagString ), mac)
+			if tag ="":
+				writeTrackMac("tst-0 ","tagPos:{}; tagPos:{}; lTag:{} tagString: {}; ".format(tagPos, tagPos, lTag, tagString ), mac)
+			else:
+				writeTrackMac("tst-0 ","tagPos:{}; tag:{}; tagPos:{}; lTag:{} tagString: {}; ".format(tagPos, tag, tagPos, lTag, tagString ), mac)
 
 		if tagString.find("X") >-1:
 			indexes = [n for n, v in enumerate(tagString) if v == 'X'] 
@@ -2339,7 +2346,7 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj, Min ):
 
 		if len(inputString) < lTag + tagPos: posFound =-1; dPos = 100
 
-		if dPos ==0: 
+		if checkMajMin and dPos ==0: 
 			if knownBeaconTags[tag]["Maj"].find("UUID:") >-1:
 				MPos= knownBeaconTags[tag]["Maj"].split(":")[1].split("-")
 				#U.logger.log(20,u"Maj:{}, Mpos:{}".format(knownBeaconTags[tag]["Maj"],MPos))
@@ -2352,7 +2359,8 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj, Min ):
 			
 
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac("tst-F ","posFound: {}, dPos: {}, tag: {}, {}, tagString: {}".format(posFound, dPos, tag, knownBeaconTags[tag]["hexCode"], tagString), mac)
+				writeTrackMac("tst-F ","posFound: {}, dPos: {}, tag: {}, tagString: {}".format(posFound, dPos, tag, tagString), mac)
+
 		return posFound, dPos, Maj, Min
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -2978,7 +2986,7 @@ def execbeaconloop(test):
 
 						msgStart, majEnd, uuidLen, UUID, Maj, Min, rssi, txPower, mfgID, pType, typeOfBeacon = getBasicData(hexstr)
 
-						txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, rssi, txPower, hexstr, UUID, Maj, Min)
+						txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr, UUID, Maj, Min)
 
 						if isOnlySensor:
 							lastMSGwithDataPassed = int(time.time())

@@ -123,7 +123,7 @@
     "prio": 1, 
     "sequence":0,
     "msg": [],
-    "hexCode": "1E020A040816F0FFXXXXXXXXXX11094D696E69426561636F6E5F"
+    "hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F"
 },
   "BlackCard":  {
     "text":"BlackCard",
@@ -404,7 +404,7 @@
     "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6"
   }, 
   "rPI":  {
-    "text":"rPI",
+    "text":"RPI",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
@@ -589,7 +589,7 @@
     "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
   "ruuviTag":  {
-    "text":"ruuviTag sensor",
+    "text":"RuuviTag sensor",
     "Maj":"",
     "Min":"",
     "battCmd": "msg", 
@@ -659,7 +659,7 @@
     "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859"
   }, 
   "myblueT":  {
-    "text":"myblueT",
+    "text":"MyblueT",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
@@ -673,7 +673,7 @@
     "hexCode": "myBlueT"
   }, 
   "iBeacon":  {
-    "text":"all std iBeacons accepted",
+    "text":"All std iBeacons accepted",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
@@ -687,7 +687,7 @@
     "hexCode": "1AFF4C000215"
   }, 
   "other":  {
-    "text":"other",
+    "text":"Other",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
