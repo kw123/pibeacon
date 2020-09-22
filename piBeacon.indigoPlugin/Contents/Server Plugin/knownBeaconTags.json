@@ -1,6 +1,34 @@
 {
+  "Satech":  {
+    "text":"Satech STiExx sensors",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
+    "sequence":0,
+    "msg": [],
+    "hexCode": "0E0201060A09426561636F6E666967"
+  },
+  "iSensor":  {
+    "text":"ISensor Gas,Co, water... Alarm, press button to ID",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 2, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
+    "sequence":0,
+    "msg": [],
+    "hexCode": "02010609086953656E736F722009FF"
+  },
   "iBSxx":  {
-    "text":"INGISCS_iBS01-04",
+    "text":"INGISCS iBS01 .. 04",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=10,norm=320,len=2,reverse=1", 
@@ -8,11 +36,11 @@
     "dBm": "-61", 
     "pos": 2, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
-    "hexCode": "0201061XFF0D008XBC"
-  }, 
+    "hexCode": "0201061XFFXX008XBC"
+  },  
   "Jaalee":  {
     "text":"Jaalee",
     "Maj":"",
@@ -22,7 +50,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
@@ -36,13 +64,13 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode":"1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########"
  },
   "Minew_01_Battery_TH":  {
-    "text":"Minew_07 w Battery  & Humidity",
+    "text":"Minew_07 w Battery & Humidity",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
@@ -50,13 +78,13 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
 },
   "Minew_03_Battery_XYZ":  {
-    "text":"Minew_07 w Battery  & xyz acceleration",
+    "text":"Minew_07 w Battery & xyz acceleration",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
@@ -64,13 +92,13 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
 },
   "Minew_05_Battery_Light":  {
-    "text":"Minew_07 w Battery  & Light info",
+    "text":"Minew_07 w Battery & Light info",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=14,norm=100", 
@@ -78,7 +106,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
@@ -92,7 +120,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "180201060303E1FFXX16E1FFA107RMAC########"
@@ -106,7 +134,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "180201060303E1FFXX16E1FFA108XXRMAC########"
@@ -120,7 +148,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F"
@@ -141,7 +169,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1X020104030225FAXXFF0E05A00033E2"
@@ -162,7 +190,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
@@ -183,7 +211,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061"
@@ -205,7 +233,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "0F020106030300F007094355424500"
@@ -219,7 +247,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
@@ -233,7 +261,7 @@
     "dBm": "-40", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],           
     "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
@@ -247,7 +275,7 @@
     "dBm": "-40", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],              
     "hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034"
@@ -269,7 +297,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "13020106030301E00B09496E6E7761"
@@ -298,7 +326,7 @@
     "dBm": "-55", 
     "pos": 4, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
@@ -327,7 +355,7 @@
     "dBm": "-50", 
     "pos": 4, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
@@ -356,7 +384,7 @@
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1C0201060303031805FFD20000xxx9160A18MAC#########"
@@ -370,7 +398,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
     "msg": [],
     "hexCode": "120201050EFFDC000201"
@@ -384,7 +412,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "0F020106030300F007094F52"
@@ -398,7 +426,7 @@
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6"
@@ -412,7 +440,7 @@
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
@@ -442,7 +470,7 @@
     "dBm": "-50", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "14020106070304180F18C0FF020A0005"
@@ -456,7 +484,7 @@
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
     "msg": [],
     "hexCode": "E2C56DB5DFFB48D2B060D0F5A71096E0"
@@ -490,7 +518,7 @@
     "dBm": "-55", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "53706F747950616C5465727261636F"
@@ -504,7 +532,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "0F02010603030A18070953"
@@ -518,7 +546,7 @@
     "dBm": "-59", 
     "pos": 42, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "546F76616C61"
@@ -551,7 +579,7 @@
     "dBm": "-55", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1X02010X030202180AFF4B4D02RMAC########-" 
@@ -583,7 +611,7 @@
     "dBm": "-55", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
@@ -597,7 +625,7 @@
     "dBm": "-65", 
     "pos": 10, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "FF990405"
@@ -611,7 +639,7 @@
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "07775DD0111B11E491910800200C9A66"
@@ -625,7 +653,7 @@
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "08885DD0111B11E491910800200C9A66"
@@ -639,7 +667,7 @@
     "dBm": "-59", 
     "pos": 20, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "04000000005F78000900580509585934"
@@ -653,7 +681,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859"
@@ -667,7 +695,7 @@
     "dBm": "-59", 
     "pos": 1, 
     "posDelta": 0, 
-    "prio": 1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1, 
     "sequence":0,
     "msg": [],
     "hexCode": "myBlueT"
@@ -681,10 +709,10 @@
     "dBm": "-59", 
     "pos": 8, 
     "posDelta": 2, 
-    "prio": -1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": -1, 
     "sequence":2,
     "msg": [],
-    "hexCode": "1AFF4C000215"
+    "hexCode": "1AFF4C000"
   }, 
   "other":  {
     "text":"Other",
@@ -695,7 +723,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
-    "prio": -1, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": -1, 
     "sequence":3,
     "msg": [],
     "hexCode": "X"

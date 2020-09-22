@@ -1,32 +1,39 @@
-Added features / changes in v7.127.447 @ 2020-09-12
-===================================================
 
-
-Added features / changes in v7.127.450 @ 2020-09-12
+Added features / changes in v7.127.451 @ 2020-10-22
 ===================================================
 0. cleaned up some code 
 1. rearanged some menu items, clearer structure, using some color for menu items
-2. added several blue tooth sensors, very easy to setup
+2. In addition to the Ruuvitag added several blue tooth sensors, very easy to setup, they all can be used as presence as well as sensors
+   They have long battery life and > 30 m distance -- with several RPi in the house essetially the whole house is covered
 	INGICS:
-		iBS01: Has 3 on/off sensors- Button and magent, movement 
-		iBS01T: hase Temp and humidity
+		iBS01-x: Family of on/off sensors- Button, magent, movement, external switch 
+		iBS01T:  Temp and humidity
 		iBS01RG: x-y-z acceleration/ gravity sensor
-		iBS02: PIR presence ir IR object detection
-		iBS03: Has 2 on/off sensors- Button and magent 
-		iBS03G: Movement detection of beacon on/off
-		iBS03T: on board temp sensor
-		iBS03TP: on board temp sensor + temp sensor probe
+		iBS02:   PIR presence ir IR object detection
+		iBS03-x: Family of on/off sensors- Button, magent, movement, external switch 
+		iBS03G:  Movement detection of beacon on/off
+		iBS03T:  on board temp sensor
+		iBS03TP: on board temp sensor + temp sensor probe, water proved 
 		iBS03RG: x-y-z acceleration/ gravity sensor
     Minew 
 		E8: x-y-z acceleration/ gravity sensor
-3. made "fastDown" work nicely, If you have more than 2 RPi you can probably go down to 10 secs
-   that means if the beacons leaves the house you will know in ~ 10+3 secs
-  if you have just one RPI and have it connected to something that moves around in the house it is likely not a good idea
-  but for eg a beacon that is connected to a bike that arrives in a dedicated space and has a good connection tot the RPi it shouldd work well
+	iSensor - Kaipule
+		various on/off sensors for GAS, CO water, alarm ... 
+		EN61, ES61, EW70, ET90, IM21, IX30 IX32
+	Satech
+		STixx sensors, acceleration, temp, humidity, on/off
 
-4. added .upper() for hexCode in knownbeacon tags, to make sure that eg aB is seenas AB in the hex string
+3. Normally beacon go "up" as soon as a signal is detect. When they are gone / no signal is received: 
+   the RPi does not send any info to the plugin if no signal. Then the plugin will set them to down after xx secs (normally 90) and after another xx secs to expired
+  In "fastDown" mode: after yy secs (>=10) w/o signal the RPi sends a fast down message to the pluginthen teh plugin will set teh beacon to down, 
+  If you have more than 2 RPi you can probably go down to 10 secs, better 20 seconds.
+  That means if the beacons leaves the house you will know in ~ 10+3 secs
+  If you have just one RPI and have it connected to something that moves around in the house it is likely not a good idea
+  but for eg a beacon that is connected to eg a bike that arrives in a dedicated space and has a good connection to the RPi it shouldd work well
 
-5. fixed some issues w fast down and BLEconnect
+4. minupSigal and mindownSignal:
+  When set to eg up=-60 and down=-80: the beacon will only go up when it is close to the RPI  ~ 1 m. but will stay up until it has eg left the room (>10m) 
+  with this setting you can decide if a beacon is in a room - that requires an RPI in each room you like to have this feature
 
 
 Added features / changes in v7.126.438 @ 2020-08-31

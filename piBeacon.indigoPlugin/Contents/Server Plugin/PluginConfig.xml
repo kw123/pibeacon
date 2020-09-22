@@ -154,7 +154,7 @@
         <Label>This information will be send to the RPI, then used by the RPI to connect to the indigo server</Label>
     </Field>
 
-   <Field id="IndigoOrSocket"   type="menu" defaultValue="socket" tooltip="web server wil go thorugh curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
+   <Field id="IndigoOrSocket"   type="menu" defaultValue="socket" tooltip="web server wil go through curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
 Socket communication will go directly through socket communication to plugin that updates the device states etc." >
         <List>
             <Option value="indigo" >use indigo std web server  </Option>
@@ -383,7 +383,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
             <Option value="3"   > 300 Hz</Option>
         </List>
     </Field>
-   <Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="socket">
+   <Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="hcidump">
         <Label>Use which method on RPIs for beacon scanning read:</Label>
         <List>
             <Option value="hcidump" > using hcidump and lescan</Option>

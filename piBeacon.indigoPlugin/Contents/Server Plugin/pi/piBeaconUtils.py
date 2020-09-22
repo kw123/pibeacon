@@ -1830,8 +1830,41 @@ def whichHCI():
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return {}
+#################################
+def checkIfHCiUP(useHCI,verbose=False):
+	"""
+checking for hci is up , find "up runnning" for proper hci channel hci0/hci1..
+hci0:	Type: Primary  Bus: USB
+	BD Address: 5C:F3:70:6D:D9:4A  ACL MTU: 1021:8  SCO MTU: 64:1
+	UP RUNNING  <----- looking for this
+	RX bytes:65822 acl:0 sco:0 events:1922 errors:0
+	TX bytes:3460 acl:0 sco:0 commands:92 errors:0
 
+hci1:	Type: Primary  Bus: UART
+	BD Address: B8:27:EB:12:5A:C1  ACL MTU: 1021:8  SCO MTU: 64:1
+	UP RUNNING 
+	RX bytes:795280348 acl:21 sco:0 events:22341732 errors:0
 
+	"""
+	try:
+		aa	= subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		ret	= [aa[0].decode('utf-8'),aa[1].decode('utf-8')]
+		if verbose: 
+			logger.log(20, u"cBY:{:<20} {}".format(G.program, ret[0]))
+		hciFound = False
+		for line in ret[0].split("\n"):
+			if line.find(useHCI) == 0: 
+				hciFound
+				continue
+			if hciFound:
+				if line.find("Bus: ") > 15:			return False # found next section , no up running
+				if len(line) < 5: 					return False # next section ...
+				if line.find("UP RUNNING") > -1:	return True  # ok, return True
+		return False			
+
+	except	Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return False
 
 #################################
 def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False):
