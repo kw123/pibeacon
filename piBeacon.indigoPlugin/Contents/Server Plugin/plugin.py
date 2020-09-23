@@ -15884,12 +15884,16 @@ class Plugin(indigo.PluginBase):
 					except: continue
 				props = dev.pluginProps
 				if self.beacons[beacon][u"ignore"] == 0 and dev.enabled:
-					xx2[beacon] = { "typeOfBeacon":"", "useOnlyThisTagToAcceptBeaconMsgDefault": 0, "useOnlyIfTagged":""}
+					xx2[beacon] = { "typeOfBeacon":"", "useOnlyIfTagged":""}
 					tag = self.beacons[beacon]["typeOfBeacon"]
 					xx2[beacon]["typeOfBeacon"] = tag
-					xx2[beacon]["useOnlyIfTagged"] = self.beacons[beacon]["useOnlyPrioTagMessageTypes"]
-					if tag in self.knownBeaconTags:
-						xx2[beacon]["useOnlyThisTagToAcceptBeaconMsgDefault"] = self.knownBeaconTags[tag]["useOnlyThisTagToAcceptBeaconMsgDefault"]
+					
+					xx2[beacon]["useOnlyIfTagged"] = 0
+					try: 
+						xx2[beacon]["useOnlyIfTagged"] = int(self.beacons[beacon]["useOnlyPrioTagMessageTypes"])
+					except: 
+						if tag in self.knownBeaconTags:
+							xx2[beacon]["useOnlyIfTagged"] = self.knownBeaconTags[tag]["useOnlyThisTagToAcceptBeaconMsgDefault"]
 
 				try:
 					if int(props[u"signalDelta"]) < 200:

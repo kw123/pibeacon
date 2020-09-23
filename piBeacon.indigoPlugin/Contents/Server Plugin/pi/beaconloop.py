@@ -380,15 +380,15 @@ def downHCI(useHCI):
 
 
 #################################
-def startHCUIDUMPlistener(hci):
+def startHCUIDUMPlistnr(hci):
 	global myBLEmac
 	global ListenProcessFileHandle
 	global readFrom
 
 	try:
-		if readFrom !="": return ""
+		if readFrom != "": return ""
 		cmd = "sudo hcidump -i {} --raw".format(hci)
-		U.logger.log(20,"startHCUIDUMPlistener: cmd {}".format(cmd))
+		U.logger.log(20,"cmd {}".format(cmd))
 		ListenProcessFileHandle = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 		##pid = ListenProcessFileHandle.pid
 		##self.myLog( text=u" pid= " + unicode(pid) )
@@ -397,18 +397,22 @@ def startHCUIDUMPlistener(hci):
 			self.indiLOG.log(40,"uType {}; IP#: {}; error connecting {}".format(uType, ipNumber, msg) )
 			self.sleep(20)
 			return  "error "+ unicode(msg)
+
 		U.killOldPgm(-1,"sudo hcidump")
+
+		if not U.pgmStillRunning("hcidump -i"):
+			self.indiLOG.log(40,"hcidump not running ")
+			return "error"
 
 		# set the O_NONBLOCK flag of ListenProcessFileHandle.stdout file descriptor:
 		flags = fcntl.fcntl(ListenProcessFileHandle.stdout, fcntl.F_GETFL)  # get current p.stdout flags
 		fcntl.fcntl(ListenProcessFileHandle.stdout, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 		time.sleep(0.1)
 		return  ""
+
 	except	Exception, e:
 		U.logger.log(20,"startConnect: in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		return "", "error "+ unicode(e)
-		self.indiLOG.log(40,"startConnect timeout, not able to  connect after 20 tries ")
-		return "","error connecting"
+		return  "error "+ unicode(e)
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return  "error"
@@ -2877,53 +2881,46 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 		setEmptybeaconsThisReadCycle(mac)
 
 		### is this a know beacon with a known tag ?
-		rejectThisMessage 	= False
+		rejectThisMessage 	= True
+		tagFound 			= "failed"
 		if mac in onlyTheseMAC:  
-			tag 									= onlyTheseMAC[mac]["typeOfBeacon"]
-			#useOnlyThisTagToAcceptBeaconMsgDefault 	= onlyTheseMAC[mac]["useOnlyThisTagToAcceptBeaconMsgDefault"] # this is from knownbeacons, not used here
-			useOnlyIfTagged 						= onlyTheseMAC[mac]["useOnlyIfTagged"] # this is from props, device edit setiings, overwrites default
-			if tag != "" and useOnlyIfTagged != "":
+			tag 			= onlyTheseMAC[mac]["typeOfBeacon"]
+			useOnlyIfTagged = onlyTheseMAC[mac]["useOnlyIfTagged"] # this is from props, device edit setiings, overwrites default
+
+			if useOnlyIfTagged == 0: 
+				rejectThisMessage = False
+
+			if tag != "":
 				if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-					writeTrackMac( "tag-1 ", "tag:{}, useOnlyPrioMsg: {}".format(tag, useOnlyIfTagged), mac)
+					writeTrackMac( "tag-1 ", "tag:{}, useOnlyIfTagged: {}".format(tag, useOnlyIfTagged), mac)
 				# right message format, if yes us main UUID
 				if  tag in knownBeaconTags:
 					UUID1 	= tag
 					UUID 	= UUID1
 					posFound, dPos, Maj, Min = testComplexTag(hexstr[12:-2], tag, mac, macplain, macplainReverse, Maj, Min)
 					if tag == "iBeacon" and iBeacon != "":
+						rejectThisMessage = False
 						iB = iBeacon.split("-")
 						Maj  = iB[1]
 						Min  = iB[2]
 
 					if posFound == -1 or abs(dPos) > knownBeaconTags[tag]["posDelta"]:
 						tagFound = "failed"
-						if useOnlyIfTagged =="1":
-							rejectThisMessage = True
 					else: 
 						tagFound = "found"
 						rejectThisMessage = False
 						typeOfBeacon = tag
 
 				else: 
-					rejectThisMessage 	= True
 					tagFound = "failed"
-
-			else: 
-				rejectThisMessage 	= True
-				tagFound = "failed"
-
-		else:
-			rejectThisMessage = True
-			tagFound = "failed"
 
 
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac( "tag-5 ", "rejectThisMessage:{}, tagFound:{}; UUID: {}, Maj: {}, Min: {}".format(rejectThisMessage, tagFound, UUID, Maj, Min),mac)
 
 		## mac not in current list, check if should look for it = accept new beacons?
-		if tagFound  != "found" and (acceptNewTagiBeacons !="off"):#   for testing only or trackMac != ""):
+		if tagFound  != "found" and (acceptNewTagiBeacons != "off"):#   for testing only or trackMac != ""):
 			## check if in tag list
-		
 
 			for seq in range(0,5): # check high prio first starts w 0
 				for tag in knownBeaconTags:
@@ -3175,7 +3172,7 @@ def execbeaconloop(test):
 		return
 
 	if rpiDataAcquistionMethod == "hcidump":
-		retCode = startHCUIDUMPlistener(useHCI)
+		retCode = startHCUIDUMPlistnr(useHCI)
 		if retCode != "":
 			U.logger.log(30,"beaconloop exit, === error in starting HCIdump listener, exit beaconloop ===")
 			return
@@ -3256,7 +3253,7 @@ def execbeaconloop(test):
 				iiWhile -= 1
 				tt = round(time.time(),2)
 				
-				if reasonMax > 1 and tt -G.tStart > 30: break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
+				if (reasonMax > 1 or loopCount == 1 ) and tt -G.tStart > 30 : break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
 
 				if tt - timeAtLoopStart	 > sendAfter: 
 					break # send curl msgs after collecting for xx seconds
@@ -3362,7 +3359,6 @@ def execbeaconloop(test):
 						U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping")
 						continue
 
-
 				
 				sensCheck, paramCheck = doLoopCheck(tt, sensCheck, paramCheck, sensor, useHCI )
 
@@ -3405,7 +3401,7 @@ def execbeaconloop(test):
 						time.sleep(0.5)
 						stopHCUIDUMPlistener()
 						sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber)
-						startHCUIDUMPlistener(useHCI)
+						startHCUIDUMPlistnr(useHCI)
 						#U.restartMyself(param="", reason="no messages:{} in a row;  hcitool -i hcix / hcidump -i hcix  not running, ".format(nEmptyMessagesInARow))
 
 			if nEmptyMessagesInARow > 20:
