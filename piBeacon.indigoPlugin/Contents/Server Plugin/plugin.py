@@ -15882,35 +15882,35 @@ class Plugin(indigo.PluginBase):
 				if devId >0:
 					try:	dev = indigo.devices[devId]
 					except: continue
-				props = dev.pluginProps
-				if self.beacons[beacon][u"ignore"] == 0 and dev.enabled:
-					xx2[beacon] = { "typeOfBeacon":"", "useOnlyIfTagged":""}
-					tag = self.beacons[beacon]["typeOfBeacon"]
-					xx2[beacon]["typeOfBeacon"] = tag
+					props = dev.pluginProps
+					if self.beacons[beacon][u"ignore"] == 0 and dev.enabled:
+						xx2[beacon] = { "typeOfBeacon":"", "useOnlyIfTagged":""}
+						tag = self.beacons[beacon]["typeOfBeacon"]
+						xx2[beacon]["typeOfBeacon"] = tag
 					
-					xx2[beacon]["useOnlyIfTagged"] = 0
-					try: 
-						xx2[beacon]["useOnlyIfTagged"] = int(self.beacons[beacon]["useOnlyPrioTagMessageTypes"])
-					except: 
-						if tag in self.knownBeaconTags:
-							xx2[beacon]["useOnlyIfTagged"] = self.knownBeaconTags[tag]["useOnlyThisTagToAcceptBeaconMsgDefault"]
+						xx2[beacon]["useOnlyIfTagged"] = 0
+						try: 
+							xx2[beacon]["useOnlyIfTagged"] = int(self.beacons[beacon]["useOnlyPrioTagMessageTypes"])
+						except: 
+							if tag in self.knownBeaconTags:
+								xx2[beacon]["useOnlyIfTagged"] = self.knownBeaconTags[tag]["useOnlyThisTagToAcceptBeaconMsgDefault"]
 
-				try:
-					if int(props[u"signalDelta"]) < 200:
-						xx4[beacon] = int(props[u"signalDelta"])
-				except:pass
-				try:
-					if int(props[u"minSignalOn"]) >-200:
-						xx5[beacon] = int(props[u"minSignalOn"])
-				except:	pass
-				try:
-					if int(props[u"minSignalOff"]) >200:
-						xx5[beacon] = int(props[u"minSignalOff"])
-				except:	pass
-				try:	
-					if int(props[u"fastDown"]) >0: 
-						xx8[beacon] = {u"seconds":int(props[u"fastDown"])}
-				except:	pass
+					try:
+						if int(props[u"signalDelta"]) < 200:
+							xx4[beacon] = int(props[u"signalDelta"])
+					except:pass
+					try:
+						if int(props[u"minSignalOn"]) >-200:
+							xx5[beacon] = int(props[u"minSignalOn"])
+					except:	pass
+					try:
+						if int(props[u"minSignalOff"]) >200:
+							xx5[beacon] = int(props[u"minSignalOff"])
+					except:	pass
+					try:	
+						if int(props[u"fastDown"]) >0: 
+							xx8[beacon] = {u"seconds":int(props[u"fastDown"])}
+					except:	pass
 
 			out["ignoreMAC"]			= xx1
 			out["onlyTheseMAC"]			= xx2

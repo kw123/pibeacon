@@ -32,6 +32,27 @@ Orbit             7 x  round           yes     yes     yes     yes         ?    
                        ===ibeacon + Sensors
 ruuviTag          8 x  round Big       no      yes     no      no          yes      cr2450 1Y                 T,H,P,A  no      display of sensors values
 myBueT            4 x  oval small      yes     yes     no      no          no       cr2032 3 M                T        yes     no app, only send ibeacon msg w T
+INGICS: iBSxx     9 x  larger          -       yes     no      no          yes      various                   T,H,P,A  some    wokr as beacon as well as sensors
+		iBS01-x: Family of on/off sensors- Button, magent, movement, external switch 
+		iBS01T:  Temp and humidity
+		iBS01RG: x-y-z acceleration/ gravity sensor
+		iBS02:   PIR presence ir IR object detection
+		iBS03-x: Family of on/off sensors- Button, magent, movement, external switch 
+		iBS03G:  Movement detection of beacon on/off
+		iBS03T:  on board temp sensor
+		iBS03TP: on board temp sensor + temp sensor probe, water proved 
+		iBS03RG: x-y-z acceleration/ gravity sensor
+Minew 
+                  8 x  various          --     yes     no      no          yes      various                   see below        display of sensors values
+		E8: x-y-z acceleration/ gravity sensor
+
+iSensor - Kaipule
+                  8 x  round Big       no      yes     no      no          yes      cr2450 1Y                 T,H,P,A  no      display of sensors values
+		various on/off sensors for GAS, CO water, alarm ... 
+		EN61, ES61, EW70, ET90, IM21, IX30 IX32
+Satech .. not recommended SOS button disables the device, needs a power cyle 
+		STixx sensors, acceleration, temp, humidity, on/off
+
 
 ++ pure iBeacon types ===
 Minew 01..08      8 x  ?               yes     yes     no      no          yes      ??		                  no       yes     iBeacon,EddyStone, conf: TX, repeat
