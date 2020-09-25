@@ -108,6 +108,7 @@ _GlobalConst_emptyrPiProps	  ={
 	u"isRPIDevice" :				True,
 	u"useOnlyPrioTagMessageTypes":  "0",
 	u"typeOfBeacon":  				"rPI",
+	u"rpiDataAcquistionMethod":  	"hcidump",
 	u"shutDownPinOutput" :			u"-1" }
 
 _GlobalConst_fillMinMaxStates = ["Temperature","AmbientTemperature","Pressure","Altitude","Humidity","AirQuality","visible","ambient","white","illuminance","IR","CO2","VOC","INPUT_0","rainRate","Moisture","INPUT"]
@@ -1109,16 +1110,19 @@ class Plugin(indigo.PluginBase):
 											self.acceptNewiBeacons  = -999
 			except:
 				self.acceptNewiBeacons		= -999
+			self.pluginPrefs[u"acceptNewiBeacons"] = self.acceptNewiBeacons
+
 
 			self.acceptNewTagiBeacons		= self.pluginPrefs.get(u"acceptNewTagiBeacons","off")
+			self.pluginPrefs[u"acceptNewTagiBeacons"] = self.acceptNewTagiBeacons
 
 			self.acceptJunkBeacons			=  u"0"
 
 
 			try:
-				self.removeJunkBeacons		= self.pluginPrefs.get(u"removeJunkBeacons", u"1")==u"1"
+				self.removeJunkBeacons		= self.pluginPrefs.get(u"removeJunkBeacons", u"1") == u"1"
 			except:
-				self.removeJunkBeacons		= True
+				self.removeJunkBeacons		= False
 
 			try:
 				self.restartBLEifNoConnect = self.pluginPrefs.get(u"restartBLEifNoConnect", u"1") == "1"
@@ -9545,17 +9549,6 @@ class Plugin(indigo.PluginBase):
 				self.SQLLoggingEnable = {"devices":True, "variables":True}
 
 
-			try:
-				if unicode(self.acceptNewiBeacons) != unicode(valuesDict[u"acceptNewiBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-				self.acceptNewiBeacons			   = int(valuesDict[u"acceptNewiBeacons"])
-			except:			   pass
-
-			if self.acceptNewTagiBeacons 		   != valuesDict[u"acceptNewTagiBeacons"]: self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-			self.acceptNewTagiBeacons				= valuesDict[u"acceptNewTagiBeacons"]
-
-			if unicode(self.acceptJunkBeacons) 	   != unicode(valuesDict[u"acceptJunkBeacons"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-			self.acceptJunkBeacons					= valuesDict[u"acceptJunkBeacons"]
-
 
 			try: self.speedUnits					= max(0.01, float(valuesDict[u"speedUnits"]))
 			except: self.speedUnits					= 1.
@@ -15145,6 +15138,9 @@ class Plugin(indigo.PluginBase):
 				if newRPI != "found":
 					self.indiLOG.log(20, u"creating new pi (3.)  -- fromPI: {};   piNR: {};   piMACSend: {};   ipAddress: {} " .format(fromPiU, piNReceived, piMACSend, ipAddress) )
 
+					newProps = copy.copy(_GlobalConst_emptyrPiProps)
+					newProps["rpiDataAcquistionMethod"] = self.rpiDataAcquistionMethod
+
 					indigo.device.create(
 						protocol		= indigo.kProtocol.Plugin,
 						address			= piMACSend,
@@ -15153,7 +15149,7 @@ class Plugin(indigo.PluginBase):
 						pluginId		= self.pluginId,
 						deviceTypeId	= "rPI",
 						folder			= self.piFolderId,
-						props			=  copy.deepcopy(_GlobalConst_emptyrPiProps)
+						props			= newProps
 						)
 
 					try:
@@ -15997,8 +15993,6 @@ class Plugin(indigo.PluginBase):
 				out[u"restartBLEifNoConnect"]	  = self.restartBLEifNoConnect
 				out[u"acceptNewiBeacons"]		  = self.acceptNewiBeacons
 				out[u"acceptNewTagiBeacons"]	  = self.acceptNewTagiBeacons
-				out[u"acceptJunkBeacons"]		  = self.acceptJunkBeacons
-				out[u"rpiDataAcquistionMethod"]	  = self.rpiDataAcquistionMethod
 				out[u"rebootHour"]				  = -1
 				out[u"ipOfServer"]				  = self.myIpNumber
 				out[u"portOfServer"]			  = self.portOfServer
@@ -16050,6 +16044,12 @@ class Plugin(indigo.PluginBase):
 							self.fixConfig(checkOnly = ["all","rpi"],fromPGM="makeParametersFile2")
 
 					if piDeviceExist: 
+
+						if "rpiDataAcquistionMethod" in props and props["rpiDataAcquistionMethod"] in["socket","hcidump"]:
+								out[u"rpiDataAcquistionMethod"]	  = props["rpiDataAcquistionMethod"]
+						else:
+								out[u"rpiDataAcquistionMethod"]	  = self.rpiDataAcquistionMethod
+
 						if u"eth0" in props and "wlan0" in props:
 							try: 	out[u"wifiEth"] =  {"eth0":json.loads(props[u"eth0"]), "wlan0":json.loads(props[u"wlan0"])}
 							except: pass			

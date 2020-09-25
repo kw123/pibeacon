@@ -157,14 +157,7 @@
     "text":"BlackCard",
     "Maj":"",
     "Min":"",
-    "battCmd": {
-      "bits": 127, 
-      "shift": 0,
-      "offset": 0,
-      "norm": 100, 
-      "random": "public", 
-      "uuid": "2A19"
-    }, 
+    "battCmd": "off",
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 

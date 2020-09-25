@@ -219,6 +219,15 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
+			<Field id="rpiDataAcquistionMethod" type="menu"     defaultValue="hcidump" tooltip=" ">
+				<Label> .... use socket or commandline for Data acquisition:</Label>
+				<List>
+					<Option value="socket"   >use python socket programming</Option>
+					<Option value="hcidump"  >hcidump tool </Option>
+				</List>
+			</Field>
+
+
 			<Field id="BLEconnectUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
 				<Label> .... BLEconnect:</Label>
 				<List>

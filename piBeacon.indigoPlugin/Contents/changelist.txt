@@ -35,6 +35,9 @@ Added features / changes in v7.127.453 @ 2020-10-23
   When set to eg up=-60 and down=-80: the beacon will only go up when it is close to the RPI  ~ 1 m. but will stay up until it has eg left the room (>10m) 
   with this setting you can decide if a beacon is in a room - that requires an RPI in each room you like to have this feature
 
+5. change hcidump method to include more advertising message types. in v.451 some where excluded
+
+
 
 Added features / changes in v7.126.438 @ 2020-08-31
 ===================================================
