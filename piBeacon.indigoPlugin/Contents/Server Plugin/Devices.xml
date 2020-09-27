@@ -193,6 +193,28 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
+
+
+			<Field id="hcidumplabel" type="label" fontColor="green" >  
+				<Label>== how to scan for beacon messages</Label>	</Field>
+			<Field id="rpiDataAcquistionMethod" type="menu"     defaultValue="hcidumpNoRestart" tooltip=" ">
+				<Label> .... use socket or hcidump/lescan for Data acquisition:</Label>
+				<List>
+					<Option value="socket"   >use python socket programming</Option>
+					<Option value="hcidumpNoRestart"  >hcidump/lescan tool </Option>
+					<Option value="hcidump"  >hcidump/lescan tool, with restart every 5 minutes </Option>
+				</List>
+			</Field>
+			<Field id="hcidumplabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>The plugin offers 2 methods to read messasages
+1) python socket calls. This methode does not catch all messages. ie messages with mfg_info etc
+2) using commandline tools hcidump and lescan. They work on most RPI flawlessly, but
+using eg pi-0-w with USB BLE dongle, it likes to get retstarted. The restart takes ~ 1 sec, during that time no messages get received.
+That should not pose a problem. It should be used as default
+</Label>	
+			</Field>
+
+
 			<Field id="BLELabel" type="label" fontColor="green" >  
 				<Label>== BLEconnect:...</Label>	</Field>
 			<Field id="BLEserial" type="menu"     defaultValue="sequential" tooltip=" ">
@@ -218,16 +240,6 @@ Change here or in initial setup:</Label>
 					<Option value="USB"   >use USB = external  when using WiFi on board</Option>
 				</List>
 			</Field>
-
-			<Field id="rpiDataAcquistionMethod" type="menu"     defaultValue="hcidump" tooltip=" ">
-				<Label> .... use socket or commandline for Data acquisition:</Label>
-				<List>
-					<Option value="socket"   >use python socket programming</Option>
-					<Option value="hcidump"  >hcidump tool </Option>
-				</List>
-			</Field>
-
-
 			<Field id="BLEconnectUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
 				<Label> .... BLEconnect:</Label>
 				<List>
@@ -6219,10 +6231,22 @@ set trigger and sensitivity parameters ===
 			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
 			<Label>==  To setup this  on/off BLE "iSensor" 
 Find MAC number on back of beacon or use the plugin tool detect new beacon 
-This sensor family sends messages when button pressed, water detected, gas, CO found ..
-The device will go RED = off when an event happens (you can select teh color)
-It will send an alive broadcast every xx minutes .. up to an hour ===
+This sensor family sends messages when device button pressed ..
+The device will go RED = off when an event happens (you can select the color)
+It will send an alive broadcast every xx minutes .. up to an hour 
+this device type supports not remote button types:
+IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTemp
+remote button types:
+DoorBell, RemoteKeyFob, WirelessKeypad, WirelessSiren, RemoteSwitch
+===
 </Label>
+			</Field>
+			<Field id="subType" type="menu"     defaultValue="notRemote"  >
+				<List>
+					<Option value="notRemote" >not remote, siomple on-off </Option>
+					<Option value="remote" >not remote, siomple on-off </Option>
+				</List>
+			<Label>subtype of device:</Label>
 			</Field>
 
 			<Field id="mac" type="textfield"     defaultValue=""  >
@@ -6294,6 +6318,31 @@ It will send an alive broadcast every xx minutes .. up to an hour ===
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
+			</State>
+			<State id="SOS">
+				<ValueType>String</ValueType>
+				<TriggerLabel>SOS</TriggerLabel>
+				<ControlPageLabel>SOS</ControlPageLabel>
+			</State>
+			<State id="home">
+				<ValueType>String</ValueType>
+				<TriggerLabel>home</TriggerLabel>
+				<ControlPageLabel>home</ControlPageLabel>
+			</State>
+			<State id="away">
+				<ValueType>String</ValueType>
+				<TriggerLabel>away</TriggerLabel>
+				<ControlPageLabel>away</ControlPageLabel>
+			</State>
+			<State id="disarm">
+				<ValueType>String</ValueType>
+				<TriggerLabel>disarm</TriggerLabel>
+				<ControlPageLabel>disarm</ControlPageLabel>
+			</State>
+			<State id="state">
+				<ValueType>String</ValueType>
+				<TriggerLabel>state</TriggerLabel>
+				<ControlPageLabel>state</ControlPageLabel>
 			</State>
 			<State id="tampered">
 				<ValueType>String</ValueType>

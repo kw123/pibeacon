@@ -112,9 +112,6 @@
             <Option value="0" >set to blank </Option>
         </List>
    </Field>
-   <Field id="sacceptJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-        <Label>reject beacons that do not comply with ibeacon message standard (ie VERY short messages)</Label>
-    </Field>
 
        <Field    id="sendFullUUID"   type="menu" defaultValue="1" tooltip="short messages reduces message size by 50%">
         <Label>RPi to send full UUID in every message or only every 10ths:</Label>

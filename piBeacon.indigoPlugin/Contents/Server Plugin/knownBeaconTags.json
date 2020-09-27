@@ -168,7 +168,7 @@
     "hexCode": "1X020104030225FAXXFF0E05A00033E2"
   }, 
   "BlueCharm_BC011":  {
-    "text":"BlueCharm_BC011",
+    "text":"BlueCharm BC011",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -189,7 +189,7 @@
     "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
   }, 
   "BlueCharm_BC0631":  {
-    "text":"BlueCharm_BC0631",
+    "text":"BlueCharm BC0631",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -232,7 +232,7 @@
     "hexCode": "0F020106030300F007094355424500"
   }, 
   "Feasy_BP103_Triangle":  {
-    "text":"Feasy_BP103_Triangle",
+    "text":"Feasy BP103 Triangle",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=15,norm=100", 
@@ -246,7 +246,7 @@
     "hexCode":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
   }, 
   "Feasy_BP109_USB":  {
-    "text":"Feasy_BP109_USB",
+    "text":"Feasy BP109 USB",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=19,norm=101", 
@@ -260,7 +260,7 @@
     "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
   }, 
   "Feasy_BP104_AAA":  {
-    "text":"Feasy_BP104_AAA",
+    "text":"Feasy BP104 AAA",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=15,norm=100", 
@@ -296,7 +296,7 @@
     "hexCode": "13020106030301E00B09496E6E7761"
   }, 
   "Nonda_Aiko":  {
-    "text":"Nonda_Aiko ",
+    "text":"Nonda Aiko ",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -325,7 +325,7 @@
     "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
   }, 
   "Nonda_iHere":  {
-    "text":"Nonda_iHere",
+    "text":"Nonda iHere",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -545,7 +545,7 @@
     "hexCode": "546F76616C61"
   }, 
   "Vozni_iTrack":  {
-    "text":"Vozni - iTrack",
+    "text":"Vozni - iTrack app",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -578,7 +578,7 @@
     "hexCode": "1X02010X030202180AFF4B4D02RMAC########-" 
   }, 
   "Rinex_Njoii_iTrack":  {
-    "text":"Rinex & Njoii - iTrack",
+    "text":"Rinex & Njoii - iTrack app",
     "Maj":"",
     "Min":"",
     "battCmd": {

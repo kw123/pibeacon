@@ -1013,131 +1013,83 @@ class Plugin(indigo.PluginBase):
 				self.rPiCommandPORT			= self.pluginPrefs.get(u"rPiCommandPORT", u"9999")
 			except:
 				self.rPiCommandPORT			= "0" # port on rPis to receive commands ==0 disable
-			try:
-				self.iBeaconFolderName		= self.pluginPrefs.get(u"iBeaconFolderName", u"Pi_Beacons_new")
-			except:
-				self.iBeaconFolderName		= u"Pi_Beacons_new" 
-			try:
-				self.iBeaconFolderNameVariables	 = self.pluginPrefs.get(u"iBeaconFolderNameVariables", u"piBeacons")
-			except:
-				self.iBeaconFolderNameVariables	 = u"piBeacons" 
-			try:
-				self.automaticRPIReplacement= unicode(self.pluginPrefs.get(u"automaticRPIReplacement", u"False")).lower() == u"true" 
-			except:
-				self.automaticRPIReplacement= False 
 
-			try:
-				self.setClostestRPItextToBlank= self.pluginPrefs.get(u"setClostestRPItextToBlank","1") !="1"
-			except:
-				self.setClostestRPItextToBlank= False
+			try:				self.iBeaconFolderName		= self.pluginPrefs.get(u"iBeaconFolderName", u"Pi_Beacons_new")
+			except:				self.iBeaconFolderName		= u"Pi_Beacons_new" 
+			self.pluginPrefs[u"iBeaconFolderName"] = self.iBeaconFolderName
 
-			try:
-				self.enableRebootRPIifNoMessages  = int(self.pluginPrefs.get(u"enableRebootRPIifNoMessages", 999999999))
-			except:
-				self.enableRebootRPIifNoMessages  = 999999999
+			try:				self.iBeaconFolderNameVariables	 = self.pluginPrefs.get(u"iBeaconFolderNameVariables", u"piBeacons")
+			except:				self.iBeaconFolderNameVariables	 = u"piBeacons" 
+			self.pluginPrefs[u"iBeaconFolderNameVariables"] = self.iBeaconFolderNameVariables
 
-			try:
-				self.rpiDataAcquistionMethod  =  self.pluginPrefs.get(u"rpiDataAcquistionMethod", "hcidump")
-			except:
-				self.rpiDataAcquistionMethod  = "hcidump"
+			try:				self.automaticRPIReplacement= unicode(self.pluginPrefs.get(u"automaticRPIReplacement", u"False")).lower() == u"true" 
+			except:				self.automaticRPIReplacement= False 
+
+			try:				self.setClostestRPItextToBlank= self.pluginPrefs.get(u"setClostestRPItextToBlank","1") !="1"
+			except:				self.setClostestRPItextToBlank= False
+
+			try:				self.enableRebootRPIifNoMessages  = int(self.pluginPrefs.get(u"enableRebootRPIifNoMessages", 999999999))
+			except:				self.enableRebootRPIifNoMessages  = 999999999
+			self.pluginPrefs[u"enableRebootRPIifNoMessages"] = self.enableRebootRPIifNoMessages
+
+			try:				self.rpiDataAcquistionMethod  =  self.pluginPrefs.get(u"rpiDataAcquistionMethod", _GlobalConst_emptyrPiProps["rpiDataAcquistionMethod"])
+			except:				self.rpiDataAcquistionMethod  = _GlobalConst_emptyrPiProps["rpiDataAcquistionMethod"]
+			self.pluginPrefs[u"rpiDataAcquistionMethod"] = self.rpiDataAcquistionMethod
 
 
-			try:
-				self.tempUnits				= self.pluginPrefs.get(u"tempUnits", u"Celsius")
-			except:
-				self.tempUnits				= u"Celsius"
+			try:				self.tempUnits				= self.pluginPrefs.get(u"tempUnits", u"Celsius")
+			except:				self.tempUnits				= u"Celsius"
 
-			try:
-				self.tempDigits				 = int(self.pluginPrefs.get(u"tempDigits", 1))
-			except:
-				self.tempDigits				 = 1
+			try:				self.tempDigits				 = int(self.pluginPrefs.get(u"tempDigits", 1))
+			except:				self.tempDigits				 = 1
 
-			try:
-				self.rainUnits				= self.pluginPrefs.get(u"rainUnits", u"mm")
-			except:
-				self.rainUnits				= u"mm"
+			try:				self.rainUnits				= self.pluginPrefs.get(u"rainUnits", u"mm")
+			except:				self.rainUnits				= u"mm"
 
-			try:
-				self.rainDigits				 = int(self.pluginPrefs.get(u"rainDigits", 0))
-			except:
-				self.rainDigits				 = 0
+			try:				self.rainDigits				 = int(self.pluginPrefs.get(u"rainDigits", 0))
+			except:				self.rainDigits				 = 0
 
-			try:
-				self.pressureUnits			= self.pluginPrefs.get(u"pressureUnits", u"hPascal")
-			except:
-				self.pressureUnits			= u"hPascal"
-			if 	self.pressureUnits			== u"mbar": self.pressureUnits = u"mBar"
+			try:				self.pressureUnits			= self.pluginPrefs.get(u"pressureUnits", u"mBar")
+			except:				self.pressureUnits			= u"hPascal"
+			if 	self.pressureUnits==  u"mbar": 				self.pressureUnits = u"mBar"
+			self.pluginPrefs[u"pressureUnits"] = self.pressureUnits
  
-			self.saveValuesDictChanged	= False
-			try:
-				self.saveValuesDict			= self.pluginPrefs.get(u"saveValuesDict", indigo.Dict())
-			except:
-				self.saveValuesDict			= indigo.Dict()
 
-			try:
-				self.distanceUnits			= max(0.0254, float(self.pluginPrefs.get(u"distanceUnits", 1.)))
-			except:
-				self.distanceUnits			= 1.0
-			try:
-				self.speedUnits				= max(0.01, float(self.pluginPrefs.get(u"speedUnits", 1.)))
-			except:
-				self.speedUnits				= 1.0
+			try:				self.distanceUnits			= max(0.0254, float(self.pluginPrefs.get(u"distanceUnits", 1.)))
+			except:				self.distanceUnits			= 1.0
+			try:				self.speedUnits				= max(0.01, float(self.pluginPrefs.get(u"speedUnits", 1.)))
+			except:				self.speedUnits				= 1.0
 
-			try:
-				self.lightningTimeWindow	 = float(self.pluginPrefs.get(u"lightningTimeWindow", 10.))
-			except:
-				self.lightningTimeWindow	 = 10.0
+			try:				self.lightningTimeWindow	 = float(self.pluginPrefs.get(u"lightningTimeWindow", 10.))
+			except:				self.lightningTimeWindow	 = 10.0
 
 
-			try:
-				self.lightningNumerOfSensors = int(self.pluginPrefs.get(u"lightningNumerOfSensors", 1))
-			except:
-				self.lightningNumerOfSensors = 1
+			try:				self.lightningNumerOfSensors = int(self.pluginPrefs.get(u"lightningNumerOfSensors", 1))
+			except:				self.lightningNumerOfSensors = 1
 
 
-			try:
-				self.secToDown				= float(self.pluginPrefs.get(u"secToDown", u"80"))
-			except:
-				self.secToDown				= 80.
+			try:				self.secToDown				= float(self.pluginPrefs.get(u"secToDown", u"80"))
+			except:				self.secToDown				= 80.
 
-			try:
-				self.acceptNewiBeacons		= int(self.pluginPrefs.get(u"acceptNewiBeacons", -999))
-				if self.acceptNewiBeacons  == u"1": 
-											self.pluginPrefs[u"acceptNewiBeacons"] = -999
-											self.acceptNewiBeacons  = -999
-				if self.acceptNewiBeacons  == u"0": 
-											self.pluginPrefs[u"acceptNewiBeacons"] = -999
-											self.acceptNewiBeacons  = -999
-			except:
-				self.acceptNewiBeacons		= -999
-			self.pluginPrefs[u"acceptNewiBeacons"] = self.acceptNewiBeacons
+			try:				self.acceptNewiBeacons		= int(self.pluginPrefs.get(u"acceptNewiBeacons", -999))
+			except:				self.acceptNewiBeacons		= -999
+			if self.acceptNewiBeacons in [u"0", u"1"]: 		self.acceptNewiBeacons  = -999
+			self.pluginPrefs[u"acceptNewiBeacons"] 			= self.acceptNewiBeacons
 
+			self.acceptNewTagiBeacons						= self.pluginPrefs.get(u"acceptNewTagiBeacons","off")
+			self.pluginPrefs[u"acceptNewTagiBeacons"] 		= self.acceptNewTagiBeacons
 
-			self.acceptNewTagiBeacons		= self.pluginPrefs.get(u"acceptNewTagiBeacons","off")
-			self.pluginPrefs[u"acceptNewTagiBeacons"] = self.acceptNewTagiBeacons
+			try:				self.removeJunkBeacons		= self.pluginPrefs.get(u"removeJunkBeacons", u"1") == u"1"
+			except:				self.removeJunkBeacons		= False
 
-			self.acceptJunkBeacons			=  u"0"
+			try:				self.restartBLEifNoConnect = self.pluginPrefs.get(u"restartBLEifNoConnect", u"1") == "1"
+			except :				self.restartBLEifNoConnect = True
 
+			try:				self.rebootWatchDogTime		= self.pluginPrefs.get(u"rebootWatchDogTime", u"-1")
+			except:				self.rebootWatchDogTime		= u"-1"
 
-			try:
-				self.removeJunkBeacons		= self.pluginPrefs.get(u"removeJunkBeacons", u"1") == u"1"
-			except:
-				self.removeJunkBeacons		= False
-
-			try:
-				self.restartBLEifNoConnect = self.pluginPrefs.get(u"restartBLEifNoConnect", u"1") == "1"
-			except :
-				self.restartBLEifNoConnect = True
-
-			try:
-				self.rebootWatchDogTime		= self.pluginPrefs.get(u"rebootWatchDogTime", u"-1")
-			except:
-				self.rebootWatchDogTime		= u"-1"
-
-			try:
-				self.expectTimeout			= self.pluginPrefs.get(u"expectTimeout", u"20")
-			except:
-				self.expectTimeout			= "20"
+			try:				self.expectTimeout			= self.pluginPrefs.get(u"expectTimeout", u"20")
+			except:				self.expectTimeout			= "20"
 
 
 			self.indigoInputPORT			= int(self.pluginPrefs.get(u"indigoInputPORT", 0))
@@ -1153,15 +1105,13 @@ class Plugin(indigo.PluginBase):
 			self.myIpNumber					= self.pluginPrefs.get(u"myIpNumber", u"192.168.1.130")
 			self.GPIOpwm					= self.pluginPrefs.get(u"GPIOpwm", 1)
 
-			try:	self.rebootHour			= int(self.pluginPrefs.get(u"rebootHour", -1))
-			except: self.rebootHour			= -1
+			try:				self.rebootHour			= int(self.pluginPrefs.get(u"rebootHour", -1))
+			except: 			self.rebootHour			= -1
 
 			self.updateRejectListsCount		= 0
 
-			try:
-				self.piUpdateWindow			= float(self.pluginPrefs.get(u"piUpdateWindow", 0))
-			except:
-				self.piUpdateWindow			= 0.
+			try:				self.piUpdateWindow			= float(self.pluginPrefs.get(u"piUpdateWindow", 0))
+			except:				self.piUpdateWindow			= 0.
 
 			self.rPiRestartCommand			= [u"" for ii in range(_GlobalConst_numberOfRPI)]  ## which part need to restart on rpi
 
@@ -1174,15 +1124,12 @@ class Plugin(indigo.PluginBase):
 			self.key_mgmt					= self.pluginPrefs.get(u"key_mgmt", u"")
 			eth0							= '{"on":"dontChange",	"useIP":"use"}'
 			wlan0							= '{"on":"dontChange",	"useIP":"useIf"}'
-			try: 
-				self.wifiEth				= {"eth0":json.loads(self.pluginPrefs.get(u"eth0", eth0)), "wlan0":json.loads(self.pluginPrefs.get(u"wlan0", wlan0))}
-			except: self.wifiEth			= {"eth0":json.loads(eth0),"wlan0":json.loads(wlan0)}
+			try: 			self.wifiEth	= {"eth0":json.loads(self.pluginPrefs.get(u"eth0", eth0)), "wlan0":json.loads(self.pluginPrefs.get(u"wlan0", wlan0))}
+			except: 		self.wifiEth	= {"eth0":json.loads(eth0),"wlan0":json.loads(wlan0)}
 
 			self.fingscanTryAgain			= False
-			try:
-				self.enableFING				= self.pluginPrefs.get(u"enableFING", u"0")
-			except:
-				self.enableFING				= u"0"
+			try:			self.enableFING	= self.pluginPrefs.get(u"enableFING", u"0")
+			except:			self.enableFING	= u"0"
 			self.sendBroadCastEventsList	= []
 			self.enableBroadCastEvents		= self.pluginPrefs.get(u"enableBroadCastEvents", u"0" )
 
@@ -6105,6 +6052,23 @@ class Plugin(indigo.PluginBase):
 		return []
 
 
+
+
+####-------------------------------------------------------------------------####
+
+	def getMenuActionConfigUiValues(self, menuId):
+		#self.indiLOG.log(20, u"getMenuActionConfigUiValues menuId".format(menuId) )
+		valuesDict = indigo.Dict()
+		errorMsgDict = indigo.Dict()
+		if  menuId == "AcceptNewBeacons":
+			valuesDict["acceptNewiBeacons"] = "999"
+			valuesDict["acceptNewTagiBeacons"] = "off"
+		elif menuId == "xx":
+			pass
+		else:
+			pass
+		return (valuesDict, errorMsgDict)
+
 ####-------------------------------------------------------------------------####
 	def buttonConfirmnewBeaconsLogTimerCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		try:
@@ -9156,7 +9120,7 @@ class Plugin(indigo.PluginBase):
 	###########################	   Config  #################################
 ####-------------------------------------------------------------------------####
 	def XXgetPrefsConfigUiValues(self):
-		valuesDict = self.pluginPrefs.get(u"saveValuesDict", indigo.Dict())
+		valuesDict= indigo.Dict()
 		valuesDict[u"piServerNumber"]  = 99
 		valuesDict[u"ipNumberPi"]	   = "192.168.1.999"
 		valuesDict[u"enablePiEntries"] = False
@@ -9788,8 +9752,6 @@ class Plugin(indigo.PluginBase):
 				self.printConfig()
 
 			self.fixConfig(checkOnly = ["all","rpi","force"],fromPGM="validatePrefsConfigUi")
-			self.saveValuesDict = valuesDict
-			self.saveValuesDictChanged = True
 		except Exception, e:
 			if unicode(e) != "None":
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -10383,9 +10345,6 @@ class Plugin(indigo.PluginBase):
 	def checkForUpdates(self,now):
 		anyChange= False
 		try:
-			if self.saveValuesDictChanged:
-				self.saveValuesDictChanged = False
-				self.pluginPrefs[u"saveValuesDict"] = self.saveValuesDict
 
 			if time.time()- self.lastUpdateSend > 3600:	 ## send config every hour, no other action
 				self.rPiRestartCommand = [u"" for ii in range(_GlobalConst_numberOfRPI)]  # soft update, no restart required
@@ -13228,28 +13187,36 @@ class Plugin(indigo.PluginBase):
 				inverse = True #on=red,off=green
 
 			stChanged = False
-			if data["onOff"]: 
-				if not dev.states[u"onOffState"]:
-					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
-					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
-					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
-					if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-					else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					stChanged = True
-			else:	
-				if dev.states[u"onOffState"]:
-					self.addToStatesUpdateDict(dev.id,u"onOffState",  False) 
-					if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-					stChanged = True
+			if "onOff" in data:
+				if data["onOff"]: 
+					if not dev.states[u"onOffState"]:
+						self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+						self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+						self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+						if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+						else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						stChanged = True
+				else:	
+					if dev.states[u"onOffState"]:
+						self.addToStatesUpdateDict(dev.id,u"onOffState",  False) 
+						if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+						stChanged = True
+			else: pass
 
-			if not stChanged: 	self.addToStatesUpdateDict(dev.id, u"lastSensorChange", 	dev.states[u"currentOnEvent"]) 
-			if True:
-								self.addToStatesUpdateDict(dev.id, u"lastAliveMessage", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
-								self.addToStatesUpdateDict(dev.id, u"sensorType", 			data[u"sensorType"]) 
-								self.addToStatesUpdateDict(dev.id, u"sendsAlive", 			data[u"sendsAlive"]) 
-								self.addToStatesUpdateDict(dev.id, u"lowVoltage", 			data[u"lowVoltage"]) 
-								self.addToStatesUpdateDict(dev.id, u"tampered", 			data[u"tampered"]) 
+			if "SOS" 		in data:	self.addToStatesUpdateDict(dev.id, u"SOS", 					data[u"SOS"]) 
+			if "home" 		in data:	self.addToStatesUpdateDict(dev.id, u"home", 				data[u"home"]) 
+			if "away" 		in data:	self.addToStatesUpdateDict(dev.id, u"away", 				data[u"away"]) 
+			if "disarm" 	in data:	self.addToStatesUpdateDict(dev.id, u"disarm", 				data[u"disarm"]) 
+			if "state" 		in data:	self.addToStatesUpdateDict(dev.id, u"state", 				data[u"state"]) 
+			if "sensorType" in data:	self.addToStatesUpdateDict(dev.id, u"sensorType", 			data[u"sensorType"]) 
+			if "sendsAlive" in data:	self.addToStatesUpdateDict(dev.id, u"sendsAlive", 			data[u"sendsAlive"]) 
+			if "lowVoltage" in data:	self.addToStatesUpdateDict(dev.id, u"lowVoltage", 			data[u"lowVoltage"]) 
+			if "tampered" 	in data:	self.addToStatesUpdateDict(dev.id, u"tampered", 			data[u"tampered"]) 
+
+			if True:					self.addToStatesUpdateDict(dev.id, u"lastAliveMessage", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+
+			if not stChanged: 			self.addToStatesUpdateDict(dev.id, u"lastSensorChange", 	dev.states[u"currentOnEvent"]) 
 
 		# set to grey if expired	 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
@@ -16045,7 +16012,7 @@ class Plugin(indigo.PluginBase):
 
 					if piDeviceExist: 
 
-						if "rpiDataAcquistionMethod" in props and props["rpiDataAcquistionMethod"] in["socket","hcidump"]:
+						if "rpiDataAcquistionMethod" in props and props["rpiDataAcquistionMethod"] in ["socket","hcidumpNoRestart",_GlobalConst_emptyrPiProps["rpiDataAcquistionMethod"]]:
 								out[u"rpiDataAcquistionMethod"]	  = props["rpiDataAcquistionMethod"]
 						else:
 								out[u"rpiDataAcquistionMethod"]	  = self.rpiDataAcquistionMethod
@@ -17172,7 +17139,6 @@ class Plugin(indigo.PluginBase):
 			self.myLog( text = u"enable FINGSCAN interface    {}" .format(self.enableFING),											   	mType= u"pi configuration")
 			self.myLog( text = u"beacon indigo folder Name    {}" .format(self.iBeaconFolderName),									   	mType= u"pi configuration")
 			self.myLog( text = u"accept newiBeacons           {}" .format(self.acceptNewiBeacons),									   	mType= u"pi configuration")
-			self.myLog( text = u"accept junk beacons          {}" .format(self.acceptJunkBeacons),									   	mType= u"pi configuration")
 			self.myLog( text = u"distance Units	              {}; 1=m, 0.01=cm , 0.0254=in, 0.3=f, 0.9=y".format(self.distanceUnits), 	mType= u"pi configuration")
 			self.myLog( text = u"", 																									mType= u"pi configuration")
 			self.myLog( text = u" ========== EXPERT parameters for each PI:----------", 												mType= u"pi configuration")
