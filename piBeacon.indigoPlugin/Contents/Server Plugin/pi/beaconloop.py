@@ -3228,7 +3228,7 @@ def execbeaconloop(test):
 		U.logger.log(30,"beaconloop exit, recode from getting BLE stack >0, after 3 tries:")
 		return
 
-	if rpiDataAcquistionMethod == "hcidump":
+	if rpiDataAcquistionMethod.find("hcidump") == 0:
 		retCode = startHCUIDUMPlistnr(useHCI)
 		if retCode != "":
 			U.logger.log(30,"beaconloop exit, === error in starting HCIdump listener, exit beaconloop ===")
@@ -3265,7 +3265,7 @@ def execbeaconloop(test):
 		while True:
 			loopCount += 1
 			# max every 5 minutes  .. restart BLE hcidump to clear out temp files if accumulated, takes ~1 secs 
-			if time.time() - restartBLE > 300 and rpiDataAcquistionMethod.find("hcidump" ) == 0:
+			if time.time() - restartBLE > 300 and rpiDataAcquistionMethod == "hcidump":
 				restartBLE = time.time()
 				startBlueTooth(G.myPiNumber,reUse=True,thisHCI=useHCI)
 				retCode = startHCUIDUMPlistnr(useHCI)
