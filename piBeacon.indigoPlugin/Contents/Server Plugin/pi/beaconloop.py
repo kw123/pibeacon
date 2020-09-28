@@ -196,9 +196,10 @@ def startBlueTooth(pi,reUse=False,thisHCI=""):
 					ret = subprocess.call(cmd, shell=True) # enable bluetooth
 					U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
 
-			cmd	 = "sudo hciconfig {} noleadv &\n sudo hciconfig {} noscan &".format(hci, hci)
-			ret = subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
-			U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd.replace("\n",";"), ret, time.time()- startTime)  )
+			if 	rpiDataAcquistionMethod.find("hcidump") == 0:
+				cmd	 = "sudo hciconfig {} noleadv &\n sudo hciconfig {} noscan &".format(hci, hci)
+				ret = subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
+				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd.replace("\n",";"), ret, time.time()- startTime)  )
 
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
@@ -238,7 +239,7 @@ def startBlueTooth(pi,reUse=False,thisHCI=""):
 
 
 
-			if	rpiDataAcquistionMethod == "socket":
+			if	True or rpiDataAcquistionMethod == "socket":
 				####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
 				#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
 				#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
@@ -350,11 +351,11 @@ def restartLESCAN(useHCI, loglevel, force=False):
 			#U.logger.log(20,cmd) 
 			#ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
 			# --privacy and -- duplicates does not work on some RPI / USB devices
-			#cmd	 = "sudo hcitool -i {} lescan --duplicates  > /dev/null 2>&1 &".format(useHCI,G.homeDir)
+			U.killOldPgm(-1,"hcitool") # will kill the launching sudo parent process, lescan still running
+			cmd	 = "sudo hcitool -i {} lescan --duplicates  > /dev/null 2>&1 &".format(useHCI,G.homeDir)
 			#cmd	 = "sudo hcitool -i {} lescan --privacy --passive --discovery=l  > /dev/null 2>&1 &".format(useHCI,G.homeDir)
 			#cmd	 = "sudo hcitool -i {} lescan --passive --discovery=l  > /dev/null 2>&1 &".format(useHCI,G.homeDir)
-			U.killOldPgm(-1,"hcitool") # will kill the launching sudo parent process, lescan still running
-			cmd	 = "sudo hcitool -i {} lescan > /dev/null 2>&1 &".format(useHCI,G.homeDir)
+			#cmd	 = "sudo hcitool -i {} lescan > /dev/null 2>&1 &".format(useHCI,G.homeDir)
 			ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
 			U.logger.log(loglevel,"cmd:{} .. ret:{}...  dT:{:.3f}".format(cmd, ret, time.time() - tt) )
 	except	Exception, e:
@@ -483,7 +484,7 @@ def readHCUIDUMPlistener():
 			#U.logger.log(20, u"Errno 35")
 		if unicode(e).find("[Errno 1]") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
 			pass
-			#U.logger.log(20, u"Errno 11")
+			#U.logger.log(20, u"Errno 1")
 		if unicode(e).find("temporarily") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
 			pass
 			#U.logger.log(20, u"Errno 11")
@@ -498,11 +499,11 @@ def readHCUIDUMPlistener():
 				else:
 					U.logger.log(20,out)
 		time.sleep(0.5)
-		return ""
+		return []
 
 	except	Exception, e:
 		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return ""
+	return []
 #################################
 def combineLines(lines):
 	global readbuffer
@@ -814,7 +815,7 @@ def copyToHistory(mac):
 		beacon_ExistingHistory[mac]["rssi"]			= []
 		beacon_ExistingHistory[mac]["timeSt"]		= []
 		beacon_ExistingHistory[mac]["reason"]		= []
-		beacon_ExistingHistory[mac]["txPower"]		= 0
+		beacon_ExistingHistory[mac]["txPower"]		= ""
 		beacon_ExistingHistory[mac]["count"]		= 1
 
 		#U.logger.log(30,u"mac:{}; beacon_ExistingHistory:{}".format(mac, beacon_ExistingHistory[mac]))
@@ -833,13 +834,14 @@ def fillHistory(mac):
 		beacon_ExistingHistory[mac]["rssi"].append(beaconsThisReadCycle[mac]["rssi"])
 		beacon_ExistingHistory[mac]["timeSt"].append(beaconsThisReadCycle[mac]["timeSt"])
 		beacon_ExistingHistory[mac]["reason"].append(beaconsThisReadCycle[mac]["reason"])
-		beacon_ExistingHistory[mac]["txPower"]				+= beaconsThisReadCycle[mac]["txPower"]
+		if beaconsThisReadCycle[mac]["txPower"] != "": beacon_ExistingHistory[mac]["txPower"] = beaconsThisReadCycle[mac]["txPower"]
 		beacon_ExistingHistory[mac]["count"]				+= 1
 		if beaconsThisReadCycle[mac]["batteryLevel"] !="": 	beacon_ExistingHistory[mac]["batteryLevel"]	= beaconsThisReadCycle[mac]["batteryLevel"]
 		if beaconsThisReadCycle[mac]["iBeacon"] !="": 		beacon_ExistingHistory[mac]["iBeacon"]		= beaconsThisReadCycle[mac]["iBeacon"]
 		if beaconsThisReadCycle[mac]["mfg_info"] !="":		beacon_ExistingHistory[mac]["mfg_info"]		= beaconsThisReadCycle[mac]["mfg_info"]
 		if beaconsThisReadCycle[mac]["typeOfBeacon"] !="":	beacon_ExistingHistory[mac]["typeOfBeacon"]	= beaconsThisReadCycle[mac]["typeOfBeacon"]
 		stripOldHistory(mac)
+		#U.logger.log(20,u"mac {} beaconsThisReadCycle{}".format(mac,beaconsThisReadCycle[mac] ))
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -890,7 +892,13 @@ def composeMSG(timeAtLoopStart):
 			if time.time() - beacon_ExistingHistory[beacon]["timeSt"][-1] > 55: continue # do not resend old data
 			try:
 				if beacon_ExistingHistory[beacon]["count"] != 0:
-					avePower	=int(beacon_ExistingHistory[beacon]["txPower"]   /max(1,beacon_ExistingHistory[beacon]["count"]))
+
+					try: 	avePower = int(beacon_ExistingHistory[beacon]["txPower"]) #  /max(1,beacon_ExistingHistory[mac]["count"]-1)
+					except: avePower = -60
+					#U.logger.log(20, "mac:{}, avePower:{},  beacon_ExistingHistory txp:{}".format(mac, avePower, beacon_ExistingHistory[mac]["txPower"]))
+
+					#avePower	=int(beacon_ExistingHistory[beacon]["txPower"]   /max(1,beacon_ExistingHistory[beacon]["count"]))
+
 					if beacon_ExistingHistory[beacon]["fastDown"]:	aveSignal = -999 
 					else:											aveSignal = int(sum(beacon_ExistingHistory[beacon]["rssi"]) /max(1,len(beacon_ExistingHistory[beacon]["rssi"])))
 					if avePower > -200:								beaconsOnline[beacon] = int(time.time())
@@ -920,6 +928,7 @@ def composeMSG(timeAtLoopStart):
 		nMessages = len(data)
 		if nMessages >1: downCount = 0
 		U.sendURL({"msgs":data,"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":int(time.time()-timeAtLoopStart),"reason":mapReasonToText[reasonMax]})
+		#U.logger.log(20, "beacons collected:{}".format(len(data)))
 
 		# save active iBeacons for getbeaconparameters() process
 		copyBE = copy.copy(beaconsOnline)
@@ -940,7 +949,8 @@ def composeMSGForThisMacOnly(mac):
 	global myBLEmac, secsCollected
 	global trackMac, logCountTrackMac
 	try:
-		avePower	=int(beacon_ExistingHistory[mac]["txPower"]) /max(1,beacon_ExistingHistory[mac]["count"]-1)
+		try: 	avePower = int(beacon_ExistingHistory[mac]["txPower"]) #  /max(1,beacon_ExistingHistory[mac]["count"]-1)
+		except: avePower = -60
 		if beacon_ExistingHistory[mac]["fastDown"]:	aveSignal = -999 
 		else:										aveSignal = round(beacon_ExistingHistory[mac]["rssi"][-1],1)
 		if avePower > -200:
@@ -961,7 +971,7 @@ def composeMSGForThisMacOnly(mac):
 		U.sendURL({"msgs":[data],"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":1,"reason":rr})
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac("MSG-s   ", "sending single msg:{}".format(data),mac)
-
+		return 1
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 0
@@ -1037,7 +1047,7 @@ def checkIfNewBeacon(mac):
 	try:
 		#U.logger.log(20,u"mac{} checkIfNewBeacon trackMac:{}  logCountTrackMac:{}".format(mac, trackMac, logCountTrackMac))
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac( "New?  ", "checking if Beacon is back " ,mac)
+			writeTrackMac( "New?   ", "checking if Beacon is back " ,mac)
 
 		if  mac not in beacon_ExistingHistory: return False
 
@@ -1076,7 +1086,7 @@ def checkIfBLErestart():
 #################################
 ######## BLE SENSORS ############
 #################################
-#################################
+######################import bluetooth._bluetooth###########
 def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 	global BLEsensorMACs
 	bl = ""
@@ -2094,8 +2104,8 @@ def BLEAnalysis(hci):
 		U.logger.log(20, u"starting  BLEAnalysis, rssi cutoff= {}[dBm]".format(rssiCutoff))
 		U.logger.log(20, u"sudo hciconfig {} reset".format(hci))
 		subprocess.Popen("sudo hciconfig "+hci+" reset", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan  ")
-		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan  > "+G.homeDir+"temp/lescan.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates ")
+		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates > "+G.homeDir+"temp/lescan.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		time.sleep(0.3)
 		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D'")
 		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D' > "+G.homeDir+"temp/hcidump.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -3098,10 +3108,10 @@ def checkIfBLEprogramIsRunning(useHCI):
 			U.logger.log(30,u"{} not up".format(useHCI))
 			return False
 
-		if  rpiDataAcquistionMethod("socket" ): 
+		if  rpiDataAcquistionMethod.find("socket") ==0: 
 			return True
 
-		if U.pgmStillRunning("hcidump -i", verbose=True) and U.pgmStillRunning("hcitool -i", verbose=True):
+		if U.pgmStillRunning("hcidump -i", verbose=True): # and U.pgmStillRunning("hcitool -i", verbose=True):
 			return True
 		else:
 			U.logger.log(30,u"hcidump or hcitool lescan  not up")
@@ -3260,6 +3270,12 @@ def execbeaconloop(test):
 	logCountTrackMac = -10 
 	nMsgs			 = 0
 	restartBLE 		 = time.time()
+	nMsgs			 = 0
+	zeroInARow 		 = 0
+	zeroInARowMax	 = 20
+	lastmsg    		 = time.time() + 5
+	lastmsgMaxDelta	 = 20
+
 	U.logger.log(30, "starting loop")
 	try:
 		while True:
@@ -3317,6 +3333,7 @@ def execbeaconloop(test):
 
 			sendAfter= sendAfterSeconds
 			iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
+			nMsgs = 0
 			while iiWhile > 0:
 				iiWhile -= 1
 				tt = round(time.time(),2)
@@ -3326,7 +3343,9 @@ def execbeaconloop(test):
 				if tt - timeAtLoopStart	 > sendAfter: 
 					break # send curl msgs after collecting for xx seconds
 
-				if nMsgs > 2: time.sleep(0.2)
+				if   nMsgs < 2: time.sleep(0.4)
+				elif nMsgs < 5: time.sleep(0.3)
+				else: 			time.sleep(0.1)
 				hexstr = ""
 
 				if rpiDataAcquistionMethod == "socket":
@@ -3358,16 +3377,30 @@ def execbeaconloop(test):
 						else:
 							time.sleep(5)
 
+				nLast = nMsgs
 				nMsgs = len(Msgs)
 				oneValid = False
+				if nMsgs == 0: 
+					zeroInARow +=1
+					#U.logger.log(20, "loopCount:{} nMsgs:{} , lastN:{}, zeroInARow:{}, max zero msgs in a row:{}".format(loopCount, nMsgs, nLast, zeroInARow, zeroInARowMax) )
+					if zeroInARow > zeroInARowMax or time.time() - lastmsg > lastmsgMaxDelta: 
+						#U.logger.log(20, "break loop, too many empty messages: {}, ble-UP?:{}".format(zeroInARow, checkIfBLEprogramIsRunning(useHCI)) )
+						zeroInARow  = 0
+						
+						break
+				else:
+					zeroInARow = 0
+					lastmsg    = time.time()
+
+
 				for hexstr in Msgs: 
 					nCharThisMessage	= len(hexstr)
 	
-					##U.logger.log(20, "loopCount:{}  #:{}  len:{}".format(loopCount, iiWhile, len(pkt))) 
 					#U.logger.log(20, "data nChar:{}".format(nCharThisMessage))
 					# skip junk data 
 					if nCharThisMessage < 16:  continue
 					if nCharThisMessage > 120: continue
+					#U.logger.log(20, "nMsgs:{} len:{}..  :{}".format(nMsgs, nCharThisMessage, hexstr[:30]) )
 						
 					try:
 						# build the return string: mac#, uuid-major-minor,txpower??,rssi

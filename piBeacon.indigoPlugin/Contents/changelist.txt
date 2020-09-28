@@ -1,5 +1,5 @@
 
-Added features / changes in v7.127.456 @ 2020-10-27
+Added features / changes in v7.127.457 @ 2020-10-27
 ===================================================
 0. cleaned up some code 
 1. rearanged some menu items, clearer structure, using some color for menu items
@@ -36,8 +36,8 @@ Added features / changes in v7.127.456 @ 2020-10-27
   with this setting you can decide if a beacon is in a room - that requires an RPI in each room you like to have this feature
 
 5. changeed hcidump method to include more advertising message types. in v.451 some where excluded
-	added option to restart BLE scanner every 5 minutes, just in case RPi can not keep up
-
+    added option to restart BLE scanner every 5 minutes, just in case RPi can not keep up
+    fixed so that 2. ble dongle not needed
 
 Added features / changes in v7.126.438 @ 2020-08-31
 ===================================================

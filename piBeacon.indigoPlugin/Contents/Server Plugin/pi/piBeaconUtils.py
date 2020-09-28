@@ -1849,14 +1849,14 @@ hci1:	Type: Primary  Bus: UART
 	try:
 		aa	= subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		ret	= [aa[0].decode('utf-8'),aa[1].decode('utf-8')]
-		if verbose: 
-			logger.log(20, u"cBY:{:<20} {}".format(G.program, ret[0]))
+		if verbose: logger.log(20, u"cBY:{:<20} {}".format(G.program, ret[0]))
 		hciFound = False
 		for line in ret[0].split("\n"):
 			if line.find(useHCI) == 0: 
-				hciFound
+				hciFound = True
 				continue
 			if hciFound:
+				#if verbose: logger.log(20, u"cBY:{:<20} hciFound, line:{}".format(G.program, line))
 				if line.find("Bus: ") > 15:			return False # found next section , no up running
 				if len(line) < 5: 					return False # next section ...
 				if line.find("UP RUNNING") > -1:	return True  # ok, return True
@@ -1969,7 +1969,7 @@ def execSend():
 
 					else:  ## do socket comm
 								MSGwasSend = False
-								for ii in range(3): # try max 3 times.
+								for ii in range(4): # try max 3 times.
 									dataC = json.dumps(data, separators=(',',':'))
 									if squeeze: dataC = dataC.replace(" ","")
 									if  len(dataC) > G.compressRPItoPlugin: 

@@ -29,6 +29,7 @@ def readParams():
 		global debug, ipOfServer,myPiNumber,passwordOfServer, userIdOfServer, authentication,ipOfServer,portOfServer,sensorList,restartBLEifNoConnect
 		global macList 
 		global oldRaw, lastRead, BLEconnectMode
+		global sensor
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return False
@@ -42,14 +43,22 @@ def readParams():
 		try:
 
 			U.getGlobalParams(inp)
+
+			sensors = {}
+			if "sensors" in inp:	
+				if sensor in inp["sensors"]: 
+					sensors = inp["sensors"][sensor]
+
+			if sensors == {}:
+				U.logger.log(30, u" no {} definitions supplied in sensorList stopping".format(sensor))
+				exit()
+
+
 			if "restartBLEifNoConnect"	in inp:	 restartBLEifNoConnect=		  (inp["restartBLEifNoConnect"])
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])
 			if "BLEconnectMode"			in inp:	 BLEconnectMode=			  (inp["BLEconnectMode"])
 
-			if "BLEconnect" not in sensorList:
-				U.logger.log(30, u" no BLEconnect definitions supplied in sensorList stopping")
-				exit()
-			if "sensors"				in inp:	 sensors=					  (inp["sensors"]["BLEconnect"])
+
 			macListNew={}
 
 			for devId in sensors :
@@ -211,6 +220,7 @@ def execBLEconnect():
 	global oldRaw,	lastRead
 	global errCount, lastConnect
 	global BLEconnectMode
+	global sensor
 	BLEconnectMode			= "socket" # or commandLine
 	oldRaw					= ""
 	lastRead				= 0
