@@ -228,7 +228,7 @@ _GlobalConst_allowedCommands = [
 	u"up", u"down", u"pulseUp", u"pulseDown", u"continuousUpDown", u"analogWrite", u"disable", u"newMessage", u"resetDevice", 
 	u"getBeaconParameters", u"startCalibration","BLEAnalysis","trackMac", u"rampUp", u"rampDown", u"rampUpDown", u"beepBeacon"]	 # commands support for GPIO pins
 
-_BLEsensorTypes =["BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor","BLESatech"]
+_BLEsensorTypes =["BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor-on","BLEiSensor-onOff","BLEiSensor-RemoteKeyFob","BLESatech"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 	 u"apds9960",															  # dist gesture
@@ -12764,7 +12764,7 @@ class Plugin(indigo.PluginBase):
 					if dev.deviceTypeId in ["BLEiBS03RG","BLEiBS01RG","BLESatech"]:
 						self.updateBLEiBS0xRG(dev,data,whichKeysToDisplay, pi)
 
-					if dev.deviceTypeId in ["BLEiSensor"]:
+					if dev.deviceTypeId in ["BLEiSensor-onOff","BLEiSensor-on","BLEiSensor-RemoteKeyFob"]:
 						self.updateBLEiSensor(dev,data,whichKeysToDisplay, pi)
 
 					if u"proximity" in data:
@@ -13108,17 +13108,17 @@ class Plugin(indigo.PluginBase):
 	def updateCommonStates(self, dev, data, whichKeysToDisplay,pi):
 		try:
 				#self.indiLOG.log(20,"updateBLERuuviTag: pi#:{}, {} data{},\n whichKeysToDisplay:{}".format(pi, dev.name.encode("utf8"),data,whichKeysToDisplay))
-				if "rssi" in data 											and "rssi" in dev.states and unicode(data["rssi"]) != unicode(dev.states["rssi"]):			
-									self.setStatusCol(dev,u"rssi",					data["rssi"],					"{} [dBm]".format(data["rssi"]),					whichKeysToDisplay,"","",decimalPlaces=0)
+				if "rssi" in data 											and "rssi" in dev.states and unicode(data["rssi"]) != unicode(dev.states["rssi"]):		
+									self.addToStatesUpdateDict(dev.id, u"rssi", data["rssi"])	
 
 				if "txPower" in data 										and "txPower" in dev.states and unicode(data["txPower"]) != unicode(dev.states["txPower"]):		
-									self.setStatusCol(dev,u"txPower",				data["txPower"],				"{} [dBm]".format(data["txPower"]),					whichKeysToDisplay,"","",decimalPlaces=0)
+									self.addToStatesUpdateDict(dev.id, u"txPower", data["txPower"])	
 
 				if "batteryLevel" in data 	and data["batteryLevel"] !="" 	and "batteryLevel" in dev.states and unicode(data["batteryLevel"]) != unicode(dev.states["batteryLevel"]):	
-									self.setStatusCol(dev,u"batteryLevel",			data["batteryLevel"],			"{} %".format(data["batteryLevel"]),				whichKeysToDisplay,"","",decimalPlaces=0)
+									self.addToStatesUpdateDict(dev.id, u"batteryLevel", data["batteryLevel"])	
 
 				if "batteryVoltage" in data and data["batteryVoltage"] !="" and "batteryVoltage" in dev.states and unicode(data["batteryVoltage"]) != unicode(dev.states["batteryVoltage"]):	
-									self.setStatusCol(dev,u"batteryVoltage",		data["batteryVoltage"],			"{} [mV]".format(data["batteryVoltage"]),			whichKeysToDisplay,"","",decimalPlaces=0)
+									self.addToStatesUpdateDict(dev.id, u"batteryVoltage", data["batteryVoltage"])	
 
 				if "trigger" in data and data["trigger"] !="" 				and "trigger" in dev.states and unicode(data["trigger"]) != unicode(dev.states["trigger"]):		
 									self.setStatusCol(dev,u"trigger",	data["trigger"],							unicode(data["trigger"]),							whichKeysToDisplay,"","",decimalPlaces=0)
@@ -13145,7 +13145,7 @@ class Plugin(indigo.PluginBase):
 									self.setStatusCol(dev,u"secsSinceStart",data["secsSinceStart"],"{}".format(data["secsSinceStart"]),	whichKeysToDisplay,"","",decimalPlaces=0)
 
 				if  "counter" in data and  data["counter"] != "" and "counter" in dev.states and unicode(data["counter"]) != unicode(dev.states["counter"]):
-									self.setStatusCol(dev,u"counter",data["counter"],"{} %".format(data["counter"]),	whichKeysToDisplay,"","",decimalPlaces=0)
+									self.setStatusCol(dev,u"counter",data["counter"],"{}".format(data["counter"]),	whichKeysToDisplay,"","",decimalPlaces=0)
 
 				if  "chipTemperature" in data and  data["chipTemperature"] != "" and "chipTemperature" in dev.states: 
 					x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"chipTemperature"])
@@ -13180,6 +13180,10 @@ class Plugin(indigo.PluginBase):
 ###-------------------------------------------------------------------------####
 	def updateBLEiSensor(self, dev, data, whichKeysToDisplay,pi):
 		try:
+
+			#if dev.deviceTypeId == "BLEiSensor-RemoteKeyFob": 
+			#	self.indiLOG.log(20,"updateBLEiSensor .. {}: {}".format(dev.name, data))
+
 			props = dev.pluginProps
 			if "onOffSetting" in props and props["onOffSetting"] == "on=green,off=grey": 
 				inverse = False
@@ -13187,32 +13191,67 @@ class Plugin(indigo.PluginBase):
 				inverse = True #on=red,off=green
 
 			stChanged = False
-			if "onOff" in data:
-				if data["onOff"]: 
-					if not dev.states[u"onOffState"]:
-						self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
-						self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
-						self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
-						if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-						else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-						stChanged = True
-				else:	
-					if dev.states[u"onOffState"]:
-						self.addToStatesUpdateDict(dev.id,u"onOffState",  False) 
-						if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-						else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-						stChanged = True
-			else: pass
+			if dev.deviceTypeId == "BLEiSensor-on":
+				if "onOff" in data and data["onOff"]:
+					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
 
-			if "SOS" 		in data:	self.addToStatesUpdateDict(dev.id, u"SOS", 					data[u"SOS"]) 
-			if "home" 		in data:	self.addToStatesUpdateDict(dev.id, u"home", 				data[u"home"]) 
-			if "away" 		in data:	self.addToStatesUpdateDict(dev.id, u"away", 				data[u"away"]) 
-			if "disarm" 	in data:	self.addToStatesUpdateDict(dev.id, u"disarm", 				data[u"disarm"]) 
-			if "state" 		in data:	self.addToStatesUpdateDict(dev.id, u"state", 				data[u"state"]) 
-			if "sensorType" in data:	self.addToStatesUpdateDict(dev.id, u"sensorType", 			data[u"sensorType"]) 
-			if "sendsAlive" in data:	self.addToStatesUpdateDict(dev.id, u"sendsAlive", 			data[u"sendsAlive"]) 
-			if "lowVoltage" in data:	self.addToStatesUpdateDict(dev.id, u"lowVoltage", 			data[u"lowVoltage"]) 
-			if "tampered" 	in data:	self.addToStatesUpdateDict(dev.id, u"tampered", 			data[u"tampered"]) 
+			else:
+				if "onOff" in data and "onOffState" in dev.states:
+					if data["onOff"]: 
+						if not dev.states[u"onOffState"]:
+							self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+							self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+							self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+							if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+							else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+							stChanged = True
+					else:	
+						if dev.states[u"onOffState"]:
+							self.addToStatesUpdateDict(dev.id,u"onOffState",  False) 
+							if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+							else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+							stChanged = True
+				else: pass
+
+			if "SOS" 		in data and "SOS" 			in dev.states:	
+				if data[u"SOS"]:
+					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"SOS") 
+					self.setStatusCol(dev, u"status", 1, "SOS", whichKeysToDisplay, u"","")
+				self.addToStatesUpdateDict(dev.id, u"SOS", 					data[u"SOS"]) 
+			if "home" 		in data and "home" 			in dev.states:	
+				if data[u"home"]:
+					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"home") 
+					self.setStatusCol(dev, u"status", 2, "home", whichKeysToDisplay, u"","")
+				self.addToStatesUpdateDict(dev.id, u"home", 				data[u"home"]) 
+			if "away" 		in data and "away" 			in dev.states:	
+				if data[u"away"]:
+					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"away") 
+					self.setStatusCol(dev, u"status", 3, "away", whichKeysToDisplay, u"","")
+				self.addToStatesUpdateDict(dev.id, u"away", 				data[u"away"]) 
+			if "disarm" 	in data and "disarm" 		in dev.states:	
+				if data[u"disarm"]:
+					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
+					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"disarm") 
+					self.setStatusCol(dev, u"status", 4, "disarm", whichKeysToDisplay, u"","")
+				self.addToStatesUpdateDict(dev.id, u"disarm", 				data[u"disarm"]) 
+			if "bits" 		in data and "bits" 			in dev.states:	self.addToStatesUpdateDict(dev.id, u"bits", 				data[u"bits"]) 
+			if "state" 		in data and "state" 		in dev.states:	self.addToStatesUpdateDict(dev.id, u"state", 				data[u"state"]) 
+			if "sensorType" in data and "sensorType" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"sensorType", 			data[u"sensorType"]) 
+			if "sendsAlive" in data and "sendsAlive" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"sendsAlive", 			data[u"sendsAlive"]) 
+			if "lowVoltage" in data and "lowVoltage" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"lowVoltage", 			data[u"lowVoltage"]) 
+			if "lowVoltage" in data and "lowVoltage" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"tampered", 			data[u"tampered"]) 
 
 			if True:					self.addToStatesUpdateDict(dev.id, u"lastAliveMessage", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
 
@@ -13447,12 +13486,12 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id, key, value, decimalPlaces=decimalPlaces,force=force)
 				self.fillMinMaxSensors(dev,key,value,decimalPlaces=decimalPlaces)
 
-			#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+"  in setStatusCol "+key+"  "+unicode(value)+"   "+unicode(valueUI))
+			#if dev.name =="s-11-iSensor-door-button": indigo.server.log(dev.name+"  in setStatusCol "+key+"  "+unicode(value)+"   "+unicode(valueUI))
 
 			if whichKeysToDisplay !="":
 				for i in range(whichKeysToDisplaylength):
 					if whichKeysToDisplayList[i] == key:
-						#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+"  in after  whichKeysToDisplayList")
+						#if dev.name == "s-11-iSensor-door-button": indigo.server.log(dev.name+"  in after  whichKeysToDisplayList")
 
 						if currentDisplay[i] != valueUI:
 							if i==0:
@@ -13461,7 +13500,7 @@ class Plugin(indigo.PluginBase):
 										dev.updateStateImageOnServer(image)
 							currentDisplay[i] = valueUI		   
 							newStatus= "/".join(currentDisplay)
-							#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+"  in bf   sensorValue  states:"+unicode(dev.states))
+							#if dev.name == "s-11-iSensor-door-button": indigo.server.log(dev.name+"  in bf   sensorValue  states:"+unicode(dev.states))
 							if "sensorValue" in dev.states:
 								#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+" af sensorValue")
 
@@ -16012,7 +16051,7 @@ class Plugin(indigo.PluginBase):
 
 					if piDeviceExist: 
 
-						if "rpiDataAcquistionMethod" in props and props["rpiDataAcquistionMethod"] in ["socket","hcidumpNoRestart",_GlobalConst_emptyrPiProps["rpiDataAcquistionMethod"]]:
+						if "rpiDataAcquistionMethod" in props and props["rpiDataAcquistionMethod"] in ["socket","hcidumpWithRestart",_GlobalConst_emptyrPiProps["rpiDataAcquistionMethod"]]:
 								out[u"rpiDataAcquistionMethod"]	  = props["rpiDataAcquistionMethod"]
 						else:
 								out[u"rpiDataAcquistionMethod"]	  = self.rpiDataAcquistionMethod

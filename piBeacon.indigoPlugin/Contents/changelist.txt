@@ -1,5 +1,5 @@
 
-Added features / changes in v7.127.457 @ 2020-10-27
+Added features / changes in v7.128.458 @ 2020-10-28
 ===================================================
 0. cleaned up some code 
 1. rearanged some menu items, clearer structure, using some color for menu items
@@ -18,7 +18,7 @@ Added features / changes in v7.127.457 @ 2020-10-27
     Minew 
 		E8: x-y-z acceleration/ gravity sensor
 	iSensor - Kaipule
-		various on/off sensors for GAS, CO water, alarm ... 
+		various on/off sensors for GAS, CO water, alarm  remoteKey, door button,..
 		EN61, ES61, EW70, ET90, IM21, IX30 IX32
 	Satech
 		STixx sensors, acceleration, temp, humidity, on/off

@@ -201,8 +201,8 @@ Change here or in initial setup:</Label>
 				<Label> .... use socket or hcidump/lescan for Data acquisition:</Label>
 				<List>
 					<Option value="socket"   >use python socket programming</Option>
-					<Option value="hcidumpNoRestart"  >hcidump/lescan tool </Option>
-					<Option value="hcidump"  >hcidump/lescan tool, with restart every 5 minutes </Option>
+					<Option value="hcidump"  >hcidump/lescan tool </Option>
+					<Option value="hcidumpWithRestart"  >hcidump/lescan tool, with restart every 5 minutes, just in case </Option>
 				</List>
 			</Field>
 			<Field id="hcidumplabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
@@ -6213,10 +6213,10 @@ set trigger and sensitivity parameters ===
 
 
 
-	<Device type="sensor" id="BLEiSensor">
-	<Name>BLE-iSensor</Name>
+	<Device type="sensor" id="BLEiSensor-onOff">
+	<Name>BLE-iSensor - on off </Name>
 		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -6236,17 +6236,8 @@ The device will go RED = off when an event happens (you can select the color)
 It will send an alive broadcast every xx minutes .. up to an hour 
 this device type supports not remote button types:
 IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTemp
-remote button types:
-DoorBell, RemoteKeyFob, WirelessKeypad, WirelessSiren, RemoteSwitch
 ===
 </Label>
-			</Field>
-			<Field id="subType" type="menu"     defaultValue="notRemote"  >
-				<List>
-					<Option value="notRemote" >not remote, siomple on-off </Option>
-					<Option value="remote" >not remote, siomple on-off </Option>
-				</List>
-			<Label>subtype of device:</Label>
 			</Field>
 
 			<Field id="mac" type="textfield"     defaultValue=""  >
@@ -6291,19 +6282,6 @@ DoorBell, RemoteKeyFob, WirelessKeypad, WirelessSiren, RemoteSwitch
 		</ConfigUI>
 
 		<States>
-<!--
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-
-			<State id="irOnOff">
-				<ValueType>String</ValueType>
-				<TriggerLabel>irOnOff</TriggerLabel>
-				<ControlPageLabel>irOnOff</ControlPageLabel>
-			</State>
--->
 			<State id="sensorType">
 				<ValueType>String</ValueType>
 				<TriggerLabel>sensorType</TriggerLabel>
@@ -6318,31 +6296,6 @@ DoorBell, RemoteKeyFob, WirelessKeypad, WirelessSiren, RemoteSwitch
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
-			</State>
-			<State id="SOS">
-				<ValueType>String</ValueType>
-				<TriggerLabel>SOS</TriggerLabel>
-				<ControlPageLabel>SOS</ControlPageLabel>
-			</State>
-			<State id="home">
-				<ValueType>String</ValueType>
-				<TriggerLabel>home</TriggerLabel>
-				<ControlPageLabel>home</ControlPageLabel>
-			</State>
-			<State id="away">
-				<ValueType>String</ValueType>
-				<TriggerLabel>away</TriggerLabel>
-				<ControlPageLabel>away</ControlPageLabel>
-			</State>
-			<State id="disarm">
-				<ValueType>String</ValueType>
-				<TriggerLabel>disarm</TriggerLabel>
-				<ControlPageLabel>disarm</ControlPageLabel>
-			</State>
-			<State id="state">
-				<ValueType>String</ValueType>
-				<TriggerLabel>state</TriggerLabel>
-				<ControlPageLabel>state</ControlPageLabel>
 			</State>
 			<State id="tampered">
 				<ValueType>String</ValueType>
@@ -6390,6 +6343,273 @@ DoorBell, RemoteKeyFob, WirelessKeypad, WirelessSiren, RemoteSwitch
 
 
 
+	<Device type="sensor" id="BLEiSensor-on">
+	<Name>BLE-iSensor - on</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
+			<Label>==  To setup this  on/off BLE "iSensor" 
+Find MAC number on back of beacon or use the plugin tool detect new beacon 
+This sensor family sends messages when device button pressed ..
+this device type supports not remote button types:
+Door Bell
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>Enter MAC number for this device: </Label>
+			</Field>
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="counter"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="counter"  >counter</Option>
+			</List>
+			</Field>
+
+			<Field id="labelRPI"               type="label" >
+			<Label>Select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="sensorType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sensorType</TriggerLabel>
+				<ControlPageLabel>sensorType</ControlPageLabel>
+			</State>
+			<State id="lowVoltage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lowVoltage</TriggerLabel>
+				<ControlPageLabel>lowVoltage</ControlPageLabel>
+			</State>
+			<State id="tampered">
+				<ValueType>String</ValueType>
+				<TriggerLabel>tampered</TriggerLabel>
+				<ControlPageLabel>tampered</ControlPageLabel>
+			</State>
+			<State id="currentOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+			<State id="previousOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOnEvent</TriggerLabel>
+				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+			<State id="counter">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>counter</TriggerLabel>
+				<ControlPageLabel>counter</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastAliveMessage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastAliveMessage</TriggerLabel>
+				<ControlPageLabel>lastAliveMessage</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+	<Device type="sensor" id="BLEiSensor-RemoteKeyFob">
+	<Name>BLE-iSensor - remote 4 buttons </Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="false"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="false"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
+			<Label>==  To setup this  on/off BLE "iSensor" 
+Find MAC number on back of beacon or use the plugin tool detect new beacon 
+This sensor family sends messages when device button pressed ..
+The device will go RED = off when an event happens (you can select the color)
+this device type supports remote button types:
+RemoteKeyFob
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>Enter MAC number for this device: </Label>
+			</Field>
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="status"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="status"  >status</Option>
+			</List>
+			</Field>
+
+			<Field id="labelRPI"               type="label" >
+			<Label>Select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="sensorType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sensorType</TriggerLabel>
+				<ControlPageLabel>sensorType</ControlPageLabel>
+			</State>
+			<State id="SOS">
+				<ValueType>String</ValueType>
+				<TriggerLabel>SOS</TriggerLabel>
+				<ControlPageLabel>SOS</ControlPageLabel>
+			</State>
+			<State id="home">
+				<ValueType>String</ValueType>
+				<TriggerLabel>home</TriggerLabel>
+				<ControlPageLabel>home</ControlPageLabel>
+			</State>
+			<State id="away">
+				<ValueType>String</ValueType>
+				<TriggerLabel>away</TriggerLabel>
+				<ControlPageLabel>away</ControlPageLabel>
+			</State>
+			<State id="disarm">
+				<ValueType>String</ValueType>
+				<TriggerLabel>disarm</TriggerLabel>
+				<ControlPageLabel>disarm</ControlPageLabel>
+			</State>
+			<State id="currentOnType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOnType</TriggerLabel>
+				<ControlPageLabel>currentOnType</ControlPageLabel>
+			</State>
+			<State id="previousOnType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOnType</TriggerLabel>
+				<ControlPageLabel>previousOnType</ControlPageLabel>
+			</State>
+			<State id="currentOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+			<State id="previousOnEvent">
+				<ValueType>String</ValueType>
+				<TriggerLabel>previousOnEvent</TriggerLabel>
+				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
 	<Device type="sensor" id="Wire18B20">
 	<Name>INPUT-Temp-Wire18B20</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -6399,6 +6619,7 @@ DoorBell, RemoteKeyFob, WirelessKeypad, WirelessSiren, RemoteSwitch
 			<Label>Setup 18DB20 Onewire Temp sensor on individual rPis .. connect 3.3, GND,signal and 4.7K resistor</Label>
 			</Field>
 
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -23034,7 +23255,6 @@ States:
 		</States>
 	</Device>
 
-	<Device type="sensor" id="BLEsensor">      <Name> deprecated, use  myBlueT sensor</Name>	</Device>
 
 	<Device type="sensor" id="i2cADS1x15">		<Name>INPUT-ADC-1x16bit-i2cADS1x15 - four channel deprecated, use new definition device</Name>	</Device>
 	<Device type="sensor" id="i2cADS1x15-1">	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel deprecated</Name>	</Device>

@@ -671,6 +671,7 @@ def readParams(init):
 								BLEsensorMACs[mac]["onOff"] 						= False
 								BLEsensorMACs[mac]["alive"] 						= False
 								BLEsensorMACs[mac]["counter"] 						= "-1"
+								BLEsensorMACs[mac]["dataByte"]   					= -1
 								BLEsensorMACs[mac]["batteryVoltage"] 	 	 		= -1
 								BLEsensorMACs[mac]["chipTemperature"] 	 	 		= -1
 								BLEsensorMACs[mac]["secsSinceStart"] 	 	 		= -1
@@ -1094,7 +1095,10 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 		if mac not in BLEsensorMACs:
 			return tx, bl, UUID, Maj, Min, False
+
+		#U.logger.log(20,u"doSensors {}   typeId:{:20s}; hexData:{}".format(mac, BLEsensorMACs[mac]["type"], hexData))
  
+
 		if BLEsensorMACs[mac]["type"] == "BLEmyBLUEt":  								
 			return domyBlueT( mac, rx, tx, hexData, UUID, Maj, Min)
 
@@ -1109,7 +1113,6 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 		if BLEsensorMACs[mac]["type"].find("BLEiSensor") >-1:
 			return  doBLEiSensor( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min)
-
 
 		if BLEsensorMACs[mac]["type"].find("BLESatech") >-1:
 			return  doBLESatech( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, BLEsensorMACs[mac]["type"])
@@ -1147,56 +1150,71 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		hexData = hexData[12:]
 		if len(hexData) < 40: return tx, "", UUID, Maj, Min, False
 
-		#U.logger.log(20,u"doBLEiSensor {}  hexData:{};".format(mac, hexData))
 		TagPos 	= hexData.find("02010609086953656E736F722009FF") 
 		if TagPos !=2: 	return tx, "", UUID, Maj, Min, False
 
-		UUID 			= "BLEiSensor"
+		UUID 			= BLEsensorMACs[mac]["type"]
 		Maj  			= mac
-		sensor			= "BLEiSensor"
+		sensor			= BLEsensorMACs[mac]["type"]
 		p = 40
-		typeID 			= int(hexData[p:p+2],16) & 0b00011111
+		dataByte		= int(hexData[p:p+2],16)
+		typeID 			=  dataByte& 0b00011111
 		remote = False
-		if    typeID == 0b00000000: sensorType = "iSensor-undefined"
-		elif  typeID == 0b00000001:	sensorType = "iSensor-IR-Fence"
-		elif  typeID == 0b00000010:	sensorType = "iSensor-PIR"
-		elif  typeID == 0b00000011:	sensorType = "iSensor-Gas"
-		elif  typeID == 0b00000100:	sensorType = "iSensor-Panic"
-		elif  typeID == 0b00000101:	sensorType = "iSensor-Smoke"
-		elif  typeID == 0b00000110:	sensorType = "iSensor-Door"
-		elif  typeID == 0b00000111:	sensorType = "iSensor-GlasBreak"
-		elif  typeID == 0b00001000:	sensorType = "iSensor-Vibration"
-		elif  typeID == 0b00001001:	sensorType = "iSensor-WaterLevel"
-		elif  typeID == 0b00001010:	sensorType = "iSensor-HighTemp"
-		elif  typeID == 0b00010110:	sensorType = "iSensor-DoorBell"			; remote= True
-		elif  typeID == 0b00011001:	sensorType = "iSensor-RemoteKeyFob"		; remote= True
-		elif  typeID == 0b00011010:	sensorType = "iSensor-WirelessKeypad"	; remote= True
-		elif  typeID == 0b00011110:	sensorType = "iSensor-WirelessSiren"	; remote= True
-		elif  typeID == 0b00011111:	sensorType = "iSensor-RemoteSwitch"		; remote= True
-		else:						sensorType = "iSensor-undefined"
+		if    typeID == 0b00000000: sensorType = "undefined"
+		elif  typeID == 0b00000001:	sensorType = "IR-Fence"
+		elif  typeID == 0b00000010:	sensorType = "PIR"
+		elif  typeID == 0b00000011:	sensorType = "Gas"
+		elif  typeID == 0b00000100:	sensorType = "Panic"
+		elif  typeID == 0b00000101:	sensorType = "Smoke"
+		elif  typeID == 0b00000110:	sensorType = "Door"
+		elif  typeID == 0b00000111:	sensorType = "GlasBreak"
+		elif  typeID == 0b00001000:	sensorType = "Vibration"
+		elif  typeID == 0b00001001:	sensorType = "WaterLevel"
+		elif  typeID == 0b00001010:	sensorType = "HighTemp"
+		elif  typeID == 0b00010110:	sensorType = "DoorBell"			; remote= True
+		elif  typeID == 0b00011001:	sensorType = "RemoteKeyFob"		; remote= True
+		elif  typeID == 0b00011010:	sensorType = "WirelessKeypad"	; remote= True
+		elif  typeID == 0b00011110:	sensorType = "WirelessSiren"	; remote= True
+		elif  typeID == 0b00011111:	sensorType = "RemoteSwitch"		; remote= True
+		else:						sensorType = "undefined"
 		Min  			= sensorType 
 
-		typeID 			= int(hexData[p:p+2],16) & 0b11000000
-		sendsAlive 		= typeID & 0b01000000 != 0
-		biDirection 	= typeID & 0b10000000 != 0# Not used 
+		typeID2 		= dataByte & 0b11000000
+		sendsAlive 		= typeID2  & 0b01000000 != 0
+		biDirection 	= typeID2  & 0b10000000 != 0# Not used 
 
+		#U.logger.log(20,u"doBLEiSensor {}  hexData[40+]:{}; typeId:{:b}; typeId2:{:b}".format(mac, hexData[40:-2], typeID, typeID2))
 
 		p = 42 ; eventData 	= int(hexData[p:p+2],16)& 0b00001111
 		p = 44 ; counter	= int(hexData[p:p+2],16)& 0b00011111
 
+		xTrig = False
 		if remote:
-			if not sensorType == "iSensor-RemoteSwitch":
+			if  sensorType == "DoorBell":
+				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
+				dd={   # the data dict to be send 
+						'lowVoltage': 	eventData & 0b00000100 != 0,
+						'onOff': 		eventData & 0b00000010 != 0,
+						'tampered': 	eventData & 0b00000001 != 0,
+						'counter': 		counter, # changes only when pressed twice 
+						'sensorType': 	sensorType,
+						'sendsAlive': 	sendsAlive,
+						"rssi":			int(rx),
+				}
+			elif  sensorType == "RemoteKeyFob":
+				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
 				dd={   # the data dict to be send 
 						'SOS': 			eventData & 0b00001000 != 0,
 						'home': 		eventData & 0b00000100 != 0,
 						'away': 		eventData & 0b00000010 != 0,
 						'disarm': 		eventData & 0b00000001 != 0,
-						'counter': 		counter,
+						'counter': 		counter, # not used always 1
 						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive,
+						'sendsAlive': 	sendsAlive, # should be false always
 						"rssi":			int(rx),
 				}
-			else:
+			elif sensorType == "RemoteSwitch":
+				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
 				dd={   # the data dict to be send 
 						'state': 		eventData & 0b00001000 != 0,
 						'onOff': 		eventData & 0b00000100 != 0,
@@ -1205,9 +1223,18 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 						'sendsAlive': 	sendsAlive,
 						"rssi":			int(rx),
 				}
+			else:
+				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
+				dd={   # the data dict to be send 
+						'bits': 		"{:b}".format(eventData & 0b00001111),
+						'counter': 		counter,
+						'sensorType': 	sensorType,
+						'sendsAlive': 	sendsAlive,
+						"rssi":			int(rx),
+				}
 
 		else:
-			if not sensorType == "iSensor-Panic":
+			if not sensorType == "Panic":
 				dd={   # the data dict to be send 
 						'onOff': 		eventData & 0b00000010 != 0,
 						'counter': 		counter,
@@ -1231,13 +1258,16 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		#U.logger.log(20, " .... checking  data:{} counter hex:{}".format( dd , hexData[42:42+5]) )
 		deltaTime 			= time.time() - BLEsensorMACs[mac]["lastUpdate"]
 		trigTime 			= deltaTime   > BLEsensorMACs[mac]["updateIndigoTiming"]  			# send min every xx secs
+		yTrig 				= dataByte != BLEsensorMACs[mac]["dataByte"]
 
-		if counter != BLEsensorMACs[mac]["counter"] or trigTime:
+		if counter != BLEsensorMACs[mac]["counter"] or trigTime or xTrig or yTrig:
 			# compose complete message
 			U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
-			BLEsensorMACs[mac]["lastUpdate"] = time.time()
+
 			# remember last values
-			BLEsensorMACs[mac]["counter"] = counter
+			BLEsensorMACs[mac]["lastUpdate"] = time.time()
+			BLEsensorMACs[mac]["counter"]    = counter
+			BLEsensorMACs[mac]["dataByte"]   = dataByte
 
 		return tx, "", UUID, Maj, Min, False
 
@@ -3281,7 +3311,7 @@ def execbeaconloop(test):
 		while True:
 			loopCount += 1
 			# max every 5 minutes  .. restart BLE hcidump to clear out temp files if accumulated, takes ~1 secs 
-			if time.time() - restartBLE > 300 and rpiDataAcquistionMethod == "hcidump":
+			if time.time() - restartBLE > 300 and rpiDataAcquistionMethod == "hcidumpWithRestart":
 				restartBLE = time.time()
 				startBlueTooth(G.myPiNumber,reUse=True,thisHCI=useHCI)
 				retCode = startHCUIDUMPlistnr(useHCI)

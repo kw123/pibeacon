@@ -1969,7 +1969,9 @@ def execSend():
 
 					else:  ## do socket comm
 								MSGwasSend = False
-								for ii in range(4): # try max 3 times.
+								ii = 5
+								while ii > 0: 
+									ii -=1
 									dataC = json.dumps(data, separators=(',',':'))
 									if squeeze: dataC = dataC.replace(" ","")
 									if  len(dataC) > G.compressRPItoPlugin: 
@@ -1991,7 +1993,7 @@ def execSend():
 										time.sleep(0.1)
 										response = soc.recv(512).decode('utf-8')
 										if (response).find("ok") >-1:
-											MSGwasSend =True
+											MSGwasSend = True
 											break
 										else:# try again
 											logger.log(10, "cBY:{:<20} Sending  again: send bytes: {} ret MSG>>{}<<".format(G.program,len(data0),response))
@@ -2013,9 +2015,12 @@ def execSend():
 									data["ts"]			= {"time":round(time.time(),2),"tz":tz}
 
 								if MSGwasSend:
-									echoToMessageSend(dataC, "msg send --")
+									echoToMessageSend(dataC, "msg send ---")
+									if ii !=4:
+										logger.log(20, u"cBY:{:<20} +++ message was send sucessfully after initial error at {}. try +++".format(G.program, 5-ii))
 								else:
-									echoToMessageSend(dataC, "++ msg not send ++")
+									echoToMessageSend(dataC, "=== msg not send after 5 tries ===")
+									logger.log(20, u"cBY:{:<20} === message not send after 5 tries due to network error ===".format(G.program))
 								try:	soc.shutdown(socket.SHUT_RDWR)
 								except: pass
 								try:	soc.close()
@@ -2041,7 +2046,7 @@ def execSend():
 ######## un decode i2c ether from in or from hex
 def echoToMessageSend(data, wasSend):
 	try:
-		if len(data) > 7000: data = data[0:7000]+"..."
+		if len(data) > 6000: data = data[0:6000]+" ... "+data[-100:]
 		logger.log(10, "cBY:{:<20}  {} {}\n".format(G.program, wasSend, data) )
 		f = open("{}temp/messageSend".format(G.homeDir),"w")
 		f.write("{} {} {}: {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"), wasSend, G.program , data) )
