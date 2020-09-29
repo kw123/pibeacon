@@ -980,6 +980,13 @@ class Plugin(indigo.PluginBase):
 				self.rpiQueues["lastData"][iiU]		= ""
 				self.RPIBusy[iiU]					= 0
 
+			self.delayedActions				= {}
+			self.delayedActions["thread"] 	= ""
+			self.delayedActions["data"]		= Queue.Queue()
+			self.delayedActions["lastData"] = 0
+			self.delayedActions["state"]	= ""
+			self.delayedActions["lastActive"]	= 0
+
 
 			self.newBeaconsLogTimer			= 0
 			self.selectBeaconsLogTimer		= {}
@@ -2316,6 +2323,8 @@ class Plugin(indigo.PluginBase):
 			self.readCARS()
 
 			self.startUpdateRPIqueues("start")
+
+			self.startDelayedActionQueue()
 
 			self.checkDevToRPIlinks()
 
@@ -13195,6 +13204,9 @@ class Plugin(indigo.PluginBase):
 				if "onOff" in data and data["onOff"]:
 					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
 					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
+					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 
 			else:
 				if "onOff" in data and "onOffState" in dev.states:
@@ -13221,6 +13233,9 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
 					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"SOS") 
 					self.setStatusCol(dev, u"status", 1, "SOS", whichKeysToDisplay, u"","")
+					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"SOS", 					data[u"SOS"]) 
 			if "home" 		in data and "home" 			in dev.states:	
 				if data[u"home"]:
@@ -13229,6 +13244,9 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
 					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"home") 
 					self.setStatusCol(dev, u"status", 2, "home", whichKeysToDisplay, u"","")
+					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"home", 				data[u"home"]) 
 			if "away" 		in data and "away" 			in dev.states:	
 				if data[u"away"]:
@@ -13237,6 +13255,9 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
 					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"away") 
 					self.setStatusCol(dev, u"status", 3, "away", whichKeysToDisplay, u"","")
+					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"away", 				data[u"away"]) 
 			if "disarm" 	in data and "disarm" 		in dev.states:	
 				if data[u"disarm"]:
@@ -13245,13 +13266,17 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"previousOnType", 	dev.states[u"currentOnType"]) 
 					self.addToStatesUpdateDict(dev.id, u"currentOnType",  	"disarm") 
 					self.setStatusCol(dev, u"status", 4, "disarm", whichKeysToDisplay, u"","")
+					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
+					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"disarm", 				data[u"disarm"]) 
+
 			if "bits" 		in data and "bits" 			in dev.states:	self.addToStatesUpdateDict(dev.id, u"bits", 				data[u"bits"]) 
 			if "state" 		in data and "state" 		in dev.states:	self.addToStatesUpdateDict(dev.id, u"state", 				data[u"state"]) 
 			if "sensorType" in data and "sensorType" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"sensorType", 			data[u"sensorType"]) 
 			if "sendsAlive" in data and "sendsAlive" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"sendsAlive", 			data[u"sendsAlive"]) 
 			if "lowVoltage" in data and "lowVoltage" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"lowVoltage", 			data[u"lowVoltage"]) 
-			if "lowVoltage" in data and "lowVoltage" 	in dev.states:	self.addToStatesUpdateDict(dev.id, u"tampered", 			data[u"tampered"]) 
+			if "tampered" 	in data and "tampered" 		in dev.states:	self.addToStatesUpdateDict(dev.id, u"tampered", 			data[u"tampered"]) 
 
 			if True:					self.addToStatesUpdateDict(dev.id, u"lastAliveMessage", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
 
@@ -16661,6 +16686,90 @@ class Plugin(indigo.PluginBase):
 			sens[param] = elseSet
 
 		return sens
+
+
+
+####-------------------------------------------------------------------------####
+####------------------delayed action queu management ------------------------START
+####-------------------------------------------------------------------------####
+	def startDelayedActionQueue(self):
+
+		if self.delayedActions["state"] == "running":
+				self.indiLOG.log(20, u"no need to start Thread, delayed action thread already running" )
+				return 
+
+		self.indiLOG.log(20, u" .. restarting   thread for delayed actions, state was: {}".format(self.delayedActions["state"]) )
+		self.delayedActions["lastCheck"] = time.time()
+		self.delayedActions["state"] = "start"
+		self.sleep(0.1)
+		self.delayedActions["thread"]  = threading.Thread(name=u'self.delayedActionsThread', target=self.delayedActionsThread)
+		self.delayedActions["thread"].start()
+		return 
+###-------------------------------------------------------------------------####
+	def stopDelayedActionQueue(self):
+
+		if self.delayedActions["state"] != "running":
+				self.indiLOG.log(20, u"no need to stop Thread, delayed action thread already stopped" )
+				return 
+
+		self.indiLOG.log(20, u" .. stopping   thread for delayed actions, state was: {}".format(self.delayedActions["state"]) )
+		self.delayedActions["lastCheck"] = time.time()
+		self.delayedActions["state"] = "stop"
+		return 
+
+####-------------------------------------------------------------------------####
+	def delayedActionsThread(self):
+		try:
+			self.delayedActions["state"] = "running"
+			if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"delayedActionsThread starting ")
+			while self.delayedActions["state"] == "running":
+				self.sleep(1)
+				self.delayedActions["lastCheck"] = time.time()
+
+				addback = []
+				while not self.delayedActions["data"].empty():
+					action = self.delayedActions["data"].get()
+
+					#if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"delayedActionsThread time?{:.1f}; action:{} ".format(time.time() - action["actionTime"], action))
+
+					self.delayedActions["lastActive"]  = time.time()
+
+					if time.time() - action["actionTime"] < 0: 
+						addback.append(action)
+						continue
+
+					dev = indigo.devices[action["devId"]]
+					for updateItem in action["updateItems"]: 
+						if self.decideMyLog(u"Special"): self.indiLOG.log(20, u"delayedActionsThread updateItem:{} ".format(updateItem))
+						if updateItem["stateName"] in dev.states:
+							if "uiValue" in updateItem:
+								dev.updateStateOnServer( updateItem["stateName"], updateItem["value"], uiValue=updateItem["uiValue"])
+							else:
+								dev.updateStateOnServer( updateItem["stateName"], updateItem["value"])
+
+					if "image" in action:
+						if action["image"] == "on":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						elif action["image"] == "off":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+						elif action["image"] == "tripped":
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+
+				for action in addback:
+					self.delayedActions["data"].put(action)	
+
+
+		except Exception, e:
+			if unicode(e) != "None":
+				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		self.indiLOG.log(20, u"delayedActions  update thread stopped, state was:{}".format(self.delayedActions["state"]) )
+		self.delayedActions["state"] = "stopped - exiting thread"
+		return
+
+###-------------------------------------------------------------------------####
+####------------------delayed action queu management ------------------------end
+###-------------------------------------------------------------------------####
+
 
 
 

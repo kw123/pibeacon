@@ -6,10 +6,11 @@
 
 		<ConfigUI>            
 			<Field id="isRPIDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="label1"               type="label" alignText="center" fontColor="orange" > 
+			<Field id="label1"               type="label" alignText="left" fontColor="orange"> > 
 				<Label>====   Set parameters for RPI device
-you can overwrite parameters from "initial setup and set timing parameters etc. 
-You can also set postion of the RPi which wil be used to determine th position of the iBeacons ====
+You can overwrite parameters from "initial setup and set timing parameters etc. 
+You can also set postion of the RPi which will be used to determine the position of the iBeacons
+====
 </Label></Field>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
  
@@ -1477,16 +1478,17 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 	<UiDisplayStateId>displayStatus</UiDisplayStateId>
 
 		<ConfigUI>
-			<Field id="label1"  type="label" fontColor="orange"  >
+			<Field id="MSG" type="textfield"    defaultValue=""> <Label>message from plugin:</Label></Field>
+			<Field id="isRPISensorDevice"      	type="checkbox" defaultValue="true" hidden="yes"> </Field>
+			<Field id="enablePiNumberMenu" 		type="checkbox" defaultValue="true"  hidden="true"></Field>
+			<Field id="label1"  type="label" 	alignText="left" fontColor="orange"  >
 				<Label>===  Set parameters  for  RPI - sensor  device
 These RPI can not be used for iBeacons or BLE devices
-you can connect i2c serial, onewire and output devices ===
+You can connect i2c, serial, onewire, spi, GPIO input, GPIO output,  display devices 
+===
 </Label>
 			</Field>
 
-			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-			<Field id="isRPISensorDevice"      	type="checkbox" defaultValue="true" hidden="yes"> </Field>
-			<Field id="enablePiNumberMenu" 		type="checkbox" defaultValue="true"  hidden="true"></Field>
 
 			<Field id="infoLabel55" type="label" fontColor="green" >
 				<Label>== Setup basic network params for RPI, use this or set parameters in "initial setup of RPI" menu"</Label>
@@ -2273,9 +2275,10 @@ Change here or in initial setup:</Label>
 		<UiDisplayStateId>displayStatus</UiDisplayStateId>
 		<ConfigUI>            
 			<Field id="isBeaconDevice"       type="checkbox"     defaultValue="true" hidden="true"> </Field>
-			<Field id="label1"               type="label" alignText="center" fontColor="orange" > 
-				<Label>====  Set parameters  for iBeacon devices  
-you can tune several parameters like response to signales etc as well as battery, beep, group membership etc ====
+			<Field id="label1"               type="label" alignText="left" fontColor="orange"> > 
+				<Label>====  Set parameters for iBeacon devices  
+You can tune several parameters like response to signales etc as well as battery, beep, group membership etc 
+====
 </Label>
 			</Field>
 
@@ -3149,7 +3152,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 				<Label>=== setup BLE connect tracking
 This device type will ping BLE enabled phones and set staus up/down similar to iBeacons, but not as stable and requires the phones to answer  ===
 </Label>
@@ -3764,7 +3767,7 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
-			<Field id="label1"               type="label" alignText="center" fontColor="orange" > 
+			<Field id="label1"               type="label" alignText="left" fontColor="orange"> > 
 				<Label>=======setup BLE sensors you need to supply the MAC number and the RPi 
  which should read the sensor:
  login to RPI and do   
@@ -3932,7 +3935,7 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== setup BLE BLERuuviTag. You need to supply the MAC number.
  Easiest is to run the Ruuvi Station app on your phone and lookup the MAC address
  The sensors do not need any config, besides power on, 
@@ -4340,7 +4343,7 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== To Setup this temperature / humidity BLE sensor
 -find the MAC number through discover new beacons; or from back of device
 -enter MAC number; select RPI(s); which temp to show in status Field; ...
@@ -4596,7 +4599,7 @@ save ===
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== To Setup this Temerature BLE sensor
 -find the MAC number  through discover new beacons or from back of device
 -enter MAC number, select RPI(s)
@@ -4811,7 +4814,7 @@ save===</Label>
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== To Setup this Temperatue and Temerature probe BLE sensor device
 -find the MAC number through discover new beacons, or from back of device
 -enter MAC number, select RPI(s), which temp to show in status Field
@@ -5061,7 +5064,7 @@ save ===
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== To setup BLE Minew E8 XYZ Accceleration beacon w  BeaconSet+ app on phone
 set all slots to off, besides acceleration (#6)
 set adv freq to 5000 mSec; set trigger on, advertise for 5 secs
@@ -5289,7 +5292,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== To setup this accelerator BLE sensor 
 Find MAC number either on back of beacon or use the plugin tool detect new beacon 
 set trigger and sensitivity parameters ===
@@ -5520,7 +5523,7 @@ set trigger and sensitivity parameters ===
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
 			<Label>=== To setup this accelerator BLE sensor 
 Find MAC number either on back of beacon or use the plugin tool detect new beacon 
 set trigger and sensitivity parameters ===
@@ -5745,7 +5748,7 @@ set trigger and sensitivity parameters ===
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 
-			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
+			<Field id="label0"               type="label"  alignText="left" fontColor="orange">
 			<Label> To setup one of these on/off BLE sensor types
 Find MAC number either on back of beacon or use the plugin tool detect new beacon 
 These sensor types are an onOff sensor. They have either a button, a mag sensor, 
@@ -5873,7 +5876,7 @@ These sensor types are an onOff sensor. They have either a button, a mag sensor,
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="center" fontColor="orange" >
+			<Field id="label0"               type="label" alignText="left" fontColor="orange" >
 			<Label>=== To setup this accelerator -temp - humidity BLE sensor 
 Find MAC number either on back of beacon or use the plugin tool detect new beacon 
 In Beaconfig app set triggers for acceleration temp and humdity on 
@@ -6228,7 +6231,7 @@ set trigger and sensitivity parameters ===
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 
-			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
+			<Field id="label0"               type="label"  alignText="left" fontColor="orange">
 			<Label>==  To setup this  on/off BLE "iSensor" 
 Find MAC number on back of beacon or use the plugin tool detect new beacon 
 This sensor family sends messages when device button pressed ..
@@ -6349,7 +6352,7 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -6359,12 +6362,12 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 
-			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
+			<Field id="label0"               type="label"  alignText="left" fontColor="orange">
 			<Label>==  To setup this  on/off BLE "iSensor" 
 Find MAC number on back of beacon or use the plugin tool detect new beacon 
 This sensor family sends messages when device button pressed ..
-this device type supports not remote button types:
-Door Bell
+This device type supports the Door Bell device.
+The device will only send a message "ON" when button is pressed: state "onOff" will go "ON". After 2 seconds the plugin will switch back to "off" 
 ===
 </Label>
 			</Field>
@@ -6476,8 +6479,8 @@ Door Bell
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="false"></Field>
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="false"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -6487,13 +6490,13 @@ Door Bell
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 
-			<Field id="label0"               type="label"  alignText="center" fontColor="orange">
+			<Field id="label0"               type="label"  alignText="left" fontColor="orange">
 			<Label>==  To setup this  on/off BLE "iSensor" 
 Find MAC number on back of beacon or use the plugin tool detect new beacon 
 This sensor family sends messages when device button pressed ..
 The device will go RED = off when an event happens (you can select the color)
-this device type supports remote button types:
-RemoteKeyFob
+This device type supports the RemoteKeyFob
+The device will only send messages when a button is pressed. The state "currentOnType" will reflect the last button. The on/off state will be set to "ON". After 2 seconds the plugin will switch back to "off" 
 ===
 </Label>
 			</Field>

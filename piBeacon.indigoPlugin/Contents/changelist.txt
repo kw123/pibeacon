@@ -1,27 +1,29 @@
 
-Added features / changes in v7.128.458 @ 2020-10-28
+Added features / changes in v7.128.459 @ 2020-10-29
 ===================================================
 0. cleaned up some code 
 1. rearanged some menu items, clearer structure, using some color for menu items
 2. In addition to the Ruuvitag added several blue tooth sensors, very easy to setup, they all can be used as presence as well as sensors
    They have long battery life and > 30 m distance -- with several RPi in the house essetially the whole house is covered
-	INGICS:
-		iBS01-x: Family of on/off sensors- Button, magent, movement, external switch 
-		iBS01T:  Temp and humidity
-		iBS01RG: x-y-z acceleration/ gravity sensor
-		iBS02:   PIR presence ir IR object detection
-		iBS03-x: Family of on/off sensors- Button, magent, movement, external switch 
-		iBS03G:  Movement detection of beacon on/off
-		iBS03T:  on board temp sensor
-		iBS03TP: on board temp sensor + temp sensor probe, water proved 
-		iBS03RG: x-y-z acceleration/ gravity sensor
+    INGICS:
+        iBS01-x: Family of on/off sensors- Button, magent, movement, external switch 
+        iBS01T:  Temp and humidity
+        iBS01RG: x-y-z acceleration/ gravity sensor
+        iBS02:   PIR presence ir IR object detection
+        iBS03-x: Family of on/off sensors- Button, magent, movement, external switch 
+        iBS03G:  Movement detection of beacon on/off
+        iBS03T:  on board temp sensor
+        iBS03TP: on board temp sensor + temp sensor probe, water proved 
+        iBS03RG: x-y-z acceleration/ gravity sensor
     Minew 
-		E8: x-y-z acceleration/ gravity sensor
-	iSensor - Kaipule
-		various on/off sensors for GAS, CO water, alarm  remoteKey, door button,..
-		EN61, ES61, EW70, ET90, IM21, IX30 IX32
-	Satech
-		STixx sensors, acceleration, temp, humidity, on/off
+        E8: x-y-z acceleration/ gravity sensor
+    iSensor - Kaipule
+        various on/off sensors: GAS, CO water, alarm , 
+        on sensor: door button
+        remoteKey
+        The on/off states are managed according to the cabailities of the sensors
+    Satech
+        STixx sensors, acceleration, temp, humidity, on/off
 
 3. Normally beacon go "up" as soon as a signal is detect. When they are gone / no signal is received: 
    the RPi does not send any info to the plugin if no signal. Then the plugin will set them to down after xx secs (normally 90) and after another xx secs to expired
@@ -35,9 +37,12 @@ Added features / changes in v7.128.458 @ 2020-10-28
   When set to eg up=-60 and down=-80: the beacon will only go up when it is close to the RPI  ~ 1 m. but will stay up until it has eg left the room (>10m) 
   with this setting you can decide if a beacon is in a room - that requires an RPI in each room you like to have this feature
 
-5. changeed hcidump method to include more advertising message types. in v.451 some where excluded
+5. changed hcidump method
     added option to restart BLE scanner every 5 minutes, just in case RPi can not keep up
-    fixed so that 2. ble dongle not needed
+    fixed so that 2. ble dongle is not needed
+    This method catches all types of messages while the python socket method ignored some of the mesage types
+     ie mfg info which is used to id a beacon / sensor 
+    You can select whcih method to use for all RPi in config, or overwrite in RPI device edit.
 
 Added features / changes in v7.126.438 @ 2020-08-31
 ===================================================
@@ -401,7 +406,7 @@ Added features / changes in v7.118.338 @ 2020-02-17
   you might need to restart the plugin twice to get all the new states loaded.
 
 4. the ibeacon state Names are now Pi_xx_Signal .. _Distance  .._Time = 2 digits for all pi_xx states  ie Pi_1 --> Pi_01, to make it sort better.
-	and there are now 20 ibeacon RPIs (0-19) and 20 non iBeacon RPI (for sensors only) 20-39
+    and there are now 20 ibeacon RPIs (0-19) and 20 non iBeacon RPI (for sensors only) 20-39
 
 5. fixed issue with wrong ip number on RPI when switching between Wifi and ethernet
 
