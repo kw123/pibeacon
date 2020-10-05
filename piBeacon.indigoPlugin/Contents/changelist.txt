@@ -1,5 +1,13 @@
 
-Added features / changes in v7.128.459 @ 2020-10-29
+Added features / changes in v7.128.460 @ 2020-10-04
+===================================================
+0. added option to use new wpa_supplicant and inetrfaces file in boot directry at every boot
+   this can be used to setup wifi, dhcp etc files
+   creat a wpa_supplicant (for ssid / passw)  and or interfaces(dhcp etc) file(s) in /boot on the rpi SSD
+   reboot and the RPI will copy the files to the proper directories and reboot with the new settings
+
+
+Added features / changes in v7.128.459 @ 2020-09-29
 ===================================================
 0. cleaned up some code 
 1. rearanged some menu items, clearer structure, using some color for menu items

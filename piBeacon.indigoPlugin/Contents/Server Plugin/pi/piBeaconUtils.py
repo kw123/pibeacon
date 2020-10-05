@@ -1384,10 +1384,16 @@ def restartWifi():
 #################################
 def copySupplicantFileFromBoot():
 	try:
+		retCode = False
 		if os.path.isfile("/boot/wpa_supplicant.conf"):
 			subprocess.call("/usr/bin/sudo cp  /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/wpa_supplicant.conf", shell=True)
-			return True
+			retCode = True
+		if os.path.isfile("/boot/interfaces"):
+			subprocess.call("/usr/bin/sudo cp  /boot/interfaces  /etc/network/interfaces", shell=True)
+			subprocess.call("/usr/bin/sudo rm  /boot/interfaces", shell=True)
+			retCode = True
+		return retCode
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False

@@ -94,6 +94,13 @@ def signedIntfromString16(string):
 	return intNumber
 
 
+def intFromhex1byte(hexString, start):
+ 	return int(hexString[start:start+2],16)
+
+def intFromhex2byte(hexString, start):
+ 	return int(hexString[start:start+4],16)
+
+
 def rshift(val, n):
     """
     Arithmetic right shift, preserves sign bit.
@@ -671,7 +678,6 @@ def readParams(init):
 								BLEsensorMACs[mac]["onOff"] 						= False
 								BLEsensorMACs[mac]["alive"] 						= False
 								BLEsensorMACs[mac]["counter"] 						= "-1"
-								BLEsensorMACs[mac]["dataByte"]   					= -1
 								BLEsensorMACs[mac]["batteryVoltage"] 	 	 		= -1
 								BLEsensorMACs[mac]["chipTemperature"] 	 	 		= -1
 								BLEsensorMACs[mac]["secsSinceStart"] 	 	 		= -1
@@ -1128,20 +1134,23 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 	global BLEsensorMACs, sensors
 
 	""" format:
-									pos#   01 23 45 67  89 01 23 45 67 89 01 23 45 67  89 01 23 45 67 89 01 23 45 67 
-- 04 3E 23 02 01 03 00 88 B8 37 22 9A AC   17 02 01 06  09 08 69 53 65 6E 73 6F 72 20  09 FF 00 DB 97 46 43 02 07 04 D4
-- 04 3E 23 02 01 03 00 88 B8 37 22 9A AC   17 02 01 06  09 08 69 53 65 6E 73 6F 72 20  09 FF 00 DB 97 46 43 02 08 05 D4
-														       i  S  e  n  s  o  r  _   = name of sensortype  string "iSensor "
-														 							   LL = length of data 
-														 								  FW = firmware
- 																						     devID--- = 00 DB 97
- 																							          data---- 
+									pos#   01 23 45 67  89 01 23 45 67 89 01 23 45 67  89 01 23 45 67 89 01 23 45 67    RSSI
+- 04 3E 23 02 01 03 00 88 B8 37 22 9A AC   17 02 01 06  09 08 69 53 65 6E 73 6F 72 20  09 FF 00 DB 97 46 43 02 07 04    D4
+- 04 3E 23 02 01 03 00 88 B8 37 22 9A AC   17 02 01 06  09 08 69 53 65 6E 73 6F 72 20  09 FF 00 DB 97 46 43 02 08 05    D4
+					   r- MA C# ## ## ##                       i  S  e  n  s  o  r  _   = name of sensortype  string "iSensor "
+														 				               LL = length of data 
+														 								  FT = FF = frame type =GAP_AD_TYPE_MANU_SPECIFIC_DATA
+														 								     FW--- = 00 = firmware 
+ 																						        devID--- = DB 97 46
+ 																							             data----  = 43 02 07
 																									     TP  = typeID = 43 = 01000011 = sends alive, and gas sensor
 																									        EV  = eventData
-																									           CB  = control byte
-																									  Data  send alive 3= gas sensor
- 																							                    EV 02 = alarm  (= 0010 = alarm, 1000 = alive )
- 																							                    CB = 08 = count= 04..05..06..07..08.. 
+																									           CB  = control byte = counter
+																									eg:  Data  send alive 3= gas sensor
+ 																							                EV 02 = alarm  (= 0010 = alarm, 1000 = alive )
+ 																							                   CB = 07/08 = count= 04..05..06..07..08.. 
+ 
+																							                      CS = 04,05 = check sum = byte 0 +..byte7
 
 	"""
 
@@ -1153,13 +1162,30 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		TagPos 	= hexData.find("02010609086953656E736F722009FF") 
 		if TagPos !=2: 	return tx, "", UUID, Maj, Min, False
 
-		UUID 			= BLEsensorMACs[mac]["type"]
-		Maj  			= mac
-		sensor			= BLEsensorMACs[mac]["type"]
-		p = 40
-		dataByte		= int(hexData[p:p+2],16)
-		typeID 			=  dataByte& 0b00011111
-		remote = False
+		UUID 				= BLEsensorMACs[mac]["type"]
+		Maj  				= mac
+		sensor				= BLEsensorMACs[mac]["type"]
+		p = 32; firmWare	= intFromhex1byte(hexData,32)
+		p = 34; devId1		= intFromhex1byte(hexData,34)
+		p = 36; devId2		= intFromhex1byte(hexData,36)
+		p = 38; devId3		= intFromhex1byte(hexData,38)
+		p = 40; deviceByte	= intFromhex1byte(hexData,40)
+		p = 42; eventData 	= intFromhex1byte(hexData,42)
+		p = 44; counter		= intFromhex1byte(hexData,44)
+		p = 46; checkSum	= intFromhex1byte(hexData,46)
+
+		checkSumCalc 		= (firmWare + devId1 + devId2 + devId3 + deviceByte + eventData + counter) & 255 # only one byte
+
+		if checkSum != checkSumCalc:
+			U.logger.log(20, " mac:{}   checksum error  hex:{}, chs:{} chscalc:{}".format( mac, hexData[32:48], checkSum, checkSumCalc) )
+			U.sendURL( {"sensors":{sensor: {BLEsensorMACs[mac]["devId"]: {"badsensor":True, "rssi":int(rx)} }}} )
+			return tx, "", UUID, Maj, Min, False 
+
+
+		counter			= counter & 0b00011111
+		sendsAlive 		= deviceByte & 0b01000000 != 0
+		biDirection 	= deviceByte & 0b10000000 != 0# Not used 
+		typeID 			= deviceByte & 0b00011111
 		if    typeID == 0b00000000: sensorType = "undefined"
 		elif  typeID == 0b00000001:	sensorType = "IR-Fence"
 		elif  typeID == 0b00000010:	sensorType = "PIR"
@@ -1171,38 +1197,51 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		elif  typeID == 0b00001000:	sensorType = "Vibration"
 		elif  typeID == 0b00001001:	sensorType = "WaterLevel"
 		elif  typeID == 0b00001010:	sensorType = "HighTemp"
-		elif  typeID == 0b00010110:	sensorType = "DoorBell"			; remote= True
-		elif  typeID == 0b00011001:	sensorType = "RemoteKeyFob"		; remote= True
-		elif  typeID == 0b00011010:	sensorType = "WirelessKeypad"	; remote= True
-		elif  typeID == 0b00011110:	sensorType = "WirelessSiren"	; remote= True
-		elif  typeID == 0b00011111:	sensorType = "RemoteSwitch"		; remote= True
+#		elif  typeID == 0b00001011:	sensorType = "undefined"		
+#		elif  typeID == 0b00001100:	sensorType = "undefined"
+#		elif  typeID == 0b00001101:	sensorType = "undefined"
+#		elif  typeID == 0b00001110:	sensorType = "undefined"
+#		elif  typeID == 0b00001111:	sensorType = "undefined"
+#		elif  typeID == 0b00010000:	sensorType = "undefined"	
+#		elif  typeID == 0b00010001:	sensorType = "undefined"	
+#		elif  typeID == 0b00010010:	sensorType = "undefined"	
+#		elif  typeID == 0b00010011:	sensorType = "undefined"	
+#		elif  typeID == 0b00010100:	sensorType = "undefined"	
+#		elif  typeID == 0b00010101:	sensorType = "undefined"	
+		elif  typeID == 0b00010110:	sensorType = "DoorBell"		
+#		elif  typeID == 0b00010111:	sensorType = "undefined"	
+#		elif  typeID == 0b00011000:	sensorType = "undefined"	
+		elif  typeID == 0b00011001:	sensorType = "RemoteKeyFob"	
+		elif  typeID == 0b00011010:	sensorType = "WirelessKeypad"
+#		elif  typeID == 0b00011011:	sensorType = "undefined"	
+#		elif  typeID == 0b00011100:	sensorType = "undefined"	
+#		elif  typeID == 0b00011101:	sensorType = "undefined"	
+		elif  typeID == 0b00011110:	sensorType = "WirelessSiren"  # not supported, will just post the bits
+		elif  typeID == 0b00011111:	sensorType = "RemoteSwitch"	  # not supported, will just post the bits
 		else:						sensorType = "undefined"
+
+		if    typeID &  0b00010000 !=0: remote = True
+		else:							remote = False
+
 		Min  			= sensorType 
 
-		typeID2 		= dataByte & 0b11000000
-		sendsAlive 		= typeID2  & 0b01000000 != 0
-		biDirection 	= typeID2  & 0b10000000 != 0# Not used 
 
-		#U.logger.log(20,u"doBLEiSensor {}  hexData[40+]:{}; typeId:{:b}; typeId2:{:b}".format(mac, hexData[40:-2], typeID, typeID2))
 
-		p = 42 ; eventData 	= int(hexData[p:p+2],16)& 0b00001111
-		p = 44 ; counter	= int(hexData[p:p+2],16)& 0b00011111
 
-		xTrig = False
+		remoteTrig = False
 		if remote:
+			if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: remoteTrig = True
 			if  sensorType == "DoorBell":
-				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
 				dd={   # the data dict to be send 
 						'lowVoltage': 	eventData & 0b00000100 != 0,
 						'onOff': 		eventData & 0b00000010 != 0,
 						'tampered': 	eventData & 0b00000001 != 0,
-						'counter': 		counter, # changes only when pressed twice 
+						'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
 						'sensorType': 	sensorType,
 						'sendsAlive': 	sendsAlive,
 						"rssi":			int(rx),
 				}
 			elif  sensorType == "RemoteKeyFob":
-				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
 				dd={   # the data dict to be send 
 						'SOS': 			eventData & 0b00001000 != 0,
 						'home': 		eventData & 0b00000100 != 0,
@@ -1214,7 +1253,6 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 						"rssi":			int(rx),
 				}
 			elif sensorType == "RemoteSwitch":
-				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
 				dd={   # the data dict to be send 
 						'state': 		eventData & 0b00001000 != 0,
 						'onOff': 		eventData & 0b00000100 != 0,
@@ -1224,9 +1262,8 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 						"rssi":			int(rx),
 				}
 			else:
-				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: xTrig = True
 				dd={   # the data dict to be send 
-						'bits': 		"{:b}".format(eventData & 0b00001111),
+						'bits': 		"{:b}".format(eventData),
 						'counter': 		counter,
 						'sensorType': 	sensorType,
 						'sendsAlive': 	sendsAlive,
@@ -1256,18 +1293,16 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 
 
 		#U.logger.log(20, " .... checking  data:{} counter hex:{}".format( dd , hexData[42:42+5]) )
-		deltaTime 			= time.time() - BLEsensorMACs[mac]["lastUpdate"]
-		trigTime 			= deltaTime   > BLEsensorMACs[mac]["updateIndigoTiming"]  			# send min every xx secs
-		yTrig 				= dataByte != BLEsensorMACs[mac]["dataByte"]
+		trigTime 			= time.time() - BLEsensorMACs[mac]["lastUpdate"]   > BLEsensorMACs[mac]["updateIndigoTiming"]  			# send min every xx secs
+		trigCount			= counter != BLEsensorMACs[mac]["counter"] 			# send min every xx secs
 
-		if counter != BLEsensorMACs[mac]["counter"] or trigTime or xTrig or yTrig:
+		if  trigCount or trigTime or remoteTrig:
 			# compose complete message
 			U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
 
 			# remember last values
 			BLEsensorMACs[mac]["lastUpdate"] = time.time()
 			BLEsensorMACs[mac]["counter"]    = counter
-			BLEsensorMACs[mac]["dataByte"]   = dataByte
 
 		return tx, "", UUID, Maj, Min, False
 
@@ -1690,8 +1725,9 @@ def domyBlueT( mac, rx, tx, hexData, UUID, Maj, Min):
 		if len(hexData) < 55:
 			return tx, "", UUID, Maj, Min, True
 		UUID = hexData[12:40]
-		Maj	 = str(int(hexData[40:44],16))
-		Min	 = str(int(hexData[44:48],16))
+		Maj	 = str(intFromhex2byte(hexData, 40))
+		Min	 = str(intFromhex2byte(hexData, 44))
+
 		RawData = hexData[48:48+6] # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
 		RawData = [int(RawData[0],16), int(RawData[1],16), int(RawData[2],16)]
 		#RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
@@ -1791,7 +1827,7 @@ hexData:1A0201060303E1FF1216E1FFA103640005FFFB01004B80A33F23ACEC; x:0005 y:FFFB,
 		accelerationY 	= signedIntfromString16(hexData[p+4:p+8 ])*(10./2.45)
 		accelerationZ 	= signedIntfromString16(hexData[p+8:p+12])*(10./2.45)
 		accelerationTotal= math.sqrt(accelerationX * accelerationX + accelerationY * accelerationY + accelerationZ * accelerationZ)
-		batteryLevel	= int(hexData[28:30],16)
+		batteryLevel	= intFromhex1byte(hexData, 28)
 
 		# make deltas compared to last send 
 		dX 			= abs(BLEsensorMACs[mac]["accelerationX"]		- accelerationX)
@@ -3302,7 +3338,7 @@ def execbeaconloop(test):
 	restartBLE 		 = time.time()
 	nMsgs			 = 0
 	zeroInARow 		 = 0
-	zeroInARowMax	 = 20
+	zeroInARowMax	 = 30
 	lastmsg    		 = time.time() + 5
 	lastmsgMaxDelta	 = 20
 
@@ -3373,9 +3409,9 @@ def execbeaconloop(test):
 				if tt - timeAtLoopStart	 > sendAfter: 
 					break # send curl msgs after collecting for xx seconds
 
-				if   nMsgs < 2: time.sleep(0.4)
-				elif nMsgs < 5: time.sleep(0.3)
-				else: 			time.sleep(0.1)
+				if   nMsgs < 2: time.sleep(0.15)
+				elif nMsgs < 5: time.sleep(0.1)
+				else: 			time.sleep(0.05)
 				hexstr = ""
 
 				if rpiDataAcquistionMethod == "socket":
@@ -3421,6 +3457,7 @@ def execbeaconloop(test):
 				else:
 					zeroInARow = 0
 					lastmsg    = time.time()
+					#U.logger.log(20, "loopCount:{} nMsgs:{} ,".format(loopCount, nMsgs) )
 
 
 				for hexstr in Msgs: 

@@ -4048,7 +4048,7 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden="no"> 
 				<Label>Send sensor values if Temp changes by:</Label>
 				<List>
-					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="0.5" > 0.5 C = 1 F</Option>
 					<Option value="1.0" > 1.0 C = 2 F</Option>
 					<Option value="1.5" > 1.5 C = 3 F</Option>
 					<Option value="2.0" > 2.0 C = 4 F</Option>
@@ -4424,7 +4424,7 @@ save ===
 			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden="no"> 
 				<Label>Send sensor values if Temp changes by:</Label>
 				<List>
-					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="0.5" > 0.5 C = 1 F</Option>
 					<Option value="1.0" > 1.0 C = 2 F</Option>
 					<Option value="1.5" > 1.5 C = 3 F</Option>
 					<Option value="2.0" > 2.0 C = 4 F</Option>
@@ -4684,7 +4684,7 @@ save===</Label>
 			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden="no"> 
 				<Label>Send sensor values if Temp changes by:</Label>
 				<List>
-					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="0.5" > 0.5 C = 1 F</Option>
 					<Option value="1.0" > 1.0 C = 2 F</Option>
 					<Option value="1.5" > 1.5 C = 3 F</Option>
 					<Option value="2.0" > 2.0 C = 4 F</Option>
@@ -4894,7 +4894,7 @@ save ===
 			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden="no"> 
 				<Label>Send sensor values if Temp changes by:</Label>
 				<List>
-					<Option value="0.5" > 0.5 C = 0.5 F</Option>
+					<Option value="0.5" > 0.5 C = 1 F</Option>
 					<Option value="1.0" > 1.0 C = 2 F</Option>
 					<Option value="1.5" > 1.5 C = 3 F</Option>
 					<Option value="2.0" > 2.0 C = 4 F</Option>

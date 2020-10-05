@@ -1124,8 +1124,6 @@ class Plugin(indigo.PluginBase):
 
 			self.anyProperTydeviceNameOrId = 0
 
-			self.lastexecuteUpdateStatesDictCalledFrom = "init"
-
 			self.wifiSSID					= self.pluginPrefs.get(u"wifiSSID", u"")
 			self.wifiPassword				= self.pluginPrefs.get(u"wifiPassword", u"")
 			self.key_mgmt					= self.pluginPrefs.get(u"key_mgmt", u"")
@@ -13206,7 +13204,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat)) 
 					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
+					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 
 			else:
 				if "onOff" in data and "onOffState" in dev.states:
@@ -13235,7 +13233,7 @@ class Plugin(indigo.PluginBase):
 					self.setStatusCol(dev, u"status", 1, "SOS", whichKeysToDisplay, u"","")
 					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
+					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"SOS", 					data[u"SOS"]) 
 			if "home" 		in data and "home" 			in dev.states:	
 				if data[u"home"]:
@@ -13246,7 +13244,7 @@ class Plugin(indigo.PluginBase):
 					self.setStatusCol(dev, u"status", 2, "home", whichKeysToDisplay, u"","")
 					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
+					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"home", 				data[u"home"]) 
 			if "away" 		in data and "away" 			in dev.states:	
 				if data[u"away"]:
@@ -13257,7 +13255,7 @@ class Plugin(indigo.PluginBase):
 					self.setStatusCol(dev, u"status", 3, "away", whichKeysToDisplay, u"","")
 					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
+					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"away", 				data[u"away"]) 
 			if "disarm" 	in data and "disarm" 		in dev.states:	
 				if data[u"disarm"]:
@@ -13268,7 +13266,7 @@ class Plugin(indigo.PluginBase):
 					self.setStatusCol(dev, u"status", 4, "disarm", whichKeysToDisplay, u"","")
 					self.addToStatesUpdateDict(dev.id,u"onOffState",  		True) 
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+2., "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
+					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id,"image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
 				self.addToStatesUpdateDict(dev.id, u"disarm", 				data[u"disarm"]) 
 
 			if "bits" 		in data and "bits" 			in dev.states:	self.addToStatesUpdateDict(dev.id, u"bits", 				data[u"bits"]) 
@@ -13995,7 +13993,11 @@ class Plugin(indigo.PluginBase):
 						if col =="red": dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 						return True
 				except: 
-					self.indiLOG.log(20,"setStateColor for dev {}, x={};  color: {};  wrong eval syntax: {}".format(dev.name.encode("utf8"), x, col, commands[col]) )
+					if commands[col].find("x") ==-1:
+						self.indiLOG.log(20,"setStateColor for dev {}, x={};  color: {};  wrong eval syntax: {};  x=  x> ... statement part missing, eg x>25; not just >25".format(dev.name.encode("utf8"), x, col, commands[col]) )
+					else:
+						self.indiLOG.log(20,"setStateColor for dev {}, x={};  color: {};  wrong eval syntax: {}".format(dev.name.encode("utf8"), x, col, commands[col]) )	
+
 
 
 		except Exception, e:
@@ -17709,34 +17711,34 @@ configuration         - ==========  defined beacons ==============
 		try:
 			try:
 
-				for ii in range(5):
-					if	self.executeUpdateStatesDictActive =="":
+				for ii in range(10):
+					if self.executeUpdateStatesDictActive == "":
 						break
 					self.sleep(0.05)
 				self.executeUpdateStatesDictActive = devId+"-add"
 
 				if devId not in self.updateStatesDict: 
-					self.updateStatesDict[devId]={}
+					self.updateStatesDict[devId] = {}
+
 				if key in self.updateStatesDict[devId]:
 					if value != self.updateStatesDict[devId][key]["value"]:
 						self.updateStatesDict[devId][key] = {}
-						if newStates !="":
+						if newStates != "":
 							newStates[key] = {}
-				self.updateStatesDict[devId][key] = {"value":value,"decimalPlaces":decimalPlaces,"force":force,"uiValue":uiValue}
 
-				if str(devId) == "801685749":
-						self.indiLOG.log(20,u"{} key:{}, val:{}; updateStatesDict:{}".format("0C:F3:EE:00:83:40", key, value, self.updateStatesDict[devId]))
+				self.updateStatesDict[devId][key] = {"value":value,"decimalPlaces":decimalPlaces,"force":force,"uiValue":uiValue}
 
 				if newStates != "": newStates[key] = value
 
 			except Exception, e:
-				if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
-				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   )
-				self.indiLOG.log(40,"devId:{}; newStates:{}; key:{}; value:{}".format(devId, key, value, newStates))
+				if unicode(e).find(u"UnexpectedNullErrorxxxx") == -1: 
+					if unicode(e).find(str(devId)) == -1 or self.decideMyLog(u"Special"):
+						self.indiLOG.log(30,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   )
+						self.indiLOG.log(30,"addToStatesUpdateDict: this happens when 2 update processes overlap. should not be a probelm if it happens not too frequently")
+						self.indiLOG.log(30,"devId:{};  key:{}; value:{}; newStates:{};".format(devId, key, value, newStates))
 
 
 
-			#self.updateStatesDict = local	  
 		except Exception, e:
 			if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
 			self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -17746,19 +17748,19 @@ configuration         - ==========  defined beacons ==============
 ####-------------------------------------------------------------------------####
 	def executeUpdateStatesDict(self,onlyDevID="0",calledFrom=""):
 		try:
-			if len(self.updateStatesDict) ==0: return
+			if len(self.updateStatesDict) == 0: return
 			#if "1929700622" in self.updateStatesDict: self.indiLOG.log(10, u"executeUpdateStatesList calledfrom: "+calledFrom +"; onlyDevID: " +onlyDevID +"; updateStatesList: " +unicode(self.updateStatesDict))
 			onlyDevID = unicode(onlyDevID)
 
-			for ii in range(5):
-				if	self.executeUpdateStatesDictActive =="":
+			for ii in range(10):
+				if	self.executeUpdateStatesDictActive == "":
 					break
 				self.sleep(0.05)
 
 			self.executeUpdateStatesDictActive = onlyDevID+"-exe"
 
 
-			local ={}
+			local = {}
 			#		 
 			if onlyDevID == "0":
 				for ii in range(5):
@@ -17786,7 +17788,6 @@ configuration         - ==========  defined beacons ==============
 				return 
 			self.executeUpdateStatesDictActive = ""
 
-			self.lastexecuteUpdateStatesDictCalledFrom = (calledFrom,onlyDevID)
 
 			changedOnly = {}
 			trigStatus	   = ""
@@ -17909,7 +17910,7 @@ configuration         - ==========  defined beacons ==============
 					self.triggerEvent(u"someClosestrPiHasChanged")
 
 		except Exception, e:
-				if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return 
+			if	unicode(e).find(u"UnexpectedNullErrorxxxx") ==-1: 
 				self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.executeUpdateStatesDictActive = ""
 		return
