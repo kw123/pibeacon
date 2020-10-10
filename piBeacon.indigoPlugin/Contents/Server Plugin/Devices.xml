@@ -858,6 +858,20 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			<Field id="labelExpertsOnly"               type="label" fontColor="green"  > 
 				<Label>EXPERTS ONLY!! ================================================= </Label>
 			</Field>
+			<Field id="compressRPItoPlugin"   type="menu" defaultValue="999999999" tooltip="" >
+				<List>
+					<Option value="200"      >msg GT 200 bytes only for testing</Option>
+					<Option value="2000"     >msg GT 2   KB </Option>
+					<Option value="10000"    >msg GT 10  KB </Option>
+					<Option value="50000"    >msg GT 50  KB </Option>
+					<Option value="100000"   >msg GT 100 KB </Option>
+					<Option value="999999999" >off </Option>
+				</List>    
+				<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
+			</Field>
+			<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>use if you have a slow connection iw wifi and large packages dont come through</Label>
+			</Field>
 
 
 			<Field id="showSpecialParameters" 	type="checkbox" defaultValue="true" ><Label>Show special parameters:</Label></Field>
@@ -2146,6 +2160,21 @@ Change here or in initial setup:</Label>
 			<Field id="SupportsStatusRequest" 	type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Supports StatusRequest:</Label></Field>
 			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Allow OnStateChange:</Label></Field>
 			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Allow SensorValueChange:</Label></Field>
+
+			<Field id="compressRPItoPlugin"   type="menu" defaultValue="999999999" tooltip="" >
+				<List>
+					<Option value="200"      >msg GT 200 bytes only for testing</Option>
+					<Option value="2000"     >msg GT 2   KB </Option>
+					<Option value="10000"    >msg GT 10  KB </Option>
+					<Option value="50000"    >msg GT 50  KB </Option>
+					<Option value="100000"   >msg GT 100 KB </Option>
+					<Option value="999999999" >off </Option>
+				</List>    
+				<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
+			</Field>
+			<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+				<Label>use if you have a slow connection iw wifi and large packages dont come through</Label>
+			</Field>
 
 
 		</ConfigUI>
@@ -3840,7 +3869,9 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -4116,7 +4147,9 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -4448,7 +4481,9 @@ save ===
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -4708,7 +4743,9 @@ save===</Label>
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -4918,7 +4955,9 @@ save ===
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -5208,7 +5247,9 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -5428,7 +5469,9 @@ set trigger and sensitivity parameters ===
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -5659,7 +5702,9 @@ set trigger and sensitivity parameters ===
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -6018,7 +6063,9 @@ set trigger and sensitivity parameters ===
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -6613,6 +6660,240 @@ The device will only send messages when a button is pressed. The state "currentO
 
 
 
+	<Device type="sensor" id="BLEiSensor-TempHum">
+	<Name>BLE-iSensor - Temperature and Humidity</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"               type="label"  alignText="left" fontColor="orange">
+			<Label>==  To setup this  Temp Hum BLE "iSensor" 
+Find MAC number on back of beacon or use the plugin tool detect new beacon 
+This sensor family sends messages when device button pressed ..
+This device will send a BLE message at least once per hour or if the tempertature changes by > 0.05C
+The indigo device state will be updated if temperature changes by > 0.5C or last update is older than 10 secs
+ when a new BLE message arrives
+You can use either red/grey/green or temperature icon in the status column: set below
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+			<Field id="labelRPI"               type="label" >
+			<Label>Select RPIs that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="status"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Humidity"  >Humidity</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="sensorType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sensorType</TriggerLabel>
+				<ControlPageLabel>sensorType</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="Humidity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Humidity</TriggerLabel>
+				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxToday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinToday</TriggerLabel>
+				<ControlPageLabel>HumidityMinToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+			<State id="lowVoltage">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lowVoltage</TriggerLabel>
+				<ControlPageLabel>lowVoltage</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+
 	<Device type="sensor" id="Wire18B20">
 	<Name>INPUT-Temp-Wire18B20</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -6668,7 +6949,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -6808,7 +7091,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7003,7 +7288,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7141,7 +7428,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7285,7 +7574,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7426,7 +7717,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7608,7 +7901,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7789,7 +8084,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -7971,7 +8268,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -8142,7 +8441,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -8329,7 +8630,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -8511,7 +8814,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -8702,7 +9007,9 @@ The device will only send messages when a button is pressed. The state "currentO
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -9050,7 +9357,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 
@@ -9360,7 +9669,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -9560,7 +9871,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -9744,7 +10057,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -9951,7 +10266,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -10135,7 +10452,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 		</ConfigUI>
 
@@ -10300,7 +10619,9 @@ After some days of running in clean air, proposed setup is:
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -10542,7 +10863,9 @@ It measures CO2 and temp using infrared light absorption
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -10736,7 +11059,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -10973,7 +11298,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -11106,7 +11433,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -11325,7 +11654,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -11572,7 +11903,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -11703,7 +12036,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -11859,7 +12194,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -12016,7 +12353,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -12176,7 +12515,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -12287,7 +12628,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -12412,7 +12755,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -12638,7 +12983,9 @@ It measures CO2 VOC
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -15430,7 +15777,9 @@ For the MQ gas sensors you need to understand the required heating voltage.
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 
@@ -15590,7 +15939,9 @@ For the MQ gas sensors you need to understand the required heating voltage.
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 
@@ -15772,7 +16123,9 @@ For the MQ gas sensors you need to understand the required heating voltage.
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 
@@ -15923,7 +16276,9 @@ For the MQ gas sensors you need to understand the required heating voltage.
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -16096,7 +16451,9 @@ For the MQ gas sensors you need to understand the required heating voltage.
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -16372,7 +16729,9 @@ use bit max value, not actual voltage for feedVolt </Label>
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -16653,7 +17012,9 @@ use bit max value, not actual voltage for feedVolt </Label>
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -16942,7 +17303,9 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 
@@ -17220,7 +17583,9 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 			</ConfigUI>
@@ -19738,7 +20103,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -19938,7 +20305,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -20155,7 +20524,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>
@@ -20379,7 +20750,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 - If one is satisfied, the others will NOT be evaluated
 - This will be skipped if all fields are empty or the same
 - An invalid python &quot;eval()&quot; statement will cause an error
-- The status column must be a single state</Label>
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
 			</Field>
 
 		</ConfigUI>

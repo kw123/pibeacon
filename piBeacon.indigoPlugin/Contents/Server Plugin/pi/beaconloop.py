@@ -1054,7 +1054,7 @@ def checkIfNewBeacon(mac):
 	try:
 		#U.logger.log(20,u"mac{} checkIfNewBeacon trackMac:{}  logCountTrackMac:{}".format(mac, trackMac, logCountTrackMac))
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac( "New?   ", "checking if Beacon is back " ,mac)
+			writeTrackMac( "New?    ", "checking if Beacon is back " ,mac)
 
 		if  mac not in beacon_ExistingHistory: return False
 
@@ -1064,7 +1064,7 @@ def checkIfNewBeacon(mac):
 
 		if beacon_ExistingHistory[mac]["count"] == 1 or len(beacon_ExistingHistory[mac]["timeSt"]) <2 or time.time() - beacon_ExistingHistory[mac]["timeSt"][-1] > 30  or beacon_ExistingHistory[mac]["fastDown"]:
 			if  (mac == trackMac or trackMac == "*") and logCountTrackMac >0:
-				writeTrackMac( "New!  ", "beacon is back, send message" ,mac)
+				writeTrackMac( "New!    ", "beacon is back, send message" ,mac)
 			if mac in beacon_ExistingHistory: 
 				if mac in fastDownList: 		beacon_ExistingHistory[mac]["reason"][-1] = 4 # beacon_fastdown is back
 				else: 							beacon_ExistingHistory[mac]["reason"][-1] = 5 # beacon is back
@@ -1134,7 +1134,9 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 	global BLEsensorMACs, sensors
 
 	""" format:
-									pos#   01 23 45 67  89 01 23 45 67 89 01 23 45 67  89 01 23 45 67 89 01 23 45 67    RSSI
+																							
+- on/off sensors 
+									pos#      01 23 45  67 89 01 23 45 67 89 01 23 45  67 89 01 23 45 67 89 01 23 45   67 89 01 23 45 67 89 01 23   RSSI
 - 04 3E 23 02 01 03 00 88 B8 37 22 9A AC   17 02 01 06  09 08 69 53 65 6E 73 6F 72 20  09 FF 00 DB 97 46 43 02 07 04    D4
 - 04 3E 23 02 01 03 00 88 B8 37 22 9A AC   17 02 01 06  09 08 69 53 65 6E 73 6F 72 20  09 FF 00 DB 97 46 43 02 08 05    D4
 					   r- MA C# ## ## ##                       i  S  e  n  s  o  r  _   = name of sensortype  string "iSensor "
@@ -1152,144 +1154,240 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
  
 																							                      CS = 04,05 = check sum = byte 0 +..byte7
 
+ temp / humidity sensor 
+									pos#      01 23 45  67 89 01 23 45 67 89 01 23 45  67 89  01 23 45 67 89 01 23 45 67 89 01 23 45 67 89 01   23   RSSI
+- 04 3E 2B 02 01 03 00 22 80 E3 22 9A AC   1F 02 01 06  09 08 69 53 65 6E 73 6F 72 20  11 FF  22 E3 80 22 4C 00 02 00 1D 5D 35 03 00 00 00 A7   C5
+- 04 3E 2B 02 01 03 00 22 80 E3 22 9A AC   1F 02 01 06  09 08 69 53 65 6E 73 6F 72 20  11 FF  22 E3 80 22 4C 00 01 00 1E 18 3B 03 00 00 00 68   D1
+					   r- MA C# ## ## ##                       i  S  e  n  s  o  r  _   = name of sensortype  string "iSensor "
+														 				               LL = length of data 
+														 								  FT = FF = frame type =GAP_AD_TYPE_MANU_SPECIFIC_DATA
+														 								      FW--- = 22 = firmware 
+																						         devID--- = E3 80 22
+																						                  typeID--- = 4C
+																											 EV data 00   
+																												CT data 02 00
+																													   Tempd 1D 5D  = int.dec  = 16+13. 5*16+13/256*100 = 19.085C
+																													        humd 35 03  int.dec = 3*16+5.3 = 53.001
+																											
+																														
+																													 
+			
+
+
 	"""
 
 	try:
 		
-		hexData = hexData[12:]
+		hexData = hexData[14:]
 		if len(hexData) < 40: return tx, "", UUID, Maj, Min, False
-
-		TagPos 	= hexData.find("02010609086953656E736F722009FF") 
-		if TagPos !=2: 	return tx, "", UUID, Maj, Min, False
-
+		TagPos1 	= hexData.find("02010609086953656E736F722009FF") 
+		TagPos2 	= hexData.find("02010609086953656E736F722011FF") 
+		#                                        i S e n s o r _
+		if mac =="AC:9A:22:E3:80:22":
+			U.logger.log(20, " mac:{}  TagPos1:{}  TagPos2:{}   hex:{}".format( mac, TagPos1, TagPos2, hexData[32:]) )
+		if TagPos1 !=0 and TagPos2 !=0: return tx, "", UUID, Maj, Min, False
+		remoteTrig = False
+		tempTrig   = False
 		UUID 				= BLEsensorMACs[mac]["type"]
 		Maj  				= mac
 		sensor				= BLEsensorMACs[mac]["type"]
-		p = 32; firmWare	= intFromhex1byte(hexData,32)
-		p = 34; devId1		= intFromhex1byte(hexData,34)
-		p = 36; devId2		= intFromhex1byte(hexData,36)
-		p = 38; devId3		= intFromhex1byte(hexData,38)
-		p = 40; deviceByte	= intFromhex1byte(hexData,40)
-		p = 42; eventData 	= intFromhex1byte(hexData,42)
-		p = 44; counter		= intFromhex1byte(hexData,44)
-		p = 46; checkSum	= intFromhex1byte(hexData,46)
-
-		checkSumCalc 		= (firmWare + devId1 + devId2 + devId3 + deviceByte + eventData + counter) & 255 # only one byte
-
-		if checkSum != checkSumCalc:
-			U.logger.log(20, " mac:{}   checksum error  hex:{}, chs:{} chscalc:{}".format( mac, hexData[32:48], checkSum, checkSumCalc) )
-			U.sendURL( {"sensors":{sensor: {BLEsensorMACs[mac]["devId"]: {"badsensor":True, "rssi":int(rx)} }}} )
-			return tx, "", UUID, Maj, Min, False 
 
 
-		counter			= counter & 0b00011111
-		sendsAlive 		= deviceByte & 0b01000000 != 0
-		biDirection 	= deviceByte & 0b10000000 != 0# Not used 
-		typeID 			= deviceByte & 0b00011111
-		if    typeID == 0b00000000: sensorType = "undefined"
-		elif  typeID == 0b00000001:	sensorType = "IR-Fence"
-		elif  typeID == 0b00000010:	sensorType = "PIR"
-		elif  typeID == 0b00000011:	sensorType = "Gas"
-		elif  typeID == 0b00000100:	sensorType = "Panic"
-		elif  typeID == 0b00000101:	sensorType = "Smoke"
-		elif  typeID == 0b00000110:	sensorType = "Door"
-		elif  typeID == 0b00000111:	sensorType = "GlasBreak"
-		elif  typeID == 0b00001000:	sensorType = "Vibration"
-		elif  typeID == 0b00001001:	sensorType = "WaterLevel"
-		elif  typeID == 0b00001010:	sensorType = "HighTemp"
-#		elif  typeID == 0b00001011:	sensorType = "undefined"		
-#		elif  typeID == 0b00001100:	sensorType = "undefined"
-#		elif  typeID == 0b00001101:	sensorType = "undefined"
-#		elif  typeID == 0b00001110:	sensorType = "undefined"
-#		elif  typeID == 0b00001111:	sensorType = "undefined"
-#		elif  typeID == 0b00010000:	sensorType = "undefined"	
-#		elif  typeID == 0b00010001:	sensorType = "undefined"	
-#		elif  typeID == 0b00010010:	sensorType = "undefined"	
-#		elif  typeID == 0b00010011:	sensorType = "undefined"	
-#		elif  typeID == 0b00010100:	sensorType = "undefined"	
-#		elif  typeID == 0b00010101:	sensorType = "undefined"	
-		elif  typeID == 0b00010110:	sensorType = "DoorBell"		
-#		elif  typeID == 0b00010111:	sensorType = "undefined"	
-#		elif  typeID == 0b00011000:	sensorType = "undefined"	
-		elif  typeID == 0b00011001:	sensorType = "RemoteKeyFob"	
-		elif  typeID == 0b00011010:	sensorType = "WirelessKeypad"
-#		elif  typeID == 0b00011011:	sensorType = "undefined"	
-#		elif  typeID == 0b00011100:	sensorType = "undefined"	
-#		elif  typeID == 0b00011101:	sensorType = "undefined"	
-		elif  typeID == 0b00011110:	sensorType = "WirelessSiren"  # not supported, will just post the bits
-		elif  typeID == 0b00011111:	sensorType = "RemoteSwitch"	  # not supported, will just post the bits
-		else:						sensorType = "undefined"
+		if TagPos2 ==0: 
+				out =""
+				for ii in range(30,len(hexData),2):
+					out += hexData[ii:ii+2]+" "
+				firmWare	= intFromhex1byte(hexData,30)
+				devId1		= intFromhex1byte(hexData,32)
+				devId2		= intFromhex1byte(hexData,34)
+				devId3		= intFromhex1byte(hexData,36)
+				typeId		= intFromhex1byte(hexData,38)
+				eventData 	= intFromhex1byte(hexData,40)
+				counter		= intFromhex1byte(hexData,42)
+				cData		= intFromhex1byte(hexData,44)
+				temp1   	= intFromhex1byte(hexData,46)
+				temp2   	= intFromhex1byte(hexData,48)
+				hum1	   	= intFromhex1byte(hexData,50)
+				hum2	   	= intFromhex1byte(hexData,52)
+				empty1	   	= intFromhex1byte(hexData,54)
+				empty2	   	= intFromhex1byte(hexData,56)
+				empty3	   	= intFromhex1byte(hexData,58)
+				checkSum	= intFromhex1byte(hexData,60)
+				checkSumCalc= (firmWare + devId1 + devId2 + devId3 + typeId + eventData + counter + cData + temp1 + temp2 +hum1 + hum2 + empty1 + empty2 + empty2) & 255 # only one byte
+						
+				temp   		= float(temp1)
+				if temp > 127: temp -= 256
+				temp 		+= temp2/256. + BLEsensorMACs[mac]["offsetTemp"]
 
-		if    typeID &  0b00010000 !=0: remote = True
-		else:							remote = False
+				hum 		= float(hum1)
+				if hum > 127: hum -= 256
+				hum 		+= hum2/256.+ BLEsensorMACs[mac]["offsetHum"]
 
-		Min  			= sensorType 
+				sendsAlive	= eventData & 0b00001000 != 0
+				lowVoltage	= eventData & 0b00000100 != 0
+				alarm		= eventData & 0b00000010 != 0
+				tampered	= eventData & 0b00000001 != 0
 
+				sensorType = "undefined"
+				if    typeId == 0b01001100: sensorType = "TempHum"
+				else: return tx, "", UUID, Maj, Min, False
 
-
-
-		remoteTrig = False
-		if remote:
-			if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: remoteTrig = True
-			if  sensorType == "DoorBell":
-				dd={   # the data dict to be send 
-						'lowVoltage': 	eventData & 0b00000100 != 0,
-						'onOff': 		eventData & 0b00000010 != 0,
-						'tampered': 	eventData & 0b00000001 != 0,
-						'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
-						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive,
-						"rssi":			int(rx),
-				}
-			elif  sensorType == "RemoteKeyFob":
-				dd={   # the data dict to be send 
-						'SOS': 			eventData & 0b00001000 != 0,
-						'home': 		eventData & 0b00000100 != 0,
-						'away': 		eventData & 0b00000010 != 0,
-						'disarm': 		eventData & 0b00000001 != 0,
-						'counter': 		counter, # not used always 1
-						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive, # should be false always
-						"rssi":			int(rx),
-				}
-			elif sensorType == "RemoteSwitch":
-				dd={   # the data dict to be send 
-						'state': 		eventData & 0b00001000 != 0,
-						'onOff': 		eventData & 0b00000100 != 0,
-						'counter': 		counter,
-						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive,
-						"rssi":			int(rx),
-				}
-			else:
-				dd={   # the data dict to be send 
-						'bits': 		"{:b}".format(eventData),
-						'counter': 		counter,
-						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive,
-						"rssi":			int(rx),
-				}
-
-		else:
-			if not sensorType == "Panic":
-				dd={   # the data dict to be send 
-						'onOff': 		eventData & 0b00000010 != 0,
-						'counter': 		counter,
-						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive,
-						"rssi":			int(rx),
+				#U.logger.log(20, " mac:{} counter:{}, hum:{:5.2f}; temp:{:9.3f}; sendsAlive:{}, lowVoltage:{}, alarm:{}, tampered:{}, checkSum:{}, csCalc:{},  hex:{}".format( mac, counter, hum, temp, sendsAlive, lowVoltage, alarm, tampered, checkSum, checkSumCalc, out)  )
+				if  sensorType == "TempHum":
+					dd={   # the data dict to be send 
+							'lowVoltage': 	eventData & 0b00000100 != 0,
+							'temp': 		round(temp,2),
+							'hum': 			int(hum),
+							'tampered': 	eventData & 0b00000001 != 0,
+							'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							"rssi":			int(rx),
 					}
-			else:
-				dd={   
-						'alive': 		eventData & 0b00001000 != 0,
-						'lowVoltage': 	eventData & 0b00000100 != 0,
-						'onOff': 		eventData & 0b00000010 != 0,
-						'tampered': 	eventData & 0b00000001 != 0,
-						'counter': 		counter,
-						'sensorType': 	sensorType,
-						'sendsAlive': 	sendsAlive,
-						"rssi":			int(rx),
+
+				trigTime 	= time.time() - BLEsensorMACs[mac]["lastUpdate"]   > BLEsensorMACs[mac]["updateIndigoTiming"]  			# send min every xx secs
+				trigCount	= False and counter != BLEsensorMACs[mac]["counter"] 			# send min every xx secs
+				trigTemp	= abs(temp - BLEsensorMACs[mac]["temp"]) > 0.5
+				trigHum		= abs(hum - BLEsensorMACs[mac]["hum"]) > 1
+
+				if  trigCount or trigTime or trigTemp or trigHum:
+					# compose complete message
+					U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
+
+					# remember last values
+					BLEsensorMACs[mac]["lastUpdate"] = time.time()
+					BLEsensorMACs[mac]["counter"]    = counter
+					BLEsensorMACs[mac]["temp"]    	 = temp
+					BLEsensorMACs[mac]["hum"]    	 = hum
+
+				return  tx, "", UUID, Maj, Min, False		
+
+
+		elif TagPos1 ==0: 
+			firmWare	= intFromhex1byte(hexData,30)
+			devId1		= intFromhex1byte(hexData,32)
+			devId2		= intFromhex1byte(hexData,34)
+			devId3		= intFromhex1byte(hexData,36)
+			deviceByte	= intFromhex1byte(hexData,38)
+			eventData 	= intFromhex1byte(hexData,40)
+			counter		= intFromhex1byte(hexData,42)
+			checkSum	= intFromhex1byte(hexData,44)
+
+			checkSumCalc 		= (firmWare + devId1 + devId2 + devId3 + deviceByte + eventData + counter) & 255 # only one byte
+
+			if checkSum != checkSumCalc:
+				U.logger.log(20, " mac:{}   checksum error  hex:{}, chs:{} chscalc:{}".format( mac, hexData[32:48], checkSum, checkSumCalc) )
+				U.sendURL( {"sensors":{sensor: {BLEsensorMACs[mac]["devId"]: {"badsensor":True, "rssi":int(rx)} }}} )
+				return tx, "", UUID, Maj, Min, False 
+
+
+			counter			= counter & 0b00011111
+			sendsAlive 		= deviceByte & 0b01000000 != 0
+			biDirection 	= deviceByte & 0b10000000 != 0# Not used 
+			typeID 			= deviceByte & 0b00011111
+			if    typeID == 0b00000000: sensorType = "undefined"
+			elif  typeID == 0b00000001:	sensorType = "IR-Fence"
+			elif  typeID == 0b00000010:	sensorType = "PIR"
+			elif  typeID == 0b00000011:	sensorType = "Gas"
+			elif  typeID == 0b00000100:	sensorType = "Panic"
+			elif  typeID == 0b00000101:	sensorType = "Smoke"
+			elif  typeID == 0b00000110:	sensorType = "Door"
+			elif  typeID == 0b00000111:	sensorType = "GlasBreak"
+			elif  typeID == 0b00001000:	sensorType = "Vibration"
+			elif  typeID == 0b00001001:	sensorType = "WaterLevel"
+			elif  typeID == 0b00001010:	sensorType = "HighTemp"
+	#		elif  typeID == 0b00001011:	sensorType = "undefined"		
+	#		elif  typeID == 0b00001100:	sensorType = "undefined"
+	#		elif  typeID == 0b00001101:	sensorType = "undefined"
+	#		elif  typeID == 0b00001110:	sensorType = "undefined"
+	#		elif  typeID == 0b00001111:	sensorType = "undefined"
+	#		elif  typeID == 0b00010000:	sensorType = "undefined"	
+	#		elif  typeID == 0b00010001:	sensorType = "undefined"	
+	#		elif  typeID == 0b00010010:	sensorType = "undefined"	
+	#		elif  typeID == 0b00010011:	sensorType = "undefined"	
+	#		elif  typeID == 0b00010100:	sensorType = "undefined"	
+	#		elif  typeID == 0b00010101:	sensorType = "undefined"	
+			elif  typeID == 0b00010110:	sensorType = "DoorBell"		
+	#		elif  typeID == 0b00010111:	sensorType = "undefined"	
+	#		elif  typeID == 0b00011000:	sensorType = "undefined"	
+			elif  typeID == 0b00011001:	sensorType = "RemoteKeyFob"	
+			elif  typeID == 0b00011010:	sensorType = "WirelessKeypad"
+	#		elif  typeID == 0b00011011:	sensorType = "undefined"	
+	#		elif  typeID == 0b00011100:	sensorType = "undefined"	
+	#		elif  typeID == 0b00011101:	sensorType = "undefined"	
+			elif  typeID == 0b00011110:	sensorType = "WirelessSiren"  # not supported, will just post the bits
+			elif  typeID == 0b00011111:	sensorType = "RemoteSwitch"	  # not supported, will just post the bits
+			else:						sensorType = "undefined"
+
+			if    typeID &  0b00010000 !=0: remote = True
+			else:							remote = False
+
+			Min  			= sensorType 
+
+
+
+
+			if remote:
+				if 	time.time() - BLEsensorMACs[mac]["lastUpdate"]  > 1.: remoteTrig = True
+				if  sensorType == "DoorBell":
+					dd={   # the data dict to be send 
+							'lowVoltage': 	eventData & 0b00000100 != 0,
+							'onOff': 		eventData & 0b00000010 != 0,
+							'tampered': 	eventData & 0b00000001 != 0,
+							'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							"rssi":			int(rx),
 					}
+				elif  sensorType == "RemoteKeyFob":
+					dd={   # the data dict to be send 
+							'SOS': 			eventData & 0b00001000 != 0,
+							'home': 		eventData & 0b00000100 != 0,
+							'away': 		eventData & 0b00000010 != 0,
+							'disarm': 		eventData & 0b00000001 != 0,
+							'counter': 		counter, # not used always 1
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive, # should be false always
+							"rssi":			int(rx),
+					}
+				elif sensorType == "RemoteSwitch":
+					dd={   # the data dict to be send 
+							'state': 		eventData & 0b00001000 != 0,
+							'onOff': 		eventData & 0b00000100 != 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							"rssi":			int(rx),
+					}
+				else:
+					dd={   # the data dict to be send 
+							'bits': 		"{:b}".format(eventData),
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							"rssi":			int(rx),
+					}
+
+			else:
+				if not sensorType == "Panic":
+					dd={   # the data dict to be send 
+							'onOff': 		eventData & 0b00000010 != 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							"rssi":			int(rx),
+						}
+				else:
+					dd={   
+							'alive': 		eventData & 0b00001000 != 0,
+							'lowVoltage': 	eventData & 0b00000100 != 0,
+							'onOff': 		eventData & 0b00000010 != 0,
+							'tampered': 	eventData & 0b00000001 != 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							"rssi":			int(rx),
+						}
 
 
 		#U.logger.log(20, " .... checking  data:{} counter hex:{}".format( dd , hexData[42:42+5]) )

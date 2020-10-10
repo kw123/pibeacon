@@ -25,7 +25,7 @@
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
     "msg": [],
-    "hexCode": "02010609086953656E736F722009FF"
+    "hexCode": "02010609086953656E736F7220XXFF"
   },
   "iBSxx":  {
     "text":"INGISCS iBS01 .. 04",

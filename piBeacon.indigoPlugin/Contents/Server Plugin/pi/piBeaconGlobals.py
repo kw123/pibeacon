@@ -177,7 +177,7 @@ specialSensorList =[ 	"amg88xx",
 						"vcnl4010Distance",
 						"vl6180xDistance",
 						"ultrasoundDistance"]
-BLEsensorTypes =      ["BLEmyBLUEt","BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS02", "BLEiBS03","BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor-onOff", "BLEiSensor-on", "BLEiSensor-RemoteKeyFob","BLESatech"]
+BLEsensorTypes =      ["BLEmyBLUEt","BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS02", "BLEiBS03","BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor-TempHum", "BLEiSensor-onOff", "BLEiSensor-on", "BLEiSensor-RemoteKeyFob","BLESatech"]
 parameterFileList   =[	"patterns",
 						"beacon_parameters",
 						"parameters",

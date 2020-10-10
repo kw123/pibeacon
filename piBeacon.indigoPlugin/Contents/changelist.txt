@@ -1,4 +1,10 @@
 
+Added features / changes in v7.128.461 @ 2020-10-10
+===================================================
+0. added BLE Temp& humidity sensor from Kaipule - iSensor
+1. fixed pIU error not found 
+
+
 Added features / changes in v7.128.460 @ 2020-10-04
 ===================================================
 0. added option to use new wpa_supplicant and inetrfaces file in boot directry at every boot
