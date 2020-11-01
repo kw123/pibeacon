@@ -3,51 +3,11 @@
 	<MenuItem id="d00">
 		<Name>BASIC setup HELP</Name>
 		<ConfigUI>
-			<Field id="label0" type="label">
-				<Label>To START,  here the basic steps:
-1.  in CONFIG setup at minimum userID,PassWD, ipNumber of indigo server
-2.  Setup of physical rPi servers: 
-    ssh pi@ipnumber      password default = pibeacon
-    passwd                   to change default pasword
-    sudo raspi-config    to set time zone, expand SD .., 
-       get ip number of RPI w ifconfig
-3.  in menu   Initial BASIC setup of rPi servers    
-        set ipNumber, userID, password of RPI# x (0-19)
-        
-4. Now wait until the first ibeacon and RPI devices show up in indigo
-  If nothing happens, do a  Send Config/Restart/PGM/Sound/...     
-  to send all files to RPI, then
-  ssh to RPI and check programs that are running: ps -ef | grep .py
-     At minimum master.py, beaconloop.py, receiveGPIOcommands.py 
-         should be running
-     if installLibs.py is running, it is updating op-sys files. 
-         That might take several hours
-5. You then want to disable accept new beacons in config
-   any car driving by likely has some beacons sending messages.
-   To add new beacons set accept new beacons to eg -60  dBm
-     Put your new beacon onto the rpi, wait a minute
-        and check the new beacon(s) created
-     Set accept new beacons to off in config
-     Then move the beacon far away and check again, 
-        find the beacon that has the signal reduced
-     Then move it back to the RPI and check if signal is high again.
-     Then set the beacon at 1m distance and note the signal strength. 
-       Edit the beacon and set TX power to that value(it is likely ~ -60). 
-       That will make the distance calulation more accurate
-
-Other remarks...
-1. Some beacon types are automatically recognized by the plugin:
-   xy (V1-3), Nonda iHere and Aiko, spotypal, ruuvitag, ...
-   checkout the file "knownBeaconTags.full_copy_to_use_as_example"
-   in the plugin prefrence directory for a full list
-   Using these types makes your live much easier
-2. It is advisable to have at least 2 RPI that "see" each other (in bluetooth range)
-   that makes the overall system more stable and enables 
-   location mapping in x,y,z coordinates
-   The location mapping gets much better if you have an RPI in each room
-
-</Label>
-			</Field>
+			<Field  id="xx" type="button" tooltip="">
+				<Title>PRINT</Title>
+				<CallbackMethod>buttonprintHelpMenu</CallbackMethod>
+                    <Label>click on PRINT to send Help text to indigo log file as well as piBeacon.log</Label>
+				</Field>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="d03">

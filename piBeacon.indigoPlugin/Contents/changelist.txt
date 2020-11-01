@@ -1,3 +1,19 @@
+Added features / changes in v7.128.463 @ 2020-11-01
+===================================================
+0. fixed accpet new beacons signal
+1. added new beacons and sensors:
+   Radius RAD beacons
+   
+2. added option to change name of group variables from "other1" to eg bicycles ..
+   and you can jnow have up to 5 groups. the varibales will only be cretaed if 
+   a the names are set in config
+   b a group has any members (set in device edit)
+
+
+Added features / changes in v7.128.462 @ 2020-10-19
+===================================================
+0. some internal sensor management changes
+
 
 Added features / changes in v7.128.461 @ 2020-10-10
 ===================================================

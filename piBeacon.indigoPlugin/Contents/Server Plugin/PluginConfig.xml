@@ -23,16 +23,63 @@
 	</Field>
 
    	<Field    id="iBeaconFolderName"   type="textfield" defaultValue="Pi_Beacons_new" >
-		<Label>... DEVICES folder:</Label>
+		<Label>... DEVICES folder for NEW beacons:</Label>
+	</Field>
+	<Field id="iBeaconFolderNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>Suggest to create a folder eg iBecons_Good and move newly created beacons into this folder to separate new and existing beacons easily</Label>
 	</Field>
 
-   	<Field    id="iBeaconFolderNameVariables"   type="textfield" defaultValue="piBeacons" >
+   	<Field    id="iBeaconFolderVariableDataTransferVarsName"   type="textfield" defaultValue="piBeacons_dataTransferVars" >
+		<Label>... VARIABLES folder for "pi_IN_x":</Label>
+	</Field>
+	<Field id="iBeaconFolderNameVariables_dataTransferVarsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>These variables are used if restfull communication RPI to plugin, not used if socket communication is used 
+These Variables are not needed by the user, but they need to exist, they go into this folder to not increase the list of real /useful variables in other folders</Label>
+	</Field>
+
+   	<Field    id="iBeaconFolderVariablesName"   type="textfield" defaultValue="piBeacons" >
 		<Label>... VARIABLES folder:</Label>
 	</Field>
 
-
 	<Field    id="groupCountNameDefault"   type="textfield" defaultValue="iBeacon_Count_">
-		<Label>... COUNT variables start w:</Label>
+		<Label>... COUNT variables names start w:</Label>
+	</Field>
+	<Field id="groupCountNameDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>These variables count number of beacons-RPi-BLEconnect are home away.. 
+define the group names below</Label>
+	</Field>
+
+
+	<Field    id="groupName0"   type="textfield" defaultValue="Family">
+		<Label>... name for COUNT-Group1(def Family):</Label>
+	</Field>
+
+
+	<Field    id="groupName1"   type="textfield" defaultValue="Guests">
+		<Label>... name for COUNT-Group2(def Guests):</Label>
+	</Field>
+
+
+	<Field    id="groupName2"   type="textfield" defaultValue="Guests">
+		<Label>... name for COUNT-Group3(def Other1):</Label>
+	</Field>
+
+
+	<Field    id="groupName3"   type="textfield" defaultValue="Other2">
+		<Label>... name for COUNT-Group4(def Other2):</Label>
+	</Field>
+
+
+	<Field    id="groupName4"   type="textfield" defaultValue="Other3">
+		<Label>... name for COUNT-Group5(def Other3):</Label>
+	</Field>
+	<Field id="groupNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>The groups names will be used for variables and track /count totals of up / down  home / away states for all group members
+When you leave the name empty the variable will not be used / created, 
+They will also only be crated when needed ie when a groups has any members
+You need to put a device (RPI,beacon,BLEconnect) into one of these groups in device edit to make it part of one of these groups, ie to be counted
+This can be used to check if eg all familiy members are home/away or all rpi devices are on or one is down = away
+This is not used for trigger names they will continue to be called Family, Guests, Other1, Other2, Other3 as their names can not be changed dynamically</Label>
 	</Field>
 
 
@@ -59,7 +106,10 @@
 			<Option value="all"        >ENABLE ALL:   for all devices that have an up/ down status</Option>
 			<Option value="individual" >ENABLE INDIVIDUAL:  individual devices must be enabled in device edit</Option>
 		</List>
-		<Label>Enable indigo BC of up/ down status:</Label>
+		<Label>Enable indigo Broadcast of up/ down status:</Label>
+	</Field>
+	<Field id="enableBroadCastEventsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>This is used if you want to send BC of status changes to eg fingscan, homeAway plugins</Label>
 	</Field>
 	<Field    id="enableFING"   type="menu" defaultValue="0" tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
 		<Label>Trigger FINGSCAN:</Label>
@@ -67,6 +117,9 @@
 			<Option value="0"  > disable </Option>
 			<Option value="1"  > enable </Option>
 		</List>    
+	</Field>
+	<Field id="enableFINGLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>This is used if you want to send status changes to fingscan plugin</Label>
 	</Field>
 
 
@@ -133,7 +186,7 @@
 		</List>
 	</Field>
 	<Field id="removeJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>if you have accept new beacons on and get flodded with new beacons, this option will allow to delete them if you have not renamed them from the default name after one hour</Label>
+		<Label>if you have accept new beacons on and get flooded with new beacons, this option will allow to delete them if you have not renamed them from the default name after one hour</Label>
 	</Field>
 	<Field id="checkBeaconParametersDisabled" type="checkbox"     defaultValue="false" > 
 		<Label>Disable checking beacon battery level for all beacons:</Label>

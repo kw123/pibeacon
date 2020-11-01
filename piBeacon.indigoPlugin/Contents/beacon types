@@ -10,13 +10,13 @@ Nonda_iHere      10 x  triangle        yes     yes     yes     yes         yes  
 Smart_tracker    10 X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register
 
 ++ repl battery, beep and Battery reading
-Vozni_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
-SpotyPal         10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
 NutFind 3        10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
  == Nutale       10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice
 
-Rinex_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, seems unstable
-Njoii_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, seems unstable, same as rinex
+Vozni_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
+SpotyPal         10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register
+Rinex_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, 
+Njoii_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex
 
 ++ communication is proprietory, works for one but not expandable to others 
 XY_1             10 1  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper
@@ -64,7 +64,7 @@ SocialRetail     10 x  USB             no      yes     no      no          no   
 SocialRetail     10 x  BIG             no      yes     no      no          no       AAA > xYears              no       no      iBeacon,EddyStone, conf: TX, repeat, for car signals presence
 Radius            3 x  round           no      yes     no      no          no       cr2032 ~ 3 months         no       yes     iBeacon, conf: TX, repeat, for testing strick standard only
 Radius           10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon, conf: TX, repeat, for car or laptop, signals ON
-cheap ibeacon ~$5   likely working,    ?       no      no      no          no       cr2032 mostly           no       no      pure iBeacon, edystone..some have sig config
+cheap ibeacon ~$5   likely working,    ?       no      no      no          no       cr2032 mostly             no       no      pure iBeacon, edystone..some have signal config
 
 ++ other types ===
 Tovala-oven         1  Oven            no      yes     no      no          no       AC                        no       no      no, an appliant I happen to have

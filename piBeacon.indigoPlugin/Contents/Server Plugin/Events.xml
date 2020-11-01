@@ -19,6 +19,11 @@
     <Event id="Other2-oneAway">	<Name>Other2-oneAway</Name> </Event>
     <Event id="Other2-oneHome">	<Name>Other2-oneHome</Name> </Event>
     <Event id="Other2-allHome">	<Name>Other2-allHome</Name> </Event>
+
+    <Event id="Other3-allAway">	<Name>Other3-allAway</Name> </Event>
+    <Event id="Other3-oneAway">	<Name>Other3-oneAway</Name> </Event>
+    <Event id="Other3-oneHome">	<Name>Other3-oneHome</Name> </Event>
+    <Event id="Other3-allHome">	<Name>Other3-allHome</Name> </Event>
     <Event id="someStatusHasChanged">	<Name>the status of at least one beacon has changed</Name> </Event>
     <Event id="someClosestrPiHasChanged">	<Name>the status of at least one CLOSEST RPI has changed</Name> </Event>
 </Events>
