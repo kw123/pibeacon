@@ -11,7 +11,11 @@ from __future__ import division
 import sys, os, subprocess, copy
 import time,datetime
 import struct
-import bluetooth._bluetooth as bluez
+try:
+	import bluetooth._bluetooth as bluez
+	bluezPresent = True
+except:
+	bluezPresent = False
 import json
 
 import math
@@ -621,13 +625,18 @@ def readParams(init):
 			if "acceptNewTagiBeacons"	in inp:	 acceptNewTagiBeacons=	 (inp["acceptNewTagiBeacons"])
 			if "sendFullUUID"			in inp:	 sendFullUUID=			 (inp["sendFullUUID"]=="1" )
 
-			if "rpiDataAcquistionMethod"				in inp:	 
-				xx =		 	 										(inp["rpiDataAcquistionMethod"])
-				if xx != rpiDataAcquistionMethod and rpiDataAcquistionMethod != "":
-					U.restartMyself(param="", reason="new data aquisition method")
-				rpiDataAcquistionMethod = xx
+
+			if bluezPresent:
+				if "rpiDataAcquistionMethod" in inp:	 
+					xx =		 	 								(inp["rpiDataAcquistionMethod"])
+					if xx != rpiDataAcquistionMethod and rpiDataAcquistionMethod != "":
+						U.restartMyself(param="", reason="new data aquisition method")
+					rpiDataAcquistionMethod = xx
+				else:
+					rpiDataAcquistionMethod = "hcidump"
 			else:
-				rpiDataAcquistionMethod = "hcidump"
+					rpiDataAcquistionMethod = "hcidump"
+
 
 
 			if "sensors"			 in inp: 
@@ -2417,17 +2426,17 @@ def checkIFtrackMacIsRequested():
 		collectTime 		= 30 
 		nLogMgsTrackMac		= 11 # # of message logged for sepcial mac 
 		logCountTrackMac 	= nLogMgsTrackMac
-		if len(xx) ==2:
-			if xx[1].find("raw") > -1:
+		if len(xx) == 2:
+			if xx[1].lower().find("raw") > -1:
 				trackRawOnly = True
 				logCountTrackMac = nLogMgsTrackMac * 5
 				collectTime = 50 
 		elif len(xx) == 3: 
-			if xx[1].find("raw") > -1:
+			if xx[1].lower().find("raw") > -1:
 				trackRawOnly = True
 				logCountTrackMac = nLogMgsTrackMac * 5
 				collectTime = 50 
-			if xx[2].find("~filter~") > -1:
+			if xx[2].lower().find("~filter~") > -1:
 				trackmacFilter = xx[2].split("~filter~")[1]
 				logCountTrackMac  = nLogMgsTrackMac * 10
 				collectTime = 90 

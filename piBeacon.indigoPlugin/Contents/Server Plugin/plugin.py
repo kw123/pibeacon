@@ -6275,6 +6275,7 @@ class Plugin(indigo.PluginBase):
 		if  menuId == u"AcceptNewBeacons":
 			valuesDict[u"acceptNewiBeacons"] = u"999"
 			valuesDict[u"acceptNewTagiBeacons"] = u"off"
+			valuesDict[u"MSG"] = u"RSSI >{}; Tag={}".format(self.acceptNewiBeacons, self.acceptNewTagiBeacons)
 		elif menuId == u"xx":
 			pass
 		else:
@@ -6288,11 +6289,14 @@ class Plugin(indigo.PluginBase):
 			if xx > 0: 
 				self.newBeaconsLogTimer = time.time() + xx*60
 				self.indiLOG.log(20,u"newBeaconsLogTimer set to: {} minutes".format(valuesDict[u"newBeaconsLogTimer"]) )
+				valuesDict["MSG"]  = u"newBeaconsLogTimer: {} min".format(valuesDict[u"newBeaconsLogTimer"])
 			else:
 				self.newBeaconsLogTimer = 0
+				valuesDict["MSG"]  = u"newBeaconsLogTimer:off"
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				valuesDict["MSG"]  = u"error, check log"
 			self.newBeaconsLogTimer = 0
 		return valuesDict
 
@@ -6300,21 +6304,38 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def buttonConfirmSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		try:
-			id	= self.beacons[valuesDict[u"selectBEACON"]][u"indigoId"]
-			length = int(valuesDict[u"selectBEACONlen"])
-			dev = indigo.devices[int(id)]
+			if self.isValidMAC(valuesDict[u"selectBEACONmanual"]):
+				mac = valuesDict[u"selectBEACONmanual"]
+				self.selectBeaconsLogTimer[mac]	 = 17
+				self.indiLOG.log(20,u"log messages for mac:{}".format(mac) )
+				valuesDict["MSG"]  = u"tracking of new beacon started:" + mac
+				return valuesDict
+
+			elif len(valuesDict[u"selectBEACONmanual"]) >0:
+				self.indiLOG.log(30,u"bad mac given:{}".format(valuesDict[u"selectBEACONmanual"]))
+				valuesDict["MSG"]  = u"bad mac given:{}".format(valuesDict[u"selectBEACONmanual"])
+				return valuesDict
+								
+			else:
+				id	= self.beacons[valuesDict[u"selectBEACON"]][u"indigoId"]
+				length = int(valuesDict[u"selectBEACONlen"])
+				dev = indigo.devices[int(id)]
+				self.indiLOG.log(20,u"log messages for  beacon:{} mac:{}".format(dev.name, valuesDict[u"selectBEACON"][:length]) )
+				self.selectBeaconsLogTimer[valuesDict[u"selectBEACON"]]	 = length
+				valuesDict["MSG"]  = u"track beacon:{}".format(dev.name)
+
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return valuesDict
-		self.indiLOG.log(20,u"log messages for	 beacon:{} mac:{}".format(dev.name, valuesDict[u"selectBEACON"][:length]) )
-		self.selectBeaconsLogTimer[valuesDict[u"selectBEACON"]]	 = length
 		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmStopSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		self.selectBeaconsLogTimer ={}
+		self.indiLOG.log(20,u"log messages stopped")
+		valuesDict["MSG"] = u"tracking of beacon stopped"
 		return valuesDict
 
 
@@ -6323,16 +6344,33 @@ class Plugin(indigo.PluginBase):
 	def buttonConfirmselectLargeChangeInSignalCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		xx =  valuesDict[u"trackSignalStrengthIfGeaterThan"].split(u",")
 		self.trackSignalStrengthIfGeaterThan = [float(xx[0]),xx[1]]
-		if xx[1] ==u"i":
-			self.indiLOG.log(20,u"log messages for beacons with signal strength change GT {}  including ON->off and off-ON".format(self.trackSignalStrengthIfGeaterThan[0]))
+
+		if self.trackSignalStrengthIfGeaterThan[0] > 150:
+			startStop  = "stopped"
 		else:
-			self.indiLOG.log(20,u"log messages for beacons with signal strength change GT {}  excluding ON->off and off-ON".format(self.trackSignalStrengthIfGeaterThan[0]))
+			startStop  = "started"
+			
+		if xx[1] ==u"i":
+			if startStop == "started":
+				self.indiLOG.log(20,u"log messages for beacons with signal strength change GT {}  including ON->off and off-ON".format(self.trackSignalStrengthIfGeaterThan[0]))
+				valuesDict["MSG"]  = u"signl > {} w on/off".format(self.trackSignalStrengthIfGeaterThan[0])
+			else:
+				self.indiLOG.log(20,u"log messages for beacons with signal strength ... stopped")
+				valuesDict["MSG"]  = u"signl logging   stopped"
+		else:
+			if startStop == "started":
+				self.indiLOG.log(20,u"log messages for beacons with signal strength change GT {}  excluding ON->off and off-ON".format(self.trackSignalStrengthIfGeaterThan[0]))
+				valuesDict["MSG"]  = u"signl > {} w/o on/off".format(self.trackSignalStrengthIfGeaterThan[0])
+			else:
+				self.indiLOG.log(20,u"log messages for beacons with signal strength ... stopped")
+				valuesDict["MSG"]  = u"signl logging   stopped"
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmselectChangeOfRPICALLBACK(self, valuesDict=None, typeId="", devId=0):
 		self.trackSignalChangeOfRPI = valuesDict[u"trackSignalChangeOfRPI"] ==u"1"
 		self.indiLOG.log(20,u"log messages for beacons that change closest RPI: {}".format(self.trackSignalChangeOfRPI))
+		valuesDict["MSG"] = u"log changing closest RPI: {}".format(self.trackSignalChangeOfRPI)
 		return valuesDict
 
 
@@ -6342,12 +6380,12 @@ class Plugin(indigo.PluginBase):
 		retCode = self.readknownBeacontags()
 		if retCode:
 			self.indiLOG.log(20,u"knownbeacontags file reloaded, and RPI update initiated")
-			valuesDict[u"msg"] = u"file reloaded, and RPI update initiated"
+			valuesDict[u"MSG"] = u"file reloaded, and RPI update initiated"
 			self.updateNeeded = u" fixConfig "
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 		else:
 			self.indiLOG.log(20,u"inputfile seems to be corrupt")
-			valuesDict[u"msg"] = u"inputfile seems to be corrupt"
+			valuesDict[u"MSG"] = u"inputfile seems to be corrupt"
 
 		return valuesDict
 
@@ -8098,13 +8136,14 @@ class Plugin(indigo.PluginBase):
 				dd = {}
 				typeOfBeacon = self.beacons[mac][u"typeOfBeacon"]
 				if typeOfBeacon !="":
-					#if "SupportsBatteryLevel" not in props: 							continue
-					#if not  props[u"SupportsBatteryLevel"]:  							continue
-					if typeOfBeacon not in self.knownBeaconTags: 						continue
+					#if "SupportsBatteryLevel" not in props: 							 continue
+					#if not  props[u"SupportsBatteryLevel"]:  							 continue
+					if typeOfBeacon not in self.knownBeaconTags: 						 continue
 					if type(self.knownBeaconTags[typeOfBeacon][u"battCmd"]) != type({}): continue
-					if u"uuid" not in self.knownBeaconTags[typeOfBeacon][u"battCmd"]: 	continue
-					if u"bits" not in self.knownBeaconTags[typeOfBeacon][u"battCmd"]: 	continue
-					if u"shift" not in self.knownBeaconTags[typeOfBeacon][u"battCmd"]: 	continue
+					if u"uuid" not in self.knownBeaconTags[typeOfBeacon][u"battCmd"]: 	 continue
+					if u"bits" not in self.knownBeaconTags[typeOfBeacon][u"battCmd"]: 	 continue
+					if u"shift" not in self.knownBeaconTags[typeOfBeacon][u"battCmd"]: 	 continue
+					#if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,u"getBeaconParameters checking beacon: {:30s};".format(dev.name) )
 
 					# check if we should do battery time check at this hour, some beacons beep (nutale) if battery level is checked
 					if not force and "batteryLevelCheckhours" in props:
@@ -8121,6 +8160,7 @@ class Plugin(indigo.PluginBase):
 									found = True
 									break
 							if not found: continue
+					#if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,u"getBeaconParameters pass 1" )
 					
 					if u"batteryLevelUUID" in props  and props[u"batteryLevelUUID"]  == u"gatttool":
 						try: 	batteryLevelLastUpdate = self.getTimetimeFromDateString(dev.states[u"batteryLevelLastUpdate"])
@@ -8128,7 +8168,9 @@ class Plugin(indigo.PluginBase):
 						try: 	batteryLevel = int(dev.states[u"batteryLevel"])
 						except: batteryLevel = 0
 
+						#if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,u"getBeaconParameters pass 2" )
 						if force or batteryLevel < 20  or (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 20% dont need to redo it again
+							#if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,u"getBeaconParameters pass 3" )
 							try: 
 								dist = float( dev.states[u"Pi_{:02d}_Distance".format(int(piU))] )
 								if dist < 99.:
@@ -8157,6 +8199,8 @@ class Plugin(indigo.PluginBase):
 			minTime    = max(list(minTime.values()))
 			nDownAddWait = True
 			nothingFor = []
+			countB = 0
+			countP = 0
 			for piU2 in devices:
 					if devices[piU2] == {}: 
 						if valuesDict[u"piServerNumber"] == u"all" or valuesDict[u"piServerNumber"] == u"999":
@@ -8166,7 +8210,8 @@ class Plugin(indigo.PluginBase):
 						xx[u"cmd"]		 		= u"getBeaconParameters"
 						xx[u"typeId"]			= json.dumps(devices[piU2])
 						xx[u"piServerNumber"]	= piU2
-
+						countB += len(devices[piU2])
+						countP += 1
 						if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,u"getBeaconParameters request list for pi{};  {}".format(piU2, xx) )
 
 						if nDownAddWait: self.setCurrentlyBooting(minTime+10, setBy=u"getBeaconParameters (batteryLevel ..)")
@@ -8175,6 +8220,8 @@ class Plugin(indigo.PluginBase):
 
 			if nothingFor != "": 
 				if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(20,u"getBeaconParameters no active/requested beacons on rpi# {}".format(sorted(nothingFor)) )
+			valuesDict[u"MSG"]  = u"get BatL {} beacons on {} Pi".format(countB,countP)
+			valuesDict[u"MSG2"]  = u""
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -8186,7 +8233,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def makeBatteryLevelReportCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
 		try:
-			out =u"battery level report:\n Dev---------------------------------------    MAC#               Beacon-Type      Status   ClosestRPI      BeepCommand BatteryLevel Last Sucessful Update"
+			out =u"battery level report:\n Dev---------------------------------------    MAC#               Beacon-Type           Status   ClosestRPI      BeepCommand BatteryLevel Last Sucessful Update"
 			for dev in indigo.devices.iter(u"props.isBeaconDevice"):
 				piU = str(dev.states[u"closestRPI"])
 				mac  = dev.address
@@ -8195,7 +8242,8 @@ class Plugin(indigo.PluginBase):
 				batlevel  = u"         off"
 				if typeOfBeacon in self.knownBeaconTags:
 					if self.knownBeaconTags[typeOfBeacon][u"battCmd"] != u"off":
-						batlevel = u"{:12d}".format(dev.states[u"batteryLevel"])
+						if u"batteryLevel" in dev.states:
+							batlevel = u"{:12d}".format(dev.states[u"batteryLevel"])
 
 				benabled = u"not capable"
 				try: 	benabled = dev.states[u"isBeepable"]
@@ -8209,8 +8257,10 @@ class Plugin(indigo.PluginBase):
 						lastU = u"disabled"
 				except: pass
 
-				out += u"\n{:45s}  {:18s} {:15s}  {:15s}  {:6s}  {:11s} {:12s} {} ".format( dev.name, mac, typeOfBeacon, dev.states[u"status"], piU, benabled, batlevel, lastU)
+				out += u"\n{:45s}  {:18s} {:20s}  {:15s}  {:6d}  {:11s} {:12s} {} ".format( dev.name, mac, typeOfBeacon, dev.states[u"status"], int(piU), benabled, batlevel, lastU)
 			indigo.server.log(out)
+			valuesDict[u"MSG2"]  = u"bat report in std indigo log"
+			valuesDict[u"MSG"]   = u""
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -8269,7 +8319,7 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog(u"Beep"): self.indiLOG.log(20,u"beep beacon requested  on pi{};  {}".format(piU, xx) )
 					self.setCurrentlyBooting(20, setBy=u"beep beacon")
 					self.setPin(xx)
-
+					valuesDict[u"MSG"] = "beep {} on pi{} ".format(beacon, piU)
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -8312,7 +8362,7 @@ class Plugin(indigo.PluginBase):
 		if mac != u"*":
 			if not self.isValidMAC(mac):
 				if not self.isValidMAC(existingMAC):
-					valuesDict[u"msg"]	= u"bad MAC number"
+					valuesDict[u"MSG"]	= u"bad MAC number"
 					return valuesDict
 				else:
 					valuesDict[u"typeId"]	= existingMAC
@@ -8320,7 +8370,7 @@ class Plugin(indigo.PluginBase):
 
 		valuesDict[u"cmd"]	 	= u"trackMac"
 		self.setPin(valuesDict)
-		valuesDict[u"msg"] 		= u"cmd sub. for:"+ valuesDict[u"typeId"]
+		valuesDict[u"MSG"] 		= u"cmd sub. for:"+ valuesDict[u"typeId"]
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -15675,8 +15725,8 @@ class Plugin(indigo.PluginBase):
 					except: batteryLevel = ""
 					try:	iBeacon	 = msg[u"iBeacon"]
 					except: iBeacon  = ""
-					if u"mfg_info" not in msg: continue
-					mfg_info = msg[u"mfg_info"]
+					if u"mfg_info" in msg: 	mfg_info = msg[u"mfg_info"]
+					else:					mfg_info = ""
 
 
 				if self.selectBeaconsLogTimer !={}: 
@@ -17542,119 +17592,28 @@ class Plugin(indigo.PluginBase):
 			helpText += u'=============== END setup HELP ===========  \n'
 			helpText += u'  \n'
 			helpText += u'  \n'
-			helpText += u'=============== iBEACON recommendations =========  \n'
-			helpText += u'  iBeacon type:  properties and functionality  \n'
-			helpText += u'  \n'
-			helpText += u'  Name/type     recom v  FormFactor      hole    auto    has     isBeepable  Battery  battery                   sensors  ON/OFF  APP functions  \n'
-			helpText += u'                mened                    4 key   detect  beeper  byPlugin    reading  Type                               button   .. comments  \n'
-			helpText += u'  -----------------------------------------------------------------------------------------------------------------------------------  \n'
-			helpText += u'  ++ rechargeable, beep and battery reading ===  \n'
-			helpText += u'  Nonda_Aiko       10 x  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register  \n'
-			helpText += u'  Nonda_iHere      10 x  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register          \n'
-			helpText += u'  Smart_tracker    10 X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register  \n'
-			helpText += u' \n'
-			helpText += u'  ++ repl battery, beep and Battery reading  \n'
-			helpText += u'  NutFind 3        10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  \n'
-			helpText += u'   == Nutale       10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  \n'
-			helpText += u'    \n'
-			helpText += u'  Vozni_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  \n'
-			helpText += u'  SpotyPal         10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  \n'
-			helpText += u'  Rinex_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register,   \n'
-			helpText += u'  Njoii_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex  \n'
-			helpText += u'  \n'
-			helpText += u'  ++ communication is proprietory, works for one but not expandable to others   \n'
-			helpText += u'  XY_1             10 1  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  \n'
-			helpText += u'  XY_2             10 2  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  \n'
-			helpText += u'  XY_3             10 3  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  \n'
+
+# /Library/Application Support/Perceptive Automation/Indigo 7.4/Plugins/piBeacon.indigoPlugin/Contents/Server Plugin/
+			filesIn   = self.pathToPlugin.split("Server Plugin/")[0]
+			helpText += u'  for changelog: check out {}changelist.txt  \n'.format(filesIn)
 			helpText += u'  \n'
 			helpText += u'  \n'
-			helpText += u'  ++ repl battery, beep no battery reading ===  \n'
-			helpText += u'  Innway            7 x  square          yes     yes     yes     yes         no       cr2032                    no       no      beep, register  \n'
-			helpText += u'  Cube              7 x  square          yes     yes     yes     yes         no       cr2032                    no       no      beep, register  \n'
-			helpText += u'  Orbit             7 x  round           yes     yes     yes     yes         ?        cr2032, sp tool repl Bat. no       no      beep, register  \n'
+			f = open(filesIn+u"beaconTypes.txt","r")
+			fff = f.read()
+			f.close()
+			helpText += u'=============== BEACONS            ===========  \n'
+			helpText += fff
+			helpText += u'=============== BEACONS     .. END ===========  \n'
+
+			f = open(filesIn+u"BLE-sensorTypes.txt","r")
+			fff = f.read()
+			f.close()
+
 			helpText += u'  \n'
-			helpText += u'                         ===ibeacon + Sensors  \n'
-			helpText += u'  ruuviTag          8 x  round Big       no      yes     no      no          yes      cr2450 1Y                 T,H,P,A  no      display of sensors values  \n'
-			helpText += u'  \n'
-			helpText += u'  \n'
-			helpText += u'  ++ pure iBeacon types ===  \n'
-			helpText += u'  Minew 01..08      8 x  ?               yes     yes     no      no          yes      ??                        no       yes     iBeacon,EddyStone, conf: TX, repeat  \n'
-			helpText += u'  BlueCharm-BC011   7 x  square          yes     yes     no      no          yes      cr2032                    no       yes     iBeacon,EddyStone, conf: TX, repeat  \n'
-			helpText += u'  MiniBeacon        5 x  various         no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone  \n'
-			helpText += u'  Feasy_USB        10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone, conf: TX, repeat !! LOOONG range  \n'
-			helpText += u'  Feasy_Triangle    3 x  trinagle        yes     yes     no      no          no       cr2032                    no       no      iBeacon,EddyStone, conf: TX, repeat  \n'
-			helpText += u'  SocialRetail     10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone, conf: TX, repeat, for car or laptop, signals ON  \n'
-			helpText += u'  SocialRetail     10 x  BIG             no      yes     no      no          no       AAA > xYears              no       no      iBeacon,EddyStone, conf: TX, repeat, for car signals presence  \n'
-			helpText += u'  Radius            3 x  round           no      yes     no      no          no       cr2032 ~ 3 months         no       yes     iBeacon, conf: TX, repeat, for testing strick standard only  \n'
-			helpText += u'  Radius           10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon, conf: TX, repeat, for car or laptop, signals ON  \n'
-			helpText += u'  cheap ibeacon ~$5   likely working,    ?       no      no      no          no       cr2032 mostly             no       no      pure iBeacon, edystone..some have sig config  \n'
-			helpText += u'    \n'
-			helpText += u'  ++ other types ===  \n'
-			helpText += u'  Tovala-oven         1  Oven            no      yes     no      no          no       AC                        no       no      no, an appliant I happen to have  \n'
-			helpText += u'  OralB               1  toothbrush      no      yes     no      no          no       rechargeable              no       no      no, just cool you can measure how long and how often teeth are brushed  \n'
-			helpText += u'  \n'
-			helpText += u'  \n'
-			helpText += u'  Not recommended  \n'
-			helpText += u'  xy_4                4    not working, still testing  \n'
-			helpText += u'  tile                 > 2018    not working  \n'
-			helpText += u'  swiftFind == ZenLif      intrusive, no actions possible   \n'
-			helpText += u'  iSearching type devices  either constantly beeps when disconnected, or difficult to connect to  \n'
-			helpText += u'=============== END ===========  \n'
-			helpText += u'  \n' 
-			helpText += u'  \n' 
-			helpText += u'=============== BLE SENSORS for Temp, Hum, pressure, light acceleration, on/off gas ...  ====  \n'
-			helpText += u'    \n' 
-			helpText += u'  This class of sensors send BLE broadcasts with sensor data on a regular basis or when button is pressed or when sensor value change.    \n'
-			helpText += u'  Some of them can also be used as iBeacons when they send a message often enough   \n'
-			helpText += u'  The reaction time between button press and indigo device change is <0.4 secs   \n'
-			helpText += u'  In general they do not use a lot of power = have a longer battery life   \n'
-			helpText += u'     \n'
-			helpText += u'     \n'
-			helpText += u'  Vendor  sensorName battery          Freqquency       Size         App      Type of Sensor ------------------------------------------------------------------------       \n'
-			helpText += u'                                      Ibeacon                                ON/off or ON      Temp ExTemp Hum  Press   Accell/Grav  IR       Light  GAS  CO  Smoke      \n'
-			helpText += u'  \n'
-			helpText += u'  ruuvi   opensource sensor w BME280 and LIS2DH22 Acceleration sensor   \n'
-			helpText += u'          ruuviTag   1x cr2450        1/1s             largeRound  ruuvi                        Y           Y    Y       X,Y,Z   \n'
-			helpText += u'     \n'
-			helpText += u'  WeatherHawk, outdated    \n'
-			helpText += u'          myBueT     1x CR2032        1/1Min           oval small                               Y   \n'
-			helpText += u'     \n'
-			helpText += u'  INGICS: All have battery voltage support   \n'
-			helpText += u'          iBS01      2x CR2032+USB    1/4s             large flat  IBS01      Button ON/off   \n'
-			helpText += u'          iBS01G     2x CR2032+USB    1/4s             large flat  IBS01      Button ON/off                              movement ON/off   \n'
-			helpText += u'          iBS01RG    2x CR2032+USB    3/s              large flat  IBS01                                                 X,Y,Z   \n'
-			helpText += u'          iBS01H     2x CR2032+USB    1/4s             large flat  IBS01      Magnetic ON/off   \n'
-			helpText += u'          iBS01T     2x CR2032+USB    1/5s             large flat  IBS01                        Y           Y   \n'
-			helpText += u'          iBS02IR2   2x CR2032+USB    1/10s            large flat  IBS01                                                               present, short distance ON/off   \n'
-			helpText += u'          iBS02IRPIR 2x CR2032+USB    1/10s            large flat  IBS01                                                               movement PIR ON/off   \n'
-			helpText += u'          iBS02M2    2x CR2032+USB    1/10s            large flat  IBS01      ExtContact ON/off                                        \n'
-			helpText += u'          iBS03G     1x CR2450        1/5s             squareThick IBS01                                                 Movement ON/off   \n'
-			helpText += u'          iBS03RG    1x CR2450        3/s              squareThick IBS01                                                 XYZ   \n'
-			helpText += u'          iBS03T     1x CR2450        1/5s             squareThick IBS01                        Y   \n'
-			helpText += u'          iBS03TP    1x CR2450        1/5s             squareThick IBS01                        Y    Y water prove IP67   \n'
-			helpText += u'          iBS04      1x CR2032        1/4s             key remote  IBS01      Button ON, not easy to press   \n'
-			helpText += u'  \n'
-			helpText += u'  Minew    \n'
-			helpText += u'          E8         1x CR2032        1/s                                                                                 XYZ   \n'
-			helpText += u'  \n'
-			helpText += u'  Kaipule - iSensor   \n'
-			helpText += u'          EN61        AC              1/hour                                                                                                           Y   \n'
-			helpText += u'          ES62        3x AA           1/hour                                                                                                                    Y   \n'
-			helpText += u'          EC50        2x AA           1/hour                                                                                                               Y   \n'
-			helpText += u'          EW70        1x CR2032       1/10Min          round                   Water ON   \n'
-			helpText += u'          ET90        1x CR2032       1/10Min/ValCHg   round                                      Y            Y   \n'
-			helpText += u'          IM21        1x CR2032                        ovalSmall               Mag ON/off   \n'
-			helpText += u'          IM24        1x CR2032                        oval                    Mag ON/off   \n'
-			helpText += u'          IM22        1x CR2032                        Long square             Mag ON/off   \n'
-			helpText += u'          IX30        1x CR2032       1/10Min          Large                                                                            movement PIR   \n'
-			helpText += u'          IX32        1x CR2032       1/10Min          Large                                                                            movement PIR   \n'
-			helpText += u'          RB50        1x CR2032       none                                     buttonPress ON   well done looks like a real door bell        \n'
-			helpText += u'          RC10        1x CR2032       none                                     4 buttonPress ON well designed, easy to use        \n'
-			helpText += u'     \n'
-			helpText += u'  Satech .. not recommended SOS button disables the device, needs a power cyle    \n'
-			helpText += u'  AKMW      not recommended, requires APp/GATT command to read data    \n'
-			helpText += u'    \n'
+			helpText += u'=============== BLE-Sensors        ===========  \n'
+			helpText += fff
 			helpText += u'=============== BLE SENSORS .. END ===========  \n'
+			helpText += u'  \n'
 			self.myLog( text = helpText, destination="")
 			self.myLog( text = helpText, destination="standard")
 		except Exception, e:

@@ -276,7 +276,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 				<Title>execute</Title>
 				<CallbackMethod>buttonExecuteReplaceRPICALLBACK</CallbackMethod>
 			</Field>
-			<Field id="msg" type="textfield" default="">
+			<Field id="MSG" type="textfield" default="">
 				<Label>msg from Plugin:</Label>
 			</Field>
 		</ConfigUI>
@@ -305,16 +305,15 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 				<Label></Label>
 			</Field>
 			<Field id="MSG" type="textfield" defaultValue="">
-				<Label> message from Plugin:</Label>
+				<Label>Current or new setting:</Label>
+			</Field>
+			<Field id="MSGLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>either current setting or new setting after you press execute</Label>
 			</Field>
 
-	<Field id="acceptNewiBeaconsLabel1" type="label" alignWithControl="true" >  
-		<Label>Accept/reject new beacons if either:</Label>
+	<Field id="acceptNewiBeaconsLabel1" type="label" >  
+		<Label>Accept/reject new beacons if any of:</Label>
 	</Field>
-       <Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="off" tooltip="if the type of beacon tag is a match it will accpet a new beacon with that signature">
-		<Label>Accept new iBeacons of type:</Label>
-             <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
-      </Field>
 
        <Field    id="acceptNewiBeacons"   type="menu" defaultValue="999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
 		<Label>Accept any new iBeacons w signal GT:</Label>
@@ -341,10 +340,15 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 			<Option value="-999" >accept ALL</Option>
 		</List>
    </Field>
+       <Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="off" tooltip="if the type of beacon tag is a match it will accpet a new beacon with that signature">
+		<Label>Accept new iBeacons of type:</Label>
+             <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
+      </Field>
 	<Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>Either use allow new beacons of Type "x" or 
+		<Label>Use allow new beacons of Type "x" or 
 Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
-After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x" </Label>
+After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x"
+or your device folder might fill up quickly </Label>
 			</Field>
 			<Field id="execAcceptNewBeaconsCALLBACK" type="button">
 				<Label>After selections click</Label>
@@ -403,10 +407,6 @@ The history files also contain the beacons that were deleted. They are marked as
 			<Field id="MSG" type="textfield" defaultValue="">
 				<Label> message from Plugin:</Label>
 			</Field>
-			<Field id="info" type="textfield" defaultValue="">
-				<Label>Set parameters for ALL beacons:</Label>
-			</Field>
-
 
 			<Field id="buttonSetAllExistingDevicesToActive" type="button" tooltip="use this if all ibeacons are expired and went to ignore  ">
 				<Label>SET active</Label>
@@ -446,7 +446,7 @@ The history files also contain the beacons that were deleted. They are marked as
 				<Title>execute</Title>
 				<CallbackMethod>buttonExecuteReloadKnownBeaconsTagsCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="msg" type="textfield" default="">
+			<Field id="MSG" type="textfield" default="">
 				<Label>msg from Plugin:</Label>
 			</Field>
 		</ConfigUI>
@@ -457,7 +457,7 @@ The history files also contain the beacons that were deleted. They are marked as
 		<ConfigUI>
 			<Field id="label0" type="label">
 				<Label>Replace an old existing iBeacon with a new one. 
-This for eg TITLEs that have to be replaced when the battery is empty 
+This for eg credit card type beacons that have to be replaced when the battery is empty 
 or you lost an iBeacon and want to replace it
 but want to preserve history and triggers etc.
 The MAC number is moved from the new to old indigo device, 
@@ -480,7 +480,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
 				<Title>execute</Title>
 				<CallbackMethod>buttonExecuteReplaceBeaconCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="msg" type="textfield" default="">
+			<Field id="MSG" type="textfield" default="">
 				<Label>msg from Plugin:</Label>
 			</Field>
 		</ConfigUI>
@@ -491,7 +491,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
 	</MenuItem>
 
    <MenuItem id="getBatteryLevels">
-		<Name>Get iBeacon battery level from rPi</Name>
+		<Name>Get beacon battery level from rPi</Name>
 		<ConfigUI>
 			<Field id="infoLabelINPUT1" type="label">
 				<Label>Send commands to PiServer(s) to get update for beacons
@@ -513,11 +513,17 @@ Other beacons that send the battery level every second
 				<Title>EXECUTE</Title>
 				<CallbackMethod>getONEBeaconParametersCALLBACKmenu</CallbackMethod>
 			</Field>
+			<Field id="MSG" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
+			</Field>
    			<Field id="simpleSeparator33" type="separator"/>
 			<Field id="execReport" type="button">
 				<Label>Print report of current beacon battery levels</Label>
 				<Title>PRINT</Title>
 				<CallbackMethod>makeBatteryLevelReportCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG2" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -562,6 +568,9 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 				<Label> ....after selection click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>sendBeepCommandCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -628,8 +637,8 @@ hcidump.data, lescan.data, bluetoothctl.data</Label>
 				<Label>Print detailed information received on RPI and anlyzed for sepecific beacon - mac#
 If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 messages or max 10 seconds</Label>
 			</Field>
-             <Field id="msg" type="textfield" defaultValue="" tooltip="" readonly="yes">
-                    <Label>msg from plugin</Label>
+             <Field id="MSG" type="textfield" defaultValue="" tooltip="" readonly="yes">
+                    <Label>msg from plugin:</Label>
 			</Field>
            <Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
@@ -659,11 +668,18 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 	<MenuItem id="enableLoggingStuff">
 		<Name>Enable special logging</Name>
 		<ConfigUI>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from plugin:</Label>
+			</Field>
+
+
 			<Field id="labelnewBeaconsLogTimer" type="label">
 				<Label>Enable new beacon logging.. 
         will print extra info for each iBeacon that is younger than xx minutes 
         to logfile as new messages arrive</Label>
 			</Field>
+
+
 			<Field id="newBeaconsLogTimer" type="menu" defaultValue="no" tooltip="">
 				<Label>enter minutes</Label>
 				<List>
@@ -691,19 +707,24 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Field id="labelnewBeaconsLogTimerStop0" type="label">
 				<Label></Label>
 			</Field>
-			<Field id="labelnewBeaconsLogTimerStop" type="label">
+
+
+			<Field id="labelenableBeaconLogging" type="label">
 				<Label>Enable specific beacon logging.. 
         will print extra info for selected iBeacon to logfile
         as new messages arrive</Label>
 			</Field>
 			<Field id="selectBEACON" type="menu" defaultValue="0">
-				<Label>ibeacon :</Label>
+				<Label>select existing beacon:</Label>
 				<List class="self" filter="" method="filterActiveBEACONs" dynamicReload="false" />
 			</Field>
+			<Field id="selectBEACONmanual" type="textfield" defaultValue="">
+				<Label>track new beacon, set MAC#:</Label>
+			</Field>
 			<Field id="selectBEACONlen" type="menu" defaultValue="17" tooltip="">
-				<Label>enter minutes</Label>
+				<Label>enter number of char</Label>
 				<List>
-                    <Option value="17">  complete MAC#  =all 6 pairs </Option>
+                    <Option value="17">  complete MAC#  = all 6 pairs </Option>
                     <Option value="14">  first  5 pairs in MAC#</Option>
                     <Option value="11">  first  4 pairs in MAC#</Option>
                     <Option value="8">  first  3 pairs in MAC#</Option>

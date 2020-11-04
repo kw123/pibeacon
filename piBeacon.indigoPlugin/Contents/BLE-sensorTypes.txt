@@ -1,51 +1,52 @@
-BLE sensors
-
-This class of sensors send BLE broadcasts with sensor data on a regular basis or when button is pressed or when sensor value change. 
-Some of them can also be used as iBeacons when they send a message often enough
-The reaction time between button press and indigo device change is <0.4 secs
-In general they do not use a lot of power = have a longer battery life
-
-
-Vendor  sensorName battery          Freqquency       Size         App      Type of Sensor ------------------------------------------------------------------------    
-                                    Ibeacon                                On/off or ON      Temp ExTemp Hum  Press   Accell/Grav  IR       Light  GAS  CO  Smoke   
-
-ruuvi   opensource sensor w BME280 and LIS2DH22 Acceleration sensor
-        ruuviTag   1x cr2450        1/1s             largeRound  ruuvi                        Y           Y    Y       X,Y,Z
-
-WeatherHawk, outdated 
-        myBueT     1x CR2032        1/1Min           oval small                               Y
-
-INGICS: All have battery voltage support
-        iBS01      2x CR2032+USB    1/4s             large flat  IBS01      Button ON/off
-        iBS01G     2x CR2032+USB    1/4s             large flat  IBS01      Button ON/off                              movement ON/off
-        iBS01RG    2x CR2032+USB    3/s              large flat  IBS01                                                 X,Y,Z
-        iBS01H     2x CR2032+USB    1/4s             large flat  IBS01      Magnetic ON/off
-        iBS01T     2x CR2032+USB    1/5s             large flat  IBS01                        Y           Y
-        iBS02IR2   2x CR2032+USB    1/10s            large flat  IBS01                                                               present, short distance ON/off
-        iBS02IRPIR 2x CR2032+USB    1/10s            large flat  IBS01                                                               movement PIR ON/off
-        iBS02M2    2x CR2032+USB    1/10s            large flat  IBS01      ExtContact ON/off                                     
-        iBS03G     1x CR2450        1/5s             squareThick IBS01                                                 Movement ON/off
-        iBS03RG    1x CR2450        3/s              squareThick IBS01                                                 XYZ
-        iBS03T     1x CR2450        1/5s             squareThick IBS01                        Y
-        iBS03TP    1x CR2450        1/5s             squareThick IBS01                        Y    Y water prove IP67
-        iBS04      1x CR2032        1/4s             key remote  IBS01      Button ON, not easy to press
-
-Minew 
-        E8         1x CR2032        1/s                                                                                 XYZ
-
-Kaipule - iSensor
-        EN61        AC              1/hour                                                                                                           Y
-        ES62        3x AA           1/hour                                                                                                                    Y
-        EC50        2x AA           1/hour                                                                                                               Y
-        EW70        1x CR2032       1/10Min          round                   Water ON
-        ET90        1x CR2032       1/10Min/ValCHg   round                                      Y            Y
-        IM21        1x CR2032                        ovalSmall               Mag ON/off
-        IM24        1x CR2032                        oval                    Mag ON/off
-        IM22        1x CR2032                        Long square             Mag ON/off
-        IX30        1x CR2032       1/10Min          Large                                                                            movement PIR
-        IX32        1x CR2032       1/10Min          Large                                                                            movement PIR
-        RB50        1x CR2032       none                                     buttonPress ON   well done looks like a real door bell     
-        RC10        1x CR2032       none                                     4 buttonPress ON well designed, easy to use     
-
-Satech .. not recommended SOS button disables the device, needs a power cyle 
-AKMW      not recommended, requires APp/GATT command to read data 
+BLE sensors  
+  
+This class of sensors send BLE broadcasts with sensor data on a regular basis or when button is pressed or when sensor value change.   
+Some of them can also be used as iBeacons when they send a message often enough  (eg ruuvuitag, iBSxx Minew)
+The reaction time between button press and indigo device change is <0.4 secs  
+In general they do not use a lot of power = have a longer battery life  
+  
+  
+Vendor  sensorName battery          Freqquency       Size         App      Type of Sensor ------------------------------------------------------------------------      
+                                    Ibeacon                                On/off or ON      Temp ExTemp Hum  Press   Accell/Grav  IR       Light  GAS  CO  Smoke     
+  
+ruuvi   opensource sensor w BME280 and LIS2DH22 Acceleration sensor  
+        ruuviTag   1x cr2450        1/1s             largeRound  ruuvi                        Y           Y    Y       X,Y,Z  
+  
+WeatherHawk, outdated   
+        myBueT     1x CR2032        1/1Min           oval small                               Y  
+  
+INGICS: All have battery voltage support  in regular bluetooth message not through gatt command  
+        iBS01      2x CR2032+USB    1/4s             large flat  IBS01      Button ON/off  
+        iBS01G     2x CR2032+USB    1/4s             large flat  IBS01      Button ON/off                              movement ON/off  
+        iBS01RG    2x CR2032+USB    3/s              large flat  IBS01                                                 X,Y,Z  
+        iBS01H     2x CR2032+USB    1/4s             large flat  IBS01      Magnetic ON/off  
+        iBS01T     2x CR2032+USB    1/5s             large flat  IBS01                        Y           Y  
+        iBS02IR2   2x CR2032+USB    1/10s            large flat  IBS01                                                               present, short distance ON/off  
+        iBS02IRPIR 2x CR2032+USB    1/10s            large flat  IBS01                                                               movement PIR ON/off  
+        iBS02M2    2x CR2032+USB    1/10s            large flat  IBS01      ExtContact ON/off                                       
+        iBS03G     1x CR2450        1/5s             squareThick IBS01                                                 Movement ON/off  
+        iBS03RG    1x CR2450        3/s              squareThick IBS01                                                 XYZ  
+        iBS03T     1x CR2450        1/5s             squareThick IBS01                        Y  
+        iBS03TP    1x CR2450        1/5s             squareThick IBS01                        Y    Y water prove IP67  
+        iBS04      1x CR2032        1/4s             key remote  IBS01      Button ON, not easy to press  
+  
+Minew All have battery voltage support  in regular bluetooth message not through gatt command  
+        E8         1x CR2032        1/s                                                                                 XYZ  
+        S1         1x CR2032        1/s                                                       Y    Y       Y  
+  
+Kaipule - iSensor  
+        EN61        AC              1/hour                                                                                                           Y  
+        ES62        3x AA           1/hour                                                                                                                    Y  
+        EC50        2x AA           1/hour                                                                                                               Y  
+        EW70        1x CR2032       1/10Min          round                   Water ON  
+        ET90        1x CR2032       1/10Min/ValCHg   round                                    Y            Y  
+        IM21        1x CR2032                        ovalSmall               Mag ON/off  
+        IM24        1x CR2032                        oval                    Mag ON/off  
+        IM22        1x CR2032                        Long square             Mag ON/off  
+        IX30        1x CR2032       1/10Min          Large                                                                            movement PIR  
+        IX32        1x CR2032       1/10Min          Large                                                                            movement PIR  
+        RB50        1x CR2032       none                                     buttonPress ON   well done looks like a real door bell       
+        RC10        1x CR2032       none                                     4 buttonPress ON well designed, easy to use       
+  
+Satech .. not recommended SOS button disables the device, needs a power cyle   
+AKMW      not recommended, requires APP/GATT with long read times    

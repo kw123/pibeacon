@@ -12,8 +12,14 @@ import	sys, os, subprocess, copy
 import	time,datetime
 import	json
 import	RPi.GPIO as GPIO  
-import bluetooth
-import bluetooth._bluetooth as bt
+
+try:
+	import bluetooth
+	import bluetooth._bluetooth as bt
+	bluezPresent = True
+except:
+	bluezPresent = False
+
 import struct
 import array
 import fcntl
@@ -56,8 +62,11 @@ def readParams():
 
 			if "restartBLEifNoConnect"	in inp:	 restartBLEifNoConnect=		  (inp["restartBLEifNoConnect"])
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])
-			if "BLEconnectMode"			in inp:	 BLEconnectMode=			  (inp["BLEconnectMode"])
 
+			if bluezPresent:
+				if "BLEconnectMode"			in inp:	 BLEconnectMode=			  (inp["BLEconnectMode"])
+			else:
+				BLEconnectMode = "commandLine"
 
 			macListNew={}
 
@@ -221,7 +230,7 @@ def execBLEconnect():
 	global errCount, lastConnect
 	global BLEconnectMode
 	global sensor
-	BLEconnectMode			= "socket" # or commandLine
+	BLEconnectMode			= "commandLine" # socket or commandLine
 	oldRaw					= ""
 	lastRead				= 0
 	errCount				= 0
@@ -291,7 +300,7 @@ def execBLEconnect():
 
 	#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 	HCIs = U.whichHCI()
-	if HCIs["hci"] !={}:
+	if HCIs["hci"] != {}:
 		useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo,"UART")
 		if BLEid < 0:
 			U.logger.log(0, "BLEconnect: BLE STACK is not  UP  HCI:{}".format(HCIs))

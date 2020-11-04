@@ -1,3 +1,11 @@
+Added features / changes in v7.128.464 @ 2020-11-03
+===================================================
+0. switch bluetooth to no socket if blues python include fails
+1. added support for safedome credit card  type beacons, wireless rechargeable
+2. changed some menu text, spelling and messages shown 
+
+
+
 Added features / changes in v7.128.463 @ 2020-11-01
 ===================================================
 0. fixed accpet new beacons signal
