@@ -3,7 +3,7 @@
 # by Karl Wachs
 # feb 5 2016
 
-masterVersion			= 12.7
+masterVersion			= 12.8
 ## changelog: 
 # 2020-04-05 added check for NTP
 # 2020-xx-xx 
@@ -1564,7 +1564,7 @@ def tryRestartNetwork():
 			time.sleep(10)
 			indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
 			if G.ipAddress != "":
-				U.restartMyself(reason=" ip number is back on")
+				U.restartMyself(reason=u" ip number is back on")
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return
@@ -1574,8 +1574,8 @@ def checkIfclearHostsFile():
 
 	try:
 		if clearHostsFile: 
-			U.logger.log(20, "resetting file /home/pi/.ssh/known_hosts")
-			subprocess.call("sudo rm /home/pi/.ssh/known_hosts", shell=True)
+			U.logger.log(20, u"resetting file /home/pi/.ssh/known_hosts")
+			subprocess.call(u"sudo rm /home/pi/.ssh/known_hosts", shell=True)
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
@@ -1583,8 +1583,8 @@ def checkIfclearHostsFile():
 ####################      #########################
 def checkPythonLibs():
 	try:
-		subprocess.call("sudo /usr/bin/python3 {}checkForInclude-py3.py & ".format(G.homeDir), shell=True)
-		subprocess.call("sudo /usr/bin/python {}checkForInclude-py2.py & ".format(G.homeDir), shell=True)
+		subprocess.call(u"sudo /usr/bin/python3 {}checkForInclude-py3.py & ".format(G.homeDir), shell=True)
+		subprocess.call(u"sudo /usr/bin/python {}checkForInclude-py2.py & ".format(G.homeDir), shell=True)
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
@@ -1592,41 +1592,41 @@ def checkPythonLibs():
 ####################      #########################
 def checknetwork0():
 	try:
-		indigoServerOn, changed, connected ="","",""
+		indigoServerOn, changed, connected = u"", u"", u""
 
-		if G.networkType  in G.useNetwork and G.wifiType =="normal":
+		if G.networkType  in G.useNetwork and G.wifiType == u"normal":
 			for ii in range(5):
 				if ii > 3 :
-					U.logger.log(30, "no ip number working, giving up, running w/o ip number, setting mode to clockMANUAL")
-					G.networkType="clockMANUAL"
+					U.logger.log(30, u"no ip number working, giving up, running w/o ip number or indigo server, setting mode to clockMANUAL = stand alone")
+					G.networkType = u"clockMANUAL"
 					break
 	
-				indigoServerOn, changed, connected = U.getIPNumberMaster()
+				indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=ii<2)
 				if not indigoServerOn  or G.ipAddress == "":
-					U.setNetwork("off")
+					U.setNetwork(u"off")
 					time.sleep(5)
-					U.logger.log(30, "no ip number working, trying again, indigoServerOn:{}, ip:{}".format(indigoServerOn, G.ipAddress))
+					U.logger.log(30, u"no ip number working, trying again, indigoServerOn:{}, myip:{}".format(indigoServerOn, G.ipAddress))
 				else:
 					U.clearNetwork()
-					U.logger.log(20, "ip number found  ip:{}".format(G.ipAddress))
+					U.logger.log(20, u"ip number found  ip:{}".format(G.ipAddress))
 					break
 
 		else:
-			if G.networkType.find("clock") > -1 and G.wifiType =="normal":
+			if G.networkType.find(u"clock") > -1 and G.wifiType == u"normal":
 				for ii in range(2):
 					if ii > 1:
-						U.logger.log(30, "no ip number working, giving up, setting mode to clockMANUAL")
-						G.networkType="clockMANUAL"
+						U.logger.log(30,u"no ip number working, giving up, setting mode to clockMANUAL = stand alone")
+						G.networkType = u"clockMANUAL"
 						break
 	
-					indigoServerOn, changed,connected = U.getIPNumberMaster()
-					if not indigoServerOn or G.ipAddress == "":
-						U.setNetwork("off")
+					indigoServerOn, changed,connected = U.getIPNumberMaster(quiet=ii<2)
+					if not indigoServerOn or G.ipAddress == u"":
+						U.setNetwork(u"off")
 						time.sleep(5)
-						U.logger.log(30, "no ip number working, trying again, indigoServerOn:{}, ip:{}".format(indigoServerOn, G.ipAddress))
+						U.logger.log(30, u"no ip number working, trying again, indigoServerOn:{}, myip:{}".format(indigoServerOn, G.ipAddress))
 					else:
 						U.clearNetwork()
-						U.logger.log(20, "ip number found  ip:{}".format( G.ipAddress))
+						U.logger.log(20, u"ip number found  ip:{}".format( G.ipAddress))
 						break
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1636,16 +1636,16 @@ def checknetwork0():
 ####################      #########################
 def checkIfNetworkStarted():
 	try:
-		if configured == "" and G.userIdOfServer == "xxstartxx": 
-			if G.networkType  in G.useNetwork and G.wifiType =="normal":
+		if configured == "" and G.userIdOfServer == u"xxstartxx": 
+			if G.networkType  in G.useNetwork and G.wifiType == u"normal":
 				wifiWaiting  = True
 				GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-				if GPIO.input(26) == 0 and G.userIdOfServer	 == "xxstartxx":
+				if GPIO.input(26) == 0 and G.userIdOfServer	 == u"xxstartxx":
 						## start adhoc wifi
 						for ii in range(500):
-							if G.userIdOfServer	 == "xxstartxx":
+							if G.userIdOfServer	 == u"xxstartxx":
 								if  adhocWifiStarted < 0: 
-									U.logger.log(30," launching at start startAdhocWifi " )
+									U.logger.log(30,u" launching at start startAdhocWifi " )
 									U.startAdhocWifi()
 									U.startwebserverINPUT(startWebServerINPUT)
 							if wifiWaiting: 
@@ -1656,8 +1656,8 @@ def checkIfNetworkStarted():
 
 				if G.userIdOfServer	 == "xxstartxx":
 						for ii in range(500):
-							if G.userIdOfServer	 == "xxstartxx":
-								U.logger.log(30, " master not configured yet, lets wait for new config files")
+							if G.userIdOfServer	 == u"xxstartxx":
+								U.logger.log(30, u" master not configured yet, lets wait for new config files")
 								if ii >498:
 									startProgam("master.py", params="", reason="..not configured yet")
 									exit(0)
@@ -1665,7 +1665,7 @@ def checkIfNetworkStarted():
 								readNewParams()
 							else:
 								break
-						U.stopAdhocWifi(setwifi="dhcp")
+						U.stopAdhocWifi(setwifi=u"dhcp")
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
@@ -1673,18 +1673,18 @@ def checkIfNetworkStarted():
 ####################      #########################
 def	checkForAdhocWeb(adhocWifiStarted):
 	try:
-		if adhocWifiStarted > 0 and G.wifiType == "adhoc":
+		if adhocWifiStarted > 0 and G.wifiType == u"adhoc":
 			if not U.checkIfwebserverINPUTrunning():
 				U.startwebserverINPUT(startWebServerINPUT, useIP="192.168.5.5", force=True)
 				# restore old interfaces for next reboot 
 				for ii in range(150):
 					if U.checkwebserverINPUT(): break
 					if U.checkIfStopAdhocWiFi():break
-					U.logger.log(20," in loop waiting for webserver input  ")
+					U.logger.log(20,u" in loop waiting for webserver input  ")
 					time.sleep(5)
-				U.logger.log(20,"switching back to normal wifi setup")
+				U.logger.log(20,u"switching back to normal wifi setup")
 				U.stopAdhocWifi()
-				U.restartMyself(reason="starting back to normal from adhoc wifi")
+				U.restartMyself(reason=u"starting back to normal from adhoc wifi")
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 

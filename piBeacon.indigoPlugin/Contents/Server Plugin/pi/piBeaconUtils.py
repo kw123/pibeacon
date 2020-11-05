@@ -1461,7 +1461,7 @@ def makeNewSupplicantFile(data):
 #
 
 ################################
-def getIPNumberMaster(quiet=False):
+def getIPNumberMaster(quiet=True):
 	ipAddressRead		= ""
 	retcode				= 0
 	connected			= False
@@ -1495,7 +1495,7 @@ def getIPNumberMaster(quiet=False):
 			if testIndigoServer()== 0:	indigoServer = True
 			
 
-		#logger.log(20,"cBY:{:<20} IP info:  xxx  wlan0>{}<; eth0>{}<;  changed:{}<<; connected:{}<<; indigoServer:{}<<, G.ipAddress:{}<;  ipAddressRead:{}<; G.wifiEth:{}<; G.wifiActive:{}".format( G.program, wlan0IP,eth0IP,changed, connected, indigoServer, G.ipAddress, ipAddressRead, G.wifiEth, G.wifiActive) )
+		if not quiet: logger.log(20,"cBY:{:<20} IP info:  xxx  wlan0>{}<; eth0>{}<;  changed:{}<<; connected:{}<<; indigoServer:{}-{}<<, G.ipAddress:{}<;  ipAddressRead:{}<; G.wifiEth:{}<; G.wifiActive:{}".format( G.program, wlan0IP,eth0IP,changed, connected, indigoServer, G.ipOfServer, G.ipAddress, ipAddressRead, G.wifiEth, G.wifiActive) )
 
 		if not connected:
 			if not G.wifiEnabled and not G.switchedToWifi:
@@ -1524,11 +1524,11 @@ def getIPNumberMaster(quiet=False):
 				 (G.wifiEth["wlan0"]["useIP"] in ["useIf"] and  eth0IP == "")
 				):
 				G.ipAddress = wlan0IP
-				#logger.log(20,"cBY:{:<20} doing wlanIP :{}< G.ipAddress :{}<".format(G.program, wlan0IP, G.ipAddress) )
+				if not quiet: logger.log(20,"cBY:{:<20} doing wlanIP :{}< G.ipAddress :{}<".format(G.program, wlan0IP, G.ipAddress) )
 
-			#logger.log(20,"cBY:{:<20} IP info:  yyy  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
+			if not quiet: logger.log(20,"cBY:{:<20} IP info:  yyy  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
 			if G.ipAddress != ipAddressRead:
-				#logger.log(20,"cBY:{:<20} IP info:  writing  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
+				if not quiet: logger.log(20,"cBY:{:<20} IP info:  writing  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
 				writeIPtoFile(G.ipAddress, reason=changed)
 				logger.log(20,"cBY:{:<20} IP info: IPs#: changed:>{}<; connected:{}; IndigoServer>{}<; Router>{}<; wlan0>{}<; eth0>{}<; G.wlanActive:{}; G.eth0Active:{};  AddressFile>{}<; PKTS(eth0>{},{}<; wlan0>{},{}<, dTime:{:.1f})".format( 
 									G.program, 			  changed, 	   connected,    G.ipOfServer, 	  G.ipOfRouter, wlan0IP,  eth0IP,   G.wifiActive,    G.eth0Active,     ipAddressRead,   G.eth0Packets, G.eth0PacketsOld, G.wlan0Packets,G .wlan0PacketsOld, min(99.9,G.packetsTime-G.packetsTimeOld)))
@@ -1543,7 +1543,7 @@ def getIPNumberMaster(quiet=False):
 				return indigoServer, False, connected
 
 		else:
-			logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(connected, indigoServer))
+			if not quiet: logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(connected, indigoServer))
 
 	except Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

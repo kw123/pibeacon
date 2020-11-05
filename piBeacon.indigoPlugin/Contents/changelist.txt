@@ -1,3 +1,9 @@
+Added features / changes in v7.128.466 @ 2020-11-05
+===================================================
+0. added some debug statements when master on pi can not find indigo or ip number
+
+
+
 Added features / changes in v7.128.465 @ 2020-11-05
 ===================================================
 0. fixed error memberList not defined
