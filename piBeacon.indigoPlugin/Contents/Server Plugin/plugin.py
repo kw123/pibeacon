@@ -3941,7 +3941,7 @@ class Plugin(indigo.PluginBase):
 			return ( False, valuesDict, errorDict )
 
 ############ 
-	def fillMemberListState(dev, valuesDict):
+	def fillMemberListState(self, dev, valuesDict):
 		try:
 			memberList = u""
 			for nn in range(len(_GlobalConst_groupList)):
