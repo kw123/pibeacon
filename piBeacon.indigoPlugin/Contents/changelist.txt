@@ -1,6 +1,15 @@
+Added features / changes in v7.128.465 @ 2020-11-05
+===================================================
+0. fixed error memberList not defined
+1. change secuence of accepting beacons to aloow ignored beacon to be accepted as sensors
+   eg for ruuviTag beacon: it has a beacon and a sensor device, 
+   when beacon device was deleted in indigo the mac# was set to ignore and the the sensor device was not updated.
+
+
+
 Added features / changes in v7.128.464 @ 2020-11-03
 ===================================================
-0. switch bluetooth to no socket if blues python include fails
+0. switch bluetooth to no socket if bluez python include fails
 1. added support for safedome credit card  type beacons, wireless rechargeable
 2. changed some menu text, spelling and messages shown 
 

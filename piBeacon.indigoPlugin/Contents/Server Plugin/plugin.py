@@ -4090,6 +4090,7 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				self.indiLOG.log(40,u"bad input for xyz-coordinates:{}".format(valuesDict[u"PosXYZ"]) )
 
+			memberList = ""
 			for nn in range(len(_GlobalConst_groupList)):
 				group = _GlobalConst_groupList[nn]
 				groupNameUsedForVar = self.groupListUsedNames[group]

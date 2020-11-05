@@ -652,7 +652,7 @@
     "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
   "ruuviTag":  {
-    "text":"RuuviTag sensor",
+    "text":"Ruuvi-beacon (not the sensor part)",
     "Maj":"",
     "Min":"",
     "battCmd": "msg", 

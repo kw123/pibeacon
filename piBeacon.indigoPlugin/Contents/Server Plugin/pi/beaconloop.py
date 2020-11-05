@@ -3851,11 +3851,6 @@ def execbeaconloop(test):
 						########  track mac  start / end ############
 						trackMacStopIf(hexstr, mac)
 
-						if mac in ignoreMAC: 		
-							if readFrom !="":
-								U.logger.log(20, u"TestMode: ignored mac:{}".format(mac))
-							continue # set to ignore in plugin
-
 						msgStart, majEnd, uuidLen, UUID, Maj, Min, rssi, txPower, mfgID, pType, typeOfBeacon = getBasicData(hexstr)
 
 						if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
@@ -3869,6 +3864,11 @@ def execbeaconloop(test):
 						if isOnlySensor:
 							lastMSGwithDataPassed = int(time.time())
 							continue
+
+						if mac in ignoreMAC: 		
+							if readFrom !="":
+								U.logger.log(20, u"TestMode: ignored mac:{}".format(mac))
+							continue # set to ignore in plugin
 
 						if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 							writeTrackMac("A-Sens  ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}, batteryLevel:{}".format(UUID, Maj, Min, rssi, txPower, batteryLevel) ,mac)
