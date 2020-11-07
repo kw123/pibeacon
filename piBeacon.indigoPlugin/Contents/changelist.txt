@@ -1,4 +1,10 @@
-Added features / changes in v7.128.467 @ 2020-11-05
+Added features / changes in v7.129.467 @ 2020-11-07
+===================================================
+0. added Bluetooth Temp / humdity sensor: Xiaomi MiJia  round humidity sensor. The round one not sqaure!
+check eg: https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0
+
+
+Added features / changes in v7.129.467 @ 2020-11-05
 ===================================================
 0. added some debug statements when master on pi can not find indigo or ip number
 1. fixed fillMemberListState error

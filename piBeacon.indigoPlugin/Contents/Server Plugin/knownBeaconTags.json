@@ -27,6 +27,20 @@
     "comment":"",
     "hexCode": "02010609086953656E736F7220XXFF"
   },
+  "BLEMiTempHumRound":  {
+    "text":"Xiaomi MiJia MI temp humidity round ",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":"",
+	"hexCode": "1A09094D4A5F48545F5631"
+   },
   "iBSxx":  {
     "text":"INGISCS iBS01 .. 04",
     "Maj":"",

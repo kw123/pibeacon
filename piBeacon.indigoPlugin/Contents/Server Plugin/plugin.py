@@ -233,8 +233,9 @@ _BLEsensorTypes =[u"BLERuuviTag",
 				u"BLEiBS01", u"BLEiBS01T", u"BLEiBS01RG", u"BLEiBS03G", u"BLEiBS03T", u"BLEiBS03TP", u"BLEiBS03RG", 
 				u"BLEaprilAccel", u"BLEaprilTHL", 
 				u"BLEminewE8", u"BLEminewS1TH", u"BLEminewS1TT", 
-				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", "BLEiSensor-TempHum", 
-				u"BLESatech"]
+				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum", 
+				u"BLESatech",
+				u"BLEMiTempHumRound"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 	 u"apds9960",															  # dist gesture
@@ -484,13 +485,13 @@ class Plugin(indigo.PluginBase):
 		try:
 			if self.indigoVersion <  7.4:                             return 
 			if self.indigoVersion == 7.4 and self.indigoRelease == 0: return 
-			#tt = [u"beacon",              "rPI",u"rPI-Sensor",u"BLEconnect",u"sensor"]
+			#tt = [u"beacon",              u"rPI",u"rPI-Sensor",u"BLEconnect",u"sensor"]
 
 			outOND  = u""
 			outOffD = u""
 			outONV  = u""
 			outOffV = u""
-			if self.decideMyLog(u"SQLSuppresslog"): self.indiLOG.log(20,u"setSqlLoggerIgnoreStatesAndVariables settings:{} ".format( self.SQLLoggingEnable) )
+			if self.decideMyLog(u"SQLSuppresslog"): self.indiLOG.log(20,u"setSqlLoggerIgnoreStatesAndVariables settings:{}".format( self.SQLLoggingEnable) )
 			if not self.SQLLoggingEnable[u"devices"]: # switch sql logging off
 				for ff in _sqlLoggerDevTypes:
 
@@ -1078,7 +1079,7 @@ class Plugin(indigo.PluginBase):
 			try:				self.iBeaconFolderVariableDataTransferVarsName	 = self.pluginPrefs.get(u"iBeaconFolderVariableDataTransferVarsName", u"piBeacons_dataTransferVars")
 			except:				self.iBeaconFolderVariableDataTransferVarsName	 = u"piBeacons_dataTransferVars" 
 			self.pluginPrefs[u"iBeaconFolderVariableDataTransferVarsName"] = self.iBeaconFolderVariableDataTransferVarsName
-			#indigo.server.log(" self.iBeaconFolderVariablesName:{};   self.iBeaconFolderVariableDataTransferVarsName:{}".format( self.iBeaconFolderVariablesName, self.iBeaconFolderVariableDataTransferVarsName))
+			#indigo.server.log(u" self.iBeaconFolderVariablesName:{};   self.iBeaconFolderVariableDataTransferVarsName:{}".format( self.iBeaconFolderVariablesName, self.iBeaconFolderVariableDataTransferVarsName))
 
 			self.getFolderIdOfBeacons()
 
@@ -1385,7 +1386,7 @@ class Plugin(indigo.PluginBase):
 
 
 			# now extra variables
-			#indigo.server.log("self.groupStatusList:{} ".format(self.groupStatusList))
+			#indigo.server.log(u"self.groupStatusList:{} ".format(self.groupStatusList))
 			for group in _GlobalConst_groupList:
 				groupNameUsedForVar = self.groupListUsedNames[group]
 				if len(groupNameUsedForVar) < 1: continue
@@ -1399,7 +1400,7 @@ class Plugin(indigo.PluginBase):
 							indigo.variable.create(varName, u"",self.iBeaconFolderVariablesName)
 							var = indigo.variables[varName]
 
-						#indigo.server.log("var:{} group:{}, gName:{} ".format(var.name, group, gName))
+						#indigo.server.log(u"var:{} group:{}, gName:{} ".format(var.name, group, gName))
 						if var.value !=	 unicode(self.groupStatusList[group][gName]):
 							indigo.variable.updateValue(varName, unicode(self.groupStatusList[group][gName]))
 
@@ -1478,7 +1479,7 @@ class Plugin(indigo.PluginBase):
 			except :
 				piFolder_pi_in = indigo.variables.folders[self.iBeaconFolderVariableDataTransferVarsName]
 
-		#indigo.server.log("deleteAndCeateVariables  iBeaconFolderVariablesName:{} iBeaconFolderVariableDataTransferVarsName: {} piFolder:{}\n piFolder_pi_in:{}".format(self.iBeaconFolderVariablesName, self.iBeaconFolderVariableDataTransferVarsName, piFolder, piFolder_pi_in))
+		#indigo.server.log(u"deleteAndCeateVariables  iBeaconFolderVariablesName:{} iBeaconFolderVariableDataTransferVarsName: {} piFolder:{}\n piFolder_pi_in:{}".format(self.iBeaconFolderVariablesName, self.iBeaconFolderVariableDataTransferVarsName, piFolder, piFolder_pi_in))
 
 		### delete at midnight and (re) create	to save sql logger space , we dont need the history
 		if delete:
@@ -3842,8 +3843,8 @@ class Plugin(indigo.PluginBase):
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_output(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			else:
-				valuesDict[u"MSG"] = u" bad dev type:".format(typeId)
-				self.indiLOG.log(40,u" bad device type:{} not in registed types:\n,_GlobalConst_allowedSensors:{}\n _BLEsensorTypes:{}\n _GlobalConst_allowedOUTPUT:{}\n... ".format(typeId, _GlobalConst_allowedSensors, _BLEsensorTypes, _GlobalConst_allowedOUTPUT))
+				valuesDict[u"MSG"] = u" bad dev type: {}".format(typeId)
+				self.indiLOG.log(40,u" bad device type:   {}   not in registed types:\n,_GlobalConst_allowedSensors:{}\n _BLEsensorTypes:{}\n _GlobalConst_allowedOUTPUT:{}\n... ".format(typeId, _GlobalConst_allowedSensors, _BLEsensorTypes, _GlobalConst_allowedOUTPUT))
 
 
 			if retCode:	
@@ -3895,11 +3896,11 @@ class Plugin(indigo.PluginBase):
 ############ RPI- BLEconnect  -------
 	def validateDeviceConfigUi_BLEconnect(self, valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev):
 		try:
-			if len(valuesDict[u"macAddress"]) == len(u"01:02:03:04:05:06"):
+			if self.isValidMAC(valuesDict[u"macAddress"]):
 				self.addToStatesUpdateDict(dev.id,u"TxPowerSet", int(valuesDict[u"beaconTxPower"]))
 				valuesDict[u"macAddress"] = valuesDict[u"macAddress"].upper()
 			else:
-				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"bad Mac Number:"+valuesDict[u"macAddress"])
 				return ( False, valuesDict, errorDict )
 			BLEMAC = valuesDict[u"macAddress"].upper()
 
@@ -3932,12 +3933,12 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict = self.fillMemberListState(dev, valuesDict)
 	
-			indigo.server.log("validateDeviceConfigUi_BLEconnect  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
+			indigo.server.log(u"validateDeviceConfigUi_BLEconnect  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
 
 			return (True, valuesDict, errorDict)
 		except Exception, e:
 			self.indiLOG.log(40,u"setting up BLEconnect Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
+			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
 ############ 
@@ -4017,7 +4018,7 @@ class Plugin(indigo.PluginBase):
 			valuesDict[u"newMACNumber"] = newMAC
 			if not self.isValidMAC(newMAC):
 				valuesDict[u"newMACNumber"] = beacon
-				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"bad Mac Number")
+				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"bad Mac Number:"+newMAC)
 				return ( False, valuesDict, errorDict )
 
 			if not new:
@@ -4152,13 +4153,13 @@ class Plugin(indigo.PluginBase):
 					beacon = newMAC
 			else:
 				valuesDict[u"newMACNumber"] = beacon
-				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"bad Mac Number:"+beacon)
 				return ( False, valuesDict, errorDict )
 			self.beaconPositionsUpdated = 1
 
 			if not self.isValidMAC(beacon):
-				error = u"bad Mac Number"
-				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad Mac Number")
+				error = u"bad Mac Number:"+beacon
+				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"bad Mac Number:"+beacon)
 				return ( False, valuesDict, errorDict )
 			self.beaconPositionsUpdated = 1
 
@@ -16541,6 +16542,7 @@ class Plugin(indigo.PluginBase):
 							if u"noI2cCheck" not in props or  not props[u"noI2cCheck"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"i2cAddress")
 
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"numberOfMeasurementToAverage")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensorRefreshSecs")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"codeType")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"nBits")
@@ -17736,7 +17738,7 @@ configuration         - ==========  defined beacons ==============
 	def printGroups(self):
 		############## list groups with members
 		try:
-			indigo.server.log("printGroups  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
+			indigo.server.log(u"printGroups  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
 
 			self.myLog( text = u"", mType= u"pi configuration")
 			self.myLog( text = u"========== beacon groups    ================", mType= u"pi configuration")
@@ -17747,7 +17749,7 @@ configuration         - ==========  defined beacons ==============
 				groupMemberNames[group] = u""
 
  			for dev	in indigo.devices.iter(self.pluginId):
-				if "groupMember" not in dev.states:  continue
+				if u"groupMember" not in dev.states:  continue
 				if dev.states[u"groupMember"] == u"": continue
 				indigo.server.log(u"printGroups   dev:{}  groupMember:{}".format(dev.name, dev.states[u"groupMember"]))
 
@@ -17841,13 +17843,13 @@ configuration         - ==========  defined beacons ==============
 
 							maxBytes   = max(maxBytN,maxBytes)
 
-							self.myLog( text = u"{} {} {} {} {} {} {} {} {}  {}  {}".format(IPN.ljust(15), name.ljust(12), xType.ljust(10), dtFT, dtLT, count, bytesT, bytesPerMsg, maxByt, bytesPerMin, msgsPerMin),mType=" ")
+							self.myLog( text = u"{} {} {} {} {} {} {} {} {}  {}  {}".format(IPN.ljust(15), name.ljust(12), xType.ljust(10), dtFT, dtLT, count, bytesT, bytesPerMsg, maxByt, bytesPerMin, msgsPerMin),mType=u" ")
 			if all == u"yes" and totMsg >0:
 				bytesPerMsg	  = unicode(int(totBytes/totMsg)).rjust(9)
 				bytesPerMin	  = (u"%9.1f"% (totBytes/minMeasured)  ).rjust(9)
 				msgsPerMin	  = (u"%9.2f"% (totMsg/minMeasured)	   ).rjust(9)
 				maxBytes	  =	 unicode(maxBytes).rjust(9)
-				self.myLog( text = u"total                                                                          {:10d}{:13d} {} {}  {}  {}".format(int(totMsg), int(totBytes), bytesPerMsg, maxBytes, bytesPerMin, msgsPerMin ),mType=" ")
+				self.myLog( text = u"total                                                                          {:10d}{:13d} {} {}  {}  {}".format(int(totMsg), int(totBytes), bytesPerMsg, maxBytes, bytesPerMin, msgsPerMin ),mType=u" ")
 				self.myLog( text = u" ===  Stats for RPI --> INDIGO data transfers ==  END total time measured: {:.0f} {} ; min measured: {:.0f}".format( int(time.strftime(u"%d", time.gmtime(secMeasured)))-1, time.strftime(u"%H:%M:%S", time.gmtime(secMeasured)), minMeasured ), mType=	 u"pi TCPIP socket")
 		return
 
@@ -17857,9 +17859,9 @@ configuration         - ==========  defined beacons ==============
 		nSecs = max(1,(time.time()-	 self.dataStats[u"updates"][u"startTime"]))
 		nMin  = nSecs/60.
 		startDate= time.strftime(_defaultDateStampFormat,time.localtime(self.dataStats[u"updates"][u"startTime"]))
-		self.myLog( text = u"",mType=" " )
+		self.myLog( text = u"",mType=u" " )
 		self.myLog( text = u"===    measuring started at: {}".format(startDate), mType="indigo update stats " )
-		self.myLog( text = u"updates: {:10d};   updates/sec: {:10.2f};   updates/minute: {:10.2f}".format(self.dataStats[u"updates"][u"devs"], self.dataStats[u"updates"][u"devs"] /nSecs, self.dataStats[u"updates"][u"devs"]  /nMin), mType=  u"    device ")
+		self.myLog( text = u"updates: {:10d};   updates/sec: {:10.2f};   updates/minute: {:10.2f}".format(self.dataStats[u"updates"][u"devs"], self.dataStats[u"updates"][u"devs"] /nSecs, self.dataStats[u"updates"][u"devs"]  /nMin), mType= u"    device ")
 		out = u"(#states #updates #updates/min) "
 		for ii in range(1,10):
 			out+= u"({:1d} {:1d} {:3.1f}) ".format(ii, self.dataStats[u"updates"][u"nstates"][ii], self.dataStats[u"updates"][u"nstates"][ii]/nMin) 
