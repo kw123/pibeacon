@@ -91,9 +91,9 @@ def getDHT(sensor,dataI):
 					except: pass
 					dataI[sensor][devId] = {"temp":t}
 					if h != "":
-						try:	h = round(float(h) + float(sensors[sensor][devId]["offsetHum"]),1)
+						try:	h = int(float(h) + float(sensors[sensor][devId]["offsetHum"]))
 						except: pass
-						dataI[sensor][devId]["hum"]=h
+						dataI[sensor][devId]["hum"] = h
 						if devId in badSensors: del badSensors[devId]
 					time.sleep(0.1)
 				else:

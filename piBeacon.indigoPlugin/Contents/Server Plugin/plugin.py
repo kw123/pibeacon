@@ -12928,8 +12928,8 @@ class Plugin(indigo.PluginBase):
 					if u"hum" in data:
 						hum = max(0.,min(data[u"hum"],100.))
 						x, UI, decimalPlaces  = self.convHum(hum)
-						newStatus = self.setStatusCol( dev, u"Humidity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
-						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"Humidity", u"{:d}%", whichKeysToDisplay, decimalPlaces)
+						newStatus = self.setStatusCol( dev, u"Humidity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = 0 )
+						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"Humidity", u"{:d}%", whichKeysToDisplay, 0)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 
@@ -12943,7 +12943,7 @@ class Plugin(indigo.PluginBase):
 					if u"AmbientTemperature" in data:
 						temp = data[u"AmbientTemperature"]
 						x, UI, decimalPlaces, useFormat  = self.convTemp(temp)
-						newStatus = self.setStatusCol( dev, u"AmbientTemperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
+						newStatus = self.setStatusCol( dev, u"AmbientTemperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces )
 						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"AmbientTemperature", useFormat, whichKeysToDisplay, decimalPlaces)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
@@ -13726,7 +13726,7 @@ class Plugin(indigo.PluginBase):
 	def setStatusCol(self,dev, key, value, valueUI, whichKeysToDisplay, image, oldStatus, decimalPlaces=1, force=False):
 		try:
 			newStatus = oldStatus
-			if whichKeysToDisplay !=u"":
+			if whichKeysToDisplay != u"":
 				whichKeysToDisplayList = whichKeysToDisplay.split(u"/")
 				whichKeysToDisplaylength = len(whichKeysToDisplayList)
 				currentDisplay = oldStatus.split(u"/")
@@ -13763,8 +13763,12 @@ class Plugin(indigo.PluginBase):
 									decimalPlaces =u""
 									##indigo.server.log(dev.name+u"  setStatusCol key:"+key+u"  value:"+unicode(value) +u"  x:"+unicode(x)+u"  decimalPlaces:"+unicode(decimalPlaces))
 								#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+u"  "+key+u"  "+unicode(value)+u"   "+unicode(x)+u"  "+valueUI)
-								if decimalPlaces !=u"":
+								if dev.id == 1513601426:
+										self.indiLOG.log(30,u"dev: {} x:{} ui:{}".format(dev.name, int(x),newStatus))
+								if decimalPlaces != u"":
 									self.addToStatesUpdateDict(dev.id,u"sensorValue", round(x,decimalPlaces), decimalPlaces=decimalPlaces, uiValue=newStatus,force=force)
+								elif decimalPlaces != 0:
+									self.addToStatesUpdateDict(dev.id,u"sensorValue", int(x), decimalPlaces=0, uiValue=newStatus,force=force)
 								else:
 									self.addToStatesUpdateDict(dev.id,u"sensorValue", x, uiValue=newStatus,force=force)
 							self.addToStatesUpdateDict(dev.id,u"status", newStatus,force=force)
@@ -14016,7 +14020,7 @@ class Plugin(indigo.PluginBase):
 				valueList = [(0,0),(0,0)]
 
 
-			if type(value) == float and useFormat.find(u"{:d}") ==-1:	valueList.append([int(time.time()),round(value,decimalPlaces)])
+			if type(value) == float and useFormat.find(u"{:d}") == -1:	valueList.append([int(time.time()),round(value,decimalPlaces)])
 			else:														valueList.append([int(time.time()),int(value)])
 
 			jj 		= len(updateList)
@@ -15018,7 +15022,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def convHum(self, hum):
 		try:
-			return int(float(hum)), u"{:0f}%".format(float(hum)) ,0
+			return round(float(hum),1), u"{:.0f}%".format(float(hum)) ,0
 		except:
 			return -99, u"",0
 

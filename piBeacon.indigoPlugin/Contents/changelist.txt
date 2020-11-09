@@ -1,3 +1,9 @@
+Added features / changes in v7.129.468 @ 2020-11-08
+===================================================
+0. fixed format for humidity UI values was {:0f} should be {:.0f}
+
+
+
 Added features / changes in v7.129.467 @ 2020-11-07
 ===================================================
 0. added Bluetooth Temp / humdity sensor: Xiaomi MiJia  round humidity sensor. The round one not sqaure!
@@ -29,7 +35,7 @@ Added features / changes in v7.128.464 @ 2020-11-03
 
 Added features / changes in v7.128.463 @ 2020-11-01
 ===================================================
-0. fixed accpet new beacons signal
+0. fixed accept new beacons signal
 1. added new beacons and sensors:
    Radius RAD beacons
    

@@ -5280,7 +5280,7 @@ save ===
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
-			<Label>=== Xiaomi MiJia Bluetooth temp(-10C...60C) and humidity sensor. The round one not sqaure!
+			<Label>=== Xiaomi MiJia Bluetooth temp(-9C...60C) and humidity sensor (LYWSDCGQ/01ZM). The round one not sqaure!
 check eg: https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0
 You can find the MAC number using the plugin tool detect new beacons ===
 </Label>
@@ -5354,6 +5354,9 @@ You can find the MAC number using the plugin tool detect new beacons ===
 				<Option value="10"  > 10</Option>
 			</List>
 			</Field>
+
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
@@ -10317,8 +10320,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"    defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum"  type="textfield"    defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0"> 
 			<Label>use local display to show values:</Label> 
@@ -10327,7 +10330,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<Option value="0"  >No</Option>
 			</List>
 			</Field>
-			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
+			<Field id="displayText"     type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
 			<Field id="statusColorLabel" type="label" >

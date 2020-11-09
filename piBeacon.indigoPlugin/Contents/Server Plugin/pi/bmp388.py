@@ -448,7 +448,7 @@ U.echoLastAlive(G.program)
 
 
 
-lastValues0			= {"temp":0,"hum":0}
+lastValues0			= {"temp":0,"press":0}
 lastValues			= {}
 lastValues2			= {}
 lastData			= {}

@@ -1083,14 +1083,14 @@ def getValues(devId):
 
 				temp  +=  float(sensors[sensor][devId]["offsetTemp"]) 
 				press +=  float(sensors[sensor][devId]["offsetPress"]) 
-				hum	  +=  float(sensors[sensor][devId]["offsetHum"])  
+				hum	  +=  float(sensors[sensor][devId]["offsetHum"]) + 0.5 
 				gas	  +=  float(sensors[sensor][devId]["offsetGas"])
 			 
 			badSensor = 0
 			if time.time() - startTime > 30 :  # wait at least 25secs and heat ok
 				data = {"temp":			round(temp,1), 
 						"press":		round(press,1), 
-						"hum":			round(hum,1),
+						"hum":			int(hum),
 						"GasResistance":gas, 
 						"GasBaseline":	gasBaseLine[devId], 
 						"SensorStatus":	SensorStatus,

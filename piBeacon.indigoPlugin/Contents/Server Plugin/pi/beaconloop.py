@@ -1212,24 +1212,25 @@ def doBLEMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, UUID, M
 		if testString == testStringTH: 
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
 			if val > 32767: val -= 65536
-			temp = tralingAv(sensor, mac, "tempAve", val/10.)
-			val = int(dataString[4:6],16) + int(dataString[6:8],16)*256
+			temp = tralingAv(sensor, mac, "tempAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetTemp"]
+			val = int(dataString[4:6],16) + int(dataString[6:8],16)*256+0.5
 			if val > 32767: val -= 65536
-			hum = tralingAv(sensor, mac, "humAve", val/10.)
+			hum = int( tralingAv(sensor, mac, "humAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetHum"] +0.5 )
+
 			if doPrint:
 				U.logger.log(20, u"mac:{}, typ: TH  {}+{} =tem:{}; {}+{} =hum:{}  dataString:{} ".format(mac, dataString[0:2],dataString[2:4],  temp, dataString[4:6],dataString[6:8], hum, out))
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 		elif testString == testStringHUM: 
-			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
+			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256 +0.5
 			if val > 32767: val -= 65536
-			hum = tralingAv(sensor, mac,"humAve", val/10.)
+			hum = int( tralingAv(sensor, mac,"humAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetHum"] + 0.5)
 			if doPrint:
 				U.logger.log(20, u"mac:{}, typ: H  {}+{} =val:{};   dataString:{}".format(mac, dataString[0:2],dataString[2:4],  hum, out))
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 		elif   testString == testStringTEMP:
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
 			if val > 32767: val -= 65536
-			temp = tralingAv(sensor, mac, "tempAve", val/10.)
+			temp = tralingAv(sensor, mac, "tempAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetTemp"]
 			if doPrint:
 				U.logger.log(20, u"mac:{}, typ: T  {}+{} =hum:{};   dataString:{}".format(mac, dataString[0:2],dataString[2:4],  temp, out))
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
@@ -1389,7 +1390,7 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 
 				hum 		= float(hum1)
 				if hum > 127: hum -= 256
-				hum 		+= hum2/256.+ BLEsensorMACs[mac][sensor]["offsetHum"]
+				hum 		+= hum2/256.+ BLEsensorMACs[mac][sensor]["offsetHum"] +0.5
 
 				sendsAlive	= eventData & 0b00001000 != 0
 				lowVoltage	= eventData & 0b00000100 != 0
@@ -1690,7 +1691,7 @@ def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 			data[sensor][devId]["batteryLevel"] = batteryLevel
 
 			p = 30# start of hum probe
-			hum = signedIntfrom16( HexStr[p+2:p+4] + HexStr[p:p+2] )
+			hum = int( signedIntfrom16( HexStr[p+2:p+4] + HexStr[p:p+2] ) + BLEsensorMACs[mac][sensor]["offsetHum"] +0.5 )
 			data[sensor][devId]["hum"] = hum
 
 			if abs(BLEsensorMACs[mac][sensor]["temp"] - temp) >= 1: Trig +=  "temp/"
@@ -1904,7 +1905,7 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 			dataString 	= dataString.split("E1FFA1")[1][2:]
 			dataString 	= dataString.split(macplain)[0]
 			p = 2; 	temp = round(signedIntfrom16(dataString[p :p+4]) /255.,2)
-			p = 6;	hum  = round(signedIntfrom16(dataString[p :p+4]) /255.,1)
+			p = 6;	int  = int(signedIntfrom16(dataString[p :p+4]) /255. + 0.5)
 			if abs(BLEsensorMACs[mac][sensor]["temp"] - temp) >= BLEsensorMACs[mac][sensor]["updateIndigoDeltaTemp"]: 	Trig1 +=  "temp/"
 			if abs(BLEsensorMACs[mac][sensor]["hum"] - hum)   >= 2: 											Trig1 +=  "hum/"
 			batteryLevel 	= int(dataString[0:2],16)
@@ -2443,7 +2444,7 @@ offset	Allowed Values		description
 		if trigMinTime and	( trigTime or trigTemp or trigAccel or trigDeltaXZY ):
 			dd={   # the data dict to be send 
 				'data_format': 5,
-				'hum': 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac][sensor]["offsetHum"]),
+				'hum': 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac][sensor]["offsetHum"] + 0.5),
 				'temp': 				round(temp							 + BLEsensorMACs[mac][sensor]["offsetTemp"],2),
 				'press': 				round(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac][sensor]["offsetPress"],1),
 				'accelerationTotal': 	int(accelerationTotal),
