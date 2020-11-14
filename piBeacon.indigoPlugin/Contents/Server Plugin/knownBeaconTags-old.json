@@ -10,7 +10,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "0E0201060A09426561636F6E666967"
   },
   "iSensor":  {
@@ -24,23 +24,58 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "02010609086953656E736F7220XXFF"
   },
+  "BLEMiTempHumRound":  {
+    "text":"Xiaomi MiJia MI temp humidity round ",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":"",
+	"hexCode": "1A09094D4A5F48545F5631"
+   },
   "iBSxx":  {
     "text":"INGISCS iBS01 .. 04",
     "Maj":"",
     "Min":"",
-    "battCmd": "msg:pos=10,norm=320,len=2,reverse=1", 
+    "battCmd": "msg", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 2, 
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "0201061XFFXX008XBC"
   },  
+  "aprilBeacon":  {
+    "text":"April Beacon",
+    "Maj":"",
+    "Min":"",
+    "battCmd": {
+      "bits": 127, 
+      "shift": 0,
+      "offset": 0,
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":"abeacon_ == 61 62 65 61 63 6f 6e 5f",
+    "hexCode": "0E0D0961626561636F6E5F"
+  }, 
   "Jaalee":  {
     "text":"Jaalee",
     "Maj":"",
@@ -52,23 +87,9 @@
     "posDelta": 10, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
   }, 
-  "Minew_E8":  {
-    "text":"Minew_E8 and S1 xyz-Accel, disab all but accel. in beaconSET+ app",
-    "Maj":"",
-    "Min":"",
-    "battCmd": "msg:pos=14,norm=100", 
-    "beepCmd": "off", 
-    "dBm": "-61", 
-    "pos": 0, 
-    "posDelta": 10, 
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
-    "sequence":0,
-    "msg": [],
-    "hexCode":"1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########"
- },
   "Minew_F4S":  {
     "text":"Minew FS4 with beep and battery",
     "Maj":"",
@@ -80,78 +101,64 @@
     "posDelta": 10, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
-    "hexCode": "1B0201060303E1FF0E16E1FFA10B64RMAC########00000409463453"
+    "comment":"not really a minew beacon, can be beeped need to find comamnd for battery and beep",
+    "hexCode": "1B0201060303E1FF0E16E1FFA1XXXXRMAC########XXXXXXXX463453"
 },
-  "Minew_01_Battery_TH":  {
-    "text":"Minew_07 and S1 w Battery & Humidity or Ext Temp Probe",
+  "Minew_Acc":  {
+    "text":"Minew (eg E8, S1) xyz-Accel, disab all but accel. in beaconSET+ app",
     "Maj":"",
     "Min":"",
-    "battCmd": "msg:pos=14,norm=100", 
+    "battCmd": "msg", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
+    "hexCode":"1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########"
+ },
+  "Minew_TH":  {
+    "text":"Minew (eg S1) Humidity or Ext Temp Probe",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 10, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":"",
     "hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
 },
-  "Minew_03_Battery_XYZ":  {
-    "text":"Minew_07 w Battery & xyz acceleration",
+  "Minew_Light":  {
+    "text":"Minew Light info",
     "Maj":"",
     "Min":"",
-    "battCmd": "msg:pos=14,norm=100", 
+    "battCmd": "msg", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
-    "hexCode": "180201060303E1FFXX16E1FFA103XXXXXXXXXXRMAC########"
-},
-  "Minew_05_Battery_Light":  {
-    "text":"Minew_07 w Battery & Light info",
-    "Maj":"",
-    "Min":"",
-    "battCmd": "msg:pos=14,norm=100", 
-    "beepCmd": "off", 
-    "dBm": "-61", 
-    "pos": 0, 
-    "posDelta": 10, 
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
-    "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
 },
-  "Minew_07":  {
-    "text":"Minew_07 plain",
+  "Minew_LightOnOff":  {
+    "text":"Minew Light on-off",
     "Maj":"",
     "Min":"",
-    "battCmd": "", 
+    "battCmd": "msg", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 0, 
     "posDelta": 10, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
-    "hexCode": "180201060303E1FFXX16E1FFA107RMAC########"
-},
-  "Minew_08_Battery":  {
-    "text":"Minew_08 w Battery info",
-    "Maj":"",
-    "Min":"",
-    "battCmd": "msg:pos=14,norm=100", 
-    "beepCmd": "off", 
-    "dBm": "-61", 
-    "pos": 0, 
-    "posDelta": 10, 
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
-    "sequence":0,
-    "msg": [],
-    "hexCode": "180201060303E1FFXX16E1FFA108XXRMAC########"
+    "comment":" simple light on/off sensor, no config possible",
+    "hexCode": "150201060303E1FF0D16E1FFA102XXXXRMAC########"
 },
   "Minibeacon":  {
     "text":"Minibeacon",
@@ -164,9 +171,23 @@
     "posDelta": 10, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F"
 },
+  "pebbleBee":  {
+    "text":"Pebble bee card",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off",
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":" id = 43415244=CARD and - = data ends here",
+    "hexCode": "06050943415244-"
+  }, 
   "BlackCard":  {
     "text":"BlackCard",
     "Maj":"",
@@ -178,7 +199,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1X020104030225FAXXFF0E05A00033E2"
   }, 
   "BlueCharm_BC011":  {
@@ -199,7 +220,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
   }, 
   "BlueCharm_BC0631":  {
@@ -220,7 +241,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061"
   }, 
   "Cube":  {
@@ -242,7 +263,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "0F020106030300F007094355424500"
   }, 
   "Feasy_BP103_Triangle":  {
@@ -256,7 +277,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
   }, 
   "Feasy_BP109_USB":  {
@@ -270,7 +291,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],           
+    "comment":"",           
     "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
   }, 
   "Feasy_BP104_AAA":  {
@@ -284,7 +305,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],              
+    "comment":"",              
     "hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034"
   }, 
   "Innway":  {
@@ -301,13 +322,34 @@
       ], 
       "random": "public"
     }, 
-    "dBm": "-59", 
+    "dBm": "-61", 
     "pos": 0, 
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
-    "hexCode": "13020106030301E00B09496E6E7761"
+    "comment":" mfg - 49 6E 6E 77 61 79 20   54 61 67    = Innway Tag // 49 6E 6E 77 61 79 20   43 61 72 64 = Innway Card //49 6E 6E 77 61 79 20   43 68 69 70 = Innway Chip",
+    "hexCode": "1X020106030301E00X09496E6E776179"
+  }, 
+  "Safedome":  {
+    "text":"Safedome",
+    "Maj":"",
+    "Min":"",
+    "battCmd": {
+      "bits": 127, 
+      "shift": 0,
+      "offset": 0,
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": "off",
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":" mfg - 0A 09 09 73 61 66 65 64 6F 6D 65  safedome  73 61 66 65 64 6F 6D 65, other: 08 02 01 05 04 FF 4D 46 01",
+    "hexCode": "0A090973616665646F6D65"
   }, 
   "Nonda_Aiko":  {
     "text":"Nonda Aiko ",
@@ -335,7 +377,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
   }, 
   "Nonda_iHere":  {
@@ -364,7 +406,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
   }, 
   "NutFinder":  {
@@ -393,7 +435,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1C0201060303031805FFD20000xxx9160A18MAC#########"
   }, 
   "OralB":  {
@@ -407,7 +449,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "120201050EFFDC000201"
   }, 
   "Orbit":  {
@@ -421,7 +463,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "0F020106030300F007094F52"
   }, 
   "Radius":  {
@@ -435,10 +477,24 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6"
   }, 
-  "rPI":  {
+   "RBE":  {
+    "text":"Radius RBE Card/Chip",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg:pos=20,norm=100", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "comment":"",
+    "hexCode": "1D17FF18010154RMAC########000000000000XXXXXXXXXXXX0409524245"
+  },
+ "rPI":  {
     "text":"RPI",
     "Maj":"",
     "Min":"",
@@ -449,7 +505,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
   }, 
 
@@ -479,7 +535,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "14020106070304180F18C0FF020A0005"
   }, 
   "SocialRetail":  {
@@ -493,7 +549,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "E2C56DB5DFFB48D2B060D0F5A71096E0"
   }, 
   "SpotyPal":  {
@@ -527,7 +583,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "53706F747950616C5465727261636F"
   }, 
   "SwiftFinder":  {
@@ -541,7 +597,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "0F02010603030A18070953"
   }, 
   "Tovala":  {
@@ -555,7 +611,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "546F76616C61"
   }, 
   "Vozni_iTrack":  {
@@ -588,7 +644,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1X02010X030202180AFF4B4D02RMAC########-" 
   }, 
   "Rinex_Njoii_iTrack":  {
@@ -620,11 +676,11 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
   "ruuviTag":  {
-    "text":"RuuviTag sensor",
+    "text":"Ruuvi-beacon (not the sensor part)",
     "Maj":"",
     "Min":"",
     "battCmd": "msg", 
@@ -634,7 +690,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "FF990405"
   }, 
   "XY_1":  {
@@ -648,7 +704,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "07775DD0111B11E491910800200C9A66"
   }, 
   "XY_2":  {
@@ -662,7 +718,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "08885DD0111B11E491910800200C9A66"
   }, 
   "XY_3":  {
@@ -676,7 +732,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "04000000005F78000900580509585934"
   }, 
   "XY_4":  {
@@ -690,7 +746,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859"
   }, 
   "myblueT":  {
@@ -704,7 +760,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
-    "msg": [],
+    "comment":"",
     "hexCode": "myBlueT"
   }, 
   "iBeacon":  {
@@ -718,7 +774,7 @@
     "posDelta": 2, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": -1, 
     "sequence":2,
-    "msg": [],
+    "comment":"",
     "hexCode": "1AFF4C000"
   }, 
   "other":  {
@@ -732,7 +788,7 @@
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": -1, 
     "sequence":3,
-    "msg": [],
+    "comment":"",
     "hexCode": "X"
   }
 }

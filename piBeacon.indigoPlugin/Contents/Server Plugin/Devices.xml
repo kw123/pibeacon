@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <Devices>
-	<Device type="sensor" id="rPI">
-	<Name>rPI</Name>
+	<Device type="sensor" id="rPI">     	<Name>rPI</Name>
 	<UiDisplayStateId>displayStatus</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -1503,8 +1502,7 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 
 
 
-	<Device type="sensor" id="rPI-Sensor">
-	<Name>rPI-no-beacon</Name>
+	<Device type="sensor" id="rPI-Sensor">     	<Name>rPI-no-beacon</Name>
 	<UiDisplayStateId>displayStatus</UiDisplayStateId>
 
 		<ConfigUI>
@@ -3192,8 +3190,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 
 
 
-	<Device type="sensor" id="BLEconnect">
-	<Name>BLE-connect</Name>
+	<Device type="sensor" id="BLEconnect">     	<Name>BLE-connect</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -3872,8 +3869,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
  
-	<Device type="sensor" id="BLEmyBLUEt">
-	<Name>BLE-myBLUE temp Sensor</Name>
+	<Device type="sensor" id="BLEmyBLUEt">     	<Name>BLE-myBLUE temp Sensor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -4032,8 +4028,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 	</Device>
 
 
-	<Device type="sensor" id="BLERuuviTag">
-	<Name>BLE-RuuviTag-Sensor T-H-P-Acc</Name>
+	<Device type="sensor" id="BLERuuviTag">     	<Name>BLE-RuuviTag-Sensor T-H-P-Acc</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -4465,8 +4460,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 	</Device>
 
 
-	<Device type="sensor" id="BLEiBS01T">
-	<Name>BLE-iBS01T Temp Hum onOff</Name>
+	<Device type="sensor" id="BLEiBS01T">     	<Name>BLE-iBS01T Temp Hum onOff</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -4746,8 +4740,7 @@ save ===
 	</Device>
 
 
-	<Device type="sensor" id="BLEiBS03T">
-	<Name>BLE-iBS03T Sensor Temp</Name>
+	<Device type="sensor" id="BLEiBS03T">     	<Name>BLE-iBS03T Sensor Temp</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -4986,8 +4979,7 @@ save===</Label>
 
 
 
-	<Device type="sensor" id="BLEiBS03TP">
-	<Name>BLE-iBS03TP Temp Prob-Temp </Name>
+	<Device type="sensor" id="BLEiBS03TP">     	<Name>BLE-iBS03TP Temp Prob-Temp </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -5262,8 +5254,7 @@ save ===
 
 
 
-	<Device type="sensor" id="BLEMiTempHumRound">
-	<Name>BLE-Xiaomi MiJia Temp/Hum round  sensor</Name>
+	<Device type="sensor" id="BLEMiTempHumRound">     	<Name>BLE-Xiaomi MiJia Temp/Hum round  sensor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -5355,8 +5346,6 @@ You can find the MAC number using the plugin tool detect new beacons ===
 			</List>
 			</Field>
 
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
@@ -5364,6 +5353,8 @@ You can find the MAC number using the plugin tool detect new beacons ===
 				<Option value="Humidity"     >Humidity</Option>
 			</List>
 			</Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
 			<Label>Min secs between indigo updates - not more often than:</Label>
@@ -5549,8 +5540,7 @@ You can find the MAC number using the plugin tool detect new beacons ===
 		</States>
 	</Device>
 
-	<Device type="sensor" id="BLEminewS1TH">
-	<Name>BLE-minew Temp/Hum Also Temp probe eg S1</Name>
+	<Device type="sensor" id="BLEminewS1TH">     	<Name>BLE-minew Temp/Hum, also Temp probe eg S1</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -5635,6 +5625,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<Option value="Humidity"     >Humidity</Option>
 			</List>
 			</Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="offsetHum"  type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
@@ -5820,8 +5812,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 		</States>
 	</Device>
 
-	<Device type="sensor" id="BLEminewE8">
-	<Name>BLE-minew XYZ Acceleration  eg E8/S1 </Name>
+	<Device type="sensor" id="BLEminewAcc">     	<Name>BLE-minew XYZ Acceleration  eg E8 ..  </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -6077,8 +6068,370 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 	</Device>
 
 
-	<Device type="sensor" id="BLEaprilAccel">
-	<Name>BLE-april(ABN03) XYZ Acceleration </Name>
+
+	<Device type="sensor" id="BLEminewS1Plus">     	<Name>BLE-minew XYZ Accel and Temp and Hum S1 Plus</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
+			<Label>=== To setup BLE Minew  accel + temp + hum  (eg:S1 Plus) beacon w  BeaconSet+ app on phone
+set all slots to off, besides acceleration (#6)
+set adv freq to 5000 mSec; set trigger on, advertise for 5 secs
+set Always advertise on; Adv interval  1000 mSec; save, exit app
+You can find the MAC number either on back of beacon or use the plugin tool detect new beacons ===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"               type="label" >
+			<Label>Select RPI(s) that should monitor this sensor, 
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="accelerationTotal" >Acc  total = sqrt(xx+yy+zz)</Option>
+				<Option value="accelerationX"     >Acc X </Option>
+				<Option value="accelerationY"     >Acc Y </Option>
+				<Option value="accelerationZ"     >Acc Z </Option>
+				<Option value="Temperature"       >Temperature</Option>
+				<Option value="Humidity"          >Humidity</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="offsetHum"  type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
+			<Label>Min secs between indigo updates - not more often than:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+				<Option value="15"  > 15  secs</Option>
+			</List>
+			</Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden="no" tooltip="if > Min Secs .."> 
+				<Label>Send sensor values to Indigo at least every (when new data arrives):</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaAccelVector"    type="menu"     defaultValue="50" hidden="no"> 
+				<Label>Send sensor values if total Acceleration values changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50 (default)</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+			<Field id="updateIndigoDeltaMaxXYZ"    type="menu"     defaultValue="50" hidden="no"> 
+				<Label>Send sensor values if Acceleration max(dx,dy,dz) changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+			<State id="accelerationVectorDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
+				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
+			</State>
+			<State id="accelerationX">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationX</TriggerLabel>
+				<ControlPageLabel>accelerationX</ControlPageLabel>
+			</State>
+			<State id="accelerationY">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationY</TriggerLabel>
+				<ControlPageLabel>accelerationY</ControlPageLabel>
+			</State>
+			<State id="accelerationZ">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationZ</TriggerLabel>
+				<ControlPageLabel>accelerationZ</ControlPageLabel>
+			</State>
+			<State id="accelerationTotal">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationTotal</TriggerLabel>
+				<ControlPageLabel>accelerationTotal</ControlPageLabel>
+			</State>
+			<State id="accelerationXYZMaxDelta">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
+				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+
+
+			<State id="Temperature">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+
+			<State id="Humidity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Humidity</TriggerLabel>
+				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxToday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinToday</TriggerLabel>
+				<ControlPageLabel>HumidityMinToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="batteryVoltage">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+	<Device type="sensor" id="BLEaprilAccel">     	<Name>BLE-april(ABN03) XYZ Acceleration </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -6095,10 +6448,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
-			<Label>=== To setup BLE Minew  XYZ Accceleration beacon w  BeaconSet+ app on phone
-set all slots to off, besides acceleration (#6)
-set adv freq to 5000 mSec; set trigger on, advertise for 5 secs
-set Always advertise on; Adv interval  1000 mSec; save, exit app
+			<Label>=== To setup BLE April XYZ Accceleration beacon w  app on phone
 You can find the MAC number either on back of beacon or use the plugin tool detect new beacons ===
 </Label>
 			</Field>
@@ -6377,8 +6727,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 	</Device>
 
 
-	<Device type="sensor" id="BLEaprilTHL">
-	<Name>BLE-april(ABN01) Temp/Hum/Light</Name>
+	<Device type="sensor" id="BLEaprilTHL">     	<Name>BLE-april(ABN01) Temp/Hum/Light</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -6461,6 +6810,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<Option value="illuminance"  >illuminance</Option>
 			</List>
 			</Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter"> 
@@ -6668,8 +7019,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 	</Device>
 
 
-	<Device type="sensor" id="BLEiBS03RG">
-	<Name>BLE-iBS03RG XYZ Acceleration</Name>
+	<Device type="sensor" id="BLEiBS03RG">     	<Name>BLE-iBS03RG XYZ Acceleration</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -6924,8 +7274,7 @@ set trigger and sensitivity parameters ===
 	</Device>
 
 
-	<Device type="sensor" id="BLEiBS01RG">
-	<Name>BLE-iBS01RG XYZ Acceleration</Name>
+	<Device type="sensor" id="BLEiBS01RG">     	<Name>BLE-iBS01RG XYZ Acceleration</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -7174,8 +7523,7 @@ set trigger and sensitivity parameters ===
 
 
 
-	<Device type="sensor" id="BLEiBS01">
-	<Name>BLE-iBS0x-Sensor on/off: (01,02,03,02-IR,02-PIR)</Name>
+	<Device type="sensor" id="BLEiBS01">     	<Name>BLE-iBS0x-Sensor on/off: (01,02,03,02-IR,02-PIR)</Name>
 
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="false" hidden="true"> </Field>
@@ -7325,8 +7673,7 @@ These sensor types are an onOff sensor. They have either a button, a mag sensor,
 
 
 
-	<Device type="sensor" id="BLESatech">
-	<Name>BLE-Satech XYZ Acceleration / temp / humidity</Name>
+	<Device type="sensor" id="BLESatech">     	<Name>BLE-Satech XYZ Acceleration / temp / humidity</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -7706,8 +8053,7 @@ set trigger and sensitivity parameters ===
 
 
 
-	<Device type="sensor" id="BLEiSensor-onOff">
-	<Name>BLE-iSensor - on off </Name>
+	<Device type="sensor" id="BLEiSensor-onOff">     	<Name>BLE-iSensor - on off </Name>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -7859,8 +8205,7 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 
 
 
-	<Device type="sensor" id="BLEiSensor-on">
-	<Name>BLE-iSensor - on</Name>
+	<Device type="sensor" id="BLEiSensor-on">     	<Name>BLE-iSensor - on</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
@@ -8010,8 +8355,7 @@ The device will only send a message "ON" when button is pressed: state "onOff" w
 
 
 
-	<Device type="sensor" id="BLEiSensor-RemoteKeyFob">
-	<Name>BLE-iSensor - remote 4 buttons </Name>
+	<Device type="sensor" id="BLEiSensor-RemoteKeyFob">     	<Name>BLE-iSensor - remote 4 buttons </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
@@ -8172,8 +8516,7 @@ The device will only send messages when a button is pressed. The state "currentO
 
 
 
-	<Device type="sensor" id="BLEiSensor-TempHum">
-	<Name>BLE-iSensor - Temperature and Humidity</Name>
+	<Device type="sensor" id="BLEiSensor-TempHum">     	<Name>BLE-iSensor - Temperature and Humidity</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
@@ -8429,8 +8772,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 
 
-	<Device type="sensor" id="Wire18B20">
-	<Name>INPUT-Temp-Wire18B20</Name>
+	<Device type="sensor" id="Wire18B20">     	<Name>INPUT-Temp-Wire18B20</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
@@ -8551,8 +8893,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 	</Device>
 
 
-	<Device type="sensor" id="DHT">
-	<Name>INPUT-Temp+Hum-DHT</Name>
+	<Device type="sensor" id="DHT">     	<Name>INPUT-Temp+Hum-DHT</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -8744,8 +9085,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 	</Device>
     
     
-	<Device type="sensor" id="i2cTMP102">
-	<Name>INPUT-Temp-i2cTMP102</Name>
+	<Device type="sensor" id="i2cTMP102">     	<Name>INPUT-Temp-i2cTMP102</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -8884,8 +9224,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 	</States>
 	</Device>
     
-	<Device type="sensor" id="i2cMCP9808">
-	<Name>INPUT-Temp-i2cMCP9808</Name>
+	<Device type="sensor" id="i2cMCP9808">     	<Name>INPUT-Temp-i2cMCP9808</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -9025,8 +9364,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 	</Device>
 
 
-	<Device type="sensor" id="i2cLM35A">
-	<Name>INPUT-Temp-i2cLM75A-35</Name>
+	<Device type="sensor" id="i2cLM35A">     	<Name>INPUT-Temp-i2cLM75A-35</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -9173,8 +9511,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 	</Device>
 
 
-	<Device type="sensor" id="i2cT5403">
-	<Name>INPUT-Temp+Press-i2cT5403</Name>
+	<Device type="sensor" id="i2cT5403">     	<Name>INPUT-Temp+Press-i2cT5403</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -9355,8 +9692,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 		</States>
 	</Device>
 
-	<Device type="sensor" id="i2cMS5803">
-	<Name>INPUT-Temp+Press-i2cMS5803</Name>
+	<Device type="sensor" id="i2cMS5803">     	<Name>INPUT-Temp+Press-i2cMS5803</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -9539,8 +9875,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 		</States>
 	</Device>
    
-	<Device type="sensor" id="i2cBMPxx">
-	<Name>INPUT-Temp+Press-i2cBMPxx</Name>
+	<Device type="sensor" id="i2cBMPxx">     	<Name>INPUT-Temp+Press-i2cBMPxx</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -9723,8 +10058,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 	</Device>
 
     
-	<Device type="sensor" id="i2cBMP280">
-	<Name>INPUT-Temp+Press-i2cBMP280</Name>
+	<Device type="sensor" id="i2cBMP280">     	<Name>INPUT-Temp+Press-i2cBMP280</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -9907,8 +10241,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 		</States>
 	</Device>
     
-	<Device type="sensor" id="bmp388">
-	<Name>INPUT-Temp+Press-i2c-BMP388</Name>
+	<Device type="sensor" id="bmp388">     	<Name>INPUT-Temp+Press-i2c-BMP388</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -10084,8 +10417,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 		</States>
 	</Device>
   
-	<Device type="sensor" id="i2cSHT21">
-	<Name>INPUT-Temp+Hum-i2cSHT21</Name>
+	<Device type="sensor" id="i2cSHT21">     	<Name>INPUT-Temp+Hum-i2cSHT21</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -10269,8 +10601,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 	</Device>
    
-	<Device type="sensor" id="i2cAM2320">
-	<Name>INPUT-Temp+Hum-i2cAM2320</Name>
+	<Device type="sensor" id="i2cAM2320">     	<Name>INPUT-Temp+Hum-i2cAM2320</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -10456,8 +10787,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
   
   
-	<Device type="sensor" id="i2cBMExx">
-	<Name>INPUT-Temp+Press+Hum-i2cBME280</Name>
+	<Device type="sensor" id="i2cBMExx">     	<Name>INPUT-Temp+Press+Hum-i2cBME280</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -10692,8 +11022,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 
    
-	<Device type="sensor" id="bme680">
-	<Name>INPUT-Temp+Press+Hum-AirQ-i2cBME680</Name>
+	<Device type="sensor" id="bme680">     	<Name>INPUT-Temp+Press+Hum-AirQ-i2cBME680</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -11124,8 +11453,7 @@ After some days of running in clean air, proposed setup is:
 	</Device>
 
   
-	<Device type="sensor" id="si7021">
-	<Name>INPUT-Temp+Hum-si7021</Name>
+	<Device type="sensor" id="si7021">     	<Name>INPUT-Temp+Hum-si7021</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -11308,8 +11636,7 @@ After some days of running in clean air, proposed setup is:
 	</Device>
 
   
-	<Device type="sensor" id="tmp006">
-	<Name>INPUT-Temp remote infrared-tmp006</Name>
+	<Device type="sensor" id="tmp006">     	<Name>INPUT-Temp remote infrared-tmp006</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -11493,8 +11820,7 @@ After some days of running in clean air, proposed setup is:
 	</Device>
 
   
-	<Device type="sensor" id="tmp007">
-	<Name>INPUT-Temp remote infrared-tmp007</Name>
+	<Device type="sensor" id="tmp007">     	<Name>INPUT-Temp remote infrared-tmp007</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -11679,8 +12005,7 @@ After some days of running in clean air, proposed setup is:
 	</Device>
 
  
-	<Device type="sensor" id="max31865">
-	<Name>INPUT-Temp max31865 -Platinum resistor</Name>
+	<Device type="sensor" id="max31865">     	<Name>INPUT-Temp max31865 -Platinum resistor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -11864,8 +12189,7 @@ After some days of running in clean air, proposed setup is:
 
 
    
-	<Device type="sensor" id="pmairquality">
-	<Name>INPUT-air quality particulate</Name>
+	<Device type="sensor" id="pmairquality">     	<Name>INPUT-air quality particulate</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12075,8 +12399,7 @@ After some days of running in clean air, proposed setup is:
 
 
    
-	<Device type="sensor" id="sgp30">
-	<Name>INPUT-CO2-VOC-i2csgp30</Name>
+	<Device type="sensor" id="sgp30">     	<Name>INPUT-CO2-VOC-i2csgp30</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12258,8 +12581,7 @@ After some days of running in clean air, proposed setup is:
    
 
    
-	<Device type="sensor" id="mhzCO2">
-	<Name>INPUT-CO2-MH-Zxx</Name>
+	<Device type="sensor" id="mhzCO2">     	<Name>INPUT-CO2-MH-Zxx</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12485,8 +12807,7 @@ It measures CO2 and temp using infrared light absorption
 
 
    
-	<Device type="sensor" id="ccs811">
-	<Name>INPUT-CO2-VOC-i2ccs811</Name>
+	<Device type="sensor" id="ccs811">     	<Name>INPUT-CO2-VOC-i2ccs811</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12743,8 +13064,7 @@ It measures CO2 VOC
 
 
 
-	<Device type="sensor" id="i2cTCS34725">
-	<Name>INPUT-Lux+RGB-i2cTCS34725</Name>
+	<Device type="sensor" id="i2cTCS34725">     	<Name>INPUT-Lux+RGB-i2cTCS34725</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -12906,8 +13226,7 @@ It measures CO2 VOC
 
 	</Device>
 
-	<Device type="sensor" id="MAX44009">
-	<Name>INPUT-Lux-MAX44009</Name>
+	<Device type="sensor" id="MAX44009">     	<Name>INPUT-Lux-MAX44009</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13016,8 +13335,7 @@ It measures CO2 VOC
 
 	</Device>
 
-	<Device type="sensor" id="as726x">
-	<Name>INPUT-RGB-Y-O-V-i2c-as726x</Name>
+	<Device type="sensor" id="as726x">     	<Name>INPUT-RGB-Y-O-V-i2c-as726x</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"        type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13271,8 +13589,7 @@ It measures CO2 VOC
 
 
 <!--
-	<Device type="custom" id="i2cIS1145">
-	<Name>INPUT-IR-Visible-UV-1145</Name>
+	<Device type="custom" id="i2cIS1145">     	<Name>INPUT-IR-Visible-UV-1145</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13351,8 +13668,7 @@ It measures CO2 VOC
 	</Device>
 -->
 
-	<Device type="sensor" id="i2cOPT3001">
-	<Name>INPUT-visible Light -OPT3001 </Name>
+	<Device type="sensor" id="i2cOPT3001">     	<Name>INPUT-visible Light -OPT3001 </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13486,8 +13802,7 @@ It measures CO2 VOC
 	</Device>
 
 
-	<Device type="sensor" id="i2cVEML7700">
-	<Name>INPUT-visible Light -veml7700 </Name>
+	<Device type="sensor" id="i2cVEML7700">     	<Name>INPUT-visible Light -veml7700 </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13644,8 +13959,7 @@ It measures CO2 VOC
 	</Device>
 
 
-	<Device type="sensor" id="i2cVEML6030">
-	<Name>INPUT-Ambient-White-i2cVEML6030</Name>
+	<Device type="sensor" id="i2cVEML6030">     	<Name>INPUT-Ambient-White-i2cVEML6030</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13802,8 +14116,7 @@ It measures CO2 VOC
 	</Device>
 
 
-	<Device type="sensor" id="i2cVEML6040">
-	<Name>INPUT-RGB-White-i2cVEML6040</Name>
+	<Device type="sensor" id="i2cVEML6040">     	<Name>INPUT-RGB-White-i2cVEML6040</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -13951,8 +14264,7 @@ It measures CO2 VOC
 	</Device>
 
 
-	<Device type="sensor" id="i2cVEML6070">
-	<Name>INPUT-UV-i2cVEML6070</Name>
+	<Device type="sensor" id="i2cVEML6070">     	<Name>INPUT-UV-i2cVEML6070</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -14077,8 +14389,7 @@ It measures CO2 VOC
 
 	</Device>
 
-	<Device type="sensor" id="i2cVEML6075">
-	<Name>INPUT-UVA-UVB-i2cVEML6075</Name>
+	<Device type="sensor" id="i2cVEML6075">     	<Name>INPUT-UVA-UVB-i2cVEML6075</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -14202,8 +14513,7 @@ It measures CO2 VOC
 
 
 
-	<Device type="sensor" id="i2cTSL2561">
-	<Name>INPUT-Ambient-IR-i2cTSL2561</Name>
+	<Device type="sensor" id="i2cTSL2561">     	<Name>INPUT-Ambient-IR-i2cTSL2561</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -14387,8 +14697,7 @@ It measures CO2 VOC
 	</Device>
 
 
-	<Device type="sensor" id="mlx90614">
-	<Name>INPUT-Temp-Ambient+Infrared-mlx90614</Name>
+	<Device type="sensor" id="mlx90614">     	<Name>INPUT-Temp-Ambient+Infrared-mlx90614</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -14606,8 +14915,7 @@ It measures CO2 VOC
 	</Device>
 
    
-	<Device type="sensor" id="amg88xx">
-	<Name>INPUT-amg88xx-infraredCamera</Name>
+	<Device type="sensor" id="amg88xx">     	<Name>INPUT-amg88xx-infraredCamera</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -14927,8 +15235,7 @@ you can setup
    
 
    
-	<Device type="sensor" id="lidar360">
-	<Name>INPUT-Lidar360</Name>
+	<Device type="sensor" id="lidar360">     	<Name>INPUT-Lidar360</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -15481,8 +15788,7 @@ you can setup
 	</Device>
    
   
-	<Device type="sensor" id="mlx90640">
-	<Name>INPUT-mlx90640-infraredCamera</Name>
+	<Device type="sensor" id="mlx90640">     	<Name>INPUT-mlx90640-infraredCamera</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -15761,8 +16067,7 @@ you can setup
    
 
 
-	<Device type="custom" id="l3g4200">
-	<Name>INPUT-XYZ-gyroscope l3g4000/l3gd20h </Name>
+	<Device type="custom" id="l3g4200">     	<Name>INPUT-XYZ-gyroscope l3g4000/l3gd20h </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -15940,8 +16245,7 @@ you can setup
 	</Device>
 
 
-	<Device type="custom" id="mag3110">
-	<Name>INPUT-3 degree sensor  mag3110 </Name>
+	<Device type="custom" id="mag3110">     	<Name>INPUT-3 degree sensor  mag3110 </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -16166,8 +16470,7 @@ you can setup
 
 
 
-	<Device type="custom" id="hmc5883L">
-	<Name>INPUT-3 degree sensor  hmc5883L </Name>
+	<Device type="custom" id="hmc5883L">     	<Name>INPUT-3 degree sensor  hmc5883L </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -16354,8 +16657,7 @@ you can setup
 
 
 
-	<Device type="custom" id="bno055">
-	<Name>INPUT-9 degree sensor  BNO055 </Name>
+	<Device type="custom" id="bno055">     	<Name>INPUT-9 degree sensor  BNO055 </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -16583,8 +16885,7 @@ you can setup
 
 
 
-	<Device type="custom" id="mpu9255">
-	<Name>INPUT-9 degree sensor  mpu9255 </Name>
+	<Device type="custom" id="mpu9255">     	<Name>INPUT-9 degree sensor  mpu9255 </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -16811,8 +17112,7 @@ you can setup
 
    
 
-	<Device type="custom" id="mpu6050">
-	<Name>INPUT-6 degree sensor  mpu6050 </Name>
+	<Device type="custom" id="mpu6050">     	<Name>INPUT-6 degree sensor  mpu6050 </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -17005,8 +17305,7 @@ you can setup
 
    
 
-	<Device type="custom" id="lsm303">
-	<Name>INPUT-6 degree sensor  lsm303</Name>
+	<Device type="custom" id="lsm303">     	<Name>INPUT-6 degree sensor  lsm303</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -17210,8 +17509,7 @@ you can setup
 
 	</Device>
 
-	<Device type="sensor" id="i2cADC121">
-	<Name>INPUT-ADC-i2cADC121</Name>
+	<Device type="sensor" id="i2cADC121">     	<Name>INPUT-ADC-i2cADC121</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -17344,8 +17642,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 	</Device>
 
 
-	<Device type="sensor" id="ina219">
-	<Name>INPUT-ADC-current and voltage ina219</Name>
+	<Device type="sensor" id="ina219">     	<Name>INPUT-ADC-current and voltage ina219</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -17518,8 +17815,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 	</Device>
 
 
-	<Device type="sensor" id="ina3221">
-	<Name>INPUT-ADC-current and voltage 3 channels ina3221</Name>
+	<Device type="sensor" id="ina3221">     	<Name>INPUT-ADC-current and voltage 3 channels ina3221</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -17726,8 +18022,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 	</Device>
 
-	<Device type="sensor" id="spiMCP3008">
-	<Name>INPUT-ADC-8x10bit-spiMCP3008</Name>
+	<Device type="sensor" id="spiMCP3008">     	<Name>INPUT-ADC-8x10bit-spiMCP3008</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -17900,8 +18195,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 	</Device>
 
 
-	<Device type="sensor" id="spiMCP3008-1">
-	<Name>INPUT-ADC-8x10bit-one-channel-spiMCP3008</Name>
+	<Device type="sensor" id="spiMCP3008-1">     	<Name>INPUT-ADC-8x10bit-one-channel-spiMCP3008</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -18040,8 +18334,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 
 
-	<Device type="sensor" id="ADS1x15">
-	<Name>INPUT-ADC-4x12/16bit-one-channel-i2c-ADS1x15</Name>
+	<Device type="sensor" id="ADS1x15">     	<Name>INPUT-ADC-4x12/16bit-one-channel-i2c-ADS1x15</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -18323,8 +18616,7 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 
 
-	<Device type="sensor" id="PCF8591">
-	<Name>INPUT-ADC-4x8bit-one-channel-i2c-PCF8591</Name>
+	<Device type="sensor" id="PCF8591">     	<Name>INPUT-ADC-4x8bit-one-channel-i2c-PCF8591</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -18610,8 +18902,7 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 
 
-	<Device type="sensor" id="rainSensorRG11">
-	<Name>INPUT-Rain Sensor RG11</Name>
+	<Device type="sensor" id="rainSensorRG11">     	<Name>INPUT-Rain Sensor RG11</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -18992,8 +19283,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 
 
 
-	<Device type="sensor" id="moistureSensor">
-	<Name>INPUT-moisture sensor</Name>
+	<Device type="sensor" id="moistureSensor">     	<Name>INPUT-moisture sensor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -19206,8 +19496,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 
 
 
-	<Device type="sensor" id="INPUTcoincidence">
-	<Name>INPUT-coincidence- for PULSE sensors</Name>
+	<Device type="sensor" id="INPUTcoincidence">     	<Name>INPUT-coincidence- for PULSE sensors</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -19413,8 +19702,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 	</Device>
 
 
-	<Device type="sensor" id="INPUTpulse">
-	<Name>INPUT-pulse- GPIO sensor</Name>
+	<Device type="sensor" id="INPUTpulse">     	<Name>INPUT-pulse- GPIO sensor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -19732,8 +20020,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="INPUTtouch-1">
-	<Name>INPUT-TOUCH- 1 touchPad active</Name>
+	<Device type="sensor" id="INPUTtouch-1">     	<Name>INPUT-TOUCH- 1 touchPad active</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -19893,8 +20180,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="INPUTtouch-4">
-	<Name>INPUT-TOUCH- 4 touchPads active</Name>
+	<Device type="sensor" id="INPUTtouch-4">     	<Name>INPUT-TOUCH- 4 touchPads active</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -20066,8 +20352,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="INPUTtouch-12">
-	<Name>INPUT-TOUCH- 12 touchPads active</Name>
+	<Device type="sensor" id="INPUTtouch-12">     	<Name>INPUT-TOUCH- 12 touchPads active</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -20279,8 +20564,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="INPUTtouch-16">
-	<Name>INPUT-TOUCH- 16 touchPads active</Name>
+	<Device type="sensor" id="INPUTtouch-16">     	<Name>INPUT-TOUCH- 16 touchPads active</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -20510,8 +20794,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 	
-	<Device type="sensor" id="INPUTgpio-1">
-	<Name>INPUT-GPIO-max-1-PINs</Name>
+	<Device type="sensor" id="INPUTgpio-1">     	<Name>INPUT-GPIO-max-1-PINs</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 	<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -20657,8 +20940,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="INPUTgpio-4">
-	<Name>INPUT-GPIO-max-4-PINs</Name>
+	<Device type="sensor" id="INPUTgpio-4">     	<Name>INPUT-GPIO-max-4-PINs</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -20800,8 +21082,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="INPUTgpio-8">
-	<Name>INPUT-GPIO-max-8-PINs</Name>
+	<Device type="sensor" id="INPUTgpio-8">     	<Name>INPUT-GPIO-max-8-PINs</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -20977,8 +21258,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="INPUTgpio-26">
-	<Name>INPUT-GPIO-max-26-PINs</Name>
+	<Device type="sensor" id="INPUTgpio-26">     	<Name>INPUT-GPIO-max-26-PINs</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -21228,8 +21508,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="INPUTRotarySwitchAbsolute">
-	<Name>INPUT-Rotatary-switch-Absolute</Name>
+	<Device type="sensor" id="INPUTRotarySwitchAbsolute">     	<Name>INPUT-Rotatary-switch-Absolute</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -21348,8 +21627,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="INPUTRotarySwitchIncremental">
-	<Name>INPUT-Rotatary-switch-Incremental</Name>
+	<Device type="sensor" id="INPUTRotarySwitchIncremental">     	<Name>INPUT-Rotatary-switch-Incremental</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -21486,8 +21764,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="sensor" id="ultrasoundDistance">
-	<Name>INPUT-distance-ultrasound </Name>
+	<Device type="sensor" id="ultrasoundDistance">     	<Name>INPUT-distance-ultrasound </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 
@@ -21676,8 +21953,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="vl503l0xDistance">
-	<Name>INPUT-distance-TOF-vl503l0x</Name>
+	<Device type="sensor" id="vl503l0xDistance">     	<Name>INPUT-distance-TOF-vl503l0x</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
@@ -21878,8 +22154,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="vcnl4010Distance">
-	<Name>INPUT-distance-TOF+Lux-vcnl4010</Name>
+	<Device type="sensor" id="vcnl4010Distance">     	<Name>INPUT-distance-TOF+Lux-vcnl4010</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
@@ -22121,8 +22396,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 	</Device>
 
-	<Device type="sensor" id="vl6180xDistance">
-	<Name>INPUT-distance-TOF+Lux-vl6180</Name>
+	<Device type="sensor" id="vl6180xDistance">     	<Name>INPUT-distance-TOF+Lux-vl6180</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
@@ -22348,8 +22622,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="apds9960">
-	<Name>INPUT proximity-apds9960</Name>
+	<Device type="sensor" id="apds9960">     	<Name>INPUT proximity-apds9960</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -22619,8 +22892,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="sensor" id="as3935">
-	<Name>INPUT lightning -as3935</Name>
+	<Device type="sensor" id="as3935">     	<Name>INPUT lightning -as3935</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"        type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -22775,8 +23047,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="custom" id="mysensors">
-	<Name>INPUT-my sensors.py program</Name>
+	<Device type="custom" id="mysensors">     	<Name>INPUT-my sensors.py program</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -22906,8 +23177,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="custom" id="myprogram">
-	<Name>INPUT-myprogram.py</Name>
+	<Device type="custom" id="myprogram">     	<Name>INPUT-myprogram.py</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
@@ -23026,8 +23296,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="custom" id="launchpgm">
-	<Name>SPECIAL-launchpgm.py</Name>
+	<Device type="custom" id="launchpgm">     	<Name>SPECIAL-launchpgm.py</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
@@ -23124,8 +23393,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="relay" id="OUTPUTi2cRelay">
-	<Name>OUTPUT-Relay-i2c</Name>
+	<Device type="relay" id="OUTPUTi2cRelay">     	<Name>OUTPUT-Relay-i2c</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isOutputDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -23219,8 +23487,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 		</States>
 	</Device>
 
-	<Device type="relay" id="OUTPUTgpio-1-ONoff">
-	<Name>OUTPUT-GPIO-1-ON/off</Name>
+	<Device type="relay" id="OUTPUTgpio-1-ONoff">     	<Name>OUTPUT-GPIO-1-ON/off</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isOutputDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -23301,8 +23568,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="dimmer" id="OUTPUTgpio-1">
-	<Name>OUTPUT-GPIO-1-Dimmer</Name>
+	<Device type="dimmer" id="OUTPUTgpio-1">     	<Name>OUTPUT-GPIO-1-Dimmer</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isOutputDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -23388,8 +23654,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="custom" id="setTEA5767">
-	<Name>OUTPUT-FM-radio-setTEA5767</Name>
+	<Device type="custom" id="setTEA5767">     	<Name>OUTPUT-FM-radio-setTEA5767</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -23714,8 +23979,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="custom" id="setMCP4725">
-	<Name>OUTPUT-DAC-1x12bit-i2cMCP4725</Name>
+	<Device type="custom" id="setMCP4725">     	<Name>OUTPUT-DAC-1x12bit-i2cMCP4725</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -23757,8 +24021,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 	</Device>
 
 
-	<Device type="custom" id="setPCF8591dac">
-	<Name>OUTPUT-Analog-1x8bit-i2cPCF8591</Name>
+	<Device type="custom" id="setPCF8591dac">     	<Name>OUTPUT-Analog-1x8bit-i2cPCF8591</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -23814,8 +24077,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="custom" id="OUTPUTxWindows">
-	<Name>OUTPUT-xWindows</Name>
+	<Device type="custom" id="OUTPUTxWindows">     	<Name>OUTPUT-xWindows</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -23855,8 +24117,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 
 
-	<Device type="custom" id="display">
-	<Name>OUTPUT-Display</Name>
+	<Device type="custom" id="display">     	<Name>OUTPUT-Display</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -24098,8 +24359,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 
 
-	<Device type="sprinkler" id="sprinkler">
-	<Name>OUTPUT-Sprinkler</Name>
+	<Device type="sprinkler" id="sprinkler">     	<Name>OUTPUT-Sprinkler</Name>
 
 		<ConfigUI>            
 			<Field id="isSprinklerDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -24245,8 +24505,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 
 
-	<Device type="custom" id="neopixel">
-	<Name>OUTPUT-Neopixel</Name>
+	<Device type="custom" id="neopixel">     	<Name>OUTPUT-Neopixel</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -24423,8 +24682,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 	</Device>
 
 
-	<Device type="dimmer" id="neopixel-dimmer">
-	<Name>OUTPUT-Neopixel-Dimmer</Name>
+	<Device type="dimmer" id="neopixel-dimmer">     	<Name>OUTPUT-Neopixel-Dimmer</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -24487,8 +24745,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 		</ConfigUI>
 	</Device>
 
-	<Device type="custom" id="neopixelClock">
-	<Name>OUTPUT-Neopixel-Clock</Name>
+	<Device type="custom" id="neopixelClock">     	<Name>OUTPUT-Neopixel-Clock</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -24945,8 +25202,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 
 
-	<Device type="custom" id="sundial">
-	<Name>OUTPUT-sundial-Clock</Name>
+	<Device type="custom" id="sundial">     	<Name>OUTPUT-sundial-Clock</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -24984,8 +25240,7 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 	</Device>
 
 
-	<Device type="custom" id="setStepperMotor">
-	<Name>OUTPUT-stepper-motor</Name>
+	<Device type="custom" id="setStepperMotor">     	<Name>OUTPUT-stepper-motor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>            
@@ -25058,8 +25313,7 @@ You can use up to 3 GPIO input pins to control the range of the motor
 
 
 
-	<Device type="custom" id="car">
-	<Name>Car</Name>
+	<Device type="custom" id="car">     	<Name>Car</Name>
 		<UiDisplayStateId>displayStatus</UiDisplayStateId>
 
 		<ConfigUI>
@@ -25167,6 +25421,7 @@ States:
 	</Device>
 
 
+	<Device type="sensor" id="BLEminewE8">      <Name>BLE-minew  ...   E8 .. deprecated, use use new definition device</Name>	</Device>
 	<Device type="sensor" id="i2cADS1x15">		<Name>INPUT-ADC-1x16bit-i2cADS1x15 - four channel deprecated, use new definition device</Name>	</Device>
 	<Device type="sensor" id="i2cADS1x15-1">	<Name>INPUT-ADC-1x16bit-i2cADS1x15 - one channel deprecated</Name>	</Device>
 

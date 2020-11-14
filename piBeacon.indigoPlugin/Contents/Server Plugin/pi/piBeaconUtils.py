@@ -1873,7 +1873,7 @@ hci1:	Type: Primary  Bus: UART
 	return False
 
 #################################
-def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False):
+def sendURL(data={},sendAlive="",text="", wait=True, verbose=False, squeeze=True, escape=False):
 
 	try:
 			netwM = getNetwork()
@@ -1886,7 +1886,7 @@ def sendURL(data={},sendAlive="",text="", wait=True, squeeze=True, escape=False)
 				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name=u'execSend', target=execSend, args=())}
 				G.sendThread["thread"].start()
 
-			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait, "squeeze":squeeze, "escape":escape})
+			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait,  "verbose":verbose, "squeeze":squeeze, "escape":escape})
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
@@ -1900,7 +1900,10 @@ def execSend():
 			while not G.sendThread["queue"].empty():
 				try:
 					all 		= G.sendThread["queue"].get()
-					#logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, unicode(all)[0:100] )
+					
+					if "verbose" in all and all["verbose"]: verbose = True
+					else:									verbose = False
+					if verbose:	logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, unicode(all)[0:100]) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
 					text 		= all["text"]
@@ -1983,7 +1986,7 @@ def execSend():
 									if  len(dataC) > G.compressRPItoPlugin: 
 										data0 = "++compressed=="+zlib.compress(dataC)
 										compressed = True
-										logger.log(10, "cBY:{:<20}  socket send compressed data lengths: before:{}; after:{} ".format(G.program,len(dataC),len(data0)))
+										if verbose: logger.log(20, "cBY:{:<20}  socket send compressed data lengths: before:{}; after:{} ".format(G.program,len(dataC),len(data0)))
 									else: 
 										data0 = dataC
 										compressed = False
@@ -2000,9 +2003,10 @@ def execSend():
 										response = soc.recv(512).decode('utf-8')
 										if (response).find("ok") >-1:
 											MSGwasSend = True
+											if verbose: logger.log(20, "cBY:{:<20}  socket send  finished ".format(G.program))
 											break
 										else:# try again
-											logger.log(10, "cBY:{:<20} Sending  again: send bytes: {} ret MSG>>{}<<".format(G.program,len(data0),response))
+											if verbose: logger.log(20, "cBY:{:<20} Sending  again: send bytes: {} ret MSG>>{}<<".format(G.program,len(data0),response))
 											try:	soc.close()
 											except: pass
 											time.sleep(3.)

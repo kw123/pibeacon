@@ -232,7 +232,7 @@ _GlobalConst_allowedCommands = [
 _BLEsensorTypes =[u"BLERuuviTag", 
 				u"BLEiBS01", u"BLEiBS01T", u"BLEiBS01RG", u"BLEiBS03G", u"BLEiBS03T", u"BLEiBS03TP", u"BLEiBS03RG", 
 				u"BLEaprilAccel", u"BLEaprilTHL", 
-				u"BLEminewE8", u"BLEminewS1TH", u"BLEminewS1TT", 
+				u"BLEminewE8", u"BLEminewS1TH", u"BLEminewS1TT", u"BLEminewS1Plus", "BLEminewAcc",
 				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum", 
 				u"BLESatech",
 				u"BLEMiTempHumRound"]
@@ -1137,6 +1137,11 @@ class Plugin(indigo.PluginBase):
 			if self.acceptNewiBeacons in [u"0", u"1"]: 		self.acceptNewiBeacons  = -999
 			self.pluginPrefs[u"acceptNewiBeacons"] 			= self.acceptNewiBeacons
 
+			self.acceptNewBeaconMAC							= u""
+			self.pluginPrefs[u"acceptNewBeaconMAC"] 		= self.acceptNewBeaconMAC
+
+
+
 			self.acceptNewTagiBeacons						= self.pluginPrefs.get(u"acceptNewTagiBeacons",u"off")
 			self.pluginPrefs[u"acceptNewTagiBeacons"] 		= self.acceptNewTagiBeacons
 
@@ -1671,7 +1676,7 @@ class Plugin(indigo.PluginBase):
 	def updateAllCARbeacons(self, indigoCarIds, force=False):
 		try:
 				beacon = u""
-				if self.decideMyLog(u"CAR"): self.indiLOG.log(10,u"updateAllCARbeacons	 CARS:" + unicode(self.CARS))
+				if self.decideMyLog(u"CAR"): self.indiLOG.log(10,u"updateAllCARbeacons  CARS:" + unicode(self.CARS))
 				for beacon in self.CARS[u"beacon"]:
 					if indigoCarIds	 !=	 self.CARS[u"beacon"][beacon][u"carId"] and not force: continue
 					beaconDevId = self.beacons[beacon][u"indigoId"]
@@ -3425,6 +3430,7 @@ class Plugin(indigo.PluginBase):
 				u"i2cMS5803",u"i2cBMPxx",u"tmp006",u"tmp007",u"i2cSHT21""i2cAM2320",u"i2cBMExx",u"bme680",u"bmp388",u"si7021",
 				u"BLERuuviTag",
 				u"BLEminewE8",
+				u"BLEminewAcc",
 				u"BLEminewS1TH",
 				u"BLEminewS1TT",
 				u"BLEaprilAccel",u"BLEaprilTHL", 
@@ -3875,6 +3881,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def validateDeviceConfigUi_Cars(self, valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev):
 		try:
+			self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1,u"devId":dev.id, u"updateItems":[u"setupCARS"]})
 			self.setupCARS(dev.id,valuesDict,mode="validate")
 			return True, errorDict, valuesDict
 		except Exception, e:
@@ -5560,7 +5567,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def filteri2cChannelS(self, valuesDict=None, filter=u"", typeId=u"", devId="x"):
 			piN = valuesDict[u"piServerNumber"]
-			valuesDict[u"i2cActive"] ="test"
+			valuesDict[u"i2cActive"] = u"test"
 			return valuesDict
 
 
@@ -8302,17 +8309,37 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def execAcceptNewBeaconsCALLBACKmenu(self, valuesDict=None, typeId=u"", devId=0):
 
+
+		xx = valuesDict[u"acceptNewBeaconMAC"].upper()
+		if self.acceptNewBeaconMAC != xx: 
+			if len(xx) > 0:
+				if self.isValidMAC(xx):
+					self.acceptNewBeaconMAC = xx
+					self.pluginPrefs[u"acceptNewBeaconMAC"] = xx
+					valuesDict[u"MSG"] = u"mac={}".format(xx)
+					self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+					self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+				else:
+					xx = ""
+					valuesDict[u"MSG"] = u"bad mac number, rerenter"
+			self.acceptNewBeaconMAC = xx
+			self.pluginPrefs[u"acceptNewBeaconMAC"] = xx
+			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			return valuesDict
+
 		if self.acceptNewTagiBeacons != valuesDict[u"acceptNewTagiBeacons"]: 
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 		self.acceptNewTagiBeacons = valuesDict[u"acceptNewTagiBeacons"]
-		self.pluginPrefs[u"acceptNewTagiBeacons"] = valuesDict[u"acceptNewTagiBeacons"]	
+
+		self.pluginPrefs[u"acceptNewTagiBeacons"] = valuesDict[u"acceptNewTagiBeacons"]
 
 		if unicode(self.acceptNewiBeacons) != valuesDict[u"acceptNewiBeacons"]: 
-				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		try: 	xxx = int(valuesDict[u"acceptNewiBeacons"])
-		except: xxx = 999 # do not accept new beacons
-		self.acceptNewiBeacons = xxx
-		self.pluginPrefs[u"acceptNewiBeacons"] = xxx
+			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
+			try: 	xxx = int(valuesDict[u"acceptNewiBeacons"])
+			except: xxx = 999 # do not accept new beacons
+			self.acceptNewiBeacons = xxx
+			self.pluginPrefs[u"acceptNewiBeacons"] = xxx
 
 		valuesDict[u"MSG"] = u"RSSI >{}; Tag={}".format(valuesDict[u"acceptNewiBeacons"], valuesDict[u"acceptNewTagiBeacons"])
 		return valuesDict
@@ -11943,7 +11970,9 @@ class Plugin(indigo.PluginBase):
 			out = u"\n\nBLEAnalysis received for beacons with signal (rssi) > {}; from RPI#:{}".format(report[u"rssiCutoff"], piU)
 			#self.indiLOG.log(20,u"BLEAnalysis :{}".format(report))
 			for existing in [u"new_Beacons",u"existing_Beacons",u"rejected_Beacons"]:
-				out+= u"\n================================ {} ============================================".format(existing)
+				out+= u"\n===================== {:16s} ==================== ".format(existing)
+				if existing in [u"new_Beacons",u"existing_Beacons"]:
+					out +=   u"                                               char pos         01  23 45 67 89 A1 23 45 67 89 B1 01 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89 E1 23 45 67 89 F1"
 				rr = report[existing]
 				for mac in rr:
 					name = u""
@@ -11955,21 +11984,45 @@ class Plugin(indigo.PluginBase):
 						out += u"\n===MAC# "+mac+u"  "+name+u" == {}\n".format(rr[mac])
 						
 					else:
-						out += u"\n===MAC# "+mac+u"  "+name+u" == ; raw data:\n"
-						for item in [u"n_of_MSG_Types", "raw_data",u"mfg_info",u"iBeacon",u"MSG_in_10Secs",u"typeOfBeacon",u"max_rssi",u"max_TX",u"pos_of_reverse_MAC_in_UUID",u"pos_of_MAC_in_UUID",u"possible_knownTag_options"]:
+						out += u"\n===MAC# "+mac+u"  "+name+u"\n"
+						for item in [ "raw_data",u"n_of_MSG_Types",u"MSG_in_10Secs",u"max_rssi",u"max_TX"]: #,u"mfg_info",u"iBeacon",u"pos_of_reverse_MAC_in_UUID",u"pos_of_MAC_in_UUID"]: #,u"typeOfBeacon",u"possible_knownTag_options"]:
 							if item not in rr[mac]:
 								out += u"missing: "+item+u"\n"
 								continue
+
 							if item == u"raw_data":
-								out += u"raw data:\n"
-								for ii in rr[mac][item]:
-									out+= u"- {}\n".format(ii)
+								out +=   u"tag -------------  mfg, TLM:Temp,BatV,ad-Cnt,SecsSinceStart, (r)mac-pos  : raw data: preamble->   [-- mac # ------] dat ll   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 .. RSSI\n"
+								for ii in range(len(rr[mac][u"raw_data"])):
+									rawData  = rr[mac][u"raw_data"][ii][:20] + "  " + rr[mac][u"raw_data"][ii][20:38] +  "    " + rr[mac][u"raw_data"][ii][38:42] + " " +rr[mac][u"raw_data"][ii][42:-2]
+									rawData += (" ").ljust( max(3, 35*3 -1 - len(rawData[38:-3])) ) 
+									xxx =  u""
+									rMacpos = rr[mac]["pos_of_reverse_MAC_in_UUID"][ii]/2 
+									if rMacpos > 0: xxx += "r-MacPos: {},".format(rMacpos)
+
+									macPos =  rr[mac]["pos_of_MAC_in_UUID"][ii]/2
+									if macPos > 0: xxx += "MacPos: {},".format(macPos)
+
+									if rr[mac]["mfg_info"][ii] != "": xxx += "mfg: {},".format(rr[mac]["mfg_info"][ii])
+
+									if type(rr[mac]["TLM"][ii]) == type({}) and u"batteryVoltage" in rr[mac]["TLM"][ii]:
+										xxx +=  u"mVt:{},".format(rr[mac]["TLM"][ii][u"batteryVoltage"])
+										xxx += u"Tmp:{},".format(rr[mac]["TLM"][ii][u"temp"])
+										xxx += u"secs:{},".format(rr[mac]["TLM"][ii][u"timeSince"])
+										xxx += u"Cnt:{},".format(rr[mac]["TLM"][ii][u"advCount"])
+									xxx = xxx.strip(",")
+									rssi = rr[mac][u"raw_data"][ii][-2:]
+									rssiInt = int(rssi,16)
+									if rssiInt > 127: rssiInt -= 256
+									out+= u"{:20s} {:>51s} : {}{}={}\n".format(rr[mac]["typeOfBeacon"][ii], xxx , rawData, rssi, rssiInt)
+
+
 							elif item == u"possible_knownTag_options":
 								out += u"possible knownTag options:\n"
 								for ii in rr[mac][item]:
 									out+= u"-- {}\n".format(ii)
+
 							else:
-								out += u"{:28s}: {}\n".format(item, rr[mac][item])
+								out += u"{:18s}: {}\n".format(item, rr[mac][item])
 			self.myLog(text= out)
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -13425,6 +13478,7 @@ class Plugin(indigo.PluginBase):
 							stChanged = True
 				else: pass
 
+				#{"BLEiSensor-RemoteKeyFob":{"431446557":{"sensorType":"RemoteKeyFob","SOS":true,"rssi":-76,"home":false,"away":false,"counter":1,"disarm":false,"sendsAlive":false}}}
 			if u"SOS" 		in data and "SOS" 			in dev.states:	
 				if data[u"SOS"]:
 					self.addToStatesUpdateDict(dev.id, u"previousOnEvent", 	dev.states[u"currentOnEvent"]) 
@@ -13763,8 +13817,8 @@ class Plugin(indigo.PluginBase):
 									decimalPlaces =u""
 									##indigo.server.log(dev.name+u"  setStatusCol key:"+key+u"  value:"+unicode(value) +u"  x:"+unicode(x)+u"  decimalPlaces:"+unicode(decimalPlaces))
 								#if dev.name =="s-3-rainSensorRG11": indigo.server.log(dev.name+u"  "+key+u"  "+unicode(value)+u"   "+unicode(x)+u"  "+valueUI)
-								if dev.id == 1513601426:
-										self.indiLOG.log(30,u"dev: {} x:{} ui:{}".format(dev.name, int(x),newStatus))
+								#if dev.id == 1513601426:
+								#		self.indiLOG.log(30,u"dev: {} x:{} ui:{}".format(dev.name, int(x),newStatus))
 								if decimalPlaces != u"":
 									self.addToStatesUpdateDict(dev.id,u"sensorValue", round(x,decimalPlaces), decimalPlaces=decimalPlaces, uiValue=newStatus,force=force)
 								elif decimalPlaces != 0:
@@ -15513,14 +15567,22 @@ class Plugin(indigo.PluginBase):
 									newStates = copy.copy(dev.states)
 									break
 
+			if self.selectBeaconsLogTimer !={}: 
+					for sMAC in self.selectBeaconsLogTimer:
+						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+							self.indiLOG.log(20,u"sel.beacon logging: pass 1          :{}; getBeaconDeviceAndCheck".format(mac)  )
 
-			if rssi < self.acceptNewiBeacons and name == u"" and self.beacons[mac][u"ignore"] >= 0: 
+			if rssi < self.acceptNewiBeacons and name == u"" and self.beacons[mac][u"ignore"] > 0: 
 				if self.selectBeaconsLogTimer !={}: 
 					for sMAC in self.selectBeaconsLogTimer:
 						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(20,u"sel.beacon logging: newMSG rej rssi :{}; name= empty".format(mac)  )
+							self.indiLOG.log(20,u"sel.beacon logging: newMSG rej rssi :{}; name= empty and ignore > 0".format(mac)  )
 				return setALLrPiVUpdate, dev, props, newStates, False
 
+			if self.selectBeaconsLogTimer !={}: 
+					for sMAC in self.selectBeaconsLogTimer:
+						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+							self.indiLOG.log(20,u"sel.beacon logging: pass 2          :{}; getBeaconDeviceAndCheck".format(mac)  )
 
 			if name == u"":
 				self.indiLOG.log(20,u"creating new beacon,  received from pi #  {}/{}:   beacon-{}  typeOfBeacon: {}".format(fromPiU, piMACSend, mac, typeOfBeacon) )
@@ -15615,20 +15677,20 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def checkBeaconDictIfok(self, mac, dateString, rssi, fromPiU, msg, isTagged):
+	def checkBeaconDictIfok(self, mac, dateString, rssi, fromPiU, msg, isTagged, acceptMAC):
 		try:
 			if (mac in self.beacons and self.beacons[mac][u"ignore"] >0 ):
 				if self.decideMyLog(u"BeaconData"): self.indiLOG.log(10,u" rejected beacon because its in reject family: pi: {}; beacon: {}".format(fromPiU, msg) )
 				return False  # ignore certain type of beacons, but only for new ones, old ones must be excluded individually
 
 			if mac not in self.beacons:
-				if  rssi >  self.acceptNewiBeacons or isTagged:
+				if  rssi >  self.acceptNewiBeacons or isTagged or acceptMAC:
 					self.beacons[mac] = copy.deepcopy(_GlobalConst_emptyBeacon)
 					self.beacons[mac][u"created"] = dateString
 					self.beacons[mac][u"lastUp"]  = time.time()
 				else:
 					self.indiLOG.log(20,u" rejected beacon because do not accept new beacons is on or rssi:{}<{};  types{};{}; pi:{}; beaconMSG:{} ".format(rssi, self.acceptNewiBeacons, type(rssi), type(self.acceptNewiBeacons), fromPiU, msg))
-				return False 
+					return False 
 			else:
 				if self.beacons[mac][u"ignore"] == 0 and self.beacons[mac][u"indigoId"] == 0 and isTagged:
 					self.beacons[mac] = copy.deepcopy(_GlobalConst_emptyBeacon)
@@ -15636,10 +15698,12 @@ class Plugin(indigo.PluginBase):
 					self.beacons[mac][u"lastUp"]  = time.time()
 					self.beacons[mac][u"ignore"] = -1
 					self.indiLOG.log(20,u"new beacon from type ID (2)  rssi:{}<{};   pi:{}; typeID:{}; beaconMSG:{} ".format(rssi, self.acceptNewiBeacons, fromPiU, self.acceptNewTagiBeacons, msg))
-				if not self.beacons[mac][u"enabled"]: 					return False 
+				if not self.beacons[mac][u"enabled"]: return False 
 
-			if self.beacons[mac][u"ignore"] > 0: 						return False  
+			if self.beacons[mac][u"ignore"] > 0: 	return False  
+
 			return True
+
 		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -15686,6 +15750,10 @@ class Plugin(indigo.PluginBase):
 						continue
 					typeOfBeacon = msg[u"typeOfBeacon"]
 					isTagged = (self.acceptNewTagiBeacons == u"all" and typeOfBeacon in self.knownBeaconTags) or typeOfBeacon == self.acceptNewTagiBeacons
+					acceptMAC   = mac == self.acceptNewBeaconMAC
+					if acceptMAC:
+						self.acceptNewBeaconMAC = u""
+						self.updateNeeded += u" fixConfig "
 					try:	rssi = float(msg[u"rssi"])
 					except: rssi = -999.
 					txPower = msg[u"txPower"]
@@ -15709,11 +15777,21 @@ class Plugin(indigo.PluginBase):
 						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
 							self.indiLOG.log(20,u"sel.beacon logging: newMSG    -1  - :{}; pi#={:2s}; msg{}".format(mac, fromPiU, msg) )
 
-				if not self.checkBeaconDictIfok( mac, dateString, rssi, fromPiU, msg, isTagged): continue
+				if not self.checkBeaconDictIfok( mac, dateString, rssi, fromPiU, msg, isTagged, acceptMAC): continue
+
+				if self.selectBeaconsLogTimer !={}: 
+					for sMAC in self.selectBeaconsLogTimer:
+						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+							self.indiLOG.log(20,u"sel.beacon logging: newMSG    -1a - :{}; after checkBeaconDictIfok".format(mac))
 
 
 				setALLrPiVUpdate, dev, props, newStates, keepThisMessage = self.getBeaconDeviceAndCheck( mac, typeOfBeacon, rssi, txPower, fromPiU, piMACSend, dateString, rssiOffset)
 				if not keepThisMessage:  continue
+				if self.selectBeaconsLogTimer !={}: 
+					for sMAC in self.selectBeaconsLogTimer:
+						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
+							self.indiLOG.log(20,u"sel.beacon logging: newMSG    -1b - :{}; after getBeaconDeviceAndCheck".format(mac))
+
 
 				self.addToStatesUpdateDict(dev.id,u"updateReason", reason)
 
@@ -16263,6 +16341,7 @@ class Plugin(indigo.PluginBase):
 				else:					out[u"debugRPI"] = 0
 				out[u"restartBLEifNoConnect"]	  = self.restartBLEifNoConnect
 				out[u"acceptNewiBeacons"]		  = self.acceptNewiBeacons
+				out[u"acceptNewBeaconMAC"]		  = self.acceptNewBeaconMAC
 				out[u"acceptNewTagiBeacons"]	  = self.acceptNewTagiBeacons
 				out[u"rebootHour"]				  = -1
 				out[u"ipOfServer"]				  = self.myIpNumber
@@ -16991,16 +17070,23 @@ class Plugin(indigo.PluginBase):
 						addback.append(action)
 						continue
 
-					dev = indigo.devices[action[u"devId"]]
+					if u"devId" in action:
+							dev = indigo.devices[action[u"devId"]]
+					else: 	dev = u""
+
 					for updateItem in action[u"updateItems"]: 
 						if self.decideMyLog(u"Special"): self.indiLOG.log(20,u"delayedActionsThread updateItem:{} ".format(updateItem))
-						if updateItem[u"stateName"] in dev.states:
-							if u"uiValue" in updateItem:
-								dev.updateStateOnServer( updateItem[u"stateName"], updateItem[u"value"], uiValue=updateItem[u"uiValue"])
-							else:
-								dev.updateStateOnServer( updateItem[u"stateName"], updateItem[u"value"])
+						if u"stateName" in updateItem and dev != u"":
+							if updateItem[u"stateName"] in dev.states:
+								if u"uiValue" in updateItem:
+									dev.updateStateOnServer( updateItem[u"stateName"], updateItem[u"value"], uiValue=updateItem[u"uiValue"])
+								else:
+									dev.updateStateOnServer( updateItem[u"stateName"], updateItem[u"value"])
+						if updateItem == u"setupCARS":
+							self.setupCARS(dev.id, dev.pluginProps, mode="init")
 
-					if u"image" in action:
+
+					if u"image" in action and dev != u"":
 						if action[u"image"] == u"on":
 							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 						elif action[u"image"] == u"off":
@@ -18850,7 +18936,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 ####-------------------------------------------------------------------------####
 	def handle(self):
 		try:
-			data0 = u""
+			data0 = ""
 			dataS =[]
 			tStart=time.time()
 			len0 = 0
@@ -18875,15 +18961,16 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					buff = self.request.recv(4096)#  max observed is ~ 3000 bytes
 					if not buff or len(buff) == 0:#	 or len(buff) < 4096: 
 						break
-					data0 += buff
+					if data0 == "": data0  = buff
+					else:			 data0 += buff
 					len0  = len(data0)
 
 					### check if package is complete:
-					test = data0[:30].split(u"x-6-a")
+					test = data0[:30].split("x-6-a")
 					try: 
 						nBytes = int(test[0])
 						name   = test[2]
-						startOfData = len(str(nBytes)) + 2*len(u"x-6-a") + len(test[1])
+						startOfData = len(str(nBytes)) + 2*len("x-6-a") + len(test[1])
 						dataS = [test[0],test[1],data0[startOfData:]]
 					except Exception, e:
 						indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )

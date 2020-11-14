@@ -339,23 +339,31 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 			<Option value="-90"  >signal GT -90 dBm </Option>
 			<Option value="-999" >accept ALL</Option>
 		</List>
-   </Field>
-       <Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="off" tooltip="if the type of beacon tag is a match it will accpet a new beacon with that signature">
+		</Field>
+		<Field    id="acceptNewTagiBeacons"   type="menu" defaultValue="off" tooltip="if the type of beacon tag is a match it will accpet a new beacon with that signature">
 		<Label>Accept new iBeacons of type:</Label>
              <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
       </Field>
+
 	<Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>Use allow new beacons of Type "x" or 
 Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
 After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x"
 or your device folder might fill up quickly </Label>
-			</Field>
-			<Field id="execAcceptNewBeaconsCALLBACK" type="button">
+	</Field>
+	<Field    id="acceptNewBeaconMAC"   type="textfield" defaultValue="" tooltip="accepts only beacon with this MAC #">
+		<Label>Accept new Beacon with THIS MAC #:</Label>
+		</Field>
+
+	<Field id="acceptNewiBeaconsLabel3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>Use for accepting single beacon with know mac</Label>
+	</Field>
+	<Field id="execAcceptNewBeaconsCALLBACK" type="button">
 				<Label>After selections click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>execAcceptNewBeaconsCALLBACKmenu</CallbackMethod>
-			</Field>
-		</ConfigUI>
+	</Field>
+	</ConfigUI>
 	</MenuItem>
 
 	<MenuItem id="ignoreBeacons">
