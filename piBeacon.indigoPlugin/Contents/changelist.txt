@@ -1,3 +1,30 @@
+Added features / changes in v7.129.470 @ 2020-11-16
+===================================================
+0. fixed format for humidity UI values was {:0f} should be {:.0f}
+1. added optiuon to add new beacon mac # in menu, (accept new becons
+   if you know a beacons mac numebr and you like to add it put the mac number there 
+   and the system will allow that mac numebr to be added as a beacon
+2. updated BLE-Analysis - detect new beacon tool 
+   the print outin plugin.log is now done is a nice format 
+   this can be used to identify beacons and understand the message structure 
+3. for Minew TH + accelerator sensor (s1-Plus) added states amd options
+4. Autodetect battery level in BLE data and setup beacon accordingly for TLM and msg battery levels
+   set supportBatterylevel = true and set method prop
+5. Added nuki door lock and UDM-pro and Flower care /mate
+
+
+Added features / changes in v7.129.469 @ 2020-11-13
+===================================================
+0. fixed format for humidity UI values was {:0f} should be {:.0f}
+1. added optiuon to add new beacon mac # in menu, (accept new becons
+   if you know a beacons mac numebr and you like to add it put the mac number there 
+   and the system will allow that mac numebr to be added as a beacon
+2. updated BLE-Analysis - detect new beacon tool 
+   the print outin plugin.log is now done is a nice format 
+   this can be used to identify beacons and understand the message structure 
+3. for Minew TH + accelerator sensor (s1-Plus) added states amd options
+
+
 Added features / changes in v7.129.468 @ 2020-11-08
 ===================================================
 0. fixed format for humidity UI values was {:0f} should be {:.0f}
