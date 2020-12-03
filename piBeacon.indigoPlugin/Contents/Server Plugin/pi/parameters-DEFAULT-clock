@@ -1,0 +1,201 @@
+{
+  "BLEserial": "sequential", 
+  "GPIOpwm": "1", 
+  "acceptNewiBeacons": "0", 
+  "authentication": "digest", 
+  "bluetoothONoff": "on", 
+  "clockLightSensor": "1.0", 
+  "debugRPI": {
+    "debugRPIBEACON": 0, 
+    "debugRPIBLE": 0, 
+    "debugRPICALL": 0, 
+    "debugRPIOUTPUT": 0, 
+    "debugRPIPRIVATE": 0, 
+    "debugRPISENSOR": 0, 
+    "debugRPImystuff": 0
+  }, 
+  "deleteHistoryAfterSeconds": 86400, 
+  "deltaChangedSensor": "5", 
+  "distanceUnits": "1.0", 
+  "enableRebootCheck": "restartLoop", 
+  "enableiBeacons": "0", 
+  "expectedIPnumberOfRPI": "192.168.1.133", 
+  "ipOfServer": "192.168.1.10", 
+  "myPiNumber": "15", 
+  "networkType": "clock", 
+  "output": {
+    "neopixelClock": {
+      "695411811": [
+        {
+          "DMAchannel": "5", 
+          "GPIOdown": "19", 
+          "GPIOsetA": "20", 
+          "GPIOsetB": "21", 
+          "GPIOsetC": "16", 
+          "GPIOup": "26", 
+          "OrderOfMatrix": "lrrl", 
+          "PWMchannel": "0", 
+          "clockLightSet": "auto", 
+          "devType": "1x241", 
+          "devTypeLEDs": "241", 
+          "devTypeROWs": "1", 
+          "extraLED": "", 
+          "frequency": "800000", 
+          "intensity": "100", 
+          "marks": {
+            "DD": {
+              "RGB": [
+                50, 
+                0, 
+                0
+              ], 
+              "marks": [], 
+              "ringNo": [
+                3
+              ]
+            }, 
+            "HH": {
+              "RGB": [
+                55, 
+                55, 
+                0
+              ], 
+              "marks": [], 
+              "ringNo": [
+                3
+              ]
+            }, 
+            "MM": {
+              "RGB": [
+                55, 
+                55, 
+                0
+              ], 
+              "marks": [], 
+              "ringNo": [
+                1
+              ]
+            }, 
+            "SS": {
+              "RGB": [
+                55, 
+                55, 
+                0
+              ], 
+              "marks": [], 
+              "ringNo": [
+                2
+              ]
+            }
+          }, 
+          "rings": [
+            60, 
+            48, 
+            40, 
+            32, 
+            24, 
+            16, 
+            12, 
+            8, 
+            1
+          ], 
+          "signalPin": "18", 
+          "speed": "1", 
+          "speedOfChange": "", 
+          "ticks": {
+            "DD": {
+              "RGB": [
+                0, 
+                0, 
+                0
+              ], 
+              "blink": [
+                1, 
+                0
+              ], 
+              "npix": 0, 
+              "ringNo": []
+            }, 
+            "HH": {
+              "RGB": [
+                255, 
+                0, 
+                0
+              ], 
+              "blink": [
+                59, 
+                1
+              ], 
+              "npix": 1, 
+              "ringNo": [
+                8, 
+                6, 
+                4
+              ]
+            }, 
+            "MM": {
+              "RGB": [
+                0, 
+                0, 
+                120
+              ], 
+              "blink": [
+                1, 
+                0
+              ], 
+              "npix": -1, 
+              "ringNo": [
+                0
+              ]
+            }, 
+            "SS": {
+              "RGB": [
+                0, 
+                255, 
+                0
+              ], 
+              "blink": [
+                1, 
+                0
+              ], 
+              "npix": 1, 
+              "ringNo": [
+                0
+              ]
+            }
+          }, 
+          "timeZone": "1 /Europe/Berlin"
+        }
+      ]
+    }
+  }, 
+  "passwordOfServer": "xx", 
+  "portOfServer": "8176", 
+  "pressureUnits": "hPascal", 
+  "rPiCommandPORT": "9999", 
+  "rPiRestartCommand": "", 
+  "rebootCommand": "reboot now", 
+  "rebootHour": -1, 
+  "rebootWatchDogTime": "-1", 
+  "restartBLEifNoConnect": false, 
+  "sendAfterSeconds": "60", 
+  "sendToIndigoSecs": "90", 
+  "sensorList": "i2cTSL2561*173320018*41,", 
+  "sensorRefreshSecs": 3.0, 
+  "sensors": {
+    "i2cTSL2561": {
+      "173320018": {
+        "displayEnable": "0", 
+        "format": "%7.1f", 
+        "i2cAddress": "41", 
+        "logScale": "0"
+      }
+    }
+  }, 
+  "shutDownPinInput": -1, 
+  "shutDownPinOutput": -1, 
+  "tempUnits": "Fahrenheit", 
+  "useRTC": "ds3231", 
+  "useRamDiskForLogfiles": "1", 
+  "userIdOfServer": "xx"
+}

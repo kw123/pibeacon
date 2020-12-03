@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+set prompt "#"
+set wait [lindex $argv 0]
+set rssi [lindex $argv 1]
+
+spawn sudo bluetoothctl 
+sleep 0.5
+send "menu scan\r"
+sleep 0.1
+send "clear all\r"
+sleep 0.1
+send "clear uuids\r"
+sleep 0.1
+send "clear transport\r"
+sleep 0.1
+send "clear duplicate-data\r"
+sleep 0.1
+send "clear rssi\r"
+sleep 0.1
+send "rssi $rssi\r"
+sleep 0.1
+send "back\r"
+sleep 0.2
+send "scan on\r"
+sleep $wait
+send "scan off\r"
+sleep 0.1
+send "quit\r"
+expect eof
+

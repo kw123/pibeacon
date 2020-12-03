@@ -1,0 +1,63 @@
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set authKeyOrPassword [lindex $argv 2 ] 
+set ipNumber [lindex $argv 3 ] 
+set ipParms  [lindex $argv 4 ] 
+set piPath   [lindex $argv 5 ] 
+set indigoPath   [lindex $argv 6 ] 
+set timeout [lindex $argv 7 ] 
+
+
+set timeout $timeout
+spawn sftp -o ConnectTimeout=20 $userID@$ipNumber
+ 
+if {$authKeyOrPassword == "assword"} { 
+    expect {
+        "(yes/no" { 
+            send "yes\r"
+            sleep 0.1
+            expect "$authKeyOrPassword" { send "$password\r"}
+        }    
+        "$authKeyOrPassword" { 
+            send "$password\r" 
+        }
+    }
+}
+
+sleep 0.1
+set timeout  40
+expect "sftp>"
+send "\r"
+
+sleep 0.1
+expect "sftp>" {  send  "lcd '$indigoPath' \r" }
+expect "sftp>" {  send  "put callbeacon.py  /home/pi/callbeacon.py\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/soundfiles\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/fonts\r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/displayfiles\r" }
+expect "sftp>" {  send  "put -r * /home/pi/pibeacon/ \r" }
+expect "sftp>" {  send  "lcd '$piPath//interfaceFiles' \r" }
+expect "sftp>" {  send  "put 'interfaces.$ipParms'  /home/pi/pibeacon/interfaces\r" }
+expect "sftp>" {  send  "put 'wpa_supplicant.conf.$ipParms'  /home/pi/pibeacon/wpa_supplicant.conf\r" }
+expect "sftp>" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
+expect "sftp>" {  send  "lcd '$piPath/rejected' \r" }
+expect "sftp>" {  send  "get /home/pi/pibeacon/rejects 'rejects.$ipParms'\r" }
+expect "sftp>" {  send  "rm /home/pi/pibeacon/reject* \r" }
+expect "sftp>" {  send  "lcd '$piPath//soundFiles' \r" }
+expect "sftp>" {  send  "put  -r * /home/pi/pibeacon/soundfiles/ \r" }
+expect "sftp>" {  send  "lcd '$piPath//displayfiles' \r" }
+expect "sftp>" {  send  "put -r * /home/pi/pibeacon/displayfiles/ \r" }
+expect "sftp>" {  send  "lcd '$indigoPath/fonts/' \r" }
+expect "sftp>" {  send  "put -r  * /home/pi/pibeacon/fonts/ \r" }
+expect "sftp>" {  send  "lcd '$indigoPath/images/' \r" }
+expect "sftp>" {  send  "put -r  * /home/pi/pibeacon/displayfiles/ \r" }
+expect "sftp>" {  send  "lcd '$piPath//all' \r" }
+expect "sftp>" {  send  "put *  /home/pi/pibeacon/ \r" }
+expect "sftp>" {  send  "rm /home/pi/pibeacon/temp/touchFile  \r" }
+sleep 3
+expect "sftp>" {  send  "quit\r" }
+set timeout 0.1
+expect eof
+
+
