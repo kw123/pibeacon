@@ -5531,7 +5531,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 	</Device>
 
 
-	<Device type="sensor" id="BLEXiaomiMiTempHumRound">     	<Name>BLE-Xiaomi MiJia Temp/Hum round  sensor</Name>
+	<Device type="sensor" id="BLEXiaomiMiTempHumRound">     	<Name>BLE-Xiaomi MiJia Temp/Hum round sensor (LYWSDCGQ/01ZM)</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
@@ -5547,12 +5547,17 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
-			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
-			<Label>=== Xiaomi MiJia Bluetooth temp(-9C...60C) and humidity sensor (LYWSDCGQ/01ZM). The round one not sqaure!
-check eg: https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0
-You can find the MAC number using the plugin tool detect new beacons ===
-</Label>
+			<Field id="label0"               type="label" alignText="left" fontColor="orange"> 
+			<Label>=== Xiaomi MiJia Bluetooth temp(-9C...60C) and humidity sensor (LYWSDCGQ/01ZM). 
+The round one not sqaure - check eg: https ref below
+You can find the MAC number using the plugin tool detect new beacons look for LYWSDCGQ/01ZM or XiaomiMiBLETempHumRound===</Label>
 			</Field>
+
+			<Field id="http" type="textfield"  defaultValue="https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0"  >
+			<Label>ref HTTP:</Label>
+			</Field>
+
+			<Field id="labelDummy" type="label" ><Label></Label></Field>
 
 			<Field id="mac" type="textfield"     defaultValue=""  >
 			<Label>Enter MAC number for this device: </Label>
@@ -5834,15 +5839,19 @@ You can find the MAC number using the plugin tool detect new beacons ===
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="label0"               type="label" alignText="left" fontColor="orange"> >
-			<Label>=== Xiaomi MiJia Bluetooth temp(-9C...60C) and humidity sensor (LYWSD03MMC). The square one not round!
-check eg: https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0
+			<Label>=== Xiaomi MiJia Bluetooth temp(-9C...60C) and humidity sensor (LYWSD03MMC). 
+The square one not round - check eg: https ref below
 This sensor requires to have a second BLE dongle in the RPI, 
   as it needs to connect to the sensor for ~ 12+ seconds to receive the values. 
   Or while offline it will block the BLE channel for ~ 15+ seconds 
  That will block any other function for that BLE dongle on the RPI
-You can find the MAC number using the plugin tool detect new beacons, look for LYWSD03MMC or XiaomiMiBLETempHumRound ===
-</Label>
+You can find the MAC number using the plugin tool detect new beacons, look for LYWSD03MMC or XiaomiMiBLETempHumSquare ===</Label>
 			</Field>
+
+			<Field id="http" type="textfield" defaultValue="https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0"  >
+			<Label>ref HTTP:</Label>
+			</Field>
+			<Field id="labelDummy" type="label" ><Label></Label></Field>
 
 			<Field id="mac" type="textfield"     defaultValue=""  >
 			<Label>Enter MAC number for this device: </Label>

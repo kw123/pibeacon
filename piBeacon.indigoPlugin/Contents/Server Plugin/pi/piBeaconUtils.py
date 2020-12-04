@@ -1747,7 +1747,7 @@ def getSerialDEV():
 
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
-def selectHCI(HCIs, useDev, default, doNotUseHCI=""): 
+def selectHCI(HCIs, useDev, default, doNotUseHCI="", tryBLEmac=""): 
 	# default is UART or USB, used if no otehr choise selected
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
@@ -1755,9 +1755,7 @@ def selectHCI(HCIs, useDev, default, doNotUseHCI=""):
 	try:
 		if len(HCIs) == 1:
 			useHCI = list(HCIs)[0]
-			myBLEmac = HCIs[useHCI]["BLEmac"]
-			devId = 0
-			return useHCI,  myBLEmac, devId
+			return useHCI, HCIs[useHCI]["BLEmac"], 0, HCIs[useHCI]["bus"]
 
 		elif len(HCIs) > 1:
 			hciChannels = ["hci0","hci1","hci2","hci3"]
@@ -1765,45 +1763,41 @@ def selectHCI(HCIs, useDev, default, doNotUseHCI=""):
 			if doNotUseHCI in hciChannels:
 				hciChannels.remove(doNotUseHCI)
 
+			if tryBLEmac != "":
+				for hh in hciChannels:
+					if tryBLEmac == HCIs[hh]["BLEmac"]:
+						#logger.log(20, u"cBY:{:<20} ret USB".format(G.program ))
+						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
+
 			#logger.log(20, u"cBY:{:<20} 1- , hciChannels:{}".format(G.program, hciChannels ))
 			if useDev == "USB":
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] == "USB":
-						useHCI	= hh
-						myBLEmac= HCIs[hh]["BLEmac"]
-						devId	= HCIs[hh]["numb"]
 						#logger.log(20, u"cBY:{:<20} ret USB".format(G.program ))
-						return useHCI,  myBLEmac, devId
+						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 			elif useDev == "UART":
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] == "UART":
-						useHCI	= hh
-						myBLEmac= HCIs[hh]["BLEmac"]
-						devId	= HCIs[hh]["numb"]
 						#logger.log(20, u"cBY:{:<20} ret UART".format(G.program ))
-						return useHCI,  myBLEmac, devId
+						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
+						return useHCI,  myBLEmac, devId, bus
 
 			else:
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] == default:
 						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
-						useHCI	= hh
-						myBLEmac= HCIs[hh]["BLEmac"]
-						devId	= HCIs[hh]["numb"]
-						return useHCI,  myBLEmac, devId
+						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 			#logger.log(20, u"cBY:{:<20} ret HCI0 end".format(G.program ))
 			useHCI	= "hci0"
-			myBLEmac= HCIs[useHCI]["BLEmac"]
-			devId	= HCIs[useHCI]["numb"]
-			return useHCI,  myBLEmac, devId
+			return useHCI,  HCIs[useHCI]["BLEmac"], HCIs[useHCI]["numb"], HCIs[useHCI]["bus"]
 
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	logger.log(20, "cBY:{:<20} BLEconnect: NO BLE STACK UP ".format(G.program))
-	return 0, -1, -1
+	return 0, -1, -1, -1
 
 #################################
 def whichHCI():

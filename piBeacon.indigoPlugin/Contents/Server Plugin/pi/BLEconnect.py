@@ -737,12 +737,14 @@ def execBLEconnect():
 
 	## give other ble functions time to finish
 	doNotUseHCI = ""
+	BusUsedByBeaconloop = ""
 	if oneisBLElongConnectDevice:
 		for ii in range(3):
 			time.sleep(ii)
 			hciBeaconloopUsed, raw  = U.readJson("{}temp/beaconloop.hci".format(G.homeDir))
 			if raw != "": 
-				doNotUseHCI = hciBeaconloopUsed["usedHCI"]
+				doNotUseHCI 		= hciBeaconloopUsed["usedHCI"]
+				BusUsedByBeaconloop = hciBeaconloopUsed["usedBus"]
 				break
 
 
@@ -774,8 +776,8 @@ def execBLEconnect():
 			time.sleep(5)
 			exit()
 
-		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo: {}; default:{}".format(G.BLEconnectUseHCINo, "USB"))
-		useHCI,  myBLEmac, BLEid = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo,"USB",doNotUseHCI=doNotUseHCI)
+		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, "USB", doNotUseHCI, BusUsedByBeaconloop))
+		useHCI,  myBLEmac, BLEid, bus = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo, "USB", doNotUseHCI=doNotUseHCI)
 		if BLEid < 0:
 			text = "BLEconnect: BLE STACK is not UP HCI-info:\n{}".format(HCIs)
 			U.logger.log(20, text)
