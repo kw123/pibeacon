@@ -356,7 +356,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 				data["triesWOdata"] = macList[MAC]["triesWOdata"]
 				if macList[MAC]["triesWOdata"] > maxTrieslongConnect:
 					macList[MAC]["triesWOdata"] = 0
-					U.logger.log(20, u"error, triesWOdata:{} HCI available:={}".format(macList[MAC]["triesWOdata"], HCIs))
+					U.logger.log(20, u"error, triesWOdata:{}".format(macList[MAC]["triesWOdata"]))
 					return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
 				return data
 
@@ -479,7 +479,7 @@ def BLEXiaomiMiVegTrug(MAC):
 			data["triesWOdata"] = macList[MAC]["triesWOdata"]
 			if macList[MAC]["triesWOdata"] >= maxTrieslongConnect:
 				macList[MAC]["triesWOdata"] = 0
-				U.logger.log(20, u"error, triesWOdata:{} HCI available:={}".format(macList[MAC]["triesWOdata"], HCIs))
+				U.logger.log(20, u"error, triesWOdata:{}".format(macList[MAC]["triesWOdata"]))
 				return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
 			return data
 
