@@ -363,7 +363,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 				readData = writeAndListenGattcmd(expCommands, "char-write-req 0038 0100", "value:", 5, 15)
 				if readData != []: break
 				time.sleep(2)
-			if expCommands != "": disconnectGattcmd(expCommands, 2)
+			disconnectGattcmd(expCommands, MAC, 2)
 
 
 			#U.logger.log(20, "{}  {}. try ret:{}".format(MAC, ii, readData))
@@ -376,9 +376,11 @@ def BLEXiaomiMiTempHumSquare(MAC):
 				data["connected"]   	= True
 				macList[MAC]["triesWOdata"] = 0
 				#U.logger.log(20, "{} return data: {}".format(MAC, data))
+
 				if macList[MAC]["lastData"] == {}:
 					macList[MAC]["lastData"] = copy.copy(data)
 					macList[MAC]["lastTesttt"] = 0.
+
 				if ( abs(data["temp"] - macList[MAC]["lastData"]["temp"])      > 1	or
 					 abs(data["hum"]  - macList[MAC]["lastData"]["hum"])       > 2	or
 					 data["connected"] !=macList[MAC]["lastData"]["connected"]		or
@@ -386,8 +388,10 @@ def BLEXiaomiMiTempHumSquare(MAC):
 					macList[MAC]["lastTesttt"] = time.time()
 					macList[MAC]["lastData"]  = copy.copy(data)
 					return data
+
 				else:
 					return {"ok":False, "connected":True, "triesWOdata": macList[MAC]["triesWOdata"]}
+
 			macList[MAC]["triesWOdata"] += 1
 
 		data["triesWOdata"] = macList[MAC]["triesWOdata"]
@@ -422,14 +426,14 @@ def BLEXiaomiMiVegTrug(MAC):
 		# start reading:  char-write-req 33 A01F
 
 		get fist set: char-read-hnd 38
-		# 7b in little 
+		# 7b in l endian
 		#    0: batteryLevel
 		#    1: ??
 		#  2-6: fw eg: '56 2d 33 2e 32 2e 34', 
 
 		get second set: char-read-hnd 35
 		# 16b in l endian
-		#   0-1: temp 0.1 [°C]
+		#   0-1: temp *10 [°C]
 		#     2: ??
 		#   3-6: bright [lux]
 		#     7: moist [%]
@@ -437,7 +441,6 @@ def BLEXiaomiMiVegTrug(MAC):
 		# 10-15: ?? 
 		# eg: 'f4 00 69 00 00 00 00 1d 11 01 02 3c 00 fb 34 9b'
 		"""
-		#U.logger.log(20,"flowercare mac:{}".format(MAC))
 			
 		#U.logger.log(20, u"{},  tries:{}, DT:{}".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 		expCommands = connectGATT(useHCI, MAC, 5,15)
@@ -466,7 +469,7 @@ def BLEXiaomiMiVegTrug(MAC):
 
 			break
 
-		disconnectGattcmd(expCommands, 2)
+		disconnectGattcmd(expCommands, MAC, 2)
 
 		#U.logger.log(20, u"connect results:{} - {}".format(result1, result2))
 
@@ -487,10 +490,12 @@ def BLEXiaomiMiVegTrug(MAC):
 		data["Conductivity"]		= int(result2[9]+result2[8],16)
 		data["ok"]					= True
 		data["connected"]			= True
+		macList[MAC]["triesWOdata"] = 0
+
 		if macList[MAC]["lastData"] == {}:
 			macList[MAC]["lastData"] = copy.copy(data)
 			macList[MAC]["lastTesttt"] = 0.
-		macList[MAC]["triesWOdata"] = 0
+
 		if ( abs(data["temp"] 			- macList[MAC]["lastData"]["temp"])			> 1 	or
 			 abs(data["moisture"]  		- macList[MAC]["lastData"]["moisture"])		> 2 	or
 			 abs(data["Conductivity"]	- macList[MAC]["lastData"]["Conductivity"])	> 2 	or
@@ -561,7 +566,7 @@ def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1):
 
 			#U.logger.log(20, u"connect error giving up")
 
-		if expCommands != "": disconnectGattcmd(expCommands,2)
+		if expCommands != "": disconnectGattcmd(expCommands, MAC, 2)
 
 		return ""
 	except  Exception, e:
@@ -570,16 +575,18 @@ def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1):
 
 
 #################################
-def disconnectGattcmd(expCommands, timeout):	
+def disconnectGattcmd(expCommands, MAC, timeout):	
 	try:
 		expCommands.sendline("quit" )
 		#U.logger.log(20,"sendline disconnect ")
 		ret = expCommands.expect([".*","Error",pexpect.TIMEOUT], timeout=timeout)
 		if ret == 0:
+			U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
 			#U.logger.log(20,"quit ok")
 			return True
 		else:
 			#U.logger.log(20,"not disconnected, quit command error: {}".format(expCommands.after))
+			U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
 			return False
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

@@ -652,10 +652,15 @@ def readParams(init):
 						if "isBLESensorDevice" in sensors[sensor][devId] and sensors[sensor][devId]["isBLESensorDevice"]:
 							sensD	= sensors[sensor][devId]
 							if "mac" not in sensD: continue
-							mac		= sensD["mac"]
-							if mac not in BLEsensorMACs: BLEsensorMACs[mac] = {}
-							if sensor not in BLEsensorMACs: BLEsensorMACs[mac][sensor] ={}
-							
+							mac = sensD["mac"]
+							if mac not in BLEsensorMACs: 
+								BLEsensorMACs[mac] = {}
+								#U.logger.log(20,u"init mac for sensor:{}".format(mac))
+
+							if sensor not in BLEsensorMACs[mac]: 
+								BLEsensorMACs[mac][sensor] = {}
+								#U.logger.log(20,u"init sensor for sensor:{}".format(mac))
+
 							BLEsensorMACs[mac][sensor]["devId"] 						= devId
 							try:	BLEsensorMACs[mac][sensor]["offsetPress"]   		= float(sensD["offsetPress"])
 							except: BLEsensorMACs[mac][sensor]["offsetPress"]			= 0.
@@ -689,6 +694,7 @@ def readParams(init):
 							BLEsensorMACs[mac][sensor]["numberOfMeasurementToAverage"] = xx
 
 							if "accelerationTotal" not in BLEsensorMACs[mac][sensor]:
+								U.logger.log(20,u"init values for sensor:{}".format(mac))
 								BLEsensorMACs[mac][sensor]["batteryLevel"]					= ""
 								BLEsensorMACs[mac][sensor]["accelerationTotal"]				= 0
 								BLEsensorMACs[mac][sensor]["accelerationX"]				 	= 0
@@ -1266,7 +1272,7 @@ def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, U
 
 
 		dd={   # the data dict to be send 
-						'temp': 		round(temp,2),
+						'temp': 		round(temp,1),
 						'hum': 			int(hum),
 						'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
 						'batteryLevel': BLEsensorMACs[mac][sensor]["batteryLevel"] , 
@@ -1283,11 +1289,11 @@ def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, U
 					U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac][sensor]["devId"]:dd}}})
 
 					# remember last values
+					if doPrint: U.logger.log(20, "mac:{} triggers:Time:{};temp:{};hum:{}; updateIndigoTiming:{}; send:{}".format( mac, trigTime , trigTemp , trigHum,BLEsensorMACs[mac][sensor]["updateIndigoTiming"] ,  dd)  )
 					BLEsensorMACs[mac][sensor]["lastUpdate"] = time.time()
 					BLEsensorMACs[mac][sensor]["counter"]    = counter
 					BLEsensorMACs[mac][sensor]["temp"]    	 = temp
 					BLEsensorMACs[mac][sensor]["hum"]    	 = hum
-					if doPrint: U.logger.log(20, " mac:{}  send:{}".format( mac, dd)  )
 		UUID = sensor
 		Maj  = mac
 		return  tx, BLEsensorMACs[mac][sensor]["batteryLevel"], UUID, Maj, Min, False		

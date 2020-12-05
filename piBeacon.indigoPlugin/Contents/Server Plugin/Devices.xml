@@ -5861,7 +5861,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 			<Field id="labelRPI"               type="label" >
 			<Label>Select RPI(s) that should monitor this sensor, 
    check only RPIs that are installed, checked RPi that do not exist will be ignored
- if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+ !!! ONLY USE ONE RPI !!! </Label>
 			</Field>
 
 
@@ -6109,7 +6109,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 			<Field id="labelRPI"               type="label" >
 			<Label>Select RPI(s) that should monitor this sensor, 
    check only RPIs that are installed, checked RPi that do not exist will be ignored
- if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+ !!! ONLY USE ONE RPI !!! </Label>
 			</Field>
 
 
