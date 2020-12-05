@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # mar 2 2016
-# version 0.95
+# 
 ##
 ##	 read BLE sensors and send http to indigo with data
 #
-
 ##
 import	sys, os, subprocess, copy
 import	time,datetime
@@ -29,6 +28,7 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "BLEconnect"
+version = 5.3
 
 
 #################################
@@ -135,6 +135,7 @@ def readParams():
 													 "badSensor": 0,
 													 "triesWOdata": 0,
 													 "quickTest": 0. ,
+													 "nextRead": 0,
 													 "devId": devId 
 													 }
 
@@ -336,36 +337,33 @@ def BLEXiaomiMiTempHumSquare(MAC):
 		need to add:
 			 hciX default 
 		"""
-		if time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
+		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
 
-		if macList[MAC]["triesWOdata"] >= maxTrieslongConnect/2 and macList[MAC]["triesWOdata"]%3 != 0:
-			# skip some after many tries
-			macList[MAC]["lastTesttt"] = macList[MAC]["readSensorEvery"] + 10
-			macList[MAC]["triesWOdata"] +=1
-			return {"ok":False}
-
-			
-		timewait = 15
+		minWaitAfterBadRead = max(5,macList[MAC]["readSensorEvery"]/3)
+		macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
 		for ii in range(1):
 
 			startCMD = time.time()
 
-			expCommands = connectGATT(useHCI, MAC, 5, 20)
+			expCommands = connectGATT(useHCI, MAC, 5, 25, repeat=1)
 			if expCommands == "":
+				macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
 				macList[MAC]["triesWOdata"] +=1
 				data["triesWOdata"] = macList[MAC]["triesWOdata"]
 				if macList[MAC]["triesWOdata"] > maxTrieslongConnect:
 					macList[MAC]["triesWOdata"] = 0
-					U.logger.log(20, u"error, triesWOdata:{}".format(macList[MAC]["triesWOdata"]))
+					#U.logger.log(20, u"MAC{}, not connected, send to indigo, triesWOdata:{}, repeat in {} secs".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 					return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
+				#U.logger.log(20, u"not connected, triesWOdata:{}, repeat in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 				return data
 
 			readData = []
 
 			for nn in range(2):
 				readData = writeAndListenGattcmd(expCommands, "char-write-req 0038 0100", "value:", 5, 15)
-				if readData == []: continue
-				break
+				if readData != []: break
+				time.sleep(2)
+			if expCommands != "": disconnectGattcmd(expCommands, 2)
 
 
 			#U.logger.log(20, "{}  {}. try ret:{}".format(MAC, ii, readData))
@@ -377,7 +375,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 				data["ok"]   			= True
 				data["connected"]   	= True
 				macList[MAC]["triesWOdata"] = 0
-				U.logger.log(20, "{} return data: {}".format(MAC, data))
+				#U.logger.log(20, "{} return data: {}".format(MAC, data))
 				if macList[MAC]["lastData"] == {}:
 					macList[MAC]["lastData"] = copy.copy(data)
 					macList[MAC]["lastTesttt"] = 0.
@@ -390,21 +388,20 @@ def BLEXiaomiMiTempHumSquare(MAC):
 					return data
 				else:
 					return {"ok":False, "connected":True, "triesWOdata": macList[MAC]["triesWOdata"]}
-			if time.time() - startCMD < (timewait -1): time.sleep(10) 
 			macList[MAC]["triesWOdata"] += 1
 
 		data["triesWOdata"] = macList[MAC]["triesWOdata"]
 		if macList[MAC]["triesWOdata"] >= maxTrieslongConnect:
 			macList[MAC]["triesWOdata"] = 0
 			HCIs = U.whichHCI()
-			U.logger.log(20, u"error, triesWOdata:{} HCI available:={}".format(macList[MAC]["triesWOdata"], HCIs))
+			#U.logger.log(20, u"error, connected but no data, triesWOdata:{} repeast in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 			return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
 
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "badData"
 	
-	U.logger.log(20, "{} return data: {}".format(MAC, data))
+	#U.logger.log(20, "{} return data: {}".format(MAC, data))
 	
 	return data
 
@@ -416,13 +413,10 @@ def BLEXiaomiMiVegTrug(MAC):
 
 	data = {"connected":False, "ok":False }
 	try:
-		if time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
+		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
 
-		if macList[MAC]["triesWOdata"] >= maxTrieslongConnect/2 and macList[MAC]["triesWOdata"]%3 != 0:
-			macList[MAC]["lastTesttt"] = macList[MAC]["readSensorEvery"] + 10
-			# skip some after many tries
-			macList[MAC]["triesWOdata"] +=1
-			return {"ok":False}
+		minWaitAfterBadRead = min(20,max(5,macList[MAC]["readSensorEvery"]/3))
+		macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
 
 		"""
 		# start reading:  char-write-req 33 A01F
@@ -445,15 +439,16 @@ def BLEXiaomiMiVegTrug(MAC):
 		"""
 		#U.logger.log(20,"flowercare mac:{}".format(MAC))
 			
-		U.logger.log(20, u"{},  tries:{}, DT:{}".format(MAC, macList[MAC]["triesWOdata"], time.time() - macList[MAC]["lastTesttt"]))
+		#U.logger.log(20, u"{},  tries:{}, DT:{}".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 		expCommands = connectGATT(useHCI, MAC, 5,15)
 		if expCommands == "":
 			macList[MAC]["triesWOdata"] +=1
 			data["triesWOdata"] = macList[MAC]["triesWOdata"]
 			if macList[MAC]["triesWOdata"] > maxTrieslongConnect:
 				macList[MAC]["triesWOdata"] = 0
-				U.logger.log(20, u"error, triesWOdata:{}".format(macList[MAC]["triesWOdata"]))
+				#U.logger.log(20, u"MAC:{}, error, not connected, sending not connected to indigo, triesWOdata:{}, retrying in {} secs".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 				return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
+			#U.logger.log(20, u"MAC:{}, error, not connected, triesWOdata:{} retrying in {} secs".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 			return data
 
 		result1 = []
@@ -471,15 +466,15 @@ def BLEXiaomiMiVegTrug(MAC):
 
 			break
 
-		disconnectGattcmd(expCommands, 5)
+		disconnectGattcmd(expCommands, 2)
 
-		U.logger.log(20, u"connect results:{} - {}".format(result1, result2))
+		#U.logger.log(20, u"connect results:{} - {}".format(result1, result2))
 
 		if result1 == [] or result2 == []:
 			data["triesWOdata"] = macList[MAC]["triesWOdata"]
 			if macList[MAC]["triesWOdata"] >= maxTrieslongConnect:
 				macList[MAC]["triesWOdata"] = 0
-				U.logger.log(20, u"error, triesWOdata:{}".format(macList[MAC]["triesWOdata"]))
+				#U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 				return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
 			return data
 
@@ -503,32 +498,89 @@ def BLEXiaomiMiVegTrug(MAC):
 			      time.time()           - macList[MAC]["lastTesttt"]             	> 119.):
 			macList[MAC]["lastTesttt"] = time.time()
 			macList[MAC]["lastData"]  = copy.copy(data)
-			U.logger.log(20, "{} return data: {}".format(MAC, data))
+			#U.logger.log(20, "{} return data: {}".format(MAC, data))
 			return data
 
 		data = {"ok":False, "connected":True, "triesWOdata": macList[MAC]["triesWOdata"]}
-		U.logger.log(20, "{} return data: {}".format(MAC, data))
+		#U.logger.log(20, u"{}; return data:{}, triesWOdata:{}, repeat in {} secs".format(MAC, data, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 		return data
 
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "badData"
 	
-	U.logger.log(20, "{} return data: {}".format(MAC, data))
+	#U.logger.log(20, "{} return data: {}".format(MAC, data))
 	
 	return data
+
+#################################
+def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1):
+
+	try:
+		nTries = 1
+		for kk in range(nTries):
+			cmd = "sudo /usr/bin/gatttool -i {} -b {} -I".format(useHCI,  MAC) 
+			#U.logger.log(20,"{} ;  expect: >".format(cmd))
+			expCommands = pexpect.spawn(cmd)
+			ret = expCommands.expect([">","error",pexpect.TIMEOUT], timeout=timeoutGattool)
+			if ret == 0:
+				pass
+				#U.logger.log(20,"gatttool started successful: {}-==-:{}".format(expCommands.before,expCommands.after))
+			else:
+				if kk == nTries -1: 
+					#U.logger.log(20, u"gatttool error, giving up: {}-==-:{}".format(expCommands.before,expCommands.after))
+					time.sleep(1)
+					return ""
+				#U.logger.log(20, u"gatttool error:  {}-==-:{}".format(expCommands.before,expCommands.after))
+				expCommands = ""
+				continue
+
+			time.sleep(0.1)
+			#ret = expCommands.expect(".*", timeout=0.5)s
+			#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
+			for ii in range(repeat):
+				try:
+					#U.logger.log(20,"send connect .. expect: Connection successful ")
+					expCommands.sendline("connect")
+					ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=timeoutConnect)
+					if ret == 0:
+						pass
+						#U.logger.log(20,"connect successful: {}-==-:{}".format(expCommands.before,expCommands.after))
+						#ret = expCommands.expect(".*", timeout=0.5)
+						#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
+						return expCommands
+					else:
+						pass
+						#U.logger.log(20, u"connect error: {}-==-:{}".format(expCommands.before,expCommands.after))
+
+				except Exception, e:
+					U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				time.sleep(1)
+			time.sleep(1)
+
+
+			#U.logger.log(20, u"connect error giving up")
+
+		if expCommands != "": disconnectGattcmd(expCommands,2)
+
+		return ""
+	except  Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return ""
 
 
 #################################
 def disconnectGattcmd(expCommands, timeout):	
 	try:
-		expCommands.sendline("disconnect" )
+		expCommands.sendline("quit" )
 		#U.logger.log(20,"sendline disconnect ")
-		ret = expCommands.expect([">","Error",pexpect.TIMEOUT], timeout=5)
+		ret = expCommands.expect([".*","Error",pexpect.TIMEOUT], timeout=timeout)
 		if ret == 0:
+			#U.logger.log(20,"quit ok")
 			return True
 		else:
-			U.logger.log(20,"... error: {}".format(expCommands.after))
+			#U.logger.log(20,"not disconnected, quit command error: {}".format(expCommands.after))
+			return False
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return False
@@ -542,10 +594,10 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout):
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=5)
 			if ret == 0:
-				#U.logger.log(20,"... successful: BF:{}-- AF:{}--".format(expCommands.before, expCommands.after))
+				##U.logger.log(20,"... successful: BF:{}-- AF:{}--".format(expCommands.before, expCommands.after))
 				return True
 			else: 
-				U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before, expCommands.after))
+				#U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before, expCommands.after))
 				continue
 			ret = expCommands.expect("\n")
 
@@ -567,10 +619,10 @@ def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout):
 				if len(xx) == nBytes:
 					return xx
 				else:
-					U.logger.log(20,"... error: len != 7")
+					#U.logger.log(20,"... error: len != 7")
 					continue
 			else:
-				U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
+				#U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
 				continue
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -589,65 +641,15 @@ def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout):
 				if len(xx) == nBytes:
 					return xx
 				else:
-					U.logger.log(20,"... error: len != 7")
+					#U.logger.log(20,"... error: len != 7")
 					continue
 			else:
-				U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
+				#U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
 				continue
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return []
 
-
-#################################
-def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect):
-
-	try:
-		nTries = 1
-		for kk in range(nTries):
-			cmd = "sudo /usr/bin/gatttool -i {} -b {} -I".format(useHCI,  MAC) 
-			U.logger.log(20,"{} ;  expect: >".format(cmd))
-			expCommands = pexpect.spawn(cmd)
-			ret = expCommands.expect([">","error",pexpect.TIMEOUT], timeout=timeoutGattool)
-			if ret == 0:
-				U.logger.log(20,"... successful: {}-==-:{}".format(expCommands.before,expCommands.after))
-			else:
-				if kk == nTries -1: 
-					U.logger.log(20, u"... error, giving up: {}-==-:{}".format(expCommands.before,expCommands.after))
-					time.sleep(1)
-					return ""
-				U.logger.log(20, u"... error:  {}-==-:{}".format(expCommands.before,expCommands.after))
-				continue
-
-			time.sleep(0.1)
-			ntriesConnect = 2
-			#ret = expCommands.expect(".*", timeout=0.5)s
-			#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
-			for ii in range(ntriesConnect):
-				try:
-					U.logger.log(20,"expect: Connection successful ")
-					expCommands.sendline("connect")
-					ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=timeoutConnect)
-					if ret == 0:
-						U.logger.log(20,"... successful: {}-==-:{}".format(expCommands.before,expCommands.after))
-						#ret = expCommands.expect(".*", timeout=0.5)
-						#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
-						return expCommands
-					else:
-						U.logger.log(20, u"... error: {}-==-:{}".format(expCommands.before,expCommands.after))
-
-				except Exception, e:
-					U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				time.sleep(1)
-			time.sleep(1)
-
-
-			U.logger.log(20, u"connect error giving up")
-
-		return ""
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return ""
 
 
 #################################
@@ -678,7 +680,7 @@ def execBLEconnect():
 	global useHCI
 
 
-	maxTrieslongConnect 	= 7
+	maxTrieslongConnect 	= 4
 	oneisBLElongConnectDevice = False
 	BLEconnectMode			= "commandLine" # socket or commandLine
 	oldRaw					= ""
@@ -687,15 +689,15 @@ def execBLEconnect():
 	###################### constants #################
 
 	####################  input gios   ...allrpi	  only rpi2 and rpi0--
-	oldParams		  = ""
+	oldParams				= ""
 	#####################  init parameters that are read from file 
-	sensorList			= "0"
-	G.authentication	= "digest"
-	restartBLEifNoConnect = True
-	sensor				= G.program
-	macList				={}
-	waitMin				=2.
-	oldRaw				= ""
+	sensorList				= "0"
+	G.authentication		= "digest"
+	restartBLEifNoConnect 	= True
+	sensor					= G.program
+	macList					= {}
+	waitMin					= 2.
+	oldRaw					= ""
 
 	myPID			= str(os.getpid())
 	U.setLogging()
@@ -703,7 +705,7 @@ def execBLEconnect():
 
 	loopCount		  = 0
 	sensorRefreshSecs = 90
-	U.logger.log(30, "starting BLEconnect program ")
+	U.logger.log(30, "======== starting BLEconnect program v:{} ".format(version))
 	readParams()
 
 	time.sleep(1)  # give HCITOOL time to start
