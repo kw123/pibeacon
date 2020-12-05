@@ -13479,9 +13479,13 @@ class Plugin(indigo.PluginBase):
 									self.setStatusCol(dev,u"counter",data[u"counter"],u"{}".format(data[u"counter"]),	whichKeysToDisplay,"","",decimalPlaces=0)
 
 				if  u"Conductivity" in data and  data[u"Conductivity"] != u"" and u"Conductivity" in dev.states and unicode(data[u"Conductivity"]) != unicode(dev.states[u"Conductivity"]):
-									self.setStatusCol(dev,u"Conductivity",data[u"Conductivity"],u"{}[µS/cm]".format(data[u"Conductivity"]),	whichKeysToDisplay,"","",decimalPlaces=0)
+									self.setStatusCol(dev,u"Conductivity",data[u"Conductivity"],u"{}[µS/cm]".format(data[u"Conductivity"]),	whichKeysToDisplay,indigo.kStateImageSel.TemperatureSensorOn,"",decimalPlaces=0)
 
 				if  u"connected" in data and  data[u"connected"] != u"" and u"connected" in dev.states and unicode(data[u"connected"]) != unicode(dev.states[u"connected"]):
+						if not data[u"connected"]:
+									self.setStatusCol(dev,u"connected",data[u"connected"],u"{}".format(data[u"connected"]),	whichKeysToDisplay,indigo.kStateImageSel.SensorOff,"")
+									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+						else:
 									self.setStatusCol(dev,u"connected",data[u"connected"],u"{}".format(data[u"connected"]),	whichKeysToDisplay,"","")
 
 
@@ -13844,7 +13848,7 @@ class Plugin(indigo.PluginBase):
 				if u"Moisture_raw" in dev.states:
 					self.addToStatesUpdateDict(dev.id, u"Moisture_raw", raw)
 				updateProps, doUpdate = self.updateChangedValues(dev, relM, props, u"Moisture", u"", u"",0)
-				newStatus = self.setStatusCol(dev, u"Moisture", relM, relMU, u"Moisture", u"",newStatus, decimalPlaces = 0)
+				newStatus = self.setStatusCol(dev, u"Moisture", relM, relMU, u"Moisture", indigo.kStateImageSel.TemperatureSensorOn, newStatus, decimalPlaces = 0)
 
 		except Exception, e:
 			if unicode(e) != u"None":
