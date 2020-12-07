@@ -90,9 +90,9 @@ def readParams():
 				for devId in sensors["BLEconnect"]:
 					thisMAC = sensors["BLEconnect"][devId]["macAddress"]
 					macListNew[thisMAC]={"type":"isBLEconnect",
-										 "iPhoneRefreshDownSecs":float(sensors[devId]["iPhoneRefreshDownSecs"]),
-										 "iPhoneRefreshUpSecs":float(sensors[devId]["iPhoneRefreshUpSecs"]),
-										 "BLEtimeout":max(1.,float(sensors[devId]["BLEtimeout"])),
+										 "iPhoneRefreshDownSecs":float(sensors["BLEconnect"][devId]["iPhoneRefreshDownSecs"]),
+										 "iPhoneRefreshUpSecs":float(sensors["BLEconnect"][devId]["iPhoneRefreshUpSecs"]),
+										 "BLEtimeout":max(1.,float(sensors["BLEconnect"][devId]["BLEtimeout"])),
 										 "up":False,
 										 "lastTesttt":time.time()-1000.,
 										 "lastMsgtt":time.time()-1000. ,
@@ -155,6 +155,7 @@ def readParams():
 								except: pass
 					if ss =="BLEdirectMiTempHumSquare":	U.logger.log(30, u"macListNew:{} ".format(macListNew))
 
+			#U.logger.log(30, u"BLEconnect - chechink devices (1):{}".format(macList))
 			for thisMAC in macListNew:
 				if thisMAC not in macList:
 					macList[thisMAC] = copy.copy(macListNew[thisMAC])
@@ -177,6 +178,7 @@ def readParams():
 				U.logger.log(30, u"no BLEconnect - BLElongConnect devices supplied in parameters (2)")
 				exit()
 
+			#U.logger.log(30, u"BLEconnect - chechink devices (2):{}".format(macList))
 			return True
 			
 		except	Exception, e:
@@ -271,10 +273,10 @@ def tryToConnectCommandLine(MAC,BLEtimeout):
 	  #sudo timeout -s SIGINT 5s hcitool -i hci0  cc  8C:86:1E:3D:5C:66;sudo hcitool -i hci0 rssi 8C:86:1E:3D:5C:66;sudo hcitool -i hci0 tpl 8C:86:1E:3D:5C:66
 		for ii in range(2):
 			cmd = "sudo timeout -s SIGINT {:.1f}s hcitool -i {}  cc {};sleep 0.2; hcitool -i {} rssi {} ;sleep 0.2;hcitool -i {} tpl {}".format(BLEtimeout, useHCI, MAC, useHCI,  MAC, useHCI, MAC)
-			U.logger.log(10, cmd)
+			#U.logger.log(20, cmd)
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			parts = ret[0].strip("\n").split("\n")
-			U.logger.log(10, "{}  1. try ret: {} --- err>>{}<<".format(MAC, ret[0].strip("\n"), ret[1].strip("\n")))
+			#U.logger.log(20, "{}  1. try ret: {} --- err>>{}<<".format(MAC, ret[0].strip("\n"), ret[1].strip("\n")))
 
 			found = False
 			for line in parts:
@@ -291,7 +293,7 @@ def tryToConnectCommandLine(MAC,BLEtimeout):
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			return {}
 	
-	U.logger.log(10, "{} return data: {}".format(MAC, retdata))
+	#U.logger.log(20, "{} return data: {}".format(MAC, retdata))
 	return retdata
 
 
@@ -581,12 +583,14 @@ def disconnectGattcmd(expCommands, MAC, timeout):
 		#U.logger.log(20,"sendline disconnect ")
 		ret = expCommands.expect([".*","Error",pexpect.TIMEOUT], timeout=timeout)
 		if ret == 0:
-			U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
+			expCommands.kill(0)
+			#U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
 			#U.logger.log(20,"quit ok")
 			return True
 		else:
 			#U.logger.log(20,"not disconnected, quit command error: {}".format(expCommands.after))
-			U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
+			expCommands.kill(0)
+			#U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
 			return False
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -823,9 +827,9 @@ def execBLEconnect():
 
 			nextTest = 300
 
-			if not oneisBLElongConnectDevice:
-				for thisMAC in macList:
-					if macList[thisMAC]["type"] == "BLEconnect":
+			for thisMAC in macList:
+					#U.logger.log(20, "BLEconnect: setting  thisMAC:{}".format(thisMAC))
+					if macList[thisMAC]["type"] == "isBLEconnect":
 						if macList[thisMAC]["up"]:
 							nextTest = min(nextTest, macList[thisMAC]["lastTesttt"] + (macList[thisMAC]["iPhoneRefreshUpSecs"]*0.90)   -tt )
 						else:
@@ -859,9 +863,11 @@ def execBLEconnect():
 
 
 			for thisMAC in macList:
+				#U.logger.log(20, "BLEconnect: looping  thisMAC:{}, type:{}".format(thisMAC, macList[thisMAC]["type"] ))
 				tt = time.time()
 				#if nowP: print "nowP:	testing: "+thisMAC,macList[ml]["retryIfUP"], tt - macList[thisMAC]["lastTesttt"]
-				if macList[thisMAC]["type"] == "BLEconnect":
+				if macList[thisMAC]["type"] == "isBLEconnect":
+					#U.logger.log(20, "BLEconnect: doing  thisMAC:{}".format(thisMAC))
 					if macList[thisMAC]["up"]:
 						if tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshUpSecs"]*0.90:	  continue
 					elif tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["iPhoneRefreshDownSecs"] - macList[thisMAC]["quickTest"]:	 continue

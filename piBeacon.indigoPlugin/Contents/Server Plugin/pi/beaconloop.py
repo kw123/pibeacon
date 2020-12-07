@@ -1,10 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# test BLE Scanning software
-# jcs 6/8/2014
 #  adopted by Karl Wachs Nov27	2015
-# version 1.1  Dec 24
-# v 2	 feb 5 2016
+#
+# scans for any kind of BLE message and sends info to indigo plugin
+#
+# has 2 method: socket and commandline (hcidump) to get info
+#
+# also scanns for sensor devices that send of eg temp/ hum/ acceleration ble messages
+#
+# can also beep and get battery level w gatttool commands
+#
+# can also send all  messages parsed to the plugin as requested
+#
+# can also track a single mac, all messages and all steps to ID these messages
+#
+# it is now >5< years in development
+#
+# runs on all kinds of RPI and BLE UART and external dongles
+#
 
 
 from __future__ import division
@@ -3010,7 +3023,7 @@ def beep(useHCI):
 			for kk in range(3):
 				tryAgain -= 1
 				if tryAgain < 0: break
-				if tryAgain != 2:
+				if tryAgain != 2 and expCommands != "":
 					try: expCommands.sendline("disconnect")	
 					except: pass	
 
@@ -3023,21 +3036,14 @@ def beep(useHCI):
 				if ret == 0:
 					U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 					connected = True
-				elif ret == 1:
-					if ii < ntriesConnect-1: 
-						U.logger.log(20, u"... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
-						time.sleep(1)
-						break
-				elif ret == 2:
-					if ii < ntriesConnect-1: 
-						U.logger.log(20, u"... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
-						time.sleep(1)
-						break
 				else:
-					if ii < ntriesConnect-1: 
-						U.logger.log(20,"... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
-						time.sleep(1)
-						break
+					if ii < ntriesConnect-1:
+						if ret == 1:	U.logger.log(20, u"... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
+						elif ret == 2:	U.logger.log(20, u"... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
+						else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
+					expCommands.kill(0)
+					time.sleep(0.1)
+					break
 
 				time.sleep(0.1)
 
@@ -3063,18 +3069,12 @@ def beep(useHCI):
 								U.logger.log(20,"... successful: {}".format(expCommands.after))
 								connected = True
 								break
-							elif ret == 1:
-								if ii < ntriesConnect-1: 
-									U.logger.log(20, u"... error, try again: {}-{}".format(expCommands.before,expCommands.after))
-									time.sleep(1)
-							elif ret == 2:
-								if ii < ntriesConnect-1: 
-									U.logger.log(20, u"... timeout, try again: {}-{}".format(expCommands.before,expCommands.after))
-									time.sleep(1)
 							else:
 								if ii < ntriesConnect-1: 
-									U.logger.log(20,"... unexpected, try again: {}-{}".format(expCommands.before,expCommands.after))
-									time.sleep(1)
+									if ret == 1:	U.logger.log(20, u"... error, try again: {}-{}".format(expCommands.before,expCommands.after))
+									elif ret == 2:	U.logger.log(20, u"... timeout, try again: {}-{}".format(expCommands.before,expCommands.after))
+									else:			U.logger.log(20, "... unexpected, try again: {}-{}".format(expCommands.before,expCommands.after))
+							time.sleep(1)
 
 						except Exception, e:
 							U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -3100,19 +3100,13 @@ def beep(useHCI):
 										U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 										time.sleep(0.1)
 										continue
-									elif ret in[1,2]:
-										if ii < ntriesConnect-1: 
-											U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before,expCommands.after))
-										success = False
-										break
-									elif ret == 3:
-										U.logger.log(20,"... timeout, quit: {}-{}".format(expCommands.before,expCommands.after))
-										success = False
-										break
 									else:
-										U.logger.log(20,"... unexpected, quit: {}-{}".format(expCommands.before,expCommands.after))
-										success = False
-										break
+										if ii < ntriesConnect-1: 
+											if ret in[1,2]:	U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before,expCommands.after))
+											elif ret == 3:	U.logger.log(20, "... timeout, quit: {}-{}".format(expCommands.before,expCommands.after))
+											else:			U.logger.log(20, "... unexpected, quit: {}-{}".format(expCommands.before,expCommands.after))
+									success = False
+									break
 								lastBeep = time.time()
 							if time.time() - startbeep > beepTime: break
 							time.sleep(1)
@@ -3125,12 +3119,10 @@ def beep(useHCI):
 								if ret == 0:
 									U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 									time.sleep(0.1)
-								elif ret in[1,2]:
-									U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
-								elif ret == 3:
-									U.logger.log(20,"... timeout: {}-{}".format(expCommands.before,expCommands.after))
 								else:
-									U.logger.log(20,"... unknown: {}-{}".format(expCommands.before,expCommands.after))
+									if ret in[1,2]:	U.logger.log(20, "... error: {}-{}".format(expCommands.before,expCommands.after))
+									elif ret == 3:	U.logger.log(20, "... timeout: {}-{}".format(expCommands.before,expCommands.after))
+									else:			U.logger.log(20, "... unknown: {}-{}".format(expCommands.before,expCommands.after))
 								tryAgain = -1
 
 						expCommands.sendline("disconnect" )
@@ -3138,13 +3130,12 @@ def beep(useHCI):
 						ret = expCommands.expect([">","Error",pexpect.TIMEOUT], timeout=5)
 						if ret == 0:
 							U.logger.log(20,"... successful: {}".format(expCommands.after))
-						elif ret == 1:
-							U.logger.log(20,"... error: {}".format(expCommands.after))
-						elif ret == 2:
-							U.logger.log(20,"... timeout: {}".format(expCommands.after))
-						else: 
-							U.logger.log(20,"... unknown: {}".format(expCommands.after))
-
+						else:
+							if ret == 1: 	U.logger.log(20, "... error: {}".format(expCommands.after))
+							elif ret == 2:	U.logger.log(20, "... timeout: {}".format(expCommands.after))
+							else: 			U.logger.log(20, "... unknown: {}".format(expCommands.after))
+							expCommands.kill(0)
+							expCommands = ""
 
 				except Exception, e:
 					U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -3153,9 +3144,16 @@ def beep(useHCI):
 			if expCommands !="":
 				try:	expCommands.sendline("quit\r" )
 				except: pass
+				try:	expCommands.kill(0)
+				except: pass
+				expCommands = ""
+
 
 		if expCommands !="":
-			expCommands.close()		
+			try:	expCommands.sendline("quit\r" )
+			except: pass
+			try:	expCommands.kill(0)
+			except: pass
 	except Exception, e:
 			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -3893,7 +3891,7 @@ def execbeaconloop(test):
 
 	readParams(True)
 
-	U.logger.log(30,"======= starting v:{} ========".format(version))
+	U.logger.log(30,"======= starting beaconloop v:{}".format(version))
 
 	fixOldNames()
 
