@@ -11,7 +11,7 @@ import	sys, os, subprocess, copy
 import	time,datetime
 import	json
 import  pexpect
-
+import  re
 try:
 	import bluetooth
 	import bluetooth._bluetooth as bt
@@ -29,6 +29,8 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "BLEconnect"
 version = 5.3
+ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
+
 
 
 #################################
@@ -325,7 +327,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 
 	data = {"connected":False, "ok":False }
 	try:
-
+		verbose = False
 		"""
 		will take ~ 8-12 secs to connect then send data every 5 secs or so, 
 			when issuing command immediate afterwads, will likely retuurn dat, when waiting for more than 10 secs it will need a pause of > 1 minute 
@@ -347,7 +349,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 
 			startCMD = time.time()
 
-			expCommands = connectGATT(useHCI, MAC, 5, 25, repeat=1)
+			expCommands = connectGATT(useHCI, MAC, 5, 25, repeat=2, verbose=verbose)
 			if expCommands == "":
 				macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
 				macList[MAC]["triesWOdata"] +=1
@@ -362,9 +364,9 @@ def BLEXiaomiMiTempHumSquare(MAC):
 			readData = []
 
 			for nn in range(2):
-				readData = writeAndListenGattcmd(expCommands, "char-write-req 0038 0100", "value:", 5, 15)
+				readData = writeAndListenGattcmd(expCommands, "char-write-req 0038 0100", "value:", 5, 15, verbose=verbose)
 				if readData != []: break
-				time.sleep(2)
+				time.sleep(1)
 			disconnectGattcmd(expCommands, MAC, 2)
 
 
@@ -420,6 +422,7 @@ def BLEXiaomiMiVegTrug(MAC):
 	data = {"connected":False, "ok":False }
 	try:
 		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
+		verbose = False
 
 		minWaitAfterBadRead = min(20,max(5,macList[MAC]["readSensorEvery"]/3))
 		macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
@@ -445,7 +448,7 @@ def BLEXiaomiMiVegTrug(MAC):
 		"""
 			
 		#U.logger.log(20, u"{},  tries:{}, DT:{}".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
-		expCommands = connectGATT(useHCI, MAC, 5,15)
+		expCommands = connectGATT(useHCI, MAC, 5,15, verbose=verbose)
 		if expCommands == "":
 			macList[MAC]["triesWOdata"] +=1
 			data["triesWOdata"] = macList[MAC]["triesWOdata"]
@@ -460,26 +463,26 @@ def BLEXiaomiMiVegTrug(MAC):
 		result2 = []
 
 		for nn in range(1):
-			if not writeGattcmd(expCommands, "char-write-req 33 A01F", "Characteristic value was written successfully", 5):
+			if not writeGattcmd(expCommands, "char-write-req 33 A01F", "Characteristic value was written successfully", 5, verbose=verbose):
 									continue
 
-			result1 = readGattcmd(expCommands, "char-read-hnd 38", "Characteristic value/descriptor:", 7, 5)
+			result1 = readGattcmd(expCommands, "char-read-hnd 38", "Characteristic value/descriptor:", 7, 5, verbose=verbose)
 			if result1 == []:		continue
 
-			result2 = readGattcmd(expCommands, "char-read-hnd 35", "Characteristic value/descriptor:", 16, 5)
+			result2 = readGattcmd(expCommands, "char-read-hnd 35", "Characteristic value/descriptor:", 16, 5, verbose=verbose)
 			if result2 == []:		continue
 
 			break
 
 		disconnectGattcmd(expCommands, MAC, 2)
 
-		#U.logger.log(20, u"connect results:{} - {}".format(result1, result2))
+		if verbose: U.logger.log(20, u"connect results:{} - {}".format(result1, result2))
 
 		if result1 == [] or result2 == []:
 			data["triesWOdata"] = macList[MAC]["triesWOdata"]
 			if macList[MAC]["triesWOdata"] >= maxTrieslongConnect:
 				macList[MAC]["triesWOdata"] = 0
-				#U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
+				if verbose: U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 				return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
 			return data
 
@@ -505,29 +508,29 @@ def BLEXiaomiMiVegTrug(MAC):
 			      time.time()           - macList[MAC]["lastTesttt"]             	> 119.):
 			macList[MAC]["lastTesttt"] = time.time()
 			macList[MAC]["lastData"]  = copy.copy(data)
-			#U.logger.log(20, "{} return data: {}".format(MAC, data))
+			if verbose: U.logger.log(20, "{} return data: {}".format(MAC, data))
 			return data
 
 		data = {"ok":False, "connected":True, "triesWOdata": macList[MAC]["triesWOdata"]}
-		#U.logger.log(20, u"{}; return data:{}, triesWOdata:{}, repeat in {} secs".format(MAC, data, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
+		if verbose: U.logger.log(20, u"{}; return data:{}, triesWOdata:{}, repeat in {} secs".format(MAC, data, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 		return data
 
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return "badData"
 	
-	#U.logger.log(20, "{} return data: {}".format(MAC, data))
+	if verbose: U.logger.log(20, "{} return data: {}".format(MAC, data))
 	
 	return data
 
 #################################
-def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1):
+def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1, verbose = False):
 
 	try:
 		nTries = 1
 		for kk in range(nTries):
 			cmd = "sudo /usr/bin/gatttool -i {} -b {} -I".format(useHCI,  MAC) 
-			#U.logger.log(20,"{} ;  expect: >".format(cmd))
+			if verbose: U.logger.log(20,"{} ;  expecting: '>'".format(cmd))
 			expCommands = pexpect.spawn(cmd)
 			ret = expCommands.expect([">","error",pexpect.TIMEOUT], timeout=timeoutGattool)
 			if ret == 0:
@@ -547,23 +550,19 @@ def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1):
 			#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
 			for ii in range(repeat):
 				try:
-					#U.logger.log(20,"send connect .. expect: Connection successful ")
+					if verbose: U.logger.log(20,"send connect try#:{}  expecting: Connection successful ".format(ii))
 					expCommands.sendline("connect")
 					ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=timeoutConnect)
 					if ret == 0:
-						pass
-						#U.logger.log(20,"connect successful: {}-==-:{}".format(expCommands.before,expCommands.after))
+						if verbose: U.logger.log(20,"connect successful: {}-==-:{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 						#ret = expCommands.expect(".*", timeout=0.5)
 						#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
 						return expCommands
 					else:
-						pass
-						#U.logger.log(20, u"connect error: {}-==-:{}".format(expCommands.before,expCommands.after))
-
+						if verbose: U.logger.log(20, u"connect error: waiting 1 sec;  .. {}-==-:{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
+						time.sleep(1)
 				except Exception, e:
 					U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				time.sleep(1)
-			time.sleep(1)
 
 
 			#U.logger.log(20, u"connect error giving up")
@@ -577,20 +576,20 @@ def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1):
 
 
 #################################
-def disconnectGattcmd(expCommands, MAC, timeout):	
+def disconnectGattcmd(expCommands, MAC, timeout, verbose=False):	
 	try:
 		expCommands.sendline("quit" )
-		#U.logger.log(20,"sendline disconnect ")
+		if verbose: U.logger.log(20,"sendline disconnect ")
 		ret = expCommands.expect([".*","Error",pexpect.TIMEOUT], timeout=timeout)
 		if ret == 0:
 			expCommands.kill(0)
-			#U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
-			#U.logger.log(20,"quit ok")
+			U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
+			if verbose: U.logger.log(20,"quit ok")
 			return True
 		else:
-			#U.logger.log(20,"not disconnected, quit command error: {}".format(expCommands.after))
+			if verbose: U.logger.log(20,"not disconnected, quit command error: {}".format(escape_ansi(expCommands.after)))
 			expCommands.kill(0)
-			#U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
+			U.killOldPgm(-1,"gatttool",  param1=MAC,param2="",verbose=False)
 			return False
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -598,14 +597,14 @@ def disconnectGattcmd(expCommands, MAC, timeout):
 
 
 #################################
-def writeGattcmd(expCommands, cc, expectedTag, timeout):	
+def writeGattcmd(expCommands, cc, expectedTag, timeout, verbose=False):	
 	try:		
 		for ii in range(3):
-			#U.logger.log(20,"sendline  cmd{}".format( cc))
+			if verbose: U.logger.log(20,"sending cmd:{}, expecting:'{}'".format(cc, expectedTag.encode('ascii',errors='ignore')))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=5)
 			if ret == 0:
-				##U.logger.log(20,"... successful: BF:{}-- AF:{}--".format(expCommands.before, expCommands.after))
+				if verbose: U.logger.log(20,"... successful: BF:{}-- AF:{}--".format(escape_ansi(expCommands.before), escape_ansi(expCommands.after)))
 				return True
 			else: 
 				#U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before, expCommands.after))
@@ -617,49 +616,55 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout):
 	return False
 
 #################################
-def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout):
+def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	try:
 		for kk in range(2):
-			#U.logger.log(20,"sendline  cmd{}".format( cc))
+			if verbose:  U.logger.log(20,"sendline  cmd{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
 			if ret == 0:
-				#U.logger.log(20,"... successful:  BF:{}-- AF:{}--".format(expCommands.before,expCommands.after))
+				if verbose: U.logger.log(20,"... successful:  BF:{}-- AF:{}--".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 				ret = expCommands.expect("\n")
 				xx = (expCommands.before.replace("\r","").strip()).split() 
 				if len(xx) == nBytes:
+					if verbose: U.logger.log(20,"returning:{}".format(xx))
 					return xx
 				else:
-					#U.logger.log(20,"... error: len != 7")
+					U.logger.log(20,"... error: len != {} .. {}".format(nBytes, xx))
 					continue
 			else:
-				#U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
+				if verbose: U.logger.log(20,"... error: {}-{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 				continue
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return []
 #################################
-def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout):
+def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	try:
 		for kk in range(2):
-			#U.logger.log(20,"sendline  cmd{}".format( cc))
+			if verbose: U.logger.log(20,"sendline  cmd{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
 			if ret == 0:
-				#U.logger.log(20,"... successful:  BF:{}-- AF:{}--".format(expCommands.before,expCommands.after))
+				if verbose: U.logger.log(20,"... successful:  BF:{}-- AF:{}--".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 				ret = expCommands.expect("\n")
 				xx = (expCommands.before.replace("\r","").strip()).split() 
 				if len(xx) == nBytes:
 					return xx
 				else:
-					#U.logger.log(20,"... error: len != 7")
+					if verbose: U.logger.log(20,"... error: len != {}".format(nBytes))
 					continue
 			else:
-				#U.logger.log(20,"... error: {}-{}".format(expCommands.before,expCommands.after))
+				if verbose: U.logger.log(20,"... error: {}-{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 				continue
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return []
+
+
+#################################
+def escape_ansi(line):
+	return ansi_escape.sub('', line).encode('ascii',errors='ignore')
 
 
 

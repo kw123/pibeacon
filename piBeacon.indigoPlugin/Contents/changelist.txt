@@ -1,4 +1,4 @@
-Added features / changes in v7.131.478@ 2020-12-07
+Added features / changes in v7.131.479@ 2020-12-07
 ===================================================
 
 0. added option to use 2 UBS BLE dongles, beta
