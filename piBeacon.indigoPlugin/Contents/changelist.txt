@@ -1,3 +1,19 @@
+Added features / changes in v7.132.480@ 2020-12-11
+===================================================
+
+
+1. added sensors:
+  
+Xiaomi MiJia Bluetooth Xiaomi MiJia MI clock w temp humidity(LYWSD02)   w clock temp/hum display   2xcr2032  
+  shows T, H, Batterylevel. and count (message#) in indigo dev states  
+  This sensor sends out Broadcasts w T, H , Battery and count     
+
+works similar to Ruuvitag, w display, but no preasure and acceleration info.
+you need to use the Xiaomi mi home app to setup the sensor (connect to china server, todate that sensor was not supported on servers outside china)
+
+
+
+
 Added features / changes in v7.131.479@ 2020-12-07
 ===================================================
 

@@ -236,7 +236,7 @@ _BLEsensorTypes =[u"BLERuuviTag",
 				u"BLEminewE8", u"BLEminewS1TH", u"BLEminewS1TT", u"BLEminewS1Plus", "BLEminewAcc",
 				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum", 
 				u"BLESatech",
-				u"BLEXiaomiMiTempHumRound"]
+				u"BLEXiaomiMiTempHumRound","BLEXiaomiMiTempHumClock"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 	 u"apds9960",															  # dist gesture
@@ -3845,7 +3845,7 @@ class Plugin(indigo.PluginBase):
 			elif typeId.find(u"OUTPUTgpio-") > -1 or typeId.find(u"OUTPUTi2cRelay") > -1:
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_OUTPUTG(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId in _GlobalConst_allowedSensors or typeId in _BLEsensorTypes:
+			elif typeId in _GlobalConst_allowedSensors or typeId in _BLEsensorTypes or ( "isBLElongConnectDevice"in valuesDict and valuesDict["isBLElongConnectDevice"]):
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_sensors(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId in _GlobalConst_allowedOUTPUT:
@@ -4246,10 +4246,7 @@ class Plugin(indigo.PluginBase):
 							self.RPI[piU][u"sensorList"] = self.RPI[piU][u"sensorList"].replace(typeId+u",","")
 					continue
 
-				if typeId == u"BLEmyBLUEt":
-					valuesDict[u"description"] = u"myBLUEt" +u"-"+ valuesDict[u"mac"]
-
-				if  typeId in _BLEsensorTypes:
+				if  typeId in _BLEsensorTypes or ( "isBLElongConnectDevice"in valuesDict and valuesDict["isBLElongConnectDevice"]):
 					valuesDict[u"address"] =  valuesDict[u"mac"]
 
 				if  typeId == u"launchpgm":

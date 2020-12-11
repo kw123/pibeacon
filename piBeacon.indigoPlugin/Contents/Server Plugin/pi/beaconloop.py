@@ -1195,7 +1195,9 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 
 			if sensor.find("BLEXiaomiMiTempHumRound") >-1:
-				return  doBLEXiaomiMiTempHumRound( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
+				return  doBLEXiaomiMiTempHum( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
+			if sensor.find("BLEXiaomiMiTempHumClock") >-1:
+				return  doBLEXiaomiMiTempHum( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1203,33 +1205,106 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 #################################
 
-def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
+def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
 	global BLEsensorMACs, sensors
 	try:
 		if len(hexData) < 60: return tx, "", UUID, Maj, Min, False
 
 		hexData = hexData[12:]
-		## message formats
-        ##                                    counter                                    data-
-        ##                                         reverse mac -----   type- ll    1  2  3  4		
-		##16 02 01 06 12 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0A 10 01   64      			battery; 	ll= 1 byte
-		##17 02 01 06 13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   06 10 02   16 02   			hum; 		ll= 2 byte
-		##17 02 01 06 13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   04 10 02   DA 02   			temp; 		ll= 2 byte
-		##19 02 01 06 15 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0D 10 04   FC 00   1E 02  	temp + hum;	ll= 4 byte
-		##01 23 45 67 89 11 23 45 67 89 21 23 45   67 89 31 23 45 67   89 41 23   45 67   89 61		position in hexData
+		"""
+		## message formats for round sensor - LYWSDCGQ = AA 01 = S-typ
+        ##                                       counter                                    data-
+        ##                                             S-typ ct   reverse mac -----   Stype ll      1  2  3  4		
+		##16 02 01 06                12 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0A 10 01      64      			0A=battery; 	ll= 1 byte
+		##17 02 01 06                13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   06 10 02      16 02   			06=hum; 		ll= 2 byte
+		##17 02 01 06                13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   04 10 02      DA 02   			04=temp; 		ll= 2 byte
+		##19 02 01 06                15 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0D 10 04      FC 00   1E 02  		0D=temp + hum;	ll= 4 byte
+		# 
+	pos   01 23 45 67                89 11 23 45 67 89 21 23 45   67 89 31 23 45 67   89 41 23      45 67   89 61		position in hexData
+		##
+		## clock - LYWSD02 = 5B 04 = S-typ, no battery level? , each meassge is eitherh T or H or bat only 
+		## mac#                E7:2E:01:41:5C:D9                                        
+        ##ll            ll           ll                S-typ ct   reverse mac -----   ?? Stype ll   1  2 		
+		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 04 10 02   EE 00    			04=temp  00ee --> 238/10 = 23.8
+		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 06 10 02   A4 01    			06=hum   01aa --> 420/10 = 42.9%
+		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 0A 10 01   5B 00				0A=batt  5B   --> 91  ll= 1 byte, not too often
+	pos   01 23 45 67   89 11 23 45  67 89 21 23 45 67 89 31 23   45 67 89 41 23 45   67 89 51 23   45 67				position in hexData
 
-		testString 		= hexData[10:24]   + macplainReverse + hexData[38:44]
-		testStringTEMP 	= "1695FE5020AA01" + macplainReverse + "041002"
-		testStringHUM 	= "1695FE5020AA01" + macplainReverse + "061002"
-		testStringTH 	= "1695FE5020AA01" + macplainReverse + "0D1004"
-		testStringBAT 	= "1695FE5020AA01" + macplainReverse + "0A1001"
+	# Xiaomi sensor types dictionary 
+	#                              binary?
+	XIAOMI_TYPE_DICT = {
+		b'\x98\x00': ("HHCCJCY01", False),
+		b'\xAA\x01': ("LYWSDCGQ", False),    # TH round
+		b'\x5B\x04': ("LYWSD02", False),     # clock TH 
+		b'\x47\x03': ("CGG1", False),
+		b'\x5D\x01': ("HHCCPOT002", False),
+		b'\xBC\x03': ("GCLS002", False),
+		b'\x5B\x05': ("LYWSD03MMC", False),  # TH square
+		b'\x76\x05': ("CGD1", False),
+		b'\xDF\x02': ("JQJCY01YM", False),
+		b'\x0A\x04': ("WX08ZM", True),
+		b'\x87\x03': ("MHO-C401", False),
+		b'\xd3\x06': ("MHO-C303", False),
+		b'\x8B\x09': ("MCCGQ02HL", True),
+		b'\x83\x00': ("YM-K1501", True),
+	}
 
-		doPrint = False
-		if doPrint:
-			out = ""
-			for ii in range(0,len(hexData)-2,2):
-				if ii == 38: out+= "  "
-				out+= hexData[ii:ii+2] + " "
+
+	# Sensor type indexes dictionary for sensor platform
+	# Temperature, Humidity, Moisture, Conductivity, Illuminance, Formaldehyde, Consumable, Battery, Switch, Opening, Light
+	#                          sensor               binary
+	# Measurement type [T  H  M  C  I  F  Cn B]  [Sw O  L  B]     (start from 0, 9 - no data)
+	MMTS_DICT = {
+		'HHCCJCY01' : [[0, 9, 1, 2, 3, 9, 9, 9], [9, 9, 9, 9]],
+		'GCLS002'   : [[0, 9, 1, 2, 3, 9, 9, 9], [9, 9, 9, 9]],
+		'HHCCPOT002': [[9, 9, 0, 1, 9, 9, 9, 9], [9, 9, 9, 9]],
+		'LYWSDCGQ'  : [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]], # TH round
+		'LYWSD02'   : [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]], # clock TH 
+		'CGG1'      : [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]],
+		'LYWSD03MMC': [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]], # TH square
+		'CGD1'      : [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]],
+		'JQJCY01YM' : [[0, 1, 9, 9, 9, 2, 9, 3], [9, 9, 9, 9]],
+		'WX08ZM'    : [[9, 9, 9, 9, 9, 9, 0, 1], [0, 9, 9, 1]],
+		'MHO-C401'  : [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]],
+		'MHO-C303'  : [[0, 1, 9, 9, 9, 9, 9, 2], [9, 9, 9, 9]],
+		'MCCGQ02HL' : [[9, 9, 9, 9, 9, 9, 9, 0], [9, 0, 1, 2]],
+		'YM-K1501'  : [[0, 9, 9, 9, 9, 9, 9, 9], [0, 9, 9, 9]],
+	}
+
+	"""
+		doPrint 		= False
+		out 			= ""
+		testStringTEMP 	= "x"
+		testStringHUM  	= "x"
+		testStringTH 	= "x"
+		testStringBAT 	= "x"
+		testStringFAL 	= "x" # Formaldehyde
+
+		BATtag   		= "0A1001"
+		TEMPtag  		= "041002"
+		HUMtag   		= "061002"
+		TEMPHtag 		= "0D1004"
+		#							 						ID-tag		sensTypeTag		counter
+		typeInfo 		= 	{"LYWSDCGQ":{"pos0":10, "pos1":[ 0,14], "pos2":[28,34], "posC":14, "id":"1695FE5020AA01"},
+							 "LYWSD02": {"pos0":18, "pos1":[ 0,14], "pos2":[30,36], "posC":14, "id":"1695FE70205B04"}
+							}
+
+		sens = ""
+		if	 sensor.find("Round") >-1: 	sens = "LYWSDCGQ"
+		elif sensor.find("Clock") >-1: 	sens = "LYWSD02"
+		else: 
+			#U.logger.log(20, u"mac:{},sens not found:{}, sensor:{}".format(mac, sens, sensor))
+			return tx, "", UUID, Maj, Min, False
+
+		hData = hexData[typeInfo[sens]["pos0"]:]
+
+		testString		= hData[typeInfo[sens]["pos1"][0]:typeInfo[sens]["pos1"][1]]	+ macplainReverse + hData[typeInfo[sens]["pos2"][0]:typeInfo[sens]["pos2"][1]]
+		testStringTEMP 	= typeInfo[sens]["id"] 											+ macplainReverse + TEMPtag
+		testStringTH	= typeInfo[sens]["id"] 											+ macplainReverse + TEMPHtag
+		testStringHUM	= typeInfo[sens]["id"] 											+ macplainReverse + HUMtag
+		testStringBAT	= typeInfo[sens]["id"] 											+ macplainReverse + BATtag
+		dataString		= hData[typeInfo[sens]["pos2"][1]:]
+		counter			= int(hData[typeInfo[sens]["posC"]:typeInfo[sens]["posC"]+2],16)
 
 		if BLEsensorMACs[mac][sensor]["nMessages"] == 0:
 			BLEsensorMACs[mac][sensor]["tempAve"] = []
@@ -1238,7 +1313,12 @@ def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, U
 				BLEsensorMACs[mac][sensor]["tempAve"].append(-100)
 				BLEsensorMACs[mac][sensor]["tempHum"].append(-100)
 
-		dataString 	= hexData[44:]
+		out = ""
+		for ii in range(0,len(hexData)-2,2):
+			out+= hexData[ii:ii+2] + " "
+		if doPrint:
+			U.logger.log(20, u"mac:{},sensor:{} data string:{}, count:{}, {}".format(mac,sensor,  dataString, counter, out))
+
 
 		temp = BLEsensorMACs[mac][sensor]["temp"]
 		hum  = BLEsensorMACs[mac][sensor]["hum"]
@@ -1246,11 +1326,10 @@ def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, U
 		if testString == testStringTH: 
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
 			if val > 32767: val -= 65536
-			temp = tralingAv(sensor, mac, "tempAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetTemp"]
+			temp = tralingAv(sensor, mac, "tempAve", val/10.)
 			val = int(dataString[4:6],16) + int(dataString[6:8],16)*256+0.5
 			if val > 32767: val -= 65536
-			hum = int( tralingAv(sensor, mac, "humAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetHum"] +0.5 )
-
+			hum = int( tralingAv(sensor, mac, "humAve", val/10.))
 			if doPrint:
 				U.logger.log(20, u"mac:{}, typ: TH  {}+{} =tem:{}; {}+{} =hum:{}  dataString:{} ".format(mac, dataString[0:2],dataString[2:4],  temp, dataString[4:6],dataString[6:8], hum, out))
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
@@ -1258,17 +1337,21 @@ def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, U
 		elif testString == testStringHUM: 
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256 +0.5
 			if val > 32767: val -= 65536
-			hum = int( tralingAv(sensor, mac,"humAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetHum"] + 0.5)
+			hum = int( tralingAv(sensor, mac,"humAve", val/10.) )
 			if doPrint:
-				U.logger.log(20, u"mac:{}, typ: H  {}+{} =val:{};   dataString:{}".format(mac, dataString[0:2],dataString[2:4],  hum, out))
+				U.logger.log(20, u"mac:{}, typ: H  {}+{} =Hum:{};   dataString:{}".format(mac, dataString[0:2],dataString[2:4],  hum, out))
+			if BLEsensorMACs[mac][sensor]["hum"]   == -100: 
+				BLEsensorMACs[mac][sensor]["hum"]   = hum
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 
 		elif   testString == testStringTEMP:
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
 			if val > 32767: val -= 65536
-			temp = tralingAv(sensor, mac, "tempAve", val/10.)  + BLEsensorMACs[mac][sensor]["offsetTemp"]
+			temp = tralingAv(sensor, mac, "tempAve", val/10.)  
 			if doPrint:
-				U.logger.log(20, u"mac:{}, typ: T  {}+{} =hum:{};   dataString:{}".format(mac, dataString[0:2],dataString[2:4],  temp, out))
+				U.logger.log(20, u"mac:{}, typ: T  {}+{} =temp:{};   dataString:{}".format(mac, dataString[0:2],dataString[2:4],  temp, out))
+			if BLEsensorMACs[mac][sensor]["temp"]   == -100: 
+				BLEsensorMACs[mac][sensor]["temp"]   = temp
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 
 		elif testString == testStringBAT: 
@@ -1278,23 +1361,24 @@ def doBLEXiaomiMiTempHumRound(mac, macplain, macplainReverse, rx, tx, hexData, U
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 
 		else:
-			if doPrint: U.logger.log(20, u"mac:{}, data not found, dataString:{}  hexstr:{} ".format(mac, dataString, out ))
+			#if sensor.find("Clock") >-1 or doPrint: U.logger.log(20, u"mac:{}, data not found, dataString:{}  hexstr:{} ".format(mac, dataString, out ))
 			return tx, BLEsensorMACs[mac][sensor]["batteryLevel"], UUID, Maj, Min, False	
 
-		counter 	= int(hexData[24:26],16)
 
 
 		dd={   # the data dict to be send 
-						'temp': 		round(temp,1),
-						'hum': 			int(hum),
-						'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
-						'batteryLevel': BLEsensorMACs[mac][sensor]["batteryLevel"] , 
+						'temp': 		round(temp+ BLEsensorMACs[mac][sensor]["offsetTemp"],1),
+						'hum': 			int(hum + BLEsensorMACs[mac][sensor]["offsetHum"] + 0.5),
+						'counter': 		counter, 
+						'batteryLevel': BLEsensorMACs[mac][sensor]["batteryLevel"], 
 						"rssi":			int(rx),
 				}
 
 		trigTime 	= time.time() - BLEsensorMACs[mac][sensor]["lastUpdate"]   > BLEsensorMACs[mac][sensor]["updateIndigoTiming"]  			# send min every xx secs
 		trigTemp	= abs(temp - BLEsensorMACs[mac][sensor]["temp"]) > 0.5
 		trigHum		= abs(hum - BLEsensorMACs[mac][sensor]["hum"]) > 2
+
+		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, triggers:{};{};{};   nMessages:{}".format(mac, temp, hum, trigTime, trigTemp, trigHum, BLEsensorMACs[mac][sensor]["nMessages"]))
 
 		if BLEsensorMACs[mac][sensor]["nMessages"] > 6 and hum > -100. and temp > -100.:
 			if  trigTime or trigTemp or trigHum:
