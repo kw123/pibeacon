@@ -236,7 +236,7 @@ _BLEsensorTypes =[u"BLERuuviTag",
 				u"BLEminewE8", u"BLEminewS1TH", u"BLEminewS1TT", u"BLEminewS1Plus", "BLEminewAcc",
 				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum", 
 				u"BLESatech",
-				u"BLEXiaomiMiTempHumRound","BLEXiaomiMiTempHumClock"]
+				u"BLEXiaomiMiTempHumRound","BLEXiaomiMiTempHumClock","BLEgoveeTempHum"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
 	 u"apds9960",															  # dist gesture

@@ -95,6 +95,22 @@
     "comment":"       F l o w e r  c a r e",
     "hexCode":"0D0C09466C6F7765722063617265"
   }, 
+  "BLEgoveeTempHum":  {
+    "text":"Govee Temp Hum .. sensors",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 4, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"  G V H  .. sensor # ",
+    "hexCode":"09475648"
+  }, 
   "iBSxx":  {
     "text":"INGISCS iBS01 .. 04",
     "Maj":"",

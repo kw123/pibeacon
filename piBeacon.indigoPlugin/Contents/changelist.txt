@@ -1,3 +1,16 @@
+Added features / changes in v7.132.481@ 2020-12-14
+===================================================
+
+
+1. added BLE sensors:
+  Govee Temp & humidity sensors, they broadcast T, H, BatteryLevel
+  - H5101 w small display
+  - H5075 w medium display
+  - H5177 w large display
+  - H5174 outside sensor, no display
+
+
+
 Added features / changes in v7.132.480@ 2020-12-11
 ===================================================
 
@@ -8,7 +21,7 @@ Xiaomi MiJia Bluetooth Xiaomi MiJia MI clock w temp humidity(LYWSD02)   w clock 
   shows T, H, Batterylevel. and count (message#) in indigo dev states  
   This sensor sends out Broadcasts w T, H , Battery and count     
 
-works similar to Ruuvitag, w display, but no preasure and acceleration info.
+works similar to Ruuvitag, w display, but no pressure and acceleration info.
 you need to use the Xiaomi mi home app to setup the sensor (connect to china server, todate that sensor was not supported on servers outside china)
 
 
