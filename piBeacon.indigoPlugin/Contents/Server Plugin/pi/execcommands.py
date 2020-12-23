@@ -25,7 +25,7 @@ externalGPIO = False
 
 
 def OUTPUTi2cRelay(command):
-	global myPID
+	global myPID, debLevel
 	import smbus
 	try:
 		devType = "OUTPUTi2cRelay"
@@ -92,11 +92,11 @@ def OUTPUTi2cRelay(command):
 				off  = "low" 
 			if cmd == "up":
 				bus.write_byte_data(i2cAddress, pin, up)
-				U.logger.log(30, "relay {} {} {} ".format(i2cAddress, pin, down))
+				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
 			elif cmd == "down":
-				U.logger.log(30, "relay {} {} {} ".format(i2cAddress, pin, down))
+				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
 				bus.write_byte_data(i2cAddress, pin, 0x00)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
@@ -134,7 +134,7 @@ def OUTPUTi2cRelay(command):
 
 
 def setGPIO(command):
-	global PWM, myPID, typeForPWM
+	global PWM, myPID, typeForPWM, debLevel
 	import RPi.GPIO as GPIO
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setwarnings(False)
@@ -208,10 +208,12 @@ def setGPIO(command):
 			GPIO.setup(pin, GPIO.OUT)
 			if inverseGPIO: 
 				GPIO.output(pin, False)
+				U.logger.log(debLevel, "setGPIO pin={}; command {}".format(pin,False) )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 			else:
 				GPIO.output(pin, True)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				U.logger.log(debLevel, "setGPIO pin={}; command {}".format(pin,True) )
 		
 
 		elif cmd == "down":
@@ -219,9 +221,11 @@ def setGPIO(command):
 			if inverseGPIO: 
 				GPIO.output(pin, True)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				U.logger.log(debLevel, "setGPIO pin={}; command {}".format(pin,True) )
 			else: 
 				GPIO.output(pin, False )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				U.logger.log(debLevel, "setGPIO pin={}; command {}".format(pin,False) )
 
 		elif cmd == "analogWrite":
 			if inverseGPIO:
@@ -229,7 +233,7 @@ def setGPIO(command):
 			else:
 				value =   bits	 # duty cycle on xxx hz 
 			value = int(value)
-			U.logger.log(10, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
+			U.logger.log(debLevel, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
 			if value > 0:
 				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 			else:
@@ -312,7 +316,7 @@ def setGPIO(command):
 
 
 def execCMDS(data):
-	global execcommands, PWM
+	global execcommands, PWM, debLevel
 
 	for ijji in range(1):
 			next =""
@@ -325,7 +329,7 @@ def execCMDS(data):
 
 			#print next
 			#print "next command: "+unicode(next)
-			U.logger.log(10,"next command: "+unicode(data))
+			U.logger.log(debLevel,"next command: "+unicode(data))
 			cmd= next["command"]
 
 			for cc in next:
@@ -682,7 +686,9 @@ def readParams():
 
 ### main pgm 		 
 global execcommands, PWM, myPID, killMyselfAtEnd
+global debLevel
 if True: #__name__ == "__main__":
+	debLevel = 0
 	PWM = 100
 	myPID = int(os.getpid())
 	U.setLogging()

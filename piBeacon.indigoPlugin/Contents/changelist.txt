@@ -1,3 +1,11 @@
+Added features / changes in v7.133.482@ 2020-12-23
+===================================================
+
+1. added BLE sensors:
+  blueradio sensor bug, support temp, light and orientation
+2. changed number to float in device states for indigo version 7.5
+
+
 Added features / changes in v7.132.481@ 2020-12-14
 ===================================================
 

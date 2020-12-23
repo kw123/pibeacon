@@ -39,11 +39,11 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 			
 		for next in commands:
 			if execGeneral(next): continue
-
+ 
 			cmdJ = json.dumps(next)
-			#U.logger.log(20,"cmd= "+cmdJ)
+			U.logger.log(20,"cmd= "+cmdJ)
 			#print cmdJ
-			cmdOut="/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
+			cmdOut = "/usr/bin/python "+G.homeDir+"execcommands.py '"+ cmdJ+"'  &"
 			subprocess.call(cmdOut, shell=True)
 			time.sleep(0.1)
 		readParams()

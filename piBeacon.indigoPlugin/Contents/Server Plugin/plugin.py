@@ -235,6 +235,7 @@ _BLEsensorTypes =[u"BLERuuviTag",
 				u"BLEaprilAccel", u"BLEaprilTHL", 
 				u"BLEminewE8", u"BLEminewS1TH", u"BLEminewS1TT", u"BLEminewS1Plus", "BLEminewAcc",
 				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum", 
+				u"BLEblueradio",
 				u"BLESatech",
 				u"BLEXiaomiMiTempHumRound","BLEXiaomiMiTempHumClock","BLEgoveeTempHum"]
 _GlobalConst_allowedSensors = [
@@ -3432,6 +3433,7 @@ class Plugin(indigo.PluginBase):
 				doSensorValueAnalog =[u"Wire18B20",u"DHT",u"i2cTMP102",u"i2cMCP9808",u"i2cLM35A",u"i2cT5403",
 				u"i2cMS5803",u"i2cBMPxx",u"tmp006",u"tmp007",u"i2cSHT21""i2cAM2320",u"i2cBMExx",u"bme680",u"bmp388",u"si7021",
 				u"BLERuuviTag",
+				u"BLEblueradio",
 				u"BLEminewE8",
 				u"BLEminewAcc",
 				u"BLEminewS1TH",
@@ -12562,15 +12564,15 @@ class Plugin(indigo.PluginBase):
 				if u"rssi" not in data:
 					self.indiLOG.log(10,u"BLEconnectupdate ignoring msg; rssi missing; PI= {}; mac:{};  data:{}".format(piU, mac, data))
 					return updateBLE
-				rssi	  = float(data[u"rssi"])
-				txPowerR  = float(data[u"txPower"])
+				rssi	  = int(data[u"rssi"])
+				txPowerR  = int(data[u"txPower"])
 				if self.decideMyLog(u"BLE"): self.indiLOG.log(10,u"BLEconnectupdate PI= {}; mac:{}  rssi:{}  txPowerR:{} TxPowerSet:{}".format(piU, mac, rssi, txPowerR, props[u"beaconTxPower"]))
 
 				txSet = 999
 				try: txSet = int(props[u"beaconTxPower"]) 
 				except: pass
 				if txSet != 999: 
-					txPower = float(txSet)
+					txPower = int(txSet)
 				else:
 					txPower = txPowerR
 	
@@ -13077,6 +13079,9 @@ class Plugin(indigo.PluginBase):
 						newStatus, updateProps0, doUpdate = self.setPressureDisplay(dev, props, data, whichKeysToDisplay,newStatus)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
+					if dev.deviceTypeId == u"BLEblueradio":
+						self.updateBLEblueradio(dev,data,whichKeysToDisplay, pi)
+
 					if dev.deviceTypeId == u"BLEaprilAccel":
 						self.updateAPRILaccel(dev,data,whichKeysToDisplay, pi)
 
@@ -13494,6 +13499,9 @@ class Plugin(indigo.PluginBase):
 					if unicode(x) != unicode(dev.states[u"chipTemperature"]):
 						self.addToStatesUpdateDict(dev.id, u"chipTemperature", x)
 
+				if  "sensorSetup" in dev.states and  data[u"sensorSetup"] != dev.states[u"sensorSetup"]: 															
+									self.addToStatesUpdateDict(dev.id, u"sensorSetup", data[u"sensorSetup"])
+
 				if  "lastUpdateFromRPI" in dev.states and  unicode(pi) != unicode(dev.states[u"lastUpdateFromRPI"]): 															
 									self.addToStatesUpdateDict(dev.id, u"lastUpdateFromRPI", pi)
 		except Exception, e:
@@ -13510,6 +13518,17 @@ class Plugin(indigo.PluginBase):
 				if u"onOff1" in data and "button" in dev.states:
 					self.setStatusCol(dev,u"button",		 	data[u"onOff1"],			 		 	unicode(data[u"onOff1"]),						whichKeysToDisplay,"","",decimalPlaces=0)
 
+				if u"onOff" in data and "onOffState" in dev.states: 		self.addToStatesUpdateDict(dev.id, u"onOffState", data[u"onOff"]) 
+
+		except Exception, e:
+			if unicode(e) != u"None":
+				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(40,unicode(data))
+
+
+###-------------------------------------------------------------------------####
+	def updateBLEblueradio(self, dev, data, whichKeysToDisplay,pi):
+		try:
 				if u"onOff" in data and "onOffState" in dev.states: 		self.addToStatesUpdateDict(dev.id, u"onOffState", data[u"onOff"]) 
 
 		except Exception, e:
@@ -15343,7 +15362,7 @@ class Plugin(indigo.PluginBase):
 						):				   
 							updateSignal = True
 							newStates = self.addToStatesUpdateDict(dev.id,piXX+u"_Signal", int(rssi-rssiOffset),newStates=newStates)
-							newStates = self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",float(txPower),newStates=newStates)
+							newStates = self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",int(txPower),newStates=newStates)
 
 							if dev.deviceTypeId == u"beacon"  and distCalc < 100/self.distanceUnits and not (u"IgnoreBeaconForClosestToRPI" in props and props[u"IgnoreBeaconForClosestToRPI"] !="0"):
 								beaconUpdatedIds.append([fromPiI,dev.id, distCalc])
@@ -15569,7 +15588,7 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id,u"vendorName", self.getVendortName(piMACSend))
 				self.addToStatesUpdateDict(dev.id,u"status", u"up")
 				self.addToStatesUpdateDict(dev.id,u"note", u"Pi-" + piNReceived)
-				self.addToStatesUpdateDict(dev.id,u"TxPowerSet", float(_GlobalConst_emptyrPiProps[u"beaconTxPower"]))
+				self.addToStatesUpdateDict(dev.id,u"TxPowerSet", int(_GlobalConst_emptyrPiProps[u"beaconTxPower"]))
 				self.addToStatesUpdateDict(dev.id,u"created", dateString)
 				self.addToStatesUpdateDict(dev.id,u"Pi_{:02d}_Signal".format(int(fromPiU)), 0)
 				self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",0)
@@ -15712,14 +15731,14 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id,u"typeOfBeacon", typeOfBeacon)
 				self.addToStatesUpdateDict(dev.id,u"note", u"beacon-other")
 				self.addToStatesUpdateDict(dev.id,u"created", dateString)
-				self.addToStatesUpdateDict(dev.id,u"TxPowerSet", float(_GlobalConst_emptyBeaconProps[u"beaconTxPower"]))
+				self.addToStatesUpdateDict(dev.id,u"TxPowerSet", int(_GlobalConst_emptyBeaconProps[u"beaconTxPower"]))
 
 				for iiU in _rpiBeaconList:
 					if iiU == fromPiU: continue
 					try: self.addToStatesUpdateDict(dev.id,u"Pi_{:02d}_Signal".format(int(iiU)),-999)
 					except: pass
-				self.addToStatesUpdateDict(dev.id,u"Pi_{:02d}_Signal".format(int(fromPiU)), int(rssi+rssiOffset))
-				self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",float(txPower))
+				self.addToStatesUpdateDict(dev.id,u"Pi_{:02d}_Signal".format(fromPiI), int(rssi+rssiOffset))
+				self.addToStatesUpdateDict(dev.id,u"TxPowerReceived",int(txPower))
 				self.addToStatesUpdateDict(dev.id,u"closestRPI",fromPiI)
 				self.addToStatesUpdateDict(dev.id,u"closestRPIText",self.getRPIdevName(fromPiU) )
 				self.addToStatesUpdateDict(dev.id,u"closestRPILast",fromPiI)
