@@ -718,6 +718,7 @@ def readParams(init):
 								BLEsensorMACs[mac][sensor]["lastUpdate2"]				 	= 0
 								BLEsensorMACs[mac][sensor]["SOS"]				 			= False
 								BLEsensorMACs[mac][sensor]["hum"]				 			= -100
+								BLEsensorMACs[mac][sensor]["Formaldehyde"]				 	= -100
 								BLEsensorMACs[mac][sensor]["temp"]				 			= -100
 								BLEsensorMACs[mac][sensor]["tempAve"]				 		=[-100,-100,-100]
 								BLEsensorMACs[mac][sensor]["humAve"]				 		=[-100,-100,-100]
@@ -1198,9 +1199,11 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 
 			if sensor.find("BLEXiaomiMiTempHumRound") >-1:
-				return  doBLEXiaomiMiTempHum( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
+				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 			if sensor.find("BLEXiaomiMiTempHumClock") >-1:
-				return  doBLEXiaomiMiTempHum( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
+				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
+			if sensor.find("BLEXiaomiMiformaldehyde") >-1:
+				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 
 			if sensor.find("BLEgoveeTempHum") >-1:
 				return  doBLEgoveeTempHum( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
@@ -1496,10 +1499,10 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 
 #################################
 
-def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
+def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
 	global BLEsensorMACs, sensors
 	try:
-		if len(hexData) < 60: return tx, "", UUID, Maj, Min, False
+		if len(hexData) < 55: return tx, "", UUID, Maj, Min, False
 
 		hexData = hexData[12:]
 		"""
@@ -1509,7 +1512,12 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 		##16 02 01 06                12 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0A 10 01      64      			0A=battery; 	ll= 1 byte
 		##17 02 01 06                13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   06 10 02      16 02   			06=hum; 		ll= 2 byte
 		##17 02 01 06                13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   04 10 02      DA 02   			04=temp; 		ll= 2 byte
+		##17 02 01 06                13 16 95 FE 51 20 DF 02 7D   FC 10 00 43 57 48   06 10 02      0E 02  
 		##19 02 01 06                15 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0D 10 04      FC 00   1E 02  		0D=temp + hum;	ll= 4 byte
+	pos                                 01 23 45 67 89 11 23 45   67 89 21 23 45 67   89 31 23      45 67   89 41  pos in tag 
+		## formaldehyde
+		##17 02 01 06                13 16 95 FE 51 20 DF 02 7E   FC 10 00 43 57 48   10 10 02      4200 
+
 		# 
 	pos   01 23 45 67                89 11 23 45 67 89 21 23 45   67 89 31 23 45 67   89 41 23      45 67   89 61		position in hexData
 		##
@@ -1540,6 +1548,7 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 		b'\x83\x00': ("YM-K1501", True),
 	}
 
+		MJHFD1_0010FC formaldehyd T H formA \mg/m**3
 
 	# Sensor type indexes dictionary for sensor platform
 	# Temperature, Humidity, Moisture, Conductivity, Illuminance, Formaldehyde, Consumable, Battery, Switch, Opening, Light
@@ -1564,20 +1573,23 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 
 	"""
 		doPrint 		= False
+		#if mac == "48:57:43:00:10:FC": doPrint = True
 		out 			= ""
 		testStringTEMP 	= "x"
 		testStringHUM  	= "x"
 		testStringTH 	= "x"
 		testStringBAT 	= "x"
-		testStringFAL 	= "x" # Formaldehyde
+		testStringFORM 	= "x" # Formaldehyde
 
 		BATtag   		= "0A1001"
 		TEMPtag  		= "041002"
 		HUMtag   		= "061002"
 		TEMPHtag 		= "0D1004"
+		FORMAtag 		= "101002"
 		#							 						ID-tag		sensTypeTag		counter
-		typeInfo 		= 	{"LYWSDCGQ":{"pos0":10, "pos1":[ 0,14], "pos2":[28,34], "posC":14, "id":"1695FE5020AA01"},
-							 "LYWSD02": {"pos0":18, "pos1":[ 0,14], "pos2":[30,36], "posC":14, "id":"1695FE70205B04"}
+		typeInfo 		= 	{ "LYWSDCGQ":{"pos0":10, "pos1":[ 0,14], "pos2":[28,34], "posC":14, "id":"1695FE5020AA01"}
+							, "MJHFD1":  {"pos0":10, "pos1":[ 0,14], "pos2":[28,34], "posC":14, "id":"1695FE5120DF02"}
+							, "LYWSD02": {"pos0":18, "pos1":[ 0,14], "pos2":[30,36], "posC":14, "id":"1695FE70205B04"}
 							}
 
 		found = False
@@ -1586,16 +1598,19 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 				found = True
 				break
 		if not found: 
+			if False and doPrint: U.logger.log(20, u"mac:{}, stype not found, sensor:{}".format(mac, sensor))
 			return tx, "", UUID, Maj, Min, False
 
 
 
 		sens = ""
-		if	 sensor.find("Round") >-1: 	sens = "LYWSDCGQ"
-		elif sensor.find("Clock") >-1: 	sens = "LYWSD02"
+		if	 sensor.find("Round") >-1: 			sens = "LYWSDCGQ"
+		elif sensor.find("Clock") >-1: 			sens = "LYWSD02"
+		elif sensor.find("formaldehyde") >-1: 	sens = "MJHFD1"
 		else: 
-			#U.logger.log(20, u"mac:{},sens not found:{}, sensor:{}".format(mac, sens, sensor))
+			if doPrint: U.logger.log(20, u"mac:{},sens not found:{}, sensor:{}".format(mac, sens, sensor))
 			return tx, "", UUID, Maj, Min, False
+		if doPrint: U.logger.log(20, u"mac:{}, sens:{}, sensor:{} start ========".format(mac, sens, sensor))
 
 		hData = hexData[typeInfo[sens]["pos0"]:]
 
@@ -1603,6 +1618,7 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 		testStringTEMP 	= typeInfo[sens]["id"] 											+ macplainReverse + TEMPtag
 		testStringTH	= typeInfo[sens]["id"] 											+ macplainReverse + TEMPHtag
 		testStringHUM	= typeInfo[sens]["id"] 											+ macplainReverse + HUMtag
+		testStringFORM	= typeInfo[sens]["id"] 											+ macplainReverse + FORMAtag
 		testStringBAT	= typeInfo[sens]["id"] 											+ macplainReverse + BATtag
 		dataString		= hData[typeInfo[sens]["pos2"][1]:]
 		counter			= int(hData[typeInfo[sens]["posC"]:typeInfo[sens]["posC"]+2],16)
@@ -1615,14 +1631,15 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 				BLEsensorMACs[mac][sensor]["tempHum"].append(-100)
 
 		out = ""
-		for ii in range(0,len(hexData)-2,2):
+		for ii in range(10,len(hexData)-2,2):
 			out+= hexData[ii:ii+2] + " "
 		if doPrint:
-			U.logger.log(20, u"mac:{},sensor:{} data string:{}, count:{}, {}".format(mac,sensor,  dataString, counter, out))
+			U.logger.log(20, u"mac:{},sensor:{} data string:{}, count:{}, \nteststr:{}\nformTag:{}\nout:{}".format(mac,sensor,  dataString, counter, testString, testStringFORM, out))
 
 
-		temp = BLEsensorMACs[mac][sensor]["temp"]
-		hum  = BLEsensorMACs[mac][sensor]["hum"]
+		temp 			= BLEsensorMACs[mac][sensor]["temp"]
+		hum  			= BLEsensorMACs[mac][sensor]["hum"]
+		Formaldehyde  	= BLEsensorMACs[mac][sensor]["Formaldehyde"]
 
 		if testString == testStringTH: 
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
@@ -1645,7 +1662,7 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 				BLEsensorMACs[mac][sensor]["hum"]   = hum
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 
-		elif   testString == testStringTEMP:
+		elif testString == testStringTEMP:
 			val = int(dataString[0:2],16) + int(dataString[2:4],16)*256
 			if val > 32767: val -= 65536
 			temp = tralingAv(sensor, mac, "tempAve", val/10.)  
@@ -1655,6 +1672,13 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 				BLEsensorMACs[mac][sensor]["temp"]   = temp
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 
+		elif testString == testStringFORM: 
+			Formaldehyde  = (int(dataString[0:2],16) + int(dataString[2:4],16)*256. ) /100.
+			if doPrint:
+				U.logger.log(20, u"mac:{}, typ: B  {}    =Formaldehyde:{};   dataString:{}".format(mac, dataString[0:2],  Formaldehyde, out))
+			BLEsensorMACs[mac][sensor]["nMessages"] += 1
+
+
 		elif testString == testStringBAT: 
 			BLEsensorMACs[mac][sensor]["batteryLevel"]  = int(dataString[0:2],16) 
 			if doPrint:
@@ -1662,7 +1686,7 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 			BLEsensorMACs[mac][sensor]["nMessages"] += 1
 
 		else:
-			#if sensor.find("Clock") >-1 or doPrint: U.logger.log(20, u"mac:{}, data not found, dataString:{}  hexstr:{} ".format(mac, dataString, out ))
+			if doPrint: U.logger.log(20, u"mac:{}, tag not found, dataString:{}  hexstr:{} ".format(mac, dataString, out ))
 			return tx, BLEsensorMACs[mac][sensor]["batteryLevel"], UUID, Maj, Min, False	
 
 
@@ -1670,28 +1694,31 @@ def doBLEXiaomiMiTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 		dd={   # the data dict to be send 
 						'temp': 		round(temp+ BLEsensorMACs[mac][sensor]["offsetTemp"],1),
 						'hum': 			int(hum + BLEsensorMACs[mac][sensor]["offsetHum"]),
+						'Formaldehyde': round(Formaldehyde,2),
 						'counter': 		counter, 
 						'batteryLevel': BLEsensorMACs[mac][sensor]["batteryLevel"], 
 						"rssi":			int(rx),
 				}
 
 		trigTime 	= time.time() - BLEsensorMACs[mac][sensor]["lastUpdate"]   > BLEsensorMACs[mac][sensor]["updateIndigoTiming"]  			# send min every xx secs
-		trigTemp	= abs(temp - BLEsensorMACs[mac][sensor]["temp"]) > 0.5
-		trigHum		= abs(hum - BLEsensorMACs[mac][sensor]["hum"]) > 2
+		trigTemp	= abs(temp - BLEsensorMACs[mac][sensor]["temp"]) 				 > 0.5
+		trigHum		= abs(hum - BLEsensorMACs[mac][sensor]["hum"]) 					 > 2
+		trigFOM		= abs(Formaldehyde - BLEsensorMACs[mac][sensor]["Formaldehyde"]) > 0.1
 
-		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, triggers:{};{};{};   nMessages:{}".format(mac, temp, hum, trigTime, trigTemp, trigHum, BLEsensorMACs[mac][sensor]["nMessages"]))
+		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, form:{}, triggers:{};{};{};{};   nMessages:{}".format(mac, temp, hum, Formaldehyde, trigTime, trigTemp, trigHum, trigFOM, BLEsensorMACs[mac][sensor]["nMessages"]))
 
 		if BLEsensorMACs[mac][sensor]["nMessages"] > 6 and hum > -100. and temp > -100.:
-			if  trigTime or trigTemp or trigHum:
+			if  trigTime or trigTemp or trigHum or trigFOM:
 					# compose complete message
 					U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac][sensor]["devId"]:dd}}})
 
 					# remember last values
-					if doPrint: U.logger.log(20, "mac:{} triggers:Time:{};temp:{};hum:{}; updateIndigoTiming:{}; send:{}".format( mac, trigTime , trigTemp , trigHum,BLEsensorMACs[mac][sensor]["updateIndigoTiming"] ,  dd)  )
-					BLEsensorMACs[mac][sensor]["lastUpdate"] = time.time()
-					BLEsensorMACs[mac][sensor]["counter"]    = counter
-					BLEsensorMACs[mac][sensor]["temp"]    	 = temp
-					BLEsensorMACs[mac][sensor]["hum"]    	 = hum
+					if doPrint: U.logger.log(20, "mac:{} triggers:Time:{};temp:{};hum:{},form:{}; updateIndigoTiming:{}; send:{}".format( mac, trigTime , trigTemp , trigHum, trigFOM, BLEsensorMACs[mac][sensor]["updateIndigoTiming"] ,  dd)  )
+					BLEsensorMACs[mac][sensor]["lastUpdate"]	= time.time()
+					BLEsensorMACs[mac][sensor]["counter"]		= counter
+					BLEsensorMACs[mac][sensor]["temp"]    		= temp
+					BLEsensorMACs[mac][sensor]["hum"]    	 	= hum
+					BLEsensorMACs[mac][sensor]["Formaldehyde"]	= Formaldehyde
 		UUID = sensor
 		Maj  = mac
 		return  tx, BLEsensorMACs[mac][sensor]["batteryLevel"], UUID, Maj, Min, False		
@@ -4599,12 +4626,12 @@ def execbeaconloop(test):
 						restartBLE = time.time()
 						#U.restartMyself(param="", reason="no messages:{} in a row;  hcitool -i hcix / hcidump -i hcix  not running, ".format(nEmptyMessagesInARow))
 
-			if nEmptyMessagesInARow > 20:
+			if nEmptyMessagesInARow > 12:
 				maxLoopCount = 20
 				restartCount +=1
 				U.logger.log(30, u" time w/out any message .. anydata: {}[secs];  okdata: {}[secs];   loopCount:{};  restartCount:{},nEmptyMessagesInARow:{} ".format(dt1, dt2, loopCount, restartCount,nEmptyMessagesInARow))
 				if restartCount > 0:
-					U.logger.log(30, " restarting BLE stack due to no messages " )
+					U.logger.log(30, " restarting beaconloop  due to no messages " )
 					time.sleep(0.5)
 					U.restartMyself(param="", reason="too long a time w/o message")
 

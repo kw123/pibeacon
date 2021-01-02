@@ -31,6 +31,22 @@
     "comment":"",
     "hexCode": "02010609086953656E736F7220XXFF"
   },
+  "XiaomiFormaldehyde":  {
+    "text":"Xiaomi MiJia formaldehyde + T + H",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "msg", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"        M J H F D 1 _   formaldehyde + T + H honeywell",
+	"hexCode": "190E094D4A484644315F"
+   },
   "XiaomiMiBLETempHumSquare":  {
     "text":"Xiaomi MiJia MI temp humidity square, req gatttool connection, only w 2. BLE dongle",
     "Maj":"",

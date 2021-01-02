@@ -21,7 +21,8 @@ Govee Temp & humidity sensors, they broadcast T, H, BatteryLevel
   - H5177          1x cr2032        1/3sec          w large display                           Y           Y                       
   - H5174 outside  3x AAA           1/3sec          no display                                Y           Y                      
 
-Xiaomi MiJia  
+Xiaomi MiJia   
+ - MJHFD1          2x AAA           1/1s      disp for formaldehyde YES                       Y           Y     formaldehyde in [mg/m3]
  - LYWSDCGQ/01ZM   1x AAA           1/1s       large Round display  YES                       Y           Y    
  - LYWSD03MMC      1x CR2032        1/2Min     small Square display YES                       Y           Y requires 2 BLE dongles, get data through GATT command 
  - VegTrug         1x CR2032        1/2Min                          YES                       Y           Y                                  Y  + Moisture+Conductivity

@@ -145,19 +145,6 @@ This is not used for trigger names they will continue to be called Family, Guest
 		</List>
 	</Field>
 
-	<Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
-		<Label>reboot RPI if GT x minutes w no iBeacon messages (on RPI):</Label>
-		<List>
-			<Option value="60"    >reboot after 1 minute  w no ibeacon signal </Option>
-			<Option value="120"   >reboot after 2 minutes w no ibeacon signal </Option>
-			<Option value="240"   >reboot after 4 minutes w no ibeacon signal </Option>
-   		<Option value="99999999999999"  >do NOT reboot, just wait </Option>
-  	</List>
-	</Field>
-	<Field id="rebootIfNoMessagesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>use if you experience instability, if you have just rpi and no beacon is home and no road near do not set to reboot</Label>
-	</Field>
-
 	<Field    id="setClostestRPItextToBlank"   type="menu" defaultValue="1" tooltip="">
 		<Label>set clostestRPItext(dev-State) to blank when iBeacon down:</Label>
 		<List>
@@ -294,18 +281,30 @@ WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~
 EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
 	</Field>
 
-	<Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
-		<Label>reboot RPI if GT xx empty beacon messages received (from plugin):</Label>
+	<Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
+		<Label>reboot RPI if GT x minutes w NO iBeacon messages (on RPI):</Label>
 		<List>
-			<Option value="999999999"  > disable </Option>
+			<Option value="60"    >reboot after 1 minute  w no ibeacon signal </Option>
+			<Option value="120"   >reboot after 2 minutes w no ibeacon signal </Option>
+			<Option value="240"   >reboot after 4 minutes w no ibeacon signal </Option>
+   		<Option value="99999999999999"  >do NOT reboot, just wait </Option>
+  	</List>
+	</Field>
+	<Field id="rebootIfNoMessagesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>use if you experience instability, if you have just rpi and no beacon is home and no road near do not set to reboot</Label>
+	</Field>
+
+
+	<Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
+		<Label>reboot RPI if GT xx EMPTY beacon messages received (from plugin):</Label>
+		<List>
 			<Option value="1"   > 1  for testing</Option>
-			<Option value="2"   > 2  for testing</Option>
-			<Option value="3"   > 3  for testing</Option>
 			<Option value="5"   > 5  </Option>
 			<Option value="10"  > 10 </Option>
 			<Option value="20"  > 20 </Option>
 			<Option value="50"  > 50 </Option>
 			<Option value="100" > 100 </Option>
+			<Option value="999999999"  > disable </Option>
 		</List>    
 	</Field>
 	<Field id="enableRebootRPIifNoMessagesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
@@ -397,10 +396,6 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="30"   >30 seconds (slow connection)</Option>
 		</List>
 	</Field>
-	<Field id="automaticRPIReplacement"   type="checkbox" defaultValue="false" tooltip="enable only when you replace an existing RPI with a new one and with different BLE device. After relacement is finished switch to off again." >
-		<Label>replace RPI automatically when new MAC number is detected?:</Label>
-	</Field>
-
 
 
 	<Field id="restartBLEifNoConnect"   type = "menu" defaultValue = "1" tooltip="BLEconnect will request a BLE stack restart from beaconloop if no messages in 5/10 .. minutes" >
