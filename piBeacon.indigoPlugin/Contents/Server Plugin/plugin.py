@@ -6816,7 +6816,7 @@ class Plugin(indigo.PluginBase):
 			if u"deviceDefs" in props:
 				gpioList = json.loads(props[u"deviceDefs"])
 				for ii in range(30):
-					if ii <= len(gpioList) and "gpio" in gpioList[ii]:
+					if ii < len(gpioList) and "gpio" in gpioList[ii]:
 						valuesDict[u"i" + unicode(ii)] = True
 			elif u"gpio" in props:
 				valuesDict[u"i" + props[u"gpio"]] = True

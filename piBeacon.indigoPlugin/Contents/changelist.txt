@@ -1,3 +1,12 @@
+Added features / changes in v7.134.485@ 2021-01-02
+===================================================
+
+1. fixed:
+   piBeacon Error                  Line 6819 has error=list index out of range
+   in confirmdeviceIDINPUTBUTTONmenu
+
+
+
 Added features / changes in v7.134.484@ 2021-01-01
 ===================================================
 
@@ -5,7 +14,7 @@ Added features / changes in v7.134.484@ 2021-01-01
    xiaomi formaldehyde sensor
 2. fixed bug that made BLE sensor devices not being active on RPi after comm disable/enable
 3. added check if reset for min/max sensor values was already at 0 am - might have been done several times between 0 and 1 am
-4. fixted typo for MoistureMinYesterday was MoistureeMinYesterday
+4. fixed typo for MoistureMinYesterday was MoistureeMinYesterday
 
 
 Added features / changes in v7.133.482@ 2020-12-23
