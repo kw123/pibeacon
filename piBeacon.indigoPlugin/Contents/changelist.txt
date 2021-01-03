@@ -1,10 +1,11 @@
-Added features / changes in v7.134.485@ 2021-01-02
+Added features / changes in v7.134.486@ 2021-01-02
 ===================================================
 
 1. fixed:
    piBeacon Error                  Line 6819 has error=list index out of range
    in confirmdeviceIDINPUTBUTTONmenu
-
+   fixed:
+   reset of pulse / gpio input count was not reset
 
 
 Added features / changes in v7.134.484@ 2021-01-01

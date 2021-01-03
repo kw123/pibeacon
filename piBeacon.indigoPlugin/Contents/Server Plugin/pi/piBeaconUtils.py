@@ -2252,12 +2252,13 @@ def readJson(fName):
 def checkresetCount(IPCin):
 	IPC = copy.copy(IPCin)
 	try:
-		if not os.path.isfile("{}temp/{}reset".format(G.homeDir, G.program)):
-			#print "checkresetCount no file"
+		resetfile = "{}temp/{}.reset".format(G.homeDir, G.program)
+		if not os.path.isfile(resetfile):
+			#logger.log(20,  "checkresetCount no file for {}resetfile".format(resetfile))
 			return IPC
-		inpJ, inp = readJson("{}temp/{}reset".format(G.homeDir, G.program))
-		os.remove("{}temp/{}reset".format(G.homeDir, G.program))
-		logger.log(10,"{} checkresetCount doing reset for {:<20}".format(G.program, inp ) )
+		inpJ, inp = readJson(resetfile)
+		os.remove(resetfile)
+		logger.log(20,"{} checkresetCount doing reset for {:<20}".format(G.program, inp ) )
 		if len(inp) < 2:
 			return IPC
 		for p in inpJ:

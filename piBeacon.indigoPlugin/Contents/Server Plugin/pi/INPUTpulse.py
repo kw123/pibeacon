@@ -512,10 +512,10 @@ def execMain():
 		
 			resetContinuousEvents()
 
-			if loopCount %10 ==0:
+			if loopCount %10 == 0:
 				quick = U.checkNowFile(G.program)
 				U.manageActions("-loop-")
-				if loopCount%5==0:
+				if loopCount%5 == 0:
 					countReset = checkReset()
 					if countReset:
 						for gpio in GPIOdict:

@@ -27,7 +27,7 @@ def readParams():
 		global INPgpioType,INPUTcount,INPUTlastvalue
 		global oldRaw, lastRead
 
-		INPUTcount= U.checkresetCount(INPUTcount)
+		INPUTcount = U.checkresetCount(INPUTcount)
 
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
