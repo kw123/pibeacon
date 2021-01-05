@@ -4547,7 +4547,7 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict[u"piDone"]		= False
 			valuesDict[u"stateDone"]	= False
-			self.indiLOG.log(10,u" piUpToDate pi: " +piU+ u"    value:"+ unicode(self.RPI[piU][u"piUpToDate"]))
+			self.indiLOG.log(10,u" piUpToDate pi: {}    value:{}".format(piU, self.RPI[piU][u"piUpToDate"]))
 			self.indiLOG.log(10,unicode(valuesDict) )
 			self.updateNeeded += u" fixConfig "
 			return (True, valuesDict, errorDict )
@@ -5395,7 +5395,7 @@ class Plugin(indigo.PluginBase):
 		inSi 	= int(inS)
 		nChan 	= self.getTypeIDLength(typeId)
 		if valuesDict[u"deviceDefs"]!=u"":
-			xxx=json.loads(valuesDict[u"deviceDefs"])
+			xxx = json.loads(valuesDict[u"deviceDefs"])
 			if len(xxx) < nChan:
 				for ll in range(nChan-len(xxx)):
 					xxx.append({u"gpio":"", u"inpType":"", u"count": u"off"})
@@ -6840,44 +6840,62 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(30,u"ERROR:  Reset counter of GPIO pin on rPi; dev:{}  not defined".format(valuesDict[u"inputDev"]))
 					return
 
+
 			devId=dev.id
 			props = dev.pluginProps
+			if u"displayS" in props:
+				whichKeysToDisplay = props[u"displayS"]
+			else:
+				whichKeysToDisplay = ""
 			piU = props[u"piServerNumber"]
 			resetGPIOCount = []
 			theType= dev.deviceTypeId.split(u"-")[0]
 			if u"deviceDefs" in props:
 				listGPIO= json.loads(props[u"deviceDefs"])
-				if u"GPIOpins" in valuesDict:
+				if False and u"GPIOpins" in valuesDict:
 					for pin in valuesDict[u"GPIOpins"]:
 						for items in listGPIO:
 							if u"gpio" not in items: continue
 							if pin == items[u"gpio"]:
 								resetGPIOCount.append(pin)
+
 				else:
 					for ii in range(len(listGPIO)):
 						if u"INPUT_" + unicode(ii) in valuesDict and valuesDict[u"INPUT_" + unicode(ii)]:
 							if u"gpio" in listGPIO[ii]:
 								resetGPIOCount.append(listGPIO[ii][u"gpio"])
+								if theType in [u"INPUTcoincidence","INPUTpulse"]:
+									if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"resetGPIOCount set count to 0 for {} - {}; -type:{},  #{}".format(dev.name, piU, theType, ii))
+									self.updatePULSE(dev, {"count":-1}, whichKeysToDisplay)
+								else:
+									dev.updateStateOnServer( u"INPUT_"+str(ii), 0)
+
 
 			elif u"gpio" in props:
 				gpio = props[u"gpio"]
 				if valuesDict[u"INPUT_" +gpio]:
 					resetGPIOCount.append(gpio)
-			else:
+					if theType in [u"INPUTcoincidence","INPUTpulse"]:
+						if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"resetGPIOCount set count to 0 for {} - {}; -type:{},  INPUT_{}".format(dev.name, piU, theType, gpio))
+						self.updatePULSE(dev, {"count":-1}, whichKeysToDisplay)
+
 				for ii in range(10):
 					if valuesDict[u"INPUT_"+str(ii)] == True:
 						if theType == u"INPUTcoincidence":
-							theType= u"INPUTpulse"
+							theType = u"INPUTpulse"
 							if u"INPUTdevId"+str(ii) in props and len(props[u"INPUTdevId"+str(ii)])>3:
 									resetGPIOCount.append(devId)
+									self.updatePULSE(dev, {"count":-1}, whichKeysToDisplay)
+									if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"resetGPIOCount reset input {} -{}; -type:{},  devID_{}".format(dev.name, piU, theType, devId))
 									break
 				 
 			if resetGPIOCount == []: return valuesDict
 
+
 			textToSend = json.dumps([{u"device": typeId, u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/"+theType+u".reset",u"fileContents":resetGPIOCount}])
 			self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"resetGPIOCountCALLBACKmenu")
 
-			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(5,u"resetGPIOCount requested: for {} on pi:{}; pins:{}".format(dev.name, piU, resetGPIOCount))
+			if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"resetGPIOCount requested: for {} on pi:{}; pins:{}, text to send:{}".format(dev.name, piU, resetGPIOCount, textToSend))
 		except Exception, e:
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return valuesDict
@@ -12646,7 +12664,7 @@ class Plugin(indigo.PluginBase):
 				else:			upD = u"up"
 
 				if upD==u"up":
-					dist=	 round( self.calcDist(txPower,  rssi) / self.distanceUnits, 1)
+					dist = round( self.calcDist(txPower,  rssi) / self.distanceUnits, 1)
 					if self.decideMyLog(u"BLE"): self.indiLOG.log(5,u"rssi txP dist dist-Corrected.. rssi:{} txPower:{}  dist:{}  rssiCaped:{}".format(rssi, txPower, dist, min(txPower,rssi)))
 					self.addToStatesUpdateDict(dev.id,piXX+u"_Time",	datetime.datetime.now().strftime(_defaultDateStampFormat)  )
 					self.addToStatesUpdateDict(dev.id,u"lastUp",datetime.datetime.now().strftime(_defaultDateStampFormat))
@@ -14119,71 +14137,95 @@ class Plugin(indigo.PluginBase):
  
 ####-------------------------------------------------------------------------####
 	def updatePULSE(self, dev, data, whichKeysToDisplay):
-		if self.decideMyLog(u"SensorData"): self.indiLOG.log(5,u"updatePULSE {}".format(data))
+		if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE {}".format(data))
 		props = dev.pluginProps
 		try:	
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat) 
-			countList = [(0,0),(0,0)] # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
-			if u"countList" in props: countList= json.loads(props[u"countList"])
+			defCountList = [{u"time":0, u"count":0}, {u"time":0, u"count":0}] # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
+			if u"countList" in props: 
+				try: 
+					countList = json.loads(props[u"countList"])
+					if len(countList) > 0:
+						if type(countList[0]) != type({}): 
+							countList = defCountList
+				except: 
+					countList = defCountList
+			else:
+				countList = defCountList
+
 			if u"count" in data:
-				try: cOld = float(dev.states[u"count"])
+				try: 	cOld = float(dev.states[u"count"])
 				except: cOld = 0
 
 				## is there a count reset?, if yes remove old counts
 				ll = len(countList)
-				if countList[-1][1] >  cOld: countList=[]
+				if ll >0:
+					if type(countList[0]) != type({}): 
+						countList = defCountList 
+
+				if countList[-1]["count"] >  cOld:  countList = defCountList
+				if float(data[u"count"]) < 0: 
+					data[u"count"] = 0
+					countList = defCountList 
 
 
-				countList.append([time.time(),data[u"count"]])
+				countList.append({"time":time.time(), "count":data[u"count"]})
 				ll = len(countList)
 				if len(countList) >2:
-					dT =  max( countList[-1][0]- countList[-2][0],1.)
+					dT =  max( countList[-1]["time"] - countList[-2]["time"],1.)
 					countsPerSecond = max(0,(float(data[u"count"]) - cOld) / dT)
 				else:
 					countsPerSecond = 0
+
+				## remove not used data
 				ll = len(countList)
-				if ll >2:
+				if ll > 2:
 					for ii in range(ll):
 						#self.indiLOG.log(5,u"updatePULSE bf count pop countList:{}".format(countList) )
 						if len(countList) <=2: break
-						if countList[0][1] >  countList[-1][1]: countList.pop(0)
+						if countList[0][u"count"] >  countList[-1][u"count"]: countList.pop(0)# remove data if less than last entry
 						else: break
+
 				ll = len(countList)
-				if ll >2:
+				if ll > 2:
 					for ii in range(ll):
 						if len(countList) <= 2: break
-						if countList[0][0] < countList[-1][0] -3600*24: countList.pop(0)
+						if countList[0][u"time"] < countList[-1][u"time"] - 3600*24: countList.pop(0) # ? older than 24 hours?, yes remove
 						else: 				    break
 				ll = len(countList)
+
+				# find last minute entry
 				minPointer = ll -1
 				if ll > 1:
 					for ii in range(1, ll):
-							if countList[ll-ii][0] > countList[-1][0] -60:	minPointer = ll-ii
-							else:
-								if minPointer == ll-1:
-									minPointer = ll-ii
-								break
+						if countList[ll-ii][u"time"] > countList[-1][u"time"] - 60:	minPointer = ll-ii
+						else:
+							if minPointer == ll - 1:
+								minPointer = ll - ii
+							break
+
+				# find last hour entry
 				hourPointer = ll -1
 				if ll > 1:
 					for ii in range(1, ll):
-							if countList[ll-ii][0] > countList[-1][0] -60:	hourPointer = ll-ii
+							if countList[ll-ii][u"time"] > countList[-1][u"time"] - 60:	hourPointer = ll-ii
 							else:
-								if hourPointer == ll-1:
-									hourPointer = ll-ii
+								if hourPointer == ll - 1:
+									hourPointer = ll - ii
 								break
  
 				#self.indiLOG.log(10,u"updatePULSE minPointer:{}; tt:{:.0f}; countList:{}".format(minPointer, time.time(), countList) )
 				self.setStatusCol( dev, u"count", data[u"count"], u"{:.0f}[c]".format(data[u"count"]), whichKeysToDisplay, u"","", decimalPlaces = u"" )
 				if cOld <= data[u"count"]: 
-					countsPerMinute =   60.    * ( countList[minPointer][1]  - countList[0][1] ) /  max(1., ( countList[minPointer][0]  - countList[0][0]) )
-					countsPerHour   = 3600.    * ( countList[hourPointer][1] - countList[0][1] ) /  max(1., ( countList[hourPointer][0] - countList[0][0]) )
-					countsPerDay    = 3600.*24 * ( countList[-1][1]          - countList[0][1] ) /  max(1., ( countList[-1][0]          - countList[0][0]) )
-					#self.indiLOG.log(5,u"updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data, time.time(), ( countList[-1][1] - countList[0][1] ), (countList[-1][0]  - countList[0][0]) , len(countList),  countList ) )
-					self.setStatusCol( dev, u"countsPerLast", countsPerSecond, 	 u"{:.2f}[c/s]".format(countsPerSecond), whichKeysToDisplay, u"","", decimalPlaces = 2 )
+					countsPerMinute =   60.    * ( countList[-1][u"count"] - countList[minPointer][u"count"]  ) /  max(1., ( countList[-1][u"time"] - countList[minPointer][u"time"]) )
+					countsPerHour   = 3600.    * ( countList[-1][u"count"] - countList[hourPointer][u"count"] ) /  max(1., ( countList[-1][u"time"] - countList[hourPointer][u"time"]) )
+					countsPerDay    = 3600.*24 * ( countList[-1][u"count"] - countList[0]["count"]            ) /  max(1., ( countList[-1][u"time"] - countList[0][u"time"]) )
+					#self.indiLOG.log(5,u"updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data, time.time(), ( countList[-1][1] - countList[0][1] ), (countList[-1]["time"]  - countList[0]["time"]) , len(countList),  countList ) )
+					self.setStatusCol( dev, u"countsPerSecond", countsPerSecond, u"{:.2f}[c/s]".format(countsPerSecond), whichKeysToDisplay, u"","", decimalPlaces = 2 )
 					self.setStatusCol( dev, u"countsPerMinute", countsPerMinute, u"{:.2f}[c/m]".format(countsPerMinute), whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerHour",   countsPerHour,   u"{:.1f}[c/h]".format(countsPerHour),   whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerDay",    countsPerDay,  	 u"{:.1f}[c/d]".format(countsPerDay),    whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					if cOld != countList[-1][1]: self.addToStatesUpdateDict(dev.id,u"lastCountTime",dd)
+					self.setStatusCol( dev, u"countsPerHour",   countsPerHour,   u"{:.1f}[c/h]".format(countsPerHour),   whichKeysToDisplay, u"","", decimalPlaces = 1 )
+					self.setStatusCol( dev, u"countsPerDay",    countsPerDay,  	 u"{:.0f}[c/d]".format(countsPerDay),    whichKeysToDisplay, u"","", decimalPlaces = 0 )
+					if cOld != countList[-1][u"count"]: self.addToStatesUpdateDict(dev.id,u"lastCountTime",dd)
 				props[u"countList"] = json.dumps(countList)
 				self.deviceStopCommIgnore = time.time()
 				dev.replacePluginPropsOnServer(props)
@@ -15387,7 +15429,7 @@ class Plugin(indigo.PluginBase):
 				except: oldRPI =-1
 
 			try:     distCalc = float(dev.states[piXX+u"_Distance"])
-			except:  distCalc = 99999
+			except:  distCalc = 99999.
 
 			if rssi != -999.:
 				if self.selectBeaconsLogTimer !={}: 
@@ -15399,7 +15441,7 @@ class Plugin(indigo.PluginBase):
 					self.beacons[mac][u"receivedSignals"][fromPiI][u"rssi"]  = rssi
 					self.beacons[mac][u"receivedSignals"][fromPiI][u"lastSignal"]  = time.time()
 					self.beacons[mac][u"lastUp"] = time.time()
-					distCalc = 9999
+					distCalc = 9999.
 					closestRPI = -1
 					try:
 						minTxPower = float(self.beacons[mac][u"beaconTxPower"])

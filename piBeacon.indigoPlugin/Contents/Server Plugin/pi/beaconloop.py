@@ -1234,6 +1234,7 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 		1A  02 01 05  03 02 0A 18  12 FF 85 00 02 00 3C  62  0B   41  02   20   42  16   2F 00   43   CC 01 B3, tag1:-1, tag2:18
 		1A  02 01 06  03 02 0A 18  12 FF 85 00 02 00 3C  62  0B   41  02   20   42  16   26 00   43   5F 01   	                                                                           0A   FF   88 EC 00     09 02 CD 15   64 02
 	pos:01  23 45 67  89 11 23 45  67 89 21 23 45 67 89  31  23   45  67   89   41  23   45 67   89   51 23  
+		1A  02 01 05  03 02 0A 18  12 FF 85 00 02 00 7C  64  00   41  02   02   42  16   3A 00   43   93 01
 		data can be any sequence, can be present or not  
 		ct = config count, stys same only increments if config changes
 
@@ -1250,11 +1251,12 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 									temp = (signedIntfrom16( HexStr[p+2:p+4] + HexStr[p:p+2] )*0.0625
 		"""
 		doPrint 		= False
-		#if doPrint: U.logger.log(20, u"mac:{}, sensor:{} hexData:{}, tag1:{}, tag2:{}".format(mac, sensor,  hexData, hexData.find("03020A18"), hexData.find("FF850002003C")))
+		#if mac == "EC:FE:7E:10:9C:E7": doPrint = True
+		if doPrint: U.logger.log(20, u"mac:{}, sensor:{} hexData:{}, tag1:{}, tag2:{}".format(mac, sensor,  hexData, hexData.find("03020A18"), hexData.find("FF85000200")))
 
 		if hexData.find("03020A18") != 8:  
 			return tx, "", UUID, Maj, Min, False
-		if hexData.find("FF850002003C") != 18:  
+		if hexData.find("FF85000200") != 18:  
 			return tx, "", UUID, Maj, Min, False
 
 

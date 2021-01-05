@@ -118,15 +118,15 @@
     "battCmd": "off", 
     "beepCmd": "off", 
     "dBm": "-59", 
-    "pos": 4, 
-    "posDelta": 0, 
+    "pos": 10, 
+    "posDelta": 12, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
     "sensorFunctions":"",
     "textForMenu":"",
-    "comment":"             S e n s o r B u g + # ",
-    "hexCode":"1A020A00100953656E736F72427567"
-  }, 
+    "comment":"  S e n s o r B u g + # ",
+    "hexCode":"0953656E736F72427567"
+  },       
   "BLEgoveeTempHum":  {
     "text":"Govee Temp Hum .. sensors",
     "Maj":"",
