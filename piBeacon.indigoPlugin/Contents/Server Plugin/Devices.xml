@@ -21474,6 +21474,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="countsPerMinute"    >countsPerMinute</Option>
 				<Option value="countsPerHour"      >countsPerHour</Option>
 				<Option value="countsPerDay"       >countsPerDay</Option>
+				<Option value="maxCountsPerSecondLastHour" >maxCountsPerSecond in last hour</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
 			</Field>
@@ -21531,6 +21532,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerSecond</TriggerLabel>
 				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+			</State>
+			<State id="maxCountsPerSecondLastHour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>maxCountsPerSecondLastHour</TriggerLabel>
+				<ControlPageLabel>maxCountsPerSecondLastHour</ControlPageLabel>
 			</State>
 			<State id="countsPerMinute">
 				<ValueType>Float</ValueType>

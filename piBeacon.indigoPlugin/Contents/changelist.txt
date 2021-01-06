@@ -1,4 +1,4 @@
-Added features / changes in v7.134.487@ 2021-01-02
+Added features / changes in v7.134.488@ 2021-01-02
 ===================================================
 
 1. fixed:
@@ -8,6 +8,8 @@ Added features / changes in v7.134.487@ 2021-01-02
    reset of pulse / gpio input count was not reset
 3. fixed:
    calculation of counts/ xx
+4. added:
+   maxCountperSecondInLastHour state for pulse device
 
 
 Added features / changes in v7.134.484@ 2021-01-01

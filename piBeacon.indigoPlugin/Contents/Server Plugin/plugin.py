@@ -14137,7 +14137,7 @@ class Plugin(indigo.PluginBase):
  
 ####-------------------------------------------------------------------------####
 	def updatePULSE(self, dev, data, whichKeysToDisplay):
-		if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE {}".format(data))
+		if self.decideMyLog(u"SensorData"): self.indiLOG.log(5,u"updatePULSE {}".format(data))
 		props = dev.pluginProps
 		try:	
 			dd = datetime.datetime.now().strftime(_defaultDateStampFormat) 
@@ -14164,16 +14164,16 @@ class Plugin(indigo.PluginBase):
 						countList = defCountList 
 
 				if countList[-1]["count"] >  cOld:  countList = defCountList
-				if float(data[u"count"]) < 0: 
+				if data[u"count"] < 0: 
 					data[u"count"] = 0
 					countList = defCountList 
 
 
-				countList.append({"time":time.time(), "count":data[u"count"]})
+				countList.append({"time": time.time(), "count": data[u"count"]})
 				ll = len(countList)
 				if len(countList) >2:
 					dT =  max( countList[-1]["time"] - countList[-2]["time"],1.)
-					countsPerSecond = max(0,(float(data[u"count"]) - cOld) / dT)
+					countsPerSecond = max(0,(data[u"count"] - cOld) / dT)
 				else:
 					countsPerSecond = 0
 
@@ -14194,26 +14194,22 @@ class Plugin(indigo.PluginBase):
 						else: 				    break
 				ll = len(countList)
 
-				# find last minute entry
-				minPointer = ll -1
+				minPointer  				= ll -1
+				hourPointer 				= ll -1
+				maxCountsPerSecondLastHour	= 0
 				if ll > 1:
-					for ii in range(1, ll):
-						if countList[ll-ii][u"time"] > countList[-1][u"time"] - 60:	minPointer = ll-ii
+					for ii in range(1,ll):
+						# find last minute entry
+						if countList[-1][u"time"] - countList[ll-ii][u"time"] <=  60:
+							minPointer = ll-ii
+
+					# 	find last hour entry
+						if countList[-1][u"time"] - countList[ll-ii][u"time"] <=  3600:
+							hourPointer = ll-ii
+							maxCountsPerSecondLastHour = max(maxCountsPerSecondLastHour,  max(0,(countList[ll-ii]["count"] - countList[ll-ii-1]["count"]) / max( countList[ll-ii]["time"] - countList[ll-ii-1]["time"],1.)) )
 						else:
-							if minPointer == ll - 1:
-								minPointer = ll - ii
 							break
 
-				# find last hour entry
-				hourPointer = ll -1
-				if ll > 1:
-					for ii in range(1, ll):
-							if countList[ll-ii][u"time"] > countList[-1][u"time"] - 60:	hourPointer = ll-ii
-							else:
-								if hourPointer == ll - 1:
-									hourPointer = ll - ii
-								break
- 
 				#self.indiLOG.log(10,u"updatePULSE minPointer:{}; tt:{:.0f}; countList:{}".format(minPointer, time.time(), countList) )
 				self.setStatusCol( dev, u"count", data[u"count"], u"{:.0f}[c]".format(data[u"count"]), whichKeysToDisplay, u"","", decimalPlaces = u"" )
 				if cOld <= data[u"count"]: 
@@ -14221,10 +14217,11 @@ class Plugin(indigo.PluginBase):
 					countsPerHour   = 3600.    * ( countList[-1][u"count"] - countList[hourPointer][u"count"] ) /  max(1., ( countList[-1][u"time"] - countList[hourPointer][u"time"]) )
 					countsPerDay    = 3600.*24 * ( countList[-1][u"count"] - countList[0]["count"]            ) /  max(1., ( countList[-1][u"time"] - countList[0][u"time"]) )
 					#self.indiLOG.log(5,u"updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data, time.time(), ( countList[-1][1] - countList[0][1] ), (countList[-1]["time"]  - countList[0]["time"]) , len(countList),  countList ) )
-					self.setStatusCol( dev, u"countsPerSecond", countsPerSecond, u"{:.2f}[c/s]".format(countsPerSecond), whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerMinute", countsPerMinute, u"{:.2f}[c/m]".format(countsPerMinute), whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerHour",   countsPerHour,   u"{:.1f}[c/h]".format(countsPerHour),   whichKeysToDisplay, u"","", decimalPlaces = 1 )
-					self.setStatusCol( dev, u"countsPerDay",    countsPerDay,  	 u"{:.0f}[c/d]".format(countsPerDay),    whichKeysToDisplay, u"","", decimalPlaces = 0 )
+					self.setStatusCol( dev, u"countsPerSecond",				countsPerSecond, 			u"{:.2f}[c/s]".format(countsPerSecond), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countsPerMinute",				countsPerMinute, 			u"{:.2f}[c/m]".format(countsPerMinute), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countsPerHour",				countsPerHour,   			u"{:.1f}[c/h]".format(countsPerHour),   			whichKeysToDisplay, u"","", decimalPlaces = 1 )
+					self.setStatusCol( dev, u"countsPerDay",    			countsPerDay,  	 			u"{:.0f}[c/d]".format(countsPerDay),    			whichKeysToDisplay, u"","", decimalPlaces = 0 )
+					self.setStatusCol( dev, u"maxCountsPerSecondLastHour",	maxCountsPerSecondLastHour,	u"{:.2f}[c/s]".format(maxCountsPerSecondLastHour),	whichKeysToDisplay, u"","", decimalPlaces = 2 )
 					if cOld != countList[-1][u"count"]: self.addToStatesUpdateDict(dev.id,u"lastCountTime",dd)
 				props[u"countList"] = json.dumps(countList)
 				self.deviceStopCommIgnore = time.time()
