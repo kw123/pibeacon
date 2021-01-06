@@ -113,7 +113,7 @@ _GlobalConst_emptyrPiProps	  ={
 	u"rpiDataAcquistionMethod":  	u"hcidump",
 	u"shutDownPinOutput" :			u"-1" }
 
-_GlobalConst_fillMinMaxStates = [u"Temperature",u"AmbientTemperature",u"Pressure",u"Altitude",u"Humidity",u"AirQuality",u"visible",u"ambient",u"white",u"illuminance",u"IR",u"CO2",u"VOC",u"INPUT_0",u"rainRate",u"Moisture",u"INPUT","Conductivity","Formaldehyde"]
+_GlobalConst_fillMinMaxStates = [u"countsPerMinute",u"Temperature",u"AmbientTemperature",u"Pressure",u"Altitude",u"Humidity",u"AirQuality",u"visible",u"ambient",u"white",u"illuminance",u"IR",u"CO2",u"VOC",u"INPUT_0",u"rainRate",u"Moisture",u"INPUT","Conductivity","Formaldehyde"]
 
 _GlobalConst_emptyRPI =	  {
 	u"rpiType":					u"rPi",
@@ -14216,12 +14216,23 @@ class Plugin(indigo.PluginBase):
 					countsPerMinute =   60.    * ( countList[-1][u"count"] - countList[minPointer][u"count"]  ) /  max(1., ( countList[-1][u"time"] - countList[minPointer][u"time"]) )
 					countsPerHour   = 3600.    * ( countList[-1][u"count"] - countList[hourPointer][u"count"] ) /  max(1., ( countList[-1][u"time"] - countList[hourPointer][u"time"]) )
 					countsPerDay    = 3600.*24 * ( countList[-1][u"count"] - countList[0]["count"]            ) /  max(1., ( countList[-1][u"time"] - countList[0][u"time"]) )
+					scaleFactorForMinuteCount = 0
+					if "scaleFactorForMinuteCount" in props:
+						try: 	
+							scaleFactorForMinuteCount = float(eval(props["scaleFactorForMinuteCount"]))
+							scfm = scaleFactorForMinuteCount * countsPerMinute
+							self.setStatusCol( dev, u"countsPerMinuteScaled",				scfm, 			u"{:.2f}[c/m*{}]".format(scfm, props["scaleFactorForMinuteCount"]), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
+						except Exception, e:
+							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.indiLOG.log(40,u"scaleFactorForMinuteCount {}".format(props["scaleFactorForMinuteCount"]))
 					#self.indiLOG.log(5,u"updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data, time.time(), ( countList[-1][1] - countList[0][1] ), (countList[-1]["time"]  - countList[0]["time"]) , len(countList),  countList ) )
 					self.setStatusCol( dev, u"countsPerSecond",				countsPerSecond, 			u"{:.2f}[c/s]".format(countsPerSecond), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
 					self.setStatusCol( dev, u"countsPerMinute",				countsPerMinute, 			u"{:.2f}[c/m]".format(countsPerMinute), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
 					self.setStatusCol( dev, u"countsPerHour",				countsPerHour,   			u"{:.1f}[c/h]".format(countsPerHour),   			whichKeysToDisplay, u"","", decimalPlaces = 1 )
 					self.setStatusCol( dev, u"countsPerDay",    			countsPerDay,  	 			u"{:.0f}[c/d]".format(countsPerDay),    			whichKeysToDisplay, u"","", decimalPlaces = 0 )
 					self.setStatusCol( dev, u"maxCountsPerSecondLastHour",	maxCountsPerSecondLastHour,	u"{:.2f}[c/s]".format(maxCountsPerSecondLastHour),	whichKeysToDisplay, u"","", decimalPlaces = 2 )
+					self.fillMinMaxSensors(dev,"countsPerMinute", countsPerMinute, 2)
+
 					if cOld != countList[-1][u"count"]: self.addToStatesUpdateDict(dev.id,u"lastCountTime",dd)
 				props[u"countList"] = json.dumps(countList)
 				self.deviceStopCommIgnore = time.time()
