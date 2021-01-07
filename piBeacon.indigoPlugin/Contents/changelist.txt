@@ -1,4 +1,4 @@
-Added features / changes in v7.134.488@ 2021-01-02
+Added features / changes in v7.134.490@ 2021-01-07
 ===================================================
 
 1. fixed:
@@ -9,9 +9,9 @@ Added features / changes in v7.134.488@ 2021-01-02
 3. fixed:
    calculation of counts/ xx
 4. added:
-   maxCountperSecondInLastHour state for pulse device
-   min/max count/min today & yesterday state for pulse device
-   counts/min*scalefactor state for pulse device
+   maxCountperSecondInLastHour state for pulse/coincidence device
+   min/max count/min today & yesterday state for pulsepulse/coincidence device
+   counts/min*scalefactor state for pulsepulse/coincidence device
 
 
 Added features / changes in v7.134.484@ 2021-01-01

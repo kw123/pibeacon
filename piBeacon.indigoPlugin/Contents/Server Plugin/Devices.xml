@@ -21161,7 +21161,11 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</List>
 			</Field>
 
-            
+			<Field id="scaleFactorForMinuteCount" type="textfield"    defaultValue="0." hidden="no"> 
+				<Label>scale factor for minutes (eg "0.1" or "1./60."):</Label>
+			</Field>
+
+           
 			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
@@ -21169,8 +21173,10 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<Option value="count"              >count</Option>
 				<Option value="countsPerSecond"    >countsPerSecond = frequency</Option>
 				<Option value="countsPerMinute"    >countsPerMinute</Option>
+				<Option value="countsPerMinuteScaled" >countsPerMinute * scale factor</Option>
 				<Option value="countsPerHour"      >countsPerHour</Option>
 				<Option value="countsPerDay"       >countsPerDay</Option>
+				<Option value="maxCountsPerSecondLastHour" >maxCountsPerSecond in last hour</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
 			</Field>
@@ -21205,7 +21211,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<ControlPageLabel>lastCountTime</ControlPageLabel>
 			</State>
 			<State id="count">
-				<ValueType>NUmber</ValueType>
+				<ValueType>Number</ValueType>
 				<TriggerLabel>count</TriggerLabel>
 				<ControlPageLabel>count</ControlPageLabel>
 			</State>
@@ -21214,10 +21220,45 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<TriggerLabel>countsPerSecond</TriggerLabel>
 				<ControlPageLabel>countsPerSecond</ControlPageLabel>
 			</State>
+			<State id="countsPerSecond">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countsPerSecond</TriggerLabel>
+				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+			</State>
+			<State id="maxCountsPerSecondLastHour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>maxCountsPerSecondLastHour</TriggerLabel>
+				<ControlPageLabel>maxCountsPerSecondLastHour</ControlPageLabel>
+			</State>
 			<State id="countsPerMinute">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinute</TriggerLabel>
 				<ControlPageLabel>countsPerMinute</ControlPageLabel>
+			</State>
+			<State id="countsPerMinuteScaled">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countsPerMinuteScaled</TriggerLabel>
+				<ControlPageLabel>countsPerMinuteScaled</ControlPageLabel>
+			</State>
+				<State id="countsPerMinuteMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countsPerMinuteMaxToday</TriggerLabel>
+				<ControlPageLabel>countsPerMinuteMaxToday</ControlPageLabel>
+			</State>
+			<State id="countsPerMinuteMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countsPerMinuteMinToday</TriggerLabel>
+				<ControlPageLabel>countsPerMinuteMinToday</ControlPageLabel>
+			</State>
+			<State id="countsPerMinuteMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countsPerMinuteMaxYesterday</TriggerLabel>
+				<ControlPageLabel>countsPerMinuteMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="countsPerMinuteMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countsPerMinuteMinYesterday</TriggerLabel>
+				<ControlPageLabel>countsPerMinuteMinYesterday</ControlPageLabel>
 			</State>
 			<State id="countsPerHour">
 				<ValueType>Float</ValueType>
@@ -21578,7 +21619,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>countsPerMinuteMinYesterday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMinYesterday</ControlPageLabel>
 			</State>
-		<State id="countsPerHour">
+			<State id="countsPerHour">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerHour</TriggerLabel>
 				<ControlPageLabel>countsPerHour</ControlPageLabel>
