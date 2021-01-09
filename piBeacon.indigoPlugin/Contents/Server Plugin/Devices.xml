@@ -21205,10 +21205,15 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="lastCountTime">
+			<State id="previousCountTime">
 				<ValueType>String</ValueType>
-				<TriggerLabel>lastCountTime</TriggerLabel>
-				<ControlPageLabel>lastCountTime</ControlPageLabel>
+				<TriggerLabel>previousCountTime</TriggerLabel>
+				<ControlPageLabel>previousCountTime</ControlPageLabel>
+			</State>
+			<State id="countLast">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>countLast</TriggerLabel>
+				<ControlPageLabel>countLast</ControlPageLabel>
 			</State>
 			<State id="count">
 				<ValueType>Number</ValueType>
@@ -21292,7 +21297,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="infoLabelINPUT" type="label">
 			<Label>This sensor setup is good to detect pulses into a GPIO: 
 Pulses = Signals are detected with GPIO events, 
-   depening on RPI max frequence varies, RPI3++ can do > 1Khz
+   depening on RPI max frequence varies, RPI3++ can do 100hz
    use bounceTime and or deadTime to tune for bad signals
 It will set state count (number of pulses) and lastCountSecs (timestamp) and frequency
    New pulse is detected under the following conditions:
@@ -21330,7 +21335,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 
 			<Field id="bounceTime" type="menu"     defaultValue="25" tooltip="hardware time to ignore other up/down/up change for set up of GPIO.add_event_detect(gpio , GPIO.RISING,   callback=RISING,  bouncetime=10)">
-			<Label>GPIO bounce Time:</Label>
+			<Label>GPIO bounce Time[ms]:</Label>
 			<List>
 				<Option value="0"         > no bounce time</Option>
 				<Option value="1"         >1 mSec (max 1KHz)  only for VERY good digital sources</Option>
@@ -21364,14 +21369,17 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
             
 		<Field id="infoLabelCOUNT" type="label">			<Label>==COUNT setup:  --------------------------</Label> </Field>
-			<Field id="deadTime" type="menu"     defaultValue="1" tooltip="software gate, after accepting an event, within deadTime no other event is accepted for count  ">
+			<Field id="deadTime" type="menu"     defaultValue="0.5" tooltip="software gate, after accepting an event, within deadTime no other event is accepted for count">
 			<Label>accept new pulse after(deadTime) for Count:</Label>
 			<List>
 				<Option value="0.0"   >(min = 0.2 .. 1.0mSec dep. on RPI)</Option>
+				<Option value="0.001" >0.001 sec  = 1 mSec</Option>
+				<Option value="0.002" >0.002 sec  = 2 mSec</Option>
 				<Option value="0.005" >0.005 sec  = 5 mSec</Option>
+				<Option value="0.007" >0.007 sec  = 7 mSec</Option>
 				<Option value="0.01"  >0.01 sec = 10 mSec</Option>
-				<Option value="0.02"  >0.02 sec</Option>
-				<Option value="0.05"  >0.05 sec</Option>
+				<Option value="0.02"  >0.02 sec = 20 mSec</Option>
+				<Option value="0.05"  >0.05 sec = 50 mSec</Option>
 				<Option value="0.1"   >0.1  sec</Option>
 				<Option value="0.2"   >0.2  sec</Option>
 				<Option value="0.3"   >0.3  sec</Option>
@@ -21394,7 +21402,25 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
             
 		<Field id="infoLabelBURST" type="label">			<Label>==BURST event setup:  ---------------------</Label> </Field>
-			<Field id="deadTimeBurst" type="menu"     defaultValue="1" tooltip="software gate, after accepting an event, within deadTime no other event is accepted for count  ">
+
+			<Field id="minEventsinTimeWindowToTriggerBursts" type="menu"     defaultValue="-1" hidden="no" > 
+			<Label>min number of pulses in time window to trigger BURST event:</Label>
+			<List>
+				<Option value="-1"  > off, do not use </Option>
+				<Option value="1"  > 1  events </Option>
+				<Option value="2"  > 2  events </Option>
+				<Option value="3"  > 3  events </Option>
+				<Option value="4"  > 4  events </Option>
+				<Option value="5"  > 5  events </Option>
+				<Option value="6"  > 6  events </Option>
+				<Option value="8"  > 8  events </Option>
+				<Option value="10" > 10 events </Option>
+				<Option value="15" > 15 events </Option>
+				<Option value="20" > 20 events </Option>
+			</List>
+			</Field>
+
+			<Field id="deadTimeBurst" type="menu"     defaultValue="1" visibleBindingId="minEventsinTimeWindowToTriggerBursts"  visibleBindingValue="1,2,3,4,6,8,10,12,15,20" tooltip="software gate, after accepting an event, within deadTime no other event is accepted for count  ">
 			<Label>accept new pulse after(deadTime) for BURST:</Label>
 			<List>
 				<Option value="0.0"   >immediately (min = 0.1 .. 1.0mSec dep. on RPI)</Option>
@@ -21420,23 +21446,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="20.0"  >20   sec</Option>
 				<Option value="30.0"  >30   sec</Option>
 				<Option value="60.0"  >60   sec</Option>
-			</List>
-			</Field>
-
-			<Field id="minEventsinTimeWindowToTriggerBursts" type="menu"     defaultValue="-1" hidden="no" > 
-			<Label>min number of pulses in time window to trigger BURST event:</Label>
-			<List>
-				<Option value="-1"  > off, do not use </Option>
-				<Option value="1"  > 1  events </Option>
-				<Option value="2"  > 2  events </Option>
-				<Option value="3"  > 3  events </Option>
-				<Option value="4"  > 4  events </Option>
-				<Option value="5"  > 5  events </Option>
-				<Option value="6"  > 6  events </Option>
-				<Option value="8"  > 8  events </Option>
-				<Option value="10" > 10 events </Option>
-				<Option value="15" > 15 events </Option>
-				<Option value="20" > 20 events </Option>
 			</List>
 			</Field>
             
@@ -21495,6 +21504,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Option value="2"   > 2   secs</Option>
 				<Option value="3"   > 3   secs</Option>
 				<Option value="4"   > 4   secs</Option>
+				<Option value="5"   > 5   secs</Option>
 				<Option value="6"   > 6   secs</Option>
 				<Option value="8"   > 8   secs</Option>
 				<Option value="10"  > 10  secs</Option>
@@ -21507,6 +21517,9 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 			<Field id="scaleFactorForMinuteCount" type="textfield"    defaultValue="0." hidden="no"> 
 				<Label>scale factor for minutes (eg "0.1" or "1./60."):</Label>
+			</Field>
+			<Field id="scaleFactorForMinuteCountUnit" type="textfield"    defaultValue="[uS/m]" hidden="no"> 
+				<Label>unit display for scaled c/m measurement</Label>
 			</Field>
 
             
@@ -21554,10 +21567,10 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>lastBurstTime</TriggerLabel>
 				<ControlPageLabel>lastBurstTime</ControlPageLabel>
 			</State>
-			<State id="lastCountTime">
+			<State id="previousCountTime">
 				<ValueType>String</ValueType>
-				<TriggerLabel>lastCountTime</TriggerLabel>
-				<ControlPageLabel>lastCountTime</ControlPageLabel>
+				<TriggerLabel>previousCountTime</TriggerLabel>
+				<ControlPageLabel>previousCountTime</ControlPageLabel>
 			</State>
 			<State id="lastContinuousEventTime">
 				<ValueType>String</ValueType>
@@ -21568,6 +21581,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastContinuousEventStopTime</TriggerLabel>
 				<ControlPageLabel>lastContinuousEventStopTime</ControlPageLabel>
+			</State>
+			<State id="countLast">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>countLast</TriggerLabel>
+				<ControlPageLabel>countLast</ControlPageLabel>
 			</State>
 			<State id="count">
 				<ValueType>Number</ValueType>

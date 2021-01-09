@@ -73,18 +73,18 @@ def readParams():
 		oldSensor = copy.deepcopy(sensors[sensor])
 
 		if new:
-			found ={str(ii):{"RISING":0,"FALLING":0,"BOTH":0 } for ii in range(100)}
+			found = {str(ii):{"RISING":0,"FALLING":0,"BOTH":0 } for ii in range(100)}
 			for devId in sens:
 				sss= sens[devId]
 				if "gpio"									not in sss: continue
-				if "deadTime"								not in sss: continue
+				if "deadTime"								not in sss: continue # in sec
 				if "risingOrFalling"						not in sss: continue
-				if "minSendDelta"							not in sss: continue
-				if "bounceTime"								not in sss: continue
-				if "deadTimeBurst"							not in sss: continue
+				if "minSendDelta"							not in sss: continue # in sec
+				if "bounceTime"								not in sss: continue # in sec
+				if "deadTimeBurst"							not in sss: continue # in sec
 				if "inpType"								not in sss: continue
-				if "timeWindowForBursts"					not in sss: continue
-				if "timeWindowForContinuousEvents"			not in sss: continue
+				if "timeWindowForBursts"					not in sss: continue # in sec
+				if "timeWindowForContinuousEvents"			not in sss: continue # in sec
 				if "minEventsinTimeWindowToTriggerBursts" 	not in sss: continue
 				gpio						= sss["gpio"]
 				risingOrFalling				= sss["risingOrFalling"]
@@ -230,7 +230,7 @@ def readParams():
 		oneFound = False
 		restart =False
 		delGPIO ={}
-		U.logger.log(10, "GPIOdict: " +unicode(GPIOdict))
+		U.logger.log(20, "GPIOdict: " +unicode(GPIOdict))
 		for gpio in GPIOdict:
 			if gpio not in INPUTcount: INPUTcount[gpio] = 0
 			GPIOdict[gpio]["count"] = INPUTcount[gpio]
@@ -307,6 +307,7 @@ def BOTH(gpio):
 
 def fillGPIOdict(gpioINT,risingOrFalling):
 	global INPUTcount, GPIOdict, sensor, BURSTS, lastGPIO, contEVENT, sensors
+
 	gpioINT = int(gpioINT)
 	gpio = str(gpioINT)
 	ggg = GPIOdict[gpio]
@@ -358,7 +359,6 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 
 	data = {"sensors":{sensor:{ggg["devId"]:{}}}}
 
-
 	###############	 this EVENTtype requires a pulse to start the CONT event, will extend event if new pulse arrives before timeWindowForContinuousEvents is over  ###
 	cEVENTtt=0
 	if ggg["timeWindowForContinuousEvents"] > 0:
@@ -394,10 +394,10 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 				lastGPIO= U.doActions(data["sensors"],lastGPIO, sensors, sensor,theAction="PulseContinuous")
 
 	if (tt - ggg["lastsendCount"] > ggg["minSendDelta"]) and countChanged:	
-			data ["sensors"][sensor][ggg["devId"]]["count"]		= ggg["count"]
+			data ["sensors"][sensor][ggg["devId"]]["count"]			= ggg["count"]
 			ggg["lastsendCount"] = tt
 
-	if data == {"sensors":{sensor:{ggg["devId"]:{}}}}: data= {"sensors":{}}
+	if data == {"sensors":{sensor:{ggg["devId"]:{}}}}: data = {"sensors":{}}
 
 	if len(GPIOdict[gpio]["coincidence"]) > 0:
 			for devIdC in coincidence:
@@ -421,7 +421,10 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 						data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[(devIdC)] 
 						U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
 	if sensor in data["sensors"] or "INPUTcoincidence" in data["sensors"]:
-			U.sendURL(data,wait=False)
+			data["sensors"][sensor][ggg["devId"]]["time"] = time.time()
+			data["sensors"][sensor][ggg["devId"]]["eventOrPeriod"] = "event"
+			U.sendURL(data, wait=False)
+
 			U.writeINPUTcount(INPUTcount)
 	#print 	INPUTcount			
 
@@ -451,7 +454,6 @@ def execMain():
 	global oldRaw,	lastRead, lastSend
 	global minSendDelta
 	global coincidence
-
 	oldSensor		= {}
 	coincidence		= {}
 	oldRaw			= ""
@@ -505,6 +507,7 @@ def execMain():
 	shortWait =0.1
 	lastSend  = 0
 	lastEcho  = 0
+	
 	while True:
 		try:
 			tt= time.time()
@@ -519,8 +522,10 @@ def execMain():
 					countReset = checkReset()
 					if countReset:
 						for gpio in GPIOdict:
-							if INPUTcount[int(gpio)] ==0: 
-								GPIOdict[gpio]["count"]=0
+							if str(gpio) not in INPUTcount: 
+								INPUTcount[str(gpio)] = 0
+							if INPUTcount[str(gpio)] == 0: 
+								GPIOdict[gpio]["count"] = 0
 		
 					##U.checkIfAliveNeedsToBeSend(lastMsg)
 					if time.time()- lastRead > 10:
@@ -535,17 +540,19 @@ def execMain():
 						U.echoLastAlive(G.program)
 				data = {"sensors":{}}
 				if ((time.time() - lastSend >  minSendDelta) and loopCount > 10 ) or countReset:
-					data["sensors"][sensor] ={}
+					data["sensors"][sensor] = {}
 					for gpio in GPIOdict:
-							if "devId" not in GPIOdict[gpio]: continue	
-							devId = GPIOdict[gpio]["devId"]
-							data["sensors"][sensor][devId] = {"count": GPIOdict[gpio]["count"]}
-							U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
-							newData = True
+							if "devId" not in GPIOdict[gpio]: continue
+							if (time.time() - GPIOdict[gpio]["lastsendCount"]) >  minSendDelta:
+								devId = GPIOdict[gpio]["devId"] 
+								data["sensors"][sensor][devId] = {"count": GPIOdict[gpio]["count"],"time":time.time(), "eventOrPeriod":"period"}
+								U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
+								newData = True
+								GPIOdict[gpio]["lastsendCount"] = time.time()
 				for devIdC in coincidence:
 					if ((time.time() - coincidence[devIdC]["lastSend"] >  minSendDelta) and loopCount > 10 ) or countReset:
 						if "INPUTcoincidence" not in data: data["sensors"]["INPUTcoincidence"] = {}
-						data["sensors"]["INPUTcoincidence"][devIdC] = {"count": INPUTcount[(devIdC)]}
+						data["sensors"]["INPUTcoincidence"][devIdC] = {"count": INPUTcount[(devIdC)],"time":time.time()}
 						coincidence[devIdC]["lastSend"] = time.time()
 						newData = True
 				if newData:

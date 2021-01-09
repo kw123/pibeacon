@@ -1,14 +1,14 @@
-Added features / changes in v7.134.490@ 2021-01-07
+Added features / changes in v7.134.492@ 2021-01-07
 ===================================================
 
 1. fixed:
    piBeacon Error                  Line 6819 has error=list index out of range
-   in confirmdeviceIDINPUTBUTTONmenu
-2. fixed:
-   reset of pulse / gpio input count was not reset
-3. fixed:
-   calculation of counts/ xx
-4. added:
+     in confirmdeviceIDINPUTBUTTONmenu
+   pulse device:  reset of pulse / gpio input count was not reset
+   pulse device: calculation of counts/ xx
+   beep beacon action:  did not work, menu beep did work fine, one parameter was missing
+
+2. added:
    maxCountperSecondInLastHour state for pulse/coincidence device
    min/max count/min today & yesterday state for pulsepulse/coincidence device
    counts/min*scalefactor state for pulsepulse/coincidence device
