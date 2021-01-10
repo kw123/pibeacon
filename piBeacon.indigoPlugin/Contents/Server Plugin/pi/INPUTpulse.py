@@ -35,6 +35,7 @@ def readParams():
 	global GPIOdict, restart
 	global oldRaw, lastRead
 	global coincidence
+	global minSendDelta
 
 	try:
 		restart = False
@@ -77,10 +78,10 @@ def readParams():
 			for devId in sens:
 				sss= sens[devId]
 				if "gpio"									not in sss: continue
-				if "deadTime"								not in sss: continue # in sec
+				if "deadTime"								not in sss: continue # in msec
 				if "risingOrFalling"						not in sss: continue
 				if "minSendDelta"							not in sss: continue # in sec
-				if "bounceTime"								not in sss: continue # in sec
+				if "bounceTime"								not in sss: continue # in msec
 				if "deadTimeBurst"							not in sss: continue # in sec
 				if "inpType"								not in sss: continue
 				if "timeWindowForBursts"					not in sss: continue # in sec
@@ -94,7 +95,7 @@ def readParams():
 				except: bounceTime			= 10
 
 				try:	minSendDelta		= int(sss["minSendDelta"])
-				except: minSendDelta		= 1
+				except: minSendDelta		= 5
 
 				try:	deadTime			= float(sss["deadTime"])
 				except: deadTime			= 1
@@ -110,8 +111,6 @@ def readParams():
 
 				try:	timeWindowForContinuousEvents = float(sss["timeWindowForContinuousEvents"])
 				except: timeWindowForContinuousEvents = -1
-				try:	minSendDelta = float(sss["minSendDelta"])
-				except: minSendDelta = -1
 
 
 
@@ -308,19 +307,19 @@ def BOTH(gpio):
 def fillGPIOdict(gpioINT,risingOrFalling):
 	global INPUTcount, GPIOdict, sensor, BURSTS, lastGPIO, contEVENT, sensors
 
-	gpioINT = int(gpioINT)
-	gpio = str(gpioINT)
-	ggg = GPIOdict[gpio]
-	tt= time.time()
+	gpioINT	= int(gpioINT)
+	gpio	= str(gpioINT)
+	ggg		= GPIOdict[gpio]
+	tt		= time.time()
 	countChanged = False
-	U.logger.log(10,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
+	#U.logger.log(10,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
 	if tt- ggg["lastSignal"] > ggg["deadTime"]:	 
 		if gpio not in INPUTcount: INPUTcount[gpio] = 0
 		INPUTcount[gpio]+=1
 		ggg["count"] = INPUTcount[gpio]
 		#print gpioINT, INPUTcount[gpioINT]
 		ggg["lastSignal"] = tt
-		U.logger.log(10,"{} edge on gpio: {},	count: {}  timest: {:6.1f}, lastSendC: {:6.1f}, minSendDelta:{}, count:{}".format(risingOrFalling, gpio, ggg["count"], tt, ggg["lastsendCount"], ggg["minSendDelta"], INPUTcount[gpio]))
+		#U.logger.log(10,"{} edge on gpio: {},	count: {}  timest: {:6.1f}, lastSendC: {:6.1f}, minSendDelta:{}, count:{}".format(risingOrFalling, gpio, ggg["count"], tt, ggg["lastsendCount"], ggg["minSendDelta"], INPUTcount[gpio]))
 		countChanged = True
 
 	###############	 this EVENTtype requires a minEventsinTimeWindowToTriggerBursts  in timeWindowForBursts to trigger ###
@@ -332,11 +331,11 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 			ii = ll - kk -1
 			if tt-bbb[ii][0] > ggg["timeWindowForBursts"]: 
 				del bbb[ii]
-		U.logger.log(10, "BURST: "+str(ll)+""+str(tt)+"	 "+ str(bbb)+" "+str(ggg["timeWindowForBursts"] ))
+		#U.logger.log(10, "BURST: "+str(ll)+""+str(tt)+"	 "+ str(bbb)+" "+str(ggg["timeWindowForBursts"] ))
 		ll	=len(bbb)
 		if ll == 0	or (tt - bbb[-1][0]  > ggg["deadTimeBurst"]): 
 			bbb.append([tt,1])
-			U.logger.log(10, "BURST: in window "+str(ggg["timeWindowForBursts"]))
+			#U.logger.log(10, "BURST: in window "+str(ggg["timeWindowForBursts"]))
 			ll	+=1
 			delupto = -1
 			for kk in range(ll):
@@ -347,7 +346,7 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 						U.logger.log(20, " burst  gpio:{}; bbb:{}; ll:{};  ii:{} ".format(gpio, bbb, ll, ii )  )
 						break
 					if bbb[ii][1] >= ggg["minEventsinTimeWindowToTriggerBursts"]:
-						U.logger.log(10, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpioINT+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
+						#U.logger.log(10, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpioINT+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
 						burst	= tt
 						delupto = ii-1
 						bbb[ii][1]	= tt+ggg["timeWindowForBursts"]
@@ -372,7 +371,7 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 				ggg["lastsendContinuousEvent"] = 0
 		#  or just conti nue old c event = just update contEVENT not need to send data 
 		contEVENT[gpioINT] =  tt
-		U.logger.log(10, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
+		#U.logger.log(10, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
 
 	
 
@@ -412,16 +411,17 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 				if triggerC:		
 						try: 	INPUTcount[(devIdC)] +=1
 						except: INPUTcount[(devIdC)] = 1
-						out =""
-						for gp in coincidence[devIdC]["gpios"]:
-							out+= "{}: {:.5f}; ".format(gp, tt- coincidence[devIdC]["gpios"][gp] )
 						coincidence[devIdC]["lastSend"] = tt
 						if "INPUTcoincidence" not in data["sensors"]: data["sensors"]["INPUTcoincidence"] = {}
 						if devIdC not in data["sensors"]["INPUTcoincidence"]: data["sensors"]["INPUTcoincidence"][devIdC] ={}
 						data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[(devIdC)] 
-						U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
+						if False:
+							out = ""
+							for gp in coincidence[devIdC]["gpios"]:
+								out+= "{}: {:.5f}; ".format(gp, tt- coincidence[devIdC]["gpios"][gp] )
+							U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
 	if sensor in data["sensors"] or "INPUTcoincidence" in data["sensors"]:
-			data["sensors"][sensor][ggg["devId"]]["time"] = time.time()
+			data["sensors"][sensor][ggg["devId"]]["time"] = tt
 			data["sensors"][sensor][ggg["devId"]]["eventOrPeriod"] = "event"
 			U.sendURL(data, wait=False)
 
@@ -504,7 +504,7 @@ def execMain():
 
 	G.tStart = time.time() 
 	lastRead = time.time()
-	shortWait =0.1
+	shortWait = 0.5
 	lastSend  = 0
 	lastEcho  = 0
 	
@@ -538,25 +538,28 @@ def execMain():
 				if time.time() - lastEcho  > 180:
 						lastEcho = time.time()
 						U.echoLastAlive(G.program)
+
 				data = {"sensors":{}}
-				if ((time.time() - lastSend >  minSendDelta) and loopCount > 10 ) or countReset:
+				if ((time.time() - lastSend >  2) and loopCount > 3 ) or countReset:
 					data["sensors"][sensor] = {}
 					for gpio in GPIOdict:
+							#U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
 							if "devId" not in GPIOdict[gpio]: continue
-							if (time.time() - GPIOdict[gpio]["lastsendCount"]) >  minSendDelta:
+							#U.logger.log(20, u" DT:{}, minsend:{} ".format(time.time() - GPIOdict[gpio]["lastsendCount"], minSendDelta) )
+							if (time.time() - GPIOdict[gpio]["lastsendCount"]) >  minSendDelta*1.2:
 								devId = GPIOdict[gpio]["devId"] 
 								data["sensors"][sensor][devId] = {"count": GPIOdict[gpio]["count"],"time":time.time(), "eventOrPeriod":"period"}
-								U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
+								#U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
 								newData = True
 								GPIOdict[gpio]["lastsendCount"] = time.time()
 				for devIdC in coincidence:
-					if ((time.time() - coincidence[devIdC]["lastSend"] >  minSendDelta) and loopCount > 10 ) or countReset:
+					if ((time.time() - coincidence[devIdC]["lastSend"] >  minSendDelta*1.2) and loopCount > 3 ) or countReset:
 						if "INPUTcoincidence" not in data: data["sensors"]["INPUTcoincidence"] = {}
 						data["sensors"]["INPUTcoincidence"][devIdC] = {"count": INPUTcount[(devIdC)],"time":time.time()}
 						coincidence[devIdC]["lastSend"] = time.time()
 						newData = True
 				if newData:
-					U.logger.log(10, u"send data:{} ".format(data) )
+					#U.logger.log(20, u"send data:{} ".format(data) )
 					U.sendURL(data,wait=False)
 					lastSend = time.time()
 					loopCount = 0

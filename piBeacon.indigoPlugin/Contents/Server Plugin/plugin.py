@@ -113,7 +113,7 @@ _GlobalConst_emptyrPiProps	  ={
 	u"rpiDataAcquistionMethod":  	u"hcidump",
 	u"shutDownPinOutput" :			u"-1" }
 
-_GlobalConst_fillMinMaxStates = [u"countsPerMinute",u"Temperature",u"AmbientTemperature",u"Pressure",u"Altitude",u"Humidity",u"AirQuality",u"visible",u"ambient",u"white",u"illuminance",u"IR",u"CO2",u"VOC",u"INPUT_0",u"rainRate",u"Moisture",u"INPUT","Conductivity","Formaldehyde"]
+_GlobalConst_fillMinMaxStates = [u"countPerMinute",u"Temperature",u"AmbientTemperature",u"Pressure",u"Altitude",u"Humidity",u"AirQuality",u"visible",u"ambient",u"white",u"illuminance",u"IR",u"CO2",u"VOC",u"INPUT_0",u"rainRate",u"Moisture",u"INPUT","Conductivity","Formaldehyde"]
 
 _GlobalConst_emptyRPI =	  {
 	u"rpiType":					u"rPi",
@@ -14143,105 +14143,130 @@ class Plugin(indigo.PluginBase):
 			else:				timeStamp = time.time()
 			now = datetime.datetime.fromtimestamp(timeStamp)
 			dd = now.strftime(_defaultDateStampFormat) 
-			defCountList = [{u"time":0., u"count":0}, {u"time":0., u"count":0}] # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
+			defCountList = {"timeLastwData":0,u"timePreviouswData":0.,"data": [{u"time":0., u"count":0,}, {u"time":0., u"count":0}]} # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
+
 			if u"countList" in props: 
 				try: 
 					countList = json.loads(props[u"countList"])
-					if len(countList) > 0:
-						if type(countList[0]) != type({}): 
-							countList = defCountList
+					if "timePreviouswData" not in countList:
+						countList = defCountList
 				except: 
 					countList = defCountList
 			else:
 				countList = defCountList
 
 			if u"count" in data:
-				try: 	cOld = float(dev.states[u"count"])
+				try: 	cOld = int(dev.states[u"count"])
 				except: cOld = 0
 
 				## is there a count reset?, if yes remove old counts
 				ll = len(countList)
 				if ll > 0:
-					if type(countList[0]) != type({}): 
+					if  data[u"count"] < 0: 
+						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE resetting countList, requested from menu")
+						data[u"count"] = 0
 						countList = defCountList 
+						cOld = 0
 
-				if countList[-1]["count"] >  cOld:  countList = defCountList
-				if data[u"count"] < 0: 
-					data[u"count"] = 0
-					countList = defCountList 
+					elif data[u"count"] <  cOld:  
+						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE resetting countList, new count < stored count")
+						countList = defCountList
+						cOld = 0
 
+				countList["data"].append({u"time": timeStamp, u"count": data[u"count"]})
 
-				countList.append({"time": timeStamp, "count": data[u"count"]})
-				ll = len(countList)
-				if len(countList) >2:
-					dT =  max( countList[-1]["time"] - countList[-2]["time"],1.)
-					countsPerSecond = max(0,(data[u"count"] - cOld) / dT)
+				#self.indiLOG.log(10,u"updatePULSE  countList:{}".format(countList)  )
+
+				ll = len(countList["data"])
+				if len(countList["data"]) >2:
+					dT =  max( countList["data"][-1][u"time"] - countList["data"][-2][u"time"],1.)
 				else:
-					countsPerSecond = 0
+					countPerSecond = 0.
 
 				## remove not used data
-				ll = len(countList)
+				ll = len(countList["data"])
 				if ll > 2:
 					for ii in range(ll):
-						#self.indiLOG.log(5,u"updatePULSE bf count pop countList:{}".format(countList) )
-						if len(countList) <=2: break
-						if countList[0][u"count"] >  countList[-1][u"count"]: countList.pop(0)# remove data if less than last entry
+						if len(countList["data"]) <=2: break
+						if countList["data"][0][u"count"] >  countList["data"][-1][u"count"]: countList["data"].pop(0)# remove data if less than last entry
 						else: break
 
-				ll = len(countList)
+				ll = len(countList["data"])
 				if ll > 2:
 					for ii in range(ll):
-						if len(countList) <= 2: break
-						if countList[0][u"time"] < countList[-1][u"time"] - 3600*24: countList.pop(0) # ? older than 24 hours?, yes remove
+						if len(countList["data"]) <= 2: break
+						if countList["data"][0][u"time"] < countList["data"][-1][u"time"] - 3600*24: countList["data"].pop(0) # ? older than 24 hours?, yes remove
 						else: 				    break
-				ll = len(countList)
+				ll = len(countList["data"])
 
 				minPointer  				= ll -1
 				hourPointer 				= ll -1
-				maxCountsPerSecondLastHour	= 0
+				countPerSecondMaxLastHour	= 0
+
+
 				if ll > 1:
 					for ii in range(1,ll):
-						# find last minute entry
-						if countList[-1][u"time"] - countList[ll-ii][u"time"] <=  60:
-							minPointer = ll-ii
-						else: # check if only one entry, then use next if available
-							if ll > 2 and ll - minPointer < 2:
-								minPointer = ll - 2
-
 					# 	find last hour entry
-						if countList[-1][u"time"] - countList[ll-ii][u"time"] <=  3600:
-							hourPointer = ll-ii
-							maxCountsPerSecondLastHour = max(maxCountsPerSecondLastHour,  max(0,(countList[hourPointer]["count"] - countList[hourPointer-1]["count"]) / max( countList[hourPointer]["time"] - countList[hourPointer-1]["time"],1.)) )
-						else: # check if only one entry, then use next if available
-							if ll > 2 and ll - hourPointer < 2:
-								hourPointer = ll - 2
-								maxCountsPerSecondLastHour = max(maxCountsPerSecondLastHour,  max(0,(countList[hourPointer]["count"] - countList[hourPointer-1]["count"]) / max( countList[hourPointer]["time"] - countList[hourPointer-1]["time"],1.)) )
+						pp = max(0,ll-ii -1)
+						dT = countList["data"][-1][u"time"] - countList["data"][ll-ii][u"time"]
+
+						if  dT <= 3600:
+							hourPointer = pp
+							countPerSecondMaxLastHour = max(countPerSecondMaxLastHour,  max(0,(countList["data"][pp+1][u"count"] - countList["data"][pp][u"count"]) / max( countList["data"][pp+1][u"time"] - countList["data"][pp][u"time"],1.)) )
+
+							# find last minute entry
+							if dT <= 60:
+								minPointer = pp # use previous 
+
+						else: #
 							break
 
-				#self.indiLOG.log(10,u"updatePULSE minPointer:{}; tt:{:.0f}; countList:{}".format(minPointer, timeStamp, countList) )
-				self.addToStatesUpdateDict(dev.id, u"previousCountTime", dev.lastChanged.strftime(_defaultDateStampFormat) )
-				self.addToStatesUpdateDict(dev.id, u"countLast", dev.states["count"])
-				self.setStatusCol( dev, u"count", data[u"count"], u"{:.0f}[c]".format(data[u"count"]), whichKeysToDisplay, u"","", decimalPlaces = u"" )
+				#self.indiLOG.log(10,u"updatePULSE cOld:{}; count:{}; timeLastwData:{} timePreviouswData:{}; countList[data][-3:]:{}".format(cOld, countList["data"][-1][u"count"], countList[u"timeLastwData"], countList[u"timePreviouswData"], countList["data"][-3:])  )
+				if cOld - countList["data"][-1][u"count"] != 0:
+					countList[u"timePreviouswData"]	= countList[u"timeLastwData"]
+					countList[u"timeLastwData"] 	= timeStamp
+					countTimePrevious				= max(1., timeStamp - countList[u"timePreviouswData"])
+					countPrevious 					= cOld
+
+					self.addToStatesUpdateDict(dev.id, u"countTimePrevious", 	-round(countTimePrevious,2) )
+					self.addToStatesUpdateDict(dev.id, u"countPrevious", 		int(countPrevious))
+					self.addToStatesUpdateDict(dev.id, u"countTime",  			time.strftime(_defaultDateStampFormat, time.localtime(timeStamp)) )
+					self.setStatusCol( dev, u"count", countList["data"][-1]["count"], 			u"{:.0f}[c]".format(countList["data"][-1]["count"]), whichKeysToDisplay, u"","", decimalPlaces = u"" )
+
+				else:
+					countList[u"timePreviouswData"]	= countList[u"timeLastwData"]
+					countTimePrevious				= max(1., timeStamp - countList[u"timePreviouswData"])
+					countPrevious 					= dev.states["countPrevious"]
+
+				#self.indiLOG.log(10,u"updatePULSE                timeLastwData:{} timePreviouswData:{}; countList[data][-3:]:{}".format(countList[u"timeLastwData"], countList[u"timePreviouswData"], countList["data"][-3:]) )
+
 				if cOld <= data[u"count"]: 
-					countsPerMinute =   60.    * ( countList[-1][u"count"] - countList[minPointer][u"count"]  ) /  max(1., ( countList[-1][u"time"] - countList[minPointer][u"time"]) )
-					countsPerHour   = 3600.    * ( countList[-1][u"count"] - countList[hourPointer][u"count"] ) /  max(1., ( countList[-1][u"time"] - countList[hourPointer][u"time"]) )
-					countsPerDay    = 3600.*24 * ( countList[-1][u"count"] - countList[0]["count"]            ) /  max(1., ( countList[-1][u"time"] - countList[0][u"time"]) )
+					dtSecs = max(1, countList["data"][-1][u"time"] 		 	 - countList["data"][-2][u"time"])
+					countPerSecond 		= round(float(countList["data"][-1]["count"] - cOld)			/ dtSecs,       	2)
+					countPerSecSmooth = round(float(countList["data"][-1]["count"] - countPrevious)	/ countTimePrevious,2)
+					#self.indiLOG.log(10,u"updatePULSE                count:{} cprev:{}; countTimePrevious:{}; countPerSecSmooth:{}".format(countList["data"][-1]["count"], countPrevious, countTimePrevious, countPerSecSmooth ))
+
+
+					countPerMinute 		=   60.        * ( countList["data"][-1][u"count"] - countList["data"][minPointer][u"count"]  ) /  max(1., ( countList["data"][-1][u"time"] - countList["data"][minPointer][u"time"]) )
+					countPerHour   		= int(3600.    * ( countList["data"][-1][u"count"] - countList["data"][hourPointer][u"count"] ) /  max(1., ( countList["data"][-1][u"time"] - countList["data"][hourPointer][u"time"]) ))
+					countPerDay    		= int(3600.*24 * ( countList["data"][-1][u"count"] - countList["data"][0]["count"]            ) /  max(1., ( countList["data"][-1][u"time"] - countList["data"][0][u"time"]) ))
 					scaleFactorForMinuteCount = 0
 					try: 	scaleFactorForMinuteCount = float(eval(props["scaleFactorForMinuteCount"]))
 					except: scaleFactorForMinuteCount = 1.
-					scfm = scaleFactorForMinuteCount * countsPerMinute
+					scfm = scaleFactorForMinuteCount * countPerMinute
 					if "scaleFactorForMinuteCountUnit" in props and len(props["scaleFactorForMinuteCountUnit"]) < 2:
-																		scaleFactorForMinuteCountUnit = u"{:.2f}[c/m*{}]".format(scfm, props["scaleFactorForMinuteCount"])
-					else:												scaleFactorForMinuteCountUnit = u"{:.2f}{}".format(      scfm, props["scaleFactorForMinuteCountUnit"])
-					self.setStatusCol( dev, u"countsPerMinuteScaled",	scfm,							scaleFactorForMinuteCountUnit,						whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					#self.indiLOG.log(5,u"updatePULSE cmp:{}; cOld:{};  sdata: {};  tt:{}; dcount:{}; dtt:{}; ll:{}; countList:{}".format(countsPerMinute, cOld, data,timeStamp, ( countList[-1][1] - countList[0][1] ), (countList[-1]["time"]  - countList[0]["time"]) , len(countList),  countList ) )
-					self.setStatusCol( dev, u"countsPerSecond",				countsPerSecond, 			u"{:.2f}[c/s]".format(countsPerSecond), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerMinute",				countsPerMinute, 			u"{:.2f}[c/m]".format(countsPerMinute), 			whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countsPerHour",				countsPerHour,   			u"{:.1f}[c/h]".format(countsPerHour),   			whichKeysToDisplay, u"","", decimalPlaces = 1 )
-					self.setStatusCol( dev, u"countsPerDay",    			countsPerDay,  	 			u"{:.0f}[c/d]".format(countsPerDay),    			whichKeysToDisplay, u"","", decimalPlaces = 0 )
-					self.setStatusCol( dev, u"maxCountsPerSecondLastHour",	maxCountsPerSecondLastHour,	u"{:.2f}[c/s]".format(maxCountsPerSecondLastHour),	whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"maxCountsPerSecondLastHour",	maxCountsPerSecondLastHour,	u"{:.2f}[c/s]".format(maxCountsPerSecondLastHour),	whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.fillMinMaxSensors(dev,"countsPerMinute", countsPerMinute, 2)
+																		scaleFactorForMinuteCountUnit = u"{:.1f}[c/m*{}]".format(scfm, props["scaleFactorForMinuteCount"])
+					else:												scaleFactorForMinuteCountUnit = props["scaleFactorForMinuteCountUnit"].format(scfm)
+					self.setStatusCol( dev, u"countPerMinuteScaled",		scfm,						scaleFactorForMinuteCountUnit,						whichKeysToDisplay, u"","", decimalPlaces = 1)
+					self.setStatusCol( dev, u"countPerSecSmooth",			countPerSecSmooth, 			u"{:.3f}[c/s]".format(countPerSecSmooth), 		 	whichKeysToDisplay, u"","", decimalPlaces = 3 )
+					self.setStatusCol( dev, u"countPerSecond",				countPerSecond, 			u"{:.2f}[c/s]".format(round(countPerSecond,2)), 	whichKeysToDisplay, u"","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countPerSecondMaxLastHour",	countPerSecondMaxLastHour,	u"{:.2f}[c/s]".format(countPerSecondMaxLastHour),	whichKeysToDisplay, u"","", decimalPlaces = 2 )
+					self.setStatusCol( dev, u"countPerMinute",				countPerMinute, 			u"{:.1f}[c/m]".format(round(countPerMinute,1)), 	whichKeysToDisplay, u"","", decimalPlaces = 1 )
+					self.setStatusCol( dev, u"countPerHour",				countPerHour,   			u"{:.0f}[c/h]".format(round(countPerHour,0)),		whichKeysToDisplay, u"","", decimalPlaces = 0 )
+					self.setStatusCol( dev, u"countPerDay",    				countPerDay,  	 			u"{:.0f}[c/d]".format(countPerDay),    			whichKeysToDisplay, u"","", decimalPlaces = 0 )
+					self.fillMinMaxSensors(dev,"countPerMinute", countPerMinute, 2)
+
+
 
 				props[u"countList"] = json.dumps(countList)
 				self.deviceStopCommIgnore = time.time()
@@ -14259,6 +14284,7 @@ class Plugin(indigo.PluginBase):
 					else: 
 						if dev.states[u"lastContinuousEventStopTime"] == u"":
 							self.addToStatesUpdateDict(dev.id,u"lastContinuousEventStopTime",dd)
+			#if self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE  ll-1:{}, minPointer:{}, cpm:{}, dc:{}, dt:{},  cps:{}\n     data:{}\n cllistmin:{},".format( ll-1, minPointer, countPerMinute, countList[-1][u"count"] - countList[minPointer][u"count"], countList[-1][u"time"] - countList[minPointer][u"time"] ,  countPerSecond,  data, countList[minPointer] ))
 
 		except Exception, e:
 			if unicode(e) != u"None":

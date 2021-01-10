@@ -21164,18 +21164,20 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="scaleFactorForMinuteCount" type="textfield"    defaultValue="0." hidden="no"> 
 				<Label>scale factor for minutes (eg "0.1" or "1./60."):</Label>
 			</Field>
+			<Field id="scaleFactorForMinuteCountUnit" type="textfield"    defaultValue="{:.1f}[uS/m]" hidden="no"> 
+				<Label>scale factor format, use eg {:.1f}[uS/m]:</Label>
+			</Field>
 
-           
 			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
 			<List>
 				<Option value="count"              >count</Option>
-				<Option value="countsPerSecond"    >countsPerSecond = frequency</Option>
-				<Option value="countsPerMinute"    >countsPerMinute</Option>
-				<Option value="countsPerMinuteScaled" >countsPerMinute * scale factor</Option>
-				<Option value="countsPerHour"      >countsPerHour</Option>
-				<Option value="countsPerDay"       >countsPerDay</Option>
+				<Option value="countPerSecond"    >countsPerSecond = frequency</Option>
+				<Option value="countPerMinute"    >countsPerMinute</Option>
+				<Option value="countPerMinuteScaled" >countsPerMinute * scale factor</Option>
+				<Option value="countPerHour"      >countsPerHour</Option>
+				<Option value="countPerDay"       >countsPerDay</Option>
 				<Option value="maxCountsPerSecondLastHour" >maxCountsPerSecond in last hour</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
@@ -21205,73 +21207,78 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="previousCountTime">
-				<ValueType>String</ValueType>
-				<TriggerLabel>previousCountTime</TriggerLabel>
-				<ControlPageLabel>previousCountTime</ControlPageLabel>
+			<State id="countTimePrevious">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countTimePrevious</TriggerLabel>
+				<ControlPageLabel>countTimePrevious</ControlPageLabel>
 			</State>
-			<State id="countLast">
+			<State id="countPrevious">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>countLast</TriggerLabel>
-				<ControlPageLabel>countLast</ControlPageLabel>
+				<TriggerLabel>countPrevious</TriggerLabel>
+				<ControlPageLabel>countPrevious</ControlPageLabel>
+			</State>
+			<State id="countTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countTime</TriggerLabel>
+				<ControlPageLabel>countTime</ControlPageLabel>
 			</State>
 			<State id="count">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>count</TriggerLabel>
 				<ControlPageLabel>count</ControlPageLabel>
 			</State>
-			<State id="countsPerSecond">
+			<State id="countPerSecond">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerSecond</TriggerLabel>
 				<ControlPageLabel>countsPerSecond</ControlPageLabel>
 			</State>
-			<State id="countsPerSecond">
+			<State id="countPerSecSmooth">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>countsPerSecond</TriggerLabel>
-				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+				<TriggerLabel>countPerSecSmooth</TriggerLabel>
+				<ControlPageLabel>countPerSecSmooth</ControlPageLabel>
 			</State>
-			<State id="maxCountsPerSecondLastHour">
+			<State id="countPerSecondMaxLastHour">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>maxCountsPerSecondLastHour</TriggerLabel>
-				<ControlPageLabel>maxCountsPerSecondLastHour</ControlPageLabel>
+				<TriggerLabel>countsPerSecondMaxLastHour</TriggerLabel>
+				<ControlPageLabel>countsPerSecondMaxLastHour</ControlPageLabel>
 			</State>
-			<State id="countsPerMinute">
+			<State id="countPerMinute">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinute</TriggerLabel>
 				<ControlPageLabel>countsPerMinute</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteScaled">
+			<State id="countPerMinuteScaled">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteScaled</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteScaled</ControlPageLabel>
 			</State>
-				<State id="countsPerMinuteMaxToday">
+				<State id="countPerMinuteMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMaxToday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMaxToday</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteMinToday">
+			<State id="countPerMinuteMinToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMinToday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMinToday</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteMaxYesterday">
+			<State id="countPerMinuteMaxYesterday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMaxYesterday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMaxYesterday</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteMinYesterday">
+			<State id="countPerMinuteMinYesterday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMinYesterday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMinYesterday</ControlPageLabel>
 			</State>
-			<State id="countsPerHour">
-				<ValueType>Float</ValueType>
+			<State id="countPerHour">
+				<ValueType>Number</ValueType>
 				<TriggerLabel>countsPerHour</TriggerLabel>
 				<ControlPageLabel>countsPerHour</ControlPageLabel>
 			</State>
-			<State id="countsPerDay">
-				<ValueType>Float</ValueType>
+			<State id="countPerDay">
+				<ValueType>Number</ValueType>
 				<TriggerLabel>countsPerDay</TriggerLabel>
 				<ControlPageLabel>countsPerDay</ControlPageLabel>
 			</State>
@@ -21518,8 +21525,8 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="scaleFactorForMinuteCount" type="textfield"    defaultValue="0." hidden="no"> 
 				<Label>scale factor for minutes (eg "0.1" or "1./60."):</Label>
 			</Field>
-			<Field id="scaleFactorForMinuteCountUnit" type="textfield"    defaultValue="[uS/m]" hidden="no"> 
-				<Label>unit display for scaled c/m measurement</Label>
+			<Field id="scaleFactorForMinuteCountUnit" type="textfield"    defaultValue="{:.1f}[uS/m]" hidden="no"> 
+				<Label>scale factor format, use eg {:.1f}[uS/m]:</Label>
 			</Field>
 
             
@@ -21528,11 +21535,11 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
 			<List>
 				<Option value="count"              >count</Option>
-				<Option value="countsPerSecond"    >countsPerSecond = frequency</Option>
-				<Option value="countsPerMinute"    >countsPerMinute</Option>
-				<Option value="countsPerMinuteScaled" >countsPerMinute * scale factor</Option>
-				<Option value="countsPerHour"      >countsPerHour</Option>
-				<Option value="countsPerDay"       >countsPerDay</Option>
+				<Option value="countPerSecond"    >countsPerSecond = frequency</Option>
+				<Option value="countPerMinute"    >countsPerMinute</Option>
+				<Option value="countPerMinuteScaled" >countsPerMinute * scale factor</Option>
+				<Option value="countPerHour"      >countsPerHour</Option>
+				<Option value="countPerDay"       >countsPerDay</Option>
 				<Option value="maxCountsPerSecondLastHour" >maxCountsPerSecond in last hour</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
@@ -21567,11 +21574,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>lastBurstTime</TriggerLabel>
 				<ControlPageLabel>lastBurstTime</ControlPageLabel>
 			</State>
-			<State id="previousCountTime">
-				<ValueType>String</ValueType>
-				<TriggerLabel>previousCountTime</TriggerLabel>
-				<ControlPageLabel>previousCountTime</ControlPageLabel>
-			</State>
 			<State id="lastContinuousEventTime">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastContinuousEventTime</TriggerLabel>
@@ -21582,68 +21584,79 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>lastContinuousEventStopTime</TriggerLabel>
 				<ControlPageLabel>lastContinuousEventStopTime</ControlPageLabel>
 			</State>
-			<State id="countLast">
+			<State id="countTimePrevious">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>countTimePrevious</TriggerLabel>
+				<ControlPageLabel>countTimePrevious</ControlPageLabel>
+			</State>
+			<State id="countPrevious">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>countLast</TriggerLabel>
-				<ControlPageLabel>countLast</ControlPageLabel>
+				<TriggerLabel>countPrevious</TriggerLabel>
+				<ControlPageLabel>countPrevious</ControlPageLabel>
+			</State>
+			<State id="countTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>countTime</TriggerLabel>
+				<ControlPageLabel>countTime</ControlPageLabel>
 			</State>
 			<State id="count">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>count</TriggerLabel>
 				<ControlPageLabel>count</ControlPageLabel>
 			</State>
-			<State id="countsPerSecond">
+			<State id="countPerSecond">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerSecond</TriggerLabel>
 				<ControlPageLabel>countsPerSecond</ControlPageLabel>
 			</State>
-			<State id="countsPerSecond">
+			<State id="countPerSecSmooth">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>countsPerSecond</TriggerLabel>
-				<ControlPageLabel>countsPerSecond</ControlPageLabel>
+				<TriggerLabel>countPerSecSmooth</TriggerLabel>
+				<ControlPageLabel>countPerSecSmooth</ControlPageLabel>
 			</State>
-			<State id="maxCountsPerSecondLastHour">
+
+			<State id="countPerSecondMaxLastHour">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>maxCountsPerSecondLastHour</TriggerLabel>
-				<ControlPageLabel>maxCountsPerSecondLastHour</ControlPageLabel>
+				<TriggerLabel>countsPerSecondMaxLastHour</TriggerLabel>
+				<ControlPageLabel>countsPerSecondMaxLastHour</ControlPageLabel>
 			</State>
-			<State id="countsPerMinute">
+			<State id="countPerMinute">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinute</TriggerLabel>
 				<ControlPageLabel>countsPerMinute</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteScaled">
+			<State id="countPerMinuteScaled">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteScaled</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteScaled</ControlPageLabel>
 			</State>
-				<State id="countsPerMinuteMaxToday">
+			<State id="countPerMinuteMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMaxToday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMaxToday</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteMinToday">
+			<State id="countPerMinuteMinToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMinToday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMinToday</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteMaxYesterday">
+			<State id="countPerMinuteMaxYesterday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMaxYesterday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMaxYesterday</ControlPageLabel>
 			</State>
-			<State id="countsPerMinuteMinYesterday">
+			<State id="countPerMinuteMinYesterday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMinYesterday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMinYesterday</ControlPageLabel>
 			</State>
-			<State id="countsPerHour">
-				<ValueType>Float</ValueType>
+			<State id="countPerHour">
+				<ValueType>Number</ValueType>
 				<TriggerLabel>countsPerHour</TriggerLabel>
 				<ControlPageLabel>countsPerHour</ControlPageLabel>
 			</State>
-			<State id="countsPerDay">
-				<ValueType>Float</ValueType>
+			<State id="countPerDay">
+				<ValueType>Number</ValueType>
 				<TriggerLabel>countsPerDay</TriggerLabel>
 				<ControlPageLabel>countsPerDay</ControlPageLabel>
 			</State>

@@ -1,4 +1,4 @@
-Added features / changes in v7.134.492@ 2021-01-07
+Added features / changes in v7.134.493@ 2021-01-10
 ===================================================
 
 1. fixed:
@@ -8,11 +8,11 @@ Added features / changes in v7.134.492@ 2021-01-07
    pulse device: calculation of counts/ xx
    beep beacon action:  did not work, menu beep did work fine, one parameter was missing
 
-2. added:
-   maxCountperSecondInLastHour state for pulse/coincidence device
-   min/max count/min today & yesterday state for pulsepulse/coincidence device
-   counts/min*scalefactor state for pulsepulse/coincidence device
-
+2. added to pulse/coincidence device
+   maxCountperSecondInLastHour state  
+   min/max count/min today & yesterday state 
+   counts/min*scalefactor state for 
+   several more states 
 
 Added features / changes in v7.134.484@ 2021-01-01
 ===================================================
