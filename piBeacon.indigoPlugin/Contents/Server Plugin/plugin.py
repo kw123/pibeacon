@@ -14250,20 +14250,33 @@ class Plugin(indigo.PluginBase):
 					countPerMinute 		=   60.        * ( countList["data"][-1][u"count"] - countList["data"][minPointer][u"count"]  ) /  max(1., ( countList["data"][-1][u"time"] - countList["data"][minPointer][u"time"]) )
 					countPerHour   		= int(3600.    * ( countList["data"][-1][u"count"] - countList["data"][hourPointer][u"count"] ) /  max(1., ( countList["data"][-1][u"time"] - countList["data"][hourPointer][u"time"]) ))
 					countPerDay    		= int(3600.*24 * ( countList["data"][-1][u"count"] - countList["data"][0]["count"]            ) /  max(1., ( countList["data"][-1][u"time"] - countList["data"][0][u"time"]) ))
+
+
 					scaleFactorForMinuteCount = 0
 					try: 	scaleFactorForMinuteCount = float(eval(props["scaleFactorForMinuteCount"]))
 					except: scaleFactorForMinuteCount = 1.
 					scfm = scaleFactorForMinuteCount * countPerMinute
+
+					countPerMinuteDP			= self.getNumberOfdecPoints(countPerMinute) 
+					countPerHourDP				= self.getNumberOfdecPoints(countPerHour) 
+					countPerDayDP				= self.getNumberOfdecPoints(countPerDay) 
+					scfmDP						= self.getNumberOfdecPoints(scfm) 
+					countPerSecondDP			= self.getNumberOfdecPoints(countPerSecond) 
+					countPerSecSmoothDP			= self.getNumberOfdecPoints(countPerSecSmooth) 
+					countPerSecondMaxLastHourDP	= self.getNumberOfdecPoints(countPerSecondMaxLastHour) 
+
+
 					if "scaleFactorForMinuteCountUnit" in props and len(props["scaleFactorForMinuteCountUnit"]) < 2:
 																		scaleFactorForMinuteCountUnit = u"{:.1f}[c/m*{}]".format(scfm, props["scaleFactorForMinuteCount"])
 					else:												scaleFactorForMinuteCountUnit = props["scaleFactorForMinuteCountUnit"].format(scfm)
-					self.setStatusCol( dev, u"countPerMinuteScaled",		scfm,						scaleFactorForMinuteCountUnit,						whichKeysToDisplay, u"","", decimalPlaces = 1)
-					self.setStatusCol( dev, u"countPerSecSmooth",			countPerSecSmooth, 			u"{:.3f}[c/s]".format(countPerSecSmooth), 		 	whichKeysToDisplay, u"","", decimalPlaces = 3 )
-					self.setStatusCol( dev, u"countPerSecond",				countPerSecond, 			u"{:.2f}[c/s]".format(round(countPerSecond,2)), 	whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countPerSecondMaxLastHour",	countPerSecondMaxLastHour,	u"{:.2f}[c/s]".format(countPerSecondMaxLastHour),	whichKeysToDisplay, u"","", decimalPlaces = 2 )
-					self.setStatusCol( dev, u"countPerMinute",				countPerMinute, 			u"{:.1f}[c/m]".format(round(countPerMinute,1)), 	whichKeysToDisplay, u"","", decimalPlaces = 1 )
-					self.setStatusCol( dev, u"countPerHour",				countPerHour,   			u"{:.0f}[c/h]".format(round(countPerHour,0)),		whichKeysToDisplay, u"","", decimalPlaces = 0 )
-					self.setStatusCol( dev, u"countPerDay",    				countPerDay,  	 			u"{:.0f}[c/d]".format(countPerDay),    			whichKeysToDisplay, u"","", decimalPlaces = 0 )
+
+					self.setStatusCol( dev, u"countPerMinuteScaled",		scfm,						scaleFactorForMinuteCountUnit,														whichKeysToDisplay, u"","", decimalPlaces = scfmDP )
+					self.setStatusCol( dev, u"countPerSecSmooth",			countPerSecSmooth, 			u"{}[c/s]".format(round(countPerSecSmooth,countPerSecSmoothDP)), 					whichKeysToDisplay, u"","", decimalPlaces = countPerSecSmoothDP )
+					self.setStatusCol( dev, u"countPerSecond",				countPerSecond, 			u"{}[c/s]".format(round(countPerSecond,countPerSecondDP)), 							whichKeysToDisplay, u"","", decimalPlaces = countPerSecondDP )
+					self.setStatusCol( dev, u"countPerSecondMaxLastHour",	countPerSecondMaxLastHour,	u"{}[c/s]".format(round(countPerSecondMaxLastHour,countPerSecondMaxLastHourDP)),	whichKeysToDisplay, u"","", decimalPlaces = countPerSecondMaxLastHourDP )
+					self.setStatusCol( dev, u"countPerMinute",				countPerMinute, 			u"{}[c/m]".format(round(countPerMinute,countPerMinuteDP)), 							whichKeysToDisplay, u"","", decimalPlaces = countPerMinuteDP )
+					self.setStatusCol( dev, u"countPerHour",				countPerHour,   			u"{}[c/h]".format(round(countPerHour,countPerHourDP)),								whichKeysToDisplay, u"","", decimalPlaces = countPerHourDP )
+					self.setStatusCol( dev, u"countPerDay",    				countPerDay,  	 			u"{}[c/d]".format(countPerDay),    													whichKeysToDisplay, u"","", decimalPlaces = countPerDayDP )
 					self.fillMinMaxSensors(dev,"countPerMinute", countPerMinute, 2)
 
 
@@ -14291,7 +14304,17 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 
  
- 
+ ####-------------------------------------------------------------------------####
+	def getNumberOfdecPoints(self, value, significantNumbers=3):
+		decPoint = 1
+		try:	
+			if value == 0: return decPoint
+			x = int(math.log10(abs(value)))
+			decPoints = max(0,min(5,significantNumbers - x))
+		except Exception, e:
+			if unicode(e) != u"None":
+				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return decPoints
 
 ####-------------------------------------------------------------------------####
 ## this will update the states xxxChangeyyMinutes / Hours eg TemperatureChange10Minutes TemperatureChange1Hour TemperatureChange6Hour
