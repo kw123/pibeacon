@@ -14228,7 +14228,7 @@ class Plugin(indigo.PluginBase):
 					countTimePrevious				= max(1., timeStamp - countList[u"timePreviouswData"])
 					countPrevious 					= cOld
 
-					self.addToStatesUpdateDict(dev.id, u"countTimePrevious", 	-round(countTimePrevious,2) )
+					self.addToStatesUpdateDict(dev.id, u"countTimePrevious", 	-round(countTimePrevious,1) )
 					self.addToStatesUpdateDict(dev.id, u"countPrevious", 		int(countPrevious))
 					self.addToStatesUpdateDict(dev.id, u"countTime",  			time.strftime(_defaultDateStampFormat, time.localtime(timeStamp)) )
 					self.setStatusCol( dev, u"count", countList["data"][-1]["count"], 			u"{:.0f}[c]".format(countList["data"][-1]["count"]), whichKeysToDisplay, u"","", decimalPlaces = u"" )
@@ -14257,13 +14257,15 @@ class Plugin(indigo.PluginBase):
 					except: scaleFactorForMinuteCount = 1.
 					scfm = scaleFactorForMinuteCount * countPerMinute
 
-					countPerMinuteDP			= self.getNumberOfdecPoints(countPerMinute) 
-					countPerHourDP				= self.getNumberOfdecPoints(countPerHour) 
-					countPerDayDP				= self.getNumberOfdecPoints(countPerDay) 
-					scfmDP						= self.getNumberOfdecPoints(scfm) 
-					countPerSecondDP			= self.getNumberOfdecPoints(countPerSecond) 
-					countPerSecSmoothDP			= self.getNumberOfdecPoints(countPerSecSmooth) 
-					countPerSecondMaxLastHourDP	= self.getNumberOfdecPoints(countPerSecondMaxLastHour) 
+					try: 	significantDigits = int(props["significantDigits"])
+					except: significantDigits = 3
+					countPerMinuteDP			= self.getNumberOfdecPoints(countPerMinute, significantDigits=significantDigits) 
+					countPerHourDP				= self.getNumberOfdecPoints(countPerHour, significantDigits=significantDigits) 
+					countPerDayDP				= self.getNumberOfdecPoints(countPerDay, significantDigits=significantDigits) 
+					scfmDP						= self.getNumberOfdecPoints(scfm, significantDigits=significantDigits) 
+					countPerSecondDP			= self.getNumberOfdecPoints(countPerSecond, significantDigits=significantDigits) 
+					countPerSecSmoothDP			= self.getNumberOfdecPoints(countPerSecSmooth, significantDigits=significantDigits) 
+					countPerSecondMaxLastHourDP	= self.getNumberOfdecPoints(countPerSecondMaxLastHour, significantDigits=significantDigits) 
 
 
 					if "scaleFactorForMinuteCountUnit" in props and len(props["scaleFactorForMinuteCountUnit"]) < 2:
@@ -14305,12 +14307,12 @@ class Plugin(indigo.PluginBase):
 		return 
  
  ####-------------------------------------------------------------------------####
-	def getNumberOfdecPoints(self, value, significantNumbers=3):
+	def getNumberOfdecPoints(self, value, significantDigits=3):
 		decPoint = 1
 		try:	
 			if value == 0: return decPoint
 			x = int(math.log10(abs(value)))
-			decPoints = max(0,min(5,significantNumbers - x))
+			decPoints = max(0,min(7, significantDigits - x))
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

@@ -21047,7 +21047,24 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
    the INPUTpulse devices must be on the same RPI
    min time interval is 1mSec, max is 3 minutes. 
    if you select 2 channels then both channels must fire in the specified time interval
-   if 4 channels are selected all 4 must fire in the same time interval</Label> 
+   if 4 channels are selected all 4 must fire in the same time interval
+== Explanation of dev states:
+- count =  total count of pulses since last reset
+- countPrevious =  total count of pulses since lasty reset previous value
+- countPerSecond = delta counts between 2 measurements, at low feq 
+  eg this goes 0 1 0 0 0 0 1 
+- countTime = timestamp(year-month ... :sec) of last count change
+- countPerSecSmooth = delta Count / time between previous change of count and now 
+  eg this goes 0.5 0.4 0.3 0.2 0.2 0.3 0.4 0.5 in comparison to countPerSecond
+- countTimePrevious = delta time in secs bwteen now and previous change of counts 
+- countPerMinute = Count delta in last 60 seconds
+- countPerMinuteScaled = Count delta in last 60 seconds * scale factor set in dev edit
+- countPerHour = Count delta in last 1 hour
+- countPerDays = Count delta in last 24 hours
+- countPerSecondMaxLastHour max of countPerSecond in last hour
+- countperMinute min/max/today/yesterday = min/max of countPerMinute 
+   today and yesterday
+</Label> 
 			</Field>
             
 		<Field id="infoLabelRPI" type="label"> 				<Label>==RPI setup:  -----------------------------</Label> </Field>
@@ -21166,6 +21183,20 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</Field>
 			<Field id="scaleFactorForMinuteCountUnit" type="textfield"    defaultValue="{:.1f}[uS/m]" hidden="no"> 
 				<Label>scale factor format, use eg {:.1f}[uS/m]:</Label>
+			</Field>
+
+			<Field id="significantDigits" type="menu"    defaultValue="3" hidden="no"> 
+				<List>
+					<Option value="0"              >0 = integer</Option>
+					<Option value="1"              >1 = 1  or 10</Option>
+					<Option value="2"              >2 = 1.1 or 11</Option>
+					<Option value="3"              >3 = 1.23 or 123 </Option>
+					<Option value="4"              >4 = 1.234 or 1234</Option>
+					<Option value="5"              >5 = 1.2345 or 12345</Option>
+					<Option value="6"              >6 = 1.23456 or 123456</Option>
+					<Option value="7"              >7 = 1.234567 or 1234567</Option>
+					<Label>number of significant digits for state values(eg 1.432 = 4):</Label>
+				</List>
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
@@ -21318,7 +21349,24 @@ In addition you can setup
   eg  with pulses every 1 second, timewindow =2 seconds , state will stay Up until pulses stop
   It will set state lastContinuousEventSecs (-Stop)  timestamp of the last continuousEvent start/stop
 Count and BURST and continuousEvents are independent of each other 
-You can only use ONE definition of edge per gpio pin (not RISING in one device and FALLING in another for the same pin)</Label> 
+You can only use ONE definition of edge per gpio pin (not RISING in one device and FALLING in another for the same pin)
+== Explanation of dev states:
+- count =  total count of pulses since last reset
+- countPrevious =  total count of pulses since lasty reset previous value
+- countPerSecond = delta counts between 2 measurements, at low feq 
+  eg this goes 0 1 0 0 0 0 1 
+- countTime = timestamp(year-month ... :sec) of last count change
+- countPerSecSmooth = delta Count / time between previous change of count and now 
+  eg this goes 0.5 0.4 0.3 0.2 0.2 0.3 0.4 0.5 in comparison to countPerSecond
+- countTimePrevious = delta time in secs bwteen now and previous change of counts 
+- countPerMinute = Count delta in last 60 seconds
+- countPerMinuteScaled = Count delta in last 60 seconds * scale factor set in dev edit
+- countPerHour = Count delta in last 1 hour
+- countPerDays = Count delta in last 24 hours
+- countPerSecondMaxLastHour max of countPerSecond in last hour
+- countperMinute min/max/today/yesterday = min/max of countPerMinute 
+   today and yesterday
+</Label> 
 			</Field>
             
 		<Field id="infoLabelRPI" type="label"> 				<Label>==RPI setup:  -----------------------------</Label> </Field>
@@ -21529,7 +21577,20 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<Label>scale factor format, use eg {:.1f}[uS/m]:</Label>
 			</Field>
 
-            
+			<Field id="significantDigits" type="menu"    defaultValue="3" hidden="no"> 
+				<List>
+					<Option value="0"              >0 = integer</Option>
+					<Option value="1"              >1 = 1  or 10</Option>
+					<Option value="2"              >2 = 1.1 or 11</Option>
+					<Option value="3"              >3 = 1.23 or 123 </Option>
+					<Option value="4"              >4 = 1.234 or 1234</Option>
+					<Option value="5"              >5 = 1.2345 or 12345</Option>
+					<Option value="6"              >6 = 1.23456 or 123456</Option>
+					<Option value="7"              >7 = 1.234567 or 1234567</Option>
+					<Label>number of significant digits for state values(eg 1.432 = 4):</Label>
+				</List>
+			</Field>
+
 			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">

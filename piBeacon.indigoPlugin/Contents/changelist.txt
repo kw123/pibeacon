@@ -1,4 +1,4 @@
-Added features / changes in v7.134.494@ 2021-01-11
+Added features / changes in v7.134.495@ 2021-01-11
 ===================================================
 
 1. fixed:
@@ -14,6 +14,7 @@ Added features / changes in v7.134.494@ 2021-01-11
    counts/min*scalefactor state for 
    several more states 
    made the number of digits dynamc in count/xx dev states to have at keast 3 significant numbers shown (that is equivalent to 0.1%) 
+     teh number of significant digits can be set in dev edit
 
 Added features / changes in v7.134.484@ 2021-01-01
 ===================================================
