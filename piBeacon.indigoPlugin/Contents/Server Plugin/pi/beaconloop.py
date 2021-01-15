@@ -3471,170 +3471,173 @@ def BLEAnalysis():
 def beep(useHCI):
 	global beaconsOnline
 	try:	
-		if not os.path.isfile(G.homeDir+"temp/beaconloop.beep"): return False
-		#U.logger.log(20,"beepBeacon ")
+		restart = False
 
-		f = open(G.homeDir+"temp/beaconloop.beep","r")
-		devices = f.read().strip("\n")
-		f.close()
+		while True: 
+			if not os.path.isfile(G.homeDir+"temp/beaconloop.beep"): break
+			f = open(G.homeDir+"temp/beaconloop.beep","r")
+			deviceList = f.read().strip("\n").split("\n")
+			f.close()
+			subprocess.call("rm {}temp/beaconloop.beep".format(G.homeDir), shell=True)
+			U.logger.log(20,u"beepBeacon deviceList:{}".format(deviceList))
 
-		subprocess.call("rm {}temp/beaconloop.beep".format(G.homeDir), shell=True)
+			# devices: '{u'24:DA:11:21:2B:20': {u'cmdOff': u'char-write-cmd 0x0011 00', u'cmdON': u'char-write-cmd  0x0011  02', u'beepTime': 2.0}}'
+			for devices in deviceList:
+				if len(devices) == 0: continue
+				devices = json.loads(devices)
+				if len(devices) == 0: continue
+				expCommands = ""
+				stopHCUIDUMPlistener()
+				U.killOldPgm(-1,"hcidump")
+				U.killOldPgm(-1,"hcitool")
+				U.killOldPgm(-1,"lescan")
+				restart = True
+				ret = subprocess.Popen("sudo /bin/hciconfig {} reset".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-		# devices: '{u'24:DA:11:21:2B:20': {u'cmdOff': u'char-write-cmd 0x0011 00', u'cmdON': u'char-write-cmd  0x0011  02', u'beepTime': 2.0}}'
-		devices = json.loads(devices)
-		if len(devices) == 0: return False
-		expCommands = ""
-		stopHCUIDUMPlistener()
-		U.killOldPgm(-1,"hcidump")
-		U.killOldPgm(-1,"hcitool")
-		U.killOldPgm(-1,"lescan")
-		ret = subprocess.Popen("sudo /bin/hciconfig {} reset".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-
-		U.logger.log(20,"beepBeacon devices:{}".format(devices))
-		for mac in devices:
-			#U.logger.log(20,"beepBeacon mac:{}".format(mac))
-			if len(mac) < 10: continue
-			params		= devices[mac]
+				#U.logger.log(20,"beepBeacon devices:{}".format(devices))
+				for mac in devices:
+					#U.logger.log(20,"beepBeacon mac:{}".format(mac))
+					if len(mac) < 10: continue
+					params		= devices[mac]
+					if "mustBeUp" in params and params["mustBeUp"]: force = False
+					else:											force = True
+					if  not force and mac not in beaconsOnline:
+						U.logger.log(20,u"mac: {}; skipping, not online or not in range".format(mac) )
+						continue
 			
-			tryAgain = 3
-			for kk in range(3):
-				tryAgain -= 1
-				if tryAgain < 0: break
-				if tryAgain != 2 and expCommands != "":
-					try: expCommands.sendline("disconnect")	
-					except: pass	
+					tryAgain = 3
+					for kk in range(3):
+						tryAgain -= 1
+						if tryAgain < 0: break
+						if tryAgain != 2 and expCommands != "":
+							try: expCommands.sendline("disconnect")	
+							except: pass	
 
-				if "random" in params and params["random"] == "randomON":	random = " -t random"
-				else:					 									random = " "
-				cmd = "sudo /usr/bin/gatttool -i {} {} -b {} -I".format(useHCI, random, mac) 
-				U.logger.log(20,cmd)
-				expCommands = pexpect.spawn(cmd)
-				ret = expCommands.expect([">","error",pexpect.TIMEOUT], timeout=10)
-				if ret == 0:
-					U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
-					connected = True
-				else:
-					if ii < ntriesConnect-1:
-						if ret == 1:	U.logger.log(20, u"... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
-						elif ret == 2:	U.logger.log(20, u"... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
-						else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
-					expCommands.kill(0)
-					time.sleep(0.1)
-					break
+						if "random" in params and params["random"] == "randomON":	random = " -t random"
+						else:					 									random = " "
+						cmd = "sudo /usr/bin/gatttool -i {} {} -b {} -I".format(useHCI, random, mac) 
+						U.logger.log(20,cmd)
+						expCommands = pexpect.spawn(cmd)
+						ret = expCommands.expect([">","error",pexpect.TIMEOUT], timeout=10)
+						if ret == 0:
+							U.logger.log(20,u"... successful: {}-{}".format(expCommands.before,expCommands.after))
+							connected = True
+						else:
+							if ii < ntriesConnect-1:
+								if ret == 1:	U.logger.log(20, u"... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
+								elif ret == 2:	U.logger.log(20, u"... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
+								else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
+							expCommands.kill(0)
+							time.sleep(0.1)
+							break
 
-				time.sleep(0.1)
+						time.sleep(0.1)
 
-				if "mustBeUp" in params and params["mustBeUp"]: force = False
-				else:											force = True
-				if  not force and mac not in beaconsOnline:
-					U.logger.log(20,"mac: {}; skipping, not online or not in range".format(mac) )
-					continue
-				try:
-					cmdON		= params["cmdON"]
-					cmdOff		= params["cmdOff"]
-					beepTime	= float(params["beepTime"])
-					U.logger.log(20,"{}:   cmdON:{};  cmdOff:{};  beepTime:{} ".format(mac, cmdON, cmdOff, beepTime) )
-
-					connected = False
-					ntriesConnect = 6
-					for ii in range(ntriesConnect):
 						try:
-							U.logger.log(20,"expect connect ")
-							expCommands.sendline("connect ")
-							ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=15)
-							if ret == 0:
-								U.logger.log(20,"... successful: {}".format(expCommands.after))
-								connected = True
-								break
-							else:
-								if ii < ntriesConnect-1: 
-									if ret == 1:	U.logger.log(20, u"... error, try again: {}-{}".format(expCommands.before,expCommands.after))
-									elif ret == 2:	U.logger.log(20, u"... timeout, try again: {}-{}".format(expCommands.before,expCommands.after))
-									else:			U.logger.log(20, "... unexpected, try again: {}-{}".format(expCommands.before,expCommands.after))
-							time.sleep(1)
+							cmdON		= params["cmdON"]
+							cmdOff		= params["cmdOff"]
+							beepTime	= float(params["beepTime"])
+							U.logger.log(20,"{}:   cmdON:{};  cmdOff:{};  beepTime:{} ".format(mac, cmdON, cmdOff, beepTime) )
 
-						except Exception, e:
-							U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							if ii < ntriesConnect-1: 
-								U.logger.log(20, u"... error, try again")
-								time.sleep(1)
-
-					if not connected:
-						U.logger.log(20, u"connect error, giving up")
-						tryAgain = True
-					
-					else:
-						startbeep = time.time()
-						lastBeep = 0
-						success = True
-						for ii in range(50):
-							if time.time() - lastBeep > 10:
-								for cc in cmdON:
-									U.logger.log(20,"sendline  cmd{}".format( cc))
-									expCommands.sendline( cc )
-									ret = expCommands.expect([mac,"Error","failed",pexpect.TIMEOUT], timeout=5)
+							connected = False
+							ntriesConnect = 6
+							for ii in range(ntriesConnect):
+								try:
+									U.logger.log(20,u"expect connect ")
+									expCommands.sendline("connect ")
+									ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=15)
 									if ret == 0:
-										U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
-										time.sleep(0.1)
-										continue
+										U.logger.log(20,u"... successful: {}".format(expCommands.after))
+										connected = True
+										break
 									else:
 										if ii < ntriesConnect-1: 
-											if ret in[1,2]:	U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before,expCommands.after))
-											elif ret == 3:	U.logger.log(20, "... timeout, quit: {}-{}".format(expCommands.before,expCommands.after))
-											else:			U.logger.log(20, "... unexpected, quit: {}-{}".format(expCommands.before,expCommands.after))
-									success = False
-									break
-								lastBeep = time.time()
-							if time.time() - startbeep > beepTime: break
-							time.sleep(1)
+											if ret == 1:	U.logger.log(20, u"... error, try again: {}-{}".format(expCommands.before,expCommands.after))
+											elif ret == 2:	U.logger.log(20, u"... timeout, try again: {}-{}".format(expCommands.before,expCommands.after))
+											else:			U.logger.log(20, "... unexpected, try again: {}-{}".format(expCommands.before,expCommands.after))
+									time.sleep(1)
 
-						if success:
-							for cc in cmdOff:
-								U.logger.log(20,"sendline  cmd{}".format( cc))
-								expCommands.sendline( cc )
-								ret = expCommands.expect([mac,"Error","failed",pexpect.TIMEOUT], timeout=5)
+								except Exception, e:
+									U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									if ii < ntriesConnect-1: 
+										U.logger.log(20, u"... error, try again")
+										time.sleep(1)
+
+							if not connected:
+								U.logger.log(20, u"connect error, giving up")
+								tryAgain = True
+					
+							else:
+								startbeep = time.time()
+								lastBeep = 0
+								success = True
+								for ii in range(50):
+									if time.time() - lastBeep > 10:
+										for cc in cmdON:
+											U.logger.log(20,"sendline  cmd{}".format( cc))
+											expCommands.sendline( cc )
+											ret = expCommands.expect([mac,"Error","failed",pexpect.TIMEOUT], timeout=5)
+											if ret == 0:
+												U.logger.log(20,u"... successful: {}-{}".format(expCommands.before,expCommands.after))
+												time.sleep(0.1)
+												continue
+											else:
+												if ii < ntriesConnect-1: 
+													if ret in[1,2]:	U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before,expCommands.after))
+													elif ret == 3:	U.logger.log(20, "... timeout, quit: {}-{}".format(expCommands.before,expCommands.after))
+													else:			U.logger.log(20, "... unexpected, quit: {}-{}".format(expCommands.before,expCommands.after))
+											success = False
+											break
+										lastBeep = time.time()
+									if time.time() - startbeep > beepTime: break
+									time.sleep(1)
+
+								if success:
+									for cc in cmdOff:
+										U.logger.log(20,u"sendline  cmd{}".format( cc))
+										expCommands.sendline( cc )
+										ret = expCommands.expect([mac,"Error","failed",pexpect.TIMEOUT], timeout=5)
+										if ret == 0:
+											U.logger.log(20,u"... successful: {}-{}".format(expCommands.before,expCommands.after))
+											time.sleep(0.1)
+										else:
+											if ret in[1,2]:	U.logger.log(20, "... error: {}-{}".format(expCommands.before,expCommands.after))
+											elif ret == 3:	U.logger.log(20, "... timeout: {}-{}".format(expCommands.before,expCommands.after))
+											else:			U.logger.log(20, "... unknown: {}-{}".format(expCommands.before,expCommands.after))
+										tryAgain = -1
+
+								expCommands.sendline("disconnect" )
+								U.logger.log(20,u"sendline disconnect ")
+								ret = expCommands.expect([">","Error",pexpect.TIMEOUT], timeout=5)
 								if ret == 0:
-									U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
-									time.sleep(0.1)
+									U.logger.log(20,u"... successful: {}".format(expCommands.after))
 								else:
-									if ret in[1,2]:	U.logger.log(20, "... error: {}-{}".format(expCommands.before,expCommands.after))
-									elif ret == 3:	U.logger.log(20, "... timeout: {}-{}".format(expCommands.before,expCommands.after))
-									else:			U.logger.log(20, "... unknown: {}-{}".format(expCommands.before,expCommands.after))
-								tryAgain = -1
+									if ret == 1: 	U.logger.log(20, "... error: {}".format(expCommands.after))
+									elif ret == 2:	U.logger.log(20, "... timeout: {}".format(expCommands.after))
+									else: 			U.logger.log(20, "... unknown: {}".format(expCommands.after))
+									expCommands.kill(0)
+									expCommands = ""
 
-						expCommands.sendline("disconnect" )
-						U.logger.log(20,"sendline disconnect ")
-						ret = expCommands.expect([">","Error",pexpect.TIMEOUT], timeout=5)
-						if ret == 0:
-							U.logger.log(20,"... successful: {}".format(expCommands.after))
-						else:
-							if ret == 1: 	U.logger.log(20, "... error: {}".format(expCommands.after))
-							elif ret == 2:	U.logger.log(20, "... timeout: {}".format(expCommands.after))
-							else: 			U.logger.log(20, "... unknown: {}".format(expCommands.after))
-							expCommands.kill(0)
-							expCommands = ""
-
-				except Exception, e:
-					U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					time.sleep(1)
-			#U.logger.log(20,"beepBeacon end of mac:{}".format(mac))
-			if expCommands !="":
-				try:	expCommands.sendline("quit\r" )
-				except: pass
-				try:	expCommands.kill(0)
-				except: pass
-				expCommands = ""
+						except Exception, e:
+							U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							time.sleep(1)
+					if expCommands !="":
+						try:	expCommands.sendline("quit\r" )
+						except: pass
+						try:	expCommands.kill(0)
+						except: pass
+						expCommands = ""
 
 
-		if expCommands !="":
-			try:	expCommands.sendline("quit\r" )
-			except: pass
-			try:	expCommands.kill(0)
-			except: pass
+				if expCommands !="":
+					try:	expCommands.sendline("quit\r" )
+					except: pass
+					try:	expCommands.kill(0)
+					except: pass
 	except Exception, e:
 			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
-	return True
+	return restart
 
 
 
@@ -3646,7 +3649,6 @@ def getBeaconParameters(useHCI):
 	data ={} 
 	try:	
 		if not os.path.isfile(G.homeDir+"temp/beaconloop.getBeaconParameters"): return False
-		#U.logger.log(20,"beepBeacon ")
 
 		f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","r")
 		devices = f.read().strip("\n")
@@ -3654,7 +3656,6 @@ def getBeaconParameters(useHCI):
 
 		subprocess.call("rm {}temp/beaconloop.getBeaconParameters".format(G.homeDir), shell=True)
 
-		# devices: '{u'24:DA:11:21:2B:20': {u'cmdOff': u'char-write-cmd 0x0011 00', u'cmdON': u'char-write-cmd  0x0011  02', u'beepTime': 2.0}}'
 		devices = json.loads(devices)
 		U.logger.log(20,"getBeaconParameters devices:{}".format(devices))
 		if len(devices) ==0: return False
@@ -3663,14 +3664,14 @@ def getBeaconParameters(useHCI):
 		U.killOldPgm(-1,"hcitool")
 		U.killOldPgm(-1,"lescan")
 
-		cmd = "sudo /bin/hciconfig hci0 down;sudo /bin/hciconfig hci0 up"
+		cmd = "sudo /bin/hciconfig {} down;sudo /bin/hciconfig {} up".format(useHCI, useHCI)
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
  		timeoutSecs = 15
 		for mac in devices:
 			if len(mac) < 10: continue
 			if False and mac not in beaconsOnline:
-				U.logger.log(20,"mac: {}; skipping, not online or not in range".format(mac) )
+				U.logger.log(20,u"mac: {}; skipping, not online or not in range".format(mac) )
 				continue
 			try:
 				params		= devices[mac]["battCmd"]
@@ -3686,7 +3687,7 @@ def getBeaconParameters(useHCI):
 				offset = params["offset"]
 #					devices:{u'24:DA:11:21:2B:20': {u'battCmd': {u'random': u'public', u'bits': 63, u'uuid': u'2A19', u'norm': 36}}}
 
-				cmd = "/usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -b {} {} --char-read --uuid={}".format(timeoutSecs, mac,random, uuid)
+				cmd = "/usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -i {} -b {} {} --char-read --uuid={}".format(timeoutSecs, useHCI, mac, random, uuid)
 				##					                   /usr/bin/gatttool -b 24:da:11:27:E4:23 --char-read --uuid=2A19 -t public / random   
 				U.logger.log(20,"cmd: {}".format(cmd) )
 				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
@@ -3709,7 +3710,7 @@ def getBeaconParameters(useHCI):
 							valueF = min(100, int( ( valueD *100. )/norm ))
 						except Exception, e:
 							U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				U.logger.log(20,"... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
+				U.logger.log(20,u"... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
 				if "sensors" not in data: data["sensors"] = {}
 				if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
 				if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] ={}

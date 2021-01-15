@@ -382,8 +382,8 @@ def execCMDS(data):
 			if cmd =="beepBeacon":
 				try:
 						U.logger.log(20, u"execcmd. beep, write: ={}".format(next["device"]))
-						f = open(G.homeDir+"temp/beaconloop.beep","w")
-						f.write(next["device"]) 
+						f = open(G.homeDir+"temp/beaconloop.beep","a")
+						f.write(next["device"]+"\n") 
 						f.close()
 				except	Exception, e:
 						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

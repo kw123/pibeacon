@@ -8355,12 +8355,14 @@ class Plugin(indigo.PluginBase):
 	def sendBeepCommandCALLBACKmenu(self, valuesDict=None, typeId=u"", devId=0, force=True):
 		
 		if  valuesDict is None: return  valuesDict
-		if self.decideMyLog(u"Beep"): self.indiLOG.log(10,u"beep beacon {}".format(valuesDict) )
+		if self.decideMyLog(u"Beep"): self.indiLOG.log(10,u"beep beacon {}".format(unicode(valuesDict)) )
 
 		if u"selectbeaconForBeep" not in  valuesDict: return  valuesDict
 		dev = indigo.devices[int(valuesDict[u"selectbeaconForBeep"])]
 		props = dev.pluginProps
-		if dev.states[u"status"] != "up": return valuesDict
+		if dev.states[u"status"] != "up": 
+			if self.decideMyLog(u"Beep"): self.indiLOG.log(10,u"beep beacon... beacon dev not up {}, no beep".format(dev.name) )
+			return valuesDict
 
 
 		try:  	int(valuesDict[u"piServerNumber"])
@@ -8382,14 +8384,17 @@ class Plugin(indigo.PluginBase):
 		beacon  = dev.address
 		if  time.time() - self.beacons[beacon][u"lastBusy"] < 0:
 			if self.decideMyLog(u"Beep"): 
-				self.indiLOG.log(10,u"beep beacon requested  for {}  rejected as last beep end too short time ago {}".format(beacon, time.time() - self.beacons[beacon][u"lastBusy"]) )
+				self.indiLOG.log(10,u"beep beacon requested  for {}  rejected as last beep done too short time ago {}".format(beacon, time.time() - self.beacons[beacon][u"lastBusy"]) )
 				return valuesDict			
-		self.beacons[beacon][u"lastBusy"] = time.time() + float(valuesDict[u"beepTime"]) + 50
-		dev.updateStateOnServer(u"isBeepable",u"busy")
 
 		typeOfBeacon = props[u"typeOfBeacon"]
+		if self.decideMyLog(u"Beep"): self.indiLOG.log(10,u"beep beacon... beacon type: {}".format(typeOfBeacon) )
 		if typeOfBeacon != u"":
-			if typeOfBeacon in self.knownBeaconTags:
+			if typeOfBeacon not in self.knownBeaconTags:
+				if self.decideMyLog(u"Beep"): self.indiLOG.log(10,u"beep beacon... beacon type not known" )
+			else:
+				self.beacons[beacon][u"lastBusy"] = time.time() + float(valuesDict[u"beepTime"]) + 20
+				dev.updateStateOnServer(u"isBeepable",u"busy")
 				if self.knownBeaconTags[typeOfBeacon][u"beepCmd"] != u"off":
 					cmd 					= self.knownBeaconTags[typeOfBeacon][u"beepCmd"]
 					cmd[u"beepTime"] 		= float(valuesDict[u"beepTime"])
