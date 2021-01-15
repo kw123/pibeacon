@@ -1,4 +1,4 @@
-Added features / changes in v7.134.498@ 2021-01-14
+Added features / changes in v7.134.499@ 2021-01-15
 ===================================================
 
 1. fixed:
@@ -23,7 +23,7 @@ Added features / changes in v7.134.498@ 2021-01-14
 4. changed detect new beacons to use data aquired anyway with hcidump. so no data collection break during detect new beacons process
    that is not active for hci- socket data aquisition, as that does not deliver all package types, have to do hcidump do catch that data.
 
-5. added beacon type nut v 2021.
+5. added beacon type nut v 45 and 46.
    the comamnds for battery and beep have changed with the new release. the hardware looks identical
 
 
