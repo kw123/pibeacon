@@ -94,7 +94,7 @@ osVersion 			= 0
 ipOfRouter			= ""
 enableRebootCheck	= "restartLoop"
 pythonVersion		= 2
-compressRPItoPlugin = 99999999
+compressRPItoPlugin = 20000
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
 import sys

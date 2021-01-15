@@ -221,19 +221,16 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 			<Option value="3600" >1 hour </Option>
 		</List>    
 	</Field>
-	<Field id="compressRPItoPlugin"   type="menu" defaultValue="999999999" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field id="compressRPItoPlugin"   type="menu" defaultValue="20000" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<List>
-			<Option value="200"      >msg GT 200 bytes only for testing</Option>
-			<Option value="2000"     >msg GT 2   KB </Option>
-			<Option value="10000"    >msg GT 10  KB </Option>
-			<Option value="50000"    >msg GT 50  KB </Option>
-			<Option value="100000"   >msg GT 100 KB </Option>
-			<Option value="999999999" >off </Option>
+			<Option value="10000"    >msg GT 10 KB </Option>
+			<Option value="200000"   >msg GT 20 KB </Option>
+			<Option value="400000"   >msg GT 40 KB </Option>
 		</List>    
 		<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
 	</Field>
 	<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>use if you have a slow connection ie wifi and large packages don't come through, can be set for each individual RPI in devcie edit</Label>
+		<Label>use if you have a slow connection ie wifi and large packages don't come through, can be set for each individual RPI in device edit</Label>
 	</Field>
 
 	<Field id="infoLabeluserID" type="label" fontSize="small" >
@@ -859,11 +856,6 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (S) special debug (only for development):</Label>  </Field>
 	<Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
-	<Field    id="logFileActive2"      type="menu"      defaultValue="standard"      > <Label> send logs to ..:</Label>
-		<List>
-			<Option value="indigo"   > .. Perceptive Automation/Indigo x/Logs/com.karlwachs.piBeacon/plugin.log </Option>
-		</List>
-	</Field>
 	<Field id="infoLabel227" type="label"> <Label>DETAILED cpu-time tracking;  set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>
 	<Field    id="do_cProfile" type="textfield"  defaultValue="on/off/print"  readonly="yes"     > 
 		<Label>... enable or stop or  print intermediate results use on/off/print:</Label>  

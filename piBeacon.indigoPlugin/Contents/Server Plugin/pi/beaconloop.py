@@ -563,7 +563,7 @@ def combineLines(lines):
 		for line in rd:
 			nn +=1
 			if len(line) < 40 and nn < ll: continue
-			MSGs.append(line[14:]) # start w the MAC#, skip the preamble
+			MSGs.append(line) 
 		if len(MSGs) ==0: return []
 
 		if len(MSGs[-1]) < 40:
@@ -655,8 +655,6 @@ def readParams(init):
 					rpiDataAcquistionMethod = "hcidump"
 			else:
 					rpiDataAcquistionMethod = "hcidump"
-
-
 
 			if "sensors"			 in inp: 
 				sensors =			 (inp["sensors"])
@@ -3148,26 +3146,30 @@ def writeTrackMac(textOut0, textOut2, mac):
 
 
 #################################
-def BLEAnalysis(hci):
-	global onlyTheseMAC, knownBeaconTags
-	global bleServiceSections
+def fillHCIdump(hexstr):
+	global rpiDataAcquistionMethod, BLEcollectStartTime, writeDumpDataHandle
 	try:
-		if not os.path.isfile(G.homeDir+"temp/beaconloop.BLEAnalysis"): return False
+		if BLEcollectStartTime > 0 and rpiDataAcquistionMethod != "socket":
+			if not os.path.isfile(G.homeDir+"temp/hcidump.data") or writeDumpDataHandle == "":
+				writeDumpDataHandle = open(G.homeDir+"temp/hcidump.data","a")
+			outstring = "> " + " ".join([ hexstr[i:i+2] for i in range(0,len(hexstr),2) ])+"\n"
+			writeDumpDataHandle.write(outstring)
 
-		dataCollectionTime = 25 # secs 
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return  hexstr[14:] # start w the MAC#, skip the preamble
 
 
-		f = open(G.homeDir+"temp/beaconloop.BLEAnalysis","r")
-		rssiCutoff = f.read().strip("\n")
-		f.close()
-		subprocess.call("rm {}temp/beaconloop.BLEAnalysis".format(G.homeDir), shell=True)
-		rssiCutoff = int(rssiCutoff)
+#################################
+def BLEAnalysisSocket(hci):
+	global onlyTheseMAC, knownBeaconTags
+	global bleServiceSections, BLEanalysisdataCollectionTime, BLEcollectStartTime
+	try:
+		if rpiDataAcquistionMethod != "socket": return False
 
 		bluetoothctl = False
 		lescanData	 = False
-
 		## init, set dict and delete old files
-		MACs={}
 		subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		subprocess.Popen("sudo rm "+G.homeDir+"temp/lescan.data > /dev/null 2>&1 ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		subprocess.Popen("sudo rm "+G.homeDir+"temp/hcidump.data > /dev/null 2>&1 ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
@@ -3183,28 +3185,25 @@ def BLEAnalysis(hci):
 		U.killOldPgm(-1,"lescan")
 
 		## now listen to BLE
-		starttime = time.time()
-		U.logger.log(20, u"starting  BLEAnalysis, rssi cutoff= {}[dBm]".format(rssiCutoff))
+		BLEcollectStartTime = time.time()
+		U.logger.log(20, u"starting  BLEAnalysis, rssi cutoff= {}[dBm]".format(BLEanalysisrssiCutoff))
 		U.logger.log(20, u"sudo hciconfig {} reset".format(hci))
 		subprocess.Popen("sudo hciconfig "+hci+" reset", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates ")
-		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates > "+G.homeDir+"temp/lescan.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		U.logger.log(20, "sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates ")
+		subprocess.Popen("sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates > "+G.homeDir+"temp/lescan.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		time.sleep(0.3)
-		U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D'")
-		subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D' > "+G.homeDir+"temp/hcidump.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		time.sleep(dataCollectionTime)
+		U.logger.log(20, "sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D'")
+		subprocess.Popen("sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s hcidump -i "+hci+" --raw  | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D' > "+G.homeDir+"temp/hcidump.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		time.sleep(BLEanalysisdataCollectionTime)
 
 		if bluetoothctl:
-			U.logger.log(20, "sudo timeout -s SIGINT "+str(dataCollectionTime)+"s bluetoothctl scan on")
-			subprocess.Popen("sudo timeout -s SIGINT "+str(dataCollectionTime)+"s bluetoothctl scan on > "+G.homeDir+"temp/bluetoothctl.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-			time.sleep(dataCollectionTime+.1)
-		U.logger.log(20, "prep done; after@: {:.1f} secs".format(time.time()-starttime))
+			U.logger.log(20, "sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s bluetoothctl scan on")
+			subprocess.Popen("sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s bluetoothctl scan on > "+G.homeDir+"temp/bluetoothctl.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			time.sleep(BLEanalysisdataCollectionTime+.1)
+		U.logger.log(20, "prep done; after@: {:.1f} secs".format(time.time()-BLEcollectStartTime))
 		subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-
-		out = []
-		extraLists= {"TLM":[],"iBeacon":[]}
-		if True: # hcidump
+		BLEAnalysis()
 		##                                                                                    
 		##  tag-pos: =MACstart  0  2  4  6  8  1  1  1  1  1  2  2  2  2  2  3  3  3  3  3  4  4  4  4  4  5  ... 
 		##                      0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0 
@@ -3217,80 +3216,131 @@ def BLEAnalysis(hci):
 		##                                                       FF 4C                                                                    
 		## ID packet Type                                        APPLE                                                                    
 		## 
-			f = open(G.homeDir+"temp/hcidump.data","r")
-			xxx = f.read()
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	
+	BLEcollectStartTime = -1
+	return
+#################################
+def BLEAnalysisStart(hci):
+	global onlyTheseMAC, knownBeaconTags, writeDumpDataHandle
+	global bleServiceSections, BLEanalysisdataCollectionTime, BLEcollectStartTime, BLEanalysisrssiCutoff
+	global rpiDataAcquistionMethod
+	try:
+		if BLEcollectStartTime == -1 and os.path.isfile(G.homeDir+"temp/beaconloop.BLEAnalysis"): 
+			f = open(G.homeDir+"temp/beaconloop.BLEAnalysis","r")
+			BLEanalysisrssiCutoff = int(f.read().strip("\n"))
 			f.close()
-			#print xxx [0:100]
-			linesIn = 0
-			linesDevices = 0
-			linesAccepted = 0
-			for line in xxx.split("\n"):
-				max_TX = -99
-				linesIn +=1
-				if len(line) < 60: 		continue
-				if line.find(">") ==-1: continue
-				linesAccepted +=1
-				line = line[2:].strip()
-				items = line.split()
-				mac = (items[7:13])[::-1]
-				mac = ":".join(mac)
-				#U.logger.log(20, " line:{}".format(line))
-				hexString = (line.replace(" ",""))[14+12:]
-				##U.logger.log(20, "mac:{};   hexstr:{} ".format(mac, hexString ))
-				parsedData = parsePackage(mac, hexString, logData=False)
-				#if mac =="DD:33:0A:11:15:E3": print "hcidump found DD:33:0A:11:15:E3", line
-				if mac not in MACs: 
-					MACs[mac] = {"max_rssi":-99, "max_TX": -99,"MSG_in_10Secs": 0,
-					"n_of_MSG_Types":0,"typeOfBeacon":[],"typeOfBeacon-msg#":[],"nMessages":[],
-					"raw_data":[],"pos_of_MAC":[],"pos_of_r-MAC":[], "possible_knownTag_options":[]}
-					for ee in extraLists:
-						MACs[mac][ee] = []
-					for mmm in bleServiceSections:
-						mm  = bleServiceSections[mmm]
-						MACs[mac][mm] = []
-				present = False
+			subprocess.call("rm {}temp/beaconloop.BLEAnalysis".format(G.homeDir), shell=True)
+			BLEcollectStartTime = time.time()
 
-				nMsgNumber = -1
-				for ll in MACs[mac]["raw_data"]:
-					nMsgNumber += 1
-					#print mac, "test   :>{}<".format(ll[0:-3])
-					if line[:-6].strip() in ll:# w/o RX TX
-						present = True
-						#print mac, "test   : duplicate"
-						break
-				if not present:
-					#U.logger.log(20, "adding:>>{}<< ".format(line[:-3])) 
-					MACs[mac]["raw_data"].append( line )
-					MACs[mac]["nMessages"].append(0)
-					nMsgNumber = len(MACs[mac]["raw_data"]) - 1
-					linesDevices +=1
-					for mmm in bleServiceSections:
-						mm  = bleServiceSections[mmm]
-						if mm in parsedData: 			MACs[mac][mm].append(parsedData[mm])
-						else:							MACs[mac][mm].append("")
-					for ee in extraLists:
-						if ee in parsedData:			MACs[mac][ee].append(parsedData[ee])
-						else:							MACs[mac][ee].append("")
+			U.logger.log(20,u"starting ble analysis with rssi cutoff:{}  using method:{}, for  {} secs, starttimeStamp:{}".format(BLEanalysisrssiCutoff, rpiDataAcquistionMethod, BLEanalysisdataCollectionTime, BLEcollectStartTime))
+			if os.path.isfile(G.homeDir+"temp/hcidump.data"):
+				subprocess.call("rm {}temp/hcidump.data".format(G.homeDir), shell=True)
 
-				MACs[mac]["nMessages"][nMsgNumber]+=1
-				if "TxPowerLevel" in parsedData:
-					try:
-						tx = signedIntfrom8(parsedData["TxPowerLevel"])
-						MACs[mac]["max_TX"] = max(MACs[mac]["max_TX"],tx )
-					except: pass
-				#print mac, "present:>{}<".format(line[2:-3])
-				try: 
-					if MACs[mac]["max_TX"]  == - 99:
-						max_TX 	= max(MACs[mac]["max_TX"],   signedIntfrom8(line[-5:-3]))
+			if rpiDataAcquistionMethod == "socket": 
+				if BLEAnalysisSocket(hci):	return True
+			return False
+
+		elif  BLEcollectStartTime >0:
+			#U.logger.log(20,u"testing ble analysis :{}".format(time.time() - BLEcollectStartTime))
+			if time.time() - BLEcollectStartTime >= BLEanalysisdataCollectionTime: 
+				if writeDumpDataHandle !="":
+					writeDumpDataHandle.close()
+				BLEAnalysis()
+				BLEcollectStartTime = -1
+			return False
+
+		BLEanalysisdataCollectionTime = 25 # secs 
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	BLEcollectStartTime = -1
+	return False
+#################################
+def BLEAnalysis():
+	global onlyTheseMAC, knownBeaconTags
+	global bleServiceSections, BLEanalysisdataCollectionTime, BLEanalysisrssiCutoff, BLEcollectStartTime
+	try:
+		if time.time() - BLEcollectStartTime <= BLEanalysisdataCollectionTime: return 
+		if not os.path.isfile(G.homeDir+"temp/hcidump.data"): return 
+		f = open(G.homeDir+"temp/hcidump.data","r")
+		xxx = f.read()
+		f.close()
+		#print xxx [0:100]
+		linesIn = 0
+		linesDevices = 0
+		linesAccepted = 0
+		out = []
+		extraLists = {"TLM":[],"iBeacon":[]}
+		MACs = {}
+		collectionTime = time.time() - BLEcollectStartTime
+		for line in xxx.split("\n"):
+			max_TX = -99
+			linesIn +=1
+			if len(line) < 60: 		 continue
+			if line.find(">") == -1: continue
+			linesAccepted +=1
+			line = line[2:].strip()
+			items = line.split()
+			mac = (items[7:13])[::-1]
+			mac = ":".join(mac)
+			#U.logger.log(20, " line:{}".format(line))
+			hexString = (line.replace(" ",""))[14+12:]
+			##U.logger.log(20, "mac:{};   hexstr:{} ".format(mac, hexString ))
+			parsedData = parsePackage(mac, hexString, logData=False)
+			#if mac =="DD:33:0A:11:15:E3": print "hcidump found DD:33:0A:11:15:E3", line
+			if mac not in MACs: 
+				MACs[mac] = {"max_rssi":-99, "max_TX": -99,"MSG_in_10Secs": 0,
+				"n_of_MSG_Types":0,"typeOfBeacon":[],"typeOfBeacon-msg#":[],"nMessages":[],
+				"raw_data":[],"pos_of_MAC":[],"pos_of_r-MAC":[], "possible_knownTag_options":[]}
+				for ee in extraLists:
+					MACs[mac][ee] = []
+				for mmm in bleServiceSections:
+					mm  = bleServiceSections[mmm]
+					MACs[mac][mm] = []
+			present = False
+
+			nMsgNumber = -1
+			for ll in MACs[mac]["raw_data"]:
+				nMsgNumber += 1
+				#print mac, "test   :>{}<".format(ll[0:-3])
+				if line[:-6].strip() in ll:# w/o RX TX
+					present = True
+					#print mac, "test   : duplicate"
+					break
+			if not present:
+				#U.logger.log(20, "adding:>>{}<< ".format(line[:-3])) 
+				MACs[mac]["raw_data"].append( line )
+				MACs[mac]["nMessages"].append(0)
+				nMsgNumber = len(MACs[mac]["raw_data"]) - 1
+				linesDevices +=1
+				for mmm in bleServiceSections:
+					mm  = bleServiceSections[mmm]
+					if mm in parsedData: 			MACs[mac][mm].append(parsedData[mm])
+					else:							MACs[mac][mm].append("")
+				for ee in extraLists:
+					if ee in parsedData:			MACs[mac][ee].append(parsedData[ee])
+					else:							MACs[mac][ee].append("")
+
+			MACs[mac]["nMessages"][nMsgNumber]+=1
+			if "TxPowerLevel" in parsedData:
+				try:
+					tx = signedIntfrom8(parsedData["TxPowerLevel"])
+					MACs[mac]["max_TX"] = max(MACs[mac]["max_TX"],tx )
 				except: pass
-				rssi 	    = max(MACs[mac]["max_rssi"], signedIntfrom8(line[-2:]))
-					
-				MACs[mac]["MSG_in_10Secs"] +=1
-				MACs[mac]["max_rssi"] 		= rssi
-				MACs[mac]["max_TX"] 		= max_TX
-			out+= "\nhcidump\n" 
-			out+= xxx
-			U.logger.log(20, "finished  hcidump:     lines -in: {:4d}, accepted: {:4d},  n-devices: {:4d}".format(linesIn,linesAccepted,linesDevices ))
+			#print mac, "present:>{}<".format(line[2:-3])
+			try: 
+				if MACs[mac]["max_TX"]  == - 99:
+					max_TX 	= max(MACs[mac]["max_TX"],   signedIntfrom8(line[-5:-3]))
+			except: pass
+			rssi 	    = max(MACs[mac]["max_rssi"], signedIntfrom8(line[-2:]))
+				
+			MACs[mac]["MSG_in_10Secs"] +=1
+			MACs[mac]["max_rssi"] 		= rssi
+			MACs[mac]["max_TX"] 		= max_TX
+		out+= "\nhcidump\n" 
+		out+= xxx
+		U.logger.log(20, "finished  hcidump:     lines -in: {:4d}, accepted: {:4d},  n-devices: {:4d}".format(linesIn,linesAccepted,linesDevices ))
 
 
 		# clean up 
@@ -3299,7 +3349,7 @@ def BLEAnalysis(hci):
 			#if mac =="DD:33:0A:11:15:E3": print "macs    DD:33:0A:11:15:E3"
 			if MACs[mac]["raw_data"]  == []:  
 				delMAC[mac] = "Reason: no_raw_data, " + str(MACs[mac])
-			if MACs[mac]["max_rssi"] < rssiCutoff: 
+			if MACs[mac]["max_rssi"] < BLEanalysisrssiCutoff: 
 				if mac not in delMAC:
 					delMAC[mac]  = "Reason: max_rssi:"+str(MACs[mac]["max_rssi"])+" < cuttoff; " + str( MACs[mac]["raw_data"])
 				else:
@@ -3320,7 +3370,7 @@ def BLEAnalysis(hci):
 		## now combine the  results in to known and new and rejected
 		for mac in MACs:
 			#print  "tagging mac: : {} ".format(mac)
-			MACs[mac]["MSG_in_10Secs"] = "{:.1f}".format(10.* float(MACs[mac]["MSG_in_10Secs"])/dataCollectionTime) #  of messages in 10 secs
+			MACs[mac]["MSG_in_10Secs"] = "{:.1f}".format(10.* float(MACs[mac]["MSG_in_10Secs"])/collectionTime) #  of messages in 10 secs
 			if mac in onlyTheseMAC:
 				#print  "tagging      in onlyTheseMAC"
 				knownMACS[mac] = copy.deepcopy(MACs[mac])
@@ -3403,15 +3453,18 @@ def BLEAnalysis(hci):
 		f = open(G.homeDir+"temp/BLEAnalysis-rejected.json","w")
 		f.write(json.dumps(delMAC, sort_keys=True, indent=2) )
 		f.close()
-		dd = {"BLEAnalysis":{"rejected_Beacons":delMAC, "new_Beacons":newMACs,"existing_Beacons":knownMACS,"rssiCutoff":str(rssiCutoff)}}
-		U.logger.log(20, "finished  BLEAnalysis: {:.1f} secs, ending:\n{}".format(time.time()-starttime, unicode(dd)[0:300]))
+		dd = {"BLEAnalysis":{"rejected_Beacons":delMAC, "new_Beacons":newMACs,"existing_Beacons":knownMACS,"rssiCutoff":str(BLEanalysisrssiCutoff)}}
+		ldd = len(unicode(dd))
+		U.logger.log(20, "finished  BLEAnalysis: {:.1f} secs, waiting for sending bytes:{}; :\n{}".format(time.time()-BLEcollectStartTime, ldd, unicode(dd)[0:300]))
 		subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		U.sendURL(dd,squeeze=False,verbose=True,wait=True)
-		time.sleep(8.)
+		U.sendURL(dd, squeeze=False, verbose=True, wait=True)
+		time.sleep(5.+ min(10,ldd/20000.))
+		U.logger.log(20, "========== BLEanalysis finished ========\n")
 
 	except	Exception, e:
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	return True
+	BLEcollectStartTime = -1
+	return
 
 
 #################################
@@ -3902,8 +3955,8 @@ def doLoopCheck(tt, sc, pc, sensor, useHCI):
 
 			if U.checkNowFile(sensor): reasonMax = max(reasonMax, 7)
 
-			if BLEAnalysis(useHCI):
-				U.restartMyself(param="", reason="BLE analysis")
+			if BLEAnalysisStart(useHCI):
+				U.restartMyself(param="", reason="BLEanalysis")
 
 			if beep(useHCI):
 				U.restartMyself(param="", reason="beep")
@@ -4236,8 +4289,14 @@ def execbeaconloop(test):
 	global restartBLE
 	global batteryLevelUUID
 	global bleServiceSections
+ 	global BLEcollectStartTime
+	global BLEanalysisdataCollectionTime
+	global writeDumpDataHandle
 
+	writeDumpDataHandle = ""
 
+	BLEanalysisdataCollectionTime = 25 # secs 
+	BLEcollectStartTime		= -1
 	deleteHistoryAfterSeconds = 600
 	sendAfterSeconds	= 60
 	doRejects			= False
@@ -4467,7 +4526,7 @@ def execbeaconloop(test):
 				if rpiDataAcquistionMethod == "socket":
 					try: 
 						pkt = sock.recv(255)
-						Msgs = [(stringFromPacket(pkt[7:])).upper()]
+						Msgs = [(stringFromPacket(pkt)).upper()]
 					except Exception, e:
 						for ii in range(10):
 							if os.path.isfile(G.homeDir+"temp/stopBLE"):
@@ -4511,9 +4570,12 @@ def execbeaconloop(test):
 
 
 				for hexstr in Msgs: 
+
+					hexstr = fillHCIdump(hexstr)
 					nCharThisMessage	= len(hexstr)
-	
-					#U.logger.log(20, "data nChar:{}".format(nCharThisMessage))
+
+
+					#U.logger.log(20, "data nChar:{}, hexStr:{}".format(nCharThisMessage,hexstr[0:50]))
 					# skip junk data 
 					if nCharThisMessage < 16:  continue
 					if nCharThisMessage > 120: continue
@@ -4549,7 +4611,7 @@ def execbeaconloop(test):
 							lastMSGwithDataPassed = int(time.time())
 							continue
 
-						if mac in ignoreMAC: 		
+						if mac in ignoreMAC: 
 							if readFrom !="":
 								U.logger.log(20, u"TestMode: ignored mac:{}".format(mac))
 							continue # set to ignore in plugin

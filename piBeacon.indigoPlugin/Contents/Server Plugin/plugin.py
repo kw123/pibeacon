@@ -977,7 +977,7 @@ class Plugin(indigo.PluginBase):
 			self.cameraImagesDir			= self.indigoPreferencesPluginDir+u"cameraImages/"
 			self.knownBeaconTags 			= {}
 
-			self.setLogfile(self.pluginPrefs.get(u"logFileActive2", u"standard"))
+			self.setLogfile(u"indigo")  #    self.pluginPrefs.get(u"logFileActive2", u"standard"))
 
 			self.beaconsFileSort			= True
 			self.parametersFileSort			= True
@@ -1168,7 +1168,8 @@ class Plugin(indigo.PluginBase):
 			self.dataStats					= {u"startTime": time.time()}
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get(u"maxSocksErrorTime", u"600.")) 
 			except: self.maxSocksErrorTime	= 600.
-			self.compressRPItoPlugin		= self.pluginPrefs.get(u"compressRPItoPlugin", u"99999999")
+			self.compressRPItoPlugin		= self.pluginPrefs.get(u"compressRPItoPlugin", u"20000")
+			self.compressRPItoPlugin		= min(40000,self.compressRPItoPlugin)
 			self.portOfServer				= self.pluginPrefs.get(u"portOfServer", u"8176")
 			self.userIdOfServer				= self.pluginPrefs.get(u"userIdOfServer", u"")
 			self.passwordOfServer			= self.pluginPrefs.get(u"passwordOfServer", u"")
@@ -9861,7 +9862,7 @@ class Plugin(indigo.PluginBase):
 				self.debugRPI		= int(valuesDict[u"debugRPI"])
 			except: pass
 
-			self.setLogfile(valuesDict[u"logFileActive2"])
+			self.setLogfile(u"indigo")  #valuesDict[u"logFileActive2"])
 	 
 			self.enableBroadCastEvents					= valuesDict[u"enableBroadCastEvents"]
 
@@ -9947,8 +9948,8 @@ class Plugin(indigo.PluginBase):
 
 			try:	self.maxSocksErrorTime			= float(valuesDict[u"maxSocksErrorTime"])
 			except: self.maxSocksErrorTime			= 600.
-			self.compressRPItoPlugin				= valuesDict[u"compressRPItoPlugin"]
-
+			try: self.compressRPItoPlugin			= min(40000,int(valuesDict[u"compressRPItoPlugin"]))
+			except: pass
 
 
 			try:
@@ -12106,7 +12107,7 @@ class Plugin(indigo.PluginBase):
 			for existing in [u"new_Beacons",u"existing_Beacons",u"rejected_Beacons"]:
 				out+= u"\n===================== {:16s} ==================== ".format(existing)
 				if existing in [u"new_Beacons",u"existing_Beacons"]:
-					out +=   u"   char pos    01  23 45 67 89 A1 23 45 67 89 B1 01 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89 E1 23 45 67 89 F1"
+					out +=   u"   char pos       01  23 45 67 89 A1 23 45 67 89 B1 01 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89 E1 23 45 67 89 F1"
 				rr = report[existing]
 				for mac in rr:
 					name = u""
@@ -16706,6 +16707,7 @@ class Plugin(indigo.PluginBase):
 						if u"compressRPItoPlugin" in props:
 							try: 	out[u"compressRPItoPlugin"] =  int(props[u"compressRPItoPlugin"])
 							except: pass			
+							out[u"compressRPItoPlugin"]= min(out[u"compressRPItoPlugin"],40000)
 
 						if u"eth0" in props and "wlan0" in props:
 							try: 	out[u"wifiEth"] =  {u"eth0":json.loads(props[u"eth0"]),u"wlan0":json.loads(props[u"wlan0"])}
@@ -18990,7 +18992,7 @@ configuration         - ==========  defined beacons ==============
 		return
 		try:
 			self.lastCheckLogfile = time.time()
-			if self.logFileActive ==u"standard": return 
+			if self.logFileActive == u"standard": return 
 			
 			fn = self.logFile.split(u".log")[0]
 			if os.path.isfile(fn + ".log"):
@@ -19240,9 +19242,12 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			data0 = ""
 			dataS =[]
 			tStart=time.time()
+			maxWaitTime = 20.
 			len0 = 0
 			piName = u"none"
 			wrongIP = 0
+			idTag = "x-6-a"
+
 
 			if	not indigo.activePlugin.ipNumberOK(self.client_address[0]) : 
 				wrongIP = 2
@@ -19254,50 +19259,58 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				#return
 
 			# 3 secs should be enough even for slow network mostly one package, should all be send in one package
-			self.request.settimeout(5) 
+			self.request.settimeout(10) 
 			seqN = 0
+			nMaxSeq = 20
 			try: # to catch timeout 
 				while True: # until end of message
+					if seqN > nMaxSeq: break # safety valve , nothing > 1Mb
 					seqN +=1
-					buff = self.request.recv(4096)#  max observed is ~ 3000 bytes
-					if not buff or len(buff) == 0:#	 or len(buff) < 4096: 
+					buff = self.request.recv(4096)#  
+					if not buff or len(buff) == 0:
 						break
-					if data0 == "": data0  = buff
-					else:			 data0 += buff
+					if data0 == "":	data0  = buff
+					else:			data0 += buff
 					len0  = len(data0)
 
 					### check if package is complete:
-					test = data0[:30].split("x-6-a")
+					test = data0[:38].split(idTag)
+					if len(test) <3: continue
 					try: 
-						nBytes = int(test[0])
-						name   = test[2]
-						startOfData = len(str(nBytes)) + 2*len("x-6-a") + len(test[1])
-						dataS = [test[0],test[1],data0[startOfData:]]
+							nBytes = int(test[0])
+							name   = test[2]
+							startOfData = len(str(nBytes)) + 2*len(idTag) + len(test[1])
+							dataS = [test[0],test[1],data0[startOfData:]]
 					except Exception, e:
 						indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
 						break
+
 
 					if len(dataS) == 3 and int(dataS[0]) == len(dataS[2]): 
 						break
 
 					#safety valves
-					if time.time() - tStart > 15: break 
-					if	len0 > 40*4096: # check for overflow = 40 packages
+					if time.time() - tStart > maxWaitTime: break 
+					if	len0 > nMaxSeq*4096: # check for overflow 
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,u"unknown",u"errBuffOvfl" )
 						self.request.close()
 						return 
+
 			except Exception, e:
-				e= unicode(e)
+				e = unicode(e)
+				sendError = e[0:min(10,len(e))] 
 				self.request.settimeout(1) 
-				self.request.send(u"error")
+				self.request.send(sendError+u"; received bytes:"+unicode(len0) +" in "+unicode(seqN)+" packets")
 				self.request.close()
-				if e.find(u"timed out") ==-1: 
-					indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
-					indigo.activePlugin.handlesockReporting( self.client_address[0],len0,piName,e[0:min(10,len(e))] )
+				indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+				if e.find(u"timed out") == -1: 
+					indigo.activePlugin.handlesockReporting( self.client_address[0],len0, piName,e[0:min(10,len(e))] )
 				else:
-					indigo.activePlugin.handlesockReporting( self.client_address[0],len0,piName,u"timeout" )
+					indigo.activePlugin.indiLOG.log(30,u" .. received data  tries:{}, len:{}, dt:{:.1f}, data:{} ... {} ".format(seqN, len(data0), time.time()- tStart, data0[0:40], data0[-10:]) )
+					indigo.activePlugin.handlesockReporting( self.client_address[0], len0, piName, u"timeout" )
 				return
-			self.request.settimeout(1) 
+
+			self.request.settimeout(3) 
 		   
 			try: 
 				## dataS =split message should look like:  len-TAG-piName-TAG-data; -TAG- = x-6-a
@@ -19318,9 +19331,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if expLength != lenData: # expected # of bytes not received
 					if lenData < expLength:
 						if indigo.activePlugin.decideMyLog(u"Socket"): indigo.indiLOG.log(30,u"TCPIP socket length of {..} data too short, exp:{};   actual:{};   piName:; {}    ..    {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
-						try: self.request.send(u"error-lenDatawrong-{}".format(lenData) )
+						try: self.request.send(u"error-lenDatawrong-{}".format(lenData0) )
 						except: pass
-						self.request.send(u"error")
+						self.request.send(u"error,len-short")
 						self.request.close()
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"tooShort" )
 						return
@@ -19335,9 +19348,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong -fixed- exp:{};  actual:{};  piName:{}; {}     ..     {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
 						except:
 							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong exp:{};  actual:{};  piName:{}; {}     ..     {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
-							try: self.request.send(u"error-lenDatawrong-{}".format(lenData) )
+							try: self.request.send(u"error-lenDatawrong-{}".format(len0) )
 							except: pass
-							self.request.send(u"error")
+							self.request.send(u"error-len-wrong")
 							self.request.close()
 							indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"tooLong" )
 							return
@@ -19346,7 +19359,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket, len:{0:d} data: {1}  ..  {2}".format(len0, data0[0:50], data0[-10:]) )
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"unknown" )
-				self.request.send(u"error")
+				self.request.send(u"error-general")
 				self.request.close()
 				return
 
@@ -19361,7 +19374,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				try: self.request.send(u"error-Json-{}".format(lenData) )
 				except: pass
 				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"errJson" )
-				self.request.send(u"error")
+				self.request.send(u"error-json")
 				self.request.close()
 				return
 
@@ -19378,7 +19391,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if wrongIP < 2: 
 					if indigo.activePlugin.decideMyLog(u"Socket"): 
 						indigo.activePlugin.indiLOG.log(20, u" sending ok to {} data: {}..{}".format(piName.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
-					self.request.send(u"ok-{}".format(lenData) )
+					self.request.send(u"ok-{}-{}".format(len0,lenData) )
 			except: pass
 			self.request.close()
 

@@ -1,4 +1,4 @@
-Added features / changes in v7.134.495@ 2021-01-11
+Added features / changes in v7.134.498@ 2021-01-14
 ===================================================
 
 1. fixed:
@@ -14,7 +14,19 @@ Added features / changes in v7.134.495@ 2021-01-11
    counts/min*scalefactor state for 
    several more states 
    made the number of digits dynamc in count/xx dev states to have at keast 3 significant numbers shown (that is equivalent to 0.1%) 
-     teh number of significant digits can be set in dev edit
+     the number of significant digits can be set in dev edit
+
+3. set compress data send to plugin to on if data len > 40kb as default. There seems to be a timeout .. issue with larger data.
+   regular data is < 5Kb, larger data (h ad 128k) only happens for detect new beacons etc 
+   compress reduces most data by factor of >7
+ 
+4. changed detect new beacons to use data aquired anyway with hcidump. so no data collection break during detect new beacons process
+   that is not active for hci- socket data aquisition, as that does not deliver all package types, have to do hcidump do catch that data.
+
+5. added beacon type nut v 2021.
+   the comamnds for battery and beep have changed with the new release. the hardware looks identical
+
+
 
 Added features / changes in v7.134.484@ 2021-01-01
 ===================================================

@@ -616,6 +616,37 @@
     "comment":"",
     "hexCode": "1C0201060303031805FFD20000xxx9160A18MAC#########"
   }, 
+  "NutFinder2":  {
+    "text":"Nut3, nutale, v2021",
+    "Maj":"",
+    "Min":"",
+    "battCmd": {
+      "bits": 127, 
+      "shift": 0,
+      "offset": 0,
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x001B 04"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x001B 03"
+      ], 
+      "random": "randomON"
+    }, 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"",
+    "hexCode": "1C0201060303031805FF590000xxx9160A18MAC#########"
+  }, 
   "OralB":  {
     "text":"OralB toothbrush",
     "Maj":"",

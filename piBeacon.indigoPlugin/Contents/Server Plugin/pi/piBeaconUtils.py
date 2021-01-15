@@ -395,9 +395,10 @@ def getGlobalParams(inp):
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
 
 		if u"enableRebootCheck"		in inp:	 G.enableRebootCheck=			(inp["enableRebootCheck"])
+
 		if u"compressRPItoPlugin"	in inp:	 
-			try:	G.compressRPItoPlugin =			int(inp["compressRPItoPlugin"])
-			except: G.compressRPItoPlugin = 99999999
+			try:	G.compressRPItoPlugin =	int(inp["compressRPItoPlugin"])
+			except: G.compressRPItoPlugin = 20000
 
 		if u"wifiEth"				in inp:
 			xxx = inp["wifiEth"]
@@ -1894,6 +1895,7 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name=u'execSend', target=execSend, args=())}
 				G.sendThread["thread"].start()
 
+			#if verbose:	logger.log(20, u"cBY:{:<20} adding nbytes {} to queue".format(G.program, len(unicode(data))) )
 			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait,  "verbose":verbose, "squeeze":squeeze, "escape":escape})
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -1990,37 +1992,40 @@ def execSend():
 								while ii > 0: 
 									ii -=1
 									dataC = json.dumps(data, separators=(',',':'))
+									lenStart = len(dataC)
 									if squeeze: dataC = dataC.replace(" ","")
 									if  len(dataC) > G.compressRPItoPlugin: 
 										data0 = "++compressed=="+zlib.compress(dataC)
 										compressed = True
-										if verbose: logger.log(20, "cBY:{:<20}  socket send compressed data lengths: before:{}; after:{} ".format(G.program,len(dataC),len(data0)))
 									else: 
 										data0 = dataC
 										compressed = False
-
-									sendData= "{}x-6-a{}x-6-a{}".format(len(data0), name, data0)
+									lld = len(data0)
+									if verbose: logger.log(20, "cBY:{:<20}  socket send data lengths  in:{} --> :sq:{} --> cmp:{} ".format(G.program, lenStart, len(dataC), lld))
+									sendData= "{}x-6-a{}x-6-a{}".format(lld, name, data0)
 									try:
 										soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-										soc.settimeout(5.)
+										soc.settimeout(6.)
 										soc.connect((G.ipOfServer, G.indigoInputPORT))
 										if G.pythonVersion >= 3:
 											sendData = bytes(sendData,'utf-8')
 										len_sent = soc.send(sendData)
-										time.sleep(0.1)
+										time.sleep(0.2+ min(10,lld/20000))
+										soc.settimeout(3.+ min(10,lld/10000))
 										response = soc.recv(512).decode('utf-8')
-										if (response).find("ok") >-1:
+										if (response).find("ok") == 0:
 											MSGwasSend = True
 											if verbose: logger.log(20, "cBY:{:<20}  socket send  finished ".format(G.program))
 											break
 										else:# try again
-											if verbose: logger.log(20, "cBY:{:<20} Sending  again: send bytes: {} ret MSG>>{}<<".format(G.program,len(data0),response))
+											if verbose: logger.log(20, "cBY:{:<20} Sending  again: send bytes: {} ret MSG from plugin: >>{}<<".format(G.program, len(data0), response))
 											try:	soc.close()
 											except: pass
-											time.sleep(3.)
+											time.sleep(1.)
 
 									except	Exception as e:
 										logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+										logger.log(30, u"cBY:{:<20} trying to send  bytes: {} --{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
 										try:	soc.shutdown(socket.SHUT_RDWR)
 										except: pass
 										try:	soc.close()

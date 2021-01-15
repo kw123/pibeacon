@@ -494,9 +494,6 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
 		</ConfigUI>
 	</MenuItem>
  
-	<MenuItem id="execOnRPI">
-		<Name>    ... get from / send to rpi</Name>
-	</MenuItem>
 
    <MenuItem id="getBatteryLevels">
 		<Name>Get beacon battery level from rPi</Name>

@@ -873,14 +873,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="labelExpertsOnly"               type="label" fontColor="green"  > 
 				<Label>EXPERTS ONLY!! ================================================= </Label>
 			</Field>
-			<Field id="compressRPItoPlugin"   type="menu" defaultValue="999999999" tooltip="" >
+			<Field id="compressRPItoPlugin"   type="menu" defaultValue="20000" tooltip="" >
 				<List>
-					<Option value="200"      >msg GT 200 bytes only for testing</Option>
 					<Option value="2000"     >msg GT 2   KB </Option>
 					<Option value="10000"    >msg GT 10  KB </Option>
-					<Option value="50000"    >msg GT 50  KB </Option>
-					<Option value="100000"   >msg GT 100 KB </Option>
-					<Option value="999999999" >off </Option>
+					<Option value="20000"    >msg GT 20  KB </Option>
+					<Option value="40000"    >msg GT 64  KB </Option>
 				</List>    
 				<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
 			</Field>
@@ -2175,14 +2173,12 @@ Change here or in initial setup:</Label>
 			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Allow OnStateChange:</Label></Field>
 			<Field id="AllowSensorValueChange" 	type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Allow SensorValueChange:</Label></Field>
 
-			<Field id="compressRPItoPlugin"   type="menu" defaultValue="999999999" tooltip="" >
+			<Field id="compressRPItoPlugin"   type="menu" defaultValue="20000" tooltip="" >
 				<List>
-					<Option value="200"      >msg GT 200 bytes only for testing</Option>
 					<Option value="2000"     >msg GT 2   KB </Option>
 					<Option value="10000"    >msg GT 10  KB </Option>
-					<Option value="50000"    >msg GT 50  KB </Option>
-					<Option value="100000"   >msg GT 100 KB </Option>
-					<Option value="999999999" >off </Option>
+					<Option value="20000"    >msg GT 20  KB </Option>
+					<Option value="40000"    >msg GT 64  KB </Option>
 				</List>    
 				<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
 			</Field>
