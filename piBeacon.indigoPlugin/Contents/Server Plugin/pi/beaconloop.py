@@ -110,6 +110,15 @@ def signedIntfrom16(string):
 		return 0
 	return intNumber
 
+def signedIntfrom24(string):
+	try:
+		intNumber = int(string,24)
+		if intNumber > 8388608: intNumber -= 16777216
+	except	Exception, e:
+		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return 0
+	return intNumber
+
 
 def intFrom8(hexString, start):
  	return int(hexString[start:start+2],16)
@@ -1408,6 +1417,7 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 		hum = data %1000 / 10.
 		"""
 		doPrint 		= False
+		#if mac == "A4:C1:38:98:15:CB": doPrint 		= True
 		out 			= ""
 
 		typeInfo 		= 	{"A":{"pos0":44, "type": "3+1",   "id":"09FF01000101"},
@@ -1430,22 +1440,33 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 			return tx, "", UUID, Maj, Min, False
 
 
-		if doPrint: U.logger.log(20, u"mac:{}, sens:{}; startData:{}, pos-id: {}, type:{}, len(hexData):{}".format(mac, sens, startData, typeInfo[sens]["pos0"], dataType, len(hexData) ))
+		if False and doPrint: U.logger.log(20, u"mac:{}, sens:{}; startData:{}, pos-id: {}, type:{}, len(hexData):{}".format(mac, sens, startData, typeInfo[sens]["pos0"], dataType, len(hexData) ))
 		hData = hexData[startData:]
 
+#-0.7, hData:8047375ACB, intData:8388608 + 18176 + 55  =  8406839, temp:840.7, hum:84.4
+# hum = 34   8388608 + 27136 + 205 = -27341, temp:-2.7, intD:8415949, hum:94.9
+#		 8421953 == -3.8
 
 		if dataType == "3+1":
 			intData1	 = int(hData[0:2],16)<<16
 			intData2	 = int(hData[2:4],16)<<8 
 			intData3	 = int(hData[4:6],16)
-			intData	 	 = intData1 + intData2 + intData3
-			#U.logger.log(20, u"mac:{}, hData:{}, intData:{} - {} - {}  =  {}".format(mac,hData,  intData1, intData2, intData3, intData ))
-			temp 		 = round(float(intData)/10000.,1)
-			hum 		 = min(100,max(0,float( intData%1000 / 10. + 0.5)))
+			intData 	 = intData1 + intData2 + intData3
+			if intData >= 8388608: 
+				intData = 8388608 - intData
+			# need to fix negative numbers
+			temp 		 = float(intData)/10000.
+			temp 		 = round(temp,1)
+
+			hum 		 = min(100,max(0,float( abs(intData)%1000 / 10.)))#  + 0.5)))
+
 			batteryLevel = min(100,max(0,int( hData[6:8],16)))
+			if doPrint: U.logger.log(20, u"mac:{}, hData:{}, intData:{} + {} + {} = {}, temp:{},  hum:{}".format(mac, hData,  intData1, intData2, intData3, intData,temp,hum ))
 
 		elif dataType == "2+2+1":
-			temp		 = round(  float(int(hData[0:2],16)<<8 + int(hData[2:4],16)) /100.,  1)
+			temp		 = int(hData[0:2],16)<<8 + int(hData[2:4],16)
+			if temp > 32767: temp -= 65536
+			temp		 = round(  temp /100.,  1)
 			hum		 	 =  min(100,max(0,float(int(hData[4:6],16)<<8 + int(hData[6:8],16)) /100. + 0.5))
 			batteryLevel =  min(100,max(0,int( hData[8:10],16)))
 
@@ -1473,7 +1494,7 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 		trigTemp	= abs(temp - BLEsensorMACs[mac][sensor]["temp"]) > 0.5
 		trigHum		= abs(hum - BLEsensorMACs[mac][sensor]["hum"]) > 2
 
-		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, triggers:{};{};{};   nMessages:{}".format(mac, temp, hum, trigTime, trigTemp, trigHum, BLEsensorMACs[mac][sensor]["nMessages"]))
+		if False and doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, triggers:{};{};{};   nMessages:{}".format(mac, temp, hum, trigTime, trigTemp, trigHum, BLEsensorMACs[mac][sensor]["nMessages"]))
 
 		if BLEsensorMACs[mac][sensor]["nMessages"] > 0 and hum > -100. and temp > -100.:
 			if  trigTime or trigTemp or trigHum:
@@ -1481,7 +1502,7 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 					U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac][sensor]["devId"]:dd}}})
 
 					# remember last values
-					if doPrint: U.logger.log(20, "mac:{} triggers:Time:{};temp:{};hum:{}; updateIndigoTiming:{}; send:{}".format( mac, trigTime , trigTemp , trigHum,BLEsensorMACs[mac][sensor]["updateIndigoTiming"] ,  dd)  )
+					if  False and doPrint: U.logger.log(20, "mac:{} triggers:Time:{};temp:{};hum:{}; updateIndigoTiming:{}; send:{}".format( mac, trigTime , trigTemp , trigHum,BLEsensorMACs[mac][sensor]["updateIndigoTiming"] ,  dd)  )
 					BLEsensorMACs[mac][sensor]["lastUpdate"] = time.time()
 					BLEsensorMACs[mac][sensor]["temp"]    	 = temp
 					BLEsensorMACs[mac][sensor]["hum"]    	 = hum
@@ -4237,14 +4258,14 @@ def checkIfBLEprogramIsRunning(useHCI):
 	global rpiDataAcquistionMethod
 
 	try:
-		if not U.checkIfHCiUP(useHCI, verbose=True):
+		if not U.checkIfHCiUP(useHCI, verbose=False):
 			U.logger.log(30,u"{} not up".format(useHCI))
 			return False
 
 		if  rpiDataAcquistionMethod.find("socket") ==0: 
 			return True
 
-		if U.pgmStillRunning("hcidump -i", verbose=True): # and U.pgmStillRunning("hcitool -i", verbose=True):
+		if U.pgmStillRunning("hcidump -i", verbose=False): # and U.pgmStillRunning("hcitool -i", verbose=True):
 			return True
 		else:
 			U.logger.log(30,u"hcidump or hcitool lescan  not up")

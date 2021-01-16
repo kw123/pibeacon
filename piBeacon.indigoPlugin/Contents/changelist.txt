@@ -1,4 +1,4 @@
-Added features / changes in v7.134.500@ 2021-01-15
+Added features / changes in v7.134.501@ 2021-01-16
 ===================================================
 
 1. fixed:
@@ -25,6 +25,8 @@ Added features / changes in v7.134.500@ 2021-01-15
 
 5. added beacon type nut v 45 and 46.
    the comamnds for battery and beep have changed with the new release. the hardware looks identical
+
+6. fized negative temperatures for govee sensors 
 
 
 
