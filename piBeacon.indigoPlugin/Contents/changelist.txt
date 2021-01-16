@@ -1,6 +1,6 @@
 Added features / changes in v7.134.501@ 2021-01-16
 ===================================================
-
+   
 1. fixed:
    piBeacon Error                  Line 6819 has error=list index out of range
      in confirmdeviceIDINPUTBUTTONmenu
@@ -26,7 +26,7 @@ Added features / changes in v7.134.501@ 2021-01-16
 5. added beacon type nut v 45 and 46.
    the comamnds for battery and beep have changed with the new release. the hardware looks identical
 
-6. fized negative temperatures for govee sensors 
+6. fixed negative temperatures for govee sensors 
 
 
 
