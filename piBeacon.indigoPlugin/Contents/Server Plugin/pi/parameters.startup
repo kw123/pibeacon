@@ -13,7 +13,7 @@
   "acceptNewiBeacons": 999, 
   "authentication": "digest", 
   "batteryUPSshutdownEnable": 0, 
-  "configured": "2019-11-12 10:01:39", 
+  "configured": "", 
   "debugRPI": 0, 
   "deleteHistoryAfterSeconds": 86400, 
   "deltaChangedSensor": "5", 

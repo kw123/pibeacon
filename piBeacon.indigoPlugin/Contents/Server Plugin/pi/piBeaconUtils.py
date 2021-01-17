@@ -407,8 +407,8 @@ def getGlobalParams(inp):
 					G.wifiEth = xxx
 					G.wifiEthOld = G.wifiEth
 
-		if G.networkType !="clockMANUAL" and  G.networkType!="":
-			if u"networkType"		in inp:	 G.networkType=					(inp["networkType"])
+		if u"networkType"			in inp:	 G.networkType=					(inp["networkType"])
+
 		try:
 			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=	   float(inp["deltaChangedSensor"])
 		except: pass
@@ -421,9 +421,6 @@ def getGlobalParams(inp):
 			except:							  G.enableMuxI2C=			   -1
 		else:
 											  G.enableMuxI2C=			   -1
-
-		if G.wifiType != "normal": # is ad-hoc
-			G.networkType = "clock"
 		setLogLevel()
 
 		if "timeZone"	 in inp:
@@ -1390,10 +1387,12 @@ def copySupplicantFileFromBoot():
 			subprocess.call("/usr/bin/sudo cp  /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/wpa_supplicant.conf", shell=True)
 			retCode = True
+			logger.log(30, u"cBY:{:<20} copying new wpa_supplicant.conf file from boot".format(G.program))
 		if os.path.isfile("/boot/interfaces"):
 			subprocess.call("/usr/bin/sudo cp  /boot/interfaces  /etc/network/interfaces", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/interfaces", shell=True)
 			retCode = True
+			logger.log(30, u"cBY:{:<20} copying new interfaces file from boot".format(G.program))
 		return retCode
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

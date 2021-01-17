@@ -1631,9 +1631,10 @@ def checknetwork0():
 		if G.networkType  in G.useNetwork and G.wifiType == u"normal":
 			for ii in range(5):
 				if ii > 3 :
-					U.logger.log(30, u"no ip number working, giving up, running w/o ip number or indigo server, setting mode to clockMANUAL = stand alone")
-					G.networkType = u"clockMANUAL"
-					break
+					if G.networkType.find("clock") >-1: 
+						U.logger.log(30, u"no ip number working, giving up, running w/o ip number or indigo server, setting mode to clockMANUAL = stand alone")
+						G.networkType = u"clockMANUAL"
+						break
 	
 				indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=ii<2)
 				if not indigoServerOn  or G.ipAddress == "":
@@ -1649,7 +1650,7 @@ def checknetwork0():
 			if G.networkType.find(u"clock") > -1 and G.wifiType == u"normal":
 				for ii in range(2):
 					if ii > 1:
-						U.logger.log(30,u"no ip number working, giving up, setting mode to clockMANUAL = stand alone")
+						U.logger.log(30,u"no ip number working, giving up, setting mode to clockMANUAL = stand alone, netwtype was:{}".format(G.networkType))
 						G.networkType = u"clockMANUAL"
 						break
 	
@@ -1669,8 +1670,11 @@ def checknetwork0():
 
 ####################      #########################
 def checkIfNetworkStarted():
+	global configured
 	try:
+		U.logger.log(30,u"RPistrt configured at>{}<, userIdOfServer:{}".format(configured, G.userIdOfServer) )
 		if configured == "" and G.userIdOfServer == u"xxstartxx": 
+			U.logger.log(30,u"RPi not configured yet, waiting for config or wifi; networkType:{}; useNetwork:{}, wifiType:{}".format(G.networkType,G.useNetwork,G.wifiType) )
 			if G.networkType  in G.useNetwork and G.wifiType == u"normal":
 				wifiWaiting  = True
 				GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -1689,13 +1693,13 @@ def checkIfNetworkStarted():
 									break
 
 				if G.userIdOfServer	 == "xxstartxx":
-						for ii in range(500):
+						for ii in range(300):
 							if G.userIdOfServer	 == u"xxstartxx":
 								U.logger.log(30, u" master not configured yet, lets wait for new config files")
-								if ii >498:
+								if ii >298:
 									startProgam("master.py", params="", reason="..not configured yet")
 									exit(0)
-								time.sleep(1)
+								time.sleep(5)
 								readNewParams()
 							else:
 								break
@@ -2110,8 +2114,8 @@ def execMaster():
 
 		U.setLogging()
 
-		ret = subprocess.Popen("//bin/cat /etc/os-release " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
-		U.logger.log(30,"========================= starting master  version: {}".format(masterVersion) )
+		ret = subprocess.Popen("/bin/cat /etc/os-release " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
+		U.logger.log(30,"========================= starting master  version: {} on os:{}".format(masterVersion, ret) )
 
 
 		# make dir for short temp files
