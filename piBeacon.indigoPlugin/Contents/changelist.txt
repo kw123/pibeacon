@@ -1,3 +1,10 @@
+Added features / changes in v7.134.503@ 2021-01-26
+===================================================
+   
+1. tuned INPUT- pulse plugin part for reset of counetrs
+
+
+
 Added features / changes in v7.134.502@ 2021-01-17
 ===================================================
    

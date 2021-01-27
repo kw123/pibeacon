@@ -14149,17 +14149,21 @@ class Plugin(indigo.PluginBase):
 			else:				timeStamp = time.time()
 			now = datetime.datetime.fromtimestamp(timeStamp)
 			dd = now.strftime(_defaultDateStampFormat) 
-			defCountList = {"timeLastwData":0,u"timePreviouswData":0.,"data": [{u"time":0., u"count":0,}, {u"time":0., u"count":0}]} # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
+			defCountList = {u"lastReset":0, u"timeLastwData":0, u"timePreviouswData":0.,"data": [{u"time":0., u"count":0}]} # is list of [[time0 ,count0], [time1 ,count1],...]  last counts up to 3600 secs,  then pop out last
 
+			countList = defCountList
 			if u"countList" in props: 
-				try: 
+				try: 	
 					countList = json.loads(props[u"countList"])
-					if "timePreviouswData" not in countList:
+					if u"lastReset" not in countList:
 						countList = defCountList
-				except: 
-					countList = defCountList
-			else:
-				countList = defCountList
+				except:	countList = defCountList
+
+			if time.time() - countList["lastReset"] < 3: 
+				if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE ignore new data after reset")
+				# ignore new data after last reset if too close, get reset from plugin, and then also from RPI
+				return 
+
 
 			if u"count" in data:
 				try: 	cOld = int(dev.states[u"count"])
@@ -14169,19 +14173,21 @@ class Plugin(indigo.PluginBase):
 				ll = len(countList)
 				if ll > 0:
 					if  data[u"count"] < 0: 
-						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE resetting countList, requested from menu")
+						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE resetting countList, requested from menu")
 						data[u"count"] = 0
 						countList = defCountList 
 						cOld = 0
+						countList["lastReset"] = time.time()
 
 					elif data[u"count"] <  cOld:  
-						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE resetting countList, new count < stored count")
+						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE resetting countList, new count < stored count")
 						countList = defCountList
 						cOld = 0
+						countList["lastReset"] = time.time()
 
 				countList["data"].append({u"time": timeStamp, u"count": data[u"count"]})
 
-				#self.indiLOG.log(10,u"updatePULSE  countList:{}".format(countList)  )
+				#if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE  countList:{}".format(countList)  )
 
 				ll = len(countList["data"])
 				if len(countList["data"]) >2:
@@ -14212,6 +14218,7 @@ class Plugin(indigo.PluginBase):
 
 				if ll > 1:
 					for ii in range(1,ll):
+						if countList["data"][ll-ii][u"time"] == 0: continue
 					# 	find last hour entry
 						pp = max(0,ll-ii -1)
 						dT = countList["data"][-1][u"time"] - countList["data"][ll-ii][u"time"]
@@ -14227,8 +14234,12 @@ class Plugin(indigo.PluginBase):
 						else: #
 							break
 
-				#self.indiLOG.log(10,u"updatePULSE cOld:{}; count:{}; timeLastwData:{} timePreviouswData:{}; countList[data][-3:]:{}".format(cOld, countList["data"][-1][u"count"], countList[u"timeLastwData"], countList[u"timePreviouswData"], countList["data"][-3:])  )
-				if cOld - countList["data"][-1][u"count"] != 0:
+				#if self.decideMyLog(u"Special"):  self.indiLOG.log(10,u"updatePULSE cOld:{}; count:{}; timeLastwData:{} timePreviouswData:{}; countList[data][-3:]:{}".format(cOld, countList["data"][-1][u"count"], countList[u"timeLastwData"], countList[u"timePreviouswData"], countList["data"][-3:])  )
+				if countList["data"][0][u"time"] == 0:
+					countList[u"timeLastwData"] 	= timeStamp
+					self.setStatusCol( dev, u"count", countList["data"][-1]["count"], 			u"{:.0f}[c]".format(countList["data"][-1]["count"]), whichKeysToDisplay, u"","", decimalPlaces = u"" )
+
+				elif cOld - countList["data"][-1][u"count"] != 0:
 					countList[u"timePreviouswData"]	= countList[u"timeLastwData"]
 					countList[u"timeLastwData"] 	= timeStamp
 					countTimePrevious				= max(1., timeStamp - countList[u"timePreviouswData"])
@@ -14244,12 +14255,12 @@ class Plugin(indigo.PluginBase):
 					countTimePrevious				= max(1., timeStamp - countList[u"timePreviouswData"])
 					countPrevious 					= dev.states["countPrevious"]
 
-				#self.indiLOG.log(10,u"updatePULSE                timeLastwData:{} timePreviouswData:{}; countList[data][-3:]:{}".format(countList[u"timeLastwData"], countList[u"timePreviouswData"], countList["data"][-3:]) )
+				#if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE                timeLastwData:{} timePreviouswData:{}; countList[data][-3:]:{}".format(countList[u"timeLastwData"], countList[u"timePreviouswData"], countList["data"][-3:]) )
 
-				if cOld <= data[u"count"]: 
+				if cOld <= data[u"count"] and countList["data"][0][u"time"] > 0: 
 					dtSecs = max(1, countList["data"][-1][u"time"] 		 	 - countList["data"][-2][u"time"])
 					countPerSecond 		= round(float(countList["data"][-1]["count"] - cOld)			/ dtSecs,       	2)
-					countPerSecSmooth = round(float(countList["data"][-1]["count"] - countPrevious)	/ countTimePrevious,2)
+					countPerSecSmooth	= round(float(countList["data"][-1]["count"] - countPrevious)	/ countTimePrevious,2)
 					#self.indiLOG.log(10,u"updatePULSE                count:{} cprev:{}; countTimePrevious:{}; countPerSecSmooth:{}".format(countList["data"][-1]["count"], countPrevious, countTimePrevious, countPerSecSmooth ))
 
 
@@ -14265,13 +14276,13 @@ class Plugin(indigo.PluginBase):
 
 					try: 	significantDigits = int(props["significantDigits"])
 					except: significantDigits = 3
-					countPerMinuteDP			= self.getNumberOfdecPoints(countPerMinute, significantDigits=significantDigits) 
-					countPerHourDP				= self.getNumberOfdecPoints(countPerHour, significantDigits=significantDigits) 
-					countPerDayDP				= self.getNumberOfdecPoints(countPerDay, significantDigits=significantDigits) 
-					scfmDP						= self.getNumberOfdecPoints(scfm, significantDigits=significantDigits) 
-					countPerSecondDP			= self.getNumberOfdecPoints(countPerSecond, significantDigits=significantDigits) 
-					countPerSecSmoothDP			= self.getNumberOfdecPoints(countPerSecSmooth, significantDigits=significantDigits) 
-					countPerSecondMaxLastHourDP	= self.getNumberOfdecPoints(countPerSecondMaxLastHour, significantDigits=significantDigits) 
+					countPerMinuteDP			= self.getNumberOfdecPoints(countPerMinute,				significantDigits=significantDigits) 
+					countPerHourDP				= self.getNumberOfdecPoints(countPerHour,				significantDigits=significantDigits) 
+					countPerDayDP				= self.getNumberOfdecPoints(countPerDay,				significantDigits=significantDigits) 
+					scfmDP						= self.getNumberOfdecPoints(scfm,						significantDigits=significantDigits) 
+					countPerSecondDP			= self.getNumberOfdecPoints(countPerSecond,				significantDigits=significantDigits) 
+					countPerSecSmoothDP			= self.getNumberOfdecPoints(countPerSecSmooth,			significantDigits=significantDigits) 
+					countPerSecondMaxLastHourDP	= self.getNumberOfdecPoints(countPerSecondMaxLastHour,	significantDigits=significantDigits) 
 
 
 					if "scaleFactorForMinuteCountUnit" in props and len(props["scaleFactorForMinuteCountUnit"]) < 2:
@@ -14289,11 +14300,10 @@ class Plugin(indigo.PluginBase):
 
 
 
-				props[u"countList"] = json.dumps(countList)
-				self.deviceStopCommIgnore = time.time()
-				dev.replacePluginPropsOnServer(props)
-			else:
-				pass
+			#if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE  writing to props: countList:{}".format(countList)  )
+			props[u"countList"] = json.dumps(countList)
+			self.deviceStopCommIgnore = time.time()
+			dev.replacePluginPropsOnServer(props)
 
 			if u"burst" in data and data[u"burst"] !=0 and data[u"burst"] !=u"":
 					self.addToStatesUpdateDict(dev.id,u"ulastBurstTime",dd )

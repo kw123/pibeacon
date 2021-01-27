@@ -593,7 +593,7 @@
     }, 
     "beepCmd": {
       "cmdON": [
-        "char-write-cmd  0x0011  02"
+        "char-write-cmd 0x0011  02"
       ], 
       "cmdOff": [
         "char-write-cmd 0x0011 00"
@@ -607,12 +607,12 @@
     "sequence":0,
     "sensorFunctions":"",
     "textForMenu":"",
-    "comment":"",
+    "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
     "subType":{},
     "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
   }, 
-  "NutFinder":  {
-    "text":"Nut3, nutale- older software V",
+  "NutFinder3C":  {
+    "text":"Nut3, nutale V-UUID=xx00003C",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -639,12 +639,44 @@
     "sequence":0,
     "sensorFunctions":"",
     "textForMenu":"",
-    "comment":"",
+    "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
     "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"56":{"beep":"0x001B 04","random":"randomON"},"3C":{"beep":"0x0025 04","random":"public"}},
     "hexCode": "1C0201060303031805FFxx00003C09160A18MAC#########"
   }, 
+  "NutFinder33":  {
+    "text":"Nut3, nutale V-UUID=xx000033",
+    "Maj":"",
+    "Min":"",
+    "battCmd": {
+      "bits": 127, 
+      "shift": 0,
+      "offset": 0,
+      "norm": 100, 
+      "random": "public", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [
+        "char-write-req 0x0025 04"
+      ], 
+      "cmdOff": [
+        "char-write-req 0x0025 03"
+      ], 
+      "random": "public"
+    }, 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
+    "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"56":{"beep":"0x001B 04","random":"randomON"},"3C":{"beep":"0x0025 04","random":"public"}},
+    "hexCode": "1C0201060303031805FFxx00003309160A18MAC#########"
+  }, 
   "NutFinder46":  {
-    "text":"Nut3, nutale - v46",
+    "text":"Nut3, nutale V-UUID=xx000046",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -671,12 +703,12 @@
     "sequence":0,
     "sensorFunctions":"",
     "textForMenu":"",
-    "comment":"",
+    "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
     "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"56":{"beep":"0x001B 04","random":"randomON"},"3C":{"beep":"0x0025 04","random":"public"}},
     "hexCode": "1C0201060303031805FFxx00004609160A18MAC#########"
   }, 
   "NutFinder45":  {
-    "text":"Nut3, nutale - v45",
+    "text":"Nut3, nutale V-UUID=xx000045",
     "Maj":"",
     "Min":"",
     "battCmd": {
