@@ -1,7 +1,19 @@
+Added features / changes in v7.134.504@ 2021-02-08
+===================================================
+   
+1. fixed dev state lables 
+2. added option to start any command from pibeacon
+   this is managed by the pibeacon master.py program
+   it will make sure the program launches,    
+    and stays up and running if requested
+     
+
+
+
 Added features / changes in v7.134.503@ 2021-01-26
 ===================================================
    
-1. tuned INPUT- pulse plugin part for reset of counetrs
+1. tuned INPUT- pulse plugin part for reset of counters
 
 
 

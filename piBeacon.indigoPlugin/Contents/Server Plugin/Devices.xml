@@ -389,6 +389,26 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
+
+			<Field id="label21"               type="label" fontColor="green" > 
+				<Label>== Start other Program (will be launched by master.py and will be restarted if not active)...:</Label>
+			</Field>
+
+			<Field id="startOtherProgram" type="textfield"     defaultValue="">
+				<Label>... enter complete command line:</Label>
+			</Field>
+
+			<Field id="labelstartOtherProgram"           type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">> 
+				<Label>When this field is not blank master.py will lauch it w 
+subprocess.call(command you entered, shell=True)
+if you want to keep it running add an "&amp;" to the end </Label> 
+			</Field>
+
+			<Field id="startOtherProgramKeepRunning" type="checkbox"     defaultValue="true"> 
+				<Label>... master will restart it if stops running:</Label> 
+			</Field>
+
+
 			<Field id="label3"               type="label" fontColor="green" > 
 				<Label>== Hardware/reboot/UPS configs:...</Label>
 			</Field>
@@ -1692,6 +1712,26 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
+
+			<Field id="label21"               type="label" fontColor="green" > 
+				<Label>== Start other Program (will be launched by master.py and will be restarted if not active)...:</Label>
+			</Field>
+
+			<Field id="startOtherProgram" type="textfield"     defaultValue="">
+				<Label>... enter complete command line:</Label>
+			</Field>
+
+			<Field id="labelstartOtherProgram"           type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">> 
+				<Label>When this field is not blank master.py will lauch it w 
+subprocess.call(command you entered, shell=True)
+if you want to keep it running add an "&amp;" to the end </Label> 
+			</Field>
+
+			<Field id="startOtherProgramKeepRunning" type="checkbox"     defaultValue="true"> 
+				<Label>... master will restart it if stops running:</Label> 
+			</Field>
+
+
 			<Field id="label3"               type="label"  fontColor="green" > 
 				<Label>== Hardware/reboot configs:...</Label>
 			</Field>
@@ -2821,7 +2861,7 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			<State id="Pi_02_Signal">
 			<ValueType>Float</ValueType>
 			<TriggerLabel>Pi_02_Signal</TriggerLabel>
-			<ControlPageLabel>Pi_03_Signal</ControlPageLabel>
+			<ControlPageLabel>Pi_02_Signal</ControlPageLabel>
 			</State>
 			<State id="Pi_02_Distance">
 			<ValueType>Float</ValueType>
@@ -3508,7 +3548,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</State>
 			<State id="Pi_00_Distance">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Pi_00_Signal</TriggerLabel>
+				<TriggerLabel>Pi_00_Distance</TriggerLabel>
 				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
 			</State>
 			<State id="Pi_00_Time">
@@ -3524,8 +3564,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</State>
 			<State id="Pi_01_Distance">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Pi_00_Signal</TriggerLabel>
-				<ControlPageLabel>Pi_00_Distance</ControlPageLabel>
+				<TriggerLabel>Pi_01_Distance</TriggerLabel>
+				<ControlPageLabel>Pi_01_Distance</ControlPageLabel>
 			</State>
 			<State id="Pi_01_Time">
 				<ValueType>String</ValueType>

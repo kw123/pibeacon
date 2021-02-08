@@ -214,9 +214,10 @@ def fixoutofdiskspace():
 #################################
 def pgmStillRunning(pgmToTest, verbose=False) :
 	try :
-		if verbose: logger.log(30, "testing  for {}".format(pgmToTest))
+		pgmToTest = pgmToTest.strip()
+		if verbose: logger.log(30, "testing  for '{}'".format(pgmToTest))
 		cmd = "ps -ef | grep '{}' | grep -v grep".format(pgmToTest)
-		if verbose: logger.log(30, "command:{}".format(pgmToTest, cmd))
+		if verbose: logger.log(30, "command:{}, cmd:{}".format(pgmToTest, cmd))
 		ret = (subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		lines = ret.split("\n")
 		if verbose: logger.log(30, "test returns {} ".format(ret))

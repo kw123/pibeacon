@@ -3,7 +3,7 @@
 # by Karl Wachs
 # feb 5 2016
 
-masterVersion			= 12.8
+masterVersion			= 12.9
 ## changelog: 
 # 2020-04-05 added check for NTP
 # 2020-xx-xx 
@@ -127,6 +127,7 @@ def readNewParams(force=0):
 	global myPID
 	global python3
 	global BLEdirectSensorDeviceActive
+	global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -163,30 +164,35 @@ def readNewParams(force=0):
 			U.restartMyself(reason="new hci-BLEconnect defs, need to restart master", doPrint =True)
 		BLEconnectUseHCINoOld = copy.copy(G.BLEconnectUseHCINo)
 
-		if u"batteryMinPinActiveTimeForShutdown" in inp: batteryMinPinActiveTimeForShutdown= float(inp["batteryMinPinActiveTimeForShutdown"])
-		if u"enableiBeacons"				in inp:	 enableiBeacons=		 		   (inp["enableiBeacons"])
-		if u"cAddress"						in inp:	 cAddress=				  		    inp["cAddress"]
-		if u"rebootHour"					in inp:	 rebootHour=					    int(inp["rebootHour"])
-		if u"sensors"						in inp:	 sensors =				 		   (inp["sensors"])
-		if u"useRamDiskForLogfiles" 		in inp:	 useRamDiskForLogfiles =  		    inp["useRamDiskForLogfiles"]
-		if u"actions"						in inp:	 actions			   =  		    inp["actions"]
-		if u"useRTC"						in inp:	 U.setUpRTC(inp["useRTC"])
-		if u"batteryChargeTimeForMaxCapacity" in inp: batteryChargeTimeForMaxCapacity= 	float(inp["batteryChargeTimeForMaxCapacity"])
-		if u"batteryCapacitySeconds" 		in inp:	 batteryCapacitySeconds= 			float(inp["batteryCapacitySeconds"])
+		if u"batteryMinPinActiveTimeForShutdown" 	in inp: batteryMinPinActiveTimeForShutdown = float(inp["batteryMinPinActiveTimeForShutdown"])
+		if u"enableiBeacons"						in inp:	 enableiBeacons=					inp["enableiBeacons"]
+		if u"cAddress"								in inp:	 cAddress=							inp["cAddress"]
+		if u"rebootHour"							in inp:	 rebootHour=						int(inp["rebootHour"])
+		if u"sensors"								in inp:	 sensors =							inp["sensors"]
+		if u"useRamDiskForLogfiles" 				in inp:	 useRamDiskForLogfiles =			inp["useRamDiskForLogfiles"]
+		if u"actions"								in inp:	 actions			   =			inp["actions"]
+		if u"useRTC"								in inp:	 U.setUpRTC(inp["useRTC"])
+		if u"batteryChargeTimeForMaxCapacity" 		in inp: batteryChargeTimeForMaxCapacity=	float(inp["batteryChargeTimeForMaxCapacity"])
+		if u"batteryCapacitySeconds" 				in inp:	 batteryCapacitySeconds= 			float(inp["batteryCapacitySeconds"])
 
-		if u"GPIONumberAfterBoot1" 			in inp:	 GPIONumberAfterBoot1= 			 	 (inp["GPIONumberAfterBoot1"])
-		if u"GPIONumberAfterBoot2" 			in inp:	 GPIONumberAfterBoot2= 			 	 (inp["GPIONumberAfterBoot2"])
-		if u"GPIOTypeAfterBoot1" 			in inp:	 GPIOTypeAfterBoot1= 			 	 (inp["GPIOTypeAfterBoot1"])
-		if u"GPIOTypeAfterBoot2" 			in inp:	 GPIOTypeAfterBoot2= 			 	 (inp["GPIOTypeAfterBoot2"])
-		if u"configured" 					in inp:	 configured= 					 	 (inp["configured"])
-		if u"startWebServerSTATUS" 			in inp:	 startWebServerSTATUS= 			  int(inp["startWebServerSTATUS"])
-		if u"startWebServerINPUT" 			in inp:	 startWebServerINPUT= 			  int(inp["startWebServerINPUT"])
-		if u"fanEnable" 					in inp:	 fanEnable= 					     (inp["fanEnable"])
-		if u"ifNetworkChanges" 				in inp:	 ifNetworkChanges= 		     	     (inp["ifNetworkChanges"]) 
-		if u"maxSizeOfLogfileOnRPI" 		in inp:	 maxSizeOfLogfileOnRPI= 		 int(inp["maxSizeOfLogfileOnRPI"]) 
-		if u"startXonPi" 					in inp:	 startXonPi= 		 				 (inp["startXonPi"]) 
-		if u"clearHostsFile" 				in inp:	 clearHostsFile= 		 			 (inp["clearHostsFile"]) =="1"
+		if u"GPIONumberAfterBoot1" 					in inp:	 GPIONumberAfterBoot1= 				inp["GPIONumberAfterBoot1"]
+		if u"GPIONumberAfterBoot2" 					in inp:	 GPIONumberAfterBoot2= 				inp["GPIONumberAfterBoot2"]
+		if u"GPIOTypeAfterBoot1" 					in inp:	 GPIOTypeAfterBoot1= 				inp["GPIOTypeAfterBoot1"]
+		if u"GPIOTypeAfterBoot2" 					in inp:	 GPIOTypeAfterBoot2= 				inp["GPIOTypeAfterBoot2"]
+		if u"configured" 							in inp:	 configured= 						inp["configured"]
+		if u"startWebServerSTATUS" 					in inp:	 startWebServerSTATUS= 				int(inp["startWebServerSTATUS"])
+		if u"startWebServerINPUT" 					in inp:	 startWebServerINPUT= 				int(inp["startWebServerINPUT"])
+		if u"fanEnable" 							in inp:	 fanEnable= 						inp["fanEnable"]
+		if u"ifNetworkChanges" 						in inp:	 ifNetworkChanges= 					inp["ifNetworkChanges"] 
+		if u"maxSizeOfLogfileOnRPI" 				in inp:	 maxSizeOfLogfileOnRPI= 		  	int(inp["maxSizeOfLogfileOnRPI"]) 
+		if u"startXonPi" 							in inp:	 startXonPi= 						inp["startXonPi"]
+		if u"clearHostsFile" 						in inp:	 clearHostsFile= 					inp["clearHostsFile"] == "1"
 
+		if u"startOtherProgram" 					in inp:	 
+			if startOtherProgram != inp["startOtherProgram"]:
+				startOtherProgramOld = startOtherProgram
+			startOtherProgram 				= inp["startOtherProgram"].strip()
+			startOtherProgramKeepRunning 	= inp["startOtherProgramKeepRunning"]
 
 		setupX(action=startXonPi)
 
@@ -1992,6 +1998,50 @@ def checkFilesystem():
 	return 
 
 
+
+####################      #########################
+def checkstartOtherProgram():
+	try:
+		global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted
+		#U.logger.log(20, u"startOtherProgram:{}<, startOtherProgramOld:{}<, startOtherProgramKeepRunning:{}, startOtherProgramStarted:{},".format(startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted))
+		if startOtherProgramOld != startOtherProgram:
+			if startOtherProgramOld != "":
+				killPGM = startOtherProgramOld.strip()
+				if ">" in killPGM: killPGM = killPGM.split(">")[0]
+				U.logger.log(20, u"killing :{}, new pgm:{}".format(killPGM, startOtherProgram))
+				U.killOldPgm(-1, killPGM)
+			U.logger.log(20, u"startOtherProgram:{}< setting start time to -1, old != new".format(startOtherProgram))
+			startOtherProgramStarted = -1
+		else:
+			if startOtherProgramStarted > 0 and not startOtherProgramKeepRunning: 
+				return 
+		
+		startOtherProgramOld = startOtherProgram
+
+		if len(startOtherProgram) < 2: 		
+			startOtherProgramStarted = -1
+			return 
+
+		if startOtherProgramStarted > 0 and not startOtherProgramKeepRunning: 
+			return
+
+		checkPGM = startOtherProgram.strip()
+		if ">" in checkPGM: checkPGM = checkPGM.split(">")[0]
+
+		if U.pgmStillRunning(checkPGM): 		
+			if startOtherProgramStarted < 0:  startOtherProgramStarted = time.time()
+		else:
+			U.logger.log(20, u"starting: '{}'".format(startOtherProgram))
+			subprocess.call(startOtherProgram, shell=True)
+			startOtherProgramStarted = time.time()
+
+		return 
+
+	except	Exception, e :
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+
 ####################      #########################
 #################### main #########################
 ####################      #########################
@@ -2027,7 +2077,12 @@ def execMaster():
 		global startingnetworkStatus
 		global fanOnTimePercent, fanOntimeData, fanOntimePeriod
 		global BLEdirectSensorDeviceActive
+		global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted
 
+		startOtherProgram		= ""
+		startOtherProgramOld	= ""
+		startOtherProgramKeepRunning = False
+		startOtherProgramStarted = -1
 		BLEdirectSensorDeviceActive = False
 		fanOntimePeriod			= 180 #  ==3 minutes for building average fan on 
 		fanOntimeData			= []
@@ -2232,6 +2287,7 @@ def execMaster():
 
 		checkIfGpioIsInstalled()
 
+		checkstartOtherProgram()
 
 		#startProgam("actions.py", params="", reason=" at startup ")
 		#checkIfAliveFileOK("actions",force="set")
@@ -2284,9 +2340,11 @@ def execMaster():
 			if loopCount == 3: 
 				checkFSCHECKfile()
 
-
 			try:	
 				readNewParams()
+				if loopCount%2 == 0: 
+					checkstartOtherProgram()
+				
 				if loopCount%5 == 0: 
 					checkRamDisk(loopCount=loopCount)
 				

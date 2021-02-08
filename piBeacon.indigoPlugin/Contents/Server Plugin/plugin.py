@@ -1011,7 +1011,7 @@ class Plugin(indigo.PluginBase):
 			self.RPIBusy					= {}
 			for ii in range(_GlobalConst_numberOfRPI):
 				iiU = unicode(ii)
-				self.rpiQueues[u"reset"][iiU] 		= False
+				self.rpiQueues[u"reset"][iiU]		= False
 				self.rpiQueues[u"data"][iiU]		= Queue.Queue()
 				self.rpiQueues[u"state"][iiU]		= u""
 				self.rpiQueues[u"lastActive"][iiU]	= time.time() - 900000
@@ -1019,11 +1019,11 @@ class Plugin(indigo.PluginBase):
 				self.rpiQueues[u"lastData"][iiU]	= u""
 				self.RPIBusy[iiU]					= 0
 
-			self.delayedActions				= {}
-			self.delayedActions[u"thread"] 	= u""
-			self.delayedActions[u"data"]	= Queue.Queue()
-			self.delayedActions[u"lastData"] = 0
-			self.delayedActions[u"state"]	= u""
+			self.delayedActions					= {}
+			self.delayedActions[u"thread"]		= u""
+			self.delayedActions[u"data"]		= Queue.Queue()
+			self.delayedActions[u"lastData"]	= 0
+			self.delayedActions[u"state"]		= u""
 			self.delayedActions[u"lastActive"]	= 0
 
 
@@ -16744,6 +16744,11 @@ class Plugin(indigo.PluginBase):
 						if u"clearHostsFile" in props:
 							try:    out[u"clearHostsFile"]  = props[u"clearHostsFile"]
 							except: out[u"clearHostsFile"]  = u"0"
+
+						if u"startOtherProgram" in props:
+							out[u"startOtherProgram"]				=  (props[u"startOtherProgram"])
+							out[u"startOtherProgramKeepRunning"]	=  (props[u"startOtherProgramKeepRunning"])
+
 
 						out[u"ifNetworkChanges"]  = u"0"
 						if u"ifNetworkChanges" in props:
