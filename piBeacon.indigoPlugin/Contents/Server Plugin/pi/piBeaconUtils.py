@@ -396,6 +396,10 @@ def getGlobalParams(inp):
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
 
 		if u"enableRebootCheck"		in inp:	 G.enableRebootCheck=			(inp["enableRebootCheck"])
+		if u"ipNumberRpiStatic"		in inp:	 G.ipNumberRpiStatic=				(inp["ipNumberRpiStatic"]) =="1"
+		if u"rpiIPNumber"			in inp:	 G.rpiIPNumber=					(inp["rpiIPNumber"]) 
+
+
 
 		if u"compressRPItoPlugin"	in inp:	 
 			try:	G.compressRPItoPlugin =	int(inp["compressRPItoPlugin"])
@@ -1514,20 +1518,25 @@ def getIPNumberMaster(quiet=True):
 
 		## added "connected or" in case router is not reachable, only indigo server
 		if connected or indigoServer:
-			if  eth0IP !="" and G.eth0Active and (
-				 G.wifiEth["eth0"]["useIP"] in ["use","dontChange"] or
-				(G.wifiEth["eth0"]["useIP"] in ["useIf"] and  wlan0IP == "")
-				) :
-				G.ipAddress = eth0IP
+			if G.ipNumberRpiStatic:
+				G.ipAddress = G.ipNumberPi
 
-			elif  wlan0IP !="" and G.wifiActive and (
-				 G.wifiEth["wlan0"]["useIP"] in ["use","dontChange"] or
-				 (G.wifiEth["wlan0"]["useIP"] in ["useIf"] and  eth0IP == "")
-				):
-				G.ipAddress = wlan0IP
-				if not quiet: logger.log(20,"cBY:{:<20} doing wlanIP :{}< G.ipAddress :{}<".format(G.program, wlan0IP, G.ipAddress) )
+			else:
+				if  eth0IP !="" and G.eth0Active and (
+					 G.wifiEth["eth0"]["useIP"] in ["use","dontChange"] or
+					(G.wifiEth["eth0"]["useIP"] in ["useIf"] and  wlan0IP == "")
+					) :
+					G.ipAddress = eth0IP
 
-			if not quiet: logger.log(20,"cBY:{:<20} IP info:  yyy  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
+				elif  wlan0IP !="" and G.wifiActive and (
+					 G.wifiEth["wlan0"]["useIP"] in ["use","dontChange"] or
+					 (G.wifiEth["wlan0"]["useIP"] in ["useIf"] and  eth0IP == "")
+					):
+					G.ipAddress = wlan0IP
+					if not quiet: logger.log(20,"cBY:{:<20} doing wlanIP :{}< G.ipAddress :{}<".format(G.program, wlan0IP, G.ipAddress) )
+
+				if not quiet: logger.log(20,"cBY:{:<20} IP info:  yyy  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
+
 			if G.ipAddress != ipAddressRead:
 				if not quiet: logger.log(20,"cBY:{:<20} IP info:  writing  wlan0>{}<; eth0>{}<;  G.ipAddress:{}<;  G.wifiEth:{}<; G.wifiActive:{}; ipAddressRead:{}<".format( G.program, wlan0IP,eth0IP, G.ipAddress, G.wifiEth, G.wifiActive, ipAddressRead) )
 				writeIPtoFile(G.ipAddress, reason=changed)
@@ -1560,6 +1569,9 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
 # G.wifiEth["wlan0"] ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 #  /usr/bin/sudo /etc/init.d/networking restart
 	changed	= ""
+	if G.ipNumberRpiStatic:
+		return wlan0IP, eth0IP, ""
+
 	try:
 		if wlan0IP == "":
 			if G.wifiEth["eth0"]["on"] in ["on","onIf","dontChange"] and eth0IP == "" and not G.eth0Enabled:
@@ -3411,6 +3423,20 @@ def stopNTP(mode=""):
 	return
 
 
+####-------------------------------------------------------------------------####
+def isValidMAC(mac0):
+		macx = mac0.split(u":")
+		if len(macx) != 6 : # len(mac.split(u"D0:D2:B0:88:7B:76")):
+			return False
+
+		for xx in macx:
+			if len(xx) !=2:
+				return False
+
+			try: 	int(xx,16)
+			except: return False
+
+		return True
 
 #################################
 def testPing(ipToPing):

@@ -1,3 +1,31 @@
+Added features / changes in v7.135.507@ 2021-03-06
+===================================================
+   
+1. --- only for experts: added option set IP number of RPI to fixed, set in rpi device edit
+   w/o the you initially set the ip number, but the rpi can chnage it eg switching between ethernet and wifi
+   w this option ON the rpi will always send the fixed IP number IN THE  data, although it could use a differnt ip#
+   By enabling this YOU must make sure that the data arriving from the RPI comes from the defined fixed IP#
+   otherwise they will be rejected
+
+2. added menu option to send just new pgm and config files, skipping fonts images etc
+   this will reduce bytes by factor 2 to be send to rpi, fonts and images have not changed for several years now
+
+Added features / changes in v7.135.505@ 2021-02-16
+===================================================
+   
+1. added option to do a wake on lan command to the indigo server from the RPI
+   use this if the mac was shut down after powerfailure and does not boot.
+   the has to be anabled on the mac in setup/ powersavings
+   set in rpi devcie edit: enter the MAC# of the indigo server ethernet card
+
+
+Added features / changes in v7.134.505@ 2021-02-08
+===================================================
+   
+1. added option to overwrite hci read method for each rpi or use default set in config
+2. added some menu messages 
+
+
 Added features / changes in v7.134.504@ 2021-02-08
 ===================================================
    

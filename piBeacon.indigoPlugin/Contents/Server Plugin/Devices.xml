@@ -57,6 +57,15 @@ Change here or in initial setup:</Label>
 				<Label>... (over)write the current IP number of RPI with:</Label>
 			</Field>
  
+ 
+			<Field id="ipNumberRpiSetStatic" type="menu"     defaultValue="0"> 
+				<Label>... set ip # of the rpi to Static/Dynamic:</Label>
+				 <List>
+					<Option value="0"    >make ip number dynamic, let the rpi find the ip#</Option>
+					<Option value="1"    >fix the ip number to above value (static)</Option>
+				</List>
+			</Field>
+ 
 
 			<Field id="newuserIdPi" type="textfield"     defaultValue=""> 
 				<Label>... (over)write the current RPI-userId with:</Label>
@@ -95,6 +104,17 @@ Change here or in initial setup:</Label>
 					<Option value="leaveAlone" >dont touch x windows</Option>
 				  </List>
 			<Label>start up x-windows with master:</Label>
+			</Field>
+
+
+			<Field    id="macIfWOLsendToIndigoServer"   type="textfield" defaultValue="">
+			<Label>WOL action on RPI: mac number of indigo ethernet card:</Label>
+			</Field>
+			<Field    id="IpnumberIfWOLsendToIndigoServer"   type="textfield" defaultValue="">
+			<Label>WOL action on RPI: ip number to ping, leave empty for indigo server:</Label>
+			</Field>
+			<Field id="macIfWOLsendToIndigoServerLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>enter mac # or leave blank. If valid mac number is entered the RPI will do a ping to the indigo server or specified ip# every 5 minutes, if not successfull it will do a wakeonlan mac#  that hsould wake up the mac server. You need to enable "Wake for network access" in  mac power savings settings</Label>
 			</Field>
 
 
@@ -197,12 +217,13 @@ Change here or in initial setup:</Label>
 
 			<Field id="hcidumplabel" type="label" fontColor="green" >  
 				<Label>== how to scan for beacon messages</Label>	</Field>
-			<Field id="rpiDataAcquistionMethod" type="menu"     defaultValue="hcidumpNoRestart" tooltip=" ">
+			<Field id="rpiDataAcquistionMethod" type="menu"     defaultValue="useDefault" tooltip="">
 				<Label> .... use socket or hcidump/lescan for Data acquisition:</Label>
 				<List>
 					<Option value="socket"   >use python socket programming</Option>
 					<Option value="hcidump"  >hcidump/lescan tool </Option>
 					<Option value="hcidumpWithRestart"  >hcidump/lescan tool, with restart every 5 minutes, just in case </Option>
+					<Option value="useDefault"  >use default set in config </Option>
 				</List>
 			</Field>
 			<Field id="hcidumplabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
@@ -1571,6 +1592,14 @@ You can connect i2c, serial, onewire, spi, GPIO input, GPIO output,  display dev
 			<Field id="newIPNumber" type="textfield"     defaultValue=""> 
 				<Label>... (over)write the current IP number of RPI with:</Label>
 			</Field>
+ 
+			<Field id="ipNumberRpiSetStatic" type="menu"     defaultValue="0"> 
+				<Label>... set ip # of the rpi to Static/Dynamic:</Label>
+				 <List>
+					<Option value="0"    >make ip number dynamic, let the rpi find the ip#</Option>
+					<Option value="1"    >fix the ip number to above value (static)</Option>
+				</List>
+			</Field>
 
 			<Field id="RPINumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>set if you create a new RPI
@@ -1609,6 +1638,7 @@ Change here or in initial setup:</Label>
 			</Label>
 			</Field>
 
+
 			<Field    id="startXonPi"   type="menu" defaultValue="leaveAlone">
 				 <List>
 					<Option value="start"    >start x windows if not started</Option>
@@ -1618,6 +1648,15 @@ Change here or in initial setup:</Label>
 			<Label>start up x-windows with master:</Label>
 			</Field>
 
+			<Field    id="macIfWOLsendToIndigoServer"   type="textfield" defaultValue="">
+			<Label>WOL action on RPI: mac number of indigo ethernet card:</Label>
+			</Field>
+			<Field    id="IpnumberIfWOLsendToIndigoServer"   type="textfield" defaultValue="">
+			<Label>WOL action on RPI: ip number to ping, leave empty for indigo server:</Label>
+			</Field>
+			<Field id="macIfWOLsendToIndigoServerLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>enter mac # or leave blank. If valid mac number is entered the RPI will do a ping to the indigo server or specified ip# every 5 minutes, if not successfull it will do a wakeonlan mac#  that hsould wake up the mac server. You need to enable "Wake for network access" in  mac power savings settings</Label>
+			</Field>
 
 			<Field id="label2"               type="label"  fontColor="green" > 
 				<Label>== For attached sensors - if not set in sensor device edit:...</Label>

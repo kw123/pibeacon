@@ -3250,7 +3250,8 @@ def BLEAnalysisStart(hci):
 	try:
 		if BLEcollectStartTime == -1 and os.path.isfile(G.homeDir+"temp/beaconloop.BLEAnalysis"): 
 			f = open(G.homeDir+"temp/beaconloop.BLEAnalysis","r")
-			BLEanalysisrssiCutoff = int(f.read().strip("\n"))
+			try: 	BLEanalysisrssiCutoff = int(f.read().strip("\n"))
+			except: BLEanalysisrssiCutoff = -99.
 			f.close()
 			subprocess.call("rm {}temp/beaconloop.BLEAnalysis".format(G.homeDir), shell=True)
 			BLEcollectStartTime = time.time()
@@ -3260,7 +3261,7 @@ def BLEAnalysisStart(hci):
 				subprocess.call("rm {}temp/hcidump.data".format(G.homeDir), shell=True)
 
 			if rpiDataAcquistionMethod == "socket": 
-				if BLEAnalysisSocket(hci):	return True
+				if BLEAnalysisSocket(hci): return True
 			return False
 
 		elif  BLEcollectStartTime >0:
@@ -3277,6 +3278,7 @@ def BLEAnalysisStart(hci):
 		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	BLEcollectStartTime = -1
 	return False
+
 #################################
 def BLEAnalysis():
 	global onlyTheseMAC, knownBeaconTags

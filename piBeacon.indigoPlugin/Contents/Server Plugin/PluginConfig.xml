@@ -423,10 +423,10 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="3"   > 300 Hz</Option>
 		</List>
 	</Field>
-	<Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="hcidump">
+	<Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="hcidump" tooltip="can be overwriten for each individual RPi in rpi device edit">
 		<Label>Use which method on RPIs for beacon scanning read:</Label>
 		<List>
-			<Option value="hcidump" > using hcidump and lescan</Option>
+			<Option value="hcidump" > using hcidump and lescan, has more functions</Option>
 			<Option value="socket"  > using python socket reading (old method)</Option>
 		</List>
 	</Field>

@@ -128,6 +128,7 @@ def readNewParams(force=0):
 	global python3
 	global BLEdirectSensorDeviceActive
 	global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning
+	global macIfWOLsendToIndigoServer, IpnumberIfWOLsendToIndigoServer
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -187,6 +188,8 @@ def readNewParams(force=0):
 		if u"maxSizeOfLogfileOnRPI" 				in inp:	 maxSizeOfLogfileOnRPI= 		  	int(inp["maxSizeOfLogfileOnRPI"]) 
 		if u"startXonPi" 							in inp:	 startXonPi= 						inp["startXonPi"]
 		if u"clearHostsFile" 						in inp:	 clearHostsFile= 					inp["clearHostsFile"] == "1"
+		if u"macIfWOLsendToIndigoServer" 			in inp:	 macIfWOLsendToIndigoServer= 		inp["macIfWOLsendToIndigoServer"] 
+		if u"IpnumberIfWOLsendToIndigoServer" 		in inp:	 IpnumberIfWOLsendToIndigoServer= 	inp["IpnumberIfWOLsendToIndigoServer"] 
 
 		if u"startOtherProgram" 					in inp:	 
 			if startOtherProgram != inp["startOtherProgram"]:
@@ -1919,9 +1922,9 @@ def checkIpSTDprogramsAreRunning(lastCheckAlive):
 						if   pp =="display":
 							checkIfDisplayIsRunning()
 						elif pp =="neopixel":
-							checkIfNeopixelIsRunning(pgm= "neopixel")
+							checkIfNeopixelIsRunning(pgm="neopixel")
 						elif pp =="neopixelClock":
-							checkIfNeopixelIsRunning(pgm= "neopixelClock")
+							checkIfNeopixelIsRunning(pgm="neopixelClock")
 						elif pp =="sundial":
 							checkIfPGMisRunning(pp+".py", checkAliveFile="sundial")
 						else:
@@ -1993,6 +1996,37 @@ def checkFilesystem():
 
 		#subprocess.call("sudo chown -R  pi:pi	 /run/user/1000/pibeacon", shell=True)
 		subprocess.call("sudo chmod a+x  /lib/udev/hwclock-set", shell=True)
+	except	Exception, e :
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+
+
+####################      #########################
+def checkIfWOLsendToIndigoServer():
+	global macIfWOLsendToIndigoServer, IpnumberIfWOLsendToIndigoServer, lastCheckWOL
+
+	try:
+		if macIfWOLsendToIndigoServer == "": 			 return 
+		if not U.isValidMAC(macIfWOLsendToIndigoServer): return 
+		if time.time() - lastCheckWOL < 100: 			 return 
+
+		
+		if U.isValidIP(IpnumberIfWOLsendToIndigoServer): 
+			ipPing = IpnumberIfWOLsendToIndigoServer
+		else: 
+			ipPing = G.ipOfServer
+
+		if U.testPing(ipPing) == 0: 
+			#U.logger.log(20, u"checking ping to {} ok, no wol action", format(ipPing))
+			
+			lastCheckWOL = time.time()
+			return 
+	
+		U.logger.log(20, u"SENDING wakeonlan to MAC#:{}".format(macIfWOLsendToIndigoServer))
+		subprocess.call("wakeonlan  "+macIfWOLsendToIndigoServer+" &", shell=True)
+		lastCheckWOL = time.time()
+
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
@@ -2078,90 +2112,94 @@ def execMaster():
 		global fanOnTimePercent, fanOntimeData, fanOntimePeriod
 		global BLEdirectSensorDeviceActive
 		global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted
+		global macIfWOLsendToIndigoServer, lastCheckWOL, IpnumberIfWOLsendToIndigoServer
+	
+		IpnumberIfWOLsendToIndigoServer = ""
+		lastCheckWOL					= 0
+		macIfWOLsendToIndigoServer 		= ""
+		startOtherProgram				= ""
+		startOtherProgramOld			= ""
+		startOtherProgramKeepRunning 	= False
+		startOtherProgramStarted 		= -1
+		BLEdirectSensorDeviceActive 	= False
+		fanOntimePeriod					= 180 #  ==3 minutes for building average fan on 
+		fanOntimeData					= []
+		fanOnTimePercent				= ""
+		python3							= {}
+		clearHostsFile					= False
+		xWindows						= ""
+		startXonPi						= "leaveAlone"
+		maxSizeOfLogfileOnRPI			= 10000000
+		typeForPWM						= "GPIO"
+		ifNetworkChanges  				= "doNothing"
+		sundial							= ""
+		checkFSCHECKfileDone			= False
+		wifiEthCheck					= {}
+		BeaconUseHCINoOld				= ""
+		BLEconnectUseHCINoOld			= ""
+		fanEnable						= "-"
+		fanTempName						= ""
+		fanTempDevId					= ""
+		lastTempValue					= -1
+		fanWasOn						= 0
+		lastTimeTempValueChecked		= -1
+		fanGPIOPin						= -1
+		fanTempOnAtTempValue			= -1
+		fanTempOffAtTempValue			= 99
 
-		startOtherProgram		= ""
-		startOtherProgramOld	= ""
-		startOtherProgramKeepRunning = False
-		startOtherProgramStarted = -1
-		BLEdirectSensorDeviceActive = False
-		fanOntimePeriod			= 180 #  ==3 minutes for building average fan on 
-		fanOntimeData			= []
-		fanOnTimePercent		= ""
-		python3					= {}
-		clearHostsFile			= False
-		xWindows				= ""
-		startXonPi				= "leaveAlone"
-		maxSizeOfLogfileOnRPI	= 10000000
-		typeForPWM				= "GPIO"
-		ifNetworkChanges  		= "doNothing"
-		sundial					= ""
-		checkFSCHECKfileDone	= False
-		wifiEthCheck			= {}
-		BeaconUseHCINoOld		= ""
-		BLEconnectUseHCINoOld	= ""
-		fanEnable				= "-"
-		fanTempName				= ""
-		fanTempDevId			= ""
-		lastTempValue			= -1
-		fanWasOn				= 0
-		lastTimeTempValueChecked= -1
-		fanGPIOPin				= -1
-		fanTempOnAtTempValue	= -1
-		fanTempOffAtTempValue   = 99
-
-		activePGM				= {}
-		GPIOTypeAfterBoot1		= "off"
-		GPIOTypeAfterBoot2		= "off"
-		GPIONumberAfterBoot1	= "-1"
-		GPIONumberAfterBoot2	= "-1"
-		alreadyBooted			= False
+		activePGM						= {}
+		GPIOTypeAfterBoot1				= "off"
+		GPIOTypeAfterBoot2				= "off"
+		GPIONumberAfterBoot1			= "-1"
+		GPIONumberAfterBoot2			= "-1"
+		alreadyBooted					= False
 
 
-		startWebServerSTATUS	 = 80
-		startWebServerINPUT		 = 8010
+		startWebServerSTATUS			= 80
+		startWebServerINPUT				= 8010
 		batteryChargeTimeForMaxCapacity = 3600. # seconds
-		batteryCapacitySeconds   = 5*3600 # 
+		batteryCapacitySeconds			= 5*3600 # 
 
 		batteryMinPinActiveTimeForShutdown = 9999999999999
-		inputPinVoltRawLastONTime = time.time()
-		oldRaw					= ""
-		lastRead				= 0
-		bluetoothONoff			= "on"
-		rebootHour				= -1  # defualt : do  not reboot
-		rebooted				= True
-		useRamDiskForLogfiles	= "0"
-		enableiBeacons			= "1"
-		beforeLoop				= True
-		myPID					= str(os.getpid())
-		restart					= ""
-		sensorEnabled			= []
-		sensorList				= []
-		sensors					= {}
-		enableSensor			= "0"
-		rPiCommandPORT			= 0
-		ipConnection			= time.time() +100
-		G.lastAliveSend2		= time.time()
-		lastAlive				= []
-		lastAliveultrasoundDistance =0
-		loopCount				= 0
-		iPhoneMACListOLD		= ""
-		shutdownInputPin		= -1
-		shutDownPinVetoOutput	= -1
-		shutdownPinVoltSensor	= -1
-		lastshutdownInputPinTime= 0
-		shutdownSignalFromUPSPin= -1
-		batteryUPSshutdownAtxPercent =-1
-		shutdownSignalFromUPS_SerialInput=""
-		shutdownSignalFromUPS_InitTime= -1
-		batteryUPSshutdown_Vin = "notSet"
+		inputPinVoltRawLastONTime 		= time.time()
+		oldRaw							= ""
+		lastRead						= 0
+		bluetoothONoff					= "on"
+		rebootHour						= -1  # defualt : do  not reboot
+		rebooted					= True
+		useRamDiskForLogfiles		= "0"
+		enableiBeacons					= "1"
+		beforeLoop						= True
+		myPID							= str(os.getpid())
+		restart							= ""
+		sensorEnabled					= []
+		sensorList						= []
+		sensors							= {}
+		enableSensor					= "0"
+		rPiCommandPORT					= 0
+		ipConnection					= time.time() +100
+		G.lastAliveSend2				= time.time()
+		lastAlive						= []
+		lastAliveultrasoundDistance 	= 0
+		loopCount						= 0
+		iPhoneMACListOLD				= ""
+		shutdownInputPin				= -1
+		shutDownPinVetoOutput			= -1
+		shutdownPinVoltSensor			= -1
+		lastshutdownInputPinTime		= 0
+		shutdownSignalFromUPSPin		= -1
+		batteryUPSshutdownAtxPercent	=-1
+		shutdownSignalFromUPS_SerialInput =""
+		shutdownSignalFromUPS_InitTime	= -1
+		batteryUPSshutdown_Vin			= "notSet"
 
-		rebootWatchDogTime		= -1
-		sensorAlive				= {}
-		actions					= []
-		firstRead				= True
-		activePGMdict			= {}
-		configured				= ""
-		adhocWifiStarted		= -1
+		rebootWatchDogTime				= -1
+		sensorAlive						= {}
+		actions							= []
+		firstRead						= True
+		activePGMdict					= {}
+		configured						= ""
+		adhocWifiStarted				= -1
 
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
@@ -2176,7 +2214,7 @@ def execMaster():
 		# make dir for short temp files
 		setupTempDir()
 
-		G.tStart	  = time.time()
+		G.tStart = time.time()
 
 		U.resetRebootingNow()
 
@@ -2344,7 +2382,8 @@ def execMaster():
 				readNewParams()
 				if loopCount%2 == 0: 
 					checkstartOtherProgram()
-				
+					checkIfWOLsendToIndigoServer()
+			
 				if loopCount%5 == 0: 
 					checkRamDisk(loopCount=loopCount)
 				

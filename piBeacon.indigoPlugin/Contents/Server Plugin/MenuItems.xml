@@ -108,15 +108,15 @@ Then the rPi will start sending data to plugin
 				<Title>Restart master.py through ssh</Title>
 				<CallbackMethod>buttonConfirmRestartMastersshCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="buttonsendBigFiles" type="button" tooltip="send and sync file from ~/Documents/piBeacons/soundFiles /displayFiles to rPi ~/soundfiles">
+			<Field id="buttonSendAllandReboot" type="button" tooltip="send and sync pgm and config files ">
 				<Label>click to</Label>
-				<Title>send ALL files (Programs.py,fonts,images,config ...)</Title>
-				<CallbackMethod>buttonSendBigFilessshCALLBACK</CallbackMethod>
-			</Field>
-			<Field id="buttonSendAllandReboot" type="button" tooltip="">
-				<Label>click to</Label>
-				<Title>send ALL files (...) and REBOOT</Title>
+				<Title>send program and config files</Title>
 				<CallbackMethod>buttonSendAllandRebootsshCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="buttonSendAllAllandReboot" type="button" tooltip="">
+				<Label>click to</Label>
+				<Title>send all of above + fonts etc and REBOOT (do only once after rpi install)</Title>
+				<CallbackMethod>buttonSendAllAllandRebootsshCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="buttonReboot" type="button" tooltip="login to rPi and issue sudo reboot">
 				<Label>click to</Label>
@@ -171,6 +171,11 @@ Then the rPi will start sending data to plugin
 				<Title>get rPi system stats to logfile</Title>
 				<CallbackMethod>buttonGetSystemParametersCALLBACK</CallbackMethod>
 			</Field>
+			<Field id="buttonStopConfig" type="button" tooltip=" stop any send activity ">
+				<Label>click to</Label>
+				<Title>==== STOP any send/action in progress ====</Title>
+				<CallbackMethod>buttonStopConfigCALLBACK</CallbackMethod>
+			</Field>
 
 			<Field id="logsEnd" type="label">
 				<Label> -------- other </Label>
@@ -179,16 +184,6 @@ Then the rPi will start sending data to plugin
 				<Label>click to</Label>
 				<Title>reset GPIO output pins memory</Title>
 				<CallbackMethod>buttonResetOutputCALLBACK</CallbackMethod>
-			</Field>
-			<Field id="buttonInit" type="button" tooltip="send and sync file from ~/Documents/piBeacons/soundFiles /displayFiles to rPi ~/soundfiles">
-				<Label>click to</Label>
-				<Title>ONLY ONCE: setup directories, send pgm reboot</Title>
-				<CallbackMethod>buttonSendINITCALLBACK</CallbackMethod>
-			</Field>
-			<Field id="buttonStopConfig" type="button" tooltip=" stop any send activity ">
-				<Label>click to</Label>
-				<Title>==== STOP any send/action in progress ====</Title>
-				<CallbackMethod>buttonStopConfigCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="anycmd" type="label">
 				<Label>.               ..send YOUR unix command</Label>
@@ -407,14 +402,14 @@ The history files also contain the beacons that were deleted. They are marked as
 				<Title>delete</Title>
 				<CallbackMethod>buttonConfirmMACDeleteOLDHISTORYCALLBACK</CallbackMethod>
 			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
+			</Field>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="setALLBeaconsTo">
 		<Name>Set all Beacons to ...</Name>
 		<ConfigUI>
-			<Field id="MSG" type="textfield" defaultValue="">
-				<Label> message from Plugin:</Label>
-			</Field>
 
 			<Field id="buttonSetAllExistingDevicesToActive" type="button" tooltip="use this if all ibeacons are expired and went to ignore  ">
 				<Label>SET active</Label>
@@ -441,6 +436,9 @@ The history files also contain the beacons that were deleted. They are marked as
 				<Title>Execute</Title>
 				<CallbackMethod>buttonSetAllbeaconsTonominSignalOffCALLBACK</CallbackMethod>
 			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
+			</Field>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="reloadKnownBeacons">
@@ -455,7 +453,7 @@ The history files also contain the beacons that were deleted. They are marked as
 				<CallbackMethod>buttonExecuteReloadKnownBeaconsTagsCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="MSG" type="textfield" default="">
-				<Label>msg from Plugin:</Label>
+				<Label>message from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -489,7 +487,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
 				<CallbackMethod>buttonExecuteReplaceBeaconCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="MSG" type="textfield" default="">
-				<Label>msg from Plugin:</Label>
+				<Label>message from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -518,17 +516,15 @@ Other beacons that send the battery level every second
 				<Title>EXECUTE</Title>
 				<CallbackMethod>getONEBeaconParametersCALLBACKmenu</CallbackMethod>
 			</Field>
-			<Field id="MSG" type="textfield" default="">
-				<Label>msg from Plugin:</Label>
-			</Field>
    			<Field id="simpleSeparator33" type="separator"/>
 			<Field id="execReport" type="button">
 				<Label>Print report of current beacon battery levels</Label>
 				<Title>PRINT</Title>
 				<CallbackMethod>makeBatteryLevelReportCALLBACKmenu</CallbackMethod>
 			</Field>
-			<Field id="MSG2" type="textfield" default="">
-				<Label>msg from Plugin:</Label>
+   			<Field id="simpleSeparator44" type="separator"/>
+			<Field id="MSG" type="textfield" default="">
+				<Label>message from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -626,10 +622,11 @@ You should not run it more often than once a minute</Label>
 				<CallbackMethod>printBLEAnalysisCALLBACKmenu</CallbackMethod>
 			</Field>
 			<Field id="printBLEreportLabel2" type="label">
-				<Label>the raw output of 
-hcitool lescan, hcidump --dump, bluetoothctl scan on
-is on your RPI in ~/pibeacon/temp/:
-hcidump.data, lescan.data, bluetoothctl.data</Label>
+				<Label>the raw output of hcidump --dump
+is on your RPI in ~/pibeacon/temp/hcidump.data</Label>
+			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -641,9 +638,6 @@ hcidump.data, lescan.data, bluetoothctl.data</Label>
 			<Field id="printBLEreportLabel0" type="label">
 				<Label>Print detailed information received on RPI and anlyzed for sepecific beacon - mac#
 If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 messages or max 10 seconds</Label>
-			</Field>
-             <Field id="MSG" type="textfield" defaultValue="" tooltip="" readonly="yes">
-                    <Label>msg from plugin:</Label>
 			</Field>
            <Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
@@ -667,6 +661,9 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="printBLEreportLabel3" type="label">
 				<Label>the data received and decission in beaconloop for sepecific mac # are printed to plugin.log after ~ 1 minute </Label>
+			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
