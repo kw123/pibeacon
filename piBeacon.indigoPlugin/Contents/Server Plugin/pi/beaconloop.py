@@ -444,17 +444,16 @@ def startHCUIDUMPlistnr(hci):
 		U.logger.log(20,"cmd {}".format(cmd))
 		ListenProcessFileHandle = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 		##pid = ListenProcessFileHandle.pid
-		##self.myLog( text=u" pid= " + unicode(pid) )
 		msg = unicode(ListenProcessFileHandle.stderr)
 		if msg.find("open file") == -1:	# try this again
-			self.indiLOG.log(40,"uType {}; IP#: {}; error connecting {}".format(uType, ipNumber, msg) )
-			self.sleep(20)
+			U.logger.log(40,"uType {}; IP#: {}; error connecting {}".format(uType, ipNumber, msg) )
+			time.sleep(20)
 			return  "error "+ unicode(msg)
 
 		U.killOldPgm(-1,"sudo hcidump")
 
 		if not U.pgmStillRunning("hcidump -i"):
-			self.indiLOG.log(40,"hcidump not running ")
+			U.logger.log(40,"hcidump not running ")
 			return "error"
 
 		# set the O_NONBLOCK flag of ListenProcessFileHandle.stdout file descriptor:

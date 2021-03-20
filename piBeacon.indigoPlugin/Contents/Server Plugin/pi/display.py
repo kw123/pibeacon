@@ -1749,7 +1749,7 @@ global klillMyselfTimeout, displayResolution
 
 displayResolution			= (0,0)
 
-klillMyselfTimeout				= time.time()
+klillMyselfTimeout			= time.time()
 pygameInitialized			= False
 
 runLoop 					= True

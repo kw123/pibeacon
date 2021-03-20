@@ -1178,6 +1178,7 @@ class Plugin(indigo.PluginBase):
 			self.passwordOfServer			= self.pluginPrefs.get(u"passwordOfServer", u"")
 			self.authentication				= self.pluginPrefs.get(u"authentication", u"digest")
 			self.myIpNumber					= self.pluginPrefs.get(u"myIpNumber", u"192.168.1.130")
+			self.myIpNumberRange			= self.myIpNumber.split(".")
 			self.GPIOpwm					= self.pluginPrefs.get(u"GPIOpwm", 1)
 
 			try:				self.rebootHour			= int(self.pluginPrefs.get(u"rebootHour", -1))
@@ -10086,6 +10087,7 @@ class Plugin(indigo.PluginBase):
 			if pp != self.myIpNumber:
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			self.myIpNumber = pp
+			self.myIpNumberRange			= self.myIpNumber.split(".")
 
 			pp = valuesDict[u"portOfServer"]
 			if pp != self.portOfServer:
@@ -17011,6 +17013,7 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensorMode")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sendMSGEverySecs")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"dhtType")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"isPy3")
 
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"timeaboveCalibrationMAX")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], dev.states, u"CO2offset")
@@ -19152,6 +19155,12 @@ configuration         - ==========  defined beacons ==============
 
 		return False
 ####-------------------------------------------------------------------------####
+	def ipNumbernotInRange(self,ipcheck):
+		ipcheck2	= ipCheck.split(".")
+		if ipok[0] != self.myIpNumberRange[0]: 	return False
+		if ipok[1] != self.myIpNumberRange[1]: 	return False
+		return True
+####-------------------------------------------------------------------------####
 	def isValidIP(self, ip0):
 		ipx = ip0.split(u".")
 		if len(ipx) != 4:
@@ -19179,28 +19188,28 @@ configuration         - ==========  defined beacons ==============
 		return True
 
 ####-------------------------------------------------------------------------####
-	def handlesockReporting(self, IPN, nBytes, name, xType, msg=u""):
+	def handlesockReporting(self, IPN, nBytes, msgName, xType, msg=u""):
 
 		try:
 			if IPN not in self.dataStats[u"data"]:
 				self.dataStats[u"data"][IPN]={}
 
-			if name not in self.dataStats[u"data"][IPN]:
-				self.dataStats[u"data"][IPN][name]={}
+			if msgName not in self.dataStats[u"data"][IPN]:
+				self.dataStats[u"data"][IPN][msgName]={}
 
-			if xType not in self.dataStats[u"data"][IPN][name]:
-				self.dataStats[u"data"][IPN][name][xType] = {u"firstTime":time.time(),u"lastTime":time.time()-1000,u"count":0,u"bytes":0,"maxBytes":0}
-			if u"maxBytes" not in self.dataStats[u"data"][IPN][name][xType]:
-				self.dataStats[u"data"][IPN][name][xType][u"maxBytes"]=0
-			self.dataStats[u"data"][IPN][name][xType][u"count"] += 1
-			self.dataStats[u"data"][IPN][name][xType][u"bytes"] += nBytes
-			self.dataStats[u"data"][IPN][name][xType][u"lastTime"] = time.time()
-			self.dataStats[u"data"][IPN][name][xType][u"maxBytes"] = max(self.dataStats[u"data"][IPN][name][xType][u"maxBytes"], nBytes)
+			if xType not in self.dataStats[u"data"][IPN][msgName]:
+				self.dataStats[u"data"][IPN][msgName][xType] = {u"firstTime":time.time(),u"lastTime":time.time()-1000,u"count":0,u"bytes":0,"maxBytes":0}
+			if u"maxBytes" not in self.dataStats[u"data"][IPN][msgName][xType]:
+				self.dataStats[u"data"][IPN][msgName][xType][u"maxBytes"]=0
+			self.dataStats[u"data"][IPN][msgName][xType][u"count"] += 1
+			self.dataStats[u"data"][IPN][msgName][xType][u"bytes"] += nBytes
+			self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] = time.time()
+			self.dataStats[u"data"][IPN][msgName][xType][u"maxBytes"] = max(self.dataStats[u"data"][IPN][msgName][xType][u"maxBytes"], nBytes)
 
 			if xType != u"ok" : # log if "errxxx" and previous event was less than xxx min ago	ago
-				if time.time() - self.dataStats[u"data"][IPN][name][xType][u"lastTime"]	< self.maxSocksErrorTime : # log if previous event was less than 10 minutes ago
-					dtLT = datetime.datetime.fromtimestamp(self.dataStats[u"data"][IPN][name][xType][u"lastTime"] ).strftime(_defaultDateStampFormat)
-					self.indiLOG.log(30,u"TCPIP socket error rate high for {}/{} ; previous:{}".format(IPN, name, dtLT) )
+				if time.time() - self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"]	< self.maxSocksErrorTime : # log if previous event was less than 10 minutes ago
+					dtLT = datetime.datetime.fromtimestamp(self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] ).strftime(_defaultDateStampFormat)
+					self.indiLOG.log(30,u"TCPIP socket error rate high for {}/{} ; previous:{}".format(IPN, msgName, dtLT) )
 					self.printTCPIPstats(all=IPN)
 				self.saveTcpipSocketStats()
 			elif u"Socket" in self.debugLevel:
@@ -19295,7 +19304,14 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			idTag = "x-6-a"
 
 
-			if	not indigo.activePlugin.ipNumberOK(self.client_address[0]) :
+			if	indigo.activePlugin.ipNumberOK(self.client_address[0]):
+				pass
+			elif not indigo.activePlugin.ipNumbernotInRange(self.client_address[0]):
+				indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} outside ip number range<<".format(self.client_address)  )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"unknown",u"extIP" )
+				self.request.close()
+				return 
+			else:
 				wrongIP = 2
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} not in accepted ip number list, please fix in >>initial setup RPI<<".format(self.client_address)  )
 				#  add looking for ip = ,"ipAddress":"192.168.1.20"

@@ -24,6 +24,67 @@ import Adafruit_DHT
 # DHT
 # ===========================================================================
 
+
+def getDHT3data():
+	global badSensors
+	global sensors, sensor
+	global isPy3
+	global py3Started
+	global dht3DataFile
+	global dht3stopFile
+	dhtData = {}
+	dht3DataFile = G.homeDir+"temp/dht.out"
+	dht3stopFile = G.homeDir+"temp/dht.stop"
+	try:
+		if py3Started > 0:
+			startDHT3()
+
+		if os.path.isfile(dht3DataFile): 
+			try:
+				f = open(dht3DataFile,"r")
+				dhtData = json.loads(f.read())
+				f.close()
+				os.remove(dht3DataFile)
+			except	Exception, e:
+				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	if dhtData == {}: py3Started = 1
+	return dhtData
+		
+def startDHT3():
+	global sensors, sensor
+	global dht3DataFile
+	global dht3stopFile
+	global py3Started
+	try:
+		if py3Started == 1 and  U.pgmStillRunning(sensor+".py3"): 
+			U.logger.log(20, "request to start DHT.py3:  it is  still running, no action")
+			py3Started = 0
+			return 
+		U.logger.log(20,"start DHT.py3  executing") 
+
+		theDict ={"sensors":{}, "outfile": dht3DataFile, "stopfile": dht3stopFile}
+		for devId in sensors[sensor]:
+			theDict["sensors"][devId] = {"dhtType": sensors[sensor][devId]["dhtType"], "gpioPin": sensors[sensor][devId]["gpioPin"]}
+
+		#theDict["PATH"] 	= os.environ["PATH"]
+		subprocess.Popen("python3  DHT.py3 '{}' &".format(json.dumps(theDict)),shell=True)
+		py3Started = 0
+		time.sleep(3)
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+def stopDHT3():
+	global dht3stopFile
+	try:
+		subprocess.Popen("echo x > {}".format(dht3stopFile),shell=True)
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return 
+
+
+
 def getDATAdht(DHTpinI,Type,devId):
 		global sensorDHT, startDHT, lastRead
 		global lastSensorRead
@@ -62,34 +123,43 @@ def getDATAdht(DHTpinI,Type,devId):
 		return "",""
 
 
-
-def getDHT(sensor,dataI):
+def getDHTdata():
 	global badSensors
-	global sensors
+	global sensors, sensor
 	try:
-		if sensor in sensors :
-			dataI[sensor]={}
-			for devId in sensors[sensor]:
-				t =[-1000,-1000]; h=[-1000,-1000]
-				for ii in range(2):
-					t[ii],h[ii] = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
-					if t[ii] =="":
-						time.sleep(4)
-				try: 
-					if abs(t[0]-t[1]) > 3 or t[0] == -1000 or t[1] == -1000 or h[0] == -1000 or h[1] == -1000:
-					# bad result 
-						t = ""; h=""
-					else:
-						t = (t[0] + t[1] )/2.					
-						h = (h[0] + h[1] )/2.	
-				except:
-					t = ""; h=""	
+		dhtData ={}
+		for devId in sensors[sensor]:
+			dhtData[devId] = {"temp":"","hum":""}
+			t,h = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
+			dhtData[devId] = {"temp":t,"hum":h}
+	except	Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return dhtData
 
+
+
+def getDHT(dataI):
+	global badSensors
+	global sensors, sensor
+	global isPy3, py3Started
+	try:
+		dhtData = {}
+		if sensor in sensors:
+			dataI[sensor]={}
+			if isPy3:
+				dhtData = getDHT3data()
+				#print " dhtData" , dhtData
+			else:
+				dhtData = getDHTdata()
+
+			for devId in dhtData:
+				t = dhtData[devId]["temp"]
 				if t != "":
 					try:	
 						t = round(float(t) + float(sensors[sensor][devId]["offsetTemp"]),1)
 					except: pass
 					dataI[sensor][devId] = {"temp":t}
+					h = dhtData[devId]["hum"]	
 					if h != "":
 						try:	h = int(float(h) + float(sensors[sensor][devId]["offsetHum"]))
 						except: pass
@@ -97,7 +167,7 @@ def getDHT(sensor,dataI):
 						if devId in badSensors: del badSensors[devId]
 					time.sleep(0.1)
 				else:
-					dataI = incrementBadSensor(devId,sensor,data)
+					dataI = incrementBadSensor(devId, data)
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -106,12 +176,12 @@ def getDHT(sensor,dataI):
 
 
 
-def incrementBadSensor(devId,sensor,dataI,text="badSensor"):
-	global badSensors
+def incrementBadSensor(devId, dataI, theText="badSensor"):
+	global badSensors, sensor
 	try:
-		if devId not in badSensors:badSensors[devId] ={"count":0,"text":text}
+		if devId not in badSensors: badSensors[devId] = {"count":0,"text":theText}
 		badSensors[devId]["count"] +=1
-		badSensors[devId]["text"]  +=text
+		badSensors[devId]["text"]  +=theText
 		#print badSensors
 		if	badSensors[devId]["count"]	> 2:
 			if sensor not in dataI: dataI={sensor:{devId:{}}}
@@ -120,6 +190,7 @@ def incrementBadSensor(devId,sensor,dataI,text="badSensor"):
 			del badSensors[devId]
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"theText{}".format(theText))
 	return dataI
 
 
@@ -138,6 +209,7 @@ def readParams():
 		global sensorList, sensors, enableTXpinsAsGpio, sensorRefreshSecs
 		global output
 		global oldRaw, lastRead
+		global isPy3
 
 		rCode= False
 
@@ -159,12 +231,18 @@ def readParams():
 		if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
 
 		sensorList=""
-		for sensor in sensors:
-			sensorList+=sensor.split("-")[0]+","
+		for sens in sensors:
+			sensorList+=sens.split("-")[0]+","
 
 		if sensorList.find("DHT") ==-1:
 			exit()
-			
+		isPy3 = False
+		for devId in sensors[sensor]:
+			#print sensors[sensor][devId]
+			if "isPy3" in sensors[sensor][devId] and sensors[sensor][devId]["isPy3"]:
+				isPy3 = True
+				U.logger.log(20,"setting to DHT to py3 mode")
+				break
 		return 
 
 
@@ -177,13 +255,16 @@ def readParams():
 #################################
 #################################
 			 
-global sensorList, sensors,badSensors
+global sensorList, sensors,badSensors, sensor
 global startDHT
 global regularCycle
 global oldRaw, lastRead
 global sensorRefreshSecs, lastSensorRead
+global isPy3, py3Started
 
 
+py3Started			= 2
+isPy3				= False
 sensorRefreshSecs	= 90
 oldRaw				= ""
 lastRead			= 0
@@ -196,6 +277,7 @@ DHTpin				= 17
 enableTXpinsAsGpio	= "0"
 quick				= False
 output				= {}
+sensor				= "DHT"
 
 U.setLogging()
 
@@ -232,10 +314,10 @@ xxx 				= -1
 while True:
 	try:
 		tt = time.time()
-		data={}
+		data = {}
 
 		if regularCycle:
-			data = getDHT("DHT",data)
+			data = getDHT(data)
 
 		loopCount +=1
 		
@@ -306,4 +388,5 @@ while True:
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		time.sleep(5.)
+stopDHT3()
 sys.exit(0)

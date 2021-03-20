@@ -604,6 +604,7 @@ def setACTIVEorKILL(tag,pgm,check,force=0):
 			U.logger.log(30,"started:%s"%pgm)
 		elif ( tag not in theList and tag in  activePGMdict) or force==-1:
 			U.killOldPgm(-1,pgm)
+			U.killOldPgm(-1,pgm+"3")
 			U.logger.log(30,"stopping sensor as no {} enabled".format(tag))
 			if tag	in activePGMdict: del activePGMdict[tag] 
 		elif tag  in activePGMdict and force ==0:
@@ -1523,7 +1524,7 @@ def fixRcLocal(sleepTime):
 
 		if writeOut:
 			U.logger.log(20, "writing new rc.local file with new line:\n {}".format(test))
-			f=open(+G.homeDir+"temp/rc.local","w")
+			f=open(G.homeDir+"temp/rc.local","w")
 			f.write(out)
 			f.close()
 			subprocess.call("sudo cp "+G.homeDir+"temp/rc.local /etc/rc.local ", shell=True)
@@ -1840,7 +1841,8 @@ def killOldPrograms():
 	global myPID
 	try:
 		U.stopDisplay()
-		U.killOldPgm(myPID,"python ", delList=G.programFiles+G.specialSensorList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program], verbose=False)
+		U.killOldPgm(myPID,"python", delList=G.programFiles+G.specialSensorList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program], verbose=False)
+		#U.killOldPgm(myPID,"python3 ", delList=G.programFiles+G.specialSensorList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program]+["DHT3"], verbose=False)
 
 		time.sleep(1)
 		for ff in G.specialOutputList:

@@ -10570,6 +10570,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			</Field>
 
 
+			<Field id="isPy3"   type="checkbox" defaultValue="true" >
+			<Label>use py3 circuitpython:</Label>
+			</Field>
+
+
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>

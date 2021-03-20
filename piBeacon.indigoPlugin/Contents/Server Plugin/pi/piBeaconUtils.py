@@ -108,7 +108,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="",param2="",verbose=False):
 			count += 1
 		if verbose: 
 			logger.log(40, u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
-			print  u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist)
+			print  (u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist))
 		if len(xlist) > 2:
 			subprocess.call("/usr/bin/sudo kill -9 {}".format(xlist), shell=True)
 	except Exception as e:
@@ -2662,16 +2662,19 @@ def testBad(newX, lastX, inXXX):
 
 	xxx = inXXX
 	try:
-		if str(newX).find("bad") == -1:
-			if str(lastX).find("bad") == -1:
-				xxx = max(xxx, abs( float(lastX) - float(newX) )/ max(0.1, abs(float(lastX) + float(newX)) ) )
+		if lastX is not None and newX is not None:
+			if str(newX).find("bad") == -1:
+				if str(lastX).find("bad") == -1:
+					xxx = max(xxx, abs( float(lastX) - float(newX) )/ max(0.1, abs(float(lastX) + float(newX)) ) )
+				else:
+					xxx = 9991.
 			else:
-				xxx = 9991.
+				if lastX.find("bad") >-1:
+					xxx = 0
+				else:
+					xxx = 9992.
 		else:
-			if lastX.find("bad") >-1:
-				xxx = 0
-			else:
-				xxx = 9992.
+			xxx = 0
 	except	Exception as e:
 		logger.log(20, u"cBY:{:<20} newX:{}, lastX:{}, inXXX:{}".format(G.program,newX, lastX, inXXX))
 		logger.log(20, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
