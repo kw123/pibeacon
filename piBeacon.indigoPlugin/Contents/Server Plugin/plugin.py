@@ -24,6 +24,7 @@ import logging
 import zlib
 
 import MACMAP.MAC2Vendor as M2Vclass
+from checkIndigoPluginName import checkIndigoPluginName 
 #import pydevd_pycharm
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
 
@@ -395,33 +396,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def startup(self):
 		try:
-			if self.pathToPlugin.find(u"/"+self.pluginName+u".indigoPlugin/")==-1:
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"The pluginname is not correct, please reinstall or rename")
-				self.errorLog(u"It should be   /Libray/....../Plugins/"+self.pluginName+u".indigPlugin")
-				p=max(0,self.pathToPlugin.find(u"/Contents/Server"))
-				self.errorLog(u"It is: "+self.pathToPlugin[:p])
-				self.errorLog(u"please check your download folder, delete old *.indigoPlugin files or this will happen again during next update")
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.errorLog(u"---------------------------------------------------------------------------------------------------------------" )
-				self.sleep(100000)
-				self.quitNOW="wromg plugin name"
-				return
-
-			if not self.checkPluginPath(self.pluginName,  self.pathToPlugin):
-				exit()
+			if not checkIndigoPluginName(self, indigo): 
+				exit() 
 
 
 			if not self.moveToIndigoPrefsDir(self.indigoPluginDirOld, self.indigoPreferencesPluginDir):
@@ -18973,25 +18949,6 @@ configuration         - ==========  defined beacons ==============
 		if inPath[-1] !="/": inPath +="/"
 		return inPath
 
-########################################
-########################################
-####----checkPluginPath----
-########################################
-########################################
-####------ --------
-	def checkPluginPath(self, pluginName, pathToPlugin):
-
-		if pathToPlugin.find(u"/" + self.pluginName + ".indigoPlugin/") == -1:
-			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
-			self.indiLOG.log(50,u"The pluginName is not correct, please reinstall or rename")
-			self.indiLOG.log(50,u"It should be   /Libray/....../Plugins/" + pluginName + ".indigoPlugin")
-			p = max(0, pathToPlugin.find(u"/Contents/Server"))
-			self.indiLOG.log(50,u"It is: " + pathToPlugin[:p])
-			self.indiLOG.log(50,u"please check your download folder, delete old *.indigoPlugin files or this will happen again during next update")
-			self.indiLOG.log(50,u"---------------------------------------------------------------------------------------------------------------")
-			self.sleep(100)
-			return False
-		return True
 
 ########################################
 ########################################
