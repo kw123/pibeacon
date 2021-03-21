@@ -182,7 +182,7 @@ This is not used for trigger names they will continue to be called Family, Guest
 
 	<Field id="simpleSeparator33" type="separator"/>
 	<Field id="infoLabel33" type="label" fontColor="green" >
-		<Label>== Parameters for ALL rPi servers</Label>
+		<Label>== Parameters for ALL rPi / plugin</Label>
 	</Field>
 	<Field    id="myIpNumber"   type="textfield" defaultValue="192.168.1.x">
 		<Label>IP Number of indigo MAC server:</Label>
@@ -206,6 +206,14 @@ Socket communication will go directly through socket communication to plugin tha
 
 	<Field id="indigoInputPORT"   type="textfield" defaultValue="12087" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<Label>define IP-PORT for socket communication RPI to Indigo:</Label> 
+	</Field>
+
+	<Field    id="blockNonLocalIp"   type="checkbox" defaultValue="false" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+		<Label>Accept only local ip numbers to contact MAC:</Label>
+	</Field>
+	<Field id="blockNonLocalIpLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>when enabled any ip number != the first 2 octets of the MAC ip address will be ignored</Label>
+
 	</Field>
 	<Field id="maxSocksErrorTime"   type="menu" defaultValue="10" tooltip="if socket communication has issues ie short or incomplete packages this parameter 
 allows to set a threshold on when to report. Eg if set to 10: if 2 events happen within 10 minutes it is reported, otherwise not" 

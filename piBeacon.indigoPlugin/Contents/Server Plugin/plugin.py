@@ -1179,6 +1179,7 @@ class Plugin(indigo.PluginBase):
 			self.authentication				= self.pluginPrefs.get(u"authentication", u"digest")
 			self.myIpNumber					= self.pluginPrefs.get(u"myIpNumber", u"192.168.1.130")
 			self.myIpNumberRange			= self.myIpNumber.split(".")
+			self.blockNonLocalIp			= self.pluginPrefs.get(u"blockNonLocalIp", False)
 			self.GPIOpwm					= self.pluginPrefs.get(u"GPIOpwm", 1)
 
 			try:				self.rebootHour			= int(self.pluginPrefs.get(u"rebootHour", -1))
@@ -10088,6 +10089,8 @@ class Plugin(indigo.PluginBase):
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			self.myIpNumber = pp
 			self.myIpNumberRange			= self.myIpNumber.split(".")
+
+			self.blockNonLocalIp			= valuesDict[u"blockNonLocalIp"]
 
 			pp = valuesDict[u"portOfServer"]
 			if pp != self.portOfServer:
@@ -19156,6 +19159,7 @@ configuration         - ==========  defined beacons ==============
 		return False
 ####-------------------------------------------------------------------------####
 	def ipNumbernotInRange(self,ipcheck):
+		if not self.blockNonLocalIp: 			return  True
 		ipcheck2	= ipCheck.split(".")
 		if ipok[0] != self.myIpNumberRange[0]: 	return False
 		if ipok[1] != self.myIpNumberRange[1]: 	return False

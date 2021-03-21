@@ -1,8 +1,10 @@
-Added features / changes in v7.135.508@ 2021-03-20
+Added features / changes in v7.135.509@ 2021-03-20
 ===================================================
    
 1. supports the latest SSD (march 20 2021)
-
+2. added option to block any ip number accessing the indigo mac that does not have the same first 2 octets
+   to avoid ansering outside ip numbers from probing, they will just be ignored, no acknowledge packet is send
+   only works if mac and rpi have the same 2 octets, eg 192.168.x.y  and 192,.1678.x.z would be accepted, but not 72.60.4.5
 
 
 Added features / changes in v7.135.507@ 2021-03-06
