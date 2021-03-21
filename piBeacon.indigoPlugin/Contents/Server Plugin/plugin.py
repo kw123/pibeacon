@@ -19456,7 +19456,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			try:
 				if wrongIP < 2:
 					if indigo.activePlugin.decideMyLog(u"Socket"):
-						indigo.activePlugin.indiLOG.log(20, u" sending ok to {} data: {}..{}".format(piName.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
+						indigo.activePlugin.indiLOG.log(10, u" sending ok to {} data: {}..{}".format(piName.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
 					self.request.send(u"ok-{}-{}".format(len0,lenData) )
 			except: pass
 			self.request.close()
