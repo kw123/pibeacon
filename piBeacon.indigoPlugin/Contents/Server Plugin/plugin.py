@@ -3195,6 +3195,8 @@ class Plugin(indigo.PluginBase):
 				self.lastSaveConfig = time.time()
 				self.saveConfig()
 
+			self.executeUpdateStatesDict()
+
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -3866,7 +3868,7 @@ class Plugin(indigo.PluginBase):
 
 			elif typeId == u"sprinkler":			retCode, valuesDict, errorDict = self.validateDeviceConfigUi_Sprinkler(	 	valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
-			elif typeId ==u"BLEconnect":			retCode, valuesDict, errorDict = self.validateDeviceConfigUi_BLEconnect(	valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+			elif typeId == u"BLEconnect":			retCode, valuesDict, errorDict = self.validateDeviceConfigUi_BLEconnect(	valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
 			elif typeId == u"rPI-Sensor":			retCode, valuesDict, errorDict = self.validateDeviceConfigUi_rPISensor(	 	valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
@@ -3894,7 +3896,10 @@ class Plugin(indigo.PluginBase):
 
 
 			if retCode:
+				valuesDict = self.fillMemberListState(dev, valuesDict)
 				self.updateNeeded += u" fixConfig "
+				self.indiLOG.log(20,u" updateStatesDict ".format(self.updateStatesDict))
+				#self.executeUpdateStatesDict(onlyDevID=devId, calledFrom=u"validateDeviceConfigUi RPI")
 				return True, valuesDict
 
 			else:
@@ -3978,9 +3983,8 @@ class Plugin(indigo.PluginBase):
 					self.updateNeeded += u" fixConfig "
 					self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP"])
 
-			valuesDict = self.fillMemberListState(dev, valuesDict)
 
-			indigo.server.log(u"validateDeviceConfigUi_BLEconnect  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
+			#indigo.server.log(u"validateDeviceConfigUi_BLEconnect  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
 
 			return (True, valuesDict, errorDict)
 		except Exception, e:
@@ -4016,13 +4020,15 @@ class Plugin(indigo.PluginBase):
 
 			memberList = memberList.strip(u"/")
 			if dev.states[u"groupMember"] != memberList:
-				self.addToStatesUpdateDict(dev.id,u"groupMember", memberList)
+				self.addToStatesUpdateDict(dev.id, u"groupMember", memberList)
 				self.updateNeeded += u" fixConfig "
+				#self.indiLOG.log(20,u"fillMemberListState\ngroupListUsedNames:{}\ngroupStatusList:{}\nmemberList:{}\nstate:{}\n updateStatesDict:{}".format(self.groupListUsedNames, self.groupStatusList, memberList, dev.states[u"groupMember"], self.updateStatesDict))
 
 			return valuesDict
 		except Exception, e:
 			self.indiLOG.log(40,u"fillMemberListState Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			return  valuesDict
+		return  valuesDict
+
 
 
 ############ RPI- sensors  -------
@@ -4048,7 +4054,7 @@ class Plugin(indigo.PluginBase):
 			self.rPiRestartCommand[int(thisPi)] 	= u"master"
 			self.updateNeeded 					   += u" fixConfig "
 			self.saveConfig(only=u"RPIconf")
-			indigo.server.log(u"validateDeviceConfigUi_rPISensor ipNumberRpiSetStatic:{}".format(valuesDict[u"ipNumberRpiSetStatic"]))
+			#indigo.server.log(u"validateDeviceConfigUi_rPISensor ipNumberRpiSetStatic:{}".format(valuesDict[u"ipNumberRpiSetStatic"]))
 			return (True, valuesDict, errorDict)
 		except Exception, e:
 			self.indiLOG.log(40,u"setting up RPI-Sensor Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -4152,12 +4158,9 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,u"bad input for xyz-coordinates:{}".format(valuesDict[u"PosXYZ"]) )
 
 
-			valuesDict = self.fillMemberListState(dev, valuesDict)
 
-			self.executeUpdateStatesDict(calledFrom=u"validateDeviceConfigUi RPI")
 			self.updateNeeded += u" fixConfig "
 			self.saveConfig(only = u"RPIconf")
-
 			return (True, valuesDict, errorDict)
 		except Exception, e:
 			self.indiLOG.log(40,u"setting up RPI Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -4228,8 +4231,6 @@ class Plugin(indigo.PluginBase):
 
 				self.beacons[beacon][u"showBeaconOnMap"]		 = valuesDict[u"showBeaconOnMap"]
 				self.beacons[beacon][u"typeOfBeacon"]			 = valuesDict[u"typeOfBeacon"]
-
-				valuesDict = self.fillMemberListState(dev, valuesDict)
 
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 
@@ -11056,7 +11057,7 @@ class Plugin(indigo.PluginBase):
 					try :
 						dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
 						props = dev.pluginProps
-						if dev.states[u"groupMember"] !=u"": anyChange = True
+						if dev.states[u"groupMember"] != u"": anyChange = True
 						self.addToStatesUpdateDict(dev.id,u"status", self.beacons[beacon][u"status"])
 
 						if self.beacons[beacon][u"status"] == u"up":
@@ -18462,6 +18463,7 @@ configuration         - ==========  defined beacons ==============
 		devId=unicode(devId)
 		try:
 			try:
+				#if u"1076556263" ==devId: self.indiLOG.log(10,u"addToStatesUpdateDict(1) {}".format(devId, key, value))
 
 				for ii in range(10):
 					if self.executeUpdateStatesDictActive == u"":
@@ -18495,14 +18497,15 @@ configuration         - ==========  defined beacons ==============
 			if	unicode(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
 			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		self.executeUpdateStatesDictActive = u""
+		#if u"1076556263" == devId: self.indiLOG.log(10,u"addToStatesUpdateDict(2) {}, updateStatesDict".format(devId,self.updateStatesDict[devId]))
 		return newStates
 
 ####-------------------------------------------------------------------------####
 	def executeUpdateStatesDict(self,onlyDevID="0", calledFrom=u""):
 		try:
 			if len(self.updateStatesDict) == 0: return
-			#if u"1929700622" in self.updateStatesDict: self.indiLOG.log(5,u"executeUpdateStatesList calledfrom: "+calledFrom +u"; onlyDevID: " +onlyDevID +u"; updateStatesList: " +unicode(self.updateStatesDict))
 			onlyDevID = unicode(onlyDevID)
+			#if u"1076556263" in self.updateStatesDict: self.indiLOG.log(20,u"executeUpdateStatesList calledfrom: {}; onlyDevID: {}; updateStatesList: {}".format(calledFrom, onlyDevID, self.updateStatesDict))
 
 			for ii in range(10):
 				if	self.executeUpdateStatesDictActive == u"":
@@ -18577,7 +18580,7 @@ configuration         - ==========  defined beacons ==============
 									nKeys +=1
 									changedOnly[devId][u"lastSensorChange"] = {u"value":dateString,u"decimalPlaces":"",u"uiValue":""}
 
-					##if dev.name =="b-radius_3": self.indiLOG.log(5,	u"changedOnly "+unicode(changedOnly))
+					#if dev.id ==1076556263: self.indiLOG.log(10,	u"changedOnly "+unicode(changedOnly))
 					if devId in changedOnly and len(changedOnly[devId]) >0:
 						chList=[]
 						for key in changedOnly[devId]:
@@ -18637,6 +18640,7 @@ configuration         - ==========  defined beacons ==============
 
 						##if dev.name =="b-radius_3": self.indiLOG.log(5,	u"chList "+unicode(chList))
 
+						#if dev.id ==1076556263: self.indiLOG.log(10,	u"chList "+unicode(chList))
 						self.execUpdateStatesList(dev,chList)
 
 				if trigStatus !=u"":
