@@ -3575,6 +3575,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
 
+			<State id="note">
+			<ValueType>String</ValueType>
+			<TriggerLabel>note</TriggerLabel>
+			<ControlPageLabel>note</ControlPageLabel>
+			</State>
+
 			<State id="groupMember">
 			<ValueType>String</ValueType>
 			<TriggerLabel>groupMember</TriggerLabel>

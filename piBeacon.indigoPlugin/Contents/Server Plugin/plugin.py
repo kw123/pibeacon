@@ -76,6 +76,7 @@ _GlobalConst_emptyBeaconProps = {
 	u"memberOfGuests":				False,
 	u"memberOfOther1":				False,
 	u"memberOfOther2":				False,
+	u"memberOfOther3":				False,
 	u"useOnlyPrioTagMessageTypes":	u"0",
 	u"isBeaconDevice":				True,
 	u"SupportsStatusRequest":		False,
@@ -102,6 +103,11 @@ _GlobalConst_emptyrPiProps	  ={
 	u"SupportsStatusRequest":		False,
 	u"AllowOnStateChange":			False,
 	u"AllowSensorValueChange":		False,
+	u"memberOfFamily":				False,
+	u"memberOfGuests":				False,
+	u"memberOfOther1":				False,
+	u"memberOfOther2":				False,
+	u"memberOfOther3":				False,
 	u"PosXYZ":						u"0.,0.,0.",
 	u"BLEserial":					u"sequential",
 	u"shutDownPinInput" :			u"-1",
@@ -133,6 +139,11 @@ _GlobalConst_emptyRPI =	  {
 	u"authKeyOrPassword":		u"assword",
 	u"piUpToDate": 				[],
 	u"sensorList": 				u"0,u",
+	u"memberOfFamily":				False,
+	u"memberOfGuests":				False,
+	u"memberOfOther1":				False,
+	u"memberOfOther2":				False,
+	u"memberOfOther3":				False,
 	u"lastMessage":				0,
 	u"sendToIndigoSecs":		90,
 	u"sensorRefreshSecs":		20,
@@ -161,6 +172,11 @@ _GlobalConst_emptyRPISENSOR =	{
 	u"authKeyOrPassword": 	u"assword",
 	u"piDevId":				0,
 	u"piMAC":				u"",
+	u"memberOfFamily":				False,
+	u"memberOfGuests":				False,
+	u"memberOfOther1":				False,
+	u"memberOfOther2":				False,
+	u"memberOfOther3":				False,
 	u"piNumberReceived":	u"",
 	u"piOnOff":				u"0",
 	u"piUpToDate":			[],
@@ -436,9 +452,8 @@ class Plugin(indigo.PluginBase):
 
 			self.resetMinMaxSensors(init=True)
 
-			self.statusChanged = 0
-
-			self.setGroupStatus(init=True)
+			self.statusChanged == 99
+			self.setGroupStatus()
 
 			self.checkPiEnabled()
 
@@ -712,6 +727,8 @@ class Plugin(indigo.PluginBase):
 
 					if dev.deviceTypeId == u"BLEconnect":
 						props[u"isBLEconnectDevice"] = True
+						if dev.enabled:
+							dev.updateStateOnServer(u"note",u"BLEconnect")
 
 					if dev.deviceTypeId in _GlobalConst_allowedSensors or dev.deviceTypeId in _BLEsensorTypes:
 						props[u"isSensorDevice"] = True
@@ -957,7 +974,9 @@ class Plugin(indigo.PluginBase):
 			self.knownBeaconTags 			= {}
 
 			self.setLogfile(u"indigo")  #    self.pluginPrefs.get(u"logFileActive2", u"standard"))
-
+			self.loopSleepTime				= 9.0
+			self.setGroupStatusrepeat		= self.loopSleepTime *3.3
+			self.setGroupStatusNextCheck 	= time.time() + self.setGroupStatusrepeat +10
 			self.beaconsFileSort			= True
 			self.parametersFileSort			= True
 			self.RPIFileSort				= True
@@ -1049,7 +1068,6 @@ class Plugin(indigo.PluginBase):
 					xx = self.pluginPrefs[u"groupName{}".format(nn)]
 					if len(xx) >0: self.groupListUsedNames[group] = xx
 				except: pass
-			indigo.server.log(unicode(self.groupListUsedNames))
 
 			try:				self.iBeaconDevicesFolderName		= self.pluginPrefs.get(u"iBeaconFolderName", u"Pi_Beacons_new")
 			except:				self.iBeaconDevicesFolderName		= u"Pi_Beacons_new"
@@ -1191,7 +1209,7 @@ class Plugin(indigo.PluginBase):
 			self.groupStatusList={}
 			for group in _GlobalConst_groupList:
 				self.groupStatusList[group] = {u"members":{},"allHome":"0", u"allAway":"0", u"oneHome":u"0", u"oneAway":u"0", u"nHome":0,u"nAway":0}
-			self.groupStatusListALL			= {u"nHome":0,"nAway":0,u"anyChange":False}
+			self.groupStatusListALL			= {}
 			self.groupCountNameDefault		= self.pluginPrefs.get(u"groupCountNameDefault",u"iBeacon_Count_")
 			self.ibeaconNameDefault			= self.pluginPrefs.get(u"ibeaconNameDefault",u"iBeacon_")
 			self.triggerList				= []
@@ -1273,9 +1291,11 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setGroupStatus(self, init=False, devIdSelected=u""):
-		self.statusChanged = 0
+	def setGroupStatus(self):
 		try:
+			## check if we should do the group variable check now 
+			if time.time() - self.setGroupStatusNextCheck < 0 and self.statusChanged == 0: return 
+			#self.indiLOG.log(10,u"setGroupStatus at:{};   dt:{}, statusChanged:{}".format(datetime.datetime.now(), time.time() - self.setGroupStatusNextCheck, self.statusChanged ))
 
 			triggerGroup= {}
 			for group in _GlobalConst_groupList:
@@ -1284,33 +1304,49 @@ class Plugin(indigo.PluginBase):
 			for group in  _GlobalConst_groupList:
 				self.groupStatusList[group][u"nAway"] = 0
 				self.groupStatusList[group][u"nHome"] = 0
-			self.groupStatusListALL[u"nHome"] = 0
-			self.groupStatusListALL[u"nAway"] = 0
+			for xx in ["BEACON","PI","BLEconnect"]:
+				if xx not in self.groupStatusListALL:
+					self.groupStatusListALL[xx] = {}
+				self.groupStatusListALL[xx][u"nHome"] = 0
+				self.groupStatusListALL[xx][u"nAway"] = 0
 
 			okList =[]
+			memberListNames = []
+			for group in _GlobalConst_groupList:
+				memberListNames.append(self.groupListUsedNames[group])
 
-			for beacon	in self.beacons:
-				if self.beacons[beacon][u"note"].find(u"beacon") !=0: continue
-				if self.beacons[beacon][u"indigoId"] ==0 or self.beacons[beacon][u"indigoId"] ==u"": continue
-				try:
-					dev= indigo.devices[self.beacons[beacon][u"indigoId"]]
-				except:
-					continue
+ 			for dev	in indigo.devices.iter(u"props.isBeaconDevice,props.isRPIDevice,props.isRPISensorDevice,props.isBLEconnectDevice"):
+				if u"groupMember" not in dev.states: 					continue
+				if not dev.enabled:	 									continue
 
-				if dev.deviceTypeId != u"beacon":	  continue
-				if dev.states[u"status"] == u"up":
-					self.groupStatusListALL[u"nHome"]	  +=1
-				else:
-					self.groupStatusListALL[u"nAway"]	  +=1
-
+				if u"note" in dev.states:
+					for xx in ["BEACON","PI","BLEconnect"]:	
+						
+						if dev.states[u"note"].lower().find(xx.lower()) >-1:
+							if dev.states[u"status"] == u"up":
+								self.groupStatusListALL[xx][u"nHome"]	  +=1
+							else:
+								self.groupStatusListALL[xx][u"nAway"]	  +=1
 				if dev.states[u"groupMember"] == u"": continue
-				if devIdSelected != u"" and dev.id  !=devIdSelected:	continue
-				if not dev.enabled:	 continue
+
+				memberOfGroupsInState = dev.states[u"groupMember"].split("/")
+
+				if True: # check if wrong definitions of member groups and change to new name if needed
+					usedMemberStates = ""
+					for member in memberOfGroupsInState:
+						if member in memberListNames:
+							usedMemberStates += member+"/"
+					usedMemberStates = usedMemberStates.strip("/")
+					if usedMemberStates != dev.states[u"groupMember"]:
+						valuesDict = self.fillMemberListState( dev, dev.pluginProps, updateNow=True)
+						memberOfGroupsInState = valuesDict[u"memberList"].split("/")
+					if memberOfGroupsInState == []: continue
+	
 				okList.append(unicode(dev.id))
 				for group in _GlobalConst_groupList:
 					groupNameUsedForVar = self.groupListUsedNames[group]
-					if groupNameUsedForVar != u"" and groupNameUsedForVar in dev.states[u"groupMember"]:
-						self.groupStatusList[group][u"members"][unicode(dev.id)] = True
+					if groupNameUsedForVar != u"" and groupNameUsedForVar in memberOfGroupsInState:
+						self.groupStatusList[group][u"members"][unicode(dev.id)] = dev.name
 						if dev.states[u"status"] == u"up":
 							if self.groupStatusList[group][u"oneHome"] == u"0":
 								triggerGroup[group][u"oneHome"]			= True
@@ -1322,29 +1358,8 @@ class Plugin(indigo.PluginBase):
 							self.groupStatusList[group][u"oneAway"]		= u"1"
 							self.groupStatusList[group][u"nAway"]		+=1
 
- 			for dev	in indigo.devices.iter(u"props.isBLEconnectDevice"):
-				if not dev.enabled: continue
-				okList.append(unicode(dev.id))
-				props = dev.pluginProps
-				for group in _GlobalConst_groupList:
-					if u"groupMember" not in dev.states: continue
-					groupNameUsedForVar = self.groupListUsedNames[group]
-					if groupNameUsedForVar != u"" and groupNameUsedForVar in dev.states[u"groupMember"]:
-						self.groupStatusList[group][u"members"][unicode(dev.id)] = True
-						if dev.states[u"status"] == u"up":
-							if self.groupStatusList[group][u"oneHome"] == u"0":
-								triggerGroup[group][u"oneHome"]			= True
-								self.groupStatusList[group][u"oneHome"]	= u"1"
-							self.groupStatusList[group][u"nHome"]		+=1
-						else:
-							if self.groupStatusList[group][u"oneAway"] == u"0":
-								triggerGroup[group][u"oneAway"]			= True
-							self.groupStatusList[group][u"oneAway"]		= u"1"
-							self.groupStatusList[group][u"nAway"]		+=1
 
-				continue
-
-
+			# remove old ones
 			for group in  _GlobalConst_groupList:
 					removeList=[]
 					for member in self.groupStatusList[group][u"members"]:
@@ -1358,7 +1373,7 @@ class Plugin(indigo.PluginBase):
 							if varName in indigo.variables:
 								indigo.variable.delete(varName)
 
-
+			# now all home/ away 
 			for group in _GlobalConst_groupList:
 				if self.groupStatusList[group][u"nAway"] == len(self.groupStatusList[group][u"members"]):
 					if self.groupStatusList[group][u"allAway"] == u"0":
@@ -1398,20 +1413,21 @@ class Plugin(indigo.PluginBase):
 
 
 
-			for tType in [u"Home", u"Away"]:
-				varName = self.groupCountNameDefault+u"ALL_"+tType
-				gName = u"n"+tType
-				try:
-					var = indigo.variables[varName]
-				except:
-					indigo.variable.create(varName, u"", self.iBeaconFolderVariablesName)
-					var = indigo.variables[varName]
+			for xx in ["BEACON","PI","BLEconnect"]:
+				for tType in [u"Home", u"Away"]:
+					varName = self.groupCountNameDefault+xx+u"_"+tType
+					gName = u"n"+tType
+					try:
+						var = indigo.variables[varName]
+					except:
+						indigo.variable.create(varName, u"", self.iBeaconFolderVariablesName)
+						var = indigo.variables[varName]
 
-				if var.value !=	 unicode(self.groupStatusListALL[gName]):
-					indigo.variable.updateValue(varName,unicode(self.groupStatusListALL[gName]))
+					if var.value !=	 unicode(self.groupStatusListALL[xx][gName]):
+						indigo.variable.updateValue(varName,unicode(self.groupStatusListALL[xx][gName]))
 
 
-			if	init != u"init" and len(self.triggerList) > 0:
+			if	self.statusChanged != 99 and len(self.triggerList) > 0:
 				for group in triggerGroup:
 					for tType in triggerGroup[group]:
 						if triggerGroup[group][tType]:
@@ -1420,7 +1436,9 @@ class Plugin(indigo.PluginBase):
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-
+		self.setGroupStatusNextCheck = time.time() +  self.setGroupStatusrepeat
+		self.statusChanged = 0
+		return 
 
 ######################################################################################
 	# Indigo Trigger Start/Stop
@@ -3319,10 +3337,18 @@ class Plugin(indigo.PluginBase):
 						else:
 							props[prop] = False
 
+		if False and u"groupMember" in dev.states:
+			gps = dev.states[u"groupMember"].split("/")
+			if len(gps) >0:
+				for groupName in gps:
+					for group in self.groupListUsedNames:
+						if groupName == self.groupListUsedNames[group]:
+							if unicode(dev.id) not in self.groupStatusList[group][u"members"]:
+								self.groupStatusList[group][u"members"][unicode(dev.id) ] = True
 
 
 		updatedev = False
-		if dev.deviceTypeId == u"rPI":
+		if dev.deviceTypeId.find(u"rPI") > -1:
 			for prop in _GlobalConst_emptyrPiProps:
 				if prop not in props:
 					updateProps = True
@@ -3579,7 +3605,6 @@ class Plugin(indigo.PluginBase):
 						self.deviceStopCommIgnore = time.time()
 						dev.replacePluginPropsOnServer(props)
 
-				self.statusChanged=2
 
 			if dev.deviceTypeId == u"beacon":
 				updProps = False
@@ -3662,7 +3687,7 @@ class Plugin(indigo.PluginBase):
 					self.deviceStopCommIgnore = 0
 					self.updateNeeded = u" disable stopcomm called "
 
-				self.statusChanged=2
+				#self.statusChanged = 2
 
 			if dev.deviceTypeId.find(u"rPI") > -1:
 				piNo = dev.states[u"note"].split(u"-")
@@ -3736,7 +3761,7 @@ class Plugin(indigo.PluginBase):
 
 						theDictList[0][u"newIPNumber"]    = self.RPI[piU][u"ipNumberPi"]
 						theDictList[0][u"ipNumberRpiSetStatic"] = self.RPI[piU][u"ipNumberRpiSetStatic"]
-						indigo.server.log(u"getDeviceConfigUiValues ipNumberRpiSetStatic:{}".format(self.RPI[piU][u"ipNumberRpiSetStatic"]))
+						#indigo.server.log(u"getDeviceConfigUiValues ipNumberRpiSetStatic:{}".format(self.RPI[piU][u"ipNumberRpiSetStatic"]))
 						theDictList[0][u"newpasswordPi"]  = self.RPI[piU][u"passwordPi"]
 						theDictList[0][u"newuserIdPi"]    = self.RPI[piU][u"userIdPi"]
 						theDictList[0][u"newauthKeyOrPassword"]   = self.RPI[piU][u"authKeyOrPassword"]
@@ -3767,7 +3792,7 @@ class Plugin(indigo.PluginBase):
 					else:
 						theDictList[0][u"isRPION"+piUstr] = False
 
-			if u"memberOfFamily" in theDictList[0] or typeId in [u"beacon", u"rPI", u"BLEconnect"]:
+			if u"memberOfFamily" in theDictList[0] or typeId in [u"beacon", u"rPI",u"rPI-Sensor", u"BLEconnect"]:
 				for nn in range(len(_GlobalConst_groupList)):
 					group = _GlobalConst_groupList[nn]
 					groupNameUsedForVar = self.groupListUsedNames[group]
@@ -3898,7 +3923,6 @@ class Plugin(indigo.PluginBase):
 			if retCode:
 				valuesDict = self.fillMemberListState(dev, valuesDict)
 				self.updateNeeded += u" fixConfig "
-				self.indiLOG.log(20,u" updateStatesDict ".format(self.updateStatesDict))
 				#self.executeUpdateStatesDict(onlyDevID=devId, calledFrom=u"validateDeviceConfigUi RPI")
 				return True, valuesDict
 
@@ -3993,8 +4017,9 @@ class Plugin(indigo.PluginBase):
 			return ( False, valuesDict, errorDict )
 
 ############
-	def fillMemberListState(self, dev, valuesDict):
+	def fillMemberListState(self, dev, valuesDict, updateNow=False):
 		try:
+			devId = unicode(dev.id)
 			memberList = u""
 			for nn in range(len(_GlobalConst_groupList)):
 				group = _GlobalConst_groupList[nn]
@@ -4005,28 +4030,32 @@ class Plugin(indigo.PluginBase):
 					if len(groupNameUsedForVar) == 0:
 						valuesDict[GN] = False
 
-					if unicode(valuesDict[GN]).lower() == u"true":
+					if valuesDict[GN]:
 						memberList += groupNameUsedForVar+u"/"
-						if unicode(dev.id) not in self.groupStatusList[group][u"members"]:
-							self.groupStatusList[group][u"members"][unicode(dev.id)] = True
+						if devId not in self.groupStatusList[group][u"members"]:
+							self.groupStatusList[group][u"members"][devId] = dev.name
 					else:
-						if unicode(dev.id) in self.groupStatusList[group][u"members"]:
-							del self.groupStatusList[group][u"members"][unicode(dev.id)]
+						if devId in self.groupStatusList[group][u"members"]:
+							del self.groupStatusList[group][u"members"][devId]
 
 				else:
-						if unicode(dev.id) in self.groupStatusList[group][u"members"]:
-							del self.groupStatusList[group][u"members"][unicode(dev.id)]
+						if devId in self.groupStatusList[group][u"members"]:
+							del self.groupStatusList[group][u"members"][devId]
 
 
 			memberList = memberList.strip(u"/")
 			if dev.states[u"groupMember"] != memberList:
-				self.addToStatesUpdateDict(dev.id, u"groupMember", memberList)
-				self.updateNeeded += u" fixConfig "
+				if  updateNow:
+					dev.updateStateOnServer( u"groupMember", memberList)
+					valuesDict["memberList"] = memberList
+				else:
+					self.addToStatesUpdateDict(dev.id, u"groupMember", memberList)
+					self.updateNeeded += u" fixConfig "
 				#self.indiLOG.log(20,u"fillMemberListState\ngroupListUsedNames:{}\ngroupStatusList:{}\nmemberList:{}\nstate:{}\n updateStatesDict:{}".format(self.groupListUsedNames, self.groupStatusList, memberList, dev.states[u"groupMember"], self.updateStatesDict))
-
-			return valuesDict
 		except Exception, e:
 			self.indiLOG.log(40,u"fillMemberListState Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(40,u"fillMemberListState valuesDict".format(valuesDict))
+		valuesDict["memberList"] = memberList
 		return  valuesDict
 
 
@@ -10352,11 +10381,11 @@ class Plugin(indigo.PluginBase):
 		try:
 			while self.quitNow == u"":
 				self.countLoop += 1
-				self.sleep(9.)
+				self.sleep(self.loopSleepTime)
 
 				if self.countLoop > 2:
 					anyChange= self.periodCheck()
-					self.checkGroups()
+					self.setGroupStatus()
 					if self.enableFING == u"1":
 						self.updateFING(u"loop ")
 					if len(self.sendBroadCastEventsList) >0: self.sendBroadCastNOW()
@@ -10392,10 +10421,6 @@ class Plugin(indigo.PluginBase):
 
 		return
 
-
-####-------------------------------------------------------------------------####
-	def checkGroups(self):
-		self.setGroupStatus(init=self.statusChanged ==2)
 
 ####-------------------------------------------------------------------------####
 
@@ -10848,6 +10873,7 @@ class Plugin(indigo.PluginBase):
 
 
 				if dev.states[u"status"] != status or self.initStatesOnServer or force:
+					self.statusChanged = 3
 					if u"lastStatusChange" in dev.states:
 						lastStatusChangeDT   =  time.time() - self.getTimetimeFromDateString(dev.states[u"lastStatusChange"])
 					if lastStatusChangeDT > 3:
@@ -10918,13 +10944,18 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id,u"online", u"expired")
 						dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
 						if piU in _rpiBeaconList:
-							self.addToStatesUpdateDict(dev.id,u"status", u"expired")
+							if dev.states[u"status"] != u"expired":
+								self.addToStatesUpdateDict(dev.id,u"status", u"expired")
+								self.statusChanged = 4
+
 					continue
 
 				if time.time()- self.RPI[piU][u"lastMessage"] > 240:
 					self.addToStatesUpdateDict(dev.id,u"online", u"expired")
 					if piU in _rpiSensorList:
-						self.addToStatesUpdateDict(dev.id,u"status", u"expired")
+						if dev.states[u"status"] != u"expired":
+							self.addToStatesUpdateDict(dev.id,u"status", u"expired")
+							self.statusChanged = 5
 						dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
 					else:
 						if dev.states[u"status"] in [u"down",u"expired"]:
@@ -10937,7 +10968,9 @@ class Plugin(indigo.PluginBase):
 				elif time.time()- self.RPI[piU][u"lastMessage"] >120:
 					self.addToStatesUpdateDict(dev.id,u"online", u"down")
 					if piU in _rpiSensorList:
-						self.addToStatesUpdateDict(dev.id,u"status", u"down")
+						if dev.states[u"status"] != u"down":
+							self.addToStatesUpdateDict(dev.id,u"status", u"down")
+							self.statusChanged = 6
 						dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
 					else:
 						if dev.states[u"status"] in [u"down",u"expired"]:
@@ -11053,6 +11086,7 @@ class Plugin(indigo.PluginBase):
 				if changed or force:
 					if self.decideMyLog(u"BeaconData"): self.indiLOG.log(5,u" CheckPeriod -5- :{}; changed=true or force {}" .format(beacon, self.beacons[beacon][u"status"]) )
 
+					self.statusChanged = 7
 
 					try :
 						dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
@@ -11672,8 +11706,6 @@ class Plugin(indigo.PluginBase):
 			## alive message?
 			if varNameIN == u"pi_IN_Alive":
 				self.updateRPIAlive(varJson,varUnicode, time.time())
-				if self.statusChanged > 0:
-					self.setGroupStatus()
 				return
 
 			## check pi#s  etc
@@ -11837,9 +11869,6 @@ class Plugin(indigo.PluginBase):
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			self.indiLOG.log(40,varUnicode)
-
-		if self.statusChanged > 0:
-			self.setGroupStatus()
 		return beaconUpdatedIds
 
 ####-------------------------------------------------------------------------####
@@ -12253,6 +12282,7 @@ class Plugin(indigo.PluginBase):
 			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 			if dev.states[u"status"] != u"up" :
 				self.addToStatesUpdateDict(dev.id,u"status", u"up")
+				self.statusChanged = 8
 
 			if dev.states[u"online"] != u"up":
 				self.addToStatesUpdateDict(dev.id,u"online", u"up")
@@ -12332,6 +12362,7 @@ class Plugin(indigo.PluginBase):
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 				if u"status" in dev.states and dev.states[u"status"] != u"up":
 					self.addToStatesUpdateDict(unicode(devID),u"status", u"up")
+					self.statusChanged = 9
 				if u"online" in dev.states and dev.states[u"online"] != u"up":
 					self.addToStatesUpdateDict(dev.id,u"online", u"up")
 				return
@@ -12349,7 +12380,9 @@ class Plugin(indigo.PluginBase):
 					#dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 					self.addToStatesUpdateDict(dev.id,u"online", u"down")
 					if piU in _rpiSensorList:
-						self.addToStatesUpdateDict(dev.id,u"status", u"down")
+						if u"status" in dev.states and dev.states[u"status"] != u"down":
+							self.addToStatesUpdateDict(dev.id,u"status", u"down")
+							self.statusChanged = 10
 					return
 
 
@@ -12520,14 +12553,14 @@ class Plugin(indigo.PluginBase):
 
 			if rssi !=-999: # dont set status for fast down messages, is done before
 				currStatus =  self.getCurrentState(dev,devIds,"status", fromMETHOD="calcPostion5")
-				if currStatus!= status :
+				if currStatus != status :
 					if u"lastStatusChange" in dev.states:
 						try: lastStatusChangeDT  =  time.time() - self.getTimetimeFromDateString(dev.states[u"lastStatusChange"])
 						except Exception, e:
 								if unicode(e) != u"None":
 									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-					if lastStatusChangeDT > 3. :
-						update=True
+					if lastStatusChangeDT > 3.:
+						update = True
 						self.addToStatesUpdateDict(dev.id,u"status", status)
 						if	(u"note" in dev.states and dev.states[u"note"].find(u"beacon") >-1) or dev.deviceTypeId ==u"BLEconnect":
 							if status ==u"up":
@@ -12536,6 +12569,7 @@ class Plugin(indigo.PluginBase):
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							elif status ==u"expired":
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+					self.statusChanged = 11
 
 			distanceToRpi = sorted(distanceToRpi)
 			PijjPosition	= []
@@ -15477,6 +15511,7 @@ class Plugin(indigo.PluginBase):
 						for sMAC in self.selectBeaconsLogTimer:
 							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
 								self.indiLOG.log(10,u"sel.beacon logging: newMSG-999-2  - :{};  set status to down\nnewStates:{}".format(mac, unicode(newStates).replace(u"\n","") ))
+					self.statusChanged = 12
 			return updateSignal, updateFINGnow, newStates
 
 		except Exception, e:
@@ -15562,6 +15597,7 @@ class Plugin(indigo.PluginBase):
 					if newStates[u"status"] != u"up":
 						if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 						newStates=self.addToStatesUpdateDict(dev.id,u"status", u"up",newStates=newStates)
+						self.statusChanged = 13
 						self.beacons[mac][u"updateFING"] = 1
 						updateFINGnow = True
 						self.beacons[mac][u"status"] = u"up"
@@ -15799,6 +15835,7 @@ class Plugin(indigo.PluginBase):
 				self.RPI[fromPiU][u"piMAC"]						= piMACSend
 				self.setONErPiV(frompiU,u"piUpToDate", [u"updateParamsFTP",u"rebootSSH"])
 				self.fixConfig(checkOnly = [u"all",u"rpi",u"force"],fromPGM=u"updateBeaconStates1") # updateBeaconStates # ok only if new MAC for rpi ...
+				self.statusChanged = 14
 
 		except Exception, e:
 			if unicode(e).find(u"timeout waiting") > -1:
@@ -15949,6 +15986,7 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(10,u"new beacon logging: created:"+unicode(dateString.split(u" ")[1])+u" "+mac+u" "+ name.ljust(20)+u" "+ typeOfBeacon.ljust(25)+ u"  pi#="+fromPiU+ u" rssi="+unicode(rssi)+ u"  txPower="+unicode(txPower))
 
 				setALLrPiVUpdate = u"updateParamsFTP"
+				self.statusChanged = 15
 
 				dev = indigo.devices[name]
 				newStates = copy.copy(dev.states)
@@ -18160,11 +18198,14 @@ configuration         - ==========  defined beacons ==============
 	def printGroups(self):
 		############## list groups with members
 		try:
-			indigo.server.log(u"printGroups  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
+			out = u"printGroups============ "
+			out+= u"\ngroupListUsedNames:{:30s}".format(self.groupListUsedNames)
+			for gr in self.groupStatusList:
+				out+= u"\n{} : {}".format(gr,self.groupStatusList[gr])
 
-			self.myLog( text = u"", mType= u"pi configuration")
-			self.myLog( text = u"========== beacon groups    ================", mType= u"pi configuration")
-			self.myLog( text = u"GroupName-----             members // counts ",mType= u"pi configuration")
+			out+= u"\n"
+			out+= u"\n========== beacon groups    ===================================="
+			out+= u"\ndev                                  groupMember in"
 
 			groupMemberNames = {}
 			for group in _GlobalConst_groupList:
@@ -18173,34 +18214,39 @@ configuration         - ==========  defined beacons ==============
  			for dev	in indigo.devices.iter(self.pluginId):
 				if u"groupMember" not in dev.states:  continue
 				if dev.states[u"groupMember"] == u"": continue
-				indigo.server.log(u"printGroups   dev:{}  groupMember:{}".format(dev.name, dev.states[u"groupMember"]))
+				out+= u"\n{:35s}: {}".format(dev.name, dev.states[u"groupMember"])
 
-				for group in self.groupListUsedNames:
-					if self.groupListUsedNames[group] !=u"" and  self.groupListUsedNames[group] in dev.states[u"groupMember"]:
-						groupMemberNames[group] += dev.name +u"; "
-					indigo.server.log(u"printGroups   group:{}  groupNameUsedForVar:{}  groupMemberNames:{}".format(group, self.groupListUsedNames[group], groupMemberNames[group]))
+				gps = dev.states[u"groupMember"].split("/")
+				if len(gps) >0:
+					for groupName in gps:
+						for group in self.groupListUsedNames:
+							if groupName == self.groupListUsedNames[group]:
+								groupMemberNames[group] += u"{},".format(dev.name)
+				 
+			out+= u"\ngroup       groupNameUsedForVar groupMemberNames ------------------  "
+			for group in self.groupListUsedNames:
+				out+= u"\n{:10s}  {:18s}: {:}".format(group, self.groupListUsedNames[group], groupMemberNames[group])
 
 			for nn in range(len(_GlobalConst_groupList)):
 				group = _GlobalConst_groupList[nn]
 				groupNameUsedForVar = self.groupListUsedNames[group]
 				if groupNameUsedForVar == u"" and groupMemberNames[group] !=u"":
 					groupNameUsedForVar = "please edit devs, set member"
-				self.myLog( text = u"{}/{:20s}:{}" .format(group, groupNameUsedForVar, groupMemberNames[group]),mType= u"pi configuration")
-				out=u"                           "
-				out+=u"nHome: {};".format(self.groupStatusList[group][u"nHome"])
-				out+=u" oneHome: {};".format(self.groupStatusList[group][u"oneHome"])
-				out+=u" allHome: {};".format(self.groupStatusList[group][u"allHome"])
-				out+=u"    nAway: {};".format(self.groupStatusList[group][u"nAway"])
-				out+=u" oneAway: {};".format(self.groupStatusList[group][u"oneAway"])
-				out+=u" allAway: {};".format(self.groupStatusList[group][u"allAway"])
-				out+=u"    memberIDs: "
+				out+= u"\n{}/{:20s}:{}" .format(group, groupNameUsedForVar, groupMemberNames[group])
+				out+= u"\n                            "
+				out+= u"nHome: {};".format(self.groupStatusList[group][u"nHome"])
+				out+= u" oneHome: {};".format(self.groupStatusList[group][u"oneHome"])
+				out+= u" allHome: {};".format(self.groupStatusList[group][u"allHome"])
+				out+= u"    nAway: {};".format(self.groupStatusList[group][u"nAway"])
+				out+= u" oneAway: {};".format(self.groupStatusList[group][u"oneAway"])
+				out+= u" allAway: {};".format(self.groupStatusList[group][u"allAway"])
+				out+= u"\n                            "
+				out+= u"memberIDs: "
 				for member in self.groupStatusList[group][u"members"]:
-					out+= member+u"; "
-				self.myLog( text = out,mType=u"pi configuration")
-			self.myLog( text = u"", mType= u"pi configuration")
-
-
-			self.myLog( text = u" ==========  Parameters END ================", mType=  u"pi configuration")
+					out+= u"{}:{}; ".format(member,self.groupStatusList[group][u"members"][member])
+			out+= u"\n ==========  Parameters END ================"
+			out+= u"\n"
+			self.indiLOG.log(20,out)
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -18585,7 +18631,6 @@ configuration         - ==========  defined beacons ==============
 						chList=[]
 						for key in changedOnly[devId]:
 							if key ==u"status":
-								self.statusChanged = max(1,self.statusChanged)
 								value =changedOnly[devId][key][u"value"]
 								if u"lastStatusChange" in dev.states and u"lastStatusChange" not in changedOnly[devId]:
 									try:

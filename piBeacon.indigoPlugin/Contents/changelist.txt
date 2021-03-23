@@ -1,3 +1,12 @@
+Added features / changes in v7.135.514@ 2021-03-22
+===================================================
+   
+1. added variables for all PI, BLEconnect and beacon devices: # of devices home and away
+   this can be used to trigger is any change in # of devices home/away changes
+   this is in addition to the regular groups: Family, guests, other 1,2 3 
+     this groups can be named as you like in config
+
+
 Added features / changes in v7.135.513@ 2021-03-21
 ===================================================
    
