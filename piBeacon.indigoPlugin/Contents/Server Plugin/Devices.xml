@@ -3323,7 +3323,7 @@ This device type will ping BLE enabled phones and set staus up/down similar to i
 			<Field id="macAddress" type="textfield"     defaultValue="">
 				<Label>Enter MAC number for this device: </Label>
 			</Field>
-
+/Volumes/hs/Library/Application Support/Perceptive Automation/Indigo 7.5/Plugins/piBeacon.indigoPlugin/Contents/Server Plugin/Devices.xml:14435: 				<TriggerLabel>CO2calibration</TriggerLabel>
 			<Field id="label01"               type="label" >
 				<Label>Enable BLE connect search on the following rPi</Label>
 			</Field>
