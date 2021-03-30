@@ -284,6 +284,7 @@ _GlobalConst_allowedSensors = [
 	 u"moistureSensor",
 	 u"launchpgm",
 	 u"sgp30",																  # co2 voc
+	 u"sgp40",																  # voc
 	 u"as3935",																	# lightning sensor
 	 u"i2cMLX90614", u"mlx90614",												   # remote	 temp &ambient temp
 	 u"ina219",																	 # current and V
@@ -307,7 +308,7 @@ _GlobalConst_lightSensors = [
 	u"i2cVEML6075",u"i2cIS1145",u"i2cOPT3001",u"i2cTCS34725",u"i2cTSL2561",u"i2cVEML6070",u"i2cVEML6040",u"i2cVEML7700"]
 
 _GlobalConst_i2cSensors	  = [
-	u"si7021",u"bme680",u"bmp388",u"amg88xx",u"mlx90640", u"ccs811",u"sgp30", u"mlx90614", u"ina219", u"ina3221", u"as726x", u"as3935", u"moistureSensor", u"PCF8591", u"ADS1x15",
+	u"si7021",u"bme680",u"bmp388",u"amg88xx",u"mlx90640", u"ccs811",u"sgp30",u"sgp40", u"mlx90614", u"ina219", u"ina3221", u"as726x", u"as3935", u"moistureSensor", u"PCF8591", u"ADS1x15",
 	u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960", u"MAX44009"]
 
 _GlobalConst_allowedOUTPUT = [
@@ -3777,6 +3778,7 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,u" bad device type:   {}   not in registed types:\n,_GlobalConst_allowedSensors:{}\n _BLEsensorTypes:{}\n _GlobalConst_allowedOUTPUT:{}\n... ".format(typeId, _GlobalConst_allowedSensors, _BLEsensorTypes, _GlobalConst_allowedOUTPUT))
 
 
+
 			if retCode:
 				valuesDict = self.fillMemberListState(dev, valuesDict)
 				self.updateNeeded += u" fixConfig "
@@ -3876,7 +3878,7 @@ class Plugin(indigo.PluginBase):
 ############
 	def fillMemberListState(self, dev, valuesDict, updateNow=False):
 		try:
-			if u"groupMember" not in dev.states: return 
+			if u"groupMember" not in dev.states: return valuesDict
 			devId = unicode(dev.id)
 			memberList = u""
 			for nn in range(len(_GlobalConst_groupList)):
@@ -13006,6 +13008,24 @@ class Plugin(indigo.PluginBase):
 							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
 							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
+						except Exception, e:
+							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.indiLOG.log(10,unicode(props))
+
+					if sensor in [u"sgp40"]:
+						try:
+							x = int(float(data[u"VOC"]))
+							UI = u"VOC index {:.0f}".format(float(data[u"VOC"]))
+							if   x < 101: UI += " very good"
+							elif x < 201: UI += " good"
+							elif x < 301: UI += " ok"
+							elif x < 401: UI += " bad"
+							else:         UI += " very bad"
+							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]))
 
 						except Exception, e:
 							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

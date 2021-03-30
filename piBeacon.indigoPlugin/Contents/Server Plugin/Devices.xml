@@ -14225,7 +14225,160 @@ After some days of running in clean air, proposed setup is:
 		</States>
 	</Device>
    
+   
+	<Device type="sensor" id="sgp40">     	<Name>INPUT-VOC-i2csgp40</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup sgp40  VOC sensor on individual rPis.. 
+    connect 3.3, GND, SDA, SCL. The sensor does not show on i2detect -y 1 sometimes
+    the VOC index value goes from 0 to 500 
+    calibration is set fixed to 20C and 50% Humidity
+    0-100:   good
+    100-200: ok
+    200-400: ventilate, purify
+    400-500: ventilate, purify intensely
+  </Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="6" hidden="no" > 
+			<Label>Min secs between indigo updates - not more often:</Label>
+			<List>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+			</List>
+			</Field>
+			<Field id="deltaX" type="menu"     defaultValue="5" hidden="no" > 
+			<Label>delta value (%) to trigger indigo update:</Label>
+			<List>
+				<Option value="1"    > 1</Option>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
+			</List>
+			</Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="VOC"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="VOC"     >VOC</Option>
+			</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="x &lt; 110">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="x &lt; 401">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x &lt; 501">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot; 
+  &quot;x &lt; 33&quot; 
+  &quot;33 &lt;= x and x &lt;= 66&quot; 
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color 
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+
+			<State id="raw">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>raw</TriggerLabel>
+				<ControlPageLabel>raw</ControlPageLabel>
+			</State>
+
+			<State id="VOC">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOC</TriggerLabel>
+				<ControlPageLabel>VOC</ControlPageLabel>
+			</State>
+
+			<State id="VOCMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCMaxToday</TriggerLabel>
+				<ControlPageLabel>VOCMaxToday</ControlPageLabel>
+			</State>
+
+			<State id="VOCMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCMinToday</TriggerLabel>
+				<ControlPageLabel>VOCMinToday</ControlPageLabel>
+			</State>
+
+			<State id="VOCMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCMaxYesterday</TriggerLabel>
+				<ControlPageLabel>VOCMaxYesterday</ControlPageLabel>
+			</State>
+
+			<State id="VOCMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCMinYesterday</TriggerLabel>
+				<ControlPageLabel>VOCMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="VOCChange5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange5Minutes</TriggerLabel>
+				<ControlPageLabel>VOCChange5Minutes</ControlPageLabel>
+			</State>
+
+			<State id="VOCChange20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange20Minutes</TriggerLabel>
+				<ControlPageLabel>VOCChange20Minutes</ControlPageLabel>
+			</State>
+
+			<State id="VOCChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VOCChange1Hour</TriggerLabel>
+				<ControlPageLabel>VOCChange1Hour</ControlPageLabel>
+			</State>
+
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+  
    
 	<Device type="sensor" id="mhzCO2">     	<Name>INPUT-CO2-MH-Zxx</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
