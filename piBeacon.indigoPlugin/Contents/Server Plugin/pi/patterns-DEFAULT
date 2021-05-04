@@ -1,0 +1,58 @@
+{
+  "marks":[
+   {    "DD": {"RGB": [0,0,0], "marks": [], "ringNo":[]}, 
+        "HH": {"RGB": [0,0,0], "marks": [], "ringNo":[]}, 
+        "MM": {"RGB": [0,0,0], "marks": [], "ringNo":[]}, 
+        "SS": {"RGB": [0,0,0], "marks": [], "ringNo":[]}
+    },
+   {    "DD": {"RGB": [0,0,0],   "marks": [],  "ringNo":[]}, 
+        "HH": {"RGB": [55,55,0], "marks": [],  "ringNo":[]}, 
+        "MM": {"RGB": [55,55,0], "marks": [0, 15, 30, 45], "ringNo":[1]}, 
+        "SS": {"RGB": [55,55,0], "marks": [0], "ringNo":[]}
+    },
+   {    "DD": {"RGB": [0,0,0],   "marks": [], "ringNo":[]}, 
+        "HH": {"RGB": [55,55,0], "marks": [], "ringNo":[]}, 
+        "MM": {"RGB": [55,55,0], "marks": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55], "ringNo":[1]}, 
+        "SS": {"RGB": [55,55,0], "marks": [], "ringNo":[]}
+    },
+   {    "DD": {"RGB": [0,0,0],   "marks": [],  "ringNo":[]}, 
+        "HH": {"RGB": [55,55,0], "marks": [],  "ringNo":[]}, 
+        "MM": {"RGB": [55,55,0], "marks": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55], "ringNo":[1]}, 
+        "SS": {"RGB": [55,55,0], "marks": [0,15,30,45], "ringNo":[2]}
+    },
+   {    "DD": {"RGB": [0,0,0],   "marks": [],  "ringNo":[]}, 
+        "HH": {"RGB": [55,55,0], "marks": [0], "ringNo":[3]}, 
+        "MM": {"RGB": [55,55,0], "marks": [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55], "ringNo":[1]}, 
+        "SS": {"RGB": [55,55,0], "marks": [0,15,30,45], "ringNo":[2]}
+    }
+  ],
+  "ticks":[
+    {   "DD": {"RGB": [65,0,50],"blink": [1,0],  "npix": 0, "ringNo": [3]},
+        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [6,4]},
+        "MM": {"RGB": [0,0,255],"blink": [1,0],  "npix": 1, "ringNo": [0]},
+        "SS": {"RGB": [0,255,0],"blink": [1,0],  "npix": 1, "ringNo": [0]}
+    },
+    {   "DD": {"RGB": [65,0,50],"blink": [1,0],  "npix": 0, "ringNo": [3]},
+        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [8,6,4]},
+        "MM": {"RGB": [0,0,255],"blink": [1,0],  "npix": 1, "ringNo": [0]},
+        "SS": {"RGB": [0,255,0],"blink": [1,0],  "npix": 1, "ringNo": [0]}
+    },
+    {   "DD": {"RGB": [65,0,50],"blink": [1,0],  "npix": 0, "ringNo": [3]},
+        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [8,6,4,1]},
+        "MM": {"RGB": [0,0,255],"blink": [1,0],  "npix": 1, "ringNo": [0]},
+        "SS": {"RGB": [0,255,0],"blink": [1,0],  "npix": 1, "ringNo": [0]}
+    },
+     {  "DD": {"RGB": [65,0,50],"blink": [1,0],  "npix": 0, "ringNo": [3]},
+        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [8,6,4]},
+        "MM": {"RGB": [0,0,120],"blink": [1,0],  "npix": -1,"ringNo": [0]},
+        "SS": {"RGB": [0,255,0],"blink": [1,0],  "npix": 1, "ringNo": [0]}
+    },
+    {   "DD": {"RGB": [65,0,50],"blink": [1,0],  "npix": 0, "ringNo": [3]},
+        "HH": {"RGB": [255,0,0],"blink": [59,1], "npix": 1, "ringNo": [8,6,4,1]},
+        "MM": {"RGB": [0,0,120],"blink": [1,0],  "npix": -1,"ringNo": [0]},
+        "SS": {"RGB": [0,255,0],"blink": [1,0],  "npix": 1, "ringNo": [0]}
+    }
+  ]
+}
+ 
+
