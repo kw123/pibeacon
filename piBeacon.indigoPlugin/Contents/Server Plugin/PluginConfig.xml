@@ -22,57 +22,61 @@
 		<Label>== Names for Indigo device/variables, general parameters </Label>
 	</Field>
 
-   	<Field    id="iBeaconFolderName"   type="textfield" defaultValue="Pi_Beacons_new" >
+   	<Field    id="iBeaconFolderName"   type="textfield" >
 		<Label>... DEVICES folder for NEW beacons:</Label>
 	</Field>
+
 	<Field id="iBeaconFolderNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>Suggest to create a folder eg iBecons_Good and move newly created beacons into this folder to separate new and existing beacons easily</Label>
 	</Field>
 
-   	<Field    id="iBeaconFolderVariableDataTransferVarsName"   type="textfield" defaultValue="piBeacons_dataTransferVars" >
+   	<Field    id="iBeaconFolderVariableDataTransferVarsName"   type="textfield"  >
 		<Label>... VARIABLES folder for "pi_IN_x":</Label>
 	</Field>
+
 	<Field id="iBeaconFolderNameVariables_dataTransferVarsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>These variables are used if restfull communication RPI to plugin, not used if socket communication is used 
 These Variables are not needed by the user, but they need to exist, they go into this folder to not increase the list of real /useful variables in other folders</Label>
 	</Field>
 
-   	<Field    id="iBeaconFolderVariablesName"   type="textfield" defaultValue="piBeacons" >
+   	<Field    id="iBeaconFolderVariablesName"   type="textfield" >
 		<Label>... VARIABLES folder:</Label>
 	</Field>
 
-	<Field    id="groupCountNameDefault"   type="textfield" defaultValue="iBeacon_Count_">
+	<Field    id="groupCountNameDefault"   type="textfield" >
 		<Label>... COUNT variables names start w:</Label>
 	</Field>
+
 	<Field id="groupCountNameDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>These variables count number of beacons-RPi-BLEconnect are home away.. 
 define the group names below</Label>
 	</Field>
 
 
-	<Field    id="groupName0"   type="textfield" defaultValue="Family">
+	<Field    id="groupName0"   type="textfield" >
 		<Label>... name for COUNT-Group1(def Family):</Label>
 	</Field>
 
 
-	<Field    id="groupName1"   type="textfield" defaultValue="Guests">
+	<Field    id="groupName1"   type="textfield" >
 		<Label>... name for COUNT-Group2(def Guests):</Label>
 	</Field>
 
 
-	<Field    id="groupName2"   type="textfield" defaultValue="Guests">
+	<Field    id="groupName2"   type="textfield" >
 		<Label>... name for COUNT-Group3(def Other1):</Label>
 	</Field>
 
 
-	<Field    id="groupName3"   type="textfield" defaultValue="Other2">
+	<Field    id="groupName3"   type="textfield" >
 		<Label>... name for COUNT-Group4(def Other2):</Label>
 	</Field>
 
 
-	<Field    id="groupName4"   type="textfield" defaultValue="Other3">
+	<Field    id="groupName4"   type="textfield" >
 		<Label>... name for COUNT-Group5(def Other3):</Label>
 	</Field>
+
 	<Field id="groupNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>The groups names will be used for variables and track /count totals of up / down  home / away states for all group members
 When you leave the name empty the variable will not be used / created, 
@@ -83,11 +87,11 @@ This is not used for trigger names they will continue to be called Family, Guest
 	</Field>
 
 
-	<Field    id="ibeaconNameDefault"   type="textfield" defaultValue="iBeacon_">
+	<Field    id="ibeaconNameDefault"   type="textfield" >
 		<Label>...STATUS changed variables start w:</Label>
 	</Field>
 
-	<Field    id="SQLLoggingEnable"   type="menu" defaultValue="on-on" tooltip="">
+	<Field    id="SQLLoggingEnable"   type="menu"  >
 		<Label>...Configure SQL logger for specific variables and devices (not) log</Label>
 		<List>
 			<Option value="on-on"   >log normal = log everything </Option>
@@ -100,7 +104,7 @@ This is not used for trigger names they will continue to be called Family, Guest
 		<Label>This is only for: dev/states = Pi_x_Time etc, variables: pi_IN_xx. This saves SQL logger cpu and disk-space. There is no (good) reason to write them to the SQL logger</Label>
 	</Field>
 
-	<Field    id="enableBroadCastEvents" type="menu"  defaultValue="0" tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
+	<Field    id="enableBroadCastEvents" type="menu"   tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
 		<List>
 			<Option value="0"          >disable</Option>
 			<Option value="all"        >ENABLE ALL:   for all devices that have an up/ down status</Option>
@@ -108,26 +112,31 @@ This is not used for trigger names they will continue to be called Family, Guest
 		</List>
 		<Label>Enable indigo Broadcast of up/ down status:</Label>
 	</Field>
+
 	<Field id="enableBroadCastEventsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>This is used if you want to send BC of status changes to eg fingscan, homeAway plugins</Label>
 	</Field>
-	<Field    id="enableFING"   type="menu" defaultValue="0" tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
+
+	<Field    id="enableFING"   type="menu"  tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
 		<Label>Trigger FINGSCAN:</Label>
 		<List>
 			<Option value="0"  > disable </Option>
 			<Option value="1"  > enable </Option>
 		</List>    
 	</Field>
+
 	<Field id="enableFINGLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>This is used if you want to send status changes to fingscan plugin</Label>
 	</Field>
 
 
 	<Field id="simpleSeparator22" type="separator"/>
+
 	<Field id="infoLabel22" type="label" fontColor="green" >
 		<Label>== Parameters for iBeacons, might be overwritten for individual ibeacons</Label>
 	</Field>
-	<Field    id="secToDown"   type="menu" defaultValue="80" tooltip="this is the default value, can be overwritten in each device edit">
+
+	<Field    id="secToDown"   type="menu"  tooltip="this is the default value, can be overwritten in each device edit">
 		<Label>Status goes from UP to DOWN  if no signal in:</Label>
 		<List>
 			<Option value="30"  > 30 Seconds</Option>
@@ -145,7 +154,7 @@ This is not used for trigger names they will continue to be called Family, Guest
 		</List>
 	</Field>
 
-	<Field    id="setClostestRPItextToBlank"   type="menu" defaultValue="1" tooltip="">
+	<Field    id="setClostestRPItextToBlank"   type="menu"  >
 		<Label>set clostestRPItext(dev-State) to blank when iBeacon down:</Label>
 		<List>
 			<Option value="1" >keep last RPi device name</Option>
@@ -153,7 +162,7 @@ This is not used for trigger names they will continue to be called Family, Guest
 		</List>
 	</Field>
 
-   	<Field    id="sendFullUUID"   type="menu" defaultValue="1" tooltip="short messages reduces message size by 50%">
+   	<Field    id="sendFullUUID"   type="menu" tooltip="short messages reduces message size by 50%">
 		<Label>RPi to send full UUID in every message or only every 10ths:</Label>
 		<List>
 <!--			<Option value="0" >short (x-x-x), only every 10th full UUID</Option> -->
@@ -165,33 +174,38 @@ This is not used for trigger names they will continue to be called Family, Guest
 	</Field>
 
 
-	<Field    id="removeJunkBeacons"   type="menu" defaultValue="1" tooltip="enable or disable the deletion of new beacons after more than one hour if not renamed">
+	<Field    id="removeJunkBeacons"   type="menu"  tooltip="enable or disable the deletion of new beacons after more than one hour if not renamed">
 		<Label>Delete NEW Beacons if not renamed:</Label>
 		<List>
 			<Option value="0" >keep</Option>
 			<Option value="1" >delete</Option>
 		</List>
 	</Field>
+
 	<Field id="removeJunkBeaconsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>if you have accept new beacons on and get flooded with new beacons, this option will allow to delete them if you have not renamed them from the default name after one hour</Label>
 	</Field>
-	<Field id="checkBeaconParametersDisabled" type="checkbox"     defaultValue="false" > 
+
+	<Field id="checkBeaconParametersDisabled" type="checkbox"      > 
 		<Label>Disable checking beacon battery level for all beacons:</Label>
 	</Field>
 
 
 	<Field id="simpleSeparator33" type="separator"/>
+
 	<Field id="infoLabel33" type="label" fontColor="green" >
 		<Label>== Parameters for ALL rPi / plugin</Label>
 	</Field>
-	<Field    id="myIpNumber"   type="textfield" defaultValue="192.168.1.x">
+
+	<Field    id="myIpNumber"   type="textfield" >
 		<Label>IP Number of indigo MAC server:</Label>
 	</Field>
+
 	<Field id="myIpNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>This information will be send to the RPI, then used by the RPI to connect to the indigo server</Label>
 	</Field>
 
-	<Field id="IndigoOrSocket"   type="menu" defaultValue="socket" tooltip="web server wil go through curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
+	<Field id="IndigoOrSocket"   type="menu"  tooltip="web server wil go through curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
 Socket communication will go directly through socket communication to plugin that updates the device states etc." >
 		<List>
 			<Option value="indigo" >use indigo std web server  </Option>
@@ -200,26 +214,27 @@ Socket communication will go directly through socket communication to plugin tha
 		<Label>use RPI to indigo web server or RPI to indigo through sockets:</Label> 
 	</Field>
 
-	<Field id="portOfServer"   type="textfield" defaultValue="8176" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
+	<Field id="portOfServer"   type="textfield"  visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
 		<Label>define IP-PORT of default Indigo web server:</Label> 
 	</Field>
 
-	<Field id="indigoInputPORT"   type="textfield" defaultValue="12087" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field id="indigoInputPORT"   type="textfield"   visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<Label>define IP-PORT for socket communication RPI to Indigo:</Label> 
 	</Field>
 
-	<Field    id="blockNonLocalIp"   type="checkbox" defaultValue="false" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field    id="blockNonLocalIp"   type="checkbox"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<Label>Accept only local ip numbers to contact MAC:</Label>
 	</Field>
+
 	<Field id="blockNonLocalIpLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>when enabled any ip number != the first 2 octets of the MAC ip address will be ignored</Label>
-
 	</Field>
-	<Field id="maxSocksErrorTime"   type="menu" defaultValue="10" tooltip="if socket communication has issues ie short or incomplete packages this parameter 
+
+	<Field id="maxSocksErrorTime"   type="menu"  tooltip="if socket communication has issues ie short or incomplete packages this parameter 
 allows to set a threshold on when to report. Eg if set to 10: if 2 events happen within 10 minutes it is reported, otherwise not" 
              visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<Label>Report on bad data received if time between bad msgs less xx minutes:</Label> 
-    			<List>
+    	<List>
 			<Option value="0"    >error reporting off</Option>
 			<Option value="30"   >30 secs </Option>
 			<Option value="60"   >1 minute </Option>
@@ -229,7 +244,8 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 			<Option value="3600" >1 hour </Option>
 		</List>    
 	</Field>
-	<Field id="compressRPItoPlugin"   type="menu" defaultValue="20000" tooltip="" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+
+	<Field id="compressRPItoPlugin"   type="menu"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<List>
 			<Option value="10000"    >msg GT 10 KB </Option>
 			<Option value="200000"   >msg GT 20 KB </Option>
@@ -237,6 +253,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		</List>    
 		<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
 	</Field>
+
 	<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>use if you have a slow connection ie wifi and large packages don't come through, can be set for each individual RPI in device edit</Label>
 	</Field>
@@ -246,14 +263,15 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina, security type is used by RPI to indigo curl connection </Label>
 	</Field>
    
-	<Field id="userIdOfServer"   type="textfield" defaultValue="" tooltip="only used for http connection to indigo" >
+	<Field id="userIdOfServer"   type="textfield"  tooltip="only used for http connection to indigo" >
 		<Label>userid for indigo server (webserver):</Label> 
 	</Field>
    
-	<Field id="passwordOfServer"   type="textfield" defaultValue="" tooltip="PI server need this to send msg to indigo webbserver, also used to make executable work under catalina" >
+	<Field id="passwordOfServer"   type="textfield"  tooltip="PI server need this to send msg to indigo webbserver, also used to make executable work under catalina" >
 		<Label>password for indigo (webserver):</Label> 
 	</Field>
-	<Field id="authentication"   type="menu" defaultValue="digest" tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
+
+	<Field id="authentication"   type="menu"  tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
 		<List>
 			<Option value="digest" >use DIGEST  </Option>
 			<Option value="basic"  >use BASIC </Option>
@@ -266,13 +284,16 @@ userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. f
 		<Label>
 WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~/piBeacon directory, they will NOT be activated. YOU can move/activate them with "sudo python interface.py" on the RPI</Label>
 	</Field>
-	<Field id="wifiSSID"   type="textfield" defaultValue="" tooltip="" >
+
+	<Field id="wifiSSID"   type="textfield"   >
 		<Label>...  SSID of your router:</Label> 
 	</Field>
-	<Field id="wifiPassword"   type="textfield" defaultValue=""  >
+
+	<Field id="wifiPassword"   type="textfield"   >
 		<Label>... WiFi password of your router:</Label> 
 	</Field>
-	<Field    id="key_mgmt"   type="menu" defaultValue="NONE" >
+
+	<Field    id="key_mgmt"   type="menu"  >
 		<Label>... Security :</Label>
 		<List>
 			<Option value="NONE"     >NONE </Option>
@@ -286,21 +307,22 @@ WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~
 EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
 	</Field>
 
-	<Field    id="rebootIfNoMessagesSeconds"   type="menu" defaultValue="99999999999999" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
+	<Field    id="rebootIfNoMessagesSeconds"   type="menu" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
 		<Label>reboot RPI if GT x minutes w NO iBeacon messages (on RPI):</Label>
 		<List>
 			<Option value="60"    >reboot after 1 minute  w no ibeacon signal </Option>
 			<Option value="120"   >reboot after 2 minutes w no ibeacon signal </Option>
 			<Option value="240"   >reboot after 4 minutes w no ibeacon signal </Option>
-   		<Option value="99999999999999"  >do NOT reboot, just wait </Option>
-  	</List>
+			<Option value="99999999999999"  >do NOT reboot, just wait </Option>
+		</List>
 	</Field>
+
 	<Field id="rebootIfNoMessagesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>use if you experience instability, if you have just rpi and no beacon is home and no road near do not set to reboot</Label>
 	</Field>
 
 
-	<Field    id="enableRebootRPIifNoMessages"   type="menu" defaultValue="999999999" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
+	<Field    id="enableRebootRPIifNoMessages"   type="menu" tooltip="if too many empty messages received in a row it is an indication that the BLE stack is not working">
 		<Label>reboot RPI if GT xx EMPTY beacon messages received (from plugin):</Label>
 		<List>
 			<Option value="1"   > 1  for testing</Option>
@@ -312,6 +334,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="999999999"  > disable </Option>
 		</List>    
 	</Field>
+
 	<Field id="enableRebootRPIifNoMessagesLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>after xx seconds the plugin will connect to RPI and reboot</Label>
 	</Field>
@@ -326,35 +349,34 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
     is overwritten in RPI device edit</Label>
 	</Field>
 
-			<Field    id="eth0"   type="menu" defaultValue='{"on":"on", "useIP":"use"}' tooltip="">
-				<Label>ethernet cable(eth0) active:</Label>
-				<List>
-							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
-							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
-							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
-							<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
-							<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
-							<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
-				</List> 
-			</Field>
+	<Field    id="eth0"   type="menu"  >
+		<Label>ethernet cable(eth0) active:</Label>
+		<List>
+					<Option value='{"on":"on", "useIP":"use"}'				>ON,  use eth0 IP# default </Option>
+					<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use eth0 IP# if wlan0 not used</Option>
+					<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use eth0 IP# </Option>
+					<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if wlan0 off,  use eth0 IP# if wlan0 not used</Option>
+					<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
+					<Option value='{"on":"dontChange","useIP":"use"}'		>do not change , must be set by user, use eth0 IP</Option>
+					<Option value='{"on":"dontChange","useIP":"useIf"}'		>do not change , must be set by user, use eth0 IP if wlan0 not used</Option>
+					<Option value='{"on":"dontChange","useIP":"doNotUse"}'	>do not change , must be set by user, do not use eth0 IP#</Option>
+		</List> 
+	</Field>
 
-			<Field    id="wlan0"   type="menu" defaultValue='{"on":"dontChange", "useIP":"use"}' tooltip="">
-				<Label>WiFi(wlan0) active:</Label>
-				<List>
-							<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
-							<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
-							<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
-							<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
-							<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
-							<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
-				</List> 
-			</Field>
+	<Field    id="wlan0"   type="menu" >
+		<Label>WiFi(wlan0) active:</Label>
+		<List>
+					<Option value='{"on":"on", "useIP":"use"}'				>ON,  use wlan0 IP# </Option>
+					<Option value='{"on":"on", "useIP":"useIf"}'			>ON,  use wlan0 IP# if eth0 not used</Option>
+					<Option value='{"on":"on", "useIP":"doNotUse"}'			>ON,  do not use wlan0 IP# </Option>
+					<Option value='{"on":"onIf", "useIP":"useIf"}'			>ON if eth0 off,  use wlan0 IP# if eth0 not used</Option>
+					<Option value='{"on":"off", "useIP":"doNotUse"}'		>off  </Option>
+					<Option value='{"on":"dontChange", "useIP":"use"}'		>do not change , must be set by user, use wlan0 IP# default</Option>
+					<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
+		</List> 
+	</Field>
 
-
-	<Field    id="piUpdateWindow"   type="menu" defaultValue="0">
+	<Field    id="piUpdateWindow"   type="menu" >
 		<Label>Update indigo states of rPi devices :</Label>
 		<List>
 			<Option value="0"    >like other beacons </Option>
@@ -364,12 +386,12 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 
 
 
-	<Field    id="rPiCommandPORT"   type="textfield" defaultValue="9999" tooltip="port on RPI to receive commands from the plugin" >
+	<Field    id="rPiCommandPORT"   type="textfield" tooltip="port on RPI to receive commands from the plugin" >
 		<Label>rPi PORT to receive GPIO commands (0=off):</Label>
 	</Field>
 
 
-	<Field id="rebootSeconds"   type="menu" defaultValue="9999999999999" tooltip="set reboot vs restart loop in setup rPi " >
+	<Field id="rebootSeconds"   type="menu"  tooltip="set reboot vs restart loop in setup rPi " >
 		<Label>Should the rPi systems reboot/restart loop after:</Label>
 		<List>
 			<Option value="300"      >5  minutes - for testing </Option>
@@ -380,7 +402,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="9999999999999" >do not use this feature </Option>
 		</List>
 	</Field>
-	<Field id="rebootHour"   type="menu" defaultValue="1" tooltip="this is an OR with the above option" >
+
+	<Field id="rebootHour"   type="menu"  tooltip="this is an OR with the above option" >
 		<Label>Should the rPi systems reboot themselves after midnight:</Label>
 		<List>
 			<Option value="0"   >at 0:00, midnight</Option>
@@ -391,7 +414,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="-1"  >do not use this feature</Option>
 		</List>
 	</Field>
-	<Field id="expectTimeout"   type="menu" defaultValue="15" tooltip="used in expect when loggin into rPi " >
+
+	<Field id="expectTimeout"   type="menu"  tooltip="used in expect when loggin into rPi " >
 		<Label>Timeout for sending fields to rPi:</Label>
 		<List>
 			<Option value="5"    > 5 seconds</Option>
@@ -403,7 +427,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	</Field>
 
 
-	<Field id="restartBLEifNoConnect"   type = "menu" defaultValue = "1" tooltip="BLEconnect will request a BLE stack restart from beaconloop if no messages in 5/10 .. minutes" >
+	<Field id="restartBLEifNoConnect"   type = "menu"  tooltip="BLEconnect will request a BLE stack restart from beaconloop if no messages in 5/10 .. minutes" >
 		<Label>Should BLEconnect do a restart of the BLE stack if no responses:</Label>
 		<List>
 			<Option value="0"   >no</Option>
@@ -411,7 +435,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="rebootWatchDogTime"   type = "menu" defaultValue = "-1" tooltip="callbeacon.py (main program) will launch a 'shutdown -r x' command, if not killed by the main program it will reboot the rPi. after x minutes" >
+	<Field id="rebootWatchDogTime"   type = "menu"  tooltip="callbeacon.py (main program) will launch a 'shutdown -r x' command, if not killed by the main program it will reboot the rPi. after x minutes" >
 		<Label>rebootWatchDog timer function for rPi:</Label>
 		<List>
 			<Option value="-1"  >off (default)</Option>
@@ -423,7 +447,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="6"   >after 6 minutes</Option>
 		</List>
 	</Field>
-	<Field id="GPIOpwm"   type = "menu" defaultValue = "1" tooltip="pulse width modulation, 100 Hz ok , max ~ 300 HZ" >
+
+	<Field id="GPIOpwm"   type = "menu"  tooltip="pulse width modulation, 100 Hz ok , max ~ 300 HZ" >
 		<Label>Pulse Width Modulation for analogWrite of GPIO:</Label>
 		<List>
 			<Option value="1"   > 100 Hz</Option>
@@ -431,7 +456,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="3"   > 300 Hz</Option>
 		</List>
 	</Field>
-	<Field    id="rpiDataAcquistionMethod"   type="menu" defaultValue="hcidump" tooltip="can be overwriten for each individual RPi in rpi device edit">
+
+	<Field    id="rpiDataAcquistionMethod"   type="menu"  tooltip="can be overwriten for each individual RPi in rpi device edit">
 		<Label>Use which method on RPIs for beacon scanning read:</Label>
 		<List>
 			<Option value="hcidump" > using hcidump and lescan, has more functions</Option>
@@ -444,7 +470,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field id="SensorsLabel" type="label" fontColor="green" >
 	  <Label>== Sensor parameters, units etc </Label>	</Field>
 
-	<Field    id="tempUnits"   type="menu" defaultValue="Celsius">
+	<Field    id="tempUnits"   type="menu" >
 		<Label>Temperature displayed in:</Label>
 		<List>
 			<Option value="Celsius"    >Celsius </Option>
@@ -452,7 +478,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="Kelvin"     >Kelvin</Option>
 		</List>
 	</Field>
-	<Field    id="tempDigits"   type="menu" defaultValue="1">
+
+	<Field    id="tempDigits"   type="menu" >
 		<Label>Temperature digits to show and store:</Label>
 		<List>
 			<Option value="0" >0 </Option>
@@ -461,7 +488,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field    id="distanceUnits"   type="menu" defaultValue="1.0">
+	<Field    id="distanceUnits"   type="menu" >
 		<Label>distance measured in:</Label>
 		<List>
 			<Option value="1.0"     >meter</Option>
@@ -471,7 +498,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="0.9144"  >yard</Option>
 		</List>
 	</Field>
-	<Field    id="speedUnits"   type="menu" defaultValue="1.0">
+
+	<Field    id="speedUnits"   type="menu" >
 		<Label>speed measured in:</Label>
 		<List>
 			<Option value="1.0"      >meter/s</Option>
@@ -484,7 +512,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field    id="pressureUnits"   type="menu" defaultValue="Pascal">
+	<Field    id="pressureUnits"   type="menu" >
 		<Label>Pressure displayed in:</Label>
 		<List>
 			<Option value="Pascal"    >Pascal </Option>
@@ -500,7 +528,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field    id="rainUnits"   type="menu" defaultValue="mm">
+	<Field    id="rainUnits"   type="menu" >
 		<Label>Rain values displayed in (rain-rate is in units/hour):</Label>
 		<List>
 			<Option value="inch"  >inches </Option>
@@ -508,7 +536,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="cm"    >cm</Option>
 		</List>
 	</Field>
-	<Field    id="rainDigits"   type="menu" defaultValue="1">
+
+	<Field    id="rainDigits"   type="menu" >
 		<Label>Rain values digits to show:</Label>
 		<List>
 			<Option value="0" >0 </Option>
@@ -518,7 +547,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-   	<Field    id="lightningTimeWindow"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
+	<Field    id="lightningTimeWindow"   type="menu"  tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
 		<Label>Time window for lightning devices:</Label>
 		<List>
 			<Option value="2"  >  2 secs  for testing</Option>
@@ -540,7 +569,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-   	<Field    id="lightningNumerOfSensors"   type="menu" defaultValue="10" tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
+	<Field    id="lightningNumerOfSensors"   type="menu"  tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
 		<Label>How many Lightning sensor have to fire to set variable:</Label>
 		<List>
 			<Option value="1"  > 1 sensor in time window</Option>
@@ -552,10 +581,11 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 
 
 	<Field id="simpleSeparatorplotbeacons" type="separator"/>
+
 	<Field id="posLabel" type="label" fontColor="green" >  
 		<Label>== Create png file of x,y,z positions of iBeacons</Label>	</Field>
     
-	<Field    id="beaconPositionsUpdateTime"   type="menu" defaultValue="-1" >
+	<Field    id="beaconPositionsUpdateTime"   type="menu"  >
 		<Label>...enable iBeacon position Plot:</Label>
 		<List>
 			<Option value="-1" >do not enable</Option>
@@ -566,8 +596,9 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="600">10 minutes update</Option>
 		</List>
 	</Field>
+
 	<Field id="posLabel2" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600" fontSize="small" >  
-	<Label>        This will create a png file with the positions of the selected iBeacons (in beacon device edit)
+		<Label>        This will create a png file with the positions of the selected iBeacons (in beacon device edit)
         =you can supply a "background.png" image in either  
           1. check: ".../Indigo x.y/Preferences/Plugins/com.karlwachs.piBeacon/plotPositions/"
           2. check: "/output image path/"  set below
@@ -575,8 +606,10 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
         =the x,y scale number should be measured in your distance units eg 20 by 30 feet/ meter ..
         =the xzy positions of the RPIs must be accurate as well as the TX power parameter of the iBeacons
         =The position calculation is a simple interpolation starting with the highest RPI signal + second highest. 
-              Beacon device edit has an option to size the markers with the position distance to the closest RPI</Label>	</Field>
-	<Field    id="beaconPositionsdeltaDistanceMinForImage"   type="menu" defaultValue="10" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">
+              Beacon device edit has an option to size the markers with the position distance to the closest RPI</Label>
+	</Field>
+
+	<Field    id="beaconPositionsdeltaDistanceMinForImage"   type="menu"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">
 		<Label>...update position if an ibeacon moved by:</Label>
 		<List>
 			<Option value="0" > any change</Option>
@@ -596,31 +629,33 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="40"> 40 distance units</Option>
 		</List>
 	</Field>
-	<Field    id="beaconPositionsimageXscale"   type="textfield" defaultValue="20" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
+
+	<Field    id="beaconPositionsimageXscale"   type="textfield" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
 		<Label>X scale:</Label>
 	</Field>
-	<Field    id="beaconPositionsimageYscale"   type="textfield" defaultValue="30" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
+
+	<Field    id="beaconPositionsimageYscale"   type="textfield"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
 		<Label>Y scale:</Label>
 	</Field>
 
-	<Field    id="beaconPositionsimageZlevels"   type="textfield" defaultValue="0,5" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
+	<Field    id="beaconPositionsimageZlevels"   type="textfield"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
 		<Label>z levels:</Label>
 	</Field>
 
 	<Field id="posLabelZlevel" type="label" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-	<Label>is used to set the heights / levels (z-coordinate) of your floors; enter one number for each floor eg 0,5,10,15 for 4 floors, then use THESE z levels in RPI device edit for the x,y,z position of the RPI. In the image the beacons on different floors are shown with differnet hatches ( blank, //, \\ ,+)</Label> 
+		<Label>is used to set the heights / levels (z-coordinate) of your floors; enter one number for each floor eg 0,5,10,15 for 4 floors, then use THESE z levels in RPI device edit for the x,y,z position of the RPI. In the image the beacons on different floors are shown with differnet hatches ( blank, //, \\ ,+)</Label> 
 	</Field>
 
 
-	<Field    id="beaconPositionsimageDotsY"     type="textfield" defaultValue="600" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
+	<Field    id="beaconPositionsimageDotsY"     type="textfield" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
 		<Label>Image size = # of y-dots:</Label>
 	</Field>
 
 
-	<Field    id="beaconPositionsimageOutfile"  type="textfield" defaultValue="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">               
+	<Field    id="beaconPositionsimageOutfile"  type="textfield"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">               
 		<Label>Output image path/filename:</Label></Field>
 
-	<Field id="beaconPositionsimageShowRPIs" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsimageShowRPIs" type="menu"      visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Show RPIs in plot:</Label>
 		<List>
 			<Option value="0"       > no</Option>
@@ -629,7 +664,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="beaconShowExpiredBeacons" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconShowExpiredBeacons" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Show expired beacons in plot:</Label>
 		<List>
 			<Option value="0"  > no</Option>
@@ -637,7 +672,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="beaconRandomBeacons" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconRandomBeacons" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>randomize beacon position a little (if they all overlap):</Label>
 		<List>
 			<Option value="0"   > no</Option>
@@ -647,7 +682,9 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="40"  > 40%</Option>
 		</List>
 	</Field>
-  <Field id="beaconSymbolSize" type="menu"     defaultValue="1.0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+
+
+	<Field id="beaconSymbolSize" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Multiply size of symbols:</Label>
 		<List>
 			<Option value="0.3"  >0.3</Option>
@@ -668,7 +705,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="3.0"  >3.0</Option>
 		</List>
 	</Field>
-  <Field id="beaconLargeCircleSize" type="menu"     defaultValue="1.0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+
+	<Field id="beaconLargeCircleSize" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Multiply size of large Circle symbol:</Label>
 		<List>
 			<Option value="0.3"  >0.3</Option>
@@ -690,7 +728,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="beaconPositionsimageShowCaption" type="menu"     defaultValue="-1" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsimageShowCaption" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Show caption:</Label>
 		<List>
 			<Option value="0"  > do not show caption</Option>
@@ -699,7 +737,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="beaconPositionsShowTimeStamp" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsShowTimeStamp" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Show time stamp:</Label>
 		<List>
 			<Option value="0"  > no</Option>
@@ -707,15 +745,15 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field    id="beaconPositionsTitleText"     type="textfield" defaultValue="text on Top" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">   
+	<Field    id="beaconPositionsTitleText"     type="textfield"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">   
 		<Label>Title text:</Label>
 	</Field>
 
-	<Field    id="beaconPositionsTitleTextPos"  type="textfield" defaultValue="0,0" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
+	<Field    id="beaconPositionsTitleTextPos"  type="textfield" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">           
 		<Label>Title text Pos:</Label>
 	</Field>
 
-	<Field id="beaconPositionsTitleTextRotation" type="menu"     defaultValue="0" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsTitleTextRotation" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Title text rotation:</Label>
 		<List>
 			<Option value="0"  > left to right</Option>
@@ -723,7 +761,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="beaconPositionsTitleTextColor" type="menu"     defaultValue="#000000" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsTitleTextColor" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Title Text color:</Label>
 		<List>
 			<Option value="#FF0000" >red</Option>
@@ -738,7 +776,7 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
 
-	<Field id="beaconPositionsTitleTextSize" type="menu"     defaultValue="12" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsTitleTextSize" type="menu"       visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Title text size [pts]:</Label>
 		<List>
 			<Option value="6"  >6</Option>
@@ -755,7 +793,11 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="50" >50</Option>
 		</List>
 	</Field>
-	<Field id="beaconPositionsCaptionTextSize" type="menu"     defaultValue="12" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+
+
+
+
+	<Field id="beaconPositionsCaptionTextSize" type="menu"     visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>Caption text size [pts]:</Label>
 		<List>
 			<Option value="6"  >6</Option>
@@ -772,7 +814,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="50" >50</Option>
 		</List>
 	</Field>
-	<Field    id="beaconPositionsLabelTextSize"     type="menu" defaultValue="18" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
+
+	<Field    id="beaconPositionsLabelTextSize"     type="menu"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
 		<Label>Label text size  [pts]:</Label>
 		<List>
 			<Option value="6"  >6</Option>
@@ -789,38 +832,26 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="50" >50</Option>
 		</List>
 	</Field>
-	<Field    id="beaconPositionstextPosLargeCircle"     type="menu" defaultValue="0" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
+
+	<Field    id="beaconPositionstextPosLargeCircle"     type="menu"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">       
 		<Label>Label pos for LARGE circles:</Label>
 		<List>
 			<Option value="atCenter"  >at center of circle</Option>
 			<Option value="atRadius"  >at right of circle</Option>
-   	</List>
+ 	  	</List>
 	</Field>
 
-	<Field id="beaconPositionsimageCompress" type="checkbox"     defaultValue="true" tooltip="" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
+	<Field id="beaconPositionsimageCompress" type="checkbox" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>compress png File:</Label>
 	</Field>
 
-<!--  not implemented yet  
-	<Field    id="mapUUIDtoNAME"   type="menu" defaultValue="0" tooltip="if enabled the discption will contain the company Name instead of the 32char hex code">
-		<Label>use company-Names isntead of UUID hex code:</Label>
-		<List>
-			<Option value="0"  > disable </Option>
-			<Option value="1"  > enable </Option>
-		</List>    
-	</Field>
--->
-
-
 	<Field id="simpleSeparator57" type="separator"/>
 
-	<Field id="infoLabel97" type="label" fontColor="green" >  
-	<Label>== Debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
-
+	<Field id="infoLabel97" type="label" fontColor="green" >  <Label>== Debug level on rPi servers; log in  /var/log/pibeacon.log:</Label>  </Field>
 
 	<Field id="infoLabeldebRPI" type="label"> <Label>Debug option ON RPI:</Label>  </Field>
 
-	<Field id="maxSizeOfLogfileOnRPI"   type = "menu" defaultValue = "10000000" tooltip="One copy will be kept: pibeacon-1.log; if you use ramdisk, please use less than 21MB"  >
+	<Field id="maxSizeOfLogfileOnRPI"   type = "menu"  tooltip="One copy will be kept: pibeacon-1.log; if you use ramdisk, please use less than 21MB"  >
 		<Label>Debug...max pibeacon logfile size on RPI:</Label>
 		<List>
 			<Option value="5000000"  >5MB</Option>
@@ -831,42 +862,49 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		</List>
 	</Field>
    
-	<Field id="debugRPI"   type = "menu" defaultValue = "-1"  >
+	<Field id="debugRPI"   type = "menu"   >
 		<Label>Debug...which RPI:</Label>
-    			<List class="self" filter="" method="filterPiC" dynamicReload="false"/>
-		</Field>
+    	<List class="self" filter="" method="filterPiC" dynamicReload="false"/>
+	</Field>
+
 	<Field id="debugRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>This will enable verbose debugging --ON the PRI-- not on the indigo server. Use this only while debugging, as this will stress the RPI SSD </Label>
 	</Field>
+
+
    
 	<Field id="infoLabel99" type="label"> <Label>Debug area for plugin:</Label>  </Field>
         
-	<Field    id="debugLogic"          type="checkbox"  defaultValue="false"       tooltip=""> <Label> Debug...                   ... (1)  Logic:</Label>  </Field>
-	<Field    id="debugDevMgmt"        type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (2)  beacon device management:</Label>  </Field>
-	<Field    id="debugBeaconData"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (3)  beacon data:</Label>  </Field>
-	<Field    id="debugSensorData"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (4)  sensor devices:</Label>  </Field>
-	<Field    id="debugOutputDevice"   type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (5)  output devices:</Label>  </Field>
-	<Field    id="debugUpdateRPI"      type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (6)  update RPI:</Label>  </Field>
-	<Field    id="debugSocketRPI"      type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (7)  socket comm indigo to RPI:</Label>  </Field>
-	<Field    id="debugStartSocket"    type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (8.0) tcpip socket comm RPI to indigo Setup:</Label>  </Field>
-	<Field    id="debugSocket"         type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (8.1) tcpip socket comm RPI to indigo:</Label>  </Field>
-	<Field    id="debugOfflineRPI"     type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (9)  show error messages if RPI is offline:</Label>  </Field>
-	<Field    id="debugFing"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (10) send data to Fingscan:</Label>  </Field>
-	<Field    id="debugBC"             type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (11) send BC to status update listeners:</Label>  </Field>
-	<Field    id="debugBLE"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (12) BLE-connect:</Label>  </Field>
-	<Field    id="debugCAR"            type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (13) CAR type devices:</Label>  </Field>
-	<Field    id="debugPlotPositions"  type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (15) beacon position plots:</Label>  </Field>
-	<Field    id="debugBatteryLevel"   type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
-	<Field    id="debugSQLlogger"      type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (17) SQLlogger:</Label>  </Field>
-	<Field    id="debugSQLSuppresslog" type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
-	<Field    id="debugBeep"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ..  (19) beacon Beep:</Label>  </Field>
-
-	<Field    id="debugSpecial"       type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (S) special debug (only for development):</Label>  </Field>
-	<Field    id="debugall"           type="checkbox"  defaultValue="false"       tooltip=""> <Label>     ... (99) all of the above .. everything:</Label>  </Field>
+	<Field    id="debugLogic"          type="checkbox"         > <Label> Debug...                   ... (1)  Logic:</Label>  </Field>
+	<Field    id="debugDevMgmt"        type="checkbox"         > <Label>     ... (2)  beacon device management:</Label>  </Field>
+	<Field    id="debugBeaconData"     type="checkbox"         > <Label>     ... (3)  beacon data:</Label>  </Field>
+	<Field    id="debugSensorData"     type="checkbox"         > <Label>     ... (4)  sensor devices:</Label>  </Field>
+	<Field    id="debugOutputDevice"   type="checkbox"         > <Label>     ... (5)  output devices:</Label>  </Field>
+	<Field    id="debugUpdateRPI"      type="checkbox"         > <Label>     ... (6)  update RPI:</Label>  </Field>
+	<Field    id="debugSocketRPI"      type="checkbox"         > <Label>     ... (7)  socket comm indigo to RPI:</Label>  </Field>
+	<Field    id="debugStartSocket"    type="checkbox"         > <Label>     ..  (8.0) tcpip socket comm RPI to indigo Setup:</Label>  </Field>
+	<Field    id="debugSocket"         type="checkbox"         > <Label>     ..  (8.1) tcpip socket comm RPI to indigo:</Label>  </Field>
+	<Field    id="debugOfflineRPI"     type="checkbox"         > <Label>     ... (9)  show error messages if RPI is offline:</Label>  </Field>
+	<Field    id="debugFing"           type="checkbox"         > <Label>     ... (10) send data to Fingscan:</Label>  </Field>
+	<Field    id="debugBC"             type="checkbox"         > <Label>     ... (11) send BC to status update listeners:</Label>  </Field>
+	<Field    id="debugBLE"            type="checkbox"         > <Label>     ... (12) BLE-connect:</Label>  </Field>
+	<Field    id="debugCAR"            type="checkbox"         > <Label>     ... (13) CAR type devices:</Label>  </Field>
+	<Field    id="debugPlotPositions"  type="checkbox"         > <Label>     ..  (15) beacon position plots:</Label>  </Field>
+	<Field    id="debugBatteryLevel"   type="checkbox"         > <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
+	<Field    id="debugSQLlogger"      type="checkbox"         > <Label>     ..  (17) SQLlogger:</Label>  </Field>
+	<Field    id="debugSQLSuppresslog" type="checkbox"         > <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
+	<Field    id="debugBeep"           type="checkbox"         > <Label>     ..  (19) beacon Beep:</Label>  </Field>
+	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S) special debug (only for development):</Label>  </Field>
+	<Field    id="debugall"            type="checkbox"         > <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
 	<Field id="infoLabel227" type="label"> <Label>DETAILED cpu-time tracking;  set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>
-	<Field    id="do_cProfile" type="textfield"  defaultValue="on/off/print"  readonly="yes"     > 
+
+	<Field    id="do_cProfile" type="textfield"   readonly="yes"     > 
 		<Label>... enable or stop or  print intermediate results use on/off/print:</Label>  
 	</Field>
+	<Field    id="cycleVariables" type="checkbox"         > <Label>recycle pibeacon variables to save sql logger db space:</Label>  </Field>
+
+
+
 
 </PluginConfig>

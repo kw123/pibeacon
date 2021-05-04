@@ -73,12 +73,29 @@ def setLogLevel():
 
 
 #################################
-def killOldPgm(myPID,pgmToKill, delList=[], param1="",param2="",verbose=False):
+def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False):
+
+	##if True or verbose: logger.log(20, u"cBY:{:<20} ======== kill pgm myPID:s{}, pgmToKill:{}".format(G.program,myPID,pgmToKill ) )
+	count = 0
+	try:		
+		if int(myPID) > 10 and len(delList) == 0:
+			cmd= ["/usr/bin/sudo","/usr/bin/python","{}killOldPgm.py".format(G.homeDir), str(myPID), pgmToKill, param1, param2]
+			if verbose: logger.log(20, u"cBY:{:<20} kill pgm using external, cmd:{}".format(G.program, cmd) )
+			ret = subprocess.Popen(cmd)
+			return 1
+	except Exception as e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		
 	count = 0
 	try:
 		#print "killOldPgm ",pgmToKill,str(myPID)
 		cmd= "ps -ef | grep '{}' | grep -v grep".format(pgmToKill)
 		if param1 !="":
+
+
+
+
+
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
 			cmd = "{} | grep ".format(cmd,param2)

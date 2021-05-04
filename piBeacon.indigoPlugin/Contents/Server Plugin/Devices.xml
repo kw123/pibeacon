@@ -1510,6 +1510,16 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 				<TriggerLabel>TemperatureMinToday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -1519,6 +1529,11 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -2386,6 +2401,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -2400,6 +2425,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -4112,6 +4142,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4126,6 +4166,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -4406,6 +4451,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4420,6 +4475,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -4452,6 +4517,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -4461,6 +4536,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
@@ -4753,6 +4833,16 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -4767,6 +4857,11 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -5012,6 +5107,16 @@ save ===
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -5026,6 +5131,11 @@ save ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -5058,6 +5168,16 @@ save ===
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -5067,6 +5187,11 @@ save ===
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
@@ -5290,6 +5415,16 @@ save===</Label>
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -5304,6 +5439,11 @@ save===</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -5524,6 +5664,16 @@ save ===
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -5538,6 +5688,11 @@ save ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -5786,6 +5941,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -5800,6 +5965,11 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -5833,6 +6003,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -5842,6 +6022,11 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
@@ -6057,6 +6242,16 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -6071,6 +6266,11 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -6104,6 +6304,16 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -6114,7 +6324,11 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
 			</State>
-
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
@@ -6337,6 +6551,16 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -6351,6 +6575,11 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -6384,6 +6613,16 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -6394,12 +6633,16 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
 
 			<State id="Formaldehyde">
 				<ValueType>Float</ValueType>
@@ -6662,6 +6905,16 @@ This Sensor does not display F only C ===</Label>
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -6676,6 +6929,11 @@ This Sensor does not display F only C ===</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -6709,6 +6967,16 @@ This Sensor does not display F only C ===</Label>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -6718,6 +6986,11 @@ This Sensor does not display F only C ===</Label>
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
@@ -6909,6 +7182,16 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -6923,6 +7206,11 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -6956,6 +7244,16 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -6965,6 +7263,11 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
@@ -7156,6 +7459,16 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -7170,6 +7483,11 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -7436,6 +7754,16 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -7450,6 +7778,11 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -7482,6 +7815,16 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -8041,6 +8384,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -8055,6 +8408,11 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -8087,6 +8445,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -8604,6 +8972,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -8618,6 +8996,11 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -8650,6 +9033,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -9587,6 +9980,16 @@ set trigger and sensitivity parameters ===
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -9601,6 +10004,11 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -9633,6 +10041,16 @@ set trigger and sensitivity parameters ===
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -10347,6 +10765,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -10361,6 +10789,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -10392,6 +10825,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -10533,6 +10976,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -10547,6 +11000,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -10679,6 +11137,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -10693,6 +11161,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -10724,6 +11197,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -10865,6 +11348,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -10879,6 +11372,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -11004,6 +11502,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -11018,6 +11526,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -11149,6 +11662,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -11163,6 +11686,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -11291,6 +11819,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -11305,6 +11843,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -11474,6 +12017,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -11488,6 +12041,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -11656,6 +12214,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -11670,6 +12238,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -11839,6 +12412,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -11853,6 +12436,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -12011,6 +12599,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -12025,6 +12623,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -12199,6 +12802,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -12213,6 +12826,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -12244,6 +12862,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -12382,6 +13010,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -12396,6 +13034,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -12427,6 +13070,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -12574,6 +13227,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -12588,6 +13251,11 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -12619,6 +13287,16 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -12923,6 +13601,16 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -12937,6 +13625,11 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -12968,6 +13661,16 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
@@ -13210,6 +13913,16 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -13224,6 +13937,11 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -13256,6 +13974,16 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>HumidityMaxToday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
 			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="HumidityMinToday">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMinToday</TriggerLabel>
@@ -13265,6 +13993,11 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Number</ValueType>
 				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
 			</State>
 			<State id="HumidityMinYesterday">
 				<ValueType>Number</ValueType>
@@ -13411,6 +14144,16 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -13425,6 +14168,11 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -13596,6 +14344,16 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -13610,6 +14368,11 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -13804,6 +14567,16 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -13818,6 +14591,11 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -14254,44 +15032,55 @@ After some days of running in clean air, proposed setup is:
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-			<Label>select rPi-server to which the sensor is connect to:</Label> 
+				<Label>select rPi-server to which the sensor is connect to:</Label> 
+			</Field>
+
+			<Field id="i2cAddress" type="menu"     defaultValue="89"> <Label>i2c address of device (fixed):</Label>
+				<List>
+					<Option value="89"   >0x59 = 89 </Option>
+				</List>
 			</Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="6" hidden="no" > 
-			<Label>Min secs between indigo updates - not more often:</Label>
-			<List>
-				<Option value="6"   > 6   secs</Option>
-				<Option value="8"   > 8   secs</Option>
-				<Option value="10"  > 10  secs</Option>
-			</List>
+				<Label>Min secs between indigo updates - not more often:</Label>
+				<List>
+					<Option value="6"   > 6   secs</Option>
+					<Option value="8"   > 8   secs</Option>
+					<Option value="10"  > 10  secs</Option>
+				</List>
 			</Field>
+
 			<Field id="deltaX" type="menu"     defaultValue="5" hidden="no" > 
-			<Label>delta value (%) to trigger indigo update:</Label>
-			<List>
-				<Option value="1"    > 1</Option>
-				<Option value="2"    > 2</Option>
-				<Option value="3"    > 3</Option>
-				<Option value="5"    > 5</Option>
-				<Option value="10"   > 10</Option>
-				<Option value="15"   > 15</Option>
-				<Option value="20"   > 20</Option>
-				<Option value="25"   > 25</Option>
-				<Option value="30"   > 30</Option>
-			</List>
+				<Label>delta value (%) to trigger indigo update:</Label>
+				<List>
+					<Option value="1"    > 1</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
 			<Field id="displayS" type="menu"     defaultValue="VOC"> <Label>Property to display in the State Column:</Label>
-			<List>
-				<Option value="VOC"     >VOC</Option>
-			</List>
+				<List>
+					<Option value="VOC"     >VOC</Option>
+				</List>
 			</Field>
 
-			<Field id="statusColorLabel" type="label" >
-			<Label>== set color of status column dot to </Label></Field>
+			<Field id="statusColorLabel" type="label" >	<Label>== set color of status column dot to </Label></Field>
+
 			<Field id="stateGreen" type="textfield"       defaultValue="x &lt; 110">	<Label>set State Indicator to GREEN if:</Label></Field>
+
 			<Field id="stateGrey"  type="textfield"       defaultValue="x &lt; 401">	<Label>set State Indicator to GREY if:</Label></Field>
+
 			<Field id="stateRed"   type="textfield"       defaultValue="x &lt; 501">	<Label>set State Indicator to RED if:</Label></Field>
+
 			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
 				<Label>The conditions will be passed through eval(). Examples:
   &quot;x &gt; 55&quot; 
@@ -14748,6 +15537,16 @@ It measures CO2 VOC
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -14762,6 +15561,11 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -16338,7 +17142,7 @@ It measures CO2 VOC
 			<List>
 				<Option value="41"   >0x29 = 41 solder patch 0</Option>
 				<Option value="57"   >0x39 = 57 default </Option>
-				<Option value="73"   >0x59 = 73 solder patch 1</Option>
+				<Option value="73"   >0x49 = 73 solder patch 1</Option>
 			</List>
 			</Field>
 			<Field id="useMuxChannel" type="menu"     defaultValue="-1"> 
@@ -16658,6 +17462,16 @@ It measures CO2 VOC
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -16672,6 +17486,11 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -16937,6 +17756,16 @@ you can setup
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -16951,6 +17780,11 @@ you can setup
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -17794,6 +18628,16 @@ you can setup
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -17808,6 +18652,11 @@ you can setup
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -18012,6 +18861,16 @@ you can setup
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -18026,6 +18885,11 @@ you can setup
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -18236,6 +19100,16 @@ you can setup
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -18250,6 +19124,11 @@ you can setup
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -18877,6 +19756,16 @@ you can setup
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -18891,6 +19780,11 @@ you can setup
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -19071,6 +19965,16 @@ you can setup
 				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
 				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -19085,6 +19989,11 @@ you can setup
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
@@ -21260,6 +22169,16 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<TriggerLabel>Temperature</TriggerLabel>
 				<ControlPageLabel>Temperature</ControlPageLabel>
 			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
@@ -21274,6 +22193,11 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinYesterday">
 				<ValueType>Float</ValueType>
