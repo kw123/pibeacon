@@ -1,0 +1,70 @@
+Beacon type:  properties and functionality  
+====================================  
+  
+Name/type     recom v  FormFactor      hole    auto    has     isBeepable  Battery  battery                   sensors  ON/OFF  APP functions  
+              mened                    4 key   detect  beeper  byPlugin    reading  Type                               button   .. comments  
+-----------------------------------------------------------------------------------------------------------------------------------  
+++ rechargeable, beep and battery reading ===  
+Nonda_Aiko       10 x  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register  
+Nonda_iHere      10 x  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register          
+Smart_tracker    10 X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register  
+  
+++ repl battery, beep and Battery reading  
+NutFind 3        10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+ == Nutale       10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
+  
+Vozni_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+SpotyPal         10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+Rinex_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register,   
+Njoii_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex  
+  
+++ communication is proprietory, works for one but not expandable to others   
+XY_1             10 1  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_2             10 2  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_3             10 3  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+  
+  
+beep no battery reading ===  
+Innway-Tag         7 x  square         yes     yes     yes     yes         no       cr2032                    no       no      beep, register, battery  
+Innway-Chip        7 x  square 2.5mm   no      yes     yes     yes         no       rechargebale              no       no      beep, register, battery  
+Innway-Card        7 x  creditC 1.5mm  no      yes     yes     yes         no       rechargebale              no       no      beep, register, battery  thinnest ebacon
+          
+Cube              7 x  square          yes     yes     yes     yes         no       cr2032                    no       no      beep, register  
+Orbit             7 x  round           yes     yes     yes     yes         ?        cr2032, sp tool repl Bat. no       no      beep, register  
+  
+  
+Safedome          7 x  creditC 1.8mm   no      yes      no      no          no       wireless-rechargeable     no       no     register, battery level  thinnest ebacon
+  
+                       ===ibeacon + Sensors  see also sensor section 
+ruuviTag          8 x  round Big       no      yes     no      no          yes      cr2450 1Y                 T,H,P,A  no      display of sensors values  
+myBueT            4 x  oval small      yes     yes     no      no          no       cr2032 3 M                T        yes     no app, only send ibeacon msg w T  
+  
+Satech .. not recommended SOS button disables the device, needs a power cyle   
+		STixx sensors, acceleration, temp, humidity, on/off  
+  
+  
+++ pure iBeacon types ===  
+BlueCharm-BC011   7 x  square          yes     yes     no      no          yes      cr2032                    no       yes     iBeacon,EddyStone, conf: TX, repeat  
+MiniBeacon        5 x  various         no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone  
+Feasy_USB        10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone, conf: TX, repeat !! LOOONG range  
+Feasy_Triangle    3 x  trinagle        yes     yes     no      no          no       cr2032                    no       no      iBeacon,EddyStone, conf: TX, repeat  
+SocialRetail     10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon,EddyStone, conf: TX, repeat, for car or laptop, signals ON  
+SocialRetail     10 x  BIG             no      yes     no      no          no       AAA > xYears              no       no      iBeacon,EddyStone, conf: TX, repeat, for car signals presence  
+Radius            3 x  round           no      yes     no      no          no       cr2032 ~ 3 months         no       yes     iBeacon, conf: TX, repeat, for testing strick standard only  
+Radius           10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon, conf: TX, repeat, for car or laptop, signals ON  
+Radius RB CCard  8  x  creditC 3.8mm   no      yes     no      no          no       non replaceble            no       no      iBeacon, for wallet 
+
+cheap ibeacon ~$5   likely working,    ?       no      no      no          no       cr2032 mostly             no       no      pure iBeacon, edystone..some have signal config  
+  
+++ other types ===  
+Tovala-oven         1  Oven            no      yes     no      no          no       AC                        no       no      no, an appliant I happen to have  
+OralB               1  toothbrush      no      yes     no      no          no       rechargeable              no       no      no, just cool you can measure how long and how often teeth are brushed  
+      
+  
+  
+  
+Not recommended  
+xy_4                4    not working, still testing  
+tile                 > 2018    not working  
+swiftFind == ZenLif      intrusive, no actions possible   
+iSearching type devices  either constantly beeps when disconnected, or difficult to connect to 
