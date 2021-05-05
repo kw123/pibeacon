@@ -14816,8 +14816,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="particles_100um">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>airQuality</TriggerLabel>
-				<ControlPageLabel>airQuality</ControlPageLabel>
+				<TriggerLabel>particles_100um</TriggerLabel>
+				<ControlPageLabel>particles_100um</ControlPageLabel>
 			</State>
 			<State id="airQuality">
 				<ValueType>String</ValueType>
