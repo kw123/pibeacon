@@ -13119,7 +13119,7 @@ class Plugin(indigo.PluginBase):
 
 
 					if sensor == u"pmairquality":
-						self.updatePMAIRQUALITY(dev,data,whichKeysToDisplay)
+						self.updatePMAIRQUALITY(dev, props, data, whichKeysToDisplay)
 						continue
 
 					if sensor == u"launchpgm":
@@ -13936,23 +13936,27 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def updatePMAIRQUALITY(self, dev, data, whichKeysToDisplay):
+	def updatePMAIRQUALITY(self, dev, props, data, whichKeysToDisplay):
 		try:
 			for cc in [u"pm10_standard",u"pm25_standard",u"pm100_standard",u"pm10_env",u"pm25_env",u"pm100_env",u"particles_03um",u"particles_05um",u"particles_10um",u"particles_25um",u"particles_50um",u"particles_100um"]:
 				if cc in data:
 					if cc.find(u"pm") >-1: units = u"ug/m3"
-					else:				  units  = u"C/0.1L"
+					else:				   units  = u"C/0.1L"
 					x, UI  = int(float(data[cc])), u"{}={:.0f}[{}]".format(cc,float(data[cc]),units)
 
 					self.setStatusCol(dev,cc,x,UI,whichKeysToDisplay,"","",decimalPlaces=0)
 
+
 					if cc == u"pm25_standard":
-						if	  x < 12:		airQuality = u"Good"
-						elif  x < 35.4:		airQuality = u"Moderate"
-						elif  x < 55.4:		airQuality = u"Unhealthy Sensitve"
-						elif  x < 150.4:	airQuality = u"Unhealthy"
-						elif  x < 250.4:	airQuality = u"Very Unhealthy"
-						else:				airQuality = u"Hazardous"
+						limitNames   = ["Good","Moderate","Unhealthy_Sensitve", "Unhealthy", "Very_Unhealthy", "Hazardous"]
+						limitValues  = [12.0,   35.4,      55.4,                  150.4,          250.4,        99999. ]
+						for ln in range(len(limitNames)):
+							if limitNames[ln] in props:
+								try: 	limitValues[ln] = float(props[limitNames[ln]])
+								except: pass
+							if x < limitValues[ln]: 
+								airQuality = limitNames[ln]
+								break
 
 
 						self.setStatusCol(dev,u"airQuality",airQuality,"Air Quality is "+airQuality,whichKeysToDisplay,"","",decimalPlaces=1)

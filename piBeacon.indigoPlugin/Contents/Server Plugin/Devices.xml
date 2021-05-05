@@ -14719,6 +14719,16 @@ After some days of running in clean air, proposed setup is:
 			</List>
 			</Field>
 
+			<Field id="statusAirqLabel" type="label" >
+			<Label>== map airquality number to name</Label></Field>
+			<Field id="Good" 				type="textfield" defaultValue="12.0">					<Label>Good: x&lt;</Label></Field>
+			<Field id="Moderate" 			type="textfield" defaultValue="35.4">					<Label>Moderate: x&lt;</Label></Field>
+			<Field id="Unhealthy_Sensitve" 	type="textfield" defaultValue="55.4">					<Label>Unhealthy Sensitve: x&lt;</Label></Field>
+			<Field id="Unhealthy" 			type="textfield" defaultValue="150.4">					<Label>Unhealthy: x&lt;</Label></Field>
+			<Field id="Very_Unhealthy" 		type="textfield" defaultValue="250.4">					<Label>Very Unhealthy: x&lt;</Label></Field>
+			<Field id="Hazardous" 			type="textfield" defaultValue="99999" readonly="true">	<Label>Hazardous: x&lt;</Label></Field>
+
+
 			<Field id="statusColorLabel" type="label" >
 			<Label>== set color of status column dot to </Label></Field>
 			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
@@ -14739,6 +14749,8 @@ After some days of running in clean air, proposed setup is:
 - If you leave it blank the defauult device state icon will be used
 </Label>
 			</Field>
+
+
 		</ConfigUI>
 
 		<States>
@@ -28337,8 +28349,6 @@ States:
 	<Device type="sensor" id="DHTxx">        	<Name>INPUT-Temp+Hum-DHTxx- deprecated</Name>		</Device>
 	<Device type="sensor" id="mhz-I2C">			<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
 	<Device type="sensor" id="mhz-SERIAL">		<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
-	<Device type="sensor" id="mhz_I2C">			<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
-	<Device type="sensor" id="mhz_SERIAL">		<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
 
     
 </Devices>	

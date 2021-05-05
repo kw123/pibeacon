@@ -1,3 +1,9 @@
+Added features / changes in v7.135.519@ 2021-05-04
+===================================================
+   
+1. added option for airquality sensors to set name for airpolution name in device edit
+
+
 Added features / changes in v7.135.518@ 2021-05-04
 ===================================================
    
