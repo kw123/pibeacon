@@ -73,7 +73,7 @@ def setLogLevel():
 
 
 #################################
-def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False):
+def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,wait=False):
 
 	##if True or verbose: logger.log(20, u"cBY:{:<20} ======== kill pgm myPID:s{}, pgmToKill:{}".format(G.program,myPID,pgmToKill ) )
 	count = 0
@@ -91,11 +91,6 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False)
 		#print "killOldPgm ",pgmToKill,str(myPID)
 		cmd= "ps -ef | grep '{}' | grep -v grep".format(pgmToKill)
 		if param1 !="":
-
-
-
-
-
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
 			cmd = "{} | grep ".format(cmd,param2)
@@ -125,9 +120,10 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False)
 			count += 1
 		if verbose: 
 			logger.log(40, u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
-			print  (u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist))
 		if len(xlist) > 2:
-			subprocess.call("/usr/bin/sudo kill -9 {}".format(xlist), shell=True)
+			cmd = "/usr/bin/sudo kill -9 {}".format(xlist)
+			if not wait: cmd += " &"
+			subprocess.call(cmd, shell=True)
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
@@ -473,9 +469,9 @@ def cleanUpSensorlist(sens, theSENSORlist):
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return {}
 #################################
-def doReboot(tt=1, text="", cmd="", force=False):
+def doReboot(tt=10., text="", cmd="", force=False):
 	try:
-
+		subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
 
 		### looks like w shell =True: /bin/sh -c /usr/bin/sudo , need to add ' ' around cmd 
 		try: logger.log(30, "cBY:{:<20}  rebooting / shutdown  delay:{}, force:{}; with cmd={}; remarks= {}".format(G.program, tt, force, cmd, text))
@@ -553,19 +549,20 @@ def resetRebootingNow():
 def doRebootThroughRUNpinReset():
 	if G.shutDownPinOutput >1:
 		subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
-		time.sleep(5)
+		time.sleep(10)
 		GPIO.setup(G.shutDownPinOutput, GPIO.OUT)
 		GPIO.output(G.shutDownPinOutput, True)
 		GPIO.output(G.shutDownPinOutput, False)
 
 
 #################################
-def sendRebootHTML(reason,reboot=True, force=False):
+def sendRebootHTML(reason,reboot=True, force=False, wait=10.):
 	sendURL(sendAlive="reboot", text=reason)
+	subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
 	if reboot:
-	   doReboot(tt=3, text=reason,force=force)
+	   doReboot(tt=wait, text=reason,force=force)
 	else:
-	   doReboot(tt=3., text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python; sleep 1; shutdown -h now ")
+	   doReboot(tt=wait, text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python; sleep 1; shutdown -h now ")
 
 	return
 

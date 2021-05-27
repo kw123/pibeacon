@@ -119,7 +119,7 @@ def readParams():
 		time.sleep(10)
 		return 3
 
-def startNEOPIXEL(setClock = ""):
+def startNEOPIXEL(setClock = "", off=False):
 	global devTypeLEDs, speed, speedOfChange, clockLightSet,clockMode, clockLightSetOverWrite, LEDintensityFactor
 	global DEVID, clockDict, inp 
 
@@ -296,10 +296,14 @@ def startNEOPIXEL(setClock = ""):
 			clockMode ="setClockStarted"
 		else:
 			clockMode ="run"
+
+		if off: out["setClock"] = "off"
 		
 		if not U.pgmStillRunning("neopixel.py neopixelClock"):
-			U.killOldPgm(myPID,"neopixel.py")
+			U.killOldPgm(myPID,"neopixel.py",verbose=True, wait=True)
+			time.sleep(3)
 			subprocess.call("/usr/bin/python "+G.homeDir+"neopixel.py neopixelClock &", shell=True)
+			U.logger.log(20, u"starting /usr/bin/python "+G.homeDir+"neopixel.py neopixelClock &")
 		setNEOinput(out)
 
 	except	Exception, e:
@@ -965,13 +969,13 @@ def setLightfromSensor():
 
 		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"): return
 		t = os.path.getmtime(G.homeDir+"temp/lightSensor.dat")
-		U.logger.log(20, "setLightfromSensor  == reading sensor ==")
+		U.logger.log(10, "setLightfromSensor  == reading sensor ==")
 	
 		lightSensorValueREAD = ""
 		maxRange = 10000.
 		sensor = ""
 		xx, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
-		U.logger.log(20, "setLightfromSensor  == reading sensor ==:{}".format(xx))
+		U.logger.log(10, "setLightfromSensor  == reading sensor ==:{}".format(xx))
 		if xx == {}: 				return
 		if "sensors" not in xx: 	return
 		if "time" not in xx: 	return
@@ -984,7 +988,7 @@ def setLightfromSensor():
 			try:
 				for sensorId in yy: 
 					rr = yy[sensorId]
-					U.logger.log(20, "setLightfromSensor  == reading sensor ==:{}".format(rr))
+					U.logger.log(10, "setLightfromSensor  == reading sensor ==:{}".format(rr))
 					lightSensorValueREAD = rr["light"]
 					if sensor == "i2cTSL2561":
 						maxRange = 12000.
@@ -1003,7 +1007,7 @@ def setLightfromSensor():
 				U.logger.log(30, "error reading light sensor")
 				return
 		if lightSensorValueREAD == "" : return 
-		U.logger.log(20, "setLightfromSensor  == read sensor ==")
+		U.logger.log(10, "setLightfromSensor  == read sensor ==")
 
 		#print "lightSensorValueREAD, lightSensorValueLast", lightSensorValueREAD, lightSensorValueLast
 		##	check if 0 , must be 2 in a row.
@@ -1035,7 +1039,7 @@ def setLightfromSensor():
 		if restartstartNEOPIXEL:
 			startNEOPIXEL()
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor) 
-		U.logger.log(20, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
+		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockLightSet+"  "+str(LEDintensityFactor))
 ##20181122-02:17:22 setting  lightSensorValueREAD lightSensorValue, clockLightSetOverWrite, maxRange, clockLightSet, LEDintensityFactor:6.0  50.0 daymedium  12000.0 offoff  offoff
 	except	Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1065,7 +1069,7 @@ def resetEverything():
 #################################
 def shutdown():
 	print" we are shutting down now"
-	time.sleep(1.5)
+	time.sleep(2)
 	subprocess.call("sudo killall -9 python;sleep 2; shutdown now", shell=True)
 	return ## dummy
 
@@ -1092,6 +1096,18 @@ def restorePattern():
 	subprocess.call("cp "+G.homeDir+"patterns-DEFAULT-clock " +G.homeDir+"temp/patterns", shell=True) 
 	return 
 	
+def signalShutDown():
+	for ii in range(8):
+		ticks = []
+		for ind in range(ii, 8):
+			ticks.append(ind + 60 + 48 + 40 + 32 + 24 + 16 + 12)
+		clockDict["extraLED"] = {"ticks":ticks, "RGB":[int(100/(ii*2+1)),int(100/(ii*2+1)),int(100/(ii*2+1))],"blink":[1,0]} # show all 8 led on ring w 8 led = dim white blinking
+		startNEOPIXEL()
+		time.sleep(0.95)
+	startNEOPIXEL(off=True)
+	time.sleep(1)
+
+
 #################################
 #################################
 #################################
@@ -1187,7 +1203,7 @@ myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
 
-U.killOldPgm(myPID,"neopixel.py")
+U.killOldPgm(myPID,"neopixel.py",verbose=True)
 
 readMarksFile()
 getCurrentPatterns()
@@ -1196,7 +1212,6 @@ U.echoLastAlive(G.program)
 
 setAllSwitchesOff()
 setupGPIOforTimeset()
-slTime = 1
 
 #save old wifi setting
 subprocess.call('cp /etc/network/interfaces '+G.homeDir+'interfaces-old', shell=True)
@@ -1205,7 +1220,6 @@ subprocess.call('cp /etc/network/interfaces '+G.homeDir+'interfaces-old', shell=
 #subprocess.call('sudo systemctl stop vncserver-x11-serviced.service', shell=True)
 
 	
-sleepTime = slTime
 maxWifiAdHocTime	= 12
 if U.whichWifi() == "normal":
 	wifiStarted = -1
@@ -1215,14 +1229,16 @@ else:
 	wifiStartedLastTest = int(time.time())
 	afterAdhocWifistarted(maxWifiAdHocTime)
 
-lastWIFITest	 = -1
+lastWIFITest	= -1
 		
+slTime 			= 1
+sleepTime		= slTime
 
-lastGPIOreset	 = 0
-G.lastAliveSend	 = time.time() -1000
-loopC			 = 0
-lastShutDownTest = -1
-lastRESETTest	 = -1
+lastGPIOreset	= 0
+G.lastAliveSend	= time.time() -1000
+loopC			= 0
+lastShutDownTest= -1
+lastRESETTest	= -1
 
 
 U.testNetwork()
@@ -1234,11 +1250,11 @@ U.logger.log(30,"wifiStarted:{}; networkStatus:{}; ipOfRouter{}".format(wifiStar
 
 networkIndicatorON = -1
 if wifiStarted < 0:
-	l0 =60 + 48 + 40 + 32 + 24 + 16 + 12
-	if G.networkStatus.find("Inet") >-1: # set network indicator = on for 30 secs 
+	l0 = 60 + 48 + 40 + 32 + 24 + 16 + 12
+	if G.networkStatus.find("Inet") > -1: # set network indicator = on for 30 secs 
 		clockDict["extraLED"]  = {"ticks":[ii+l0 for ii in range(8)], "RGB":[0,100,0],"blink":[1,0]} # start on 8 ring 
 	else:
-		clockDict["extraLED"]  = {"ticks":[ii+l0 for ii in range(8)], "RGB":[100,0,0],"blink":[1,0]} # start on 8 ring 
+		clockDict["extraLED"]  = {"ticks":[ii+l0 for ii in range(8)], "RGB":[100,0,0],"blink":[1,1]} # start on 8 ring 
 	startNEOPIXEL()
 	networkIndicatorON	= time.time()+25
 U.checkParametersFile("parameters-DEFAULT-clock")
@@ -1275,7 +1291,12 @@ while True:
 				U.checkParametersFile("parameters-DEFAULT-clock")
 				time.sleep(20) # wait for some time for good parameters
 				U.restartMyself(param=" bad parameters read", reason="")
-		
+	
+		if U.checkifRebooting():
+			signalShutDown()
+			exit()
+			
+	
 		if loopC % 3 ==0: # every 3 secs read parameters file 
 			setLightfromSensor()
 			U.echoLastAlive(G.program)
@@ -1299,11 +1320,7 @@ while True:
 		if GPIO.input(gpiopinSET["up"]) == 0 and GPIO.input(gpiopinSET["down"]) == 0 :
 			lastShutDownTest+=1
 			if lastShutDownTest > 2:
-				ticks =[]
-				for ind in range(8):
-					ticks.append(ind + 60 + 48 + 40 + 32 + 24 + 16 + 12)
-				clockDict["extraLED"]	 = {"ticks":ticks, "RGB":[100,100,100],"blink":[1,1]} # show all 8 led on ring w 8 led = dim white blinking
-				startNEOPIXEL()
+				signalShutDown()
 				shutdown()
 		else:
 			lastShutDownTest =-1

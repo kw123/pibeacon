@@ -114,6 +114,23 @@
     "subType":{},
     "hexCode":"0D0C09466C6F7765722063617265"
   }, 
+  "InkBirdTempPool01B":  {
+    "text":"Ink Bird Temp Pool 01B",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"name Tag: tps= 74 70 73",
+    "subType":{},
+    "hexCode":"1004097470730AFF"
+  }, 
   "BLEsensorbug":  {
     "text":"Blueradio sensor bug ",
     "Maj":"",

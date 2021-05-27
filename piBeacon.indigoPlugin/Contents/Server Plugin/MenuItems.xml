@@ -367,7 +367,7 @@ or your device folder might fill up quickly </Label>
 			<Field id="labelDeleteFAMILY" type="label">
 				<Label>Manage beacons: include / excluded them individually from tracking</Label>
 			</Field>
-			<Field id="ignoreMAC" type="menu" defaultValue="0" tooltip="Select the beacon to be erased ">
+			<Field id="ignoreMAC" type="menu" defaultValue="0" tooltip="Select the beacon to be (un)-ignored ">
 				<Label>Ignore / delete beacons -history:</Label>
 				<List class="self" filter="" method="filterMACs" dynamicReload="true" />
 			</Field>

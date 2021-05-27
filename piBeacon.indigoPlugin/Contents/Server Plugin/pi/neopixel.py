@@ -148,7 +148,7 @@ class Adafruit_NeoPixel(object):
 		"""
 		resp = ws.ws2811_init(self._leds)
 		if resp != 0:
-			raise RuntimeError('ws2811_init failed with code {0}'.format(resp))
+			raise RuntimeError('ws2811_init failed with code {}'.format(resp))
 		
 	def show(self):
 		#print "Update the display with the data from the LED buffer."
@@ -715,7 +715,7 @@ def readParams(pgmType="neopixel"):
 					if "PWMchannel"	 in ddd:
 						try:	PWMchannel		 = int(ddd["PWMchannel"])
 						except: pass
-					U.logger.log(10, " new params "+
+					U.logger.log(20, " new params "+
 					  "	 devType="		   + unicode(devType)	  +
 					  "	 signalPin="	   + unicode(signalPin)	 +
 					  "	 OrderOfMatrix="   + unicode(OrderOfMatrix)	 +
@@ -976,7 +976,7 @@ inpRaw			= ""
 U.setLogging()
 
 readParams(pgmType=pgmType)
-U.logger.log(30, u"===========	(re) started neopixel  ===============================================")
+U.logger.log(20, u"=========== (re) started neopixel  ============{}".format(sys.argv))
 
 
 LED_CHANNEL	   = PWMchannel
@@ -987,7 +987,7 @@ LED_DMA		   = DMAchannel
 
 
 if devType	  == "": 
-	print datetime.datetime.now(), " no neopixel section in parameters file available"
+	U.logger.log(30, u"{} , no neopixel section in parameters file available".format(datetime.datetime.now()))
 	exit()
 
 MAP,linMAP		   = makeMAP(devType, OrderOfMatrix=OrderOfMatrix)
@@ -1033,6 +1033,7 @@ U.killOldPgm(myPID,G.program+".py")
 
 time.sleep(0.1)
 while True:
+	#U.logger.log(20,"after while")
 	ttx = time.time()
 	try:
 		if loop == 1 and  (items == [] or items ==""):
@@ -1098,10 +1099,14 @@ while True:
 			except:
 				pass
 
-			setClock=""
+			setClock = ""
 			try:
 				if "setClock" in data: 
 					setClock	  = data["setClock"]
+				if setClock == "off":
+					image.resetImage([0,0,0])
+					image.show()
+					exit()
 			except:
 				pass
 
@@ -1136,7 +1141,7 @@ while True:
 						 
 								reset =""
 								if "reset" in cmd:
-									reset =cmd["reset"]
+									reset = cmd["reset"]
 									if reset !=[]:
 										try:		image.resetImage(reset)
 										except:		U.logger.log(30, " reset error :" +unicode(reset))
@@ -1208,9 +1213,13 @@ while True:
 
 								elif cType == "clock":
 									tt1 = time.time()
+									if setClock == "off":
+										image.resetImage([0,0,0])
+										image.show()
+										exit()
 									speed = 1
 									if len(unicode(pos)) < 20: 
-										print "clock:  bad data, exiting"
+										U.logger.log(30, u"clock:  bad data, exiting")
 										time.sleep(1)
 										exit()
 									if "speed" in pos:
@@ -1222,7 +1231,7 @@ while True:
 										#print	"tt- lastClock", tt- lastClock
 										continue 
 									#print speed, pos
-									if speed ==1 and setClock =="":
+									if speed == 1 and setClock == "":
 										lastClock = int(tt)
 										dd = datetime.datetime.now()
 										hh = dd.hour
@@ -1230,7 +1239,7 @@ while True:
 										mm = dd.minute	# 0..59
 										ss = dd.second	# 0..59
 										smh={"SS":dd.second,"MM":dd.minute,"HH":hh,"DD":dd.day} 
-									elif setClock !="":
+									elif setClock != "":
 										dhms = setClock.split(":")
 										hh = int(dhms[1])
 										if hh > 11: hh -=12	 # 0-11
@@ -1370,6 +1379,7 @@ while True:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		items=[]
 
+U.logger.log(20, u"exiting at end")
 
 atexit.register(_clean_shutdown)
 		

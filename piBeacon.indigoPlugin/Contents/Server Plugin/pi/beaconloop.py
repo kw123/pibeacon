@@ -1544,10 +1544,13 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Mi
 		## clock - LYWSD02 = 5B 04 = S-typ, no battery level? , each meassge is eitherh T or H or bat only 
 		## mac#                E7:2E:01:41:5C:D9                                        
         ##ll            ll           ll                S-typ ct   reverse mac -----   ?? Stype ll   1  2 		
+		## clock T         02 1A 18  13 16 95 FE 70 20 5B 04 49   D9 5C 41 01 2E E7   09 0A 10 01   26 00
+		##                 02 1A 18  13 16 95 FE 70 20 5B 04 54   D9 5C 41 01 2E E7   09 04 10 02   EA 00
 		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 04 10 02   EE 00    			04=temp  00ee --> 238/10 = 23.8
 		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 06 10 02   A4 01    			06=hum   01aa --> 420/10 = 42.9%
 		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 0A 10 01   5B 00				0A=batt  5B   --> 91  ll= 1 byte, not too often
 	pos   01 23 45 67   89 11 23 45  67 89 21 23 45 67 89 31 23   45 67 89 41 23 45   67 89 51 23   45 67				position in hexData
+
 
 	# Xiaomi sensor types dictionary 
 	#                              binary?
@@ -1711,14 +1714,13 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Mi
 
 
 
-		dd={   # the data dict to be send 
-						'temp': 		round(temp+ BLEsensorMACs[mac][sensor]["offsetTemp"],1),
-						'hum': 			int(hum + BLEsensorMACs[mac][sensor]["offsetHum"]),
-						'Formaldehyde': round(Formaldehyde,2),
-						'counter': 		counter, 
-						'batteryLevel': BLEsensorMACs[mac][sensor]["batteryLevel"], 
-						"rssi":			int(rx),
-				}
+		dd = {}  # the data dict to be send 
+		if temp > -100: 										dd['temp'] 			= round(temp+ BLEsensorMACs[mac][sensor]["offsetTemp"],1)
+		if hum > -100: 											dd['hum']			= int(hum + BLEsensorMACs[mac][sensor]["offsetHum"])
+		if Formaldehyde > -100: 								dd['Formaldehyde']	= round(Formaldehyde,2)
+		if counter > -100: 										dd['counter']		= counter 
+		if BLEsensorMACs[mac][sensor]["batteryLevel"] > -100: 	dd['batteryLevel']	= BLEsensorMACs[mac][sensor]["batteryLevel"]
+		if rx > -101: 											dd['rssi']			= int(rx)
 
 		trigTime 	= time.time() - BLEsensorMACs[mac][sensor]["lastUpdate"]   > BLEsensorMACs[mac][sensor]["updateIndigoTiming"]  			# send min every xx secs
 		trigTemp	= abs(temp - BLEsensorMACs[mac][sensor]["temp"]) 				 > 0.5
@@ -1727,7 +1729,7 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Mi
 
 		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, form:{}, triggers:{};{};{};{};   nMessages:{}".format(mac, temp, hum, Formaldehyde, trigTime, trigTemp, trigHum, trigFOM, BLEsensorMACs[mac][sensor]["nMessages"]))
 
-		if BLEsensorMACs[mac][sensor]["nMessages"] > 6 and hum > -100. and temp > -100.:
+		if BLEsensorMACs[mac][sensor]["nMessages"] > 6 and temp > -100.:
 			if  trigTime or trigTemp or trigHum or trigFOM:
 					# compose complete message
 					U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac][sensor]["devId"]:dd}}})
@@ -1737,7 +1739,7 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Mi
 					BLEsensorMACs[mac][sensor]["lastUpdate"]	= time.time()
 					BLEsensorMACs[mac][sensor]["counter"]		= counter
 					BLEsensorMACs[mac][sensor]["temp"]    		= temp
-					BLEsensorMACs[mac][sensor]["hum"]    	 	= hum
+					BLEsensorMACs[mac][sensor]["hum"]		 	= hum
 					BLEsensorMACs[mac][sensor]["Formaldehyde"]	= Formaldehyde
 		UUID = sensor
 		Maj  = mac
@@ -3104,6 +3106,10 @@ def checkIFtrackMacIsRequested():
 				trackRawOnly = True
 				logCountTrackMac = nLogMgsTrackMac * 5
 				collectTime = 50 
+			elif xx[1].lower().find("~filter~") > -1:
+				trackmacFilter = xx[1].split("~filter~")[1]
+				logCountTrackMac  = nLogMgsTrackMac * 10
+				collectTime = 90 
 		elif len(xx) == 3: 
 			if xx[1].lower().find("raw") > -1:
 				trackRawOnly = True

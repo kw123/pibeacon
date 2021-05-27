@@ -28,7 +28,7 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "BLEconnect"
-version = 5.3
+version = 6.3
 ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
@@ -126,6 +126,7 @@ def readParams():
 							if thisMAC not in macListNew:
 								macListNew[thisMAC]={"type":"isBLElongConnectDevice",
 													 "updateIndigoTiming":60,
+													 "lastSend":0,
 													 "readSensorEvery":120,
 													 "lastTesttt":time.time()-1000.,
 													 "lastMsgtt":time.time()-1000. ,
@@ -138,6 +139,7 @@ def readParams():
 													 "triesWOdata": 0,
 													 "quickTest": 0. ,
 													 "nextRead": 0,
+													 "bleHandle": "",
 													 "devId": devId 
 													 }
 
@@ -155,6 +157,8 @@ def readParams():
 							if "offsetTemp" in CCC[ss][devId]:
 								try:	macListNew[thisMAC]["offsetTemp"] = float(CCC[ss][devId]["offsetTemp"])
 								except: pass
+							if "bleHandle" in CCC[ss][devId]:
+								macListNew[thisMAC]["bleHandle"] = CCC[ss][devId]["bleHandle"]
 					if ss =="BLEdirectMiTempHumSquare":	U.logger.log(30, u"macListNew:{} ".format(macListNew))
 
 			#U.logger.log(30, u"BLEconnect - chechink devices (1):{}".format(macList))
@@ -307,6 +311,7 @@ def tryToConnectCommandLine(MAC,BLEtimeout):
 #################################
 def tryToConnectToDevice(MAC):
 	global macList
+	data = {"connected":False, "dataChanged":False, "dataRead":False, "triesWOdata":macList[MAC]["triesWOdata"]}
 	try:
 		if macList[MAC]["devType"] == "BLEXiaomiMiTempHumSquare":
 			return BLEXiaomiMiTempHumSquare(MAC)
@@ -314,18 +319,20 @@ def tryToConnectToDevice(MAC):
 		elif macList[MAC]["devType"] == "BLEXiaomiMiVegTrug":
 			return BLEXiaomiMiVegTrug(MAC)
 
+
+		elif macList[MAC]["devType"] == "BLEinkBirdPool01B":
+			return BLEinkBirdPool01B(MAC)
+
 	except  Exception, e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			return {}
-
-	return {"connected":False, "ok":False }
+	return data
 
 
 #################################
 def BLEXiaomiMiTempHumSquare(MAC):
 	global errCount, macList, maxTrieslongConnect, useHCI
 
-	data = {"connected":False, "ok":False }
+	data = {"connected":False, "dataChanged":False, "dataRead":False, "triesWOdata":macList[MAC]["triesWOdata"]}
 	try:
 		verbose = False
 		"""
@@ -341,7 +348,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 		need to add:
 			 hciX default 
 		"""
-		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
+		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return data
 
 		minWaitAfterBadRead = max(5,macList[MAC]["readSensorEvery"]/3)
 		macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
@@ -376,25 +383,22 @@ def BLEXiaomiMiTempHumSquare(MAC):
 				data["hum"]  			= int( int(readData[2],16) + macList[MAC]["offsetHum"] )
 				data["batteryVoltage"]	= int(readData[4]+readData[3],16)
 				data["batteryLevel"]	= batLevelTempCorrection(data["batteryVoltage"], data["temp"], batteryVoltAt100 = 3000, batteryVoltAt0=2700. )
-				data["ok"]   			= True
 				data["connected"]   	= True
+				data["dataRead"]		= True
 				macList[MAC]["triesWOdata"] = 0
 				#U.logger.log(20, "{} return data: {}".format(MAC, data))
 
 				if macList[MAC]["lastData"] == {}:
-					macList[MAC]["lastData"] = copy.copy(data)
-					macList[MAC]["lastTesttt"] = 0.
+					macList[MAC]["lastData"] 			= copy.copy(data)
+					macList[MAC]["lastData"]["temp"]	= -10000.
+					macList[MAC]["lastTesttt"] 			= 0.
 
 				if ( abs(data["temp"] - macList[MAC]["lastData"]["temp"])      > 1	or
-					 abs(data["hum"]  - macList[MAC]["lastData"]["hum"])       > 2	or
-					 data["connected"] !=macList[MAC]["lastData"]["connected"]		or
-					 time.time()      - macList[MAC]["lastTesttt"]             > 60.):
-					macList[MAC]["lastTesttt"] = time.time()
-					macList[MAC]["lastData"]  = copy.copy(data)
-					return data
-
-				else:
-					return {"ok":False, "connected":True, "triesWOdata": macList[MAC]["triesWOdata"]}
+					 abs(data["hum"]  - macList[MAC]["lastData"]["hum"])       > 2):
+						data["dataChanged"]	= True
+				macList[MAC]["lastTesttt"] = time.time()
+				macList[MAC]["lastData"]  = copy.copy(data)
+				return data
 
 			macList[MAC]["triesWOdata"] += 1
 
@@ -403,7 +407,7 @@ def BLEXiaomiMiTempHumSquare(MAC):
 			macList[MAC]["triesWOdata"] = 0
 			HCIs = U.whichHCI()
 			#U.logger.log(20, u"error, connected but no data, triesWOdata:{} repeast in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
-			return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
+			return data
 
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -419,9 +423,9 @@ def BLEXiaomiMiTempHumSquare(MAC):
 def BLEXiaomiMiVegTrug(MAC):
 	global errCount, macList, maxTrieslongConnect, useHCI
 
-	data = {"connected":False, "ok":False }
+	data = {"connected":False, "dataChanged":False, "dataRead":False, "triesWOdata":macList[MAC]["triesWOdata"]}
 	try:
-		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return {"ok":False}
+		if time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]: return data
 		verbose = False
 
 		minWaitAfterBadRead = min(20,max(5,macList[MAC]["readSensorEvery"]/3))
@@ -447,7 +451,7 @@ def BLEXiaomiMiVegTrug(MAC):
 		# eg: 'f4 00 69 00 00 00 00 1d 11 01 02 3c 00 fb 34 9b'
 		"""
 			
-		#U.logger.log(20, u"{},  tries:{}, DT:{}".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
+		if verbose: U.logger.log(20, u"{},  tries:{}, DT:{}".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 		expCommands = connectGATT(useHCI, MAC, 5,15, verbose=verbose)
 		if expCommands == "":
 			macList[MAC]["triesWOdata"] +=1
@@ -455,8 +459,7 @@ def BLEXiaomiMiVegTrug(MAC):
 			if macList[MAC]["triesWOdata"] > maxTrieslongConnect:
 				macList[MAC]["triesWOdata"] = 0
 				#U.logger.log(20, u"MAC:{}, error, not connected, sending not connected to indigo, triesWOdata:{}, retrying in {} secs".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
-				return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
-			#U.logger.log(20, u"MAC:{}, error, not connected, triesWOdata:{} retrying in {} secs".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
+				U.logger.log(20, u"MAC:{}, error, not connected, triesWOdata:{} retrying in {} secs".format(MAC, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
 			return data
 
 		result1 = []
@@ -483,7 +486,6 @@ def BLEXiaomiMiVegTrug(MAC):
 			if macList[MAC]["triesWOdata"] >= maxTrieslongConnect:
 				macList[MAC]["triesWOdata"] = 0
 				if verbose: U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
-				return {"ok":True, "connected":False, "triesWOdata": macList[MAC]["triesWOdata"]}
 			return data
 
 		data["batteryLevel"]		= int(result1[0],16)
@@ -493,27 +495,24 @@ def BLEXiaomiMiVegTrug(MAC):
 		data["illuminance"]			= int(result2[6]+result2[5]+result2[4]+result2[3],16)
 		data["moisture"] 			= int(result2[7],16)
 		data["Conductivity"]		= int(result2[9]+result2[8],16)
-		data["ok"]					= True
+		data["dataRead"]			= True
 		data["connected"]			= True
 		macList[MAC]["triesWOdata"] = 0
 
 		if macList[MAC]["lastData"] == {}:
-			macList[MAC]["lastData"] = copy.copy(data)
-			macList[MAC]["lastTesttt"] = 0.
+			macList[MAC]["lastData"] 			= copy.copy(data)
+			macList[MAC]["lastData"]["temp"]	= -10000.
+			macList[MAC]["lastTesttt"] 			= 0.
 
 		if ( abs(data["temp"] 			- macList[MAC]["lastData"]["temp"])			> 1 	or
 			 abs(data["moisture"]  		- macList[MAC]["lastData"]["moisture"])		> 2 	or
-			 abs(data["Conductivity"]	- macList[MAC]["lastData"]["Conductivity"])	> 2 	or
-			     (data["connected"]	   != macList[MAC]["lastData"]["connected"])			or
-			      time.time()           - macList[MAC]["lastTesttt"]             	> 119.):
+			 abs(data["Conductivity"]	- macList[MAC]["lastData"]["Conductivity"])	> 2 ):
 			macList[MAC]["lastTesttt"] = time.time()
 			macList[MAC]["lastData"]  = copy.copy(data)
-			if verbose: U.logger.log(20, "{} return data: {}".format(MAC, data))
-			return data
-
-		data = {"ok":False, "connected":True, "triesWOdata": macList[MAC]["triesWOdata"]}
-		if verbose: U.logger.log(20, u"{}; return data:{}, triesWOdata:{}, repeat in {} secs".format(MAC, data, macList[MAC]["triesWOdata"], minWaitAfterBadRead))
+			data["dataChanged"]			=  True
+		if verbose: U.logger.log(20, "{} return data: {}".format(MAC, data))
 		return data
+
 
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -522,6 +521,69 @@ def BLEXiaomiMiVegTrug(MAC):
 	if verbose: U.logger.log(20, "{} return data: {}".format(MAC, data))
 	
 	return data
+
+
+
+#################################
+def BLEinkBirdPool01B(MAC):
+	global errCount, macList, maxTrieslongConnect, useHCI
+
+	data = {"connected":False, "dataChanged":False, "dataRead":False, "triesWOdata":macList[MAC]["triesWOdata"]}
+	verbose = False
+	try:
+		if (time.time() - macList[MAC]["nextRead"] < 0 or time.time() - macList[MAC]["lastTesttt"] < macList[MAC]["readSensorEvery"]): return data
+
+		minWaitAfterBadRead = min(20.,max(5.,macList[MAC]["readSensorEvery"]/3.))
+		macList[MAC]["nextRead"] = time.time() + minWaitAfterBadRead
+
+		"""
+		# simple read: 
+		sudo gatttool  --device=49:42:01:00:12:76 --char-read --handle=0x0024
+		# temp: first 16bytes  in little endian format 
+		"""
+		result = batchGattcmd(useHCI, MAC, "--char-read --handle=0x{}".format(macList[MAC]["bleHandle"]), "descriptor:", 7, repeat=3, verbose=verbose)
+
+		if verbose: U.logger.log(20, u"connect results:{}".format(result))
+
+		if result == []:
+			data["triesWOdata"] = macList[MAC]["triesWOdata"]
+			if macList[MAC]["triesWOdata"] >= maxTrieslongConnect:
+				macList[MAC]["triesWOdata"] = 0
+				if verbose: U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[MAC]["triesWOdata"], minWaitAfterBadRead))
+				return data
+			return data
+
+		data["temp"]  				= round( int(result[1]+result[0],16)/100. + macList[MAC]["offsetTemp"], 1)
+		data["dataRead"]			= True
+		data["connected"]			= True
+		macList[MAC]["triesWOdata"] = 0
+		data["triesWOdata"] = macList[MAC]["triesWOdata"]
+
+		if macList[MAC]["lastData"] == {}:
+			macList[MAC]["lastData"]			= copy.copy(data)
+			macList[MAC]["lastData"]["temp"]	= -10000.
+			macList[MAC]["lastTesttt"]			= 0.
+
+		if abs(data["temp"] - macList[MAC]["lastData"]["temp"]) > 1:
+			data["dataChanged"] = True
+
+		macList[MAC]["lastTesttt"] = time.time()
+		macList[MAC]["lastData"]  = copy.copy(data)
+		if verbose: U.logger.log(20, "{} return ok data: {}".format(MAC, data))
+		return data
+
+
+
+
+
+	except  Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return "badData"
+	
+	if verbose: U.logger.log(20, "{}  return 99 data: {}".format(MAC, data))
+	
+	return data
+
 
 #################################
 def connectGATT(useHCI, MAC, timeoutGattool, timeoutConnect, repeat=1, verbose = False):
@@ -619,7 +681,7 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout, verbose=False):
 def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	try:
 		for kk in range(2):
-			if verbose:  U.logger.log(20,"sendline  cmd{}, expecting:'{}'".format(cc, expectedTag))
+			if verbose:  U.logger.log(20,"sendline  cmd:{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
 			if ret == 0:
@@ -642,7 +704,7 @@ def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose
 def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	try:
 		for kk in range(2):
-			if verbose: U.logger.log(20,"sendline  cmd{}, expecting:'{}'".format(cc, expectedTag))
+			if verbose: U.logger.log(20,"sendline  cmd:{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
 			if ret == 0:
@@ -660,6 +722,31 @@ def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return []
+
+
+#################################
+def batchGattcmd(useHCI, MAC, cc, expectedTag, nBytes, repeat=3, verbose=False):
+	try:
+		cmd = "sudo /usr/bin/gatttool -i {} -b {} {}".format(useHCI,  MAC, cc) 
+		if verbose: U.logger.log(20,"{} ;  expecting: '{}'".format(cmd, expectedTag))
+		for kk in range(repeat):
+			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			if ret[0].find(expectedTag) >-1:
+				if verbose: U.logger.log(20,"... successful:  0:{}".format( escape_ansi(ret[0]) ))
+				xx = ret[0].split(expectedTag)[1].replace("\r","").strip().split() 
+				if len(xx) == nBytes:
+					return xx
+				else:
+					if verbose: U.logger.log(20,"... error: len != {}".format(nBytes))
+					continue
+			else:
+				if verbose: U.logger.log(20,"... error: {}".format( escape_ansi(ret[0]) ))
+			time.sleep(1)
+
+	except  Exception, e:
+		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return []
+
 
 
 #################################
@@ -919,7 +1006,7 @@ def execBLEconnect():
 						macList[thisMAC]["up"] = False
 
 				if macList[thisMAC]["type"] == "isBLElongConnectDevice":
-					if tt - macList[thisMAC]["lastTesttt"] <= macList[thisMAC]["updateIndigoTiming"]: continue
+					#U.logger.log(20, "isBLElongConnectDevice: doing  thisMAC:{}, devType:{}".format(thisMAC, macList[thisMAC]["devType"]) )
 
 					data0 = tryToConnectToDevice(thisMAC)
 
@@ -931,17 +1018,22 @@ def execBLEconnect():
 							macList[thisMAC]["badSensor"] +=1
 							if macList[thisMAC]["badSensor"] > 3:
 								data["sensors"] = {macList[thisMAC]["devType"]:{macList[thisMAC]["devId"]:"badSensor"}}
-							continue
-						macList[thisMAC]["badSensor"] = 0
-						macList[thisMAC]["up"] = True
-						if "ok" in data0:
-							if data0["ok"]:
-								data["sensors"]				= {macList[thisMAC]["devType"]:{macList[thisMAC]["devId"]:data0}}
 								U.sendURL(data=data)
-							if macList[thisMAC]["triesWOdata"] >  2* maxTrieslongConnect:
-								U.logger.log(20, "requested a restart of BLE stack due to no sensor signal  for {} tries".format( macList[thisMAC]["triesWOdata"]))
-								time.sleep(5)
-								subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
+								macList[thisMAC]["badSensor"] = 0
+							macList[thisMAC]["up"] = False
+							continue
+
+						if (tt - macList[thisMAC]["lastSend"] <= macList[thisMAC]["updateIndigoTiming"] and not data0["dataChanged"] ) or not data0["dataRead"]: continue
+
+						macList[thisMAC]["badSensor"]	= 0
+						macList[thisMAC]["up"] 			= True
+						data["sensors"]					= {macList[thisMAC]["devType"]:{macList[thisMAC]["devId"]:data0}}
+						U.sendURL(data=data)
+						macList[thisMAC]["lastSend"] = time.time()
+						if macList[thisMAC]["triesWOdata"] >  2* maxTrieslongConnect:
+							U.logger.log(20, "requested a restart of BLE stack due to no sensor signal  for {} tries".format( macList[thisMAC]["triesWOdata"]))
+							time.sleep(5)
+							subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
 							
 					else:
 						macList[thisMAC]["up"] = False
