@@ -11861,6 +11861,7 @@ class Plugin(indigo.PluginBase):
 		beaconUpdatedIds = []
 		try:
 
+			if "msgs" not in data: return beaconUpdatedIds
 			piU = unicode(pi)
 			retCode, piMAC, piN = self.checkincomingMACNo(data, piU, timeStampOfReceive)
 			if not retCode: return beaconUpdatedIds
@@ -11881,22 +11882,27 @@ class Plugin(indigo.PluginBase):
 					secondsCollected = data[u"secsCol"]
 				msgs = data[u"msgs"]
 				if len(msgs) > 0 and piMAC != u"":
-					if self.RPI[piU][u"ipNumberRpiSetStatic"] == "0":
-						if u"ipAddress" in data:
-							ipAddress = data[u"ipAddress"]
-							if self.RPI[piU][u"ipNumberPi"] != u"" and self.RPI[piU][u"ipNumberPi"] != ipAddress:
-								if ipAddress == u"":
-									self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP",u"rebootSSH"])
-									self.indiLOG.log(30,u"rPi#: {}  ip# send from rPi is empty, you should restart rPi, ip# should be {}".format(piU, self.RPI[piU][u"ipNumberPi"] ))
-									return beaconUpdatedIds
-								else:
-									self.indiLOG.log(30,u"rPi#:{} {}: IP number has changed to {}, please fix in menue/pibeacon/setup RPI to reflect changed IP number or fix IP# on RPI\n this can happen when WiFi and ethernet are both active, try setting wlan/eth parameters in RPI device edit;  ==> ignoring data".format(piU, self.RPI[piU][u"ipNumberPi"], ipAddress ))
-									return beaconUpdatedIds
-						else:
-							return beaconUpdatedIds
+					if u"ipAddress" in data:
+						ipAddress = data[u"ipAddress"]
+					else:
+						self.indiLOG.log(30,u"rPi#:{} {}: ipAddress not in data".format(piU, self.RPI[piU][u"ipNumberPi"]))
+						return beaconUpdatedIds
 
-						beaconUpdatedIds = self.updateBeaconStates(piU, piN, ipAddress, piMAC, secondsCollected, msgs)
-						self.RPI[piU][u"emptyMessages"] = 0
+					if ipAddress == u"":
+						self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP",u"rebootSSH"])
+						self.indiLOG.log(30,u"rPi#: {}  ip# send from rPi is empty, you should restart rPi, ip# should be {}".format(piU, self.RPI[piU][u"ipNumberPi"] ))
+						return beaconUpdatedIds
+
+					if self.RPI[piU][u"ipNumberPi"] != ipAddress:
+						if self.RPI[piU][u"ipNumberRpiSetStatic"] == "1":
+							self.indiLOG.log(30,u"rPi#:{} {}: IP number has changed to {}, please fix in menu/pibeacon/setup RPI to reflect changed IP number or fix IP# on RPI\n this can happen when WiFi and ethernet are both active, try setting wlan/eth parameters in RPI device edit;  ==> ignoring data".format(piU, self.RPI[piU][u"ipNumberPi"], ipAddress ))
+							return beaconUpdatedIds
+						else:
+							self.RPI[piU][u"ipNumberPi"] = ipAddress
+
+					beaconUpdatedIds = self.updateBeaconStates(piU, piN, ipAddress, piMAC, secondsCollected, msgs)
+					self.RPI[piU][u"emptyMessages"] = 0
+
 				elif len(msgs) == 0 and piMAC != u"":
 					self.RPI[piU][u"emptyMessages"] +=1
 					if	self.RPI[piU][u"emptyMessages"] >  min(self.enableRebootRPIifNoMessages,10) :
@@ -11908,6 +11914,9 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(30,u"sending reboot command to RPI")
 							self.setONErPiV(piU,u"piUpToDate",[u"updateParamsFTP",u"rebootSSH"])
 							self.RPI[piU][u"emptyMessages"] = 0
+				else:
+						self.indiLOG.log(30,u"rPi#:{} {}: piMAC empty ".format(piU, self.RPI[piU][u"ipNumberPi"]))
+						return beaconUpdatedIds
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -11984,13 +11993,14 @@ class Plugin(indigo.PluginBase):
 			if u"piMAC" in data:
 				piMAC = unicode(data[u"piMAC"])
 			if piMAC == u"0" or piMAC == u"":
+				#self.indiLOG.log(10,u"checkincomingMACNo, piMAC is wrong# {};  piU:{}, data:{}".format(piMAC, pi, data) )
 				return False, u"", u""
 
 			#if str(pi) =="9": self.indiLOG.log(10,u"receiving: pi "+piU+u"  piMAC:" + piMAC)
 			piN = int(data[u"pi"])
 			piNU = unicode(piN)
 			if piNU not in _rpiList :
-				if self.decideMyLog(u"all"): self.indiLOG.log(5,u"bad data  Pi# not in range: {}".format(piNU))
+				self.indiLOG.log(30,u"bad data  Pi# not in range: {}".format(piNU))
 				return	False, u"", u""
 
 			try:
@@ -16056,7 +16066,7 @@ class Plugin(indigo.PluginBase):
 			if unicode(e).find(u"timeout waiting") > -1:
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
-			if e != None	and unicode(e).find(u"not found in database") ==-1:
+			if e != None and unicode(e).find(u"not found in database") ==-1:
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 			keepThisMessage = False
 
@@ -16108,7 +16118,9 @@ class Plugin(indigo.PluginBase):
 			beaconUpdatedIds = []
 			updateFINGnow = False
 			ln = len(msgs)
-			if ln < 1: return beaconUpdatedIds
+			if ln < 1: 
+				self.indiLOG.log(30,u"updateBeaconStates: message rejected RPI piMACSend: {}; pi#: {:2s}; MSGS EMPTY:{}".format(piMACSend, fromPiU, msgs) )
+				return beaconUpdatedIds
 			dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 
 			newRPI			= u""
@@ -16122,12 +16134,15 @@ class Plugin(indigo.PluginBase):
 
 			# rpi
 			keepThisMessage, beaconUpdatedIds, updatepIP = self.handleRPIMessagePart(piMACSend, newRPI, fromPiU, piNReceived, ipAddress, dateString, beaconUpdatedIds)
-			if not keepThisMessage: return beaconUpdatedIds
+			if not keepThisMessage: 
+				self.indiLOG.log(30,u"message rejected RPI piMACSend: {}; pi#: {:2s};  {}".format(piMACSend, fromPiU, msgs) )
+				return beaconUpdatedIds
 
 
 			###########################	 ibeacons ############################
 			#### ---- update ibeacon info
 			for msg in msgs:
+				if self.decideMyLog(u"BeaconData"): self.indiLOG.log(5,u"updateBeaconStates new iBeacon message 2 \n {}".format(msg) )
 				if True: # get data from message
 					if type(msg) != type({}): continue
 					mac		= msg[u"mac"].upper()

@@ -1,7 +1,15 @@
+Added features / changes in v7.136.525@ 2021-05-29
+===================================================
+   
+1. some code cleanup for BLEconnect - iphones  and BLEconnect-sensors
+2. added some debugging logs in plugin  
+3. fixed error with static / dynamic ip number settings in RPI device edit  
+
+
 Added features / changes in v7.136.521@ 2021-05-27
 ===================================================
    
-1. add sensor type BLE inkBird Pool 01B ( not R!!)
+1. added sensor type BLE inkBird Pool 01B ( not R!!)
    this is the first floating pool temperature sensors 
    that can be read by indigo. The old pool temp sensor RFXcom from scientific  was discontinued
    to install: put batteries into inkbird, put it next to RPI;  menu / accept new beacons: select Inkbird
