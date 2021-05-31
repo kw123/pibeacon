@@ -1307,6 +1307,18 @@ def getTZ():
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 ###############################
+def getTZNumber():
+
+# returns time relative to GMZ
+	tznumber = ""
+	try:
+		#JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
+		JanDelta = int(subprocess.Popen("date -d '1 Jan' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
+		#NowDelta = int(subprocess.Popen("date  +%z "		   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
+		tznumber = JanDelta
+	except: pass	
+	return tznumber
+###############################
 def writeTZ( iTZ = 99, cTZ="",force=False ):
 	try:
 

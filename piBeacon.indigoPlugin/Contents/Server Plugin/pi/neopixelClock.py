@@ -18,6 +18,139 @@ G.program = "neopixelClock"
 import	RPi.GPIO as GPIO
 
 
+version = 2.3
+status = "ok"
+
+# ------------------    ------------------ 
+
+def getWifiInfo(longShort=0):
+	global eth0IP, wifi0IP
+
+	labels = [["o","off"],["A","active"],["P","search"],["I","adhoc"]]
+	wifiInfo = labels[0][longShort]
+	try:
+		if G.wifiType == "adhoc":
+			wifiInfo = labels[3][longShort]
+		elif G.wifiEnabled:
+			if wifi0IP !="":
+				wifiInfo = labels[1][longShort]
+			else:
+				wifiInfo = labels[2][longShort]
+	except Exception, e:
+
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return wifiInfo
+
+# ------------------    ------------------ 
+def updatewebserverStatus():
+	global eth0IP, wifi0IP, LEDintensityFactor, clockLightSetOverWrite, clockLightSet, timeZone, lightSensorValue
+	try: 
+		xxx	= []
+		xxx.append('')
+		xxx.append( "Neopixel CLOCK current Status, updated every 3 secs<br> ")
+		xxx.append( "time........... = "+ datetime.datetime.now().strftime(u"%H:%M:%S") )
+		xxx.append( "time zone...... = "+ str(timeZone) )
+		xxx.append( "IP-Number..eth. = "+ eth0IP  )
+		xxx.append( "IP-Number..wifi = "+ wifi0IP  )
+		xxx.append( 'to set parameters..... =click on: <a href="http://{}:8010" style="color:rgb(255,255,255)">{}:8010 </a>'.format(G.ipAddress,G.ipAddress))
+		xxx.append( "WiFi enabled... = "+ str(G.wifiEnabled)  )
+		xxx.append( "ClockLightSet.. = "+ str(clockLightSet)  )
+		xxx.append( "LightSensorRaw. = "+ str(lightSensorValue)  )
+		xxx.append( "LightSensor.... = "+ str(LEDintensityFactor)  )
+		xxx.append( "LightOveride... = "+ str(clockLightSetOverWrite)  )
+		xxx.append( "Marks-HH....... = "+ str(clockDict["marks"]["HH"])  )
+		xxx.append( "Marks-MM....... = "+ str(clockDict["marks"]["MM"])  )
+		xxx.append( "Marks-SS....... = "+ str(clockDict["marks"]["SS"])  )
+		xxx.append( "Ticks-HH....... = "+ str(clockDict["ticks"]["HH"])  )
+		xxx.append( "Ticks-MM....... = "+ str(clockDict["ticks"]["MM"])  )
+		xxx.append( "Ticks-SS....... = "+ str(clockDict["ticks"]["SS"])  )
+		xxx.append( '')
+
+		statusData = ""
+		for x in xxx:
+			statusData += (x +"<br>")
+		U.logger.log(10, u"web status update:{}".format(xxx) )
+
+		U.writeJson(G.homeDir+"statusData."+ G.myPiNumber, xxx, sort_keys=True, indent=2 )
+		U.updateWebStatus(statusData)
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
+def removebracketsetc(data):
+	out = unicode(data).replace("[","").replace("]","").replace(" ","")
+
+
+# ------------------    ------------------ 
+def webServerInputExtraText():
+	try:
+		xxx = []
+		y  = ""
+		y +=	'<hr align="left" width="70%" >'
+		y +=	'<p><b>WALLClock.............:  enter clock parameters below:</b></p>'
+		xxx.append(y)
+		y  =		'led color...........:  <select name="LED">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="led:High">High</option>'
+		y +=			'<option value="led:Low">Low</option>'
+		y +=			'<option value="led:Off">Off</option>'
+		y +=			'<option value="led:On">On</option>'
+		y +=		'</select>'
+		xxx.append(y)
+		y  =	'led off..on hours...:  <select name="lightoff">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="lightoff:0,0">on</option>'
+		y +=			'<option value="lightoff:22,6">off between 22..6</option>'
+		y +=			'<option value="lightoff:23,6">off between 23..6</option>'
+		y +=			'<option value="lightoff:24,6">off between 24..6</option>'
+		y +=			'<option value="lightoff:22,7">off between 22..7</option>'
+		y +=			'<option value="lightoff:23,7">off between 23..7</option>'
+		y +=			'<option value="lightoff:24,7">off between 24..7</option>'
+		y +=			'<option value="lightoff:22,8">off between 22..8</option>'
+		y +=			'<option value="lightoff:23,8">off between 23..8</option>'
+		y +=			'<option value="lightoff:24,8">off between 24..8</option>'
+		y +=		'</select>'
+		xxx.append(y)
+		y  =	'light sensor slope..: <select name="lightSensor">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="lightSensor:0.016;">*64 highest</option>'
+		y +=			'<option value="lightSensor:0.031;">*32 </option>'
+		y +=			'<option value="lightSensor:0.063;">*16 </option>'
+		y +=			'<option value="lightSensor:0.125;">"*8 </option>'
+		y +=			'<option value="lightSensor:0.25;">*4 </option>'
+		y +=			'<option value="lightSensor:0.50;">*2 </option>'
+		y +=			'<option value="lightSensor:1.00;">normal default </option>'
+		y +=			'<option value="lightSensor:2.00;">/2</option>'
+		y +=			'<option value="lightSensor:4.00;">/4</option>'
+		y +=			'<option value="lightSensor:8.00;">/8</option>'
+		y +=			'<option value="lightSensor:16.00;">/16</option>'
+		y +=			'<option value="lightSensor:32.00;">/32</option>'
+		y +=			'<option value="lightSensor:64.00;">/64 lowest</option>'
+		y +=		'</select>'
+		xxx.append(y)
+		y  =		're-boot shutdown etc: <select name="re">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="restart"  >soft restart clock </option>'
+		y +=			'<option value="reboot"   >powercycle clock </option>'
+		y +=			'<option value="shutdown" >shutdown clock, wait 30 secs before power off switch</option>'
+		y +=			'<option value="halt"     >halt clock, wait 30 secs before power off switch</option>'
+		y +=		'</select>'
+		xxx.append(y)
+		y  =	'enable auto update..: <select name="autoupdate">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="E" >Enable</option>'
+		y +=			'<option value="D" >Disable</option>'
+		y +=		'</select>'
+		defaults	= {"re":"-1","LED":"-1","calibrate":"-1","lightSensor":"-1","lightoff":"-1"}
+
+		webServerInputHTML = ""
+		for x in xxx:
+			webServerInputHTML += (x +"<br>")
+		out = json.dumps({"webServerInputHTML":webServerInputHTML,"defaults":defaults,"outputFile":G.homeDir+"temp/neopixcelClock.cmd"})
+		U.logger.log(10, u"web status update:{}".format(out) )
+		U.updateWebINPUT(out)
+	except Exception, e:
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+
 
 
 
@@ -42,7 +175,8 @@ def readParams():
 		if inp == "": 
 			inp = inpLast
 			return changed
-			
+
+
 		if lastRead2 == lastRead: return changed
 		lastRead  = lastRead2
 		if inpRaw == "error":
@@ -312,30 +446,6 @@ def startNEOPIXEL(setClock = "", off=False):
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 	return 
-
-def updatewebserverStatus():
-	global eth0IP, wifi0IP, LEDintensityFactor, clockLightSetOverWrite, clockLightSet, timeZone, lightSensorValue
-	statusData	= ""
-	statusData +='<br>'
-	statusData += "Neopixel CLOCK current Status, updated every 3 secs<br> "
-	statusData += "time........... = "+ datetime.datetime.now().strftime(u"%H:%M:%S") +"<br>"
-	statusData += "time zone...... = "+ str(timeZone) +"<br>"
-	statusData += "IP-Number..eth. = "+ eth0IP  +"<br>"
-	statusData += "IP-Number..wifi = "+ wifi0IP  +"<br>"
-	statusData += "WiFi enabled... = "+ str(G.wifiEnabled)  +"<br>"
-	statusData += "ClockLightSet.. = "+ str(clockLightSet)  +"<br>"
-	statusData += "LightSensorRaw. = "+ str(lightSensorValue)  +"<br>"
-	statusData += "LightSensor.... = "+ str(LEDintensityFactor)  +"<br>"
-	statusData += "LightOveride... = "+ str(clockLightSetOverWrite)  +"<br>"
-	statusData += "Marks-HH....... = "+ str(clockDict["marks"]["HH"])  +"<br>"
-	statusData += "Marks-MM....... = "+ str(clockDict["marks"]["MM"])  +"<br>"
-	statusData += "Marks-SS....... = "+ str(clockDict["marks"]["SS"])  +"<br>"
-	statusData += "Ticks-HH....... = "+ str(clockDict["ticks"]["HH"])  +"<br>"
-	statusData += "Ticks-MM....... = "+ str(clockDict["ticks"]["MM"])  +"<br>"
-	statusData += "Ticks-SS....... = "+ str(clockDict["ticks"]["SS"])  +"<br>"
-	statusData += '<br>'
-	U.updateWebStatus(statusData)
-
 
 
 #################################
@@ -1248,18 +1358,28 @@ eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 
 U.logger.log(30,"wifiStarted:{}; networkStatus:{}; ipOfRouter{}".format(wifiStarted, G.networkStatus, G.ipOfRouter)) 
 
+lastIP = wifi0IP.split(".")
+if len(lastIP) ==4:
+	ipDots = int(lastIP[3])
+else:
+	ipDots = 10
+ipDots = min(48 + 40 + 32 + 24,ipDots)
+
 networkIndicatorON = -1
+print "G.networkStatus", G.networkStatus
 if wifiStarted < 0:
 	l0 = 60 + 48 + 40 + 32 + 24 + 16 + 12
-	if G.networkStatus.find("Inet") > -1: # set network indicator = on for 30 secs 
-		clockDict["extraLED"]  = {"ticks":[ii+l0 for ii in range(8)], "RGB":[0,100,0],"blink":[1,0]} # start on 8 ring 
+	if G.networkStatus.find("Inet") > -1: # set network indicator = on for 30 secs, show last digits of ip on second outer ring 
+		clockDict["extraLED"]  = { "ticks":[ii+60 for ii in range(ipDots)], "RGB":[0,30,0],"blink":[1,0]} 
 	else:
-		clockDict["extraLED"]  = {"ticks":[ii+l0 for ii in range(8)], "RGB":[100,0,0],"blink":[1,1]} # start on 8 ring 
+		clockDict["extraLED"]  = {"ticks":[ii+l0 for ii in range(8)], "RGB":[30,0,0],"blink":[1,1]} # start on 8 ring 
 	startNEOPIXEL()
-	networkIndicatorON	= time.time()+25
+	networkIndicatorON	= time.time()+30
+print "G.networkStatus", G.networkStatus, clockDict["extraLED"]
 U.checkParametersFile("parameters-DEFAULT-clock")
 
-	
+webServerInputExtraText()
+
 while True:
 	loopC+=1
 	try:
@@ -1274,7 +1394,9 @@ while True:
 			U.checkParametersFile("parameters-DEFAULT-clock")
 
 				
-		if loopC % 30 ==0: # every 30 secs read parameters file 
+		if loopC % 10 ==0: # every 30 secs read parameters file 
+			timeZoneOpsys = U.getTZ()
+			print u"tz:{}<< clockDict>>{}<<".format(timeZoneOpsys, clockDict["timeZone"])
 			updatewebserverStatus()
 			# set neopixel params file if not set for 1 minutes 
 

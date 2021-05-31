@@ -4123,7 +4123,7 @@ class Plugin(indigo.PluginBase):
 
 			self.RPI[thisPi][u"ipNumberPi"] 		= valuesDict[u"newIPNumber"]
 			self.RPI[thisPi][u"ipNumberPiSendTo"] 	= valuesDict[u"newIPNumber"]
-			self.RPI[thisPi][u"ipNumberRpiSetStatic"]		= valuesDict[u"ipNumberRpiSetStatic"]
+			self.RPI[thisPi][u"ipNumberRpiSetStatic"] = valuesDict[u"ipNumberRpiSetStatic"]
 			self.RPI[thisPi][u"userIdPi"] 			= valuesDict[u"newuserIdPi"]
 			self.RPI[thisPi][u"passwordPi"]			= valuesDict[u"newpasswordPi"]
 			valuesDict[u"passwordPi"] 				= valuesDict[u"newpasswordPi"]
@@ -18203,6 +18203,8 @@ class Plugin(indigo.PluginBase):
 			self.myLog( text = u"maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000)),	mType= u"pi configuration")
 			self.myLog( text = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),								mType= u"pi configuration")
 			self.myLog( text = u"myIp Number                  {}" .format(self.myIpNumber),												mType= u"pi configuration")
+			self.myLog( text = u"blockNonLocalIp              {}" .format(self.blockNonLocalIp),										mType= u"pi configuration")
+			self.myLog( text = u"ip accepted if blocknonlocal {}.{}.x.x" .format(self.myIpNumberRange[0],self.myIpNumberRange[1]),		mType= u"pi configuration")
 			self.myLog( text = u"port# of indigoWebServer     {}" .format(self.portOfServer),											mType= u"pi configuration")
 			self.myLog( text = u"indigo UserID                ....{}" .format(self.userIdOfServer[4:]),									mType= u"pi configuration")
 			self.myLog( text = u"indigo Password              ....{}" .format(self.passwordOfServer[4:]),								mType= u"pi configuration")
@@ -19304,10 +19306,10 @@ configuration         - ==========  defined beacons ==============
 		return False
 ####-------------------------------------------------------------------------####
 	def ipNumbernotInRange(self,ipcheck):
-		if not self.blockNonLocalIp: 			return  True
+		if not self.blockNonLocalIp: 				return  True
 		ipcheck2	= ipCheck.split(".")
-		if ipok[0] != self.myIpNumberRange[0]: 	return False
-		if ipok[1] != self.myIpNumberRange[1]: 	return False
+		if ipcheck2[0] != self.myIpNumberRange[0]: 	return False
+		if ipcheck2[1] != self.myIpNumberRange[1]: 	return False
 		return True
 ####-------------------------------------------------------------------------####
 	def isValidIP(self, ip0):

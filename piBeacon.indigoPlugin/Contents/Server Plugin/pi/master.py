@@ -292,6 +292,7 @@ def readNewParams(force=0):
 								checkIfNeopixelIsRunning(pgm= "neopixel")
 								activePGM[pp] =True
 							elif pp =="neopixelClock":
+								G.sundialActive = "/home/pi/pibeacon/temp/neopixelClock.cmd"
 								checkIfNeopixelIsRunning(pgm= "neopixelClock")
 								activePGM[pp] =True
 							else:
