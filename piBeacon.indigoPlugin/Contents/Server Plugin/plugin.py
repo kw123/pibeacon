@@ -19296,7 +19296,7 @@ configuration         - ==========  defined beacons ==============
 ###################	 TCPIP listen section  receive data from RPI via socket comm  #####################
 
 ####-------------------------------------------------------------------------####
-	def ipNumberOK(self,ipcheck):
+	def ipNumberOK(self, ipcheck):
 		if not self.isValidIP(ipcheck): return False
 		for piU in self.RPI: #OKconvert
 			if self.RPI[piU][u"piOnOff"] == u"0": continue#OKconvert
@@ -19307,7 +19307,7 @@ configuration         - ==========  defined beacons ==============
 ####-------------------------------------------------------------------------####
 	def ipNumbernotInRange(self,ipcheck):
 		if not self.blockNonLocalIp: 				return  True
-		ipcheck2	= ipCheck.split(".")
+		ipcheck2	= ipcheck.split(".")
 		if ipcheck2[0] != self.myIpNumberRange[0]: 	return False
 		if ipcheck2[1] != self.myIpNumberRange[1]: 	return False
 		return True
@@ -19357,10 +19357,10 @@ configuration         - ==========  defined beacons ==============
 			self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] = time.time()
 			self.dataStats[u"data"][IPN][msgName][xType][u"maxBytes"] = max(self.dataStats[u"data"][IPN][msgName][xType][u"maxBytes"], nBytes)
 
-			if xType != u"ok" : # log if "errxxx" and previous event was less than xxx min ago	ago
-				if time.time() - self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"]	< self.maxSocksErrorTime : # log if previous event was less than 10 minutes ago
+			if xType != u"ok" : # log if "errxxx" and previous event was less than xxx min ago
+				if time.time() - self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] < self.maxSocksErrorTime : # log if previous event was less than 10 minutes ago
 					dtLT = datetime.datetime.fromtimestamp(self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] ).strftime(_defaultDateStampFormat)
-					self.indiLOG.log(30,u"TCPIP socket error rate high for {}/{} ; previous:{}".format(IPN, msgName, dtLT) )
+					self.indiLOG.log(30,u"TCPIP socket error rate high for {} msg:{}, Type:{}; previous:{}".format(IPN, msgName, xType, dtLT) )
 					self.printTCPIPstats(all=IPN)
 				self.saveTcpipSocketStats()
 			elif u"Socket" in self.debugLevel:
@@ -19459,7 +19459,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				pass
 			elif not indigo.activePlugin.ipNumbernotInRange(self.client_address[0]):
 				indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} outside ip number range<<".format(self.client_address)  )
-				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"unknown",u"extIP" )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"badIP",u"extIP" )
 				self.request.close()
 				return 
 			else:
@@ -19467,7 +19467,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} not in accepted ip number list, please fix in >>initial setup RPI<<".format(self.client_address)  )
 				#  add looking for ip = ,"ipAddress":"192.168.1.20"
 				# but need first to read data
-				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"unknown",u"errIP" )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"IP-Wrong",u"errIP" )
 				#self.request.close()
 				#return
 
@@ -19598,7 +19598,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				wrongIP -= 1
 				#### now update Indigo dev/ states
 				indigo.activePlugin.addToDataQueue( piName, dataJ,dataS[2] )
-				if wrongIP < 1: indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"ok",msg=data0 )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"ok",msg=data0 )
 
 			try:
 				if wrongIP < 2:
@@ -19611,9 +19611,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
 
 		except Exception, e:
-			if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket {}".format(data0[0:50]) )
-			indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"unknown" )
+			indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data:{}<<".format(data0[0:50]) )
+			indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"Exception" )
 			self.request.close()
 		return
 ####-------------------------------------------------------------------------####

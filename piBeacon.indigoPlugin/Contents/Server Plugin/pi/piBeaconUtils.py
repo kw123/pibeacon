@@ -134,7 +134,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False):
 	try:
 		if doPrint:
-			logger.log(50, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
+			logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
 		else:
 			logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
 	except: pass
@@ -253,7 +253,7 @@ def getTimetimeFromDateString( dateString, fmrt="%Y-%m-%d %H:%M:%S"):
 		return 0
 
 #################################
-def checkParametersFile(defaultParameters, force=False):
+def checkParametersFile(force=False):
 		inp,inpRaw,lastRead2 = doRead(lastTimeStamp=1)
 		#print "checking parameters file"
 		if len(inpRaw) < 100 or force:
@@ -565,6 +565,32 @@ def sendRebootHTML(reason,reboot=True, force=False, wait=10.):
 	   doReboot(tt=wait, text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python; sleep 1; shutdown -h now ")
 
 	return
+
+
+
+#################################
+def manualStartOfRTC():
+	try:
+		global checkIfmanualStartOfRTC
+		try:
+			checkIfmanualStartOfRTC
+			logger.log(20, u"cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
+			return 
+		except:
+			checkIfmanualStartOfRTC = 1
+	
+		ret = (subprocess.Popen("/usr/bin/timedatectl status " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip()
+		if ret.find("NTP service: activex") > -1:
+			logger.log(20, u"cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
+			return
+
+		logger.log(20, u"cBY:{:<20} starting RTC clock manually".format(G.program))
+		subprocess.call("/usr/bin/sudo bash -c 'echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device'", shell=True)
+		subprocess.call("sudo hwclock -s", shell=True)
+	except	Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return
+		
 
 
 
@@ -938,16 +964,18 @@ def getIPofRouter():
 ################################
 def whichWifi():
 	try:
-		ret = (subprocess.Popen("/sbin/ifconfig" ,shell=True,stdout=subprocess.PIPE).communicate()[0].decode('utf-8'))
-		#print "whichWifi", ret
-		if	ret.find("192.168.1.254") >-1:
-			G.wifiType="adhoc"
-			return "adhoc"
-		G.wifiType="normal"
+		lines = ""
+		if os.path.isfile("/etc/network/interfaces"):
+			f = open("/etc/network/interfaces","r")
+			lines = f.read()
+			f.close()
+		if	lines.find(" ad-hoc") > -1 and lines.find("wireless-mode") > -1 and lines.find("clock") > -1:
+			G.wifiType = "adhoc"
+		else:
+			G.wifiType = "normal"
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-	return "normal"
-
+	return G.wifiType
 
 ################################
 def checkWhenAdhocWifistarted():
@@ -969,7 +997,7 @@ def startAdhocWifi():
 		#subprocess.call("/usr/bin/sudo iwconfig wlan0 mode ad-hoc", shell=True)
 		#subprocess.call('/usr/bin/sudo iwconfig wlan0 essid "clock"', shell=True)
 		#subprocess.call("/usr/bin/sudo ifconfig wlan0 192.168.5.5 netmask 255.255.255.0", shell=True)
-		subprocess.call("/usr/bin/sudo cp /etc/network/interfaces {}interfaces-old".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/sudo cp /etc/network/interfaces {}interfaces-fromBeforeAdhoc".format(G.homeDir), shell=True)
 		subprocess.call("/usr/bin/sudo cp {}interfaces-adhoc /etc/network/interfaces".format(G.homeDir), shell=True)
 		writeJson("{}adhocWifistarted.time".format(G.homeDir), {"startTime":time.time()})
 		time.sleep(2)
@@ -979,22 +1007,47 @@ def startAdhocWifi():
 	return
 
 #################################
-def stopAdhocWifi(setwifi="manual"):
+def prepNextNormalRestartFromAdhocWifi():
 	try:
-		if  os.path.isfile("{}adhocWifistarted.time".format(G.homeDir)):
-			subprocess.call("/usr/bin/sudo rm {}adhocWifistarted.time".format(G.homeDir), shell=True)
-		if os.path.isfile("{}temp/adhocWifi.stop".format(G.homeDir)):
-			subprocess.call("/usr/bin/sudo rm {}temp/adhocWifi.stop".format(G.homeDir), shell=True)
-		if os.path.isfile("{}temp/adhocWifi.start".format(G.homeDir)):
-			subprocess.call("/usr/bin/sudo rm {}temp/adhocWifi.start".format(G.homeDir), shell=True)
-
-		if True:
-			logger.log(50, "cBY:{:<20}  stopAdhocwebserver Wifi: stopping wifi, restoring wifi active (dhcp) interface file and reboot".format(G.program))
-			subprocess.call('/usr/bin/sudo cp {}interfaces-DEFAULT-wifi /etc/network/interfaces'.format(G.homeDir), shell=True)
-			subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
-
+		if  os.path.isfile("{}interfaces-fromBeforeAdhoc".format(G.homeDir)):
+			logger.log(20, "cBY:{:<20}  restoring wifi /etc/network/interface file from before wifi adhoc start ".format(G.program))
+			subprocess.call('/usr/bin/sudo cp {}interfaces-fromBeforeAdhoc /etc/network/interfaces'.format(G.homeDir), shell=True)
+			time.sleep(0.1)
+			subprocess.call("/usr/bin/sudo rm {}interfaces-fromBeforeAdhoc ".format(G.homeDir), shell=True)
+			subprocess.call("echo  /etc/network/interfaces >> {}permanent.log ".format(G.homeDir), shell=True)
+			subprocess.call("cat  /etc/network/interfaces >> {}permanent.log ".format(G.homeDir), shell=True)
+		else:
+			logger.log(20, "cBY:{:<20}  restoring wifi /etc/network/interface not needed, adhoc file not present ".format(G.program))
+	except	Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return
+#################################
+def stopAdhocWifi():
+	try:
+		prepNextNormalRestartFromAdhocWifi()
+		clearAdhocWifi()
+		logger.log(50, "cBY:{:<20}  stopping wifi, restoring wifi active (dhcp) interface file and reboot".format(G.program))
+		#subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
 		time.sleep(2)
 		doReboot(tt=0)
+	except	Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return
+
+#################################
+def clearAdhocWifi():
+	try:
+		logger.log(20, "cBY:{:<20}  clearing adhoc files".format(G.program))
+
+		if  os.path.isfile("{}adhocWifistarted.time".format(G.homeDir)):
+			subprocess.call("/usr/bin/sudo rm {}adhocWifistarted.time".format(G.homeDir), shell=True)
+
+		if os.path.isfile("{}temp/adhocWifi.stop".format(G.homeDir)):
+			subprocess.call("/usr/bin/sudo rm {}temp/adhocWifi.stop".format(G.homeDir), shell=True)
+			subprocess.call("/usr/bin/sudo rm {}temp/adhocWifi.start".format(G.homeDir), shell=True)
+
+		if  os.path.isfile("{}adhocWifistarted.time".format(G.homeDir)):
+			subprocess.call("/usr/bin/sudo rm {}adhocWifistarted.time".format(G.homeDir), shell=True)
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
@@ -1003,6 +1056,7 @@ def stopAdhocWifi(setwifi="manual"):
 #################################
 def startWiFi():
 	try:
+
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
 		logger.log(20, u"cBY:{:<20} starting WiFi".format(G.program) )
 		subprocess.call("/usr/bin/sudo rfkill unblock all", shell=True)
@@ -1025,7 +1079,7 @@ def startWiFi():
 		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		ret.append((subprocess.Popen("/usr/bin/sudo /etc/init.d/networking restart&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
+		#subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
 		logger.log(30, u"cBY:{:<20} starting Wifi: {}".format(G.program, ret))
 		G.wifiEnabled = True
 	except	Exception as e :
@@ -1044,7 +1098,7 @@ def startEth():
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set  eth0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		ret.append((subprocess.Popen("/usr/bin/sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		ret.append((subprocess.Popen("/usr/bin/sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
+		#subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
 		logger.log(30,  u"cBY:{:<20} starting ETH: {}".format(G.program, ret))
 		G.eth0Enabled = True
 	except	Exception as e :
@@ -1094,7 +1148,14 @@ def stopDisplay():
 
 #################################
 def startwebserverINPUT(port, useIP="", force=False):
+	global startwebserverINPUTTries
+	try: 
+		startwebserverINPUTTries +=1
+	except:
+		startwebserverINPUTTries = 0
+
 	try:
+		if startwebserverINPUTTries > 5: return
 		if checkIfStartwebserverINPUT() and not force: return
 		outFile	="{}temp/webparameters.input".format(G.homeDir)
 		ip = G.ipAddress
@@ -1119,9 +1180,15 @@ def stopwebserverINPUT():
 	return
 
 #################################
-def startwebserverSTATUS(port,useIP="", force=False):
+def startwebserverSTATUS(port, useIP="", force=False):
+	global startwebserverSTATUSTries
+	try: 
+		startwebserverSTATUSTries +=1
+	except:
+		startwebserverSTATUSTries = 0
 	try:
-		if checkIfStartwebserverSTATUS() and not force: return
+		if startwebserverSTATUSTries > 5: return
+		if checkIfStartwebserverSTATUS() and not force and startwebserverSTATUSTries >3: return
 		outFile	= "{}temp/webserverSTATUS.show".format(G.homeDir)
 		ip = G.ipAddress
 		if useIP !="":
@@ -1371,10 +1438,14 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 				if currTZC != iTZ:
 					logger.log(30, "cBY:{:<20} changing timezone executing".format(G.program))
 					if os.path.isfile("/usr/share/zoneinfo/{}".format(G.timeZones[setNew+12])):
-						subprocess.call("/usr/bin/sudo rm /etc/localtime", shell=True)
-						subprocess.call("/usr/bin/sudo ln -sf /usr/share/zoneinfo/{} /etc/localtime".format(G.timeZones[setNew+12]) , shell=True)
+						subprocess.call("/usr/bin/sudo timedatectl set-timezone {}".format(G.timeZones[setNew+12]) , shell=True)
 						logger.log(20, "cBY:{:<20} changing timezone done".format(G.program))
-
+						inp, raw = doRead()
+						if raw != "error" and raw !="":
+							if "timeZone" in inp:
+								inp["timeZone"] = u"{} {}".format(setNew, G.timeZones[setNew+12])
+								writeJson(u"{}parameters".format(G.homeDir), inp, sort_keys=True)
+								subprocess.call("touch {}temp\touchFile".format(G.homeDir), shell=True)
 					else:
 						logger.log(20, u"cBY:{:<20} error bad timezone:{}".format(G.program, G.timeZones[setNew+12]) )
 	except	Exception as e :
@@ -1413,22 +1484,24 @@ def restartWifi():
 #################################
 def copySupplicantFileFromBoot():
 	try:
+		logger.log(20, u"cBY:{:<20} checking if interfaces or wpa_supplicant.conf files in /boot/".format(G.program))
 		retCode = False
 		if os.path.isfile("/boot/wpa_supplicant.conf"):
 			subprocess.call("/usr/bin/sudo cp  /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/wpa_supplicant.conf", shell=True)
 			retCode = True
-			logger.log(30, u"cBY:{:<20} copying new wpa_supplicant.conf file from boot".format(G.program))
+			logger.log(20, u"cBY:{:<20} copying new wpa_supplicant.conf file from boot".format(G.program))
 		if os.path.isfile("/boot/interfaces"):
 			subprocess.call("/usr/bin/sudo cp  /boot/interfaces  /etc/network/interfaces", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/interfaces", shell=True)
 			retCode = True
-			logger.log(30, u"cBY:{:<20} copying new interfaces file from boot".format(G.program))
+			logger.log(20, u"cBY:{:<20} copying new interfaces file from boot".format(G.program))
 		return retCode
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
+#################################
 def checkifWifiJsonFileInBootDir():
 	if os.path.isfile("/boot/wifiInfo.json"):
 		wifiInfo, raw = readJson("/boot/wifiInfo.json")
@@ -1453,46 +1526,69 @@ def makeNewSupplicantFile(data):
 		if data["passCode"] == "do not change": return False
 		if data["passCode"] == "do+not+change": return False
 
-		old = ""
+		minFile = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\mnetwork={}\n"
 
-		logger.log(30, "cBY:{:<20} making new supplicant file with: ".format(G.program, data))
+		logger.log(30, "cBY:{:<20} making new supplicant file with: {}".format(G.program, data))
 		if os.path.isfile("/etc/wpa_supplicant/wpa_supplicant.conf"):
-			subprocess.call("cp  /etc/wpa_supplicant/wpa_supplicant.conf {}wpa_supplicant.conf-temp ".format(G.homeDir), shell=True)
+			subprocess.call("/usr/bin/sudo cp  /etc/wpa_supplicant/wpa_supplicant.conf {}wpa_supplicant.conf-temp ".format(G.homeDir), shell=True)
 			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"r")
 			old = f.read()
 			f.close()
-			if old.find(b'"'+data["SSID"]+'"') >-1 and  old.find(b'"'+data["passCode"]+'"') >-1:
-				logger.log(30, "cBY:{:<20} ssid and passcode already in config file.. no update".format(G.program))
+			if old.find('"'+data["SSID"]+'"') >-1 and  old.find('"'+data["passCode"]+'"') >-1:
+				logger.log(20, "cBY:{:<20} ssid and passcode already in wpa_supplicant.conf file.. no update".format(G.program))
 				return False
 
-		if old.find("network={") ==-1:
-			subprocess.call("cp {}wpa_supplicant.conf-DEFAULT {}wpa_supplicant.conf-temp".format(G.homeDir, G.homeDir), shell=True)
-			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"a")
-			f.write('network={\n      ssid="'+data["SSID"]+'"\n      psk="'+data["passCode"]+'""\n}\n')
-			f.close()
-		else:
-			old.replace("network={",'network={\n      ssid="'+data["SSID"]+'"\n      psk="'+data["passCode"]+'"\n')
-			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"w")
-			f.write(old)
-			f.close()
+		if old.find("network={") == -1:
+			old = minFile
+	
+		subprocess.call("cp {}wpa_supplicant.conf-DEFAULT {}wpa_supplicant.conf-temp".format(G.homeDir, G.homeDir), shell=True)
 
-		subprocess.call("cp {}wpa_supplicant.conf-temp /etc/wpa_supplicant/wpa_supplicant.conf".format(G.homeDir), shell=True)
+		oldSidFound = old.find('"'+data["SSID"]+'"')
+
+		maxprio = 0
+		for j in range(20):
+			prio = old.find("priority={}".format(20-j))
+			if prio > -1:
+				maxprio = 20-j
+				break
+		maxprio +=1
+
+		if oldSidFound > -1: # replace only password
+			part1 = old[:oldSidFound] + '"' +data["SSID"]+'"\n'  # up to and including ssid
+			n1  = old[oldSidFound:].find("\n") # next line end
+			part2 = old[oldSidFound+n1:].lstrip("\n") #the rest
+			n1  = part2.find("\n")  # replace next line w new passcode
+			part2 = '  psk="'+data["passCode"]+ '"'+part2[n1:]
+			addToS = part1+part2
+			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"w")
+			f.write(addToS)
+			f.close()
+			logger.log(20, "cBY:{:<20} added to network = SSID..,  changed passcode in wpa_supplicant.conf file: {}".format(G.homeDir, addToS))
+
+		else: # add network={ssid="xxx" psk="yyy"}
+			newF = old +'\nnetwork={\n  ssid="'+data["SSID"]+'"\n  psk="'+data["passCode"]+'"\n  priority='+str(maxprio)+'\n}\n'
+			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"w")
+			f.write(newF)
+			f.close()
+			logger.log(20, "cBY:{:<20} added network = ... SSID and passcode to supplicant file {}".format(G.homeDir,newF))
+
+		subprocess.call("/usr/bin/sudo cp {}wpa_supplicant.conf-temp /etc/wpa_supplicant/wpa_supplicant.conf".format(G.homeDir), shell=True)
+
+		## need to reboot to get the new configs loaded
 		if whichWifi().find("adhoc") > -1:
 			setStopAdhocWiFi()
-			time.sleep(3)
-			stopAdhocWifi(setwifi="dhcp")
-		else:
-			## need to reboot to get the new configs loaded
-			time.sleep(2)
-			doReboot(tt=0)
+			stopAdhocWifi()
+
+		doReboot(tt=2)
+		return True
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-	return	True
+	return False
 
 #
 
 ################################
-def getIPNumberMaster(quiet=True):
+def getIPNumberMaster(quiet=True, noRestart=False):
 	ipAddressRead		= ""
 	retcode				= 0
 	connected			= False
@@ -1512,7 +1608,7 @@ def getIPNumberMaster(quiet=True):
 
 		eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled = getIPCONFIG()
 
-		wlan0IP,eth0IP,changed = setWlanEthONoff(wlan0IP, eth0IP, ipAddressRead)
+		wlan0IP,eth0IP,changed = setWlanEthONoff(wlan0IP, eth0IP, ipAddressRead, noRestart=noRestart)
 
 
 		if testROUTER() == 0: 			connected	 = True
@@ -1589,19 +1685,20 @@ def getIPNumberMaster(quiet=True):
 	return indigoServer, changed !="", connected
 
 #################################
-def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
+def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 
 # G.wifiEth["eth0"]  ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 # G.wifiEth["wlan0"] ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 #  /usr/bin/sudo /etc/init.d/networking restart
 	changed	= ""
-	if G.ipNumberRpiStatic:
-		return wlan0IP, eth0IP, ""
 
+	
 	try:
+		if G.ipNumberRpiStatic:
+			return wlan0IP, eth0IP, ""
 		if wlan0IP == "":
 			if G.wifiEth["eth0"]["on"] in ["on","onIf","dontChange"] and eth0IP == "" and not G.eth0Enabled:
-				startEth()
+				if not noRestart: startEth()
 				time.sleep(10)
 				changed	= "ETHon"
 				logger.log(30, "cBY:{:<20} setWlanEthONoff  ip changed: eth0[on]: {}, eth0IP:/, eth0Enabled:F, wlan0IP=="", eth0Packets:{}, wlan0Packets:{} .. starting eth0".format(G.program, G.wifiEth["eth0"]["on"],  G.eth0Packets, G.wlan0Packets) )
@@ -1609,11 +1706,11 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
 		if G.switchedToWifi != 0 and time.time() - G.switchedToWifi < 100:
 			G.switchedToWifi =time.time() + 100.
 			# reset eth packet counters
-			if G.eth0Enabled:
+			if G.eth0Enabled and not noRestart:
 				stopEth()
 				startEth()
 			if wlan0IP == "":
-				if not G.wifiEnabled:
+				if not G.wifiEnabled and not noRestart:
 					startWiFi()
 					time.sleep(10)
 				changed	= "WIFIon"
@@ -1638,14 +1735,14 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
 			if oldIP in [eth0IP, wlan0IP]:
 				changed = ""
 				return wlan0IP, eth0IP, changed
-			logger.log(30, "cBY:{:<20} setWlanEthONoff  return: eth0IP:{}, wlan0IP:{}, eth0Enabled:{}, wifiEnabled:{}, eth0Active:{}, wifiActive:{}, eth0Packets:{}, eth0PacketsOld:{}, wlan0Packets:{},  wlan0PacketsOld:{}".format(G.program,eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled,G.eth0Active, G.wifiActive, G.eth0Packets, G.wlan0Packets  ) )
+			logger.log(30, "cBY:{:<20} setWlanEthONoff  return: eth0IP:{}, wlan0IP:{}, eth0Enabled:{}, wifiEnabled:{}, eth0Active:{}, wifiActive:{}, eth0Packets:{}, eth0PacketsOld:{}, wlan0Packets:{}".format( G.program, eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled, G.eth0Active, G.wifiActive, G.eth0Packets, G.wlan0Packets, G.wlan0Packets ) )
 			return wlan0IP, eth0IP, changed
 
 
 		if G.wifiEth["wlan0"]["on"] not in ["on","dontChange"] and wlan0IP != "" and G.wifiEnabled:
 			if eth0IP !="" and G.eth0Active:
 				logger.log(30, "cBY:{:<20} switching WiFi off".format(G.program))
-				stopWiFi(calledFrom="setWlanEthONoff - 2")
+				if not noRestart: stopWiFi(calledFrom="setWlanEthONoff - 2")
 				changed = "ETHon"
 				logger.log(30, "cBY:{:<20} setWlanEthONoff  ip changed: G.wifiEth[wlan0][on] not in [on,dontChange] and wlan0IP:{}  and G.wifiEnabled, eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(G.program,wlan0IP, eth0IP, G.eth0Packets, G.wlan0Packets ) )
 
@@ -1653,18 +1750,18 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP):
 		if G.wifiEth["eth0"]["on"] == "off" and eth0IP != "" and G.eth0Active:
 				logger.log(30, "cBY:{:<20} switching eth0 off".format(G.program))
 				logger.log(30, "cBY:{:<20} setWlanEthONoff  ip changed: G.wifiEth[eth0][on] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(G.program,eth0IP, G.eth0Packets, G.wlan0Packets) )
-				stopEth()
+				if not noRestart: ()
 				changed = "ETHoff"
 
 		if  G.wifiEth["eth0"]["useIP"] == "off" and eth0IP !="":
 			logger.log(30, "cBY:{:<20} setWlanEthONoff  ip changed: G.wifiEth[eth0][useIP] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(G.program,eth0IP, G.eth0Packets, G.wlan0Packets) )
-			stopEth()
+			if not noRestart: stopEth()
 			changed = "ETHoff"
 
 		if  G.wifiEth["wlan0"]["useIP"] == "off" and wlan0IP !="":
 			changed = "WIFIoff"
 			logger.log(30, "cBY:{:<20} setWlanEthONoff  ip changed: G.wifiEth[wlan0][useIP] ==off and  wlan0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(G.program,wlan0IP, G.eth0Packets, G.wlan0Packets) )
-			stopWiFi()
+			if not noRestart: stopWiFi()
 
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

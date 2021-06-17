@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 import os, subprocess
 
+
+if os.path.isfile("/home/pi/pibeacon/includep2.done"):
+	exit()
 try:
 	import serial
 except:
@@ -23,5 +26,7 @@ if ret[0].find("/usr/bin/expect") == -1:
 ret = subprocess.Popen("which hcidump",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 if ret[0].find("/usr/bin/hcidump") == -1:
 	ret = subprocess.Popen("sudo apt-get install -y bluez-hcidump &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
+subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep2.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 exit()

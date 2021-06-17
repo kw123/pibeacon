@@ -18,7 +18,7 @@ denyinterfaces wlan0
 allow-hotplug wlan0
 iface wlan0 inet static
  wireless-mode ad-hoc
- address 192.168.1.254
+ address 192.168.1.10
  netmask 255.255.255.0
  wireless-channel 11
  wireless-essid clock

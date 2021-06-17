@@ -97,6 +97,7 @@ pythonVersion		= 2
 compressRPItoPlugin = 20000
 ipNumberRpiStatic	= False
 ipNumberPi			= ""
+networkRestartTries = 0
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
 import sys
@@ -182,8 +183,7 @@ specialSensorList =[ 	"amg88xx",
 						"ultrasoundDistance"]
 isBLEdirectSensorDevice =["BLEdirectMiTempHumRound"]
 ## not used anymore BLEsensorTypes =      ["BLEmyBLUEt","BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS02", "BLEiBS03","BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor-TempHum", "BLEiSensor-onOff", "BLEiSensor-on", "BLEiSensor-RemoteKeyFob","BLESatech"]
-parameterFileList   =[	"patterns",
-						"beacon_parameters",
+parameterFileList   =[	"beacon_parameters",
 						"parameters",
 						"knownBeaconTags"]
 
@@ -209,18 +209,18 @@ timeZones[7+12]	 = "Asia/Saigon"
 timeZones[6+12]	 = "Asia/Dacca"
 timeZones[5+12]	 = "Asia/Karachi"
 timeZones[4+12]	 = "Asia/Dubai"
-timeZones[3+12]	 = "/Europe/Moscow"
-timeZones[2+12]	 = "/Europe/Helsinki"
-timeZones[1+12]	 = "/Europe/Berlin"
-timeZones[0+12]	 = "/Europe/London"
+timeZones[3+12]	 = "Europe/Moscow"
+timeZones[2+12]	 = "Europe/Helsinki"
+timeZones[1+12]	 = "Europe/Amsterdam"
+timeZones[0+12]	 = "Europe/London"
 timeZones[-1+12] = "Atlantic/Cape_Verde"
 timeZones[-2+12] = "Atlantic/South_Georgia"
 timeZones[-3+12] = "America/Buenos_Aires"
 timeZones[-4+12] = "America/Puerto_Rico"
-timeZones[-5+12] = "/US/Eastern"
-timeZones[-6+12] = "/US/Central"
-timeZones[-7+12] = "/US/Mountain"
-timeZones[-8+12] = "/US/Pacific"
-timeZones[-9+12] = "/US/Alaska"
+timeZones[-5+12] = "US/Eastern"
+timeZones[-6+12] = "US/Central"
+timeZones[-7+12] = "US/Mountain"
+timeZones[-8+12] = "US/Pacific"
+timeZones[-9+12] = "US/Alaska"
 timeZones[-10+12] = "Pacific/Honolulu"
 timeZones[-11+12] = "US/Samoa"

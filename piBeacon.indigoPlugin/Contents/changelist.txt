@@ -1,3 +1,11 @@
+Added features / changes in v7.136.527@ 2021-06-17
+===================================================
+   
+1. maintenance release
+   - fixed various smaller siuues, mostly for exceptions 
+   - small performance improvements
+
+
 Added features / changes in v7.136.526@ 2021-05-30
 ===================================================
    

@@ -3,7 +3,7 @@
 # by Karl Wachs
 # feb 5 2016
 
-masterVersion			= 12.9
+masterVersion			= 12.10
 ## changelog: 
 # 2020-04-05 added check for NTP
 # 2020-xx-xx 
@@ -131,7 +131,7 @@ def readNewParams(force=0):
 	global BLEdirectSensorDeviceActive
 	global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning
 	global macIfWOLsendToIndigoServer, IpnumberIfWOLsendToIndigoServer
-	global typeOfUPS
+	global typeOfUPS, RTCpresent
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -156,8 +156,8 @@ def readNewParams(force=0):
 			
 		U.getGlobalParams(inp)
 
-		if wifiEthCheck != {} and wifiEthCheck != G.wifiEthOld:
-			U.restartMyself(reason="new wifi, eth defs, need to restart master", doPrint =True)
+		if wifiEthCheck != {} and wifiEthCheck != G.wifiEthOld and G.networkType.find("indigo") > -1:
+			U.restartMyself(reason="new wifi, eth defs, need to restart master:{}  :{}".format(wifiEthCheck, G.wifiEthOld), doPrint =True)
 		wifiEthCheck = copy.copy(G.wifiEthOld)
 
 		if BeaconUseHCINoOld != "" and BeaconUseHCINoOld != G.BeaconUseHCINo:
@@ -295,12 +295,14 @@ def readNewParams(force=0):
 								G.sundialActive = "/home/pi/pibeacon/temp/neopixelClock.cmd"
 								checkIfNeopixelIsRunning(pgm= "neopixelClock")
 								activePGM[pp] =True
+								RTCpresent = True
 							else:
 								startProgam(pp+".py", params="", reason="restarting "+pp+"..not running")
 								activePGM[pp] =True
 						if pp=="sundial": 
 							G.sundialActive = "/home/pi/pibeacon/temp/sundial.cmd"
 							activePGM[pp] =True
+							RTCpresent = True
 						if pp == u"display":
 							for devId in output[pp]:
 								ddd = output[pp][devId][0]
@@ -1228,7 +1230,7 @@ def checkIfShutDownVoltage():
 				shutdownSignalFromUPS_LastCount = 0
 
 			version, Vtext, Vin, Vbat, batCap, Vout, temp = getUPSdata()
-			U.logger.log(20, "UPS-V2 data: Vin {:.0f}[mV], Vtext:{}, Vbat:{:.0f}, battery-capacity@ {:.0f}[%], Vout {:.0f}[mV], temp:{:.1f}".format(Vin, Vtext, Vbat, batCap, Vout, temp)) 
+			U.logger.log(10, "UPS-V2 data: Vin {:.0f}[mV], Vtext:{}, Vbat:{:.0f}, battery-capacity@ {:.0f}[%], Vout {:.0f}[mV], temp:{:.1f}".format(Vin, Vtext, Vbat, batCap, Vout, temp)) 
 
 			if time.time() - shutdownSignalFromUPS_LastCall > 20:
 				shutdownSignalFromUPS_LastCall = time.time()
@@ -1288,7 +1290,7 @@ def checkIfShutDownVoltage():
 				batteryStatus["batteryMinPinActiveTimeForShutdown"]			= batteryMinPinActiveTimeForShutdown
 
 				if version == "ALCHEMY":
-					U.logger.log(20, "checkIfShutDownVoltage  Vtext:{};  batteryStatus:{}".format(Vtext, json.dumps(batteryStatus, sort_keys=True, indent=2) ))
+					U.logger.log(10, "checkIfShutDownVoltage  Vtext:{};  batteryStatus:{}".format(Vtext, json.dumps(batteryStatus, sort_keys=True, indent=2) ))
 					if Vtext != "VinOff":
 							batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
 							batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"], batteryChargeTimeForMaxCapacity),1) # x hour charge time should get to 90+%
@@ -1768,10 +1770,10 @@ def tryRestartNetwork():
 		startNetworkTimer = time.time()
 		if len(G.ipAddress) < 8:
 			ret = subprocess.Popen("sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip()
-			logger.log(30, u"(re)starting network, response: {}".format(ret))
+			U.logger.log(30, u"(re)starting network, response: {}".format(ret))
 			time.sleep(10)
 			indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
-			if G.ipAddress != "":
+			if G.ipAddress != "" and G.networkType.find("indigo") > -1:
 				U.restartMyself(reason=u" ip number is back on")
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1802,12 +1804,13 @@ def checknetwork0():
 	try:
 		indigoServerOn, changed, connected = u"", u"", u""
 
-		if G.networkType  in G.useNetwork and G.wifiType == u"normal":
-			for ii in range(5):
-				if ii > 3 :
+		if G.networkType in G.useNetwork and G.wifiType == u"normal":
+			for ii in range(2):
+				if ii > 0 :
 					if G.networkType.find("clock") >-1: 
 						U.logger.log(30, u"no ip number working, giving up, running w/o ip number or indigo server, setting mode to clockMANUAL = stand alone")
 						G.networkType = u"clockMANUAL"
+						U.setNetwork(u"off")
 						break
 	
 				indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=ii<2)
@@ -1823,19 +1826,19 @@ def checknetwork0():
 		else:
 			if G.networkType.find(u"clock") > -1 and G.wifiType == u"normal":
 				for ii in range(2):
-					if ii > 1:
+					if ii > 0:
 						U.logger.log(30,u"no ip number working, giving up, setting mode to clockMANUAL = stand alone, netwtype was:{}".format(G.networkType))
 						G.networkType = u"clockMANUAL"
 						break
 	
-					indigoServerOn, changed,connected = U.getIPNumberMaster(quiet=ii<2)
+					indigoServerOn, changed,connected = U.getIPNumberMaster(quiet=ii<2, noRestart=True)
 					if not indigoServerOn or G.ipAddress == u"":
 						U.setNetwork(u"off")
 						time.sleep(5)
-						U.logger.log(30, u"no ip number working, trying again, indigoServerOn:{}, myip:{}".format(indigoServerOn, G.ipAddress))
+						U.logger.log(30, u"no  indigo ip number working, trying again, indigoServerOn:{}, myip:{}".format(indigoServerOn, G.ipAddress))
 					else:
 						U.clearNetwork()
-						U.logger.log(20, u"ip number found  ip:{}".format( G.ipAddress))
+						U.logger.log(20, u"ip number found and connected to indigo  ip:{}".format( G.ipAddress))
 						break
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
@@ -1843,12 +1846,12 @@ def checknetwork0():
 	return indigoServerOn, changed, connected 
 
 ####################      #########################
-def checkIfNetworkStarted():
-	global configured
+def checkIfFirstStart():
+	global configured, adhocWifiStarted
 	try:
-		U.logger.log(30,u"RPistrt configured at>{}<, userIdOfServer:{}".format(configured, G.userIdOfServer) )
+		U.logger.log(20,u"RPistrt configured at>{}<, userIdOfServer:{}".format(configured, G.userIdOfServer) )
 		if configured == "" and G.userIdOfServer == u"xxstartxx": 
-			U.logger.log(30,u"RPi not configured yet, waiting for config or wifi; networkType:{}; useNetwork:{}, wifiType:{}".format(G.networkType,G.useNetwork,G.wifiType) )
+			U.logger.log(20,u"RPi not configured yet, waiting for config or wifi; networkType:{}; useNetwork:{}, wifiType:{}".format(G.networkType,G.useNetwork,G.wifiType) )
 			if G.networkType  in G.useNetwork and G.wifiType == u"normal":
 				wifiWaiting  = True
 				GPIO.setup(26, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -1877,17 +1880,18 @@ def checkIfNetworkStarted():
 								readNewParams()
 							else:
 								break
-						U.stopAdhocWifi(setwifi=u"dhcp")
+						U.stopAdhocWifi()
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
 
 ####################      #########################
-def	checkForAdhocWeb(adhocWifiStarted):
+def	checkForAdhocWeb():
+	global adhocWifiStarted, ipNumberForAdhoc
 	try:
-		if adhocWifiStarted > 0 and G.wifiType == u"adhoc":
+		if adhocWifiStarted > 10:
 			if not U.checkIfwebserverINPUTrunning():
-				U.startwebserverINPUT(startWebServerINPUT, useIP="192.168.5.5", force=True)
+				U.startwebserverINPUT(80, useIP=ipNumberForAdhoc, force=True)
 				# restore old interfaces for next reboot 
 				for ii in range(150):
 					if U.checkwebserverINPUT(): break
@@ -1953,7 +1957,7 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 						U.sendURL(sendAlive="reboot")
 						U.doReboot(tt=30., text=" reboot due to no  PING reply from MAC for 10 minutes ")				
 
-		if	G.networkType.find("clock")> -1:
+		if	G.networkType.find("clock") > -1:
 				if startingnetworkStatus.find("Inet") >-1 and G.networkStatus.find("Inet") == -1 : # was up at start, now down
 					if (time.time() - restartCLock) < 0:
 						G.networkType ="clockMANUAL"
@@ -1965,9 +1969,9 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 					G.networkType ="clock"
 
 				#print "restartCLock", time.time() - restartCLock
-				if G.networkType =="clockMANUAL"  and (time.time() - restartCLock)> 0  :
+				if G.networkType == "clockMANUAL"  and (time.time() - restartCLock)> 0  :
 					xx = G.networkType
-					G.networkType="x"
+					G.networkType = "x"
 					indigoServerOn, changed, connected = U.getIPNumberMaster()
 					G.networkType = xx
 					#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
@@ -2053,7 +2057,7 @@ def checkIfipNumberchanged(indigoServerOn, changed, connected):
 		oldIP = G.ipAddress
 		indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
 
-		if	G.ipAddress =="" and G.networkType !="clockMANUAL" :
+		if	G.ipAddress =="" and G.networkType.find("clock") == -1:
 			U.doReboot(tt=10., text=" reboot due to no IP nummber")				   
 			time.sleep(10)
 			subprocess.call("reboot now", shell=True)
@@ -2197,7 +2201,18 @@ def checkIfWOLsendToIndigoServer():
 		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 	return 
 
-
+def getadhocIpNumber():
+	adhocIP = "192.168.1.10"
+	try:
+		if	os.path.isfile(G.homeDir+"interfaces-adhoc"):
+			f=open(G.homeDir+"interfaces-adhoc") 
+			lines = f.read()
+			f.close()
+			ip = lines.split(" address ")[1]
+			adhocIP = ip.split("\n")[0].strip()
+	except	Exception, e :
+		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	return adhocIP
 
 ####################      #########################
 def checkstartOtherProgram():
@@ -2282,7 +2297,13 @@ def execMaster():
 		global batteryUPSshutdownALCHEMYupcI2C, batteryUPSshutdownEnable
 		global checkIfShutDownVoltageLastCheck
 		global typeOfUPS
+		global adhocWifiStarted
+		global ipNumberForAdhoc
+		global RTCpresent
 
+		RTCpresent						= False
+		ipNumberForAdhoc				= "192.168.1.10"
+		adhocWifiStarted				= -1
 		typeOfUPS						= ""
 		checkIfShutDownVoltageLastCheck	= 0
 		batteryUPSshutdownALCHEMYupcI2C = ""
@@ -2379,11 +2400,12 @@ def execMaster():
 		GPIO.setmode(GPIO.BCM)
 		
 
+		subprocess.Popen("/usr/bin/python "+G.homeDir+"doOnce.py" ,shell=True)
+		time.sleep(0.5)
 		U.setLogging()
 
-		ret = subprocess.Popen("/bin/cat /etc/os-release " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
-		U.logger.log(30,"========================= starting master  version: {} on os:{}".format(masterVersion, ret) )
 
+		ret = subprocess.Popen("/bin/cat /etc/os-release " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip().split("\n")
 
 		# make dir for short temp files
 		setupTempDir()
@@ -2407,7 +2429,8 @@ def execMaster():
 		checkIfclearHostsFile()
 
 		readNewParams(force=2)
-		U.logger.log(20, "START.. indigoServer @ IP:>>{}<<".format(G.ipOfServer) )
+		U.logger.log(20, "" )
+		U.logger.log(20, "=========START.. MASTER  v:{}".format(masterVersion) )
 
 		checkWiFiSetupBootDir()
 
@@ -2416,6 +2439,7 @@ def execMaster():
 
 		checkPythonLibs()
 
+		U.logger.log(20, "=========START2.. indigoServer @ IP:{}<< G.wifiType:>>{}<<".format(G.ipOfServer, G.wifiType) )
 
 		checkIfUARThciChannelIsOnRPI4()
 
@@ -2423,41 +2447,47 @@ def execMaster():
 		
 		subprocess.Popen("sudo hwclock -r",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
+
+		ipNumberForAdhoc = getadhocIpNumber()
 		# sets: G.wifiType = normal/ adhoc
 		U.whichWifi() 
 
 		adhocWifiStarted = U.checkWhenAdhocWifistarted()
+		U.prepNextNormalRestartFromAdhocWifi()
+		U.clearAdhocWifi()
 
-		if G.wifiType == "adhoc": U.logger.log(20, "Master adhocWifi , master started at: {} ".format(adhocWifiStarted) )
+
+		if adhocWifiStarted > 10: U.logger.log(20, "adhocWifi active, {} sec left bf restart".format(600 - (time.time() - adhocWifiStarted)) )
+		U.logger.log(20, "=========START3.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 		
 
 		subprocess.call("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py", shell=True)
 
 		U.clearNetwork()
 
-
 		indigoServerOn, changed, connected = checknetwork0()
 	
 		readNewParams(force = 1)
 
-		if G.wifiType =="normal" and G.networkType !="clockMANUAL" and rPiCommandPORT >0:
-			startProgam("receiveCommands.py", params=str(rPiCommandPORT), reason=" restart requested from plugin")
+		if G.wifiType =="normal" and G.networkType.find("clock") == -1 and rPiCommandPORT >0:
+			startProgam("receiveCommands.py", params=str(rPiCommandPORT), reason=" normal start of receiveCommands")
 
 
-		checkIfNetworkStarted()
+		checkIfFirstStart()
+		U.logger.log(20, "=========START4.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
-		if startWebServerSTATUS > 0:
-			if not U.checkIfwebserverSTATUSrunning():
-				U.startwebserverSTATUS(startWebServerSTATUS)
+		if startWebServerSTATUS > 0 and  adhocWifiStarted < 10:
+			U.startwebserverSTATUS(startWebServerSTATUS)
 
+		U.logger.log(20, "=========START5.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
-		checkForAdhocWeb(adhocWifiStarted)
+		checkForAdhocWeb()
 
+		U.logger.log(20, "=========START6.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
 		indigoServerOn, changed, connected  = checkIfNetworkStarted2(indigoServerOn, changed, connected )
 
-
-
+		U.logger.log(20, "=========START7.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<, indigoServerOn:{}<<, changed:{}<<, connected:{}<< ".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType, indigoServerOn, changed, connected ) )
 		# make directory for sound files
 		if not os.path.isdir(G.homeDir+"soundfiles"):
 			subprocess.call("mkdir "+G.homeDir+"soundfiles &", shell=True)
@@ -2500,6 +2530,7 @@ def execMaster():
 		checkIfGpioIsInstalled()
 
 		checkstartOtherProgram()
+		U.logger.log(20, "=========START8.. adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
 
 		#startProgam("actions.py", params="", reason=" at startup ")
 		#checkIfAliveFileOK("actions",force="set")
@@ -2510,25 +2541,33 @@ def execMaster():
 		tAtLoopSTart =time.time()
 
 		U.testNetwork()
-		checkNTP()
-
-
-
+		if G.networkType.find("clock") == -1:
+			checkNTP()
 
 		startingnetworkStatus = G.networkStatus
 		restartCLock		  = time.time() +  999999999.
 
-		indigoServerOn, changed, connected = U.getIPNumberMaster()
-		if indigoServerOn  and G.ipAddress !="":
-			U.setNetwork("on")
+		if G.networkType.find("clock") == -1:
+			indigoServerOn, changed, connected = U.getIPNumberMaster(noRestart=True)
+			if indigoServerOn  and G.ipAddress !="":
+				U.setNetwork("on")
+			if changed: 
+				U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (1) changed:{}".format(changed))
+		else:
+			if G.ipAddress == "":
+				time.sleep(10)
+			changed = False
 	
-		if changed: 
-			U.restartMyself(reason="changed ip number, eg wifi was switched off with eth0 present (1) changed:{}".format(changed))
+
+		U.logger.log(20, "=========START9.. adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
+		if adhocWifiStarted < 10 and G.ipAddress == "" and RTCpresent:
+			U.manualStartOfRTC()
+
 
 		subprocess.call("rm  {}temp/sending > /dev/null 2>&1 ".format(G.homeDir), shell=True)
 
 
-		U.logger.log(20,"starting loop")
+		U.logger.log(20,"=========START10 loop")
 
 		checkTempForFanOnOff(force = True)
 		lastCheckAlive = time.time() -90
@@ -2566,11 +2605,12 @@ def execMaster():
 
 				#check if IP number has changed, or if we should switch off wlan0 if eth0 is present 
 				if loopCount%24 == 0: # every 2 minutes
-					checkIfipNumberchanged(indigoServerOn, changed, connected)
+					if G.networkType.find("clock") == -1:
+						checkIfipNumberchanged(indigoServerOn, changed, connected)
 
 		##########   check if pgms are running
 
-				if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType !="clockMANUAL" and (G.networkStatus).find("indigo") >-1: 
+				if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType.find("clock") == -1 and (G.networkStatus).find("indigo") >-1: 
 					checkIfPGMisRunning("receiveCommands.py", checkAliveFile="", parameters=str(rPiCommandPORT))
 
 
@@ -2588,39 +2628,39 @@ def execMaster():
 
 
 		######### start / stop  wifi  &  web servers 
-				if adhocWifiStarted > 0:
+				if adhocWifiStarted > 10 and (time.time() - adhocWifiStarted) > 20 :
 					if time.time() - adhocWifiStarted > 600:
 						U.stopAdhocWifi()
 				else:
 					adhocWifiStarted = U.checkWhenAdhocWifistarted()
 
 				if U.checkIfStartAdhocWiFi():
-					#print " seems to be tru start adhoc wifi"
-					if U.whichWifi() =="normal":
+					if adhocWifiStarted  < 20 :
 						U.startAdhocWifi()
-						U.restartMyself(reason="starting adhoc wifi")
+						time.sleep(20)
 					
 
 				if U.checkIfStopAdhocWiFi():
-					if U.whichWifi() =="adhoc":
+					if adhocWifiStarted > 10 and (time.time() - adhocWifiStarted) > 20 :
 						U.stopAdhocWifi()
-						U.restartMyself(reason="starting back to normal from adhoc wifi")
+						time.sleep(20) # symbolic, will reboot before
 
-				if startWebServerSTATUS >0 or U.checkIfStartwebserverSTATUS():
+				if (startWebServerSTATUS >0 or U.checkIfStartwebserverSTATUS()) and adhocWifiStarted < 10:
 					if not U.checkIfwebserverSTATUSrunning():
 							U.startwebserverSTATUS(startWebServerSTATUS)
 
-				if startWebServerSTATUS >0 and  U.checkIfStopwebserverSTATUS():
+				if (startWebServerINPUT > 0 or U.checkIfStartwebserverINPUT()) and adhocWifiStarted < 10:
+					if not U.checkIfwebserverINPUTrunning():
+						U.startwebserverINPUT(startWebServerINPUT)
+
+				if startWebServerSTATUS > 0 and  U.checkIfStopwebserverSTATUS():
 					if U.checkIfwebserverSTATUSrunning():
 						U.stopwebserverSTATUS()
 
-				if startWebServerINPUT > 0 and  U.checkIfStopwebserverINPUT() and adhocWifiStarted <0:
+				if startWebServerINPUT > 0 and  U.checkIfStopwebserverINPUT():
 					if U.checkIfwebserverINPUTrunning():
 						U.stopwebserverINPUT()
 
-				if startWebServerINPUT > 0 or U.checkIfStartwebserverINPUT():
-					if not U.checkIfwebserverINPUTrunning():
-						U.startwebserverINPUT(startWebServerINPUT)
 
 				if fanGPIOPin > 0:
 					checkTempForFanOnOff()
@@ -2632,12 +2672,14 @@ def execMaster():
 
 				if loopCount%8 == 0: 
 					U.sendSensorAndRPiInfoToPlugin(sensors, fanOnTimePercent=fanOnTimePercent)		   
-					if adhocWifiStarted ==0: tryRestartNetwork()
+					if adhocWifiStarted < 10: 
+						if G.networkType.find("clock") == -1:
+							tryRestartNetwork()
 		
-				if loopCount %4 ==0: # check network every 40 secs
+				if loopCount %4 == 0: # check network every 40 secs
 					checkNetworkLoop(restartCLock, indigoServerOn, changed, connected )
 
-				if loopCount %5 ==0: # check logfiles every 5*20=100 seconds 
+				if loopCount %5 == 0: # check logfiles every 5*20=100 seconds 
 					checkLogfiles()
 
 					#check if fallback "master.sh"  is running, if not restart 

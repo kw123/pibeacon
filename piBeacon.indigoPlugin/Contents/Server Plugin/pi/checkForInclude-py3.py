@@ -3,6 +3,10 @@
 import	os, time, subprocess
 
 
+if os.path.isfile("/home/pi/pibeacon/includep3.done"):
+	exit()
+
+
 
 osInfo	 = (subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").split("\n")
 for line in osInfo:
@@ -10,6 +14,7 @@ for line in osInfo:
 		os = int( line.strip('"').split('="')[1] )
 if os < 9: 
 	print (" os is to old for adafruit p3 stuff, exit")
+	subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	exit()
 
 pipList	 = (subprocess.Popen("/usr/bin/pip3 list" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
@@ -31,9 +36,11 @@ if  aptList.find("install ok installed") == -1:
 
 if not foundOne and not aptList: 
 	print ("check for pip3 includees, nothing found to install")
+	subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	exit()
 
 
+print ("waiting for thinsg to calm down before instaling")
 sleepTime = 20
 
 
@@ -70,6 +77,8 @@ except:
 if libgpiod2:
 		print(" installing libgpiod2\n")
 		subprocess.Popen("sudo apt-get install libgpiod2 &",shell=True)
+
+subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 exit()
 
