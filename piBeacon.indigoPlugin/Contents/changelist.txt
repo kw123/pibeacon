@@ -1,10 +1,10 @@
-Added features / changes in v7.137.529@ 2021-06-17
+Added features / changes in v7.137.529@ 2021-06-28
 ===================================================
    
 1. added support for switch bot devices
    they have to be "associated" to a single RPi in device edit
    you need to first find the MAC # either through detect new beaconsor through iphone app
-   then cretae switch bot indigo device add mac# and select RPi that is closest to device
+   then create switch bot indigo device add mac# and select RPi that is closest to device
    rest should be left at default
    then the device will behave like a relay
    you can set the "hold" time with the iphone app 
