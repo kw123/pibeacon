@@ -93,26 +93,26 @@ def OUTPUTi2cRelay(command):
 			if cmd == "up":
 				bus.write_byte_data(i2cAddress, pin, up)
 				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualStatus":on}}}})
 
 			elif cmd == "down":
 				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
 				bus.write_byte_data(i2cAddress, pin, 0x00)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualStatus":off}}}})
 
 			elif cmd == "pulseUp":
 				bus.write_byte_data(i2cAddress, pin, up)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualStatus":on}}}})
 				time.sleep(pulseUp)
 				bus.write_byte_data(i2cAddress, pin, down)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualStatus":off}}}})
 
 			elif cmd == "pulseDown":
 				bus.write_byte_data(i2cAddress, pin, down)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualStatus":off}}}})
 				time.sleep(pulseDown)
 				bus.write_byte_data(i2cAddress, pin, up)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualStatus":on}}}})
 
 			elif cmd == "continuousUpDown":
 				for ii in range(nPulses):
@@ -212,12 +212,12 @@ def setGPIO(command):
 				tf = False
 				GPIO.output(pin, tf)
 				U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			else:
 				tf = False
 				GPIO.output(pin, tf)
 				U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 		
 
 		elif cmd == "down":
@@ -226,12 +226,12 @@ def setGPIO(command):
 				tf = True
 				GPIO.output(pin, tf)
 				U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 			else: 
 				tf = False
 				GPIO.output(pin, False )
 				U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 
 		elif cmd == "analogWrite":
 			if inverseGPIO:
@@ -241,9 +241,9 @@ def setGPIO(command):
 			value = int(value)
 			U.logger.log(debLevel, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
 			if value > 0:
-				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
+				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualStatus":"high"}}}})
 			else:
-				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
+				U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualStatus":"low"}}}})
 
 			if typeForPWM == "PIGPIO": 	
 				#U.logger.log(20, "..  setting PIGPIO {}  {}  {}".format(pwmFreq, pwmRange,  value) )
@@ -263,17 +263,17 @@ def setGPIO(command):
 			GPIO.setup(pin, GPIO.OUT)
 			if inverseGPIO: 
 				GPIO.output(pin, False)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			else:		
 				GPIO.output(pin, True)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 			time.sleep(pulseUp)
 			if not inverseGPIO: 
 				GPIO.output(pin, False)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			else:		
 				GPIO.output(pin, True)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 
 
 
@@ -281,34 +281,34 @@ def setGPIO(command):
 			GPIO.setup(pin, GPIO.OUT)
 			if not inverseGPIO: 
 				GPIO.output(pin, False)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			else:		
 				GPIO.output(pin, True)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 			time.sleep(pulseDown)
 			if  inverseGPIO: 
 				GPIO.output(pin, False)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			else:		
 				GPIO.output(pin, True)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 
 		elif cmd == "continuousUpDown":
 			GPIO.setup(pin, GPIO.OUT)
 			for ii in range(nPulses):
 				if inverseGPIO: 
 					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 				else:		
 					GPIO.output(pin, True)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 				time.sleep(pulseUp)
 				if not inverseGPIO: 
 					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 				else:		
 					GPIO.output(pin, True)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 				time.sleep(pulseDown)
 
 		U.removeOutPutFromFutureCommands(pin, devType)
@@ -360,12 +360,12 @@ def execCMDS(data):
 					continue
 
 
-			if cmd =="file":
+			if cmd == "file":
 				if "fileName" in next and "fileContents" in next:
 					#print next
 					try:
 						m = "w"
-						if "fileMode" in next and next["fileMode"].lower() =="a": m="a"
+						if "fileMode" in next and next["fileMode"].lower() == "a": m = "a"
 						#print "write to",next["fileName"], json.dumps(next["fileContents"]), m
 						f = open(next["fileName"],m)
 						f.write("{}".format(json.dumps(next["fileContents"]) )) 

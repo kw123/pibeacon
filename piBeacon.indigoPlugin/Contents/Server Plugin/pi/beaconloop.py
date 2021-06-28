@@ -558,11 +558,11 @@ def combineLines(lines):
 		msg = ""
 		countLinesPerMsg = 1
 		for line in lines.split("\n"):
-			if line.find("-") >-1: continue
-			if line.find(".") >-1: continue
-			if line.find(",") >-1: continue
-			if line.find(":") >-1: continue
-			if line.find("<") >-1: continue
+			if line.find("-") > -1: continue
+			if line.find(".") > -1: continue
+			if line.find(",") > -1: continue
+			if line.find(":") > -1: continue
+			if line.find("<") > -1: continue
 			readbuffer += line.replace(" ","")
 
 		rd = readbuffer.split(">")
@@ -572,7 +572,7 @@ def combineLines(lines):
 			nn +=1
 			if len(line) < 40 and nn < ll: continue
 			MSGs.append(line) 
-		if len(MSGs) ==0: return []
+		if len(MSGs) == 0: return []
 
 		if len(MSGs[-1]) < 40:
 			readbuffer = MSGs[-1]
@@ -3717,7 +3717,7 @@ def getBeaconParameters(useHCI):
 
 				cmd = "/usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -i {} -b {} {} --char-read --uuid={}".format(timeoutSecs, useHCI, mac, random, uuid)
 				##					                   /usr/bin/gatttool -b 24:da:11:27:E4:23 --char-read --uuid=2A19 -t public / random   
-				U.logger.log(20,"cmd: {}".format(cmd) )
+				U.logger.log(20,"cmd: {}".format(cmd))
 				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 				check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
 				valueF = 0; valueI = 0; valueB = ""; valueC = 0; valueD = 0

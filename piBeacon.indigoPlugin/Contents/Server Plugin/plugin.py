@@ -424,7 +424,7 @@ _GlobalConst_i2cSensors	  = [
 	u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960", u"MAX44009"]
 
 _GlobalConst_allowedOUTPUT = [
-	u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTi2cRelay", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
+	u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTswitchbotRelay", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTi2cRelay", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
 
 _GlobalConst_allowedpiSends = [
 	u"updateParamsFTP", u"updateAllFilesFTP",u"updateAllAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
@@ -4782,6 +4782,17 @@ class Plugin(indigo.PluginBase):
 						cAddress = unicode(int(valuesDict[u"spiAddress"]))
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)] = [{u"spi":cAddress},{u"devType":devType}]
 
+					if u"mac" in valuesDict:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["mac"] = valuesDict["mac"]
+					if u"blehandle" in valuesDict:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["blehandle"] = valuesDict["blehandle"]
+					if u"onCmd" in valuesDict:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["onCmd"] = valuesDict["onCmd"]
+					if u"offCmd" in valuesDict:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["offCmd"] = valuesDict["offCmd"]
+
+
+
 					self.updateNeeded += u" fixConfig "
 					self.rPiRestartCommand[pi] += u"receiveGPIOcommands,"
 					self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP"])
@@ -6015,15 +6026,10 @@ class Plugin(indigo.PluginBase):
 	def filterBeaconsWithBattery(self, valuesDict=None, filter=u"", typeId=u"", devId=0, action=u""):
 		xList = []
 		for dev in indigo.devices.iter(u"props.isBeaconDevice"):
-			if self.decideMyLog(u"Special"):
-				try: self.indiLOG.log(10,u"filterBeaconsWithBattery: checking:  {}".format(dev.name) )
-				except: indigo.server.log(dev.name)
 			props = dev.pluginProps
 			if u"SupportsBatteryLevel" not in props or not props[u"SupportsBatteryLevel"]:
-				if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"filterBeaconsWithBattery:  ... rejected as SupportsBatteryLevel is not enabled in device edit" )
 				continue
 			if u"batteryLevelUUID"     not in props or props[u"batteryLevelUUID"] != u"gatttool":
-				if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"filterBeaconsWithBattery:  ... rejected as gattool is not enabled in device edit..")
 				continue
 			xList.append((dev.id, u"{} - {}".format(dev.name, dev.address) ))
 		xList.append([u"0",u"all"])
@@ -6844,7 +6850,6 @@ class Plugin(indigo.PluginBase):
 							if u"gpio" in listGPIO[ii]:
 								resetGPIOCount.append(listGPIO[ii][u"gpio"])
 								if theType in [u"INPUTcoincidence","INPUTpulse"]:
-									if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"resetGPIOCount set count to 0 for {} - {}; -type:{},  #{}".format(dev.name, piU, theType, ii))
 									self.updatePULSE(dev, {"count":-1}, whichKeysToDisplay)
 								else:
 									dev.updateStateOnServer( u"INPUT_"+str(ii), 0)
@@ -6872,7 +6877,6 @@ class Plugin(indigo.PluginBase):
 			textToSend = json.dumps([{u"device": typeId, u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/"+theType+u".reset",u"fileContents":resetGPIOCount}])
 			self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"resetGPIOCountCALLBACKmenu")
 
-			if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"resetGPIOCount requested: for {} on pi:{}; pins:{}, text to send:{}".format(dev.name, piU, resetGPIOCount, textToSend))
 		except Exception, e:
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return valuesDict
@@ -6881,6 +6885,7 @@ class Plugin(indigo.PluginBase):
 	def resetGPIOCountCALLBACKaction(self, action1=None, typeId=u"", devId=0):
 		self.resetGPIOCountCALLBACKmenu(action1.props)
 		return
+
 
 
 
@@ -8640,6 +8645,30 @@ class Plugin(indigo.PluginBase):
 
 				return
 
+			elif dev0.deviceTypeId == u"OUTPUTswitchbotRelay":
+				piU = props0[u"piServerNumber"]
+				if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
+											onOff = "1"
+				elif action.deviceAction == indigo.kDimmerRelayAction.Toggle:
+					if not dev0.onState:	onOff = "1"
+					else:					onOff = "0"
+				elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
+											onOff = "0"
+				else:
+					self.indiLOG.log(10,u"action dimmer relay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
+					return 
+				dev0.updateStateOnServer(u"status", "send: {}".format("on" if onOff == "1" else "off"))
+	
+				fileContents = {"mac":props0["mac"], "onOff":onOff, u"outputDev":  dev0.id}
+
+				textToSend = json.dumps([{u"device": u"OUTPUTswitchbotRelay", u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/switchbot.cmd",u"fileContents":fileContents}])
+				self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"switchBotRelaySet")
+
+				if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
+				return 
+
+
+
 
 			#####  GPIO
 			else:
@@ -8648,7 +8677,7 @@ class Plugin(indigo.PluginBase):
 
 			if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"deviceAction \n{}\n props {}".format(action, props))
 			valuesDict={}
-			valuesDict[u"outputDev"]=dev.id
+			valuesDict[u"outputDev"] = dev.id
 			valuesDict[u"piServerNumber"] = props[u"piServerNumber"]
 			valuesDict[u"deviceDefs"]	  = props[u"deviceDefs"]
 			if dev.deviceTypeId ==u"OUTPUTgpio-1-ONoff":
@@ -12794,12 +12823,14 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def updateOutput(self, piU, outputs):
-		data=u""
+		data = u""
 		dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 		try:
+			#self.indiLOG.log(20,u"updateOutput from pi:{}; outputs:{}".format(piU, outputs) )
+							#  updateOutput from pi:11; outputs:{u'OUTPUTswitchbotRelay': {u'1631600841': {u'actualStatus': u'on'}}}
 
 			for output in outputs:
-				if output.find(u"OUTPUTgpio") == -1 and output.find(u"OUTPUTi2cRelay") == -1: continue
+				if output.find(u"OUTPUTgpio") == -1 and output.find(u"OUTPUTi2cRelay") == -1 and output.find(u"OUTPUTswitchbotRelay") == -1: continue
 
 				devUpdate = {}
 				for devIds in outputs[output]:
@@ -12821,7 +12852,7 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							return
 
-						self.indiLOG.log(40,u"bad devId send from pi:"+ piU+ u"devId: "+devIds+u" deleted?")
+						self.indiLOG.log(40,u"bad devId send from pi :{}; devId: {}, deleted? ".format(piU, devIds) )
 						continue
 
 					if not dev.enabled:
@@ -12836,16 +12867,8 @@ class Plugin(indigo.PluginBase):
 						except: pass
 						continue
 
-					if u"displayS" in props:
-						whichKeysToDisplay = props[u"displayS"]
-					else:
-						whichKeysToDisplay = u""
-
-					if output.find(u"OUTPUTgpio-1") > -1 or output.find(u"OUTPUTi2cRelay") > -1:
-						if self.decideMyLog(u"SensorData"): self.indiLOG.log(5,u"{} received {}".format(output, Data) )
-						self.OUTPUTgpio1(dev, props, data)
-						continue
-
+					if self.decideMyLog(u"SensorData"): self.indiLOG.log(5,u"{} received {}".format(output, uData) )
+					self.setActualRelayStatus(dev, props, data)
 
 				for devIds in devUpdate:
 					if devIds in self.updateStatesDict:
@@ -12860,21 +12883,23 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def OUTPUTgpio1(self, dev, props, data):
+	def setActualRelayStatus(self, dev, props, data):
 		try:
-			if u"actualGpioValue" in data and "outputType" in props:
-				actualGpioValue = unicode(data[u"actualGpioValue"]).lower()
+			if u"actualStatus" not in data or u"outType" not in props: return 
 
-				self.addToStatesUpdateDict(dev.id,u"actualGpioValue", data[u"actualGpioValue"])
+			upState = data[u"actualStatus"]
+			actualStatus = upState.lower()
+			if actualStatus not in ["on", "off"]:
 				if props[u"outType"] == u"0": # not inverse
-					if actualGpioValue =="high" :upState = u"on"
-					else:               		 upState = u"off"
+					if actualStatus == "high": upState = u"on"
+					else:               	   upState = u"off"
 				else:
-					if actualGpioValue =="low"  :upState = u"on"
-					else:               		 upState = u"off"
+					if actualStatus == "low": upState = u"on"
+					else:               	  upState = u"off"
 
-				self.addToStatesUpdateDict(dev.id,u"status", upState)
-				self.addToStatesUpdateDict(dev.id,u"onOffState", upState=="on")
+			self.addToStatesUpdateDict(dev.id,u"status", upState)
+			self.addToStatesUpdateDict(dev.id,u"actualStatus", actualStatus)
+			self.addToStatesUpdateDict(dev.id,u"onOffState", upState == "on")
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -14259,7 +14284,7 @@ class Plugin(indigo.PluginBase):
 				except:	countList = defCountList
 
 			if time.time() - countList[u"lastReset"] < 3:
-				if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE ignore new data after reset")
+				if self.decideMyLog(u"SensorData"): self.indiLOG.log(10,u"updatePULSE ignore new data after reset")
 				# ignore new data after last reset if too close, get reset from plugin, and then also from RPI
 				return
 
@@ -14272,14 +14297,14 @@ class Plugin(indigo.PluginBase):
 				ll = len(countList)
 				if ll > 0:
 					if  data[u"count"] < 0:
-						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE resetting countList, requested from menu")
+						if self.decideMyLog(u"SensorData"): self.indiLOG.log(10,u"updatePULSE resetting countList, requested from menu")
 						data[u"count"] = 0
 						countList = defCountList
 						cOld = 0
 						countList[u"lastReset"] = time.time()
 
 					elif data[u"count"] <  cOld:
-						if self.decideMyLog(u"SensorData") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"updatePULSE resetting countList, new count < stored count")
+						if self.decideMyLog(u"SensorData"): self.indiLOG.log(10,u"updatePULSE resetting countList, new count < stored count")
 						countList = defCountList
 						cOld = 0
 						countList[u"lastReset"] = time.time()
@@ -17280,14 +17305,14 @@ class Plugin(indigo.PluginBase):
 
 				out[u"sensorList"] = self.RPI[piU][u"sensorList"]
 
-				out[u"output"]={}
+				out[u"output"] = {}
 				for devOut in indigo.devices.iter(u"props.isOutputDevice"):
 					typeId = devOut.deviceTypeId
 					if typeId not in _GlobalConst_allowedOUTPUT: 								continue
 					if not devOut.enabled: 														continue
 					propsOut= devOut.pluginProps
 					if u"piServerNumber" in propsOut and propsOut[u"piServerNumber"] != piU:	 continue
-					if typeId.find(u"OUTPUTgpio") >-1 or typeId.find(u"OUTPUTi2cRelay") >-1:
+					if typeId.find(u"OUTPUTgpio") >-1 or typeId.find(u"OUTPUTi2cRelay") > -1 or typeId.find(u"OUTPUTswitchbotRelay") > -1: 
 						if typeId in self.RPI[piU][u"output"]:
 							out[u"output"][typeId] = copy.deepcopy(self.RPI[piU][u"output"][typeId])
 					else:
@@ -17390,7 +17415,6 @@ class Plugin(indigo.PluginBase):
 
 								out[u"output"][typeId][devIdoutS][0]=  copy.deepcopy(theDict)
 								if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,	u" neoPixelClock: "+json.dumps(theDict))
-
 
 
 						out[u"output"][typeId][devIdoutS][0] = self.updateSensProps(out[u"output"][typeId][devIdoutS][0], propsOut, u"lightSensorOnForDisplay")
@@ -17523,7 +17547,6 @@ class Plugin(indigo.PluginBase):
 	def delayedActionsThread(self):
 		try:
 			self.delayedActions[u"state"] = u"running"
-			if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"delayedActionsThread starting ")
 			while self.delayedActions[u"state"] == u"running":
 				self.sleep(1)
 				self.delayedActions[u"lastCheck"] = time.time()
@@ -18607,9 +18630,15 @@ configuration         - ==========  defined beacons ==============
 
 		###### STATUS REQUEST ######
 		elif action.deviceAction == indigo.kUniversalAction.RequestStatus:
-			# Query hardware module (dev) for its current status here:
-			# ** IMPLEMENT ME **
-			self.indiLOG.log(10,u"sent \"{}\" status request not implemented".format(dev.name))
+			if dev.deviceTypeId == u"OUTPUTswitchbotRelay":
+				props = dev.pluginProps
+				piU = props[u"piServerNumber"]
+				fileContents = {"mac":props["mac"], "statusRequest":True, u"outputDev":  dev.id}
+				textToSend = json.dumps([{u"device": u"OUTPUTswitchbotRelay", u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/switchbot.cmd",u"fileContents":fileContents}])
+				self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"switchBotRelaySet")
+				if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, textToSend))
+				return 
+			indigo.server.log(u"sent \"{}\" status request not implemented".format(dev.name))
 
 	########################################
 	# Sensor Action callback

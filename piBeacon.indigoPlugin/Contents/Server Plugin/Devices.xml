@@ -26639,6 +26639,63 @@ full screen apps probably do not work eg "top" does not work:</Label>
 	</Device>
 
 
+	<Device type="relay" id="OUTPUTswitchbotRelay">     	<Name>OUTPUT-switch bot Relay</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsStatusRequest" 	type="checkbox"  defaultValue="true" ><Label>Supports StatusRequest:</Label></Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label>
+			</Field>
+
+			<Field id="infoLabelOUTPUT" type="label">
+			<Label>Setup switch bot  relay  on individual rPis through BLE-connect</Label>
+			</Field>
+
+			<Field id="outType"  type="textfield" defaultValue="0" > 
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+				<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
+				<Label>select rPi-server to which the relay is connect to:</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""> <Label>mac number of  switch bot:</Label>
+			</Field>
+
+			<Field id="blehandle"   type="textfield" defaultValue="16"  >
+				<Label>ble handle:</Label>
+			</Field>
+
+			<Field id="onCmd"   type="textfield" defaultValue="=570101"  >
+				<Label>on cmd:</Label>
+			</Field>
+
+			<Field id="offCmd"   type="textfield" defaultValue="=570102"  >
+				<Label>off cmd:</Label>
+			</Field>
+
+			<Field id="displayState" type="textfield"      defaultValue="actualStatus" hidden="YES"> </Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="actualStatus">
+				<ValueType>String</ValueType>
+				<TriggerLabel>actualStatus</TriggerLabel>
+				<ControlPageLabel>actualStatus</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
+
+
 	<Device type="relay" id="OUTPUTi2cRelay">     	<Name>OUTPUT-Relay-i2c</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
@@ -26710,10 +26767,10 @@ full screen apps probably do not work eg "top" does not work:</Label>
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="actualGpioValue">
+			<State id="actualStatus">
 				<ValueType>String</ValueType>
-				<TriggerLabel>actualGpioValue</TriggerLabel>
-				<ControlPageLabel>actualGpioValue</ControlPageLabel>
+				<TriggerLabel>actualStatus</TriggerLabel>
+				<ControlPageLabel>actualStatus</ControlPageLabel>
 			</State>
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>
@@ -26789,10 +26846,10 @@ full screen apps probably do not work eg "top" does not work:</Label>
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="actualGpioValue">
+			<State id="actualStatus">
 				<ValueType>String</ValueType>
-				<TriggerLabel>actualGpioValue</TriggerLabel>
-				<ControlPageLabel>actualGpioValue</ControlPageLabel>
+				<TriggerLabel>actualStatus</TriggerLabel>
+				<ControlPageLabel>actualStatus</ControlPageLabel>
 			</State>
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>
@@ -26872,10 +26929,10 @@ full screen apps probably do not work eg "top" does not work:</Label>
 				<TriggerLabel>status</TriggerLabel>
 				<ControlPageLabel>status</ControlPageLabel>
 			</State>
-			<State id="actualGpioValue">
+			<State id="actualStatus">
 				<ValueType>String</ValueType>
-				<TriggerLabel>actualGpioValue</TriggerLabel>
-				<ControlPageLabel>actualGpioValue</ControlPageLabel>
+				<TriggerLabel>actualStatus</TriggerLabel>
+				<ControlPageLabel>actualStatus</ControlPageLabel>
 			</State>
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>

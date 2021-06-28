@@ -1,4 +1,21 @@
 {
+  "switchbot":  {
+    "text":"switch bot",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "", 
+    "beepCmd": "off", 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"",
+    "subType":{},
+    "hexCode": "0D02010609FF5900MAC#########"
+  },
   "Satech":  {
     "text":"Satech STiExx sensors",
     "Maj":"",
@@ -907,7 +924,7 @@
         "char-write-req 0x0034 0100", 
         "char-write-req 0x0039 0100", 
         "char-write-req 0x0043 A1A2A3A4", 
-        "char-write-req x003D 02", 
+        "char-write-req 0x003D 02", 
         "char-write-cmd 0x0011 02"
       ], 
       "cmdOff": [

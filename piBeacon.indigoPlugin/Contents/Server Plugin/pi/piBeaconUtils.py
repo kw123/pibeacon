@@ -2335,10 +2335,26 @@ def doFileCheck(xxx,extension):
 				os.remove("{}temp/{}.{}".format(G.homeDir, xxx, extension))
 			except:
 				pass
-			return	True
+			return True
 		return False
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+
+#################################
+def checkForNewCommand(fname):
+	try:
+		if os.path.isfile("{}temp/{}".format(G.homeDir, fname)):
+			try:
+				jData, xx = readJson("{}temp/{}".format(G.homeDir, fname))
+				os.remove("{}temp/{}".format(G.homeDir, fname))
+				return jData
+			except:
+				pass
+			return ""
+		return ""
+	except	Exception as e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return ""
 
 #################################
 def makeDATfile(sensor, data):
