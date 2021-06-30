@@ -1,9 +1,16 @@
+Added features / changes in v7.137.531@ 2021-06-29
+===================================================
+   
+1. added support for switch bot temperature humidity display / sensor
+2. added batterylevel version states for switchbot bot
+
+
 Added features / changes in v7.137.529@ 2021-06-28
 ===================================================
    
 1. added support for switch bot devices
    they have to be "associated" to a single RPi in device edit
-   you need to first find the MAC # either through detect new beaconsor through iphone app
+   you need to first find the MAC # either through detect new beacons or through iphone app
    then create switch bot indigo device add mac# and select RPi that is closest to device
    rest should be left at default
    then the device will behave like a relay

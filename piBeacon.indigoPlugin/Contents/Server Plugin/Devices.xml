@@ -6396,13 +6396,6 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -6747,13 +6740,6 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<ControlPageLabel>FormaldehydeMinYesterday</ControlPageLabel>
 			</State>
 
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -7060,12 +7046,6 @@ This Sensor does not display F only C ===</Label>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -7348,13 +7328,6 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="connected">
 				<ValueType>String</ValueType>
 				<TriggerLabel>connected</TriggerLabel>
@@ -7927,13 +7900,6 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -8557,13 +8523,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -8805,13 +8764,6 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 				<ValueType>Float</ValueType>
 				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
-			</State>
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 			<State id="connected">
@@ -9396,13 +9348,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="illuminance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -10405,12 +10350,6 @@ set trigger and sensitivity parameters ===
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -11188,21 +11127,268 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
 				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
 			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 			<State id="lowVoltage">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="lastUpdateFromRPI">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastUpdateFromRPI</TriggerLabel>
+				<ControlPageLabel>lastUpdateFromRPI</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
+
+	<Device type="sensor" id="BLEswitchbotTempHum">     	<Name>BLE-switchbot - Temperature and Humidity</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="false"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
+			<Label>==  To setup this  Temp Hum BLE "switchbot"
+Find MAC number through finde new beacons or using the iphone app.
+This device will send a BLE w temp and hum values  every 5 secs
+You can use either red/grey/green or temperature icon in the status column: set below
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+			<Field id="labelRPI"   type="label" >
+			<Label>Select RPIs that should monitor this sensor,
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Humidity"  >Humidity</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field> 
+			<Field id="stateGreen" type="textfield"       defaultValue="x &lt; 23 and x&gt; 21">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="(x &lt;= 21 and x&gt; 19) or (x &gt;= 23 and x &lt; 25)">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x &gt;= 25 or x &lt;= 19">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot;
+  &quot;x &lt; 33&quot;
+  &quot;33 &lt;= x and x &lt;= 66&quot;
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="Temperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange10Minutes">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>TemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>TemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="TemperatureChange6Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>TemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveToday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMeasurementsToday">
+				<ValueType>number</ValueType>
+				<TriggerLabel>TemperatureMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMeasurementsToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureAveYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureAveYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureAveYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="Humidity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Humidity</TriggerLabel>
+				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxToday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinToday</TriggerLabel>
+				<ControlPageLabel>HumidityMinToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>model</TriggerLabel>
+				<ControlPageLabel>model</ControlPageLabel>
+			</State>
+			<State id="mode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>mode</TriggerLabel>
+				<ControlPageLabel>mode</ControlPageLabel>
 			</State>
 
 			<State id="rssi">
@@ -13692,9 +13878,6 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
-
-
-
 			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastSensorChange</TriggerLabel>
@@ -14939,7 +15122,7 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
 			</State>
-		<State id="lastSensorChange">
+			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastSensorChange</TriggerLabel>
 				<ControlPageLabel>lastSensorChange</ControlPageLabel>
@@ -15425,11 +15608,8 @@ After some days of running in clean air, proposed setup is:
 			<Field id="statusColorLabel" type="label" >	<Label>== set color of status column dot to </Label></Field>
 
 			<Field id="stateGreen" type="textfield"       defaultValue="x &lt; 110">	<Label>set State Indicator to GREEN if:</Label></Field>
-
 			<Field id="stateGrey"  type="textfield"       defaultValue="x &lt; 401">	<Label>set State Indicator to GREY if:</Label></Field>
-
 			<Field id="stateRed"   type="textfield"       defaultValue="x &lt; 501">	<Label>set State Indicator to RED if:</Label></Field>
-
 			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
 				<Label>The conditions will be passed through eval(). Examples:
   &quot;x &gt; 55&quot;
@@ -20141,7 +20321,7 @@ you can setup
 				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
 			</State>
 
-				<State id="lastSensorChange">
+			<State id="lastSensorChange">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastSensorChange</TriggerLabel>
 				<ControlPageLabel>lastSensorChange</ControlPageLabel>
@@ -21952,10 +22132,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 		</States>
 
 	</Device>
-
-
-
-
 
 
 
@@ -26644,6 +26820,7 @@ full screen apps probably do not work eg "top" does not work:</Label>
 		<ConfigUI>
 			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true" hidden="yes"> </Field>
 			<Field id="SupportsStatusRequest" 	type="checkbox"  defaultValue="true" ><Label>Supports StatusRequest:</Label></Field>
+			<Field id="SupportsBatteryLevel"    type="checkbox" defaultValue="true" hidden="false"></Field>
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label>
 			</Field>
@@ -26664,14 +26841,20 @@ full screen apps probably do not work eg "top" does not work:</Label>
 			</Field>
 
 			<Field id="blehandle"   type="textfield" defaultValue="16"  >
-				<Label>ble handle:</Label>
+				<Label>ble handle for writing:</Label>
+			</Field>
+			<Field id="blehandleStatus"   type="textfield" defaultValue="13"  >
+				<Label>ble handle for status:</Label>
+			</Field>
+			<Field id="statusCmd"   type="textfield" defaultValue="5702"  >
+				<Label>status cmd:</Label>
 			</Field>
 
-			<Field id="onCmd"   type="textfield" defaultValue="=570101"  >
+			<Field id="onCmd"   type="textfield" defaultValue="570101"  >
 				<Label>on cmd:</Label>
 			</Field>
 
-			<Field id="offCmd"   type="textfield" defaultValue="=570102"  >
+			<Field id="offCmd"   type="textfield" defaultValue="570102"  >
 				<Label>off cmd:</Label>
 			</Field>
 
@@ -26689,6 +26872,26 @@ full screen apps probably do not work eg "top" does not work:</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>actualStatus</TriggerLabel>
 				<ControlPageLabel>actualStatus</ControlPageLabel>
+			</State>
+			<State id="version">
+				<ValueType>String</ValueType>
+				<TriggerLabel>version</TriggerLabel>
+				<ControlPageLabel>version</ControlPageLabel>
+			</State>
+			<State id="holdSeconds">
+				<ValueType>String</ValueType>
+				<TriggerLabel>holdSeconds</TriggerLabel>
+				<ControlPageLabel>holdSeconds</ControlPageLabel>
+			</State>
+			<State id="dualStateMode">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>dualStateMode</TriggerLabel>
+				<ControlPageLabel>dualStateMode</ControlPageLabel>
+			</State>
+			<State id="inverseDirection">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>inverseDirection</TriggerLabel>
+				<ControlPageLabel>inverseDirection</ControlPageLabel>
 			</State>
 		</States>
 	</Device>

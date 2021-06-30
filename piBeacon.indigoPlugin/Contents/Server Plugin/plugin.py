@@ -368,6 +368,7 @@ _BLEsensorTypes =[u"BLERuuviTag",
 				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum",
 				u"BLEblueradio",
 				u"BLESatech",
+				u"BLEswitchbotTempHum",
 				u"BLEXiaomiMiTempHumRound", u"BLEXiaomiMiTempHumClock", u"BLEXiaomiMiformaldehyde", u"BLEgoveeTempHum"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
@@ -4786,10 +4787,14 @@ class Plugin(indigo.PluginBase):
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["mac"] = valuesDict["mac"]
 					if u"blehandle" in valuesDict:
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["blehandle"] = valuesDict["blehandle"]
+					if u"blehandleStatus" in valuesDict:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["blehandleStatus"] = valuesDict["blehandleStatus"]
 					if u"onCmd" in valuesDict:
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["onCmd"] = valuesDict["onCmd"]
 					if u"offCmd" in valuesDict:
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["offCmd"] = valuesDict["offCmd"]
+					if u"statusCmd" in valuesDict:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["statusCmd"] = valuesDict["statusCmd"]
 
 
 
@@ -12885,21 +12890,25 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def setActualRelayStatus(self, dev, props, data):
 		try:
-			if u"actualStatus" not in data or u"outType" not in props: return 
+			if u"actualStatus" in data and  u"outType" in props: 
 
-			upState = data[u"actualStatus"]
-			actualStatus = upState.lower()
-			if actualStatus not in ["on", "off"]:
-				if props[u"outType"] == u"0": # not inverse
-					if actualStatus == "high": upState = u"on"
-					else:               	   upState = u"off"
-				else:
-					if actualStatus == "low": upState = u"on"
-					else:               	  upState = u"off"
+				upState = data[u"actualStatus"]
+				actualStatus = upState.lower()
+				if actualStatus not in ["on", "off"]:
+					if props[u"outType"] == u"0": # not inverse
+						if actualStatus == "high": upState = u"on"
+						else:               	   upState = u"off"
+					else:
+						if actualStatus == "low": upState = u"on"
+						else:               	  upState = u"off"
 
-			self.addToStatesUpdateDict(dev.id,u"status", upState)
-			self.addToStatesUpdateDict(dev.id,u"actualStatus", actualStatus)
-			self.addToStatesUpdateDict(dev.id,u"onOffState", upState == "on")
+				self.addToStatesUpdateDict(dev.id,u"status", upState)
+				self.addToStatesUpdateDict(dev.id,u"actualStatus", actualStatus)
+				self.addToStatesUpdateDict(dev.id,u"onOffState", upState == "on")
+
+			for xx in [u"batteryLevel",u"version",u"holdSeconds",u"dualStateMode",u"inverseDirection"]:
+				if xx in data : 
+					self.addToStatesUpdateDict(dev.id,xx, data[xx])
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -13715,6 +13724,15 @@ class Plugin(indigo.PluginBase):
 					x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"chipTemperature"])
 					if unicode(x) != unicode(dev.states[u"chipTemperature"]):
 						self.addToStatesUpdateDict(dev.id, u"chipTemperature", x)
+
+				if  "model" in dev.states and  data[u"model"] != dev.states[u"model"]:
+									self.addToStatesUpdateDict(dev.id, u"model", data[u"model"])
+
+				if  "mode" in dev.states and  data[u"mode"] != dev.states[u"mode"]:
+									self.addToStatesUpdateDict(dev.id, u"mode", data[u"mode"])
+
+				if  "fahrenheit" in dev.states and  data[u"fahrenheit"] != dev.states[u"fahrenheit"]:
+									self.addToStatesUpdateDict(dev.id, u"fahrenheit", data[u"fahrenheit"])
 
 				if  "sensorSetup" in dev.states and  data[u"sensorSetup"] != dev.states[u"sensorSetup"]:
 									self.addToStatesUpdateDict(dev.id, u"sensorSetup", data[u"sensorSetup"])

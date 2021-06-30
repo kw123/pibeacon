@@ -1203,6 +1203,8 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 			if sensor.find("BLEapril") >-1:
 				return  doBLEapril( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 
+			if sensor.find("BLEswitchbotTempHum") >-1:
+				return  doBLEswitchbotTempHum( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 
 			if sensor.find("BLEXiaomiMiTempHumRound") >-1:
 				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
@@ -1223,6 +1225,84 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 #################################
 
+
+def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
+	global BLEsensorMACs, sensors
+	try:
+		if len(hexData) < 60: return tx, "", UUID, Maj, Min, False
+
+		hexData = hexData[12:]
+		"""
+		govee package  structure:
+		afetr mac#:
+		GVH5177_C097:
+				        name string ------------------------                               th start:        
+        1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD DA
+	pos:01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67   89 41 23 45 67 89 51 23 45 67 89 
+	pos:                                                                 01 23 45 67 89 11 23 45 
+																					 BB tt TT HH 	
+		"""
+		doPrint 		= False
+		#if mac == "A4:C1:38:98:15:CB": doPrint 		= True
+		out 			= ""
+		startData = 42
+		if doPrint: U.logger.log(20, u"mac:{}, sens:{}; startData:{}, len(hexData):{}; hexData:{};".format(mac, sensor, startData,  len(hexData), hexData ))
+		if  "1C11071BC5D5A50200B89FE6114D22000DA2CB0916" not in  hexData: return tx, "", UUID, Maj, Min, False
+		hData = hexData[startData:]
+		if doPrint: U.logger.log(20, u"mac:{},  len(hexData):{}".format(mac, hData ))
+
+		tempFra = int(hData[10:12].encode('utf-8'), 16) / 10.0
+		tempInt = int(hData[12:14].encode('utf-8'), 16)
+		if tempInt < 128:
+			tempInt *= -1
+			tempFra *= -1
+		else:
+			tempInt -= 128
+		temp = tempInt + tempFra
+		hum = int(hData[14:16].encode('utf-8'), 16) % 128
+		#fahrenheit  = int(hData[8:10].encode('utf-8'), 16) &  0b10000000
+
+		batteryLevel = int(hData[8:10].encode('utf-8'), 16) & 0b01111111
+		model = chr(int(hData[4:6],16))
+		mode  = int(hData[6:8],16)
+
+		if doPrint: U.logger.log(20, u"mac:{}, temp:{},  hum:{}".format(mac,temp,hum ))
+
+		dd={   # the data dict to be send 
+						'temp': 		round(temp+ BLEsensorMACs[mac][sensor]["offsetTemp"],1),
+						'hum': 			int(hum + BLEsensorMACs[mac][sensor]["offsetHum"]),
+						'batteryLevel': batteryLevel,
+						'model': 		model,
+						'mode': 		mode,
+						"rssi":			int(rx)
+				}
+
+		trigTime 	= time.time() - BLEsensorMACs[mac][sensor]["lastUpdate"]   > BLEsensorMACs[mac][sensor]["updateIndigoTiming"]  			# send min every xx secs
+		trigTemp	= abs(temp - BLEsensorMACs[mac][sensor]["temp"]) > 0.5
+		trigHum		= abs(hum - BLEsensorMACs[mac][sensor]["hum"]) > 2
+
+		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, triggers:{};{};{}".format(mac, temp, hum, trigTime, trigTemp, trigHum))
+
+		if  trigTime or trigTemp or trigHum:
+					# compose complete message
+					U.sendURL({"sensors":{sensor:{BLEsensorMACs[mac][sensor]["devId"]:dd}}})
+
+					# remember last values
+					if  doPrint: U.logger.log(20, "mac:{} triggers:Time:{};temp:{};hum:{}; updateIndigoTiming:{}; send:{}".format( mac, trigTime , trigTemp , trigHum,BLEsensorMACs[mac][sensor]["updateIndigoTiming"] ,  dd)  )
+					BLEsensorMACs[mac][sensor]["lastUpdate"] 	= time.time()
+					BLEsensorMACs[mac][sensor]["temp"]    	 	= temp
+					BLEsensorMACs[mac][sensor]["hum"]    	 	= hum
+					BLEsensorMACs[mac][sensor]["batteryLevel"]  = batteryLevel
+		UUID = sensor
+		Maj  = mac
+		return  tx, batteryLevel, UUID, Maj, Min, False		
+
+
+
+	except	Exception, e:
+		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	# return incoming parameetrs
+	return tx, "", UUID, Maj, Min, False
 
 
 
@@ -4251,6 +4331,7 @@ def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, batteryLevel
 										beaconsThisReadCycle[mac]["txPower"]		= float(txPower) # transmit power
 										beaconsThisReadCycle[mac]["timeSt"]			= time.time() 
 										beaconsThisReadCycle[mac]["batteryLevel"]	= batteryLevel # battery level 
+										beaconsThisReadCycle[mac]["typeOfBeacon"]	= "" # 
 		if iBeacon != "": 				beaconsThisReadCycle[mac]["iBeacon"]		= iBeacon # 
 		if mfg_info != "": 				beaconsThisReadCycle[mac]["mfg_info"]		= mfg_info # 
 		if TLMenabled: 					beaconsThisReadCycle[mac]["TLMenabled"]		= True
