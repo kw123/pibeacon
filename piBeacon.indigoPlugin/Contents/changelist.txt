@@ -1,3 +1,10 @@
+Added features / changes in v7.137.532@ 2021-06-30
+===================================================
+   
+1. added support battery values for all switchbot type beacons and auto population of battery level for switchbot bot relays
+2. fixed auto update when new version ships
+
+
 Added features / changes in v7.137.531@ 2021-06-29
 ===================================================
    

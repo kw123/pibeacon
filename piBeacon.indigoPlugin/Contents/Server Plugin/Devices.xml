@@ -26818,15 +26818,19 @@ full screen apps probably do not work eg "top" does not work:</Label>
 	<Device type="relay" id="OUTPUTswitchbotRelay">     	<Name>OUTPUT-switch bot Relay</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
+			<Field id="isSwitchbotDevice"       type="checkbox"  defaultValue="true" hidden="yes"> </Field>
 			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true" hidden="yes"> </Field>
-			<Field id="SupportsStatusRequest" 	type="checkbox"  defaultValue="true" ><Label>Supports StatusRequest:</Label></Field>
-			<Field id="SupportsBatteryLevel"    type="checkbox" defaultValue="true" hidden="false"></Field>
+			<Field id="SupportsStatusRequest"   type="checkbox"  defaultValue="true" ><Label>Supports StatusRequest:</Label></Field>
+			<Field id="SupportsBatteryLevel"    type="checkbox"  defaultValue="true" hidden="yes"></Field>
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label>
 			</Field>
 
 			<Field id="infoLabelOUTPUT" type="label">
-			<Label>Setup switch bot  relay  on individual rPis through BLE-connect</Label>
+			<Label>Setup switch bot  relay  on individual rPis through BLE-connect
+These are mechanical switches that get their commands through bluetooth messages. 
+Indigo sends the messages to one RPI via tcpip, that rpi sends the commands via BLE
+This works reliable when 2 BLE dongles are on an rpi, eg the internal +1 external</Label>
 			</Field>
 
 			<Field id="outType"  type="textfield" defaultValue="0" > 
@@ -26892,6 +26896,12 @@ full screen apps probably do not work eg "top" does not work:</Label>
 				<ValueType>boolean</ValueType>
 				<TriggerLabel>inverseDirection</TriggerLabel>
 				<ControlPageLabel>inverseDirection</ControlPageLabel>
+
+			</State>
+			<State id="batteryLevelLastUpdate">
+				<ValueType>string</ValueType>
+				<TriggerLabel>batteryLevelLastUpdate</TriggerLabel>
+				<ControlPageLabel>batteryLevelLastUpdate</ControlPageLabel>
 			</State>
 		</States>
 	</Device>

@@ -1240,6 +1240,12 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
         1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD DA
 	pos:01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67   89 41 23 45 67 89 51 23 45 67 89 
 	pos:                                                                 01 23 45 67 89 11 23 45 
+        for otehr devices: 
+																		 00 0D 48 D0 E1
+																		 00 0D 62 00 64 00
+ 																		 00 0D 48 90 00 low battery
+																		 00 0D 48 D0 64
+																		 00 0D 48 D0 DF 95%
 																					 BB tt TT HH 	
 		"""
 		doPrint 		= False
@@ -4090,6 +4096,8 @@ def checkForBatteryInfo( tag, tagFound, mac, hexstr ):
 	global knownBeaconTags
 	global trackMac, logCountTrackMac
 	try:
+		if mac == trackMac and logCountTrackMac >0:
+			writeTrackMac("Bat-0   ","tag:{}; tagFound:{}; tagin:{}; batcmd:{} hexstr:{}".format(tag, tagFound, tag in knownBeaconTags, knownBeaconTags[tag]["battCmd"], hexstr), mac )
 		bl = ""
 		if tag in knownBeaconTags and tagFound == "found":
 			if type(knownBeaconTags[tag]["battCmd"]) != type({}) and knownBeaconTags[tag]["battCmd"].find("msg:") >-1:
@@ -4108,7 +4116,7 @@ def checkForBatteryInfo( tag, tagFound, mac, hexstr ):
 								ii = item.split("=")
 								par[ii[0]]= ii[1]
 							if mac == trackMac and logCountTrackMac >0:
-								writeTrackMac("Bat-1   ","params:{}, par-split:{}".format(params, par), mac )
+								writeTrackMac("Bat-2   ","params:{}, par-split:{}".format(params, par), mac )
 
 							batPos	= int(par["pos"])*2
 							norm	= float(par["norm"])
@@ -4116,14 +4124,19 @@ def checkForBatteryInfo( tag, tagFound, mac, hexstr ):
 							except:	length  = 1
 							try:	reverse	= int(par["reverse"]) == 1
 							except:	reverse = False
+							
+							if "and" in par:	andWith = int(par["and"])
+							else:				andWith = 255
 
 							batHexStr = hexstr[12:]
 							Bstring =  batHexStr[batPos:batPos+length*2]
+							if mac == trackMac and logCountTrackMac >0:
+								writeTrackMac("Bat-3   ", "batpos:{}, hex:{}, norm:{}, length:{}, andWith:{}, reverse:{}".format(batPos, Bstring, norm, length, andWith, reverse),  mac )
 							if reverse:
 								Bstring = Bstring[2:4]+Bstring[0:2]
-							bl	 	= 100.* int(Bstring,16)/norm
+							bl	 	= 100.* (int(Bstring,16)&andWith)/norm
 							if mac == trackMac and logCountTrackMac >0:
-								writeTrackMac("Bat-2   ", "batpos:{}, hex:{}, norm:{}, length:{}, reverse:{}; bl:{}".format(batPos, Bstring, norm, length, reverse, bl),  mac )
+								writeTrackMac("Bat-4   ", "bl:{}".format(bl),  mac )
 				except	Exception, e:
 					if mac == trackMac and logCountTrackMac >0:
 						writeTrackMac("        ", u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), mac)

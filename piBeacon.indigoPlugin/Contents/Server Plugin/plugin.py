@@ -10192,7 +10192,6 @@ class Plugin(indigo.PluginBase):
 
 
 
-		self.writeJson(self.pluginVersion, fName=self.indigoPreferencesPluginDir + u"currentVersion")
 
 		self.initSprinkler()
 
@@ -10221,13 +10220,15 @@ class Plugin(indigo.PluginBase):
 
 		self.rPiRestartCommand = [u"master" for ii in range(_GlobalConst_numberOfRPI)]	## which part need to restart on rpi
 		self.setupFilesForPi()
-		if self.currentVersion != self.pluginVersion :
+		self.indiLOG.log(20,u" ..  checkingh for new py programs current:{}, new:{}".format(self.currentVersion, self.pluginVersion))
+		if self.currentVersion != self.pluginVersion:
 			self.setCurrentlyBooting(40, setBy=u"initConcurrentThread")
-			self.indiLOG.log(5,u" ..  new py programs  etc will be send to rPis")
+			self.indiLOG.log(20,u" ..  new py programs  etc will be send to rPis")
 			for piU in self.RPI:
 				if self.RPI[piU][u"ipNumberPi"] != u"":
 					self.setONErPiV(piU,u"piUpToDate", [u"updateAllFilesFTP",u"restartmasterSSH"])
-			self.indiLOG.log(5,u" ..  new pgm versions send to rPis")
+			self.indiLOG.log(20,u" ..  new pgm versions send to rPis")
+			self.sleep(10)
 		else:
 			for piU in self.RPI:
 				if self.RPI[piU][u"ipNumberPi"] != u"":
@@ -10242,6 +10243,7 @@ class Plugin(indigo.PluginBase):
 		self.lastUpdateSend = time.time()  # used to send updates to all rPis if not done anyway every day
 		self.pluginState	= u"run"
 		self.setCurrentlyBooting(50, setBy=u"initConcurrentThread")
+		self.writeJson(self.pluginVersion, fName=self.indigoPreferencesPluginDir + u"currentVersion")
 
 		return
 
@@ -11561,7 +11563,7 @@ class Plugin(indigo.PluginBase):
 										self.addToStatesUpdateDict(dev.id,ttx+u"MinYesterday",	val,decimalPlaces=decimalPlaces)
 										self.addToStatesUpdateDict(dev.id,ttx+u"MaxToday",		val,decimalPlaces=decimalPlaces)
 										self.addToStatesUpdateDict(dev.id,ttx+u"MinToday",		val,decimalPlaces=decimalPlaces)
-										self.addToStatesUpdateDict(dev.id,ttx+u"MeasurementsToday",	0)
+										if ttx+u"MeasurementsToday" in dev.states: self.addToStatesUpdateDict(dev.id,ttx+u"MeasurementsToday",	0)
 
 								elif nHour == 0 and time.time() - resetMinMaxDayDoneToday > 3600.:	 # update at midnight
 									self.addToStatesUpdateDict(dev.id,ttx+u"MaxYesterday",	dev.states[ttx+u"MaxToday"], decimalPlaces=decimalPlaces)
@@ -11571,7 +11573,7 @@ class Plugin(indigo.PluginBase):
 									if ttx+u"AveToday" in dev.states: 
 										self.addToStatesUpdateDict(dev.id,ttx+u"AveYesterday",	dev.states[ttx+u"AveToday"], decimalPlaces=decimalPlaces)
 										self.addToStatesUpdateDict(dev.id,ttx+u"AveToday",		dev.states[ttx], 			 decimalPlaces=decimalPlaces)
-										self.addToStatesUpdateDict(dev.id,ttx+u"MeasurementsToday",		1, 					 decimalPlaces=decimalPlaces)
+										if ttx+u"MeasurementsToday" in dev.states: self.addToStatesUpdateDict(dev.id,ttx+u"MeasurementsToday",		1, 					 decimalPlaces=decimalPlaces)
 									self.pluginPrefs[u"resetMinMaxDayDoneToday"] = time.time()
 					except Exception, e:
 						if unicode(e) != u"None":
@@ -11592,13 +11594,13 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id,stateName+u"MaxToday",	 val, decimalPlaces=decimalPlaces)
 				if val < float(dev.states[stateName+u"MinToday"]):
 					self.addToStatesUpdateDict(dev.id,stateName+u"MinToday",	 val, decimalPlaces=decimalPlaces)
-				if stateName+u"AveToday" in dev.states:
-					currentAve = dev.states[stateName+u"AveToday"]
-					nMeas = max(1,dev.states[stateName+u"MeasurementsToday"])
-					newAve = ( currentAve*nMeas + val )/ (nMeas+1)
-					if decimalPlaces ==0: newAve = int(newAve)
-					self.addToStatesUpdateDict(dev.id,stateName+u"AveToday",	 newAve, decimalPlaces=decimalPlaces)
-					self.addToStatesUpdateDict(dev.id,stateName+u"MeasurementsToday",	 nMeas+1, decimalPlaces=0)
+				if stateName+u"AveToday" in dev.states and stateName+u"MeasurementsToday" in dev.states:
+						currentAve = dev.states[stateName+u"AveToday"]
+						nMeas = max(1,dev.states[stateName+u"MeasurementsToday"])
+						newAve = ( currentAve*nMeas + val )/ (nMeas+1)
+						if decimalPlaces ==0: newAve = int(newAve)
+						self.addToStatesUpdateDict(dev.id,stateName+u"AveToday",	 newAve, decimalPlaces=decimalPlaces)
+						self.addToStatesUpdateDict(dev.id,stateName+u"MeasurementsToday",	 nMeas+1, decimalPlaces=0)
 					
 
 
@@ -12907,8 +12909,11 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id,u"onOffState", upState == "on")
 
 			for xx in [u"batteryLevel",u"version",u"holdSeconds",u"dualStateMode",u"inverseDirection"]:
-				if xx in data : 
+				if xx in data: 
 					self.addToStatesUpdateDict(dev.id,xx, data[xx])
+					if xx == "batteryLevel" and "batteryLevelLastUpdate" in dev.states:
+						self.addToStatesUpdateDict(dev.id,u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
+
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -16271,9 +16276,16 @@ class Plugin(indigo.PluginBase):
 							dev = indigo.devices[dev.id]
 							props = dev.pluginProps
 
-					if  u"batteryLevel" in dev.states:
-						newStates = self.addToStatesUpdateDict(dev.id,u"batteryLevel", int(msg[u"batteryLevel"]), newStates=newStates)
-						newStates = self.addToStatesUpdateDict(dev.id,u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat),newStates=newStates)
+					if  u"batteryLevel" in dev.states and batteryLevel !="":
+						newStates = self.addToStatesUpdateDict(dev.id,u"batteryLevel", batteryLevel, newStates=newStates)
+						newStates = self.addToStatesUpdateDict(dev.id,u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat), newStates=newStates)
+						if typeOfBeacon == "Switchbot":
+							for devBot in indigo.devices.iter(u"props.isSwitchbotDevice"):
+								if devBot.pluginProps["mac"] == mac:
+									if str(batteryLevel) != str(devBot.states["batteryLevel"]): 
+										devBot.updateStateOnServer(u"batteryLevel", batteryLevel)
+									devBot.updateStateOnServer(u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
+
 
 
 				updateSignal, updateFINGnow, newStates = self.checkForFastDown(mac, piMACSend, dev, props, rssi, fromPiU, newStates)

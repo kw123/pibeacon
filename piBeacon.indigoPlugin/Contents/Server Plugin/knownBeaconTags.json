@@ -3,7 +3,7 @@
     "text":"Switch bot",
     "Maj":"",
     "Min":"",
-    "battCmd": "", 
+    "battCmd": "msg:pos=25,norm=100,and=127", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 2, 
