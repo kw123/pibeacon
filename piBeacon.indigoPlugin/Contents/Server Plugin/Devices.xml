@@ -11246,9 +11246,9 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<Field id="statusColorLabel" type="label" >
 			<Label>== set color of status column dot to </Label></Field> 
-			<Field id="stateGreen" type="textfield"       defaultValue="x &lt; 23 and x&gt; 21">	<Label>set State Indicator to GREEN if:</Label></Field>
-			<Field id="stateGrey"  type="textfield"       defaultValue="(x &lt;= 21 and x&gt; 19) or (x &gt;= 23 and x &lt; 25)">	<Label>set State Indicator to GREY if:</Label></Field>
-			<Field id="stateRed"   type="textfield"       defaultValue="x &gt;= 25 or x &lt;= 19">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="x&lt;23 and x&gt;21">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="(x&lt;=21 and x&gt;19) or (x&gt;=23 and x&lt;25)">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x&gt;=25 or x&lt;=19">	<Label>set State Indicator to RED if:</Label></Field>
 			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
 				<Label>The conditions will be passed through eval(). Examples:
   &quot;x &gt; 55&quot;
@@ -26833,9 +26833,6 @@ Indigo sends the messages to one RPI via tcpip, that rpi sends the commands via 
 This works reliable when 2 BLE dongles are on an rpi, eg the internal +1 external</Label>
 			</Field>
 
-			<Field id="outType"  type="textfield" defaultValue="0" > 
-			</Field>
-
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 				<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
 				<Label>select rPi-server to which the relay is connect to:</Label>
@@ -26887,13 +26884,13 @@ This works reliable when 2 BLE dongles are on an rpi, eg the internal +1 externa
 				<TriggerLabel>holdSeconds</TriggerLabel>
 				<ControlPageLabel>holdSeconds</ControlPageLabel>
 			</State>
-			<State id="dualStateMode">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>dualStateMode</TriggerLabel>
-				<ControlPageLabel>dualStateMode</ControlPageLabel>
+			<State id="mode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>mode</TriggerLabel>
+				<ControlPageLabel>mode</ControlPageLabel>
 			</State>
 			<State id="inverseDirection">
-				<ValueType>boolean</ValueType>
+				<ValueType>String</ValueType>
 				<TriggerLabel>inverseDirection</TriggerLabel>
 				<ControlPageLabel>inverseDirection</ControlPageLabel>
 

@@ -751,7 +751,7 @@ def getSwitchBot(jData):
 			switchbugActive = ""
 			return False
 
-		thisMAC = jData["mac"]
+		thisMAC = jData["mac"].upper()
 		if switchBotConfig[thisMAC]["lastFailedTryCount"] > 1 and time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"] < 30:
 			#if verbose: U.logger.log(20, "skip next test dt:{}".format(time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"]))
 			switchbugActive = "waiting"
@@ -785,35 +785,38 @@ def getSwitchBot(jData):
 		if "statusRequest" in jData: 
 			retData = {"outputs": {"OUTPUTswitchbotRelay": {switchBotConfig[thisMAC]["devId"]: {} }}}
 
-			result = batchGattcmd(useHCI, thisMAC, "--char-read -t random --handle=0x{}".format(switchBotConfig[thisMAC]["blehandle"] ), "descriptor:", nBytes=0, repeat=3, verbose=verbose, timeout=2)
-			if len(result) == 3:
-				cmdOn  = switchBotConfig[thisMAC]["onCmd"].replace(" ","")[-4:]
-				cmdOff = switchBotConfig[thisMAC]["offCmd"].replace(" ","")[-4:]
-				result = result.split("descriptor: ")[1].strip().replace(" ","")[-4:]
-				if   result == cmdOn:	actualStatus = "on"
-				elif result == cmdOff:	actualStatus = "off"
-				else: 					actualStatus = "unknown"
-				retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["actualStatus"]= actualStatus
-
-				if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}, cmdOn:{}; cmdOff:{}".format(thisMAC, result, retData, cmdOn, cmdOff))
+			# hanlde 0x13 gives:
+			#down 570101: 01 48 90
+			#up   570102: 01 48 d0
+			#press: 5701: 01 48 d0 / 01 48 90
+			#status 5702: 01 60 31 64 00 00 00 be 00 10 02 00 00 
 
 			for ii in range(2):
-				result = batchGattcmd(useHCI, thisMAC, "--char-read -t random --handle=0x{}".format(switchBotConfig[thisMAC]["blehandleStatus"] ), "descriptor:", nBytes=13, repeat=3, verbose=verbose, timeout=2)
-				if len(result) == 13: break
-				result = batchGattcmd(useHCI, thisMAC, "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], switchBotConfig[thisMAC]["statusCmd"] ), "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=2)
+				result = batchGattcmd(useHCI, thisMAC, "--char-read -t random --handle=0x{}".format(switchBotConfig[thisMAC]["blehandleStatus"] ), "descriptor:", nBytes=-1, repeat=3, verbose=verbose, timeout=2)
 
-			if len(result) == 13:
-				#01 61 31 64 00 00 00 bd 00 10 02 00 00 
-				retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["batteryLevel"]		= int(result[1],16)
-				retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["version"] 			= str(int(result[2],16)/10.)
-				retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["holdSeconds"]		= int(result[10],16)
-				retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["dualStateMode"]		= int(result[9],16) & 16 !=0
-				retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["inverseDirection"]	= int(result[9],16) & 1 !=0
+				if len(result) == 3:
+					if result == ["01","48","90"]: actualStatus = "on"
+					elif result == ["01","48","d0"]: actualStatus = "off"
+					else: 						  actualStatus = ""
+					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["actualStatus"] = actualStatus
+					if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}, actualStatus:{}".format(thisMAC, result, retData, actualStatus))
+
+				elif len(result) == 13:
+					#01 61 31 64 00 00 00 bd 00 10 02 00 00 
+					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["batteryLevel"]		= int(result[1],16) & 0b01111111
+					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["version"] 			= str(int(result[2],16)/10.)
+					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["holdSeconds"]		= int(result[10],16)
+					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["mode"]				= "press mode" if int(result[9],16) & 16 !=0 else "on off mode"
+					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["inverseDirection"]	= "inverse" if int(result[9],16) & 1 !=0 else "normal"
+					break
+
+				# if not status: issue status command, then read again
+				result = batchGattcmd(useHCI, thisMAC, "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], switchBotConfig[thisMAC]["statusCmd"] ), "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=2)
 
 			if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}".format(thisMAC, result, retData))
 
 			if retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]] !={}:
-				U.sendURL(retData)
+				U.sendURL(retData, squeeze=False)
 				switchbugActive = "finished"
 				switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 				switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 

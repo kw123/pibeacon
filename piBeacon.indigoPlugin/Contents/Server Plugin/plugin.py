@@ -12908,7 +12908,7 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id,u"actualStatus", actualStatus)
 				self.addToStatesUpdateDict(dev.id,u"onOffState", upState == "on")
 
-			for xx in [u"batteryLevel",u"version",u"holdSeconds",u"dualStateMode",u"inverseDirection"]:
+			for xx in [u"batteryLevel",u"version",u"holdSeconds",u"mode",u"inverseDirection"]:
 				if xx in data: 
 					self.addToStatesUpdateDict(dev.id,xx, data[xx])
 					if xx == "batteryLevel" and "batteryLevelLastUpdate" in dev.states:
