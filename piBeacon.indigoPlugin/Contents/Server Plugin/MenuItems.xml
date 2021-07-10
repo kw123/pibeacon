@@ -1106,10 +1106,24 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 	<MenuItem id="d20o">
 		<Name>-------------set values on output/display devices  ----------</Name>
 	</MenuItem>
+	<MenuItem id="OUTPUTswitchBotParams">
+		<Name>Set params on switchbot bot </Name>
+		<ConfigUI>
+			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select dev ">
+				<List class="indigo.devices" filter="self.OUTPUTswitchbotRelay"  />
+				<Label>select switchbot bot device:</Label>
+			</Field>
+			<Field id="exec" type="button">
+				<Label> ....after selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>setSWITCHBOTBOTCALLBACKmenu</CallbackMethod>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
 	<MenuItem id="OUTPUTgpio">
 		<Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>
 		<ConfigUI>
-			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
+			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pdev ">
 				<List class="self" filter="" method="filterOUTPUTdevicesACTION" />
 				<Label>select OUTPgpio device to set gpio pins:</Label>
 			</Field>

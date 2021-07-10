@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # mar 2 2016
@@ -161,7 +161,7 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, verbo
 	try:
 		nTries = 1
 		for kk in range(nTries):
-			if switchBotPresent and switchbugActive == "delayed" and checkSwitchbot(): return ""
+			if switchBotPresent and switchbugActive == "delayed" and checkSwitchbotForCommand(): return ""
 			cmd = "sudo /usr/bin/gatttool -i {} -b {} -I".format(useHCI,  thisMAC) 
 			if verbose: U.logger.log(20,"{} ;  expecting: '>'".format(cmd))
 			expCommands = pexpect.spawn(cmd)
@@ -183,7 +183,7 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, verbo
 			#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
 			for ii in range(repeat):
 				try:
-					if switchBotPresent and switchbugActive == "delayed" and checkSwitchbot(): return ""
+					if switchBotPresent and switchbugActive == "delayed" and checkSwitchbotForCommand(): return ""
 					if verbose: U.logger.log(20,"send connect try#:{}  expecting: Connection successful ".format(ii))
 					expCommands.sendline("connect")
 					ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=timeoutConnect)
@@ -240,7 +240,7 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout, verbose=False):
 	try:		
 		for ii in range(3):
 			if switchBotPresent and switchbugActive  == "delayed":  return False
-			if switchBotPresent and checkSwitchbot(): return False
+			if switchBotPresent and checkSwitchbotForCommand(): return False
 
 			if verbose: U.logger.log(20,"sending cmd:{}, expecting:'{}'".format(cc, expectedTag.encode('ascii',errors='ignore')))
 			expCommands.sendline( cc )
@@ -264,7 +264,7 @@ def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose
 	global switchBotPresent, switchbugActive
 	try:
 		for kk in range(2):
-			if switchBotPresent and checkSwitchbot(): return []
+			if switchBotPresent and checkSwitchbotForCommand(): return []
 			if verbose:  U.logger.log(20,"sendline  cmd:{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
@@ -293,7 +293,7 @@ def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	try:
 		for kk in range(2):
 			if switchBotPresent and switchbugActive == "delayed": return []
-			if switchBotPresent and checkSwitchbot(): return []
+			if switchBotPresent and checkSwitchbotForCommand(): return []
 			if verbose: U.logger.log(20,"sendline  cmd:{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
@@ -327,8 +327,8 @@ def batchGattcmd(useHCI, thisMAC, cc, expectedTag, nBytes=0, repeat=3, verbose=F
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			if ret[0].find(expectedTag) > -1:
 				if verbose: U.logger.log(20,"... successful:  0:{}".format( escape_ansi(ret[0]) ))
+				if nBytes == 0: return expectedTag
 				xx = ret[0].split(expectedTag)[1].replace("\r","").strip()
-				if nBytes == 0: return xx
 				xx = xx.split() 
 				if len(xx) == nBytes or nBytes < 0:
 					return xx
@@ -576,11 +576,11 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 
 		get second set: char-read-hnd 35
 		# 16b in l endian
-		#   0-1: temp *10 [°C]
+		#   0-1: temp *10 [�C]
 		#     2: ??
 		#   3-6: bright [lux]
 		#     7: moist [%]
-		#   8-9: conduct [µS/cm]
+		#   8-9: conduct [�S/cm]
 		# 10-15: ?? 
 		# eg: 'f4 00 69 00 00 00 00 1d 11 01 02 3c 00 fb 34 9b'
 		"""
@@ -716,8 +716,8 @@ def BLEinkBirdPool01B(thisMAC, data0):
 
 
 
-
-def checkSwitchbot():
+#################################
+def checkSwitchbotForCommand():
 	global switchbugActive, switchBotPresent, oldSwitchbotCommand
 
 	switchbugActive = ""
@@ -730,19 +730,20 @@ def checkSwitchbot():
 	# we have something
 	if len(jData) == 0: jData = copy.copy(oldSwitchbotCommand)
 	else:				oldSwitchbotCommand = copy.copy(jData)
-	return getSwitchBot(jData)
+	return doSwitchBot(jData)
 
 
 #################################
-def getSwitchBot(jData):
+def doSwitchBot(jData):
 	global useHCI
 	global switchBotConfig, switchbugActive, oldSwitchbotCommand
 
 	switchbugActive = "started"
 	verbose = True
 	# jData= {"mac":mac#,"onOff":"0/1","statusRequest":True}
-	#U.logger.log(20, u"jData:{}".format(jData))
+	U.logger.log(20, u"jData:{}".format(jData))
 	try:
+		readParams()
 		"""
 		# read: 
 		gatttool -b F9:A6:49:9A:DF:85 -t random --char-write-req  --handle=0x0016 --value=570102 / 1
@@ -751,7 +752,12 @@ def getSwitchBot(jData):
 			switchbugActive = ""
 			return False
 
+		checkParams = False
+		retData ={}
 		thisMAC = jData["mac"].upper()
+
+		sType = switchBotConfig[thisMAC]["sType"]
+
 		if switchBotConfig[thisMAC]["lastFailedTryCount"] > 1 and time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"] < 30:
 			#if verbose: U.logger.log(20, "skip next test dt:{}".format(time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"]))
 			switchbugActive = "waiting"
@@ -763,68 +769,144 @@ def getSwitchBot(jData):
 			switchBotConfig[thisMAC]["lastFailedTryCount"] = 0
 		switchBotConfig[thisMAC]["lastFailedTryCount"] += 1
 
-		if "onOff" in jData: 
-			if str(jData["onOff"]) == "1":  onOff =  switchBotConfig[thisMAC]["onCmd"];  actualStatus = "on"
-			else:  							onOff =  switchBotConfig[thisMAC]["offCmd"]; actualStatus = "off"
+		if sType == "switchbotbot":
+			
+			if    "onOff" in jData:	onoff = jData["onOff"]
+			elif  "onoff" in jData:	onoff = jData["onoff"]
+			else: 					onoff = ""
+		
+			if onoff != "":
+				if str(onoff) == "1":	onOff =  switchBotConfig[thisMAC]["onCmd"];  actualStatus = "on"
+				else:  					onOff =  switchBotConfig[thisMAC]["offCmd"]; actualStatus = "off"
 
-			result = batchGattcmd(useHCI, thisMAC, "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], onOff ), "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=2)
+				result = batchGattcmd(useHCI, thisMAC, "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], onOff ), "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=4)
 
 
-			if result != []:
-				retData = {"outputs":{"OUTPUTswitchbotRelay":{switchBotConfig[thisMAC]["devId"]:{"actualStatus": actualStatus}}}}
-				if verbose: U.logger.log(20, "{} return ok data: {}, retData:{}".format(thisMAC, result, retData))
-				U.sendURL(retData)
+				if result != []:
+					retData = {"outputs":{"OUTPUTswitchbotRelay":{switchBotConfig[thisMAC]["devId"]:{"actualStatus": actualStatus}}}}
+					if verbose: U.logger.log(20, "{} return ok data: {}, retData:{}".format(thisMAC, result, retData))
+					#U.sendURL(retData)
+					#oldSwitchbotCommand = {}
+					switchbugActive = "finished"
+					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
+					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
+					checkParams = True
+					jData["setParameters"] = True
+		
+			if "setParameters" in jData:
+				#if verbose: U.logger.log(20, "{} entering setparameters, switchBotConfig:{}".format(thisMAC, switchBotConfig[thisMAC]))
+				if  switchBotConfig[thisMAC]["modeOfDevice"] in ["cmdPressNormal","cmdPressInverse","cmdSwitchNormal","cmdSwitchInverse"]: 
+					modeOfDevice = switchBotConfig[thisMAC]["modeOfDevice"]
+					cmd= "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], switchBotConfig[thisMAC][modeOfDevice] )
+					if verbose: U.logger.log(20, "{} entering setparameters, cmd:{}".format(thisMAC, cmd))
+					for ii in range(2):
+						if "successfully" == batchGattcmd(useHCI, thisMAC, cmd , "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=4):
+							if verbose: U.logger.log(20, "{} return ok cmd:{};".format(thisMAC, cmd))
+							break
+							if verbose: U.logger.log(20, "{} return ok cmd:{};".format(thisMAC, cmd))
+						checkParams = True
+
+				try: 
+					holdSeconds = switchBotConfig[thisMAC]["holdSeconds"]
+					holdSeconds = int(holdSeconds)
+					if holdSeconds >= 0:
+						hexStr = "{:02x}".format(holdSeconds) 
+						cmd= "--char-write-req -t random --handle=0x{} --value={}{}".format(switchBotConfig[thisMAC]["blehandle"], switchBotConfig[thisMAC]["cmdHoldtime"], hexStr  )
+						if verbose: U.logger.log(20, "{} entering setparameters, cmd:{}".format(thisMAC, cmd))
+						for ii in range(2):
+							if "successfully" == batchGattcmd(useHCI, thisMAC, cmd , "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=4):
+								if verbose: U.logger.log(20, "{} return ok cmd:{}".format(thisMAC, cmd))
+								break
+							if verbose: U.logger.log(20, "{} return not ok cmd:{}".format(thisMAC, cmd))
+						checkParams = True
+				except:
+					pass
+
+
+			if "statusRequest" in jData or checkParams:
+				if retData =={}: 
+					retData = {"outputs": {"OUTPUTswitchbotRelay": {switchBotConfig[thisMAC]["devId"]: {} }}}
+				#if verbose: U.logger.log(20, "{} entering statusRequest".format(thisMAC))
+
+				# hanlde 0x13 gives:
+				#down 570101: 01 48 90
+				#up   570102: 01 48 d0
+				#press: 5701: 01 48 d0 / 01 48 90
+				#status 5702: 01 60 31 64 00 00 00 be 00 10 02 00 00 
+
+				for ii in range(2):
+					result = batchGattcmd(useHCI, thisMAC, "--char-read -t random --handle=0x{}".format(switchBotConfig[thisMAC]["blehandleStatus"] ), "descriptor:", nBytes=-1, repeat=3, verbose=verbose, timeout=4)
+
+					if len(result) == 3:
+						if result == ["01","48","90"]: 		actualStatus = "on"
+						elif result == ["01","48","d0"]: 	actualStatus = "off"
+						else: 						  		actualStatus = ""
+						retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["actualStatus"] = actualStatus
+						if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}, actualStatus:{}".format(thisMAC, result, retData, actualStatus))
+
+					elif len(result) == 13:
+						#01 61 31 64 00 00 00 bd 00 10 02 00 00 
+						retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["batteryLevel"]		= int(result[1],16) & 0b01111111
+						retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["version"] 			= str(int(result[2],16)/10.)
+						retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["holdSeconds"]		= int(result[10],16)
+						retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["mode"]				= "press mode" if int(result[9],16) & 16 == 0 else "on off mode"
+						retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["inverseDirection"]	= "inverse" if int(result[9],16) & 1 != 0 else "normal"
+						break
+
+					# if not status: issue status command, then read again
+					result = batchGattcmd(useHCI, thisMAC, "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], switchBotConfig[thisMAC]["statusCmd"] ), "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=4)
+
+				if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}".format(thisMAC, result, retData))
+
+				if retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]] !={}:
+					U.sendURL(retData, squeeze=False)
+					switchbugActive = "finished"
+					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
+					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
+					oldSwitchbotCommand = {}
+					return True
+			return False
+
+		if sType == "switchbotcurtain":
+			if verbose: U.logger.log(20, "{} switchbotcurtain, jData:{}".format(thisMAC, jData))
+			if "pos" in jData: 
+			
+				if   jData["pos"][0].lower() == "o":  cmd = "{}{}00".format(switchBotConfig[thisMAC]["positionCmd"],switchBotConfig[thisMAC]["modeOfDevice"])
+				elif jData["pos"][0].lower() == "c":  cmd = "{}{}ff".format(switchBotConfig[thisMAC]["positionCmd"],switchBotConfig[thisMAC]["modeOfDevice"])
+				elif jData["pos"][0].lower() == "p":  cmd = switchBotConfig[thisMAC]["pauseCmd"]
+				else: 
+					try: 
+						cmd = "{}{}{:02x}".format(switchBotConfig[thisMAC]["positionCmd"],switchBotConfig[thisMAC]["modeOfDevice"], int(jData["pos"]))
+					except:
+						U.logger.log(20, u"{} bad command given:{}".format(thisMAC, jData["pos"]))
+						oldSwitchbotCommand = {}
+						return True
+
+				blecmd = "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], cmd )	
+				if verbose: U.logger.log(20, "{} sending {}".format(thisMAC, blecmd))
+				result = batchGattcmd(useHCI, thisMAC, blecmd, "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=4)
+
+				if result != []:
+					retData = {"outputs":{"OUTPUTswitchbotCurtain":{switchBotConfig[thisMAC]["devId"]:{"position": jData["pos"]}}}}
+					if verbose: U.logger.log(20, "{} return ok data: {}, retData:{}".format(thisMAC, result, retData))
+					U.sendURL(retData, squeeze=False)
+					switchbugActive = "finished"
+					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
+					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
+					oldSwitchbotCommand = {}
+					return True
+			else:
+				if verbose: U.logger.log(20, "{} direction not in command:{}".format(thisMAC))
 				oldSwitchbotCommand = {}
-				switchbugActive = "finished"
-				switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
-				switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 				return True
 
-			##jData["statusRequest"] = True
-
-		if "statusRequest" in jData: 
-			retData = {"outputs": {"OUTPUTswitchbotRelay": {switchBotConfig[thisMAC]["devId"]: {} }}}
-
-			# hanlde 0x13 gives:
-			#down 570101: 01 48 90
-			#up   570102: 01 48 d0
-			#press: 5701: 01 48 d0 / 01 48 90
-			#status 5702: 01 60 31 64 00 00 00 be 00 10 02 00 00 
-
-			for ii in range(2):
-				result = batchGattcmd(useHCI, thisMAC, "--char-read -t random --handle=0x{}".format(switchBotConfig[thisMAC]["blehandleStatus"] ), "descriptor:", nBytes=-1, repeat=3, verbose=verbose, timeout=2)
-
-				if len(result) == 3:
-					if result == ["01","48","90"]: actualStatus = "on"
-					elif result == ["01","48","d0"]: actualStatus = "off"
-					else: 						  actualStatus = ""
-					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["actualStatus"] = actualStatus
-					if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}, actualStatus:{}".format(thisMAC, result, retData, actualStatus))
-
-				elif len(result) == 13:
-					#01 61 31 64 00 00 00 bd 00 10 02 00 00 
-					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["batteryLevel"]		= int(result[1],16) & 0b01111111
-					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["version"] 			= str(int(result[2],16)/10.)
-					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["holdSeconds"]		= int(result[10],16)
-					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["mode"]				= "press mode" if int(result[9],16) & 16 !=0 else "on off mode"
-					retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]["inverseDirection"]	= "inverse" if int(result[9],16) & 1 !=0 else "normal"
-					break
-
-				# if not status: issue status command, then read again
-				result = batchGattcmd(useHCI, thisMAC, "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], switchBotConfig[thisMAC]["statusCmd"] ), "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=2)
-
-			if verbose: U.logger.log(20, "{} return ok;  result: {}, retData:{}".format(thisMAC, result, retData))
-
-			if retData["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]] !={}:
-				U.sendURL(retData, squeeze=False)
-				switchbugActive = "finished"
-				switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
-				switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
-				oldSwitchbotCommand = {}
-				return True
-
+		else:
+			if verbose: U.logger.log(20, "{} stype not found:{}".format(thisMAC, sType))
+			oldSwitchbotCommand = {}
+			return True
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		oldSwitchbotCommand = {}
 	
 		if verbose: U.logger.log(20, "{}  return  data: {}".format(thisMAC, switchBotConfig))
 	
@@ -877,11 +959,6 @@ def readParams():
 					if oneActive:
 						sensors["isBLElongConnectDevice"][ss] = copy.deepcopy(inp["sensors"][ss])
 
-
-
-			if "output" in inp:	
-				if "OUTPUTswitchbotRelay" in inp["output"]: 
-					output["switchbot"] = copy.deepcopy(inp["output"]["OUTPUTswitchbotRelay"])
 
 
 			if sensors == {} and  output == {} :
@@ -996,23 +1073,61 @@ def readParams():
 				del macList[thisMAC]
 
 
-			if output != {}:
-				for devId in output["switchbot"]:
-					thisMAC = output["switchbot"][devId]["mac"]
-					switchBotConfig[thisMAC] = {
-										"type":				"switchbot",
-										 "blehandle":		output["switchbot"][devId]["blehandle"],
-										 "blehandleStatus":	output["switchbot"][devId]["blehandleStatus"],
-										 "statusCmd":		output["switchbot"][devId]["statusCmd"],
-										 "onCmd": 			output["switchbot"][devId]["onCmd"],
-										 "offCmd":			output["switchbot"][devId]["offCmd"],
-										 "lastFailedTryTime":0,
-										 "lastFailedTryCount":0,
-										 "devId": 			devId }
-					switchBotPresent = True
+			for devType in ["OUTPUTswitchbotRelay"]:
+				if devType in inp["output"]:
+					for devId in inp["output"][devType]:
+						thisMAC = inp["output"][devType][devId]["mac"]
+						switchBotConfig[thisMAC] = {"sType":"switchbotbot",
+											 "devType":					devType,
+											 "blehandle":				"16",
+											 "blehandleStatus":			"13",
+											 "statusCmd":				"5702",
+											 "onCmd": 					"570101",
+											 "offCmd":					"570102",
+											 "modeOfDevice":			"donotchange",
+											 "holdSeconds":	 			-1,
+											 "cmdPressNormal":			"57036400",
+											 "cmdPressInverse":			"57036401",
+											 "cmdSwitchNormal":			"57036410",
+											 "cmdSwitchInverse": 		"57036411",
+											 "cmdHoldtime": 			"570F08",
+											 "lastFailedTryTime":		0,
+											 "lastFailedTryCount":		0,
+											 "devId": 			devId }
+						if "modeOfDevice" in inp["output"][devType][devId]:
+							switchBotConfig[thisMAC]["modeOfDevice"] = 	inp["output"][devType][devId]["modeOfDevice"]
+							#U.logger.log(30, u"=== modeOfDevice:{}".format(inp["output"][devType][devId]["modeOfDevice"]))
+						if "holdSeconds" in inp["output"][devType][devId]:
+							switchBotConfig[thisMAC]["holdSeconds"] = 	inp["output"][devType][devId]["holdSeconds"]
+							#U.logger.log(30, u"=== holdSeconds:{}".format(inp["output"][devType][devId]["holdSeconds"]))
+
+							#U.logger.log(30, u"=== holdSeconds:{}".format(inp["output"]["OUTPUTswitchbotRelay"][devId]["holdSeconds"]))
+						switchBotPresent = True
+			for devType in ["OUTPUTswitchbotCurtain"]:
+				if devType in inp["output"]:
+					for devId in inp["output"][devType]:
+						thisMAC = inp["output"][devType][devId]["mac"]
+						switchBotConfig[thisMAC] = {"sType":"switchbotcurtain",
+											 "devType":					devType,
+											 "blehandle":				"0d",
+											 "blehandleStatus":			"0f",
+											 "statusCmd":				"5702",
+											 "openCmd": 				"570f450105ff00",
+											 "closeCmd":				"570f450105ff64",
+											 "pauseCmd": 				"570f450105ff",
+											 "positionCmd": 			"570f450105", 
+											 "modeOfDevice": 			"ff", 
+											 "lastFailedTryTime":		0,
+											 "lastFailedTryCount":		0,
+											 "devId": 			devId }
+						if "modeOfDevice" in inp["output"][devType][devId] and inp["output"][devType][devId]["modeOfDevice"] in ["00","ff"]:
+							switchBotConfig[thisMAC]["modeOfDevice"] = 	inp["output"][devType][devId]["modeOfDevice"]
+						switchBotConfig[thisMAC]["devType"] = 	devType
+
+							#U.logger.log(30, u"=== holdSeconds:{}".format(inp["output"]["OUTPUTswitchbotRelay"][devId]["holdSeconds"]))
+						switchBotPresent = True
+				U.logger.log(30, u" switchBotConfig:{}".format(switchBotConfig))
 				#U.logger.log(20, u" BLEconnect - switchBotConfig {}".format(switchBotConfig))
-
-
 
 			if len(macList) == 0:
 				U.logger.log(30, u"no BLEconnect - BLElongConnect devices supplied in parameters (2)")
@@ -1240,14 +1355,14 @@ def execBLEconnect():
 				lastSignal = time.time() +30
 				restartCount +=1
 
-			checkSwitchbot()
+			checkSwitchbotForCommand()
 
 			if time.time() - tlastQuick > 1: 
 				tlastQuick = time.time()
 				checkIFQuickRequested()
 
 				for thisMAC in macList:
-					checkSwitchbot()
+					checkSwitchbotForCommand()
 					#U.logger.log(20, "testing mac {}, type:{}".format(thisMAC, macList[thisMAC]["type"]) )
 
 					if macList[thisMAC]["type"] == "isBLEconnect":

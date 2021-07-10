@@ -1,3 +1,31 @@
+Added features / changes in v7.138.533@ 2021-07-10
+===================================================
+   
+1. added support for several switchbot devices
+   - temp + humidity, set states: temperature, humidity, battery
+   - contact, set states: onoff, last open, short open, long open, light, press count ..
+   - motion,  set states: onoff, last motion,  light, ...
+   - curtain, can set mode : slow, fast, and position the device between 0/100 = open closed as an indigo dimmer device 
+     a curtain can be operated with an ssh command: 
+        ssh pi@ip#
+        echo '{"mac":mac#,"pos":"0...100"}' temp/switchbot.cmd for direct position
+        echo '{"mac":mac#,"pos":"open"}' temp/switchbot.cmd for moving to open 
+        echo '{"mac":mac#,"pos":"close"}' temp/switchbot.cmd for moving to close
+        echo '{"mac":mac#,"pos":"pause"}' temp/switchbot.cmd for stopping any move
+        - only o c p are needed (not open close pause)
+
+   - bot, can set modes up/down/ inverse, and set on/ off as indigo relay device 
+     a bot can be operated with an ssh command: 
+        ssh pi@ip#
+        echo '{"mac":mac#,"onOff":"1/0"}' temp/switchbot.cmd
+
+   they all suport battery level states
+   they all benefit from having "brother" devices - the beacons for each type, they expose mac number and battery level.
+
+   These devices all send and receive bluetooth messages. The RPI's will be talking bluetooth with them and send / receive commands/ status from to indigo
+   for the output devices: curtain & bot you need an extra BLE dongle besides the internal
+
+
 Added features / changes in v7.137.533@ 2021-07-02
 ===================================================
    

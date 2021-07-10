@@ -1884,7 +1884,7 @@ def getSerialDEV():
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
 def selectHCI(HCIs, useDev, default, doNotUseHCI="", tryBLEmac=""): 
-	# default is UART or USB, used if no otehr choise selected
+	# default is UART or USB, used if no other choice selected
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
 	#logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, default:{}, doNotUseHCI:{}".format(G.program,HCIs, useDev, default, doNotUseHCI ))
@@ -1894,7 +1894,7 @@ def selectHCI(HCIs, useDev, default, doNotUseHCI="", tryBLEmac=""):
 			return useHCI, HCIs[useHCI]["BLEmac"], 0, HCIs[useHCI]["bus"]
 
 		elif len(HCIs) > 1:
-			hciChannels = ["hci0","hci1","hci2","hci3"]
+			hciChannels = ["hci0","hci1","hci2","hci3","hci4"]
 			hciChannels = hciChannels[0:len(HCIs)]
 			if doNotUseHCI in hciChannels:
 				hciChannels.remove(doNotUseHCI)
@@ -1953,11 +1953,11 @@ def whichHCI():
 
 		lines = (ret[0]).split("\n")
 		for ll in range(len(lines)):
-			if lines[ll].find("hci")>-1:
+			if lines[ll].find("hci") == 0: # finds :  #hci1:	Type: Primary  Bus: UART
 				bus = lines[ll].split("Bus: ")[1]
 				hciNo = lines[ll].split(":")[0]
-				hci["hci"][hciNo] = {"bus":bus, "numb":int(hciNo[3:]),"upDown":"DOWN","BLEmac":"0"}
-				if lines[ll+1].find("BD Address:")>-1:
+				hci["hci"][hciNo] = {"bus":bus, "numb":int(hciNo[-1]),"upDown":"DOWN","BLEmac":"0"}
+				if lines[ll+1].find("BD Address:") >- 1: # finds: BD Address: B8:27:EB:D4:E3:35  ACL MTU: 1021:8	SCO MTU: 64:1
 					mm=lines[ll+1].strip().split("BD Address: ")[1]
 					mm=mm.split(" ")
 					if len(mm)>2:

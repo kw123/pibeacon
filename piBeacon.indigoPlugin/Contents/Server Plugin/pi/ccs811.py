@@ -188,7 +188,7 @@ class ccs811_class(object):
 				return False
 			else:
 				buf = self.readList(CCS811_ALG_RESULT_DATA, 8)
-
+				if len(buf) < 5: return 0
 				self._eCO2 = (buf[0] << 8) | (buf[1])
 				self._TVOC = (buf[2] << 8) | (buf[3])
 			
@@ -280,26 +280,27 @@ class ccs811_class(object):
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
 		except	Exception, e:
-			U.logger.log(30, u"writeList	 in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(10, u"writeList	 in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 	def readList(self, command,	 length):
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
 		except	Exception, e:
-			U.logger.log(30, u"readList	in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(10, u"readList	in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return []
 
 	def readU8(self, reg):
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
 		except	Exception, e:
-			U.logger.log(30, u"readU8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(10, u"readU8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 		return 0
+
 	def write8(self, reg,value):
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
 		except	Exception, e:
-			U.logger.log(30, u"write8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(10, u"write8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
 
 

@@ -368,7 +368,7 @@ _BLEsensorTypes =[u"BLERuuviTag",
 				u"BLEiSensor-on", u"BLEiSensor-onOff", u"BLEiSensor-RemoteKeyFob", u"BLEiSensor-TempHum",
 				u"BLEblueradio",
 				u"BLESatech",
-				u"BLEswitchbotTempHum",
+				u"BLEswitchbotTempHum",u"BLEswitchbotMotion",u"BLEswitchbotContact",
 				u"BLEXiaomiMiTempHumRound", u"BLEXiaomiMiTempHumClock", u"BLEXiaomiMiformaldehyde", u"BLEgoveeTempHum"]
 _GlobalConst_allowedSensors = [
 	 u"ultrasoundDistance", u"vl503l0xDistance", u"vl6180xDistance", u"vcnl4010Distance", # dist / light
@@ -425,7 +425,7 @@ _GlobalConst_i2cSensors	  = [
 	u"l3g4200", u"bno055", u"mag3110", u"mpu6050", u"hmc5883L", u"mpu9255", u"lsm303", u"vl6180xDistance", u"vcnl4010Distance",u"apds9960", u"MAX44009"]
 
 _GlobalConst_allowedOUTPUT = [
-	u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTswitchbotRelay", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTi2cRelay", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
+	u"neopixel", u"neopixel-dimmer", u"neopixelClock", u"OUTPUTswitchbotRelay",u"OUTPUTswitchbotCurtain", u"OUTPUTgpio-1-ONoff", u"OUTPUTgpio-1", u"OUTPUTi2cRelay", u"OUTPUTgpio-4", u"OUTPUTgpio-10", u"OUTPUTgpio-26", u"setMCP4725",  u"OUTPUTxWindows", u"display", u"setPCF8591dac", u"setTEA5767", u"sundial", u"setStepperMotor"]
 
 _GlobalConst_allowedpiSends = [
 	u"updateParamsFTP", u"updateAllFilesFTP",u"updateAllAllFilesFTP", u"rebootSSH", u"resetOutputSSH", u"shutdownSSH", u"getStatsSSH", u"initSSH", u"upgradeOpSysSSH"]
@@ -4293,7 +4293,11 @@ class Plugin(indigo.PluginBase):
 					continue
 
 				if  typeId in _BLEsensorTypes or ( u"isBLElongConnectDevice" in valuesDict and valuesDict[u"isBLElongConnectDevice"]):
+					if not self.isValidMAC(valuesDict[u"mac"]):
+						valuesDict[u"MSG"] = "enter valid MAC number"
+						return ( False, valuesDict, errorDict )
 					valuesDict[u"address"] =  valuesDict[u"mac"]
+
 
 				if  typeId == u"launchpgm":
 					valuesDict[u"description"] =  "pgm: "+valuesDict[u"launchCommand"]
@@ -4784,7 +4788,11 @@ class Plugin(indigo.PluginBase):
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)] = [{u"spi":cAddress},{u"devType":devType}]
 
 					if u"mac" in valuesDict:
+						if not self.isValidMAC(valuesDict[u"mac"]):
+							valuesDict[u"MSG"] = "enter valid MAC number"
+							return ( False, valuesDict, errorDict )
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["mac"] = valuesDict["mac"]
+					"""
 					if u"blehandle" in valuesDict:
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["blehandle"] = valuesDict["blehandle"]
 					if u"blehandleStatus" in valuesDict:
@@ -4795,8 +4803,35 @@ class Plugin(indigo.PluginBase):
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["offCmd"] = valuesDict["offCmd"]
 					if u"statusCmd" in valuesDict:
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["statusCmd"] = valuesDict["statusCmd"]
+					"""
 
 
+					sendupdate = False
+
+					if typeId.find("OUTPUTswitchbo") > -1 and "modeOfDevice" not in self.RPI[piU][u"output"][typeId][unicode(dev.id)]:
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"] = valuesDict["modeOfDevice"]
+						sendupdate = True
+
+					if u"modeOfDevice" in valuesDict:
+						if typeId.find("OUTPUTswitchbot") > -1 and  valuesDict["modeOfDevice"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"]:
+							sendupdate = True
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"] = valuesDict["modeOfDevice"]
+
+					if u"holdSeconds" in valuesDict:
+						if typeId == "OUTPUTswitchbotRelay" and valuesDict["holdSeconds"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"]:
+							sendupdate = True
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"] = valuesDict["holdSeconds"]
+						if typeId == "OUTPUTswitchbotRelay" and valuesDict["holdSeconds"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"]:
+							sendupdate = True
+
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"] = valuesDict["holdSeconds"]
+
+					if sendupdate:
+						#								give regular update time to send config, only then send command
+						addToAction =  {u"actionTime":time.time()+20 , u"devId":dev.id, u"updateItems":[{u"setParameters":True}]}
+						self.delayedActions[u"data"].put(addToAction)
+						#self.indiLOG.log(20,u"add to delayed action queue:{}".format(addToAction))
+						
 
 					self.updateNeeded += u" fixConfig "
 					self.rPiRestartCommand[pi] += u"receiveGPIOcommands,"
@@ -8664,16 +8699,42 @@ class Plugin(indigo.PluginBase):
 					return 
 				dev0.updateStateOnServer(u"status", "send: {}".format("on" if onOff == "1" else "off"))
 	
-				fileContents = {"mac":props0["mac"], "onOff":onOff, u"outputDev":  dev0.id}
+				fileContents = {"mac":props0["mac"], "onOff":onOff}
 
-				textToSend = json.dumps([{u"device": u"OUTPUTswitchbotRelay", u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/switchbot.cmd",u"fileContents":fileContents}])
+				textToSend = json.dumps([{u"device": u"OUTPUTswitchbotRelay", u"command":u"file", u"fileName":u"/home/pi/pibeacon/temp/switchbot.cmd", u"fileContents":fileContents}])
 				self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"switchBotRelaySet")
 
 				if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
 				return 
 
+			elif dev0.deviceTypeId == u"OUTPUTswitchbotCurtain":
+				piU = props0[u"piServerNumber"]
+				if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
+											position = "close"
+											self.addToStatesUpdateDict(dev0.id,u"onOffState", True )
+											self.addToStatesUpdateDict(dev0.id,u"brightnessLevel", 100 )
+				elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
+											position = "open"
+											self.addToStatesUpdateDict(dev0.id,u"onOffState", False )
+											self.addToStatesUpdateDict(dev0.id,u"brightnessLevel", 0 )
+				elif action.deviceAction == indigo.kDeviceAction.SetBrightness:
+											position = str(action.actionValue)
+											self.addToStatesUpdateDict(dev0.id,u"brightnessLevel", int(position) )
+											if int(position) > 50:
+												self.addToStatesUpdateDict(dev0.id,u"onOffState", True )
+											else:
+												self.addToStatesUpdateDict(dev0.id,u"onOffState", False )
+				else:
+					self.indiLOG.log(10,u"action dimmer relay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
+					return 
+	
+				fileContents = {"mac":props0["mac"], "pos":position}
 
+				textToSend = json.dumps([{u"device": u"OUTPUTswitchbotCurtain", u"command":u"file", u"fileName":u"/home/pi/pibeacon/temp/switchbot.cmd", u"fileContents":fileContents}])
+				self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"switchBotCurtainSet")
 
+				if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
+				return 
 
 			#####  GPIO
 			else:
@@ -8876,6 +8937,25 @@ class Plugin(indigo.PluginBase):
 				xxx.append((unicode(ii-12)+u" "+timeZones[ii], (unicode(ii-12))+u" "+timeZones[ii]))
 		xxx.append((u"99 -", u"do not set"))
 		return xxx
+
+####-------------------------------------------------------------------------####
+	def setSWITCHBOTBOTCALLBACKmenu(self, valuesDict=None, typeId=u""):
+		self.indiLOG.log(10,	unicode(valuesDict))
+
+		try:
+			devId = int(valuesDict[u"outputDev"])
+			dev = indigo.devices[devId]
+			props = dev.pluginProps
+			piU = props[u"piServerNumber"]
+		except:
+			self.indiLOG.log(10,u"device not properly defined, please define OUTPUT ")
+			return valuesDict
+
+		fileContents = {"mac":props["mac"], "setParameters":True, u"outputDev":  dev.id}
+		textToSend = json.dumps([{u"device": u"OUTPUTswitchbotRelay", u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/switchbot.cmd",u"fileContents":fileContents}])
+		self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"switchBotRelaySet")
+		if self.decideMyLog(u"UpdateRPI") or self.decideMyLog(u"Special"): self.indiLOG.log(10,u"action set switchbot params requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, textToSend))
+		return 
 
 ####-------------------------------------------------------------------------####
 	def setPinCALLBACKmenu(self, valuesDict=None, typeId=u""):
@@ -12837,7 +12917,7 @@ class Plugin(indigo.PluginBase):
 							#  updateOutput from pi:11; outputs:{u'OUTPUTswitchbotRelay': {u'1631600841': {u'actualStatus': u'on'}}}
 
 			for output in outputs:
-				if output.find(u"OUTPUTgpio") == -1 and output.find(u"OUTPUTi2cRelay") == -1 and output.find(u"OUTPUTswitchbotRelay") == -1: continue
+				if output.find(u"OUTPUTgpio") == -1 and output.find(u"OUTPUTi2cRelay") == -1 and output.find(u"OUTPUTswitchbotRelay") == -1 and output.find(u"OUTPUTswitchbotCurtain") == -1: continue
 
 				devUpdate = {}
 				for devIds in outputs[output]:
@@ -12913,6 +12993,9 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id,xx, data[xx])
 					if xx == "batteryLevel" and "batteryLevelLastUpdate" in dev.states:
 						self.addToStatesUpdateDict(dev.id,u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
+
+			if u"position" in data and  u"position" in dev.states: 
+				self.addToStatesUpdateDict(dev.id,u"brightnessLevel", 	int(data["position"]) )
 
 
 		except Exception, e:
@@ -13707,10 +13790,6 @@ class Plugin(indigo.PluginBase):
 									self.setStatusCol(dev,u"Formaldehyde", useData, u"{}[mg/m3]".format(useData),whichKeysToDisplay,"","",decimalPlaces=2)
 					except: pass
 
-
-				if  u"counter" in data and  data[u"counter"] != u"" and u"counter" in dev.states and unicode(data[u"counter"]) != unicode(dev.states[u"counter"]):
-									self.setStatusCol(dev,u"counter",data[u"counter"],u"{}".format(data[u"counter"]),	whichKeysToDisplay,"","",decimalPlaces=0)
-
 				if  u"Conductivity" in data and  data[u"Conductivity"] != u"" and u"Conductivity" in dev.states and unicode(data[u"Conductivity"]) != unicode(dev.states[u"Conductivity"]):
 									self.setStatusCol(dev,u"Conductivity",data[u"Conductivity"],u"{}[µS/cm]".format(data[u"Conductivity"]),	whichKeysToDisplay,indigo.kStateImageSel.TemperatureSensorOn,"",decimalPlaces=0)
 
@@ -13722,25 +13801,45 @@ class Plugin(indigo.PluginBase):
 									self.setStatusCol(dev,u"connected",data[u"connected"],u"{}".format(data[u"connected"]),	whichKeysToDisplay,"","")
 
 
-				if  u"Version" in data and  data[u"Version"] != u"" and u"Version" in dev.states and unicode(data[u"Version"]) != unicode(dev.states[u"Version"]):
-									self.setStatusCol(dev,u"Version",data[u"Version"],u"{}".format(data[u"Version"]),	whichKeysToDisplay,"","")
+				if  u"motion" in data and  data[u"motion"] != u"" and u"onOffState" in dev.states:
+					if data[u"motion"] != dev.states[u"onOffState"]:
+									self.addToStatesUpdateDict(dev.id, u"onOffState", data[u"motion"] )
+									if not data[u"motion"]:
+										self.delayedActions[u"data"].put( {u"actionTime":time.time()  , u"devId":dev.id, u"updateItems":[{"remove":u"onOffState"}]})
+
+				if  u"motionDuration" in data and  data[u"motionDuration"] > -1 and u"motionDuration" in dev.states:
+					if data[u"motionDuration"] != dev.states[u"motionDuration"]:
+									self.setStatusCol(dev,u"motionDuration",data[u"motionDuration"], data[u"motionDuration"],	whichKeysToDisplay,"","")
+
+				for statename in [ "shortOpen", "longOpen", "light", "lightCounter", "pressCounter"]:
+					if  statename in data and  data[statename] != u"" and statename in dev.states:
+						 if  data[statename] != dev.states[statename]:
+										self.addToStatesUpdateDict(dev.id,statename,data[statename])
+
+				for statename in ["onOffState"]:
+					if  statename in data and  data[statename] != u"" and statename in dev.states:
+						 if  data[statename] != dev.states[statename]:
+										self.addToStatesUpdateDict(dev.id,statename,data[statename])
+										if data[statename]:
+											dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+										else:
+											dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+
+				for statename in ["lastMotion", "lastlightChange", "lastClose", "lastshortOpen", "lastlongOpen", "lastPress"]:
+					if  statename in data and  data[statename] != u"" and statename in dev.states:
+						xx = time.strftime(_defaultDateStampFormat, time.localtime(data[statename]))
+						if  xx != dev.states[statename] or len(dev.states[statename]) < 10:
+										self.addToStatesUpdateDict(dev.id, statename, xx)
 
 				if  u"chipTemperature" in data and  data[u"chipTemperature"] != u"" and u"chipTemperature" in dev.states:
 					x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"chipTemperature"])
 					if unicode(x) != unicode(dev.states[u"chipTemperature"]):
-						self.addToStatesUpdateDict(dev.id, u"chipTemperature", x)
+									self.addToStatesUpdateDict(dev.id, u"chipTemperature", x)
 
-				if  "model" in dev.states and  data[u"model"] != dev.states[u"model"]:
-									self.addToStatesUpdateDict(dev.id, u"model", data[u"model"])
-
-				if  "mode" in dev.states and  data[u"mode"] != dev.states[u"mode"]:
-									self.addToStatesUpdateDict(dev.id, u"mode", data[u"mode"])
-
-				if  "fahrenheit" in dev.states and  data[u"fahrenheit"] != dev.states[u"fahrenheit"]:
-									self.addToStatesUpdateDict(dev.id, u"fahrenheit", data[u"fahrenheit"])
-
-				if  "sensorSetup" in dev.states and  data[u"sensorSetup"] != dev.states[u"sensorSetup"]:
-									self.addToStatesUpdateDict(dev.id, u"sensorSetup", data[u"sensorSetup"])
+				for statename in ["model", "mode", "fahrenheit", "sensorSetup", "Version", "counter"]:
+					if statename in data:
+						if  statename in dev.states and  data[statename] != dev.states[statename]:
+									self.addToStatesUpdateDict(dev.id, statename, data[statename])
 
 				if  "lastUpdateFromRPI" in dev.states and  unicode(pi) != unicode(dev.states[u"lastUpdateFromRPI"]):
 									self.addToStatesUpdateDict(dev.id, u"lastUpdateFromRPI", pi)
@@ -16276,17 +16375,24 @@ class Plugin(indigo.PluginBase):
 							dev = indigo.devices[dev.id]
 							props = dev.pluginProps
 
-					if  u"batteryLevel" in dev.states and batteryLevel !="":
+					if  u"batteryLevel" in dev.states:
 						newStates = self.addToStatesUpdateDict(dev.id,u"batteryLevel", batteryLevel, newStates=newStates)
 						newStates = self.addToStatesUpdateDict(dev.id,u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat), newStates=newStates)
-						if typeOfBeacon == "Switchbot":
-							for devBot in indigo.devices.iter(u"props.isSwitchbotDevice"):
-								if devBot.pluginProps["mac"] == mac:
-									if str(batteryLevel) != str(devBot.states["batteryLevel"]): 
-										devBot.updateStateOnServer(u"batteryLevel", batteryLevel)
-									devBot.updateStateOnServer(u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
+
+				if typeOfBeacon in ["SwitchbotCurtain","Switchbot"]:
+					for devBot in indigo.devices.iter(u"props.isSwitchbotDevice"):
+						if devBot.pluginProps["mac"] == mac:
+							for xx in ["light",u"batteryLevel","calibration","position"]:
+								if xx =="position": statename = "brightnessLevel"
+								else:				statename = xx 
+								if xx in msg and msg[xx] != "" and statename in devBot.states and msg[xx] != devBot.states[statename]:
+									self.addToStatesUpdateDict(devBot.id,statename,	int(msg[xx]) )
 
 
+							self.addToStatesUpdateDict(devBot.id,u"batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
+							self.executeUpdateStatesDict(onlyDevID=devBot.id, calledFrom=u"updateBeaconStates isSwitchbotDevice")
+							break
+						
 
 				updateSignal, updateFINGnow, newStates = self.checkForFastDown(mac, piMACSend, dev, props, rssi, fromPiU, newStates)
 
@@ -17342,7 +17448,7 @@ class Plugin(indigo.PluginBase):
 					if not devOut.enabled: 														continue
 					propsOut= devOut.pluginProps
 					if u"piServerNumber" in propsOut and propsOut[u"piServerNumber"] != piU:	 continue
-					if typeId.find(u"OUTPUTgpio") >-1 or typeId.find(u"OUTPUTi2cRelay") > -1 or typeId.find(u"OUTPUTswitchbotRelay") > -1: 
+					if typeId.find(u"OUTPUTgpio") >-1 or typeId.find(u"OUTPUTi2cRelay") > -1 or typeId.find(u"OUTPUTswitchbot") > -1: 
 						if typeId in self.RPI[piU][u"output"]:
 							out[u"output"][typeId] = copy.deepcopy(self.RPI[piU][u"output"][typeId])
 					else:
@@ -17586,7 +17692,7 @@ class Plugin(indigo.PluginBase):
 					if self.delayedActions[u"state"] != u"running": break
 					action = self.delayedActions[u"data"].get()
 
-					#if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"delayedActionsThread time?{:.1f}; action:{} ".format(time.time() - action[u"actionTime"], action))
+					if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"delayedActionsThread time?{:.1f}; action:{} ".format(time.time() - action[u"actionTime"], action))
 
 					self.delayedActions[u"lastActive"]  = time.time()
 
@@ -17598,6 +17704,13 @@ class Plugin(indigo.PluginBase):
 							dev = indigo.devices[action[u"devId"]]
 					else: 	dev = u""
 
+					removeItem  = False
+					for updateItem in action[u"updateItems"]:
+						if "remove" in updateItem:
+							removeItem = True
+							break
+					if removeItem:	continue
+
 					for updateItem in action[u"updateItems"]:
 						if self.decideMyLog(u"Special"): self.indiLOG.log(10,u"delayedActionsThread updateItem:{} ".format(updateItem))
 						if u"stateName" in updateItem and dev != u"":
@@ -17608,6 +17721,12 @@ class Plugin(indigo.PluginBase):
 									dev.updateStateOnServer( updateItem[u"stateName"], updateItem[u"value"])
 						if updateItem == u"setupCARS":
 							self.setupCARS(dev.id, dev.pluginProps, mode="init")
+
+						if u"setParameters" in updateItem and dev != u"":
+							#if self.decideMyLog(u"Special") or True: self.indiLOG.log(10,u"delayedActionsThread  devtype:".format(dev.deviceTypeId ))
+							if dev.deviceTypeId in ["OUTPUTswitchbotRelay"]: ##,"OUTPUTswitchbotCurtain"]:
+								self.setSWITCHBOTBOTCALLBACKmenu({u"outputDev":dev.id})
+
 
 
 					if u"image" in action and dev != u"":

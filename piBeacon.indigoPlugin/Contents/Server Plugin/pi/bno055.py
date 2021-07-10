@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-## adopted from adafruit 
+## adopted from adafruit   
 #
 #
 
