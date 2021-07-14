@@ -39,7 +39,7 @@ import	piBeaconUtils as U
 import	piBeaconGlobals as G
 import  pexpect
 G.program = "beaconloop"
-version   = 8.30
+VERSION   = 8.50
 
 
 #################################  BLE iBeaconScanner  ----> start
@@ -189,7 +189,7 @@ def hci_le_set_scan_parameters(sock):
 			
 	
 
-def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac=""):
+def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False):
 	global myBLEmac, downCount
 	global lastLESCANrestart
 	global rpiDataAcquistionMethod
@@ -199,7 +199,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac=""):
 	useHCI	 = ""
 	bus 	 = ""
 	## good explanation: http://gaiger-G.programming.blogspot.com/2015/01/bluetooth-low-energy.html
-	U.logger.log(30,"(re)starting bluetooth")
+	U.logger.log(20,"(re)starting bluetooth")
 	startTime = time.time()
 	logLevelStart = 20
 	if thisHCI !="": logLevelStart = 10
@@ -209,7 +209,24 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac=""):
 		for hci in HCIs["hci"]:
 			if thisHCI != "" and hci !=thisHCI: continue
 
-			if reUse:
+			if hardreset:
+				cmd = "sudo hciconfig {} down".format(thisHCI)
+				ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
+				#cmd = "sudo rmmod btusb"
+				#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+				#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
+				#cmd = "sudo modprobe btusb"
+				#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+				#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
+				cmd = "sudo invoke-rc.d bluetooth restart".format(thisHCI)
+				ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
+				cmd = "sudo hciconfig {} up".format(thisHCI)
+				ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
+
+			elif reUse:
 				cmd = "sudo hciconfig "+hci+" reset"
 				ret = subprocess.call(cmd, shell=True) # 
 				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
@@ -217,16 +234,16 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac=""):
 			else:
 				cmd = "sudo hciconfig "+hci+" down"
 				ret = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate()# disable bluetooth
-				U.logger.log(10,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
-				if ret[1] !="":
+				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
+				if ret[1] != "":
 					time.sleep(0.2)
 					ret = subprocess.call(cmd, shell=True) # enable bluetooth
 					U.logger.log(logLevelStart)
 
 				cmd = "sudo hciconfig "+hci+" up"
 				ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
-				U.logger.log(10,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
-				if ret[1] !="":
+				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
+				if ret[1] != "":
 					time.sleep(0.2)
 					ret = subprocess.call(cmd, shell=True) # enable bluetooth
 					U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
@@ -236,13 +253,14 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac=""):
 				ret = subprocess.call(cmd,shell=True,stdout=subprocess.PIPE)
 				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd.replace("\n",";"), ret, time.time()- startTime)  )
 
+		time.sleep(1)
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0, or use last one
 		if not reUse: HCIs = U.whichHCI()
 		if HCIs !={} and "hci" in  HCIs and HCIs["hci"] !={}:
 
 			#U.logger.log(30,"myBLEmac HCIs{}".format( HCIs))
-			useHCI,  myBLEmac, devId, bus = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"UART", tryBLEmac=trymyBLEmac)
+			useHCI,  myBLEmac, devId, bus = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"USB", tryBLEmac=trymyBLEmac)
 			writeFile("temp/beaconloop.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
 			writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
 
@@ -4716,7 +4734,7 @@ def execbeaconloop(test):
 
 	BLEanalysisdataCollectionTime = 25 # secs 
 	deleteHistoryAfterSeconds = 600
-	switchbotData 	= {}
+	switchbotData 			= {}
 	writeDumpDataHandle 	= ""
 	BLEcollectStartTime		= -1
 	sendAfterSeconds		= 60
@@ -4795,7 +4813,7 @@ def execbeaconloop(test):
 
 	readParams(True)
 
-	U.logger.log(30,"======= starting beaconloop v:{}".format(version))
+	U.logger.log(30,"======= starting beaconloop v:{}".format(VERSION))
 
 	fixOldNames()
 
@@ -4843,282 +4861,298 @@ def execbeaconloop(test):
 
 	U.logger.log(30,"using >{}< for data read method testMode:>{}< ".format(rpiDataAcquistionMethod, readFrom!=""))
 	
-	loopCount		= 0
-	tt				= time.time()
-	logfileCheck	= tt + 10
-	paramCheck		= tt + 10
-	sensCheck 		= tt + 10
-	checkIPConnection	=tt
+	loopCount				= 0
+	logfileCheck			= time.time() + 10
+	paramCheck				= time.time() + 10
+	sensCheck 				= time.time() + 10
+	checkIPConnection		= time.time()
 
 	U.echoLastAlive(G.program)
-	lastAlive		= tt
-	G.tStart		= tt
-	beaconsThisReadCycle		= {}
-	trackMac		= ""
-	bleRestartCounter = 0
+	lastAlive				= time.time()
+	G.tStart				= time.time()
+	beaconsThisReadCycle	= {}
+	trackMac				= ""
+	bleRestartCounter 		= 0
 	eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
 	##print "beaconloop", eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
-	nEmptyMessagesInARow 		 = 0
-	lastMSGwithDataPlain = tt
-	lastMSGwithDataPassed = tt
-	maxLoopCount	 = 6000
-	restartCount	 = 0
-	logCountTrackMac = -10 
-	nMsgs			 = 0
-	restartBLE 		 = time.time()
-	nMsgs			 = 0
-	zeroInARow 		 = 0
-	zeroInARowMax	 = 30
-	lastmsg    		 = time.time() + 5
-	lastmsgMaxDelta	 = 20
+	nEmptyMessagesInARow 	 = 0
+	lastMSGwithDataPlain 	= time.time()
+	lastMSGwithDataPassed 	= time.time()
+	maxLoopCount	 		= 6000
+	restartCount	 		= 0
+	logCountTrackMac 		= -10 
+	nMsgs			 		= 0
+	restartBLE 				= time.time()
+	nMsgs					= 0
+	zeroInARow 				= 0
+	zeroInARowMax	 		= 6
+	lastmsg    		 		= time.time() + 5
+	lastmsgMaxDelta	 		= 3
+	stackrestartcount		= 0
+	dtinner = [0,0,0,0,0,0,0,0,0,0]
 
 	U.logger.log(30, "starting loop")
 	try:
-		while True:
-			loopCount += 1
-			# max every 5 minutes  .. restart BLE hcidump to clear out temp files if accumulated, takes ~1 secs 
-			if time.time() - restartBLE > 300 and rpiDataAcquistionMethod == "hcidumpWithRestart":
-				restartBLE = time.time()
-				sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, reUse=True, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
-				retCode = startHCUIDUMPlistnr(useHCI)
-				U.logger.log(20, "time needed to restartBLE:{:.2f}[secs]".format(time.time()- restartBLE))
+				while True:
+					loopCount += 1
+					# max every 5 minutes  .. restart BLE hcidump to clear out temp files if accumulated, takes ~1 secs 
+					if time.time() - restartBLE > 300 and rpiDataAcquistionMethod == "hcidumpWithRestart":
+						restartBLE = time.time()
+						sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, reUse=True, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
+						retCode = startHCUIDUMPlistnr(useHCI)
+						U.logger.log(20, "time needed to restartBLE:{:.2f}[secs]".format(time.time()- restartBLE))
 
-			tt = time.time()
-			if tt - checkIPConnection > 600: # check once per 10 minutes
-				checkIPConnection = tt
-				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
+					tt = time.time()
+					if tt - checkIPConnection > 600: # check once per 10 minutes
+						checkIPConnection = tt
+						eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 			
-			beaconsThisReadCycle = {}
+					beaconsThisReadCycle = {}
 		
-			#U.logger.log(0,"beacons info: {}".format(beacon_ExistingHistory))
-			timeAtLoopStart = tt
+					#U.logger.log(0,"beacons info: {}".format(beacon_ExistingHistory))
+					timeAtLoopStart = tt
 
-			U.echoLastAlive(G.program)
+					U.echoLastAlive(G.program)
 
-			reasonMax = 1
+					reasonMax = 1
 
-			if checkIfBLErestart():
-				bleRestartCounter +=1
-				if bleRestartCounter > 10: 
-					U.restartMyself(param="", reason="bad BLE restart")
-					time.sleep(1)
-					sys.exit(4)
+					if checkIfBLErestart():
+						bleRestartCounter +=1
+						if bleRestartCounter > 10: 
+							U.restartMyself(param="", reason="bad BLE restart")
+							time.sleep(1)
+							sys.exit(4)
 
-				sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
-				restartBLE = time.time()
-				if rpiDataAcquistionMethod == "hcidump":
-					retCode = startHCUIDUMPlistnr(useHCI)
-				if retCode != 0:
-					U.logger.log(30,"stopping {} bad BLE start retCode= {}".format(G.program, retCode) )
-					if downCount > 1: sys.exit(5)
-					time.sleep(2)
-					continue
-
-			if rpiDataAcquistionMethod == "socket":
-				old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
-
-				# perform a device inquiry on bluetooth device #0
-				# The inquiry should last 8 * 1.28 = 10.24 seconds
-				# before the inquiry is performed, bluez should flush its cache of
-				# previously discovered devices
-				flt = bluez.hci_filter_new()
-				bluez.hci_filter_all_events(flt)
-				bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
-				sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
-				sock.settimeout(12)
-
-			sendAfter= sendAfterSeconds
-			iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
-			nMsgs = 0
-			while iiWhile > 0:
-				iiWhile -= 1
-				tt = round(time.time(),2)
-				
-				if (reasonMax > 1 or loopCount == 1 ) and tt -G.tStart > 30 : break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
-
-				if tt - timeAtLoopStart	 > sendAfter: 
-					break # send curl msgs after collecting for xx seconds
-
-				if   nMsgs < 2: time.sleep(0.15)
-				elif nMsgs < 5: time.sleep(0.1)
-				else: 			time.sleep(0.05)
-				hexstr = ""
-
-				if rpiDataAcquistionMethod == "socket":
-					try: 
-						pkt = sock.recv(255)
-						Msgs = [(stringFromPacket(pkt)).upper()]
-					except Exception, e:
-						for ii in range(10):
-							if os.path.isfile(G.homeDir+"temp/stopBLE"):
-								U.logger.log(20,  "stopBLE is present, waiting for it to disappear")
-								time.sleep(5)
-							else:
-								break
-						if os.path.isfile(G.homeDir+"temp/stopBLE"): 
-							subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
-							stopBLE = "stopBLE file PRESENT"
-						else:
-							stopBLE = "stopBLE file NOT present"
-
-						U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out, {}".format(sys.exc_traceback.tb_lineno, e, stopBLE))
-						time.sleep(1)
-						U.restartMyself(param="", reason="sock.recv error")
-				
-				if rpiDataAcquistionMethod.find("hcidump" ) == 0:
-					Msgs = readHCUIDUMPlistener()
-					if readFrom != "":
-						if len(Msgs) >0: 
-							U.logger.log(20, u"TestMode: read {}".format(Msgs))
-						else:
-							time.sleep(5)
-
-				nLast = nMsgs
-				nMsgs = len(Msgs)
-				oneValid = False
-				if nMsgs == 0: 
-					zeroInARow +=1
-					#U.logger.log(20, "loopCount:{} nMsgs:{} , lastN:{}, zeroInARow:{}, max zero msgs in a row:{}".format(loopCount, nMsgs, nLast, zeroInARow, zeroInARowMax) )
-					if zeroInARow > zeroInARowMax or time.time() - lastmsg > lastmsgMaxDelta: 
-						#U.logger.log(20, "break loop, too many empty messages: {}, ble-UP?:{}".format(zeroInARow, checkIfBLEprogramIsRunning(useHCI)) )
-						zeroInARow  = 0
-						
-						break
-				else:
-					zeroInARow = 0
-					lastmsg    = time.time()
-					#U.logger.log(20, "loopCount:{} nMsgs:{} ,".format(loopCount, nMsgs) )
-
-
-				for hexstr in Msgs: 
-
-					hexstr = fillHCIdump(hexstr)
-					nCharThisMessage	= len(hexstr)
-
-
-					#U.logger.log(20, "data nChar:{}, hexStr:{}".format(nCharThisMessage,hexstr[0:50]))
-					# skip junk data 
-					if nCharThisMessage < 16:  continue
-					if nCharThisMessage > 120: continue
-					#U.logger.log(20, "nMsgs:{} len:{}..  :{}".format(nMsgs, nCharThisMessage, hexstr[:30]) )
-						
-
-					try:
-						# build the return string: mac#, uuid-major-minor,txpower??,rssi
-						lastMSGwithDataPlain = int(time.time())
-					
-						macplainReverse 	= hexstr[0:12]
-						mac 				= macplainReverse[10:12]+":"+macplainReverse[8:10]+":"+macplainReverse[6:8]+":"+macplainReverse[4:6]+":"+macplainReverse[2:4]+":"+macplainReverse[0:2]
-						macplain 			= mac.replace(":","")
-
-						#if mac == "xxAC:23:3F:33:88:08":
-							#U.logger.log(20, u" mac:{}, hexstr:{}".format(mac, hexstr[12:]))
-
-						if readFrom !="":
-							U.logger.log(20, u"TestMode: start: mac:{}, rest:{}".format(mac, hexstr[12:]))
-
-						########  track mac  start / end ############
-						trackMacStopIf(hexstr, mac)
-
-						msgStart, majEnd, uuidLen, UUID, Maj, Min, rssi, txPower, mfgID, pType, typeOfBeacon = getBasicData(hexstr)
-
-						if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-							writeTrackMac("basic   ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}".format(UUID, Maj, Min, rssi, txPower) ,mac)
-
-						txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr, UUID, Maj, Min)
-
-							
-						if isOnlySensor:
-							lastMSGwithDataPassed = int(time.time())
+						sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
+						restartBLE = time.time()
+						if rpiDataAcquistionMethod == "hcidump":
+							retCode = startHCUIDUMPlistnr(useHCI)
+						if retCode != 0:
+							U.logger.log(30,"stopping {} bad BLE start retCode= {}".format(G.program, retCode) )
+							if downCount > 1: sys.exit(5)
+							time.sleep(2)
 							continue
 
-						if mac in ignoreMAC: 
-							if readFrom !="":
-								U.logger.log(20, u"TestMode: ignored mac:{}".format(mac))
-							continue # set to ignore in plugin
+					if rpiDataAcquistionMethod == "socket":
+						old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 
-						if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-							writeTrackMac("A-Sens  ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}, batteryLevel:{}".format(UUID, Maj, Min, rssi, txPower, batteryLevel) ,mac)
+						# perform a device inquiry on bluetooth device #0
+						# The inquiry should last 8 * 1.28 = 10.24 seconds
+						# before the inquiry is performed, bluez should flush its cache of
+						# previously discovered devices
+						flt = bluez.hci_filter_new()
+						bluez.hci_filter_all_events(flt)
+						bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
+						sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, flt )
+						sock.settimeout(12)
 
-						## doing this derectly does not work, first hasve to save then test reject
-						if checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, hexstr, batteryLevel, rssi, txPower): continue
-						#if mac not in onlyTheseMAC: print " accepted", mac, rssi
+					sendAfter= sendAfterSeconds
+					iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
+					nMsgs = 0
+					while iiWhile > 0:
+								startofInnerLoop = time.time()
+								iiWhile -= 1
+								tt = round(time.time(),2)
+				
+								if (reasonMax > 1 or loopCount == 1 ) and tt -G.tStart > 30 : break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
 
-						if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-							writeTrackMac("A-tag   ", "after checkIfTagged, msg accepted, checking for new, changed signal,... ",mac)
+								if tt - timeAtLoopStart	 > sendAfter: 
+									break # send curl msgs after collecting for xx seconds
 
-						lastMSGwithDataPassed = int(time.time())
+								if   nMsgs < 2: time.sleep(0.15)
+								elif nMsgs < 5: time.sleep(0.1)
+								else: 			time.sleep(0.05)
+								hexstr = ""
+
+								if rpiDataAcquistionMethod.find("hcidump" ) == 0:
+											Msgs = readHCUIDUMPlistener()
+											if readFrom != "":
+												if len(Msgs) >0: 
+													U.logger.log(20, u"TestMode: read {}".format(Msgs))
+												else:
+													time.sleep(5)
+
+								elif rpiDataAcquistionMethod == "socket":
+											try: 
+												pkt = sock.recv(255)
+												Msgs = [(stringFromPacket(pkt)).upper()]
+											except Exception, e:
+												for ii in range(10):
+													if os.path.isfile(G.homeDir+"temp/stopBLE"):
+														U.logger.log(20,  "stopBLE is present, waiting for it to disappear")
+														time.sleep(5)
+													else:
+														break
+												if os.path.isfile(G.homeDir+"temp/stopBLE"): 
+													subprocess.call("rm {}temp/stopBLE".format(G.homeDir), shell=True)
+													stopBLE = "stopBLE file PRESENT"
+												else:
+													stopBLE = "stopBLE file NOT present"
+
+												U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out, {}".format(sys.exc_traceback.tb_lineno, e, stopBLE))
+												time.sleep(1)
+												U.restartMyself(param="", reason="sock.recv error")
+				
+
+								#### check new messages
+								dtinner[0] = max(dtinner[0], time.time() - startofInnerLoop )
+
+								nLast = nMsgs
+								nMsgs = len(Msgs)
+								oneValid = False
+
+								if nMsgs == 0: 
+									zeroInARow += 1
+									#U.logger.log(20, "loopCount:{} nMsgs:{} , lastN:{}, zeroInARow:{}, max zero msgs in a row:{}".format(loopCount, nMsgs, nLast, zeroInARow, zeroInARowMax) )
+									if zeroInARow > zeroInARowMax or time.time() - lastmsg > lastmsgMaxDelta: 
+										#U.logger.log(20, "break loop, too many empty messages: {}, ble-UP?:{}".format(zeroInARow, checkIfBLEprogramIsRunning(useHCI)) )
+										zeroInARow  = 0
+										break
+								else:
+									zeroInARow = 0
+									lastmsg    = time.time()
+									#U.logger.log(20, "loopCount:{} nMsgs:{} ,".format(loopCount, nMsgs) )
+
+
+								for hexstr in Msgs: 
+
+									hexstr = fillHCIdump(hexstr)
+									nCharThisMessage	= len(hexstr)
+
+
+									#U.logger.log(20, "data nChar:{}, hexStr:{}".format(nCharThisMessage,hexstr[0:50]))
+									# skip junk data 
+									if nCharThisMessage < 16:  continue
+									if nCharThisMessage > 120: continue
+									#U.logger.log(20, "nMsgs:{} len:{}..  :{}".format(nMsgs, nCharThisMessage, hexstr[:30]) )
+						
+
+									dtinner[1] = max(dtinner[1], time.time() - startofInnerLoop )
+									try:
+										# build the return string: mac#, uuid-major-minor,txpower??,rssi
+										lastMSGwithDataPlain = int(time.time())
+					
+										macplainReverse 	= hexstr[0:12]
+										mac 				= macplainReverse[10:12]+":"+macplainReverse[8:10]+":"+macplainReverse[6:8]+":"+macplainReverse[4:6]+":"+macplainReverse[2:4]+":"+macplainReverse[0:2]
+										macplain 			= mac.replace(":","")
+
+										#if mac == "xxAC:23:3F:33:88:08":
+											#U.logger.log(20, u" mac:{}, hexstr:{}".format(mac, hexstr[12:]))
+
+										if readFrom !="":
+											U.logger.log(20, u"TestMode: start: mac:{}, rest:{}".format(mac, hexstr[12:]))
+
+										########  track mac  start / end ############
+										trackMacStopIf(hexstr, mac)
+										dtinner[2] = max(dtinner[2], time.time() - startofInnerLoop )
+
+										msgStart, majEnd, uuidLen, UUID, Maj, Min, rssi, txPower, mfgID, pType, typeOfBeacon = getBasicData(hexstr)
+										dtinner[3] = max(dtinner[3], time.time() - startofInnerLoop )
+
+										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("basic   ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}".format(UUID, Maj, Min, rssi, txPower) ,mac)
+
+										txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr, UUID, Maj, Min)
+										dtinner[4] = max(dtinner[4], time.time() - startofInnerLoop )
+
+							
+										if isOnlySensor:
+											lastMSGwithDataPassed = int(time.time())
+											continue
+
+										if mac in ignoreMAC: 
+											if readFrom !="":
+												U.logger.log(20, u"TestMode: ignored mac:{}".format(mac))
+											continue # set to ignore in plugin
+
+										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("A-Sens  ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}, batteryLevel:{}".format(UUID, Maj, Min, rssi, txPower, batteryLevel) ,mac)
+
+										## doing this derectly does not work, first hasve to save then test reject
+										if checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, hexstr, batteryLevel, rssi, txPower): continue
+										#if mac not in onlyTheseMAC: print " accepted", mac, rssi
+										dtinner[5] = max(dtinner[5], time.time() - startofInnerLoop )
+
+										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("A-tag   ", "after checkIfTagged, msg accepted, checking for new, changed signal,... ",mac)
+
+										lastMSGwithDataPassed = int(time.time())
 		
-						#if mac in fastDownList: sendAfter = min(45., sendAfterSeconds)
+										#if mac in fastDownList: sendAfter = min(45., sendAfterSeconds)
 
-						if time.time() - G.tStart > 31: # wee need some history first 
-							#U.logger.log(50, u"time.time() - G.tStart:{}".format(time.time() - G.tStart) )
-							if checkIfNewBeacon(mac): continue
+										if time.time() - G.tStart > 31: # wee need some history first 
+											#U.logger.log(50, u"time.time() - G.tStart:{}".format(time.time() - G.tStart) )
+											if checkIfNewBeacon(mac): continue
 
-							if checkIfDeltaSignal(mac): continue
+											if checkIfDeltaSignal(mac): continue
 
-						if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-							writeTrackMac("Accpt   ", "{}".format(beaconsThisReadCycle[mac]) ,mac)
+										if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("Accpt   ", "{}".format(beaconsThisReadCycle[mac]) ,mac)
 
-					except	Exception, e:
-						U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping")
+									except	Exception, e:
+										U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping")
+										continue
+
+				
+								dtinner[6] = max(dtinner[6], time.time() - startofInnerLoop )
+								sensCheck, paramCheck = doLoopCheck(tt, sensCheck, paramCheck, sensor, useHCI )
+								dtinner[7] = max(dtinner[7], time.time() - startofInnerLoop )
+
+								if time.time() - G.tStart > 31: checkIfFastDownForAll() # send -999 if gone 
+								dtinner[8] = max(dtinner[8], time.time() - startofInnerLoop )
+
+					if rpiDataAcquistionMethod == "socket":
+						sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
+				
+					if readFrom !="":
+						lastMSGwithDataPlain  = time.time()
+						lastMSGwithDataPassed = time.time()
+						nEmptyMessagesInARow = 0
+						U.echoLastAlive(G.program)
+						if len(Msgs) > 0:
+							nMessagesSend = composeMSG(timeAtLoopStart)
+							handleHistory() 
+						U.logger.log(20, u"TestMode: {}".format(beacon_ExistingHistory))
+						time.sleep(5)
 						continue
 
-				
-				sensCheck, paramCheck = doLoopCheck(tt, sensCheck, paramCheck, sensor, useHCI )
-
-				if time.time() - G.tStart > 31: checkIfFastDownForAll() # send -999 if gone 
-
-			if rpiDataAcquistionMethod == "socket":
-				sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
-				
-			if readFrom !="":
-				lastMSGwithDataPlain = time.time()
-				lastMSGwithDataPassed = time.time()
-				nEmptyMessagesInARow = 0
-				U.echoLastAlive(G.program)
-				if len(Msgs) > 0:
 					nMessagesSend = composeMSG(timeAtLoopStart)
 					handleHistory() 
-				U.logger.log(20, u"TestMode: {}".format(beacon_ExistingHistory))
-				time.sleep(5)
-				continue
-
-			nMessagesSend = composeMSG(timeAtLoopStart)
-			handleHistory() 
-			U.echoLastAlive(G.program)
+					U.echoLastAlive(G.program)
 
 
-			dt1 = int(time.time() - lastMSGwithDataPlain)
-			dt2 = int(time.time() - lastMSGwithDataPassed)
-			if  nMessagesSend > 0:
-				nEmptyMessagesInARow = 0
+					dt1 = int(time.time() - lastMSGwithDataPlain)
+					dt2 = int(time.time() - lastMSGwithDataPassed)
+					if  nMessagesSend > 0:
+						nEmptyMessagesInARow = 0
 						
-			else:
-				nEmptyMessagesInARow += 1
-				if nEmptyMessagesInARow > 2 and not checkIfBLEprogramIsRunning(useHCI):
-					U.logger.log(30, " restarting BLE stack due to no messages "+G.program)
-					if rpiDataAcquistionMethod == "socket":
-						sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
-						restartBLE = time.time()
-						maxLoopCount = 6000
 					else:
-						time.sleep(0.5)
-						restartLESCAN(useHCI, 20, force=True)
-						stopHCUIDUMPlistener()
-						sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
-						startHCUIDUMPlistnr(useHCI)
-						restartBLE = time.time()
-						#U.restartMyself(param="", reason="no messages:{} in a row;  hcitool -i hcix / hcidump -i hcix  not running, ".format(nEmptyMessagesInARow))
-
-			if nEmptyMessagesInARow > 12:
-				maxLoopCount = 20
-				restartCount +=1
-				U.logger.log(30, u" time w/out any message .. anydata: {}[secs];  okdata: {}[secs];   loopCount:{};  restartCount:{},nEmptyMessagesInARow:{} ".format(dt1, dt2, loopCount, restartCount,nEmptyMessagesInARow))
-				if restartCount > 0:
-					U.logger.log(30, " restarting beaconloop  due to no messages " )
-					time.sleep(0.5)
-					U.restartMyself(param="", reason="too long a time w/o message")
+						nEmptyMessagesInARow += 1
+						if (nEmptyMessagesInARow > 3 or not checkIfBLEprogramIsRunning(useHCI)):
+							ret = subprocess.Popen("rfkill list", shell=True, stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate()#
+							U.logger.log(30, u"time w/out any message .. last anydata: {}[secs]; last okdata: {}[secs]; loopCount:{}; restartCount:{}, nEmptyMessagesInARow:{}, dtinnerL:{}\n    rfkill list:{} ".format(dt1, dt2, loopCount, restartCount, nEmptyMessagesInARow, dtinner, ret))
+							if stackrestartcount < 5:
+								U.logger.log(20, "restarting stack  due to no messages " )
+								if rpiDataAcquistionMethod == "socket":
+									sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=useHCI, trymyBLEmac=myBLEmac) 
+									restartBLE = time.time()
+									maxLoopCount = 6000
+								else:
+									stopHCUIDUMPlistener()
+									sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=useHCI, trymyBLEmac=myBLEmac, hardreset=True) 
+									#restartLESCAN(useHCI, 20, force=True)
+									startHCUIDUMPlistnr(useHCI)
+									restartBLE = time.time()
+									#U.restartMyself(param="", reason="no messages:{} in a row;  hcitool -i hcix / hcidump -i hcix  not running, ".format(nEmptyMessagesInARow))
+								nEmptyMessagesInARow = 0
+								stackrestartcount +=1
+							else:
+								maxLoopCount = 20
+								restartCount +=1
+								if restartCount > 0:
+									U.logger.log(20, "restarting beaconloop  due to no messages " )
+									time.sleep(0.5)
+									U.restartMyself(param="", reason="too long a time w/o message")
 
 	except	Exception, e:
 		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

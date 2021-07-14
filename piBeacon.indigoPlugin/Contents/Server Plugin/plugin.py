@@ -17008,7 +17008,7 @@ class Plugin(indigo.PluginBase):
 							except: out[u"startXonPi"]  = u"leaveAlone"
 
 						if u"macIfWOLsendToIndigoServer" in props:
-							try:    out[u"macIfWOLsendToIndigoServer"]  = props[u"macIfWOLsendToIndigoServer"]
+							try:    out[u"macIfWOLsendToIndigoServer"]  = props[u"macIfWOLsendToIndigoServer"].upper()
 							except: pass
 
 						if u"ipNumberRpiSetStatic" in props:

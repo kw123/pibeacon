@@ -1883,7 +1883,7 @@ def getSerialDEV():
 
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
-def selectHCI(HCIs, useDev, default, doNotUseHCI="", tryBLEmac=""): 
+def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac=""): 
 	# default is UART or USB, used if no other choice selected
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
@@ -1919,15 +1919,15 @@ def selectHCI(HCIs, useDev, default, doNotUseHCI="", tryBLEmac=""):
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 						return useHCI,  myBLEmac, devId, bus
 
-			else:
+			elif defaultBus != "":
 				for hh in hciChannels:
-					if HCIs[hh]["bus"] == default:
+					if HCIs[hh]["bus"] == defaultBus:
 						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
-			#logger.log(20, u"cBY:{:<20} ret HCI0 end".format(G.program ))
-			useHCI	= "hci0"
-			return useHCI,  HCIs[useHCI]["BLEmac"], HCIs[useHCI]["numb"], HCIs[useHCI]["bus"]
+			else:
+				hh = hciChannel[0]
+				return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

@@ -28,7 +28,7 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 G.program = "BLEconnect"
-version = 6.3
+VERSION = 6.4
 ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 
@@ -74,6 +74,7 @@ def startHCI():
 	global useHCI
 	## give other ble functions time to finish
 
+	defaultBus = "USB"
 	doNotUseHCI = ""
 	BusUsedByBeaconloop = ""
 	if oneisBLElongConnectDevice:
@@ -113,8 +114,8 @@ def startHCI():
 			time.sleep(5)
 			exit()
 
-		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, "USB", doNotUseHCI, BusUsedByBeaconloop))
-		useHCI,  myBLEmac, BLEid, bus = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo, "USB", doNotUseHCI=doNotUseHCI)
+		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, defaultBus, doNotUseHCI, BusUsedByBeaconloop))
+		useHCI,  myBLEmac, BLEid, bus = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo, defaultBus, doNotUseHCI=doNotUseHCI)
 		if BLEid >= 0:
 			U.logger.log(20, "BLE(long)connect: using mac:{};  useHCI: {}; bus: {}; mode: {} searching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
 			return 	useHCI,  myBLEmac, BLEid, bus 
@@ -134,6 +135,12 @@ def startHCI():
 	exit()
 
 
+#################################
+def checkIfHCIup(useHCI):
+	HCIs = U.whichHCI()
+	if useHCI in HCIs["hci"]:
+		if HCIs["hci"][useHCI]["upDown"] == "UP": return True
+	return False
 
 #################################
 def escape_ansi(line):
@@ -1301,13 +1308,12 @@ def execBLEconnect():
 	waitMin					= 2.
 	oldRaw					= ""
 
-	myPID			= str(os.getpid())
+	myPID				= str(os.getpid())
 	U.setLogging()
 	U.killOldPgm(myPID,G.program+".py")# kill  old instances of myself if they are still running
 
-	loopCount		  = 0
-	sensorRefreshSecs = 90
-	U.logger.log(30, "======== starting BLEconnect program v:{} ".format(version))
+	loopCount		  	= 0
+	sensorRefreshSecs 	= 90
 	readParams()
 
 	time.sleep(1)  # give HCITOOL time to start
@@ -1324,7 +1330,7 @@ def execBLEconnect():
 		exit()
 
 	G.tStart			= time.time() 
-	lastMsg				={}
+	lastMsg				= {}
 	#print iPhoneRefreshDownSecs
 	#print iPhoneRefreshUpSecs
 	startSeconds		= time.time()
@@ -1338,6 +1344,7 @@ def execBLEconnect():
 	##print eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
 
 	useHCI, myBLEmac, BLEid, bus = startHCI()
+	U.logger.log(30, "starting v:{} \n                            using HCI:{}; mac#:{}; bus:{}; pid#:{}; eth0IP:{}; wifi0IP:{}; eth0Enabled:{}; wifiEnabled:{}".format(VERSION, useHCI, myBLEmac, bus, myPID, eth0IP, wifi0IP, eth0Enabled, wifiEnabled))
 
 	tlastQuick = time.time()
 
@@ -1347,10 +1354,26 @@ def execBLEconnect():
 			if tt - lastRead > 4 :
 				newParameterFile = readParams()
 				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
-				lastRead=tt
+				lastRead = tt
+				if not checkIfHCIup(useHCI):
+					U.logger.log(20, "requested a restart of BLE stack due to {} down ".format(useHCI))
+					#subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
+					cmd = "sudo hciconfig {} reset".format(useHCI)
+					ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+					U.logger.log(20,"cmd:{} ".format(cmd)  )
+					time.sleep(1)
+					restartCount +=1
+					if not checkIfHCIup(useHCI): # simple restart did not woek, lets do a master restart 
+						cmd = "sudo python master.py &"
+						ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+						U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret)  )
+						time.sleep(1)
+					else:
+						U.logger.log(20,"...restart fixed".format()  )
+					
 
 			if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
-				U.logger.log(30, "requested a restart of BLE stack due to no signal for {:.0f} seconds".format(tt-lastSignal))
+				U.logger.log(20, "requested a restart of BLE stack due to no signal for {:.0f} seconds".format(tt-lastSignal))
 				subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
 				lastSignal = time.time() +30
 				restartCount +=1

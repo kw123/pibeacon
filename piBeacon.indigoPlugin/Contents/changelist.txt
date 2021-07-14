@@ -1,6 +1,12 @@
 Added features / changes in v7.138.533@ 2021-07-10
 ===================================================
    
+1. smaller performance imporovemnts when using 2 bluetooth channels on RPI
+
+
+Added features / changes in v7.138.533@ 2021-07-10
+===================================================
+   
 1. added support for several switchbot devices
    - temp + humidity, set states: temperature, humidity, battery
    - contact, set states: onoff, last open, short open, long open, light, press count ..
