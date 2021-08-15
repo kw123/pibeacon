@@ -4706,7 +4706,7 @@ class Plugin(indigo.PluginBase):
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "devtype not defined for neopixel" )
 					return ( False, valuesDict, errorDict )
 
-				pixels=u"; pix="
+				pixels = u"; pix="
 				if valuesDict[u"pixelMenulist"] !=u"": pixels +=valuesDict[u"pixelMenulist"]
 				else:
 					for ii in range(20):
@@ -4767,17 +4767,22 @@ class Plugin(indigo.PluginBase):
 						if pi != int(props[u"piServerNumber"]):
 							self.updateNeeded += u" fixConfig "
 					cAddress = u""
-					devType=u""
+					devType = u""
 
 					if u"devType" in valuesDict:
 						devType = valuesDict[u"devType"]
 
 					if u"output" not in			self.RPI[piU]:
-						self.RPI[piU][u"output"]={}
+						self.RPI[piU][u"output"] = {}
+
 					if typeId not in			self.RPI[piU][u"output"]:
-						self.RPI[piU][u"output"][typeId]={}
+						self.RPI[piU][u"output"][typeId] = {}
+
 					if unicode(dev.id) not in	self.RPI[piU][u"output"][typeId]:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]={}
+						self.RPI[piU][u"output"][typeId][unicode(dev.id)] = {}
+
+					if type(self.RPI[piU][u"output"][typeId][unicode(dev.id)]) != type({}):
+							self.RPI[piU][u"output"][typeId][unicode(dev.id)] = {}
 
 					if u"i2cAddress" in valuesDict:
 						cAddress = valuesDict[u"i2cAddress"]
@@ -4792,44 +4797,30 @@ class Plugin(indigo.PluginBase):
 							valuesDict[u"MSG"] = "enter valid MAC number"
 							return ( False, valuesDict, errorDict )
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["mac"] = valuesDict["mac"]
-					"""
-					if u"blehandle" in valuesDict:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["blehandle"] = valuesDict["blehandle"]
-					if u"blehandleStatus" in valuesDict:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["blehandleStatus"] = valuesDict["blehandleStatus"]
-					if u"onCmd" in valuesDict:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["onCmd"] = valuesDict["onCmd"]
-					if u"offCmd" in valuesDict:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["offCmd"] = valuesDict["offCmd"]
-					if u"statusCmd" in valuesDict:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["statusCmd"] = valuesDict["statusCmd"]
-					"""
 
-
-					sendupdate = False
-
-					if typeId.find("OUTPUTswitchbo") > -1 and "modeOfDevice" not in self.RPI[piU][u"output"][typeId][unicode(dev.id)]:
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"] = valuesDict["modeOfDevice"]
-						sendupdate = True
-
+					sendupdateSwitchBot = False
 					if u"modeOfDevice" in valuesDict:
-						if typeId.find("OUTPUTswitchbot") > -1 and  valuesDict["modeOfDevice"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"]:
-							sendupdate = True
+						if "modeOfDevice" not in self.RPI[piU][u"output"][typeId][unicode(dev.id)]:
+							self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"] = "donotset"
+							sendupdateSwitchBot = True
+
+						if  valuesDict["modeOfDevice"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"]:
+							sendupdateSwitchBot = True
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["modeOfDevice"] = valuesDict["modeOfDevice"]
 
 					if u"holdSeconds" in valuesDict:
-						if typeId == "OUTPUTswitchbotRelay" and valuesDict["holdSeconds"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"]:
-							sendupdate = True
+						if "holdSeconds" not in self.RPI[piU][u"output"][typeId][unicode(dev.id)]:
+							self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"] = "-1"
+							sendupdateSwitchBot = True
+						if valuesDict["holdSeconds"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"]:
+							sendupdateSwitchBot = True
 						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"] = valuesDict["holdSeconds"]
-						if typeId == "OUTPUTswitchbotRelay" and valuesDict["holdSeconds"] != self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"]:
-							sendupdate = True
 
-						self.RPI[piU][u"output"][typeId][unicode(dev.id)]["holdSeconds"] = valuesDict["holdSeconds"]
-
-					if sendupdate:
+					if sendupdateSwitchBot:
 						#								give regular update time to send config, only then send command
 						addToAction =  {u"actionTime":time.time()+20 , u"devId":dev.id, u"updateItems":[{u"setParameters":True}]}
 						self.delayedActions[u"data"].put(addToAction)
+						self.updateNeeded += u" fixConfig "
 						#self.indiLOG.log(20,u"add to delayed action queue:{}".format(addToAction))
 						
 
@@ -17447,10 +17438,13 @@ class Plugin(indigo.PluginBase):
 					if typeId not in _GlobalConst_allowedOUTPUT: 								continue
 					if not devOut.enabled: 														continue
 					propsOut= devOut.pluginProps
-					if u"piServerNumber" in propsOut and propsOut[u"piServerNumber"] != piU:	 continue
-					if typeId.find(u"OUTPUTgpio") >-1 or typeId.find(u"OUTPUTi2cRelay") > -1 or typeId.find(u"OUTPUTswitchbot") > -1: 
+					if u"piServerNumber" in propsOut and propsOut[u"piServerNumber"] != piU:	continue
+					if typeId.find(u"OUTPUTgpio") > -1 or typeId.find(u"OUTPUTi2cRelay") > -1 or typeId.find(u"OUTPUTswitchbot") > -1: 
 						if typeId in self.RPI[piU][u"output"]:
 							out[u"output"][typeId] = copy.deepcopy(self.RPI[piU][u"output"][typeId])
+						else:
+							self.indiLOG.log(30,u"creating parametersfile .. please fix device {}; rpi number:{} , outdput dev not linked ?, typeId: {}, self.RPI[piU][output]: {}".format(devOut.name, piU, typeId, self.RPI[piU][u"output"]))
+							continue
 					else:
 						devIdoutS = unicode(devOut.id)
 						i2cAddress =u""
@@ -17620,7 +17614,7 @@ class Plugin(indigo.PluginBase):
 						if out[u"output"][typeId] == {}:
 							del out[u"output"][typeId]
 					except Exception, e:
-						self.indiLOG.log(30,u"creating parametersfile .. please fix device {}; rpi number wrong {} , outdput dev not linked ?, typeId: {}, out[output]: {}".format(devOut.name, piU, typeId, out[u"output"]))
+						self.indiLOG.log(30,u"creating parametersfile .. please fix device {}; rpi number:{} , outdput dev not linked ?, typeId: {}, out[output]: {}".format(devOut.name, piU, typeId, out[u"output"]))
 
 
 				out = self.writeJson(out, fName = self.indigoPreferencesPluginDir + u"interfaceFiles/parameters." + piU , fmtOn=self.parametersFileSort )
@@ -19642,10 +19636,10 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				return 
 			else:
 				wrongIP = 2
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} not in accepted ip number list, please fix in >>initial setup RPI<<".format(self.client_address)  )
+				indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} not in accepted ip number list, please fix in >>initial setup RPI<<".format(self.client_address)  )
 				#  add looking for ip = ,"ipAddress":"192.168.1.20"
 				# but need first to read data
-				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"IP-Wrong",u"errIP" )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"IP#-Wrong",u"errIP" )
 				#self.request.close()
 				#return
 

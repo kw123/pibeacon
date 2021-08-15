@@ -536,10 +536,10 @@ def readHCUIDUMPlistener():
 		if unicode(e).find("[Errno 35]") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
 			pass
 			#U.logger.log(20, u"Errno 35")
-		if unicode(e).find("[Errno 1]") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
+		if unicode(e).find("[Errno 1]") > -1:	 
 			pass
 			#U.logger.log(20, u"Errno 1")
-		if unicode(e).find("temporarily") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
+		if unicode(e).find("temporarily") > -1:
 			pass
 			#U.logger.log(20, u"Errno 11")
 		else:
@@ -597,7 +597,7 @@ def combineLines(lines):
 			#U.logger.log(20, u"readHCUIDUMPlistener leftover>{}<, >{}<".format(readbuffer,MSGs[-1] ))
 			del MSGs[-1]
 		else:
-			readbuffer = ""		
+			readbuffer = ""
 	
 		return MSGs	
 	except	Exception, e:
@@ -631,7 +631,7 @@ def fixOldNames():
 
 
 
-def readParams(init):
+def readParams(init=False):
 	global collectMsgs, loopMaxCallBLE,  beacon_ExistingHistory, signalDelta,fastDownList, ignoreMAC
 	global acceptNewiBeacons,acceptNewBeaconMAC, acceptNewTagiBeacons,onlyTheseMAC,enableiBeacons, sendFullUUID,BLEsensorMACs, minSignalOff, minSignalOn, knownBeaconTags
 	global oldRaw, lastRead
@@ -645,6 +645,8 @@ def readParams(init):
 		G.passwordOfServer	= ""
 		G.userIdOfServer  	= ""
 		G.myPiNumber	  	= "0"
+		lastRead			= 0
+		oldRaw				= "xxx"
 
 	inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
 	doParams = True
@@ -4377,7 +4379,7 @@ def doLoopCheck(tt, sc, pc, sensor, useHCI):
 
 
 		if tt - paramCheck > 10:
-			if readParams(False): reasonMax = max(reasonMax, 8) # new params
+			if readParams(): reasonMax = max(reasonMax, 8) # new params
 			paramCheck=time.time()
 
 		return sensCheck, paramCheck 
@@ -4811,7 +4813,7 @@ def execbeaconloop(test):
 		U.sendRebootHTML("bluetooth_startup is DOWN  too many  ghost hciconfig processes running ",reboot=True, force=True)
 		time.sleep(10)
 
-	readParams(True)
+	readParams(init=True)
 
 	U.logger.log(30,"======= starting beaconloop v:{}".format(VERSION))
 
