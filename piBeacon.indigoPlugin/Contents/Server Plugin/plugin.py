@@ -2440,24 +2440,23 @@ class Plugin(indigo.PluginBase):
 				for piProp in delProp:
 					del self.RPI[piU][piProp]
 
-				for iii in [u"input",u"output"]:
-					delSens={}
-					for sensor in self.RPI[piU][iii]:
+			for piU in _rpiList:
+				for IO in [u"output"]:
+					if IO not in self.RPI[piU]: continue
+					for typeID in self.RPI[piU][IO]:
+						delDev = {}
+						for devId in self.RPI[piU][IO][typeID]:
+							try:
+								indigo.devices[int(devId)]
+								if self.RPI[piU][IO][typeID][devId] in [""]:
+									delDev[devId] = 2
+							except:	 
+								delDev[devId] = 1
 
-						delDev ={}
-						for devId in self.RPI[piU][iii][sensor]:
-							try:	 indigo.devices[int(devId)]
-							except:	 delDev[devId] = True
 						for devId in delDev:
-							del self.RPI[piU][iii][sensor][devId]
-							self.indiLOG.log(10,u"RPI cleanup {} del {} devId:{}".format(piU, iii, devId)  )
+							self.indiLOG.log(20,u"RPI cleanup {} del {} devId:{} deldevreason:{}, self.RPI[piU][IO][devId]:{}".format(piU, IO, devId, delDev[devId], self.RPI[piU][IO][typeID])  )
+							del self.RPI[piU][IO][typeID][devId]
 
-						if self.RPI[piU][iii][sensor] =={}:
-							delSens[sensor]=True
-
-					for sensor in delSens:
-						self.indiLOG.log(10,u"RPI cleanup {} deleting {}  {}".format(piU, iii, sensor) )
-						del self.RPI[piU][iii][sensor]
 
 
 			for piU in self.RPI:
@@ -4762,10 +4761,20 @@ class Plugin(indigo.PluginBase):
 				piU = valuesDict[u"piServerNumber"]
 				pi = int(piU)
 				valuesDict[u"address"] = u"PI-" + piU
+
 				if pi >= 0:
 					if u"piServerNumber" in props:
 						if pi != int(props[u"piServerNumber"]):
 							self.updateNeeded += u" fixConfig "
+							oldPiU = unicode(int(props[u"piServerNumber"]))
+							if oldPiU in self.RPI:
+								if "output" in self.RPI[oldPiU]:
+									if typeId in self.RPI[oldPiU][u"output"]:
+										if unicode(dev.id) in self.RPI[oldPiU][u"output"][typeId]:
+											del self.RPI[oldPiU][u"output"][typeId][unicode(dev.id)]
+										if self.RPI[oldPiU][u"output"][typeId] == {}:
+											del self.RPI[oldPiU][u"output"][typeId]
+		
 					cAddress = u""
 					devType = u""
 
@@ -4783,6 +4792,8 @@ class Plugin(indigo.PluginBase):
 
 					if type(self.RPI[piU][u"output"][typeId][unicode(dev.id)]) != type({}):
 							self.RPI[piU][u"output"][typeId][unicode(dev.id)] = {}
+
+						
 
 					if u"i2cAddress" in valuesDict:
 						cAddress = valuesDict[u"i2cAddress"]
@@ -17441,15 +17452,25 @@ class Plugin(indigo.PluginBase):
 					if u"piServerNumber" in propsOut and propsOut[u"piServerNumber"] != piU:	continue
 					if typeId.find(u"OUTPUTgpio") > -1 or typeId.find(u"OUTPUTi2cRelay") > -1 or typeId.find(u"OUTPUTswitchbot") > -1: 
 						if typeId in self.RPI[piU][u"output"]:
-							out[u"output"][typeId] = copy.deepcopy(self.RPI[piU][u"output"][typeId])
+							if typeId.find(u"OUTPUTswitchbot") > -1:
+								out[u"output"][typeId] = {}
+								for devId in self.RPI[piU][u"output"][typeId]:
+									if self.RPI[piU][u"output"][typeId][devId] in [{},""]: continue
+									out[u"output"][typeId][devId] = copy.deepcopy(self.RPI[piU][u"output"][typeId][devId])
+								if out[u"output"][typeId] == {}:
+									del out[u"output"][typeId]
+							else:
+								out[u"output"][typeId] = copy.deepcopy(self.RPI[piU][u"output"][typeId])
+
+
 						else:
 							self.indiLOG.log(30,u"creating parametersfile .. please fix device {}; rpi number:{} , outdput dev not linked ?, typeId: {}, self.RPI[piU][output]: {}".format(devOut.name, piU, typeId, self.RPI[piU][u"output"]))
 							continue
 					else:
-						devIdoutS = unicode(devOut.id)
-						i2cAddress =u""
-						spiAddress =u""
-						if typeId not in out[u"output"]: out[u"output"][typeId]={}
+						devIdoutS  = unicode(devOut.id)
+						i2cAddress = u""
+						spiAddress = u""
+						if typeId not in out[u"output"]: out[u"output"][typeId] = {}
 						out[u"output"][typeId][devIdoutS] = [{}]
 
 						if typeId.find(u"neopixelClock") >-1:

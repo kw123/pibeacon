@@ -986,6 +986,7 @@ def readParams():
 
 			if "BLEconnect" in sensors:
 				for devId in sensors["BLEconnect"]:
+					if "macAddress" not in CCC[ss][devId]: continue
 					thisMAC = sensors["BLEconnect"][devId]["macAddress"]
 					macListNew[thisMAC]={"type":"isBLEconnect",
 										 "iPhoneRefreshDownSecs":float(sensors["BLEconnect"][devId]["iPhoneRefreshDownSecs"]),
@@ -1016,45 +1017,45 @@ def readParams():
 					#if ss == "BLEdirectMiTempHumSquare":	U.logger.log(30, u"CCC:{} ".format(CCC))
 					for devId in CCC[ss]:
 						#if ss == "BLEdirectMiTempHumSquare":	U.logger.log(30, u"devId:{} ".format(devId))
-						if "mac" in CCC[ss][devId]:
-							thisMAC = CCC[ss][devId]["mac"]
-							#if ss == "BLEdirectMiTempHumSquare":	U.logger.log(30, u"thisMAC:{} ".format(thisMAC))
-							if thisMAC not in macListNew:
-								macListNew[thisMAC]={"type":"isBLElongConnectDevice",
-													 "updateIndigoTiming":60,
-													 "lastSend":0,
-													 "readSensorEvery":120,
-													 "lastTesttt":time.time()-1000.,
-													 "lastMsgtt":time.time()-1000. ,
-													 "lastData": {},
-													 "up": False,
-													 "offsetHum": 0,
-													 "offsetTemp": 0.,
-													 "devType": ss,
-													 "badSensor": 0,
-													 "triesWOdata": 0,
-													 "quickTest": 0. ,
-													 "nextRead": 0,
-													 "bleHandle": "",
-													 "devId": devId 
-													 }
+						if "mac" not in CCC[ss][devId]: continue
+						thisMAC = CCC[ss][devId]["mac"]
+						#if ss == "BLEdirectMiTempHumSquare":	U.logger.log(30, u"thisMAC:{} ".format(thisMAC))
+						if thisMAC not in macListNew:
+							macListNew[thisMAC]={"type":"isBLElongConnectDevice",
+												 "updateIndigoTiming":60,
+												 "lastSend":0,
+												 "readSensorEvery":120,
+												 "lastTesttt":time.time()-1000.,
+												 "lastMsgtt":time.time()-1000. ,
+												 "lastData": {},
+												 "up": False,
+												 "offsetHum": 0,
+												 "offsetTemp": 0.,
+												 "devType": ss,
+												 "badSensor": 0,
+												 "triesWOdata": 0,
+												 "quickTest": 0. ,
+												 "nextRead": 0,
+												 "bleHandle": "",
+												 "devId": devId 
+												 }
 
 
-							if "readSensorEvery" in CCC[ss][devId]:
-								try:	macListNew[thisMAC]["readSensorEvery"] = float(CCC[ss][devId]["readSensorEvery"])
-								except: macListNew[thisMAC]["readSensorEvery"] = 120
-							if "updateIndigoTiming" in CCC[ss][devId]:
-								try:	macListNew[thisMAC]["updateIndigoTiming"] = float(CCC[ss][devId]["updateIndigoTiming"])
-								except: macListNew[thisMAC]["updateIndigoTiming"] = 120
+						if "readSensorEvery" in CCC[ss][devId]:
+							try:	macListNew[thisMAC]["readSensorEvery"] = float(CCC[ss][devId]["readSensorEvery"])
+							except: macListNew[thisMAC]["readSensorEvery"] = 120
+						if "updateIndigoTiming" in CCC[ss][devId]:
+							try:	macListNew[thisMAC]["updateIndigoTiming"] = float(CCC[ss][devId]["updateIndigoTiming"])
+							except: macListNew[thisMAC]["updateIndigoTiming"] = 120
 
-							if "offsetHum" in CCC[ss][devId]:
-								try:	macListNew[thisMAC]["offsetHum"] = float(CCC[ss][devId]["offsetHum"])
-								except: pass
-							if "offsetTemp" in CCC[ss][devId]:
-								try:	macListNew[thisMAC]["offsetTemp"] = float(CCC[ss][devId]["offsetTemp"])
-								except: pass
-							if "bleHandle" in CCC[ss][devId]:
-								macListNew[thisMAC]["bleHandle"] = CCC[ss][devId]["bleHandle"]
+						if "offsetHum" in CCC[ss][devId]:
+							try:	macListNew[thisMAC]["offsetHum"] = float(CCC[ss][devId]["offsetHum"])
+							except: pass
+						if "offsetTemp" in CCC[ss][devId]:
+							try:	macListNew[thisMAC]["offsetTemp"] = float(CCC[ss][devId]["offsetTemp"])
+							except: pass
+						if "bleHandle" in CCC[ss][devId]:
+							macListNew[thisMAC]["bleHandle"] = CCC[ss][devId]["bleHandle"]
 					if ss =="BLEdirectMiTempHumSquare":	U.logger.log(30, u"macListNew:{} ".format(macListNew))
 
 
@@ -1083,6 +1084,7 @@ def readParams():
 			for devType in ["OUTPUTswitchbotRelay"]:
 				if devType in inp["output"]:
 					for devId in inp["output"][devType]:
+						if "mac" not in inp["output"][devType][devId]: continue
 						thisMAC = inp["output"][devType][devId]["mac"]
 						switchBotConfig[thisMAC] = {"sType":"switchbotbot",
 											 "devType":					devType,
@@ -1113,6 +1115,7 @@ def readParams():
 			for devType in ["OUTPUTswitchbotCurtain"]:
 				if devType in inp["output"]:
 					for devId in inp["output"][devType]:
+						if "mac" not in inp["output"][devType][devId]: continue
 						thisMAC = inp["output"][devType][devId]["mac"]
 						switchBotConfig[thisMAC] = {"sType":"switchbotcurtain",
 											 "devType":					devType,

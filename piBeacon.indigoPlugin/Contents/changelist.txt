@@ -1,4 +1,4 @@
-Added features / changes in v7.138.537@ 2021-08-15
+Added features / changes in v7.138.538@ 2021-08-16
 ===================================================
    
 1. fixed: piBeacon Error                  setting up OUTPUT Line 4821 has error='holdSeconds'
