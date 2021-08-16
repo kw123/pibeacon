@@ -986,7 +986,7 @@ def readParams():
 
 			if "BLEconnect" in sensors:
 				for devId in sensors["BLEconnect"]:
-					if "macAddress" not in CCC[ss][devId]: continue
+					if "macAddress" not in sensors["BLEconnect"][devId]: continue
 					thisMAC = sensors["BLEconnect"][devId]["macAddress"]
 					macListNew[thisMAC]={"type":"isBLEconnect",
 										 "iPhoneRefreshDownSecs":float(sensors["BLEconnect"][devId]["iPhoneRefreshDownSecs"]),
