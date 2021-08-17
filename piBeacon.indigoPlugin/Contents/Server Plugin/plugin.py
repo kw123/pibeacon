@@ -12392,16 +12392,28 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def upDateHCIinfo(self, piU, varJson, varUnicode):
-		# {"pi":"11","program":"beaconloop","data":{"HCIinfo":"hci0-USB-5C:F3:70:6D:DA:75"},"ipAddress":"192.168.1.204"}
+		# {"pi":"11","program":"beaconloop","data":{"hciInfo":"hci0-USB-5C:F3:70:6D:DA:75"},"ipAddress":"192.168.1.204"}
 		try:
 			if "hciInfo" not in varUnicode: return 
 			if "program" not in varUnicode: return 
 			if "pi" 	 not in varUnicode: return 
-			self.indiLOG.log(20,u"pi:{}; hciinfo: {}".format(piU, varJson))
+			#self.indiLOG.log(20,u"pi:{}; hciinfo: {}".format(piU, varJson))
+			program =varJson["program"]
 
 			devId = int(self.RPI[piU]["piDevId"])
 			dev = indigo.devices[devId]
-			dev.updateStateOnServer(u"hciInfo_"+varJson["program"], varJson["data"]["hciInfo"])
+
+			if program == "beaconloop": program = "beacons"
+			data = varJson["data"]["hciInfo"]
+			if program == "master":
+				if dev.states[u"hciInfo_BLEconnect"] != data:
+					dev.updateStateOnServer(u"hciInfo_BLEconnect", data)
+				if dev.states[u"hciInfo_beacons"] != data:
+					dev.updateStateOnServer(u"hciInfo_beacons", data)
+			else:
+				if dev.states[u"hciInfo_"+program] != data:
+					dev.updateStateOnServer(u"hciInfo_"+program, data)
+
 		except Exception, e:
 			if unicode(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))

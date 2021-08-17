@@ -2431,6 +2431,7 @@ def execMaster():
 		readNewParams(force=2)
 		U.logger.log(20, "" )
 		U.logger.log(20, "=========START.. MASTER  v:{}".format(masterVersion) )
+		U.sendURL( data={"data":{"hciInfo":" "}}, squeeze=False, wait=False )
 
 		checkWiFiSetupBootDir()
 

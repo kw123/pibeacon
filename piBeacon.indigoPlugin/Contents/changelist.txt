@@ -1,3 +1,9 @@
+Added features / changes in v7.138.542@ 2021-08-17
+===================================================
+   
+1. tuned switchbot and hci bluetooth channel management (timing etc) on RPIs
+
+
 Added features / changes in v7.138.541@ 2021-08-17
 ===================================================
    

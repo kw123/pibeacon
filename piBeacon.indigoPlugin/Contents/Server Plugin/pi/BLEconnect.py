@@ -77,14 +77,16 @@ def startHCI():
 	defaultBus = "USB"
 	doNotUseHCI = ""
 	BusUsedByBeaconloop = ""
+	time.sleep(10)
 	if oneisBLElongConnectDevice:
 		for ii in range(3):
-			time.sleep(ii)
+			time.sleep(ii*5)
 			hciBeaconloopUsed, raw  = U.readJson("{}temp/beaconloop.hci".format(G.homeDir))
-			if raw != "": 
-				doNotUseHCI 		= hciBeaconloopUsed["usedHCI"]
-				BusUsedByBeaconloop = hciBeaconloopUsed["usedBus"]
-				break
+			if "usedHCI" not in hciBeaconloopUsed: continue
+			if "usedBus" not in hciBeaconloopUsed: continue
+			doNotUseHCI 		= hciBeaconloopUsed["usedHCI"]
+			BusUsedByBeaconloop = hciBeaconloopUsed["usedBus"]
+			break
 
 	#### selct the proper hci bus: if just one take that one, if 2, use bus="USB", if no uart use hci0
 
