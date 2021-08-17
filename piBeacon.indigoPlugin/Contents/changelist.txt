@@ -1,3 +1,9 @@
+Added features / changes in v7.138.541@ 2021-08-17
+===================================================
+   
+1. added RPI dev states for hci info, which port used etc
+
+
 Added features / changes in v7.138.540@ 2021-08-16
 ===================================================
    

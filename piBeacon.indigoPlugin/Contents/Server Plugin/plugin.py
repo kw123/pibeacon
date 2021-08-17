@@ -11831,6 +11831,7 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,u"pi# rejected outside range:  {}".format(varNameIN) )
 				return
 
+			self.upDateHCIinfo(piU, varJson, varUnicode)
 
 			## add to message queue
 			self.beaconMessages[u"data"].put((time.time(), piU, varJson, varUnicode))
@@ -12389,6 +12390,22 @@ class Plugin(indigo.PluginBase):
 		except:
 			pass
 
+####-------------------------------------------------------------------------####
+	def upDateHCIinfo(self, piU, varJson, varUnicode):
+		# {"pi":"11","program":"beaconloop","data":{"HCIinfo":"hci0-USB-5C:F3:70:6D:DA:75"},"ipAddress":"192.168.1.204"}
+		try:
+			if "hciInfo" not in varUnicode: return 
+			if "program" not in varUnicode: return 
+			if "pi" 	 not in varUnicode: return 
+			self.indiLOG.log(20,u"pi:{}; hciinfo: {}".format(piU, varJson))
+
+			devId = int(self.RPI[piU]["piDevId"])
+			dev = indigo.devices[devId]
+			dev.updateStateOnServer(u"hciInfo_"+varJson["program"], varJson["data"]["hciInfo"])
+		except Exception, e:
+			if unicode(e) != u"None":
+				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		return 
 
 ####-------------------------------------------------------------------------####
 	def updateRPIAlive(self, varJson,varUnicode,  timeStampOfReceive):
@@ -12795,8 +12812,8 @@ class Plugin(indigo.PluginBase):
 		while not self.messagesQueueBLE.empty():
 			item = self.messagesQueueBLE.get()
 			for ii in range(40):
-				if self.queueListBLE ==u"update" : break
-				if self.queueListBLE ==u""		 : break
+				if self.queueListBLE == u"update" : break
+				if self.queueListBLE == u""		 : break
 				if ii > 0:	pass
 				time.sleep(0.05)
 			self.queueListBLE = u"update"

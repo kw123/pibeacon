@@ -111,6 +111,7 @@ def startHCI():
 			cmd = "timeout 20 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			U.logger.log(20, "cmd: {} and ret:".format(cmd, ret))
+			U.sendURL( data={"data":{"hciInfo":"err-need-2-USB"}}, squeeze=False, wait=False )
 			time.sleep(5)
 			exit()
 
@@ -124,12 +125,14 @@ def startHCI():
 			text = "BLEconnect: BLE STACK is not UP HCI-info:\n{}".format(HCIs)
 			U.logger.log(20, text)
 			U.sendURL( data={"data":{"error":text}}, squeeze=False, wait=True )
+			U.sendURL( data={"data":{"hciInfo":"err-BLE-stack-not-up"}}, squeeze=False, wait=False )
 			time.sleep(25)
 			exit()
 	else:
 			text = "BLEconnect: BLE STACK HCI is empty HCI:{}".format(HCIs)
 			U.logger.log(20, text)
 			U.sendURL( data={"data":{"error":text}}, squeeze=False, wait=True )
+			U.sendURL( data={"data":{"hciInfo":"err-BLE-stack-empty"}}, squeeze=False, wait=False )
 			time.sleep(25)
 			exit()
 	exit()
@@ -1348,6 +1351,9 @@ def execBLEconnect():
 
 	useHCI, myBLEmac, BLEid, bus = startHCI()
 	U.logger.log(30, "starting v:{} \n                            using HCI:{}; mac#:{}; bus:{}; pid#:{}; eth0IP:{}; wifi0IP:{}; eth0Enabled:{}; wifiEnabled:{}".format(VERSION, useHCI, myBLEmac, bus, myPID, eth0IP, wifi0IP, eth0Enabled, wifiEnabled))
+	text = "{}-{}-{}".format(useHCI, bus, myBLEmac)
+	U.sendURL( data={"data":{"hciInfo":text}}, squeeze=False, wait=False )
+	U.logger.log(20, "sending {}".format(text))
 
 	tlastQuick = time.time()
 
@@ -1373,7 +1379,8 @@ def execBLEconnect():
 						time.sleep(1)
 					else:
 						U.logger.log(20,"...restart fixed".format()  )
-					
+
+
 
 			if restartBLEifNoConnect and (tt - lastSignal > (2*3600+ 600*restartCount)) :
 				U.logger.log(20, "requested a restart of BLE stack due to no signal for {:.0f} seconds".format(tt-lastSignal))

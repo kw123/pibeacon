@@ -1577,6 +1577,16 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 				<TriggerLabel>sensors_active</TriggerLabel>
 				<ControlPageLabel>sensors_active</ControlPageLabel>
 			</State>
+			<State id="hciInfo_beaconloop">
+				<ValueType>String</ValueType>
+				<TriggerLabel>hciInfo_beaconloop</TriggerLabel>
+				<ControlPageLabel>hciInfo_beaconloop</ControlPageLabel>
+			</State>
+			<State id="hciInfo_BLEconnect">
+				<ValueType>String</ValueType>
+				<TriggerLabel>hciInfo_BLEconnect</TriggerLabel>
+				<ControlPageLabel>hciInfo_BLEconnect</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>

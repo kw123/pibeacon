@@ -263,6 +263,9 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			useHCI,  myBLEmac, devId, bus = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"USB", tryBLEmac=trymyBLEmac)
 			writeFile("temp/beaconloop.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
 			writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
+			text = "{}-{}-{}".format(useHCI, bus, myBLEmac)
+			U.sendURL( data={"data":{"hciInfo":text}}, squeeze=False, wait=False )
+			U.logger.log(20, "sending {}".format(text))
 
 			if myBLEmac ==  -1:
 				U.logger.log(20,"myBLEmac wrong: myBLEmac:{}, HCIs:{}".format( myBLEmac, HCIs))
@@ -315,7 +318,10 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 		else:
 			ret =["",""]
 
-		if ret[1] != "":	U.logger.log(30,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
+		if ret[1] != "":	
+			U.logger.log(30,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
+			U.sendURL( data={"data":{"hciInfo":"err-BLE-start"}}, squeeze=False, wait=False )
+
 		else:
 				U.logger.log(20,"BLE start returned:\n{}my BLE mac# is >>{}<<, on bus:{}".format(ret[0], myBLEmac, bus))
 				if useHCI in HCIs["hci"]:
@@ -323,6 +329,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 						if downCount > 1:
 							U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
 							writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCI))
+							U.sendURL( data={"data":{"hciInfo":"err-BLE-down"}}, squeeze=False, wait=False )
 							time.sleep(10)
 						downCount +=1
 						time.sleep(10)
@@ -331,6 +338,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 					U.logger.log(30," {}  not in hciconfig list".format(useHCI))
 					downCount +=1
 					if downCount > 1:
+						U.sendURL( data={"data":{"hciInfo":"err-BLE-channel-missing"}}, squeeze=False, wait=False )
 						U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCI))
 						writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCI))
 						time.sleep(10)
@@ -340,10 +348,12 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 					
 				
 		if myBLEmac == "":
+			U.sendURL( data={"data":{"hciInfo":"err-BLE-start-mac-empty"}}, squeeze=False, wait=False )
 			return 0, "", -1, useHCI
 
 	except Exception, e: 
 		U.logger.log(50,u"exit at restart BLE stack error  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.sendURL( data={"data":{"hciInfo":"err-BLE-start"}}, squeeze=False, wait=False )
 		time.sleep(10)
 		writeFile("restartNeeded","bluetooth_startup.ERROR:{}".format(e))
 		downHCI(useHCI)
