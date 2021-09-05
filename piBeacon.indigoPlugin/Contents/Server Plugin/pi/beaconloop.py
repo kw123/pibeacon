@@ -265,7 +265,6 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
 			text = "{}-{}-{}".format(useHCI, bus, myBLEmac)
 			U.sendURL( data={"data":{"hciInfo":text}}, squeeze=False, wait=False )
-			U.logger.log(20, "sending {}".format(text))
 
 			if myBLEmac ==  -1:
 				U.logger.log(20,"myBLEmac wrong: myBLEmac:{}, HCIs:{}".format( myBLEmac, HCIs))
@@ -4857,7 +4856,7 @@ def execbeaconloop(test):
 	## start bluetooth
 	for ii in range(5):
 		sock, myBLEmac, retCode, useHCI = startBlueTooth(G.myPiNumber, thisHCI=thisHCI, trymyBLEmac=trymyBLEmac)  
-		if retCode ==0: break 
+		if retCode == 0: break 
 		time.sleep(3)
 	if retCode != 0: 
 		U.logger.log(30,"beaconloop exit, recode from getting BLE stack >0, after 3 tries:")

@@ -22,6 +22,8 @@ except:
 import struct
 import array
 import fcntl
+try: import Queue
+except: import queue as Queue
 
 
 sys.path.append(os.getcwd())
@@ -254,7 +256,7 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout, verbose=False):
 			if switchBotPresent and switchbugActive  == "delayed":  return False
 			if switchBotPresent and checkSwitchbotForCommand(): return False
 
-			if verbose: U.logger.log(20,"sending cmd:{}, expecting:'{}'".format(cc, expectedTag.encode('ascii',errors='ignore')))
+			if verbose: U.logger.log(20,"sending cmd:{}, expecting:'{}'".format(cc, expectedTag.encode('ascii', errors='ignore')))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=5)
 			if ret == 0:
@@ -730,30 +732,44 @@ def BLEinkBirdPool01B(thisMAC, data0):
 
 #################################
 def checkSwitchbotForCommand():
-	global switchbugActive, switchBotPresent, oldSwitchbotCommand
+	global switchbugActive, switchBotPresent
+	global switchbotQueue
 
 	switchbugActive = ""
 	if not switchBotPresent: return False
 
 	jData = U.checkForNewCommand("switchbot.cmd")
 	
-	if len(jData) == 0 and len(oldSwitchbotCommand) == 0: return False
+	if len(jData) > 0:
+		switchbotQueue.put([0,jData])
 
-	# we have something
-	if len(jData) == 0: jData = copy.copy(oldSwitchbotCommand)
-	else:				oldSwitchbotCommand = copy.copy(jData)
-	return doSwitchBot(jData)
+	if switchbotQueue.empty(): return False
+	#U.logger.log(20, "jData {}, empty:{}".format(jData, switchbotQueue.empty()) )
+
+	return doSwitchBot()
 
 
 #################################
-def doSwitchBot(jData):
+def doSwitchBot():
 	global useHCI
-	global switchBotConfig, switchbugActive, oldSwitchbotCommand
+	global switchBotConfig, switchbugActive
+	global switchbotQueue
 
 	switchbugActive = "started"
 	verbose = True
 	# jData= {"mac":mac#,"onOff":"0/1","statusRequest":True}
-	U.logger.log(20, u"jData:{}".format(jData))
+	if  switchbotQueue.empty(): 
+		U.logger.log(20, u" empty:{}")
+		switchbugActive = ""
+		return 
+
+	retryCount, jData = switchbotQueue.get()
+	switchbotQueue.task_done()
+	#U.logger.log(20, u" retrycount:{}; jData:{}, empty:{}".format(retryCount, jData, switchbotQueue.empty()))
+	if retryCount > 3: 
+		switchbugActive = ""
+		return 
+
 	try:
 		readParams()
 		"""
@@ -771,8 +787,9 @@ def doSwitchBot(jData):
 		sType = switchBotConfig[thisMAC]["sType"]
 
 		if switchBotConfig[thisMAC]["lastFailedTryCount"] > 1 and time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"] < 30:
-			#if verbose: U.logger.log(20, "skip next test dt:{}".format(time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"]))
+			U.logger.log(20, "skip next test dt:{}".format(time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"]))
 			switchbugActive = "waiting"
+			switchbotQueue.put([retryCount, jData])
 			return False
 		#if verbose: U.logger.log(20, "not skiped next test dt:{}".format(time.time() - switchBotConfig[thisMAC]["lastFailedTryTime"]))
 
@@ -798,12 +815,15 @@ def doSwitchBot(jData):
 					retData = {"outputs":{"OUTPUTswitchbotRelay":{switchBotConfig[thisMAC]["devId"]:{"actualStatus": actualStatus}}}}
 					if verbose: U.logger.log(20, "{} return ok data: {}, retData:{}".format(thisMAC, result, retData))
 					#U.sendURL(retData)
-					#oldSwitchbotCommand = {}
 					switchbugActive = "finished"
 					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
 					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 					checkParams = True
 					jData["setParameters"] = True
+				else:
+					switchbotQueue.put([retryCount+1, jData])
+					if verbose: U.logger.log(20, "{} ret data not ok, putting command back into queue: ".format(thisMAC))
+					
 		
 			if "setParameters" in jData:
 				#if verbose: U.logger.log(20, "{} entering setparameters, switchBotConfig:{}".format(thisMAC, switchBotConfig[thisMAC]))
@@ -815,7 +835,6 @@ def doSwitchBot(jData):
 						if "successfully" == batchGattcmd(useHCI, thisMAC, cmd , "successfully", nBytes=0, repeat=3, verbose=verbose, timeout=4):
 							if verbose: U.logger.log(20, "{} return ok cmd:{};".format(thisMAC, cmd))
 							break
-							if verbose: U.logger.log(20, "{} return ok cmd:{};".format(thisMAC, cmd))
 						checkParams = True
 
 				try: 
@@ -875,7 +894,6 @@ def doSwitchBot(jData):
 					switchbugActive = "finished"
 					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
-					oldSwitchbotCommand = {}
 					return True
 			return False
 
@@ -891,7 +909,6 @@ def doSwitchBot(jData):
 						cmd = "{}{}{:02x}".format(switchBotConfig[thisMAC]["positionCmd"],switchBotConfig[thisMAC]["modeOfDevice"], int(jData["pos"]))
 					except:
 						U.logger.log(20, u"{} bad command given:{}".format(thisMAC, jData["pos"]))
-						oldSwitchbotCommand = {}
 						return True
 
 				blecmd = "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], cmd )	
@@ -905,20 +922,19 @@ def doSwitchBot(jData):
 					switchbugActive = "finished"
 					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
 					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
-					oldSwitchbotCommand = {}
 					return True
+				else:
+					switchbotQueue.put([retryCount+1, jData])
+					if verbose: U.logger.log(20, "{} ret data not ok, putting command back into queue: ".format(thisMAC))
 			else:
 				if verbose: U.logger.log(20, "{} direction not in command:{}".format(thisMAC))
-				oldSwitchbotCommand = {}
 				return True
 
 		else:
-			if verbose: U.logger.log(20, "{} stype not found:{}".format(thisMAC, sType))
-			oldSwitchbotCommand = {}
+			if verbose: U.logger.log(20, "{} sType not found:{}".format(thisMAC, sType))
 			return True
 	except  Exception, e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		oldSwitchbotCommand = {}
 	
 		if verbose: U.logger.log(20, "{}  return  data: {}".format(thisMAC, switchBotConfig))
 	
@@ -1290,9 +1306,8 @@ def execBLEconnect():
 	global lastSignal
 	global restartCount
 	global nowTest, nowP
-	global switchBotConfig, switchbugActive, switchBotPresent, oldSwitchbotCommand
+	global switchBotConfig, switchbugActive, switchBotPresent, switchbotQueue
 
-	oldSwitchbotCommand		= {}
 	switchbugActive			= ""
 	switchBotPresent		= False
 	switchBotConfig			= {}
@@ -1350,18 +1365,20 @@ def execBLEconnect():
 	oldRetry			= False
 	eth0IP, wifi0IP, eth0Enabled, wifiEnabled = U.getIPCONFIG()
 	##print eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
+	switchbotQueue = Queue.Queue()
 
 	useHCI, myBLEmac, BLEid, bus = startHCI()
 	U.logger.log(30, "starting v:{} \n                            using HCI:{}; mac#:{}; bus:{}; pid#:{}; eth0IP:{}; wifi0IP:{}; eth0Enabled:{}; wifiEnabled:{}".format(VERSION, useHCI, myBLEmac, bus, myPID, eth0IP, wifi0IP, eth0Enabled, wifiEnabled))
 	text = "{}-{}-{}".format(useHCI, bus, myBLEmac)
 	U.sendURL( data={"data":{"hciInfo":text}}, squeeze=False, wait=False )
-	U.logger.log(20, "sending {}".format(text))
 
 	tlastQuick = time.time()
 
 	while True:
 
 			tt = time.time()
+			#U.logger.log(20, "loop time after start:{}".format(tt-startSeconds))
+
 			if tt - lastRead > 4 :
 				newParameterFile = readParams()
 				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
@@ -1394,17 +1411,17 @@ def execBLEconnect():
 
 			if time.time() - tlastQuick > 1: 
 				tlastQuick = time.time()
-				checkIFQuickRequested()
 
 				for thisMAC in macList:
-					checkSwitchbotForCommand()
 					#U.logger.log(20, "testing mac {}, type:{}".format(thisMAC, macList[thisMAC]["type"]) )
 
 					if macList[thisMAC]["type"] == "isBLEconnect":
 						tryToConnectToBLEconnect(thisMAC, BLEid)
+						checkSwitchbotForCommand()
 
 					if macList[thisMAC]["type"] == "isBLElongConnectDevice":
 						tryToConnectToSensorDevice(thisMAC)
+						checkSwitchbotForCommand()
 
 			loopCount+=1
 			time.sleep(0.1)

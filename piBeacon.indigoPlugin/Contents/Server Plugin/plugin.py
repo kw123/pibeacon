@@ -17,7 +17,8 @@ import math
 import socket
 import threading
 import SocketServer
-import Queue
+try: import Queue
+except: import queue as Queue
 import cProfile
 import pstats
 import logging
@@ -1268,7 +1269,6 @@ class Plugin(indigo.PluginBase):
 			self.passwordOfServer			= self.pluginPrefs.get(u"passwordOfServer", u"")
 			self.authentication				= self.pluginPrefs.get(u"authentication", u"digest")
 			self.myIpNumber					= self.pluginPrefs.get(u"myIpNumber", u"192.168.1.130")
-			self.myIpNumberRange			= self.myIpNumber.split(".")
 			self.blockNonLocalIp			= self.pluginPrefs.get(u"blockNonLocalIp", False)
 			self.GPIOpwm					= self.pluginPrefs.get(u"GPIOpwm", 1)
 
@@ -2969,11 +2969,21 @@ class Plugin(indigo.PluginBase):
 				anyChange= False
 
 				if u"rpi" in checkOnly or u"all" in checkOnly:
+					myIPrange = ["300","1","1","1"]
+					myIPrangeValid = "empty"
+					self.myIpNumberRange = ["-1","-1","-1","-1"]
 					for piU in self.RPI:
 						if self.RPI[piU][u"ipNumberPi"] != u"":
 							if self.RPI[piU][u"ipNumberPiSendTo"] != self.RPI[piU][u"ipNumberPi"]:
 								self.RPI[piU][u"ipNumberPiSendTo"] = copy.copy(self.RPI[piU][u"ipNumberPi"])
 								anyChange = True
+							if self.RPI[piU][u"piOnOff"] == "1" and self.isValidIP(self.RPI[piU][u"ipNumberPi"]):
+								newIPList = self.RPI[piU][u"ipNumberPi"].split(".")
+								if myIPrangeValid == "empty":
+									myIPrange =  newIPList
+									myIPrangeValid = "ok"
+								if myIPrange[0] != newIPList[0] or myIPrange[1] != newIPList[1]:
+									myIPrangeValid = "not consistent"
 
 						try:
 							piDevId = int(self.RPI[piU][u"piDevId"])
@@ -3050,6 +3060,8 @@ class Plugin(indigo.PluginBase):
 								self.RPI[piU][u"piOnOff"] = u"0"
 								anyChange = True
 								continue
+					if myIPrangeValid == "ok":
+						self.myIpNumberRange = myIPrange
 			except Exception, e:
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 
@@ -10178,7 +10190,6 @@ class Plugin(indigo.PluginBase):
 			if pp != self.myIpNumber:
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			self.myIpNumber = pp
-			self.myIpNumberRange			= self.myIpNumber.split(".")
 
 			self.blockNonLocalIp			= valuesDict[u"blockNonLocalIp"]
 
@@ -12405,14 +12416,15 @@ class Plugin(indigo.PluginBase):
 
 			if program == "beaconloop": program = "beacons"
 			data = varJson["data"]["hciInfo"]
-			if program == "master":
-				if dev.states[u"hciInfo_BLEconnect"] != data:
-					dev.updateStateOnServer(u"hciInfo_BLEconnect", data)
-				if dev.states[u"hciInfo_beacons"] != data:
-					dev.updateStateOnServer(u"hciInfo_beacons", data)
-			else:
-				if dev.states[u"hciInfo_"+program] != data:
-					dev.updateStateOnServer(u"hciInfo_"+program, data)
+			if u"hciInfo_BLEconnect" in dev.states:
+				if program == "master":
+					if dev.states[u"hciInfo_BLEconnect"] != data:
+						dev.updateStateOnServer(u"hciInfo_BLEconnect", data)
+					if dev.states[u"hciInfo_beacons"] != data:
+						dev.updateStateOnServer(u"hciInfo_beacons", data)
+				else:
+					if dev.states[u"hciInfo_"+program] != data:
+						dev.updateStateOnServer(u"hciInfo_"+program, data)
 
 		except Exception, e:
 			if unicode(e) != u"None":
@@ -18420,7 +18432,7 @@ class Plugin(indigo.PluginBase):
 			self.myLog( text = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),								mType= u"pi configuration")
 			self.myLog( text = u"myIp Number                  {}" .format(self.myIpNumber),												mType= u"pi configuration")
 			self.myLog( text = u"blockNonLocalIp              {}" .format(self.blockNonLocalIp),										mType= u"pi configuration")
-			self.myLog( text = u"ip accepted if blocknonlocal {}.{}.x.x" .format(self.myIpNumberRange[0],self.myIpNumberRange[1]),		mType= u"pi configuration")
+			self.myLog( text = u".. ip#s accepted             {}.{}.x.x" .format(self.myIpNumberRange[0],self.myIpNumberRange[1]),		mType= u"pi configuration")
 			self.myLog( text = u"port# of indigoWebServer     {}" .format(self.portOfServer),											mType= u"pi configuration")
 			self.myLog( text = u"indigo UserID                ....{}" .format(self.userIdOfServer[4:]),									mType= u"pi configuration")
 			self.myLog( text = u"indigo Password              ....{}" .format(self.passwordOfServer[4:]),								mType= u"pi configuration")
@@ -19528,11 +19540,12 @@ configuration         - ==========  defined beacons ==============
 		return False
 ####-------------------------------------------------------------------------####
 	def ipNumbernotInRange(self,ipcheck):
-		if not self.blockNonLocalIp: 				return  True
+		if not self.blockNonLocalIp: 				return False
+		if self.myIpNumberRange[0] == "-1":			return False # not set
 		ipcheck2	= ipcheck.split(".")
-		if ipcheck2[0] != self.myIpNumberRange[0]: 	return False
-		if ipcheck2[1] != self.myIpNumberRange[1]: 	return False
-		return True
+		if ipcheck2[0] != self.myIpNumberRange[0]: 	return True
+		if ipcheck2[1] != self.myIpNumberRange[1]: 	return True
+		return False
 ####-------------------------------------------------------------------------####
 	def isValidIP(self, ip0):
 		ipx = ip0.split(u".")
@@ -19679,7 +19692,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			#indigo.server.log("hello")
 			if	indigo.activePlugin.ipNumberOK(self.client_address[0]):
 				pass
-			elif not indigo.activePlugin.ipNumbernotInRange(self.client_address[0]):
+			elif indigo.activePlugin.ipNumbernotInRange(self.client_address[0]):
 				indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data receiving from {} outside ip number range<<".format(self.client_address)  )
 				indigo.activePlugin.handlesockReporting(self.client_address[0],0,u"badIP",u"extIP" )
 				self.request.close()

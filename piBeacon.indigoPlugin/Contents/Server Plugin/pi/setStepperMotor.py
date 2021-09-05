@@ -12,7 +12,8 @@ import json,  os, time, datetime
 import copy
 import RPi.GPIO as GPIO
 import threading
-import Queue
+try: import Queue
+except: import queue as Queue
 
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U

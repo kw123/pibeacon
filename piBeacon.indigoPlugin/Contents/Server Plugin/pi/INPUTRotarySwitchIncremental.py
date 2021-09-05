@@ -252,7 +252,8 @@ def startGPIO(devId):
 			if PIGPIO == "":
 				import pigpio
 				import threading 
-				import Queue
+				try: import Queue
+				except: import queue as Queue
 				if not U.pgmStillRunning("pigpiod"): 	
 					U.logger.log(30, "starting pigpiod")
 					subprocess.call("sudo pigpiod &", shell=True)
@@ -288,7 +289,8 @@ def startGPIO(devId):
 			if useThreads: 
 				if 	"queue" not in threadDict:
 					import threading 
-					import Queue
+					try: import Queue
+					except: import queue as Queue
 					threadDict["queue"] = Queue.Queue()
 					threadDict["thread"] = threading.Thread(target=workQueue, name="workQueue" )
 					threadDict["thread"].start()

@@ -1,3 +1,14 @@
+Added features / changes in v7.138.543@ 2021-09-05
+===================================================
+   
+1. changed setting of local ip number determination:
+   was set by IP # of MAC, now ip numbers of RPi(s) is used (first 2 octet eg 192.168.x.x are used)
+   this is used to block incoming socket connections fro non local ip numbers
+   set option in plugin config
+   
+
+
+
 Added features / changes in v7.138.542@ 2021-08-17
 ===================================================
    
