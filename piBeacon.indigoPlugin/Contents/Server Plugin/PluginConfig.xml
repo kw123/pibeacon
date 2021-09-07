@@ -222,6 +222,10 @@ Socket communication will go directly through socket communication to plugin tha
 		<Label>define IP-PORT for socket communication RPI to Indigo:</Label> 
 	</Field>
 
+	<Field    id="checkRPIipForReject"   type="checkbox"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+		<Label>Check if ip used by rpi is registered (set to off if rpi is in subnet):</Label>
+	</Field>
+
 	<Field    id="blockNonLocalIp"   type="checkbox"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<Label>Accept only local ip numbers to contact MAC:</Label>
 	</Field>
