@@ -174,6 +174,7 @@ specialSensorList =[ 	"amg88xx",
 						"mpu9255",
 						"rainSensorRG11",
 						"moistureSensor",
+						"sensirionscd30",
 						"sgp30",
 						"sgp40",
 						"pmairquality",
@@ -187,7 +188,7 @@ parameterFileList   =[	"beacon_parameters",
 						"parameters",
 						"knownBeaconTags"]
 
-python3Apps			=[ "moistureSensor"]
+python3Apps			=[ "moistureSensor","sensirionscd30"]
 
 loggerSet 		   = False
 global logging, logger

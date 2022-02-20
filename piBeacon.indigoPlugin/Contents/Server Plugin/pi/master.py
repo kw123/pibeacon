@@ -693,7 +693,7 @@ def startProgam(pgm, params="", reason=""):
 	global python3
 	pgm1 = pgm.split(".")[0]
 	if pgm1 in python3 and python3[pgm1]: 
-		cmd = "sudo /usr/bin/python3 "+G.homeDir+pgm+" "+ params+" &"
+		cmd = "sudo -E /usr/bin/python3  "+G.homeDir+pgm+" "+ params+" &"
 		U.logger.log(30, ">>>> starting "+pgm+" "+reason+";--  with cmd: "+cmd  )
 	else:
 		cmd = "sudo /usr/bin/python "+G.homeDir+pgm+"  "+ params+" &"

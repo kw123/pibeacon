@@ -1,10 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import	os, time, subprocess
 
 
 if os.path.isfile("/home/pi/pibeacon/includep3.done"):
 	exit()
+
 
 
 
@@ -18,6 +19,7 @@ if os < 9:
 	exit()
 
 pipList	 = (subprocess.Popen("/usr/bin/pip3 list" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+
 
 
 foundOne = False
@@ -77,6 +79,7 @@ except:
 if libgpiod2:
 		print(" installing libgpiod2\n")
 		subprocess.Popen("sudo apt-get install libgpiod2 &",shell=True)
+
 
 subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 

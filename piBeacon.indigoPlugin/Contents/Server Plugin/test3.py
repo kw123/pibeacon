@@ -401,7 +401,6 @@ _GlobalConst_allowedSensors = [
 	 u"lidar360",															# rd lidar
 	 u"ccs811",																   # co2 voc
 	 u"mhzCO2",																# co2 temp
-	 u"sensirionscd30",																# co2 temp
 	 u"rainSensorRG11",
 	 u"moistureSensor",
 	 u"launchpgm",
@@ -13309,23 +13308,20 @@ class Plugin(indigo.PluginBase):
 					try: 	newStatus = dev.states[u"status"]
 					except: newStatus = u""
 
-
-					if sensor in[u"mhzCO2"]:
+					if sensor in [u"sgp30",u"ccs811"]:
 						try:
-							if abs( float(dev.states[u"CO2offset"]) - float(data[u"CO2offset"])	) > 1:
-								self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP"])
-							self.addToStatesUpdateDict(dev.id,u"calibration", data[u"calibration"])
-							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]),	decimalPlaces = 1)
-							self.addToStatesUpdateDict(dev.id,u"CO2offset", float(data[u"CO2offset"]),	decimalPlaces = 1)
+							x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm] ".format(float(data[u"CO2"]))
+							newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate =  self.updateChangedValues(dev, x, props, u"CO2", u"{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+							x, UI  = int(float(data[u"VOC"])),  u"VOC {:.0f}[ppb]".format(float(data[u"VOC"]))
+							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
 						except Exception, e:
 							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-							self.indiLOG.log(40,u"props:{}\nstates:{}\n:data:{}".format(u"{}".format(props), dev.states, data) )
-
-					if u"VOC" in data:
-						x, UI  = int(float(data[u"VOC"])),  u"VOC {:.0f}[ppb]".format(float(data[u"VOC"]))
-						newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
-						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
-						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+							self.indiLOG.log(10, u"{}".format(props))
 
 					if sensor in [u"sgp40"]:
 						try:
@@ -13382,6 +13378,23 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
 							self.indiLOG.log(40, u"{}".format(props) +u"\n"+ u"{}".format(data))
 						continue
+
+
+					if sensor in[u"mhzCO2"]:
+						try:
+							x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm]".format(float(data[u"CO2"]))
+							newStatus   = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
+							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"CO2", "{:d}%", whichKeysToDisplay, 0)
+							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
+							if abs( float(dev.states[u"CO2offset"]) - float(data[u"CO2offset"])	) > 1:
+								self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP"])
+							self.addToStatesUpdateDict(dev.id,u"calibration", data[u"calibration"])
+							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]),	decimalPlaces = 1)
+							self.addToStatesUpdateDict(dev.id,u"CO2offset", float(data[u"CO2offset"]),	decimalPlaces = 1)
+						except Exception, e:
+							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.indiLOG.log(40,u"props:{}\nstates:{}\n:data:{}".format(u"{}".format(props), dev.states, data) )
 
 
 					if u"hum" in data:
@@ -13778,10 +13791,6 @@ class Plugin(indigo.PluginBase):
 ###-------------------------------------------------------------------------####
 	def updateCommonStates(self, dev, props, data, whichKeysToDisplay,pi):
 		try:
-				if u"deviceVersion" in data 											and u"deviceVersion" in dev.states and u"{}".format(data[u"deviceVersion"]) != u"{}".format(dev.states[u"deviceVersion"]):
-									self.addToStatesUpdateDict(dev.id, u"deviceVersion", data[u"deviceVersion"])
-
-
 				#if dev.id == 985980096: self.indiLOG.log(10,u"updateCommonStates: pi#:{}, {} data{},\n whichKeysToDisplay:{}".format(pi, dev.name,data,whichKeysToDisplay))
 				if u"rssi" in data 											and u"rssi" in dev.states and u"{}".format(data[u"rssi"]) != u"{}".format(dev.states[u"rssi"]):
 									self.addToStatesUpdateDict(dev.id, u"rssi", data[u"rssi"])
@@ -13818,12 +13827,6 @@ class Plugin(indigo.PluginBase):
 
 				if  u"secsSinceStart" in data and  data[u"secsSinceStart"] != u"" and u"secsSinceStart" in dev.states and u"{}".format(data[u"secsSinceStart"]) != u"{}".format(dev.states[u"secsSinceStart"]):
 									self.setStatusCol(dev,u"secsSinceStart",data[u"secsSinceStart"],"{}".format(data[u"secsSinceStart"]),	whichKeysToDisplay,"","",decimalPlaces=0)
-
-				if "CO2" in data:
-					x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm] ".format(float(data[u"CO2"]))
-					newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
-					updateProps0, doUpdate =  self.updateChangedValues(dev, x, props, u"CO2", u"{:d}%", whichKeysToDisplay, 0)
-
 
 				if  u"Formaldehyde" in data and u"Formaldehyde" in dev.states:
 					try:
@@ -17367,7 +17370,6 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"format")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multTemp")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetTemp")
-							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetCO2")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetAlt")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"enableCalibration")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multiplyPress")

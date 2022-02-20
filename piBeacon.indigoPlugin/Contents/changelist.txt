@@ -1,3 +1,17 @@
+Added features / changes in v7.138.547@ 2022-02-20
+===================================================
+   
+1. added sensirion scd30 Co2 temp hum sensor
+   runs in python 3
+
+
+Added features / changes in v7.138.546@ 2022-02-13
+===================================================
+   
+1. replaced unicode( with u"{}".format(
+   to prepare for python 3.9 -- unicode function does not exist any more 
+
+
 Added features / changes in v7.138.545@ 2021-09-06
 ===================================================
    

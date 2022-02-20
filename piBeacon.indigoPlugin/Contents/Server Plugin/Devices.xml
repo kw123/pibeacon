@@ -15847,6 +15847,242 @@ After some days of running in clean air, proposed setup is:
 	</Device>
 
 
+
+	<Device type="sensor" id="sensirionscd30">     	<Name>INPUT-CO2-temp-hum-i2cscd30</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+
+			<Field id="infoLabel" type="label">
+			<Label>Setup scd30 CO2 temp hum sensor on individual rPis..
+    connect 3.3, GND, SDA, SCL. ====
+  </Label>
+			</Field>
+			<Field id="i2cAddress" type="menu"     defaultValue="97"> <Label>i2c address of device:</Label>
+			<List>
+				<Option value="97"   >0x61 = 97 is fixed </Option>
+			</List>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+			<Label>select rPi-server to which the sensor is connect to:</Label>
+			</Field>
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" >
+			<Label>Min secs between indigo updates - not more often:</Label>
+			<List>
+				<Option value="1"   > 1   secs </Option>
+				<Option value="2"   > 2   secs</Option>
+				<Option value="3"   > 3   secs</Option>
+				<Option value="4"   > 4   secs</Option>
+				<Option value="6"   > 6   secs</Option>
+				<Option value="8"   > 8   secs</Option>
+				<Option value="10"  > 10  secs</Option>
+			</List>
+			</Field>
+			<Field id="deltaX" type="menu"     defaultValue="5" hidden="no" >
+			<Label>delta value (%) to trigger indigo update:</Label>
+			<List>
+				<Option value="1"    > 1</Option>
+				<Option value="2"    > 2</Option>
+				<Option value="3"    > 3</Option>
+				<Option value="5"    > 5</Option>
+				<Option value="10"   > 10</Option>
+				<Option value="15"   > 15</Option>
+				<Option value="20"   > 20</Option>
+				<Option value="25"   > 25</Option>
+				<Option value="30"   > 30</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp"   type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="offsetHum"  type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity:(%)</Label> </Field>
+			<Field id="offsetCO2"  type="textfield"  defaultValue="0"> <Label>offset added to measured Co2 [ppm]</Label> </Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayS" type="menu"     defaultValue="CO2"> <Label>Property to display in the State Column:</Label>
+			<List>
+				<Option value="CO2"     >CO2</Option>
+				<Option value="Temperature"     >Temperature</Option>
+				<Option value="Humidity" >Humidity</Option>
+			</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" >
+			<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot;
+  &quot;x &lt; 33&quot;
+  &quot;33 &lt;= x and x &lt;= 66&quot;
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>status</TriggerLabel>
+				<ControlPageLabel>status</ControlPageLabel>
+			</State>
+			<State id="CO2">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2</TriggerLabel>
+				<ControlPageLabel>CO2</ControlPageLabel>
+			</State>
+			<State id="CO2MaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2MaxToday</TriggerLabel>
+				<ControlPageLabel>CO2MaxToday</ControlPageLabel>
+			</State>
+			<State id="CO2MinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2MinToday</TriggerLabel>
+				<ControlPageLabel>CO2MinToday</ControlPageLabel>
+			</State>
+			<State id="CO2MaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2MaxYesterday</TriggerLabel>
+				<ControlPageLabel>CO2MaxYesterday</ControlPageLabel>
+			</State>
+			<State id="CO2MinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2MinYesterday</TriggerLabel>
+				<ControlPageLabel>CO2MinYesterday</ControlPageLabel>
+			</State>
+			<State id="CO2Change5Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change5Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change5Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change20Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change20Minutes</TriggerLabel>
+				<ControlPageLabel>CO2Change20Minutes</ControlPageLabel>
+			</State>
+			<State id="CO2Change1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change1Hour</TriggerLabel>
+				<ControlPageLabel>CO2Change1Hour</ControlPageLabel>
+			</State>
+
+			<State id="Temperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Temperature</TriggerLabel>
+				<ControlPageLabel>Temperature</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="TemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>TemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>TemperatureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="lastSensorChange">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastSensorChange</TriggerLabel>
+				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			</State>
+			<State id="Humidity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Humidity</TriggerLabel>
+				<ControlPageLabel>Humidity</ControlPageLabel>
+			</State>
+			<State id="HumidityChange10Minutes">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange10Minutes</TriggerLabel>
+				<ControlPageLabel>HumidityChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="HumidityChange1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange1Hour</TriggerLabel>
+				<ControlPageLabel>HumidityChange1Hour</ControlPageLabel>
+			</State>
+			<State id="HumidityChange6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityChange6Hours</TriggerLabel>
+				<ControlPageLabel>HumidityChange6Hours</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxToday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxToday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveToday</TriggerLabel>
+				<ControlPageLabel>HumidityAveToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMeasurementsToday</TriggerLabel>
+				<ControlPageLabel>HumidityMeasurementsToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinToday</TriggerLabel>
+				<ControlPageLabel>HumidityMinToday</ControlPageLabel>
+			</State>
+			<State id="HumidityMaxYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMaxYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityAveYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityAveYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityAveYesterday</ControlPageLabel>
+			</State>
+			<State id="HumidityMinYesterday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>HumidityMinYesterday</TriggerLabel>
+				<ControlPageLabel>HumidityMinYesterday</ControlPageLabel>
+			</State>
+			<State id="deviceVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>deviceVersion</TriggerLabel>
+				<ControlPageLabel>deviceVersion</ControlPageLabel>
+			</State>
+
+
+		</States>
+	</Device>
+
+
 	<Device type="sensor" id="sgp40">     	<Name>INPUT-VOC-i2csgp40</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
