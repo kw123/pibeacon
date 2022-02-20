@@ -214,7 +214,7 @@ def setGPIO(command):
 				U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			else:
-				tf = False
+				tf = True
 				GPIO.output(pin, tf)
 				U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
@@ -269,22 +269,22 @@ def setGPIO(command):
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 			time.sleep(pulseUp)
 			if not inverseGPIO: 
-				GPIO.output(pin, False)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
-			else:		
 				GPIO.output(pin, True)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
+			else:		
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 
 
 
 		elif cmd == "pulseDown":
 			GPIO.setup(pin, GPIO.OUT)
 			if not inverseGPIO: 
-				GPIO.output(pin, False)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
-			else:		
 				GPIO.output(pin, True)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
+			else:		
+				GPIO.output(pin, False)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 			time.sleep(pulseDown)
 			if  inverseGPIO: 
 				GPIO.output(pin, False)
@@ -304,11 +304,11 @@ def setGPIO(command):
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
 				time.sleep(pulseUp)
 				if not inverseGPIO: 
-					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
-				else:		
 					GPIO.output(pin, True)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"high"}}}})
+				else:		
+					GPIO.output(pin, False)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualStatus":"low"}}}})
 				time.sleep(pulseDown)
 
 		U.removeOutPutFromFutureCommands(pin, devType)

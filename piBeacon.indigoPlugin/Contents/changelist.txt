@@ -1,6 +1,12 @@
 Added features / changes in v7.138.547@ 2022-02-20
 ===================================================
    
+1. fixed output-gpio high / low for inverse/ not inverse config 
+
+
+Added features / changes in v7.138.547@ 2022-02-20
+===================================================
+   
 1. added sensirion scd30 Co2 temp hum sensor
    runs in python 3
 
