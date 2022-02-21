@@ -72,7 +72,7 @@ def checkIFQuickRequested():
 def startHCI():
 	global BLEconnectMode
 	global macList
-	global oneisBLElongConnectDevice
+	global oneisBLElongConnectDevice, switchBotPresent
 	global useHCI
 	## give other ble functions time to finish
 
@@ -80,10 +80,11 @@ def startHCI():
 	doNotUseHCI = ""
 	BusUsedByBeaconloop = ""
 	time.sleep(10)
-	if oneisBLElongConnectDevice:
+	if oneisBLElongConnectDevice or switchBotPresent:
 		for ii in range(3):
 			time.sleep(ii*5)
-			hciBeaconloopUsed, raw  = U.readJson("{}temp/beaconloop.hci".format(G.homeDir))
+			hciBeaconloopUsed, raw  = U.readJson("{}beaconloop.hci".format(G.homeDir))
+			U.logger.log(30, "BLE(long)connect: beconloop uses: {}".format(hciBeaconloopUsed))
 			if "usedHCI" not in hciBeaconloopUsed: continue
 			if "usedBus" not in hciBeaconloopUsed: continue
 			doNotUseHCI 		= hciBeaconloopUsed["usedHCI"]
@@ -106,11 +107,11 @@ def startHCI():
 	if HCIs["hci"] != {}:
 		if len(HCIs["hci"]) < 2 and oneisBLElongConnectDevice:
 			text = "BLE(long)connect: only one BLE dongle, need 2 to run, will restart BLE stack (hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -) and try again,, HCI inf:\n{}".format(HCIs)
-			U.logger.log(20, text)
+			U.logger.log(30, text)
 			U.sendURL( data={"data":{"error":text}}, squeeze=False, wait=True )
 			cmd = "timeout 5 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			U.logger.log(20, "cmd: {} and ret:".format(cmd, ret))
+			U.logger.log(30, "cmd: {} and ret:".format(cmd, ret))
 
 			cmd = "timeout 20 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -119,10 +120,10 @@ def startHCI():
 			time.sleep(5)
 			exit()
 
-		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, defaultBus, doNotUseHCI, BusUsedByBeaconloop))
+		U.logger.log(30, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, defaultBus, doNotUseHCI, BusUsedByBeaconloop))
 		useHCI,  myBLEmac, BLEid, bus = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo, defaultBus, doNotUseHCI=doNotUseHCI)
 		if BLEid >= 0:
-			U.logger.log(20, "BLE(long)connect: using mac:{};  useHCI: {}; bus: {}; mode: {} searching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
+			U.logger.log(30, "BLE(long)connect: using mac:{};  useHCI: {}; bus: {}; mode: {} searching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
 			return 	useHCI,  myBLEmac, BLEid, bus 
 
 		else:
@@ -963,9 +964,9 @@ def readParams():
 
 		try:
 
-			U.getGlobalParams(inp)
 			sensors = {}
-			output = {}
+			
+			U.getGlobalParams(inp)
 			switchbugActive = ""
 			switchBotPresent = False
 
@@ -989,8 +990,9 @@ def readParams():
 
 
 
-			if sensors == {} and  output == {} :
-				U.logger.log(30, u" no {} definitions supplied in sensorList / oputputs;  stopping (1)".format(sensor))
+			if sensors == {} and "OUTPUTswitchbotRelay" not in inp["output"]:
+
+				U.logger.log(30, u" no {} definitions supplied in sensorList / or switchbot def in outputs{};  stopping (1)".format(sensor, inp["output"]))
 				exit()
 
 
@@ -1160,8 +1162,8 @@ def readParams():
 				U.logger.log(30, u" switchBotConfig:{}".format(switchBotConfig))
 				#U.logger.log(20, u" BLEconnect - switchBotConfig {}".format(switchBotConfig))
 
-			if len(macList) == 0:
-				U.logger.log(30, u"no BLEconnect - BLElongConnect devices supplied in parameters (2)")
+			if len(macList) == 0 and not switchBotPresent:
+				U.logger.log(30, u"no BLEconnect - BLElongConnect devices / switchbots supplied in parameters (2)")
 				exit()
 
 			#U.logger.log(30, u"BLEconnect - chechink devices (2):{}".format(macList))

@@ -102,8 +102,7 @@ class SCD30:
 
 		return rem
 
-	def _send_command(self, command: int, num_response_words: int = 1,
-					  arguments: list = []):
+	def _send_command(self, command: int, num_response_words: int = 1, arguments: list = []):
 		"""Sends the provided I2C command and reads out the results.
 
 		Parameters:
@@ -142,7 +141,7 @@ class SCD30:
 		# raw_response = self._i2c.read_i2c_block_data(
 		#	self._i2c_addr, command, 3 * num_response_words)
 		raw_response = list(read_txn)
-		logging.debug("Received raw I2C response: " + self._pretty_hex(raw_response))
+		U.logger.log(10,"Received raw I2C response: " + self._pretty_hex(raw_response))
 
 		if len(raw_response) != 3 * num_response_words:
 			U.logger.log(30, "Wrong response length: {) expected:{}".format(len(raw_response),  3 * num_response_words))
@@ -242,7 +241,7 @@ class SCD30:
 
 		if data is None or len(data) != 6:
 			U.logger.log(30, "Failed to read measurement, received: ".format( self._pretty_hex(data)) )
-			return None
+			return "","",""
 
 		co2_ppm = interpret_as_float((data[0] << 16) | data[1])
 		temp_celsius = interpret_as_float((data[2] << 16) | data[3])
@@ -318,8 +317,15 @@ class SCD30:
 		Arguments:
 			offset: temperature offset floating-point value in degrees Celsius.
 		"""
-		offset_ticks = int(offset * 100)
-		return self._send_command(0x5403, 0, [offset_ticks])
+		try:			
+			offset_ticks = int(offset * 100)
+			if offset_ticks < 0:
+				offset_ticks &= 0xFFFF
+			U.logger.log(30, u"in offset {} offset_ticks={} ".format(offset, offset_ticks))
+			return self._send_command(0x5403, 0, [offset_ticks])
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={} ".format(sys.exc_info()[-1].tb_lineno, e))
+			return 0 
 
 	def soft_reset(self):
 		"""Resets the sensor without the need to disconnect power.
@@ -409,6 +415,22 @@ def readParams():
 			except:
 				deltaX[devId] = 2
 
+
+			if "autoCalibration" not in sensors[sensor][devId]: 
+				sensors[sensor][devId]["autoCalibration"] = "1"
+
+			if sensor in sensorsOld and "autoCalibration" 		 in sensorsOld[sensor][devId]: 
+				if sensorsOld[sensor][devId]["autoCalibration"] != sensors[sensor][devId]["autoCalibration"]:
+					if devId in SENSOR:  del SENSOR[devId]
+
+
+			if "sensorTemperatureOffset" not in sensors[sensor][devId]: 
+				sensors[sensor][devId]["sensorTemperatureOffset"] = "0"
+
+			if sensor in sensorsOld and sensorsOld[sensor][devId]["sensorTemperatureOffset"] != sensors[sensor][devId]["sensorTemperatureOffset"]:
+					if devId in SENSOR: del SENSOR[devId]
+
+
 			try:
 				if "minSendDelta" in sensors[sensor][devId]: 
 					minSendDelta= float(sensors[sensor][devId]["minSendDelta"])
@@ -419,7 +441,7 @@ def readParams():
 			if devId not in SENSOR or  restart:
 				U.logger.log(30," new parameters read:  minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}".format( minSendDelta, deltaX[devId], sensorRefreshSecs) )
 				startSensor(devId)
-				if SENSOR[devId] =="":
+				if SENSOR[devId] == "":
 					return
 		deldevID={}		   
 		for devId in SENSOR:
@@ -444,7 +466,7 @@ def startSensor(devId):
 	global sensors,sensor
 	global startTime
 	global SENSOR, i2c_bus
-	global deviceVersion
+	global deviceVersion, sensorTemperatureOffset, autoCalibration
 	startTime =time.time()
 
 	
@@ -452,10 +474,31 @@ def startSensor(devId):
 		ii = SENSOR[devId]
 	except:
 		try:
+			autoCalibration = True
 			time.sleep(1)
-			SENSOR[devId]  = SENSORclass()
-			deviceVersion = SENSOR[devId].scd30.get_firmware_version()
-			print ( " version: {}".format(deviceVersion) )
+			SENSOR[devId]			= SENSORclass()
+			deviceVersion			= SENSOR[devId].scd30.get_firmware_version()
+			AutocalibWas			= SENSOR[devId].scd30.get_auto_self_calibration_active()
+			sensorTemperatureOffset	= SENSOR[devId].scd30.get_temperature_offset()
+			U.logger.log(20," version: {}, calibration was set to:{}, temperature offset was:{}".format(deviceVersion, AutocalibWas, sensorTemperatureOffset) )
+			# set auto calib 
+			if str(AutocalibWas) != sensors[sensor][devId]["autoCalibration"]:
+				U.logger.log(20," setting auto-calibration to:{}".format(sensors[sensor][devId]["autoCalibration"]) )
+				SENSOR[devId].scd30.set_auto_self_calibration( sensors[sensor][devId]["autoCalibration"]=="1" )
+				time.sleep(1)
+			# set temp offset  
+			toff =  min(10.,max(-10.,float(sensors[sensor][devId]["sensorTemperatureOffset"])))
+			if str(toff) != str(sensorTemperatureOffset): 
+				U.logger.log(20," setting temp offset to:{}".format(sensors[sensor][devId]["sensorTemperatureOffset"]) )
+				SENSOR[devId].scd30.set_temperature_offset( toff )
+				time.sleep(1)
+
+			ret = 	SENSOR[devId].getData()
+
+			U.logger.log(20,"  first data read: {}".format(ret ) )
+			autoCalibration			= SENSOR[devId].scd30.get_auto_self_calibration_active()
+			sensorTemperatureOffset	= SENSOR[devId].scd30.get_temperature_offset()
+
 		except	Exception as e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			SENSOR[devId] = ""
@@ -468,9 +511,11 @@ def startSensor(devId):
 def getValues(devId):
 	global sensor, sensors,	 SENSOR, badSensor
 	global startTime, sendToIndigoSecs, sensorMode
-	global deviceVersion
+	global deviceVersion, sensorTemperatureOffset, autoCalibration
 
 	try:
+		if devId not in SENSOR:
+			startSensor(devId) 
 		if SENSOR[devId] == "": 
 			badSensor +=1
 			return "badSensor"
@@ -479,7 +524,7 @@ def getValues(devId):
 		if "offsetTemp" in sensors[sensor][devId]: temp += float(sensors[sensor][devId]["offsetTemp"])
 		if "offsetHum"  in sensors[sensor][devId]: hum  += float(sensors[sensor][devId]["offsetHum"])
 		if "offsetCO2"  in sensors[sensor][devId]: CO2  += float(sensors[sensor][devId]["offsetCO2"])
-		data = {"temp":	round(temp,1), "CO2": int(CO2), "hum": int(hum), "deviceVersion":deviceVersion} 
+		data = {"temp":	round(temp,1), "CO2": int(CO2+0.5), "hum": int(hum+0.5), "deviceVersion":deviceVersion, "autoCalibration": autoCalibration, "sensorTemperatureOffset": sensorTemperatureOffset} 
 		badSensor = 0
 		return data
 	except	Exception as e:

@@ -129,6 +129,7 @@ def readNewParams(force=0):
 	global myPID
 	global python3
 	global BLEdirectSensorDeviceActive
+	global BLEdirectSwitchbotActive
 	global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning
 	global macIfWOLsendToIndigoServer, IpnumberIfWOLsendToIndigoServer
 	global typeOfUPS, RTCpresent
@@ -489,7 +490,7 @@ def readNewParams(force=0):
 
 
 		if	rPiRestartCommand.find("master") > -1:
-			U.logger.log(20,"restart due to new input {}".format(rPiRestartCommand))
+			U.logger.log(20,"restart due to new input:  {}".format(rPiRestartCommand))
 			subprocess.call("/usr/bin/python "+G.homeDir+"master.py &" , shell=True)
 			sys.exit()
 
@@ -531,8 +532,17 @@ def readNewParams(force=0):
 			for devId in sensors[sensor]:
 				if "isBLElongConnectDevice" in sensors[sensor][devId] and sensors[sensor][devId]["isBLElongConnectDevice"]:
 					BLEdirectSensorDeviceActive = True
-					U.logger.log(40, u"BLEdirectSensorDeviceActive:{}, sensor:{}, devID:{} sensor[]:{}".format(BLEdirectSensorDeviceActive, sensor, devId,sensors[sensor][devId] ))
+					U.logger.log(30, u"BLEdirectSensorDeviceActive:{}, sensor:{}, devID:{} sensor[]:{}".format(BLEdirectSensorDeviceActive, sensor, devId,sensors[sensor][devId] ))
 					break
+
+		BLEdirectSwitchbotActive = False
+		if "output" in inp and "OUTPUTswitchbotRelay" in inp["output"]:
+			U.logger.log(30, u"BLEdirectSwitchbotActive:{}".format(inp["output"]["OUTPUTswitchbotRelay"] ))
+			BLEdirectSwitchbotActive = True
+		else:
+			U.logger.log(30, u"BLEdirectSwitchbotActive: not active: {}".format(inp["output"]))
+
+		
 
 		if	not beforeLoop:
 			if rPiRestartCommand.find("beacons") >-1 :
@@ -703,15 +713,15 @@ def startProgam(pgm, params="", reason=""):
 
 ####################      #########################
 def startBLEconnect():
-	global sensors, BLEdirectSensorDeviceActive
+	global sensors, BLEdirectSensorDeviceActive, BLEdirectSwitchbotActive
 	try:
 
-		if "BLEconnect" not in sensors and not BLEdirectSensorDeviceActive:
+		if "BLEconnect" not in sensors and not BLEdirectSensorDeviceActive and not BLEdirectSwitchbotActive:
 			U.killOldPgm(-1, "BLEconnect.py")
 			return
 
 		if not U.pgmStillRunning("BLEconnect.py") :
-			U.logger.log(20, u"BLEdirectSensorDeviceActive:{} , BLEconnect:{}".format(BLEdirectSensorDeviceActive, "BLEconnect" in sensors))
+			U.logger.log(30, u"BLEdirectSensorDeviceActive:{} , BLEconnect:{} or switchbot active".format(BLEdirectSensorDeviceActive, "BLEconnect" in sensors))
 			startProgam("BLEconnect.py", params="", reason="..starting in serial mode ")
 		return
 
@@ -2081,8 +2091,8 @@ def checkIfipNumberchanged(indigoServerOn, changed, connected):
 def checkIpSTDprogramsAreRunning(lastCheckAlive):
 	global sensors, enableiBeacons, activePGM, activePGMdict, BLEdirectSensorDeviceActive
 	try:
-		if "BLEconnect" in sensors or BLEdirectSensorDeviceActive:
-			startBLEconnect()
+		if "BLEconnect" in sensors or BLEdirectSensorDeviceActive or BLEdirectSwitchbotActive:
+			startBLEconnect() 
 
 		if time.time() - lastCheckAlive > 100:
 			lastCheckAlive = time.time()
@@ -2292,6 +2302,7 @@ def execMaster():
 		global startingnetworkStatus
 		global fanOnTimePercent, fanOntimeData, fanOntimePeriod
 		global BLEdirectSensorDeviceActive
+		global BLEdirectSwitchbotActive
 		global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted
 		global macIfWOLsendToIndigoServer, lastCheckWOL, IpnumberIfWOLsendToIndigoServer
 		global batteryUPSshutdownALCHEMYupcI2C, batteryUPSshutdownEnable
@@ -2317,6 +2328,7 @@ def execMaster():
 		startOtherProgramKeepRunning 	= False
 		startOtherProgramStarted 		= -1
 		BLEdirectSensorDeviceActive 	= False
+		BLEdirectSwitchbotActive				= False
 		fanOntimePeriod					= 180 #  ==3 minutes for building average fan on 
 		fanOntimeData					= []
 		fanOnTimePercent				= ""

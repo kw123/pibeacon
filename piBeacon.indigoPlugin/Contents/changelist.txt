@@ -1,7 +1,16 @@
-Added features / changes in v7.138.547@ 2022-02-20
+Added features / changes in v7.138.549@ 2022-02-21
+===================================================
+   
+1. added calibration options for sensirion scd30 CO2 sensor
+2. fixed switchbot program on RPI
+
+
+
+Added features / changes in v7.138.548@ 2022-02-20
 ===================================================
    
 1. fixed output-gpio high / low for inverse/ not inverse config 
+
 
 
 Added features / changes in v7.138.547@ 2022-02-20

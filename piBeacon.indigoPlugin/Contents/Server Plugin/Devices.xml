@@ -1529,8 +1529,8 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureMinToday">
 				<ValueType>Float</ValueType>
@@ -2470,8 +2470,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureAveToday">
 				<ValueType>Float</ValueType>
@@ -4129,12 +4129,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
 
 
-			<Field id="offsetTemp"   type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="offsetTemp"   type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden="no">
 			<Label>send sensor values to Indigo:</Label>
@@ -4196,8 +4196,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -4354,8 +4354,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"      >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"      >Humidity[%]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Proximity"      >Proximity</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
@@ -4370,8 +4370,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"  defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar):</Label> </Field>
 
 
@@ -4505,8 +4505,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -4566,8 +4566,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -4818,13 +4818,13 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="illuminance"  >illuminance</Option>
 			</List>
 			</Field>
 
 
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden="no" tooltip="if > Min Secs ..">
 				<Label>Send sensor values to Indigo at least every:</Label>
@@ -4887,8 +4887,8 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -5067,12 +5067,12 @@ save ===
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature" >Temperature</Option>
-				<Option value="Humidity"    >Humidity</Option>
+				<Option value="Temperature" >Temperature[C/F]</Option>
+				<Option value="Humidity"    >Humidity[%]</Option>
 			</List>
 			</Field>
 
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetHum"  type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity:(%)</Label> </Field>
 
 
@@ -5161,8 +5161,8 @@ save ===
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -5217,8 +5217,8 @@ save ===
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -5376,12 +5376,12 @@ save===</Label>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
 
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
@@ -5469,8 +5469,8 @@ save===</Label>
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -5630,12 +5630,12 @@ save ===
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  		 >Temperature</Option>
+				<Option value="Temperature"  		 >Temperature[C/F]</Option>
 				<Option value="AmbientTemperature"   >Ambient - Probe Temperature</Option>
 			</List>
 			</Field>
 
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
@@ -5718,8 +5718,8 @@ save ===
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -5920,12 +5920,12 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
-			<Field id="offsetHum"  type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"  type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
@@ -5995,8 +5995,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -6052,8 +6052,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -6222,12 +6222,12 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
 			<Label>Min secs between indigo updates - not more often than:</Label>
@@ -6296,8 +6296,8 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -6353,8 +6353,8 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -6515,8 +6515,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="displayS" type="menu"     defaultValue="Formaldehyde" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
 				<Option value="Formaldehyde" >Formaldehyde</Option>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 			</List>
 			</Field>
 
@@ -6528,8 +6528,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			</List>
 			</Field>
 
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
 			<Label>Min secs between indigo updates - not more often than:</Label>
@@ -6598,8 +6598,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -6655,8 +6655,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -6871,12 +6871,12 @@ This Sensor does not display F only C ===</Label>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
 			<Label>Min secs between indigo updates - not more often than:</Label>
@@ -6945,8 +6945,8 @@ This Sensor does not display F only C ===</Label>
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -7002,8 +7002,8 @@ This Sensor does not display F only C ===</Label>
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -7169,12 +7169,12 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="readSensorEvery"    type="menu"     defaultValue="120" hidden="no" tooltip="">
 				<Label>Read sensor every:</Label>
@@ -7228,8 +7228,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -7285,8 +7285,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -7447,13 +7447,13 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 
 			<Field id="displayS" type="menu"     defaultValue="Moisture" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="Moisture"     >Moisture</Option>
 				<Option value="illuminance"  >Brightness</Option>
 				<Option value="Conductivity" >Conductivity</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="minMoisture" type="textfield"     defaultValue="0"> <Label>Moisture: min = value when dry:</Label> </Field>
 			<Field id="maxMoisture" type="textfield"     defaultValue="100"> <Label>Moisture: max = value when in water:</Label> </Field>
 
@@ -7510,8 +7510,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -7731,12 +7731,12 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
 			<Label>Min secs between indigo updates - not more often than:</Label>
@@ -7805,8 +7805,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -7862,8 +7862,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -8273,12 +8273,12 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<Option value="accelerationX"     >Acc X </Option>
 				<Option value="accelerationY"     >Acc Y </Option>
 				<Option value="accelerationZ"     >Acc Z </Option>
-				<Option value="Temperature"       >Temperature</Option>
-				<Option value="Humidity"          >Humidity</Option>
+				<Option value="Temperature"       >Temperature[C/F]</Option>
+				<Option value="Humidity"          >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
-			<Field id="offsetHum"  type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"  type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
@@ -8428,8 +8428,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -8485,8 +8485,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -8640,10 +8640,10 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="readSensorEvery"    type="menu"     defaultValue="180" hidden="no" tooltip="">
 				<Label>Read sensor every:</Label>
@@ -8722,8 +8722,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -9177,13 +9177,13 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 				<Option value="illuminance"  >illuminance</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"      defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
@@ -9253,8 +9253,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -9310,8 +9310,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -10138,12 +10138,12 @@ set trigger and sensitivity parameters ===
 				<Option value="accelerationX"     >Acc X </Option>
 				<Option value="accelerationY"     >Acc Y </Option>
 				<Option value="accelerationZ"     >Acc Z </Option>
-				<Option value="Temperature"  	>Temperature</Option>
-				<Option value="Humidity"     	>Humidity</Option>
+				<Option value="Temperature"  	>Temperature[C/F]</Option>
+				<Option value="Humidity"     	>Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 
 			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
@@ -10254,8 +10254,8 @@ set trigger and sensitivity parameters ===
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -10311,8 +10311,8 @@ set trigger and sensitivity parameters ===
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -10990,12 +10990,12 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<Field id="displayS" type="menu"     defaultValue="status"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"  >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"  >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="statusColorLabel" type="label" >
 			<Label>== set color of status column dot to </Label></Field>
@@ -11033,8 +11033,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -11089,8 +11089,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -11247,12 +11247,12 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"  >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"  >Humidity[%]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden="no" tooltip="if > Min Secs ..">
 				<Label>Send sensor values to Indigo at least every:</Label>
 				<List>
@@ -11298,8 +11298,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -11354,8 +11354,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -11748,11 +11748,11 @@ Find MAC number through find new beacons or using the iphone app.
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
 
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="displayEnable" type="menu"       defaultValue="0" hidden="YES">
 			<Label>use local display to show values:</Label>
 			<List>
@@ -11792,8 +11792,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -11906,13 +11906,13 @@ Find MAC number through find new beacons or using the iphone app.
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"     >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"     >Humidity[%]</Option>
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 			<Field id="displayEnable" type="menu"     defaultValue="0" hidden="YES">
 			<Label>use local display to show values:</Label>
 			<List>
@@ -11953,8 +11953,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -12009,8 +12009,8 @@ Find MAC number through find new beacons or using the iphone app.
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -12120,10 +12120,10 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured temp:</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0" >
 			<Label>use local display to show values:</Label>
@@ -12164,8 +12164,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -12274,10 +12274,10 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured temp:</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -12318,8 +12318,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -12433,10 +12433,10 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -12478,8 +12478,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -12588,12 +12588,12 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -12635,8 +12635,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -12795,12 +12795,12 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="statusColorLabel" type="label" >
@@ -12833,8 +12833,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -12983,12 +12983,12 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -13030,8 +13030,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -13180,12 +13180,12 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
@@ -13228,8 +13228,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -13377,12 +13377,12 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp"  type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp"  type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="statusColorLabel" type="label" >
@@ -13415,8 +13415,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -13570,13 +13570,13 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"      >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"      >Humidity[%]</Option>
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -13618,8 +13618,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -13674,8 +13674,8 @@ Find MAC number through find new beacons or using the iphone app.
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -13778,13 +13778,13 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"      >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"      >Humidity[%]</Option>
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"    defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum"  type="textfield"    defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"    defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"  type="textfield"    defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -13826,8 +13826,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -13882,8 +13882,8 @@ Find MAC number through find new beacons or using the iphone app.
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -13990,8 +13990,8 @@ Find MAC number through find new beacons or using the iphone app.
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"      >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"      >Humidity[%]</Option>
 				<Option value="Pressure"      >Pressure</Option>
 				<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
@@ -13999,8 +13999,8 @@ Find MAC number through find new beacons or using the iphone app.
 				<Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
@@ -14043,8 +14043,8 @@ Find MAC number through find new beacons or using the iphone app.
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -14099,8 +14099,8 @@ Find MAC number through find new beacons or using the iphone app.
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -14352,8 +14352,8 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="Temperature"  >Temperature</Option>
-					<Option value="Humidity"      >Humidity</Option>
+					<Option value="Temperature"  >Temperature[C/F]</Option>
+					<Option value="Humidity"      >Humidity[%]</Option>
 					<Option value="Pressure"      >Pressure</Option>
 					<Option value="GasResistance" >Gas  (raw resistance)</Option>
 					<Option value="AirQuality"    >AirQuality (in % after calibration set)</Option>
@@ -14367,8 +14367,8 @@ After some days of running in clean air, proposed setup is:
 					<Option value="Temperature/AirQuality"     >Temperature/AirQuality</Option>
 				</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 			<Field id="offsetPress" type="textfield"     defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar)):</Label> </Field>
 			<Field id="offsetGas" type="textfield"      defaultValue="0"> <Label>offset added to measured Gas(Ohm):</Label> </Field>
 
@@ -14414,8 +14414,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -14470,8 +14470,8 @@ After some days of running in clean air, proposed setup is:
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -14678,13 +14678,13 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
-				<Option value="Humidity"      >Humidity</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
+				<Option value="Humidity"      >Humidity[%]</Option>
 				<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
-			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity(%):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -14726,8 +14726,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -14782,8 +14782,8 @@ After some days of running in clean air, proposed setup is:
 
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -14897,7 +14897,7 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
 			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise">
@@ -14915,7 +14915,7 @@ After some days of running in clean air, proposed setup is:
 				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -14957,8 +14957,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -15096,7 +15096,7 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 			</List>
 			</Field>
 			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise">
@@ -15115,7 +15115,7 @@ After some days of running in clean air, proposed setup is:
 			</List>
 			</Field>
 
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
@@ -15157,8 +15157,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -15271,7 +15271,7 @@ After some days of running in clean air, proposed setup is:
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="Temperature"  >Temperature</Option>
+					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
 			</Field>
 
@@ -15338,7 +15338,7 @@ After some days of running in clean air, proposed setup is:
 				</List>
 			</Field>
 
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 				<Label>use local display to show values:</Label>
@@ -15380,8 +15380,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -15904,16 +15904,49 @@ After some days of running in clean air, proposed setup is:
 				<Option value="30"   > 30</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp"   type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="sensorTemperatureOffset"   type="menu"     defaultValue="0"> <Label>set the sensor Temperature offset parameter to:</Label> 
+			<List>
+				<Option value="-7.0"  > -7C</Option>
+				<Option value="-6.0"  > -6C</Option>
+				<Option value="-5.0"  > -5C</Option>
+				<Option value="-4.0"  > -4C</Option>
+				<Option value="-3.5"  > -3.5C</Option>
+				<Option value="-3.0"  > -3C</Option>
+				<Option value="-2.5"  > -2.5C</Option>
+				<Option value="-2.0"  > -2C</Option>
+				<Option value="-1.5"  > -1.5C</Option>
+				<Option value="-1.0"  > -1.0C</Option>
+				<Option value="-0.5"  > -0.5C</Option>
+				<Option value="0"     > 0C</Option>
+				<Option value="0.5"   > 0.5C</Option>
+				<Option value="1.0"   > 1.0C</Option>
+				<Option value="1.5"   > 1.5C</Option>
+				<Option value="2.0"   > 2.0C</Option>
+				<Option value="2.5"   > 2.5C</Option>
+				<Option value="3.0"   > 3.0C</Option>
+				<Option value="3.5"   > 3.5C</Option>
+				<Option value="4.0"   > 4.0C</Option>
+				<Option value="5.0"   > 5.0C</Option>
+				<Option value="6.0"   > 6.0C</Option>
+				<Option value="7.0"   > 7.0C</Option>
+			</List>
+			</Field>
+			<Field id="autoCalibration"   type="menu"     defaultValue="1"> <Label>set the sensor auto calibration to:</Label> 
+			<List>
+				<Option value="0"    > off</Option>
+				<Option value="1"    > on</Option>
+			</List>
+			</Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetHum"  type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity:(%)</Label> </Field>
 			<Field id="offsetCO2"  type="textfield"  defaultValue="0"> <Label>offset added to measured Co2 [ppm]</Label> </Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			<Field id="displayS" type="menu"     defaultValue="CO2"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS"     type="menu"     defaultValue="CO2"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="CO2"     >CO2</Option>
-				<Option value="Temperature"     >Temperature</Option>
-				<Option value="Humidity" >Humidity</Option>
+				<Option value="CO2"         >CO2 [ppm]</Option>
+				<Option value="Temperature" >Temperature [C/F]</Option>
+				<Option value="Humidity"    >Humidity [%]</Option>
 			</List>
 			</Field>
 
@@ -15986,11 +16019,31 @@ After some days of running in clean air, proposed setup is:
 				<TriggerLabel>CO2Change1Hour</TriggerLabel>
 				<ControlPageLabel>CO2Change1Hour</ControlPageLabel>
 			</State>
+			<State id="CO2Change1Hour">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change1Hour</TriggerLabel>
+				<ControlPageLabel>CO2Change1Hour</ControlPageLabel>
+			</State>
+			<State id="CO2Change6Hours">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2Change6Hours</TriggerLabel>
+				<ControlPageLabel>CO2Change6Hours</ControlPageLabel>
+			</State>
+			<State id="CO2AveToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2AveToday</TriggerLabel>
+				<ControlPageLabel>CO2AveToday</ControlPageLabel>
+			</State>
+			<State id="CO2MeasurementsToday">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>CO2MeasurementsToday</TriggerLabel>
+				<ControlPageLabel>CO2MeasurementsToday</ControlPageLabel>
+			</State>
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureMaxToday">
 				<ValueType>Float</ValueType>
@@ -16019,8 +16072,8 @@ After some days of running in clean air, proposed setup is:
 			</State>
 			<State id="Humidity">
 				<ValueType>Number</ValueType>
-				<TriggerLabel>Humidity</TriggerLabel>
-				<ControlPageLabel>Humidity</ControlPageLabel>
+				<TriggerLabel>Humidity[%]</TriggerLabel>
+				<ControlPageLabel>Humidity[%]</ControlPageLabel>
 			</State>
 			<State id="HumidityChange10Minutes">
 				<ValueType>Number</ValueType>
@@ -16076,6 +16129,17 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>String</ValueType>
 				<TriggerLabel>deviceVersion</TriggerLabel>
 				<ControlPageLabel>deviceVersion</ControlPageLabel>
+			</State>
+			<State id="autoCalibration">
+				<ValueType>String</ValueType>
+				<TriggerLabel>autoCalibration</TriggerLabel>
+				<ControlPageLabel>autoCalibration</ControlPageLabel>
+			</State>
+
+			<State id="sensorTemperatureOffset">
+				<ValueType>number</ValueType>
+				<TriggerLabel>autoCasensorTemperatureOffsetlibration</TriggerLabel>
+				<ControlPageLabel>sensorTemperatureOffset</ControlPageLabel>
 			</State>
 
 
@@ -16558,7 +16622,7 @@ It measures CO2 VOC
 			<List>
 				<Option value="CO2"     >CO2</Option>
 				<Option value="VOC"     >VOC</Option>
-				<Option value="temp"    >Temperature</Option>
+				<Option value="temp"    >Temperature[C/F]</Option>
 				<Option value="CO2/VOC" >CO2/VOC</Option>
 			</List>
 			</Field>
@@ -16595,8 +16659,8 @@ It measures CO2 VOC
 
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -17235,8 +17299,8 @@ It measures CO2 VOC
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -18474,12 +18538,12 @@ It measures CO2 VOC
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"  >Temperature</Option>
+				<Option value="Temperature"  >Temperature[C/F]</Option>
 				<Option value="AmbientTemperature"      >Ambient Temperature</Option>
 				<Option value="Temperature/AmbientTemperature" >Temperature/Ambient</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"   defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"   defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="displayEnable" type="menu"     defaultValue="0">
 			<Label>use local display to show values:</Label>
 			<List>
@@ -18520,8 +18584,8 @@ It measures CO2 VOC
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -18717,13 +18781,13 @@ you can setup
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"       >Temperature</Option>
+				<Option value="Temperature"       >Temperature[C/F]</Option>
 				<Option value="AmbientTemperature">AmbientTemperature</Option>
 				<Option value="Uniformity"        >Uniformity</Option>
 				<Option value="Movement"          >Movement</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="imageFilesaveRawData" type="menu"     defaultValue="0">
 			<List>
@@ -18814,8 +18878,8 @@ you can setup
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -19592,12 +19656,12 @@ you can setup
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="displayS" type="menu"     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 			<List>
-				<Option value="Temperature"       >Temperature</Option>
+				<Option value="Temperature"       >Temperature[C/F]</Option>
 				<Option value="Uniformity"        >Uniformity</Option>
 				<Option value="Movement"          >Movement</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature(C):</Label> </Field>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 
 			<Field id="imageFilesaveRawData" type="menu"     defaultValue="0">
 			<List>
@@ -19686,8 +19750,8 @@ you can setup
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -19883,7 +19947,7 @@ you can setup
 			<List>
 				<Option value="GYR"        >x,y,z</Option>
 				<Option value="XYZSumSQ"   >GRY SQRT(x*x+y*y+z*z)</Option>
-				<Option value="Temperature">Temperature</Option>
+				<Option value="Temperature">Temperature[C/F]</Option>
 
 			</List>
 			</Field>
@@ -19919,8 +19983,8 @@ you can setup
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -20100,8 +20164,8 @@ you can setup
 			</List>
 			</Field>
 
-			<Field id="offsetTemp" type="textfield"     defaultValue="25" hidden="no">
-			<Label>temperature offset[ºC]:</Label>
+			<Field id="offsetTemp" type="textfield"     defaultValue="0" hidden="no">
+			<Label>offset added to measured Temperature[C]:</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
@@ -20158,8 +20222,8 @@ you can setup
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -20740,7 +20804,7 @@ you can setup
 				<Option value="MAG" >MAG  x,y,z</Option>
 				<Option value="ACC" >ACC  x,y,z</Option>
 				<Option value="GYR" >GYR  x,y,z</Option>
-				<Option value="Temperature"     >Temperature</Option>
+				<Option value="Temperature"     >Temperature[C/F]</Option>
 			</List>
 			</Field>
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
@@ -20814,8 +20878,8 @@ you can setup
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -20979,7 +21043,7 @@ you can setup
 			<List>
 				<Option value="ACC" >ACC  x,y,z</Option>
 				<Option value="GYR" >GYR  x,y,z</Option>
-				<Option value="Temperature"     >Temperature</Option>
+				<Option value="Temperature"     >Temperature[C/F]</Option>
 			</List>
 			</Field>
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
@@ -21023,8 +21087,8 @@ you can setup
 			</State>
 			<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureChange10Minutes">
 				<ValueType>Float</ValueType>
@@ -23158,7 +23222,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<Option value="300"  >300 secs</Option>
 			</List>
 			</Field>
-			<Field id="offsetTemp" type="textfield"      defaultValue="0"> <Label>offset added to measured Temperature:</Label> </Field>
+			<Field id="offsetTemp" type="textfield"      defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="minMoisture" type="textfield"     defaultValue="310"> <Label>Moisture: min = value when dry:</Label> </Field>
 			<Field id="maxMoisture" type="textfield"     defaultValue="610"> <Label>Moisture: max = value when in water:</Label> </Field>
 
@@ -23167,7 +23231,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
 			<List>
 				<Option value="Moisture"        >Moisture</Option>
-				<Option value="Temperature"     >Temperature</Option>
+				<Option value="Temperature"     >Temperature[C/F]</Option>
 			</List>
 			<Label>State to display in the State Column:</Label>
 			</Field>
@@ -23238,8 +23302,8 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</State>
 				<State id="Temperature">
 				<ValueType>Float</ValueType>
-				<TriggerLabel>Temperature</TriggerLabel>
-				<ControlPageLabel>Temperature</ControlPageLabel>
+				<TriggerLabel>Temperature[C/F]</TriggerLabel>
+				<ControlPageLabel>Temperature[C/F]</ControlPageLabel>
 			</State>
 			<State id="TemperatureAveToday">
 				<ValueType>Float</ValueType>

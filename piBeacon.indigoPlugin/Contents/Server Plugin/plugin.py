@@ -4289,8 +4289,7 @@ class Plugin(indigo.PluginBase):
 				pi = int(piU)
 				if ( pi == pix or pix == 999 or (pi >= _GlobalConst_numberOfiBeaconRPI and pix == 800) or (u"rPiEnable"+piU in valuesDict and valuesDict[u"rPiEnable"+piU])) and self.RPI[piU][u"piDevId"] >0:
 					self.updateNeeded += u" fixConfig "
-					self.rPiRestartCommand[pi] += u"master,"
-					self.rPiRestartCommand[int(piU)] += u"master,"
+					self.rPiRestartCommand[pi] += u", sensor"
 					self.setONErPiV(piU,u"piUpToDate",[u"updateParamsFTP"])
 
 					if typeId not in self.RPI[piU][u"input"]:
@@ -13148,7 +13147,7 @@ class Plugin(indigo.PluginBase):
 						if u"temp" in data:
 							x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"temp"])
 							self.addToStatesUpdateDict(dev.id,u"temperature", x, decimalPlaces=decimalPlaces)
-							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+							updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
 							if updateProps0:
 								props[doUpdate[0]] = doUpdate[1]
 								self.deviceStopCommIgnore = time.time()
@@ -13324,7 +13323,7 @@ class Plugin(indigo.PluginBase):
 					if u"VOC" in data:
 						x, UI  = int(float(data[u"VOC"])),  u"VOC {:.0f}[ppb]".format(float(data[u"VOC"]))
 						newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
-						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
+						updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 					if sensor in [u"sgp40"]:
@@ -13337,7 +13336,7 @@ class Plugin(indigo.PluginBase):
 							elif x < 401: UI += " bad"
 							else:         UI += " very bad"
 							newStatus = self.setStatusCol( dev, u"VOC", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 1)
-							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
+							updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"VOC", u"{:d}%", whichKeysToDisplay, 0)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]))
 
@@ -13384,12 +13383,20 @@ class Plugin(indigo.PluginBase):
 						continue
 
 
+					if "CO2" in data:
+						x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm] ".format(float(data[u"CO2"]))
+						newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
+						updateProps0, doUpdate =  self.updateChangedValuesInLastXXMinutes(dev, x, props, u"CO2", u"{:d}%", whichKeysToDisplay, 0)
+						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
+
+
+
 					if u"hum" in data:
 						if data[u"hum"] > -1:
 							hum = max(0., min(data[u"hum"],100.))
 							x, UI, decimalPlaces  = self.convHum(hum)
 							newStatus = self.setStatusCol( dev, u"Humidity", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = 0 )
-							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"Humidity", u"{:d}%", whichKeysToDisplay, 0)
+							updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"Humidity", u"{:d}%", whichKeysToDisplay, 0)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 
@@ -13397,14 +13404,14 @@ class Plugin(indigo.PluginBase):
 						temp = data[u"temp"]
 						x, UI, decimalPlaces, useFormat = self.convTemp(temp)
 						newStatus = self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces )
-						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+						updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 					if u"AmbientTemperature" in data:
 						temp = data[u"AmbientTemperature"]
 						x, UI, decimalPlaces, useFormat  = self.convTemp(temp)
 						newStatus = self.setStatusCol( dev, u"AmbientTemperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = decimalPlaces )
-						updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"AmbientTemperature", useFormat, whichKeysToDisplay, decimalPlaces)
+						updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"AmbientTemperature", useFormat, whichKeysToDisplay, decimalPlaces)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 
@@ -13413,7 +13420,7 @@ class Plugin(indigo.PluginBase):
 							#indigo.server.log(u"Altitude    "+ u"{}".format(data[u"press"])+u"  "+ u"{}".format(props))
 							x, UI, decimalPlaces, useFormat  = self.convAlt(data[u"press"], props, data[u"temp"])
 							newStatus = self.setStatusCol( dev, u"Altitude", x, UI, whichKeysToDisplay, indigo.kStateImageSel.HumiditySensor,newStatus, decimalPlaces = decimalPlaces )
-							updateProps0, doUpdate = self.updateChangedValues(dev, x, props, u"Altitude", useFormat, whichKeysToDisplay, decimalPlaces)
+							updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"Altitude", useFormat, whichKeysToDisplay, decimalPlaces)
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 						newStatus, updateProps0, doUpdate = self.setPressureDisplay(dev, props, data, whichKeysToDisplay,newStatus)
@@ -13475,7 +13482,7 @@ class Plugin(indigo.PluginBase):
 						newStatus = self.setStatusCol( dev, u"GasBaseline",		gb, gbUI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
 						newStatus = self.setStatusCol( dev, u"SensorStatus",	SensorStatus, SensorStatus, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
 						newStatus = self.setStatusCol( dev, u"AirQualityText",	AirQualityText, AirQualityText, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = 0)
-						updateProps0, doUpdate = self.updateChangedValues(dev, aq, props, "AirQuality", "{:d}%", whichKeysToDisplay, 0)
+						updateProps0, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, aq, props, "AirQuality", "{:d}%", whichKeysToDisplay, 0)
 						if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 
 					if u"MovementAbs" in data:
@@ -13780,7 +13787,10 @@ class Plugin(indigo.PluginBase):
 		try:
 				if u"deviceVersion" in data 											and u"deviceVersion" in dev.states and u"{}".format(data[u"deviceVersion"]) != u"{}".format(dev.states[u"deviceVersion"]):
 									self.addToStatesUpdateDict(dev.id, u"deviceVersion", data[u"deviceVersion"])
-
+				if u"sensorTemperatureOffset" in data 											and u"sensorTemperatureOffset" in dev.states and u"{}".format(data[u"sensorTemperatureOffset"]) != u"{}".format(dev.states[u"sensorTemperatureOffset"]):
+									self.addToStatesUpdateDict(dev.id, u"sensorTemperatureOffset", data[u"sensorTemperatureOffset"])
+				if u"autoCalibration" in data 											and u"autoCalibration" in dev.states and ("on" if str(data[u"autoCalibration"]) == "1" else "off") != u"{}".format(dev.states[u"autoCalibration"]):
+									self.addToStatesUpdateDict(dev.id, u"autoCalibration", "on" if str(data[u"autoCalibration"]) == "1" else "off")
 
 				#if dev.id == 985980096: self.indiLOG.log(10,u"updateCommonStates: pi#:{}, {} data{},\n whichKeysToDisplay:{}".format(pi, dev.name,data,whichKeysToDisplay))
 				if u"rssi" in data 											and u"rssi" in dev.states and u"{}".format(data[u"rssi"]) != u"{}".format(dev.states[u"rssi"]):
@@ -13818,11 +13828,6 @@ class Plugin(indigo.PluginBase):
 
 				if  u"secsSinceStart" in data and  data[u"secsSinceStart"] != u"" and u"secsSinceStart" in dev.states and u"{}".format(data[u"secsSinceStart"]) != u"{}".format(dev.states[u"secsSinceStart"]):
 									self.setStatusCol(dev,u"secsSinceStart",data[u"secsSinceStart"],"{}".format(data[u"secsSinceStart"]),	whichKeysToDisplay,"","",decimalPlaces=0)
-
-				if "CO2" in data:
-					x, UI  = int(float(data[u"CO2"])),  u"CO2 {:.0f}[ppm] ".format(float(data[u"CO2"]))
-					newStatus = self.setStatusCol( dev, u"CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
-					updateProps0, doUpdate =  self.updateChangedValues(dev, x, props, u"CO2", u"{:d}%", whichKeysToDisplay, 0)
 
 
 				if  u"Formaldehyde" in data and u"Formaldehyde" in dev.states:
@@ -14210,7 +14215,7 @@ class Plugin(indigo.PluginBase):
 				#self.indiLOG.log(10,u"p ={}  units:{}".format( p, self.pressureUnits ) )
 				pu = pu.strip()
 				newStatus = self.setStatusCol(dev, u"Pressure", p, pu, whichKeysToDisplay, u"",newStatus, decimalPlaces = 0)
-				updateProps, doUpdate = self.updateChangedValues(dev, p, props, u"Pressure", useFormat, whichKeysToDisplay, 0)
+				updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, p, props, u"Pressure", useFormat, whichKeysToDisplay, 0)
 
 		except Exception, e:
 			if u"{}".format(e) != u"None":
@@ -14231,7 +14236,7 @@ class Plugin(indigo.PluginBase):
 				#self.indiLOG.log(10,u"p ={}  units:{}".format( p, self.pressureUnits ) )
 				pu = pu.strip()
 				newStatus = self.setStatusCol(dev, u"Proximity", p, pu, whichKeysToDisplay, u"",newStatus, decimalPlaces = 0)
-				updateProps, doUpdate = self.updateChangedValues(dev, p, props, u"Proximity", useFormat, whichKeysToDisplay, 0)
+				updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, p, props, u"Proximity", useFormat, whichKeysToDisplay, 0)
 
 		except Exception, e:
 			if u"{}".format(e) != u"None":
@@ -14359,7 +14364,7 @@ class Plugin(indigo.PluginBase):
 							dev = indigo.devices[dev.id]
 						props = dev.pluginProps
 						self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev.states[u"status"], decimalPlaces = decimalPlaces )
-						updateProps, doUpdate = self.updateChangedValues(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+						updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
 						if updateProps:
 							props[doUpdate[0]] = doUpdate[1]
 							self.deviceStopCommIgnore = time.time()
@@ -14401,7 +14406,7 @@ class Plugin(indigo.PluginBase):
 									self.addToStatesUpdateDict(u"{}".format(dev1.id),u"serialNumber",serialNumber)
 									self.setStatusCol( dev1, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev1.states[u"status"], decimalPlaces = decimalPlaces )
 									props = dev1.pluginProps
-									updateProps, doUpdate = self.updateChangedValues(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+									updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
 									if updateProps:
 										props[doUpdate[0]] = doUpdate[1]
 										self.deviceStopCommIgnore = time.time()
@@ -14423,7 +14428,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			x, UI, decimalPlaces, useFormat  = self.convTemp(data[u"temp"])
 			self.setStatusCol( dev, u"Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev.states[u"status"], decimalPlaces = decimalPlaces )
-			updateProps, doUpdate = self.updateChangedValues(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
+			updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, x, props, u"Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
 			if updateProps:
 				props[doUpdate[0]] = doUpdate[1]
 				self.deviceStopCommIgnore = time.time()
@@ -14631,12 +14636,12 @@ class Plugin(indigo.PluginBase):
 		return decPoints
 
 ####-------------------------------------------------------------------------####
-## this will update the states xxxChangeyyMinutes / Hours eg TemperatureChange10Minutes TemperatureChange1Hour TemperatureChange6Hour
+## this will update the states xxxChangeXXMinutes / Hours eg TemperatureChange10Minutes TemperatureChange1Hour TemperatureChange6Hour
 ## has problems when there are no updates, values can be  stale over days
-	def updateChangedValues(self,dev, value, props, stateToUpdate, useFormat, whichKeysToDisplay, decimalPlaces):
+	def updateChangedValuesInLastXXMinutes(self,dev, value, props, stateToUpdate, useFormat, whichKeysToDisplay, decimalPlaces):
 		try:
 			if stateToUpdate not in dev.states:
-				self.indiLOG.log(10,u"updateChangedValues: {}, prop{}  \nnot in props".format(dev.name, stateToUpdate))
+				self.indiLOG.log(10,u"updateChangedValuesInLastXXMinutes: {}, prop{}  \nnot in props".format(dev.name, stateToUpdate))
 				return False, []
 
 			updateList = []
@@ -14652,7 +14657,7 @@ class Plugin(indigo.PluginBase):
 					updateList.append( {u"state":state, u"unit":updateN, u"deltaSecs":updateMinutes * int(amount), u"pointer":0, u"changed":0} )
 
 			if len(updateList) < 1: 
-				#self.indiLOG.log(10,u"updateChangedValues:{},  state:{}Changexx value:{} \nnot in states: {}".format(dev.name, stateToUpdate, value, dev.states))
+				#self.indiLOG.log(10,u"updateChangedValuesInLastXXMinutes:{},  state:{}Changexx value:{} \nnot in states: {}".format(dev.name, stateToUpdate, value, dev.states))
 				return False, []
 
 			updateList = sorted(updateList, key = lambda x: x[u"deltaSecs"])
@@ -14676,6 +14681,8 @@ class Plugin(indigo.PluginBase):
 				else: 				    break
 
 
+			if False and dev.name == "s-5-sensirionscd30":
+				self.indiLOG.log(20,u"CO2 data :dev{},   value:{} updateList: {}; \n:valueList:{}".format(dev.name, value, updateList, valueList))
 			ll = len(valueList)
 			if ll > 1:
 				for kk in range(jj):
@@ -17365,6 +17372,8 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multiply")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offset")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"format")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"sensorTemperatureOffset")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"autoCalibration")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"multTemp")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetTemp")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, u"offsetCO2")
