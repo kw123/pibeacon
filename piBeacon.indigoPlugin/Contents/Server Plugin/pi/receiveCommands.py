@@ -223,7 +223,7 @@ def setGPIO(command):
 					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 				else:
-					tf = False
+					tf = True
 					GPIO.output(pin, tf)
 					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
@@ -238,7 +238,7 @@ def setGPIO(command):
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 				else: 
 					tf = False
-					GPIO.output(pin, False )
+					GPIO.output(pin, tf )
 					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 
@@ -279,10 +279,10 @@ def setGPIO(command):
 				if sleepForxSecs(pulseUp): break
  
 				if not inverseGPIO: 
-					GPIO.output(pin, False)
+					GPIO.output(pin, True)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 				else:		
-					GPIO.output(pin, True)
+					GPIO.output(pin, False)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 
 
@@ -297,10 +297,10 @@ def setGPIO(command):
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 				if sleepForxSecs(pulseDown): break
 				if  inverseGPIO: 
-					GPIO.output(pin, False)
+					GPIO.output(pin, True)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 				else:		
-					GPIO.output(pin, True)
+					GPIO.output(pin, False)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 
 			elif cmd == "continuousUpDown":
@@ -314,10 +314,10 @@ def setGPIO(command):
 						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 					if sleepForxSecs(pulseUp): break
 					if not inverseGPIO: 
-						GPIO.output(pin, False)
+						GPIO.output(pin, True)
 						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 					else:		
-						GPIO.output(pin, True)
+						GPIO.output(pin, False)
 						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 					if sleepForxSecs(pulseDown): break
 		except	Exception, e:
