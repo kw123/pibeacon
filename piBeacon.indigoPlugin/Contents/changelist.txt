@@ -1,3 +1,9 @@
+Added features / changes in v7.138.551@ 2022-02-22
+===================================================
+   
+1. made BLEconnect a threaded program with priority for switchbot. now reposne is much faster ~ 1-3 secs 
+
+
 Added features / changes in v7.138.550@ 2022-02-21
 ===================================================
    
