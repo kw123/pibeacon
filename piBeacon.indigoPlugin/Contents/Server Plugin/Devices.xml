@@ -1775,6 +1775,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
+
 		</States>
 	</Device>
 
@@ -2573,11 +2574,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
+
+
 			<State id="UUID">
 				<ValueType>String</ValueType>
 				<TriggerLabel>UUID</TriggerLabel>
 				<ControlPageLabel>UUID</ControlPageLabel>
 			</State>
+
 
 		</States>
 	</Device>
@@ -2810,6 +2814,52 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="accelerationVectorDelta">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
+				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
+			</State>
+			<State id="accelerationX">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>accelerationX</TriggerLabel>
+				<ControlPageLabel>accelerationX</ControlPageLabel>
+			</State>
+			<State id="accelerationY">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>accelerationY</TriggerLabel>
+				<ControlPageLabel>accelerationY</ControlPageLabel>
+			</State>
+			<State id="accelerationZ">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>accelerationZ</TriggerLabel>
+				<ControlPageLabel>accelerationZ</ControlPageLabel>
+			</State>
+			<State id="accelerationTotal">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>accelerationTotal</TriggerLabel>
+				<ControlPageLabel>accelerationTotal</ControlPageLabel>
+			</State>
+			<State id="accelerationXYZMaxDelta">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
+				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="movementCount">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>movementCount</TriggerLabel>
@@ -2974,6 +3024,18 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 		</ConfigUI>
 
 		<States>
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
 			<State id="illuminance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -3004,6 +3066,7 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 				<TriggerLabel>sensorSetup</TriggerLabel>
 				<ControlPageLabel>sensorSetup</ControlPageLabel>
 			</State>
+
 
 		</States>
 	</Device>
@@ -3161,6 +3224,30 @@ save ===
 
 		<States>
 
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+			<State id="button">
+				<ValueType>String</ValueType>
+				<TriggerLabel>button</TriggerLabel>
+				<ControlPageLabel>button</ControlPageLabel>
+			</State>
+
+
+
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -3326,12 +3413,30 @@ save===</Label>
 		</ConfigUI>
 
 		<States>
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
-
+	
 		</States>
 	</Device>
 
@@ -3487,12 +3592,72 @@ save ===
 		</ConfigUI>
 
 		<States>
+
+
+			<State id="txPower">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>txPower</TriggerLabel>
+				<ControlPageLabel>txPower</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+			<State id="AmbientTemperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureChange10Minutes">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureChange10Minutes</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureChange10Minutes</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureChange1Hour</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureChange6Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureChange6Hours</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureChange6Hours</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
+			</State>
+
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
-
+	
 		</States>
 	</Device>
 
@@ -3640,6 +3805,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 		</ConfigUI>
 
 		<States>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+
+
 
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -3976,6 +4151,13 @@ You can find the MAC number using the plugin tool detect new beacons look for
 		</ConfigUI>
 
 		<States>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -4147,11 +4329,23 @@ This Sensor does not display F only C ===</Label>
 		</ConfigUI>
 
 		<States>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+
+
+
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
 				<ControlPageLabel>counter</ControlPageLabel>
 			</State>
+
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -4300,6 +4494,9 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 		</ConfigUI>
 
 		<States>
+
+
+
 
 			<State id="connected">
 				<ValueType>String</ValueType>
@@ -4456,6 +4653,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 
 		<States>
 
+
+
 			<State id="Moisture">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Moisture</TriggerLabel>
@@ -4523,6 +4722,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 				<TriggerLabel>connected</TriggerLabel>
 				<ControlPageLabel>connected</ControlPageLabel>
 			</State>
+
 
 		</States>
 	</Device>
@@ -4673,11 +4873,21 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 		<States>
 
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+
+
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
 				<ControlPageLabel>counter</ControlPageLabel>
 			</State>
+
 
 		</States>
 	</Device>
@@ -4874,6 +5084,12 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 		<States>
 
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -4908,6 +5124,11 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 
 		</States>
@@ -5109,6 +5330,12 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 		<States>
 
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -5140,10 +5367,19 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
 			</State>
 
+
+
+
+
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 
 		</States>
@@ -5307,6 +5543,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 
 		<States>
 
+
+
 			<State id="connected">
 				<ValueType>String</ValueType>
 				<TriggerLabel>connected</TriggerLabel>
@@ -5318,6 +5556,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
+
 		</States>
 	</Device>
 
@@ -5509,6 +5748,12 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 		<States>
 
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
 
 			<State id="button">
 				<ValueType>string</ValueType>
@@ -5587,6 +5832,11 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 
 		</States>
@@ -5733,6 +5983,16 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 		</ConfigUI>
 
 		<States>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+
+
 			<State id="illuminance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -5758,6 +6018,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
 				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
 			</State>
+
 
 		</States>
 	</Device>
@@ -5945,10 +6206,17 @@ set trigger and sensitivity parameters ===
 		</ConfigUI>
 
 		<States>
+
 			<State id="button">
 				<ValueType>String</ValueType>
 				<TriggerLabel>button</TriggerLabel>
 				<ControlPageLabel>button</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 
 			<State id="accelerationVectorDelta">
@@ -5980,6 +6248,11 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6173,6 +6446,11 @@ set trigger and sensitivity parameters ===
 		</ConfigUI>
 
 		<States>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
 
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
@@ -6203,6 +6481,11 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6338,6 +6621,11 @@ These sensor types are an onOff sensor. They have either a button, a mag sensor,
 				<ValueType>String</ValueType>
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6538,6 +6826,15 @@ set trigger and sensitivity parameters ===
 		</ConfigUI>
 
 		<States>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
+
+
+
+
 
 			<State id="counter">
 				<ValueType>Number</ValueType>
@@ -6592,6 +6889,11 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>String</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6732,6 +7034,11 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 				<TriggerLabel>counter</TriggerLabel>
 				<ControlPageLabel>counter</ControlPageLabel>
 			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
 			<State id="lastAliveMessage">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastAliveMessage</TriggerLabel>
@@ -6861,6 +7168,11 @@ The device will only send a message "ON" when button is pressed: state "onOff" w
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
 				<ControlPageLabel>counter</ControlPageLabel>
+			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 			<State id="lastAliveMessage">
 				<ValueType>String</ValueType>
@@ -7008,6 +7320,11 @@ The device will only send messages when a button is pressed. The state "currentO
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>
@@ -7136,10 +7453,17 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ControlPageLabel>sensorType</ControlPageLabel>
 			</State>
 
+
 			<State id="lowVoltage">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 
 		</States>
@@ -7275,6 +7599,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 		<States>
 
+
+
 			<State id="model">
 				<ValueType>String</ValueType>
 				<TriggerLabel>model</TriggerLabel>
@@ -7284,6 +7610,12 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>String</ValueType>
 				<TriggerLabel>mode</TriggerLabel>
 				<ControlPageLabel>mode</ControlPageLabel>
+			</State>
+
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 
 		</States>
@@ -7399,6 +7731,11 @@ Find MAC number through find new beacons or using the iphone app.
 				<ControlPageLabel>lightCounter</ControlPageLabel>
 			</State>
 
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>
@@ -7538,6 +7875,11 @@ Find MAC number through find new beacons or using the iphone app.
 				<ControlPageLabel>pressCounter</ControlPageLabel>
 			</State>
 
+			<State id="rssi">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>rssi</TriggerLabel>
+				<ControlPageLabel>rssi</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>
@@ -7606,21 +7948,12 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 	<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
+
 
 			<State id="serialNumber">
 				<ValueType>String</ValueType>
 				<TriggerLabel>serialNumber</TriggerLabel>
 				<ControlPageLabel>serialNumber</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 	</States>
 	</Device>
@@ -7654,7 +7987,7 @@ Find MAC number through find new beacons or using the iphone app.
 			</Field>
 
 
-			<Field id="dhtType"   type="menu" defaultValue="17" >
+			<Field id="dhtType"   type="menu" defaultValue="22" >
 			<Label>type = 22 or 11:</Label>
 			<List>
 				<Option value="22"  >22</Option>
@@ -7712,23 +8045,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 	<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 	</States>
 	</Device>
 
@@ -7818,16 +8134,7 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 	<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 	</States>
 	</Device>
@@ -7917,16 +8224,7 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 	</Device>
@@ -8022,17 +8320,8 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -8124,17 +8413,48 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+
+
+			<State id="Pressure">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
 			</State>
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
 		</States>
@@ -8227,17 +8547,48 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+
+
+			<State id="Pressure">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
 			</State>
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
 		</States>
@@ -8329,17 +8680,48 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 	<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+
+
+			<State id="Pressure">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
 			</State>
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
 	</States>
@@ -8432,17 +8814,48 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
+
+
+
+			<State id="Pressure">
 				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
 			</State>
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
 
@@ -8524,22 +8937,53 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
+
+
+
+			<State id="Pressure">
 				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
+			</State>
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
 
 
 
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 
 
 		</States>
@@ -8632,18 +9076,9 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -8735,18 +9170,9 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -8847,19 +9273,50 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+
+
+			<State id="Pressure">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
+			</State>
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
 			</State>
 
-
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 
 		</States>
 	</Device>
@@ -9073,13 +9530,49 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+
+
+			<State id="Pressure">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Pressure</TriggerLabel>
+				<ControlPageLabel>Pressure</ControlPageLabel>
 			</State>
-
-
+			<State id="PressureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxToday</TriggerLabel>
+				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
+			</State>
+			<State id="PressureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinToday</TriggerLabel>
+				<ControlPageLabel>PressureMinToday</ControlPageLabel>
+			</State>
+			<State id="PressureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureMinYesterday</TriggerLabel>
+				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
+			</State>
+			<State id="PressureChange4Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange4Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
+			</State>
+			<State id="PressureChange1Hour">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange1Hour</TriggerLabel>
+				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
+			</State>
+			<State id="PressureChange12Hours">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>PressureChange12Hours</TriggerLabel>
+				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
+			</State>
 
 
 
@@ -9144,11 +9637,6 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>Float</ValueType>
 				<TriggerLabel>GasBaseline</TriggerLabel>
 				<ControlPageLabel>GasBaseline</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -9240,18 +9728,9 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 	</Device>
@@ -9361,15 +9840,31 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+			<State id="AmbientTemperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
 			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
 			</State>
 
 		</States>
@@ -9481,15 +9976,31 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+			<State id="AmbientTemperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
 			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
 			</State>
 
 		</States>
@@ -9624,16 +10135,7 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 	</Device>
@@ -9781,11 +10283,6 @@ After some days of running in clean air, proposed setup is:
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="pm10_standard">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>pm10_standard</TriggerLabel>
@@ -9850,11 +10347,6 @@ After some days of running in clean air, proposed setup is:
 				<ValueType>String</ValueType>
 				<TriggerLabel>airQuality</TriggerLabel>
 				<ControlPageLabel>airQuality</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -9948,57 +10440,7 @@ After some days of running in clean air, proposed setup is:
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
-			<State id="VOC">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOC</TriggerLabel>
-				<ControlPageLabel>VOC</ControlPageLabel>
-			</State>
-			<State id="VOCMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMaxToday</TriggerLabel>
-				<ControlPageLabel>VOCMaxToday</ControlPageLabel>
-			</State>
-			<State id="VOCMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMinToday</TriggerLabel>
-				<ControlPageLabel>VOCMinToday</ControlPageLabel>
-			</State>
-			<State id="VOCMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMaxYesterday</TriggerLabel>
-				<ControlPageLabel>VOCMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="VOCMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMinYesterday</TriggerLabel>
-				<ControlPageLabel>VOCMinYesterday</ControlPageLabel>
-			</State>
-			<State id="VOCChange5Minutes">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCChange5Minutes</TriggerLabel>
-				<ControlPageLabel>VOCChange5Minutes</ControlPageLabel>
-			</State>
-			<State id="VOCChange20Minutes">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCChange20Minutes</TriggerLabel>
-				<ControlPageLabel>VOCChange20Minutes</ControlPageLabel>
-			</State>
-			<State id="VOCChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCChange1Hour</TriggerLabel>
-				<ControlPageLabel>VOCChange1Hour</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -10016,9 +10458,6 @@ After some days of running in clean air, proposed setup is:
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
-
-
-			<Field id="statesFromProps" type="textfield" defaultValue="Temperature,Humidity,CO2" hidden="False"></Field>
 
 
 			<Field id="infoLabel" type="label">
@@ -10133,11 +10572,6 @@ After some days of running in clean air, proposed setup is:
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="deviceVersion">
 				<ValueType>String</ValueType>
 				<TriggerLabel>deviceVersion</TriggerLabel>
@@ -10160,7 +10594,7 @@ After some days of running in clean air, proposed setup is:
 	</Device>
 
 
-	<Device type="sensor" id="i2csgp40">     	<Name>INPUT-VOC-i2csgp40</Name>
+	<Device type="sensor" id="sgp40">     	<Name>INPUT-VOC-i2csgp40</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
@@ -10253,11 +10687,6 @@ After some days of running in clean air, proposed setup is:
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 			<State id="raw">
 				<ValueType>Number</ValueType>
@@ -10265,59 +10694,7 @@ After some days of running in clean air, proposed setup is:
 				<ControlPageLabel>raw</ControlPageLabel>
 			</State>
 
-			<State id="VOC">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOC</TriggerLabel>
-				<ControlPageLabel>VOC</ControlPageLabel>
-			</State>
 
-			<State id="VOCMaxToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCMaxToday</TriggerLabel>
-				<ControlPageLabel>VOCMaxToday</ControlPageLabel>
-			</State>
-
-			<State id="VOCMinToday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCMinToday</TriggerLabel>
-				<ControlPageLabel>VOCMinToday</ControlPageLabel>
-			</State>
-
-			<State id="VOCMaxYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCMaxYesterday</TriggerLabel>
-				<ControlPageLabel>VOCMaxYesterday</ControlPageLabel>
-			</State>
-
-			<State id="VOCMinYesterday">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCMinYesterday</TriggerLabel>
-				<ControlPageLabel>VOCMinYesterday</ControlPageLabel>
-			</State>
-
-			<State id="VOCChange5Minutes">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCChange5Minutes</TriggerLabel>
-				<ControlPageLabel>VOCChange5Minutes</ControlPageLabel>
-			</State>
-
-			<State id="VOCChange20Minutes">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCChange20Minutes</TriggerLabel>
-				<ControlPageLabel>VOCChange20Minutes</ControlPageLabel>
-			</State>
-
-			<State id="VOCChange1Hour">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>VOCChange1Hour</TriggerLabel>
-				<ControlPageLabel>VOCChange1Hour</ControlPageLabel>
-			</State>
-
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -10469,27 +10846,7 @@ It measures CO2 and temp using infrared light absorption
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
-			<State id="CO2">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>CO2</TriggerLabel>
-				<ControlPageLabel>CO2</ControlPageLabel>
-			</State>
-			<State id="raw">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>raw</TriggerLabel>
-				<ControlPageLabel>raw</ControlPageLabel>
-			</State>
-			<State id="calibration">
-				<ValueType>String</ValueType>
-				<TriggerLabel>calibration</TriggerLabel>
-				<ControlPageLabel>calibration</ControlPageLabel>
-			</State>
 			<State id="CO2calibration">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>CO2calibration</TriggerLabel>
@@ -10499,11 +10856,6 @@ It measures CO2 and temp using infrared light absorption
 				<ValueType>Float</ValueType>
 				<TriggerLabel>CO2offset</TriggerLabel>
 				<ControlPageLabel>CO2offset</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -10629,61 +10981,6 @@ It measures CO2 VOC
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-
-
-
-
-
-			<State id="VOC">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOC</TriggerLabel>
-				<ControlPageLabel>VOC</ControlPageLabel>
-			</State>
-			<State id="VOCMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMaxToday</TriggerLabel>
-				<ControlPageLabel>VOCMaxToday</ControlPageLabel>
-			</State>
-			<State id="VOCMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMinToday</TriggerLabel>
-				<ControlPageLabel>VOCMinToday</ControlPageLabel>
-			</State>
-			<State id="VOCMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMaxYesterday</TriggerLabel>
-				<ControlPageLabel>VOCMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="VOCMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCMinYesterday</TriggerLabel>
-				<ControlPageLabel>VOCMinYesterday</ControlPageLabel>
-			</State>
-			<State id="VOCChange5Minutes">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCChange5Minutes</TriggerLabel>
-				<ControlPageLabel>VOCChange5Minutes</ControlPageLabel>
-			</State>
-			<State id="VOCChange20Minutes">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCChange20Minutes</TriggerLabel>
-				<ControlPageLabel>VOCChange20Minutes</ControlPageLabel>
-			</State>
-			<State id="VOCChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>VOCChange1Hour</TriggerLabel>
-				<ControlPageLabel>VOCChange1Hour</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -10787,11 +11084,6 @@ It measures CO2 VOC
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="clear">
 				<ValueType>String</ValueType>
 				<TriggerLabel>clear</TriggerLabel>
@@ -10841,11 +11133,6 @@ It measures CO2 VOC
 				<ValueType>String</ValueType>
 				<TriggerLabel>kelvin</TriggerLabel>
 				<ControlPageLabel>kelvin</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -10921,11 +11208,6 @@ It measures CO2 VOC
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="illuminance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -10950,11 +11232,6 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
 				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11140,11 +11417,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="red">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>red</TriggerLabel>
@@ -11184,11 +11456,6 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>LEDcurrent</TriggerLabel>
 				<ControlPageLabel>LEDcurrent</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -11243,11 +11510,6 @@ It measures CO2 VOC
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="UV">
 				<ValueType>String</ValueType>
 				<TriggerLabel>UV</TriggerLabel>
@@ -11262,11 +11524,6 @@ It measures CO2 VOC
 				<ValueType>String</ValueType>
 				<TriggerLabel>visible</TriggerLabel>
 				<ControlPageLabel>visible</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11367,11 +11624,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="illuminance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -11396,11 +11648,6 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
 				<ControlPageLabel>visibleMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11499,11 +11746,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="white">
 				<ValueType>String</ValueType>
 				<TriggerLabel>white</TriggerLabel>
@@ -11553,11 +11795,6 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>ambientMinYesterday</TriggerLabel>
 				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11656,11 +11893,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="white">
 				<ValueType>String</ValueType>
 				<TriggerLabel>white</TriggerLabel>
@@ -11710,11 +11942,6 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>ambientMinYesterday</TriggerLabel>
 				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11814,11 +12041,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="white">
 				<ValueType>String</ValueType>
 				<TriggerLabel>white</TriggerLabel>
@@ -11858,11 +12080,6 @@ It measures CO2 VOC
 				<ValueType>String</ValueType>
 				<TriggerLabel>blue</TriggerLabel>
 				<ControlPageLabel>blue</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11975,20 +12192,10 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="UV">
 				<ValueType>String</ValueType>
 				<TriggerLabel>UV</TriggerLabel>
 				<ControlPageLabel>UV</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -12087,11 +12294,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="UVA">
 				<ValueType>String</ValueType>
 				<TriggerLabel>UV</TriggerLabel>
@@ -12106,11 +12308,6 @@ It measures CO2 VOC
 				<ValueType>String</ValueType>
 				<TriggerLabel>UV</TriggerLabel>
 				<ControlPageLabel>UV</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -12213,11 +12410,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="illuminance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -12292,11 +12484,6 @@ It measures CO2 VOC
 				<ValueType>Float</ValueType>
 				<TriggerLabel>ambientMinYesterday</TriggerLabel>
 				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -12440,16 +12627,32 @@ It measures CO2 VOC
 
 		</ConfigUI>
 	<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
+
+			<State id="AmbientTemperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
 			</State>
 
 	</States>
@@ -12654,10 +12857,31 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
+
+			<State id="AmbientTemperature">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperature</TriggerLabel>
+				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinToday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMaxYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="AmbientTemperatureMinYesterday">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
+				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
 			</State>
 			<State id="Movement">
 				<ValueType>Float</ValueType>
@@ -12701,11 +12925,6 @@ you can setup
 			</State>
 
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -13189,11 +13408,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="Leaving_count">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Leaving_count</TriggerLabel>
@@ -13255,11 +13469,6 @@ you can setup
 			</State>
 
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -13446,11 +13655,7 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
+
 			<State id="Movement">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Movement</TriggerLabel>
@@ -13493,11 +13698,6 @@ you can setup
 			</State>
 
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -13604,11 +13804,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="GYRx">
 				<ValueType>String</ValueType>
 				<TriggerLabel>GYRx</TriggerLabel>
@@ -13630,11 +13825,7 @@ you can setup
 				<ControlPageLabel>XYZSumSQ</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -13773,11 +13964,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="heading">
 				<ValueType>String</ValueType>
 				<TriggerLabel>heading</TriggerLabel>
@@ -13814,11 +14000,7 @@ you can setup
 				<ControlPageLabel>XYZSumSQ</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -13961,11 +14143,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="heading">
 				<ValueType>String</ValueType>
 				<TriggerLabel>heading</TriggerLabel>
@@ -14000,11 +14177,6 @@ you can setup
 				<ValueType>String</ValueType>
 				<TriggerLabel>XYZSumSQ</TriggerLabel>
 				<ControlPageLabel>XYZSumSQ</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -14129,11 +14301,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="heading">
 				<ValueType>String</ValueType>
 				<TriggerLabel>heading</TriggerLabel>
@@ -14228,11 +14395,6 @@ you can setup
 				<ValueType>String</ValueType>
 				<TriggerLabel>calibration</TriggerLabel>
 				<ControlPageLabel>calibration</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -14349,11 +14511,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="heading">
 				<ValueType>String</ValueType>
 				<TriggerLabel>heading</TriggerLabel>
@@ -14415,11 +14572,7 @@ you can setup
 				<ControlPageLabel>GYRz</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -14533,11 +14686,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="ACCx">
 				<ValueType>String</ValueType>
 				<TriggerLabel>ACCx</TriggerLabel>
@@ -14569,11 +14717,7 @@ you can setup
 				<ControlPageLabel>GYRz</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
+
 
 		</States>
 
@@ -14720,11 +14864,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="ACCx">
 				<ValueType>String</ValueType>
 				<TriggerLabel>ACCx</TriggerLabel>
@@ -14774,11 +14913,6 @@ you can setup
 				<ValueType>String</ValueType>
 				<TriggerLabel>XYZSumSQ</TriggerLabel>
 				<ControlPageLabel>XYZSumSQ</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -14894,11 +15028,6 @@ For the MQ gas sensors you need to understand the required heating voltage.
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="adc">
 				<ValueType>String</ValueType>
 				<TriggerLabel>adc</TriggerLabel>
@@ -14908,11 +15037,6 @@ For the MQ gas sensors you need to understand the required heating voltage.
 				<ValueType>String</ValueType>
 				<TriggerLabel>value</TriggerLabel>
 				<ControlPageLabel>value</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -15055,11 +15179,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="Current">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Current</TriggerLabel>
@@ -15079,11 +15198,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Power</TriggerLabel>
 				<ControlPageLabel>Power</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -15238,11 +15352,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="Current1">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Current1</TriggerLabel>
@@ -15287,11 +15396,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 				<ValueType>Float</ValueType>
 				<TriggerLabel>ShuntVoltage3</TriggerLabel>
 				<ControlPageLabel>ShuntVoltage3</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -15389,11 +15493,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -15458,11 +15557,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 
@@ -15563,11 +15657,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -15597,11 +15686,6 @@ the current .. values are measured every 0.5 seconds, update is send to indigo d
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -15840,11 +15924,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUT</TriggerLabel>
@@ -15879,11 +15958,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -16122,11 +16196,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUT</TriggerLabel>
@@ -16161,11 +16230,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -16410,11 +16474,6 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="rainText">
 				<ValueType>String</ValueType>
 				<TriggerLabel>rainLevel</TriggerLabel>
@@ -16539,11 +16598,6 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 				<ValueType>String</ValueType>
 				<TriggerLabel>bucketSize</TriggerLabel>
 				<ControlPageLabel>bucketSize</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 			<State id="resetDate">
 				<ValueType>String</ValueType>
@@ -16688,11 +16742,6 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="illuminance">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
@@ -16728,15 +16777,10 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 				<TriggerLabel>MoistureMinYesterday</TriggerLabel>
 				<ControlPageLabel>MoistureMinYesterday</ControlPageLabel>
 			</State>
-				<State id="illuminance">
+			<State id="illuminance">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>illuminance</TriggerLabel>
 				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -16949,11 +16993,6 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="countTimePrevious">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countTimePrevious</TriggerLabel>
@@ -17341,11 +17380,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="lastBurstTime">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastBurstTime</TriggerLabel>
@@ -17580,11 +17614,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT</TriggerLabel>
@@ -17731,11 +17760,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -17903,11 +17927,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_00">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_00</TriggerLabel>
@@ -18114,11 +18133,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_00">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_00</TriggerLabel>
@@ -18340,11 +18354,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -18467,11 +18476,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -18610,11 +18614,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -18785,11 +18784,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_00">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_00</TriggerLabel>
@@ -19034,11 +19028,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT</TriggerLabel>
@@ -19168,11 +19157,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT</TriggerLabel>
@@ -19343,11 +19327,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -19362,11 +19341,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
 				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -19544,11 +19518,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -19563,11 +19532,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
 				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -19762,11 +19726,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -19806,11 +19765,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
 				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -19987,11 +19941,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -20031,11 +19980,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
 				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
 			</State>
 
 		</States>
@@ -20191,11 +20135,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="proximity">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>proximity</TriggerLabel>
@@ -20302,11 +20241,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -20426,11 +20360,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="lightning">
 				<ValueType>string</ValueType>
 				<TriggerLabel>lightning</TriggerLabel>
@@ -20457,11 +20386,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ControlPageLabel>lastLightning</ControlPageLabel>
 			</State>
 
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -20538,11 +20462,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
            								<Label> display = </Label>  </Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -20657,11 +20576,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
            								<Label> display = </Label>  </Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="INPUT_0">
 				<ValueType>String</ValueType>
 				<TriggerLabel>INPUT_0</TriggerLabel>
@@ -20799,16 +20713,6 @@ full screen apps probably do not work eg "top" does not work:</Label>
 			</Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
-			<State id="lastSensorChange">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastSensorChange</TriggerLabel>
-				<ControlPageLabel>lastSensorChange</ControlPageLabel>
-			</State>
 
 			</States>
 	</Device>
@@ -20905,11 +20809,6 @@ To force an update of the mode and switch time  use
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="actualStatus">
 				<ValueType>String</ValueType>
 				<TriggerLabel>actualStatus</TriggerLabel>
@@ -21083,11 +20982,6 @@ This device will get its battery level from its brother device,
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="actualStatus">
 				<ValueType>String</ValueType>
 				<TriggerLabel>actualStatus</TriggerLabel>
@@ -21162,11 +21056,6 @@ This device will get its battery level from its brother device,
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="actualStatus">
 				<ValueType>String</ValueType>
 				<TriggerLabel>actualStatus</TriggerLabel>
@@ -21245,11 +21134,6 @@ This device will get its battery level from its brother device,
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="actualStatus">
 				<ValueType>String</ValueType>
 				<TriggerLabel>actualStatus</TriggerLabel>
@@ -21368,11 +21252,6 @@ This device will get its battery level from its brother device,
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 			<State id="frequency">
 				<ValueType>Float</ValueType>
@@ -21630,11 +21509,6 @@ This device will get its battery level from its brother device,
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>
@@ -21685,11 +21559,6 @@ This device will get its battery level from its brother device,
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>
@@ -21731,11 +21600,6 @@ This device will get its battery level from its brother device,
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
  		</States>
 	</Device>
 
@@ -21966,11 +21830,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>
@@ -22291,11 +22150,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 
 			<State id="OUTPUT">
 				<ValueType>String</ValueType>
@@ -22815,11 +22669,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 		</States>
 
 	</Device>
@@ -22854,11 +22703,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 		</States>
 
 	</Device>
@@ -22926,11 +22770,6 @@ You can use up to 3 GPIO input pins to control the range of the motor
 		</ConfigUI>
 
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 		</States>
 
 	</Device>
@@ -23011,11 +22850,6 @@ States:
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="engine">
 				<ValueType>String</ValueType>
 				<TriggerLabel>engine</TriggerLabel>

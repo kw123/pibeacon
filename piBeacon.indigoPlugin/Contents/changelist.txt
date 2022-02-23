@@ -1,6 +1,16 @@
 Added features / changes in v7.138.551@ 2022-02-22
 ===================================================
    
+1. made BLEconnect a threaded program with priority for switchbot. now response is much faster ~ 1-3 secs 
+2. most common dev states are now set in plugin and not in devices.xml
+   taht will enable in tyhe future dynamic add / remove of states ie pi_16_Signal will be gone if you don't have pi_15 
+   in addition all temperature humidity, Co2 formaldehyde, VOC etc now have  common statistic states eg TemperatureChange10Minutes, TemperatureAveToday  max / min etc 
+     makes it easier to maintain and keep consitent, only one place needed to change for all device types  
+
+
+Added features / changes in v7.138.551@ 2022-02-22
+===================================================
+   
 1. made BLEconnect a threaded program with priority for switchbot. now reposne is much faster ~ 1-3 secs 
 
 

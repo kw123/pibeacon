@@ -172,115 +172,6 @@ _sqlLoggerIgnoreStates = {u"isBeaconDevice":			u"Pi_00_Time,Pi_01_Time,Pi_02_Tim
 _debugAreas = [u"Logic",u"DevMgmt",u"BeaconData",u"SensorData",u"OutputDevice",u"UpdateRPI",u"OfflineRPI",u"Fing",u"BLE",u"CAR",u"BC",u"all",u"Socket",u"StartSocket",u"Special",u"PlotPositions",u"SocketRPI",u"BatteryLevel",u"SQLlogger",u"SQLSuppresslog",u"Beep"]
 
 
-# for dev states:
-_rpiAndBeaconStates = []
-for ii in range(_GlobalConst_numberOfiBeaconRPI):
-	kk = "{:02d}".format(ii)
-	_rpiAndBeaconStates.append(["Pi_"+kk+"_Signal","Integer"])	
-	_rpiAndBeaconStates.append(["Pi_"+kk+"_Distance","Real"])	
-	_rpiAndBeaconStates.append(["Pi_"+kk+"_Time","String"])	
-_rpiAndBeaconStates.append(["PosX","Real"])	
-_rpiAndBeaconStates.append(["PosY","Real"])	
-_rpiAndBeaconStates.append(["PosZ","Real"])	
-_rpiAndBeaconStates.append(["closestRPI","Integer"])	
-_rpiAndBeaconStates.append(["closestRPIText","String"])	
-_rpiAndBeaconStates.append(["closestRPILast","Integer"])	
-_rpiAndBeaconStates.append(["closestRPITextLast","String"])	
-_rpiAndBeaconStates.append(["TxPowerReceived","Integer"])	
-_rpiAndBeaconStates.append(["TxPowerSet","Integer"])	
-_rpiAndBeaconStates.append(["iBeacon","String"])	
-_rpiAndBeaconStates.append(["updateReason","String"])	
-_rpiAndBeaconStates.append(["typeOfBeacon","String"])	
-_rpiAndBeaconStates.append(["vendorName","String"])	
-_rpiAndBeaconStates.append(["mfg_info","String"])	
-
-
-_rpiAndSensorAndBeaconStates = []
-_rpiAndSensorAndBeaconStates.append(["created","String"])	
-_rpiAndSensorAndBeaconStates.append(["groupMember","String"])	
-_rpiAndSensorAndBeaconStates.append(["note","String"])	
-_rpiAndSensorAndBeaconStates.append(["displayStatus","String"])	
-_rpiAndSensorAndBeaconStates.append(["status","String"])	
-
-
-
-_rpiAndSensorStates = []
-_rpiAndSensorStates.append(["RPI_throttled","String"])	
-_rpiAndSensorStates.append(["sensors_active","String"])	
-_rpiAndSensorStates.append(["op_sys","String"])	
-_rpiAndSensorStates.append(["sensors_active","String"])	
-_rpiAndSensorStates.append(["last_boot","String"])	
-_rpiAndSensorStates.append(["last_masterStart","String"])	
-_rpiAndSensorStates.append(["rpi_type","String"])	
-_rpiAndSensorStates.append(["fan_OnTime_Percent","String"])	
-_rpiAndSensorStates.append(["i2c_active","String"])	
-_rpiAndSensorStates.append(["fan_OnTime_Percent","String"])	
-_rpiAndSensorStates.append(["last_MessageFromRpi","String"])	
-_rpiAndSensorStates.append(["online","String"])	
-
-
-_rpiStates = []
-_rpiStates.append(["RPI_throttled","String"])	
-_rpiStates.append(["sensors_active","String"])	
-_rpiStates.append(["closestiBeacon","String"])	
-_rpiStates.append(["closestiBeaconLast","String"])	
-_rpiStates.append(["iBeacon","String"])	
-_rpiStates.append(["hciInfo_beacons","String"])	
-_rpiStates.append(["hciInfo_BLEconnect","String"])	
-
-
-_beaconStates = []
-_beaconStates.append(["lastStatusChange","String"])	
-_beaconStates.append(["lastUp","String"])	
-_beaconStates.append(["isBeepable","String"])	
-_beaconStates.append(["vendorName","String"])	
-_beaconStates.append(["batteryLevelLastUpdate","String"])	
-
-
-_beaconSensorStates= []
-_beaconSensorStates.append(["txPower","Integer"])	
-_beaconSensorStates.append(["rssi","Integer"])	
-_beaconSensorStates.append(["trigger","String"])	
-_beaconSensorStates.append(["lastSensorChange","String"])	
-_beaconSensorStates.append(["status","String"])	
-_beaconSensorStates.append(["lastUpdateFromRPI","String"])	
-
-
-
-
-_realSensorStates 		= [["","Real"], 	["MinToday","Real"],	["MaxYesterday","Real"],	["MinYesterday","Real"],	["MaxToday","Real"],	["AveToday","Real"], 	["MeasurementsToday","number"], 	["Change5Minutes","Real"], 		["Change10Minutes","Real"], 	["Change20Minutes","Real"], 	["Change1Hours","Real"],  	["Change6Hours","Real"],	["Change12Hours","Real"] ]
-_integerSensorStates	= [["","Integer"],	["MinToday","Integer"],	["MaxYesterday","Integer"],	["MinYesterday","Integer"],	["MaxToday","Integer"],	["AveToday","Integer"],	["MeasurementsToday","Integer"], 	["Change5Minutes","Integer"], 	["Change10Minutes","Integer"], 	["Change20Minutes","Integer"], 	["Change1Hours","Integer"],	["Change6Hours","Integer"],	["Change12Hours","Integer"] ]
-
-_addingstates = {}
-_addingstates["AmbientTemperature"]		= {"addTag":True, "States":_realSensorStates}
-_addingstates["Temperature"]			= {"addTag":True, "States":_realSensorStates}
-_addingstates["CO2"] 					= {"addTag":True, "States":_integerSensorStates}
-_addingstates["Humidity"]				= {"addTag":True, "States":_integerSensorStates}
-_addingstates["Pressure"]				= {"addTag":True, "States":_realSensorStates}
-_addingstates["VOC"]					= {"addTag":True, "States":_realSensorStates}
-_addingstates["Formaldehyde"]			= {"addTag":True, "States":_realSensorStates}
-
-_addingstates["rpiAndSensorAndBeacon"]	= {"addTag":False, "States":_rpiAndSensorAndBeaconStates}
-_addingstates["rpiAndBeacon"]			= {"addTag":False, "States":_rpiAndBeaconStates}
-_addingstates["rpiAndSensor"]			= {"addTag":False, "States":_rpiAndSensorStates}
-_addingstates["beacon"]					= {"addTag":False, "States":_beaconStates}
-_addingstates["rpi"]					= {"addTag":False, "States":_rpiStates}
-
-
-_stateList = {}
-_stateList["Temperature"]			= ["BLERuuviTag", "BLEiBS01T", "BLEiBS03T", "BLEminewS1TH", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiTempHumRound", "BLEXiaomiMiTempHumSquare", "BLEXiaomiMiVegTrug", "BLEgoveeTempHum", "BLEminewS1Plus", "BLEinkBirdPool01B", "BLEaprilTHL", "BLESatech", "BLEiSensor-TempHum", "BLEswitchbotTempHum", "Wire18B20", "i2cTMP102", "i2cMCP9808", "i2cLM35A", "i2cLM35A", "i2cT5403", "i2cMS5803", "i2cBMPxx", "i2cBMP280", "bmp388", "i2cSHT21", "i2cAM2320", "i2cBMExx", "bme680", "si7021", "tmp006", "tmp007", "max31865", "sensirionscd30", "rPI", "rPI-Sensor"]
-_stateList["AmbientTemperature"]	= ["mlx90614", "tmp006", "tmp007", "BLEiBS03TP", "amg88xx"]
-_stateList["Humidity"]				= ["BLERuuviTag", "BLEminewS1TH", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiTempHumRound", "BLEXiaomiMiTempHumSquare", "BLEgoveeTempHum", "BLEminewS1Plus", "BLEaprilTHL", "BLESatech", "BLEiSensor-TempHum", "BLEswitchbotTempHum", "i2cSHT21", "i2cAM2320", "i2cBMExx", "bme680", "si7021",  "sensirionscd30"]
-_stateList["CO2"]					= ["sensirionscd30", "sgp30", "mhzCO2", "sgp40", "ccs811" ]
-_stateList["Pressure"]				= ["BLERuuviTag", "i2cT5403", "i2cMS5803", "i2cBMPxx", "i2cBMP280", "bmp388", "i2cBMExx", "bme680" ]
-_stateList["VOC"]					= ["sgp30", "sgp30", "ccs811", "i2cBMPxx", "i2cBMP280", "bmp388", "i2cBMExx", "bme680", "ccs811", "ccs811" ]
-_stateList["Formaldehyde"]			= ["BLEXiaomiMiformaldehyde" ]
-_stateList["rpiAndBeacon"]			= ["beacon", "rPI"]
-_stateList["rpiAndSensorAndBeacon"]	= ["beacon", "rPI", "rPI-Sensor"]
-_stateList["rpiAndSensor"]			= ["rPI", "rPI-Sensor"]
-_stateList["rpi"]					= ["rPI"]
-_stateList["beacon"]				= ["beacon"]
-_stateList["beaconSensorStates"]	= ["BLERuuviTag", "BLEiBS03T", "BLEmyBLUEt", "BLEiBS03TP", "BLEiBS01T", "BLEblueradio", "BLEminewS1TH", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiformaldehyde", "BLEXiaomiMiTempHumRound", "BLEXiaomiMiTempHumSquare", "BLEgoveeTempHum", "BLEminewAcc", "BLEminewS1Plus", "BLEinkBirdPool01B", "BLEaprilAccel", "BLEaprilTHL", "BLEiBS03RG", "BLEiBS01RG", "BLEiBS01", ""]
 
 
 
@@ -558,6 +449,165 @@ _GlobalConst_groupList = [u"Family", u"Guests", u"Other1", u"Other2", u"Other3"]
 
 _defaultDateStampFormat = u"%Y-%m-%d %H:%M:%S"
 
+
+################################################################################
+# for dev states:
+
+_devtypesToStates = {}
+_devtypesToStates["rpiAndBeacon"] = {}
+_devtypesToStates["rpiAndBeacon"]["iBeacon"] = "String"	
+_devtypesToStates["rpiAndBeacon"]["updateReason"] = "String"	
+_devtypesToStates["rpiAndBeacon"]["typeOfBeacon"] = "String"	
+_devtypesToStates["rpiAndBeacon"]["vendorName"] = "String"	
+_devtypesToStates["rpiAndBeacon"]["mfg_info"] = "String"	
+_devtypesToStates["rpiAndBeacon"]["mfg_info"] = "String"	
+
+_devtypesToStates["rpiAndBeaconAndBLEconnect"] = {}
+for ii in range(_GlobalConst_numberOfiBeaconRPI):
+	kk = "{:02d}".format(ii)
+	_devtypesToStates["rpiAndBeaconAndBLEconnect"]["Pi_"+kk+"_Signal"] = "Integer"	
+	_devtypesToStates["rpiAndBeaconAndBLEconnect"]["Pi_"+kk+"_Distance"] = "Real"	
+	_devtypesToStates["rpiAndBeaconAndBLEconnect"]["Pi_"+kk+"_Time"] = "String"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["PosX"] = "Real"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["PosY"] = "Real"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["PosZ"] = "Real"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPI"] = "Integer"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPIText"] = "String"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPILast"] = "Integer"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPITextLast"] = "String"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["TxPowerReceived"] = "Integer"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["TxPowerSet"] = "Integer"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["groupMember"] = "String"	
+
+
+_devtypesToStates["rpiAndSensorAndBeacon"] = {}
+_devtypesToStates["rpiAndSensorAndBeacon"]["groupMember"] = "String"	
+_devtypesToStates["rpiAndSensorAndBeacon"]["note"] = "String"	
+_devtypesToStates["rpiAndSensorAndBeacon"]["displayStatus"] = "String"	
+
+
+
+_devtypesToStates["rpiAndSensor"] = {}
+_devtypesToStates["rpiAndSensor"]["RPI_throttled"] = "String"	
+_devtypesToStates["rpiAndSensor"]["sensors_active"] = "String"	
+_devtypesToStates["rpiAndSensor"]["op_sys"] = "String"	
+_devtypesToStates["rpiAndSensor"]["last_boot"] = "String"	
+_devtypesToStates["rpiAndSensor"]["last_masterStart"] = "String"	
+_devtypesToStates["rpiAndSensor"]["rpi_type"] = "String"	
+_devtypesToStates["rpiAndSensor"]["fan_OnTime_Percent"] = "String"	
+_devtypesToStates["rpiAndSensor"]["i2c_active"] = "String"	
+_devtypesToStates["rpiAndSensor"]["last_MessageFromRpi"] = "String"	
+_devtypesToStates["rpiAndSensor"]["online"] = "String"	
+_devtypesToStates["rpiAndSensor"]["lastStatusChange"] = "String"	
+
+
+_devtypesToStates["rpi"] = {}
+_devtypesToStates["rpi"]["RPI_throttled"] = "String"	
+_devtypesToStates["rpi"]["sensors_active"] = "String"	
+_devtypesToStates["rpi"]["closestiBeacon"] = "String"	
+_devtypesToStates["rpi"]["closestiBeaconLast"] = "String"	
+_devtypesToStates["rpi"]["iBeacon"] = "String"	
+_devtypesToStates["rpi"]["hciInfo_beacons"] = "String"	
+_devtypesToStates["rpi"]["hciInfo_BLEconnect"] = "String"	
+
+
+_devtypesToStates["beacon"] = {}
+_devtypesToStates["beacon"]["lastStatusChange"] = "String"	
+_devtypesToStates["beacon"]["lastUp"] = "String"	
+_devtypesToStates["beacon"]["isBeepable"] = "String"	
+_devtypesToStates["beacon"]["vendorName"] = "String"	
+_devtypesToStates["beacon"]["batteryLevelLastUpdate"] = "String"	
+_devtypesToStates["beacon"]["iBeacon"] = "String"	
+
+
+_devtypesToStates["BLEconnect"] = {}
+_devtypesToStates["BLEconnect"]["note"] = "String"	
+_devtypesToStates["BLEconnect"]["lastUp"] = "String"	
+_devtypesToStates["BLEconnect"]["lastStatusChange"] = "String"	
+_devtypesToStates["BLEconnect"]["lastStatusChange"] = "String"	
+_devtypesToStates["BLEconnect"]["groupMember"] = "String"	
+
+
+_devtypesToStates["beaconSensor"] = {}
+_devtypesToStates["beaconSensor"]["txPower"] = "Integer"	
+_devtypesToStates["beaconSensor"]["rssi"] = "Integer"	
+_devtypesToStates["beaconSensor"]["trigger"] = "String"	
+
+
+_devtypesToStates["sensor"] = {}
+_devtypesToStates["sensor"]["lastSensorChange"] = "String"	
+
+_devtypesToStates["allDevHaveThese"] = {}
+_devtypesToStates["allDevHaveThese"]["lastUpdateFromRPI"] = "String"	
+_devtypesToStates["allDevHaveThese"]["status"] = "String"	
+_devtypesToStates["allDevHaveThese"]["created"] = "String"	
+
+_devtypesToStates["ouput"] = {}
+_devtypesToStates["ouput"]["created"] = "String"	
+
+
+_devtypesToStates["realSensor"] 	= {"":"Real", "MinToday":"Real", "MaxYesterday":"Real", "MinYesterday":"Real", "MaxToday":"Real", "AveToday":"Real", "MeasurementsToday":"number", "Change5Minutes":"Real", "Change10Minutes":"Real", "Change20Minutes":"Real", "Change1Hours":"Real", "Change6Hours":"Real", "Change12Hours":"Real"}
+_devtypesToStates["integerSensor"]	= {"":"Integer", "MinToday":"Integer", "MaxYesterday":"Integer", "MinYesterday":"Integer", "MaxToday":"Integer", "AveToday":"Integer", "MeasurementsToday":"Integer", "Change5Minutes":"Integer", "Change10Minutes":"Integer", "Change20Minutes":"Integer", "Change1Hours":"Integer", "Change6Hours":"Integer", "Change12Hours":"Integer"}
+
+_addingstates = {}
+_addingstates["AmbientTemperature"]		= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["Temperature"]			= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["CO2"] 					= {"addTag":True, "States":_devtypesToStates["integerSensor"]}
+_addingstates["Humidity"]				= {"addTag":True, "States":_devtypesToStates["integerSensor"]}
+_addingstates["Pressure"]				= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["VOC"]					= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["Formaldehyde"]			= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+
+_addingstates["rpiAndSensorAndBeacon"]	= {"addTag":False, "States":_devtypesToStates["rpiAndSensorAndBeacon"]}
+_addingstates["rpiAndBeaconAndBLEconnect"]	= {"addTag":False, "States":_devtypesToStates["rpiAndBeaconAndBLEconnect"]}
+_addingstates["rpiAndBeacon"]			= {"addTag":False, "States":_devtypesToStates["rpiAndBeacon"]}
+_addingstates["rpiAndSensor"]			= {"addTag":False, "States":_devtypesToStates["rpiAndSensor"]}
+_addingstates["beacon"]					= {"addTag":False, "States":_devtypesToStates["beacon"]}
+_addingstates["BLEconnect"]				= {"addTag":False, "States":_devtypesToStates["BLEconnect"]}
+_addingstates["rPI"]					= {"addTag":False, "States":_devtypesToStates["rpi"]}
+_addingstates["allDevHaveTheseStates"]	= {"addTag":False, "States":_devtypesToStates["allDevHaveThese"]}
+_addingstates["beaconSensorStates"]		= {"addTag":False, "States":_devtypesToStates["beaconSensor"]}
+_addingstates["sensorStates"]			= {"addTag":False, "States":_devtypesToStates["sensor"]}
+_addingstates["ouput"]					= {"addTag":False, "States":_devtypesToStates["ouput"]}
+
+
+_stateListToDevTypes = {}
+_stateListToDevTypes["Temperature"]				= {"DHT":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEminewS1TH":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEXiaomiMiVegTrug":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
+_stateListToDevTypes["Humidity"]				= {"DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1}
+_stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
+_stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
+_stateListToDevTypes["VOC"]						= {"sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1, "bme680":1}
+_stateListToDevTypes["Formaldehyde"]			= {"BLEXiaomiMiformaldehyde":1 }
+_stateListToDevTypes["rpiAndBeacon"]			= {"beacon":1, "rPI":1}
+_stateListToDevTypes["rpiAndSensorAndBeacon"]	= {"beacon":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["rpiAndSensor"]			= {"rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["rPI"]						= {"rPI":1}
+_stateListToDevTypes["beacon"]					= {"beacon":1}
+_stateListToDevTypes["BLEconnect"]				= {"BLEconnect":1}
+_stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
+_stateListToDevTypes["rpiAndBeaconAndBLEconnect"] = {"beacon":1, "rPI":1, "BLEconnect":1}
+
+_stateListToDevTypes["output"]					= {}
+for dd in _GlobalConst_allowedOUTPUT:
+	_stateListToDevTypes["output"][dd] = 1
+
+
+## all sensors 
+_stateListToDevTypes["sensorStates"]			= {}
+for xx in _GlobalConst_allowedSensors:
+	_stateListToDevTypes["sensorStates"][xx]			= 1
+for xx in _BLEsensorTypes:
+	_stateListToDevTypes["sensorStates"][xx]			= 1
+for xx in ["AmbientTemperature","Temperature","CO2","Pressure","VOC","Formaldehyde", "beaconSensorStates"]:
+	for dd in _stateListToDevTypes[xx]:
+		_stateListToDevTypes["sensorStates"][dd] = 1
+
+_stateListToDevTypes["allDevHaveTheseStates"]	= {"*":1}
+
+
+
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -703,6 +753,9 @@ class Plugin(indigo.PluginBase):
 			self.setSqlLoggerIgnoreStatesAndVariables()
 
  			self.indiLOG.log(5,u" ..   startup(self): setting variables, debug ..   finished ")
+
+			#self.indiLOG.log(20,u"_stateListToDevTypes:{}".format(json.dumps(_stateListToDevTypes, sort_keys=True, indent=2)))
+			#self.indiLOG.log(20,u"_devtypesToStates:{}".format(json.dumps(_devtypesToStates, sort_keys=True, indent=2)))
 
 		except Exception, e:
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
@@ -1241,7 +1294,7 @@ class Plugin(indigo.PluginBase):
 			self.beaconMessages				= {}
 
 			self.existingStateList			= {}
-
+			self.statesFromProps			= {}
 			self.newBeaconsLogTimer			= 0
 			self.selectBeaconsLogTimer		= {}
 
@@ -3725,19 +3778,23 @@ class Plugin(indigo.PluginBase):
 		try:
 			#self.indiLOG.log(10,u"deviceStartComm called for dev={}, stopcom ignore:{}".format(dev.name, self.deviceStopCommIgnore) )
 
-			if self.pluginState == u"init":
+			if True or self.pluginState == u"init":
 				########################  init ########################## 
+	
 				props = dev.pluginProps
-				props["statesFromProps"] = ""
-				for dd in _stateList:
-					for devType in _stateList[dd]:
-						if dev.deviceTypeId in devType:
-							props["statesFromProps"] += dd+","	
+				test = "allDevHaveTheseStates,"
+				for state in _stateListToDevTypes:
+						if dev.deviceTypeId in _stateListToDevTypes[state]:
+							test += state+","
 
-				props["statesFromProps"] = props["statesFromProps"] .strip(",")
-				if props["statesFromProps"]  !="":
+				test = test.strip(",")
+				if "statesFromProps" not in props:
+					props["statesFromProps"] = ""
+				if test  != props["statesFromProps"]:
+					props["statesFromProps"] = test
 					dev.replacePluginPropsOnServer(props)
-					#self.indiLOG.log(20,u"updating props for dev:{}, dev.deviceTypeId :{}, statesFrom Props  ={}".format(dev.name, dev.deviceTypeId , props["statesFromProps"] ))
+				#if dev.name.find("switchbot") >-1: self.indiLOG.log(20,u"updating props for dev:{}, dev.deviceTypeId :{}, statesFrom Props  ={}".format(dev.name, dev.deviceTypeId , props["statesFromProps"] ))
+				self.statesFromProps[dev.id] =  props["statesFromProps"]
 				dev.stateListOrDisplayStateIdChanged()	# update  from device.xml info if changed
 
 
@@ -13921,23 +13978,40 @@ class Plugin(indigo.PluginBase):
 		try:
 			# only refresh list every xx secs 
 			if dev.id in self.existingStateList:
-				if time.time() - self.existingStateList[dev.id]["lastSet"] < 120: 
+				if self.existingStateList[dev.id]["count"] > 5  and time.time() - self.existingStateList[dev.id]["lastSet"] < 120: 
+					#self.indiLOG.log(20,u"updating states for dev:{}, skipping".format(dev.name))
 					return self.existingStateList[dev.id]["stateList"]
 			else:  
 				self.existingStateList[dev.id] = {}
+				self.existingStateList[dev.id]["count"] =  0
+				self.existingStateList[dev.id]["stateList"]  = super(Plugin, self).getDeviceStateList(dev)
 
+			self.existingStateList[dev.id]["count"]  +=  1
 			self.existingStateList[dev.id]["lastSet"] = time.time()
-			self.existingStateList[dev.id]["stateList"]  = super(Plugin, self).getDeviceStateList(dev)
 
-			statesFromProps = dev.pluginProps.get(u"statesFromProps","").split(",")
-			if statesFromProps[0] != "":
-				for addState in statesFromProps: #  eg (Temperature, Humidity, CO2, beacon ,......)
+
+			if dev.id in self.statesFromProps: 
+				statesFromPropsL = self.statesFromProps[dev.id]
+			else:
+				statesFromPropsL = dev.pluginProps.get("statesFromProps", "")
+
+			statesFromPropsL = statesFromPropsL.split(",")
+			#if dev.name.find("switchbot") >-1: self.indiLOG.log(20,u"updating states for dev:{}, dev.deviceTypeId :{}, self.statesFrom{};  props()={}".format(dev.name, dev.deviceTypeId , statesFromPropsL, dev.pluginProps.get("statesFromProps", "")))
+
+			stateList = {}
+			if statesFromPropsL[0] != "":
+				for addState in statesFromPropsL: #  eg (Temperature, Humidity, CO2, beacon ,......)
+					#if dev.name.find("switchbot") >-1: self.indiLOG.log(20,u"addState:{};".format(addState  ))
 					if  addState in _addingstates: # (Temperature, Humidity, CO2, ...)
-						for stateSub, stateType in _addingstates[addState]["States"]:
+						for stateSub in _addingstates[addState]["States"]:
+							stateType = _addingstates[addState]["States"][stateSub] 
 							if _addingstates[addState]["addTag"]:
 								xx = addState+stateSub  # eg Temperature+MinYesterday
 							else:
 								xx = stateSub  # eg  PosX PosY
+							if xx in stateList: continue
+							#if dev.name.find("switchbot") >-1: self.indiLOG.log(20,u"state:{}, stateSub:{}, stateType:{}; addTag:{}".format(xx, stateSub, stateType,_addingstates[addState]["addTag"] ))
+							stateList[xx] = 1
 
 							if stateType == "Real":
 								stateToBeadded = self.getDeviceStateDictForRealType(xx, xx, xx)
@@ -13974,9 +14048,11 @@ class Plugin(indigo.PluginBase):
 
 							self.existingStateList[dev.id]["stateList"] .append(stateToBeadded)
 
+		
 		except Exception, e:
 			if u"{}".format(e) != u"None":
 				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		#time.sleep(0)
 		return self.existingStateList[dev.id]["stateList"]
 
 
@@ -14477,7 +14553,7 @@ class Plugin(indigo.PluginBase):
 					currentDisplay = whichKeysToDisplay.split(u"/")
 
 			if key not in dev.states:
-				self.indiLOG.log(40,u"dev:{} does not have state key:{}".format(dev.name, key))
+				self.indiLOG.log(40,u"setStatusCol: dev:{} does not have state key:{}".format(dev.name, key))
 				return newStatus
 				
 			if u"{}".format(dev.states[key]) != u"{}".format(value):
@@ -19222,10 +19298,21 @@ configuration         - ==========  defined beacons ==============
 									changedOnly[devId][u"lastSensorChange"] = {u"value":dateString,u"decimalPlaces":"",u"uiValue":""}
 
 					#if dev.id ==1076556263: self.indiLOG.log(10,	u"changedOnly "+ u"{}".format(changedOnly))
+					
+					if "created" in dev.states and dev.states["created"] == "": 
+						createdSet = False
+					else:
+						createdSet = True
+					#if "created" not in dev.states: 
+					#	self.indiLOG.log(20,	u"dev {} does not have created state".format(dev.name))
+
+
 					if devId in changedOnly and len(changedOnly[devId]) >0:
 						chList=[]
+						if "created" in changedOnly[devId]:
+							createdSet = True
 						for key in changedOnly[devId]:
-							if key ==u"status":
+							if key == u"status":
 								value =changedOnly[devId][key][u"value"]
 								if u"lastStatusChange" in dev.states and u"lastStatusChange" not in changedOnly[devId]:
 									try:
@@ -19281,6 +19368,9 @@ configuration         - ==========  defined beacons ==============
 						##if dev.name =="b-radius_3": self.indiLOG.log(5,	u"chList "+ u"{}".format(chList))
 
 						#if dev.id ==1076556263: self.indiLOG.log(10,	u"chList "+ u"{}".format(chList))
+						if not createdSet:
+							chList.append({u"key":"created","value":dateString})
+																		 
 						self.execUpdateStatesList(dev,chList)
 
 				if trigStatus !=u"":
