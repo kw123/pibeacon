@@ -5,7 +5,7 @@ Added features / changes in v7.138.552@ 2022-02-25
 2. most common dev states are now set in plugin and not in devices.xml
    that will enable in the future dynamic add / remove of states ie pi_16_Signal will be gone if you don't have pi_15 
    in addition all temperature humidity, Co2, formaldehyde, VOC etc now have  common statistic states eg TemperatureChange10Minutes, TemperatureAveToday  max / min etc 
-     makes it easier to maintain and keep consitent, only one place needed to change for all device types  
+     makes it easier to maintain and keep consistent, only one place needed to change for all device types  
 3. fixed some typos
 
 

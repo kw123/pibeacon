@@ -43,7 +43,7 @@ def OUTPUTi2cRelay(command):
 		devType = "OUTPUTi2cRelay"
 
 		for iii in range(1):
-			U.logger.log(10, "OUTPUTi2cRelay command:{}".format(command) )
+			U.logger.log(G.debug*20, "OUTPUTi2cRelay command:{}".format(command) )
 			if "cmd" in command:
 				cmd= command["cmd"]
 				if cmd not in allowedCommands:
@@ -149,7 +149,7 @@ def setGPIO(command):
 	global threadsActive
 	devType = "OUTPUTgpio"
 
-	#U.logger.log(G.debug, "{:.2f} into setGPIO ".format(time.time()) )
+	#U.logger.log(G.debug*20, "{:.2f} into setGPIO ".format(time.time()) )
 
 	for iiii in range(1):
 		try:	PWM= command["PWM"] *100
@@ -170,13 +170,13 @@ def setGPIO(command):
 		if "cmd" in command:
 			cmd= command["cmd"]
 			if cmd not in allowedCommands:
-				U.logger.log(30, "setGPIO pid=%d, bad command %s  allowed only: %s" %(myPID,unicode(command) ,unicode(allowedCommands))  )
+				U.logger.log(30, "setGPIO pid={}, bad command %s  allowed only: {}".format(myPID,unicode(command) ,unicode(allowedCommands))  )
 				exit(1)
 
 		if "pin" in command:
 			pin= int(command["pin"])
 		else:
-			U.logger.log(30, "setGPIO pid=%d, pin not included,  bad command %s"%(myPID,unicode(command)) )
+			U.logger.log(30, "setGPIO pid={}, pin not included,  bad command {}".format(myPID,unicode(command)) )
 			exit(1)
 
 
@@ -213,33 +213,33 @@ def setGPIO(command):
 		else: devId = "0"
 
 
-		#U.logger.log(G.debug, "{:.2f} bf  GPIO.setup ".format(time.time()) )
+		#U.logger.log(G.debug*20, "{:.2f} bf  GPIO.setup ".format(time.time()) )
 		try:
 			if cmd == "up":
 				GPIO.setup(pin, GPIO.OUT)
 				if inverseGPIO: 
-					tf = False
+					tf = 0
 					GPIO.output(pin, tf)
-					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug*20, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 				else:
-					tf = True
+					tf = 1
 					GPIO.output(pin, tf)
-					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug*20, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 		
 
 			elif cmd == "down":
 				GPIO.setup(pin, GPIO.OUT)
 				if inverseGPIO: 
-					tf = True
+					tf = 1
 					GPIO.output(pin, tf)
-					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug*20, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 				else: 
-					tf = False
+					tf = 0
 					GPIO.output(pin, tf )
-					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug*20, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 
 			elif cmd == "analogWrite":
@@ -248,7 +248,7 @@ def setGPIO(command):
 				else:
 					value =   bits	 # duty cycle on xxx hz 
 				value = int(value)
-				U.logger.log(G.debug, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
+				U.logger.log(G.debug*20, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
 				if value > 0:
 					U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 				else:
@@ -358,7 +358,7 @@ def execCMDS(next):
 	global execcommands, PWM
 
 	threadName = threading.currentThread().getName()
-	#U.logger.log(G.debug, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
+	#U.logger.log(G.debug*20, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
 
 	for ijji in range(1):
 
@@ -609,7 +609,7 @@ def execCMDS(next):
 
 
 			if device=="OUTgpio" or device.find("OUTPUTgpio")> -1:
-						#U.logger.log(G.debug, u"{:.2f} into if OUTgpio".format(time.time()))
+						#U.logger.log(G.debug*20, u"{:.2f} into if OUTgpio".format(time.time()))
 						try:
 							pinI = int(next["pin"])
 							pin = str(pinI)
@@ -781,7 +781,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 				U.logger.log(30,"bad command: json failed  "+unicode(buffer))
 				return
 
-		#U.logger.log(G.debug, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
+		#U.logger.log(G.debug*20, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
 			
 		for next in commands:
 			if execSimple(next): continue
