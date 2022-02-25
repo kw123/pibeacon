@@ -37,7 +37,7 @@ externalGPIO = False
 
 ### ----------------------------------------- ###
 def OUTPUTi2cRelay(command):
-	global myPID, debLevel
+	global myPID
 	global threadsActive
 	try:
 		devType = "OUTPUTi2cRelay"
@@ -145,11 +145,11 @@ def OUTPUTi2cRelay(command):
 
 ### ----------------------------------------- ###
 def setGPIO(command):
-	global PWM, myPID, typeForPWM, debLevel
+	global PWM, myPID, typeForPWM
 	global threadsActive
 	devType = "OUTPUTgpio"
 
-	#U.logger.log(debLevel, "{:.2f} into setGPIO ".format(time.time()) )
+	#U.logger.log(G.debug, "{:.2f} into setGPIO ".format(time.time()) )
 
 	for iiii in range(1):
 		try:	PWM= command["PWM"] *100
@@ -213,19 +213,19 @@ def setGPIO(command):
 		else: devId = "0"
 
 
-		#U.logger.log(debLevel, "{:.2f} bf  GPIO.setup ".format(time.time()) )
+		#U.logger.log(G.debug, "{:.2f} bf  GPIO.setup ".format(time.time()) )
 		try:
 			if cmd == "up":
 				GPIO.setup(pin, GPIO.OUT)
 				if inverseGPIO: 
 					tf = False
 					GPIO.output(pin, tf)
-					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 				else:
 					tf = True
 					GPIO.output(pin, tf)
-					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 		
 
@@ -234,12 +234,12 @@ def setGPIO(command):
 				if inverseGPIO: 
 					tf = True
 					GPIO.output(pin, tf)
-					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 				else: 
 					tf = False
 					GPIO.output(pin, tf )
-					U.logger.log(debLevel, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
+					U.logger.log(G.debug, "{:.2f} setGPIO pin={}; command {}".format(time.time(), pin, tf) )
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
 
 			elif cmd == "analogWrite":
@@ -248,7 +248,7 @@ def setGPIO(command):
 				else:
 					value =   bits	 # duty cycle on xxx hz 
 				value = int(value)
-				U.logger.log(debLevel, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
+				U.logger.log(G.debug, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
 				if value > 0:
 					U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 				else:
@@ -334,7 +334,6 @@ def setGPIO(command):
 ### ----------------------------------------- ###
 def sleepForxSecs(sleepTime):
 	global threadsActive
-	global debLevel
 	try:
 		tDone 	= 0
 		dt 		= 0.05
@@ -356,10 +355,10 @@ def sleepForxSecs(sleepTime):
 ### ----------------------------------------- ###
 def execCMDS(next):
 	global threadsActive
-	global execcommands, PWM, debLevel
+	global execcommands, PWM
 
 	threadName = threading.currentThread().getName()
-	#U.logger.log(debLevel, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
+	#U.logger.log(G.debug, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
 
 	for ijji in range(1):
 
@@ -610,7 +609,7 @@ def execCMDS(next):
 
 
 			if device=="OUTgpio" or device.find("OUTPUTgpio")> -1:
-						#U.logger.log(debLevel, u"{:.2f} into if OUTgpio".format(time.time()))
+						#U.logger.log(G.debug, u"{:.2f} into if OUTgpio".format(time.time()))
 						try:
 							pinI = int(next["pin"])
 							pin = str(pinI)
@@ -698,7 +697,7 @@ def execCMDS(next):
 				 
 ### ----------------------------------------- ###
 def stopThreadsIfEnded(all=False):
-	global debLevel, threadsActive
+	global threadsActive
 	try:
 		stopThreads = {}
 		for threadName in threadsActive:
@@ -715,7 +714,7 @@ def stopThreadsIfEnded(all=False):
 				 
 ### ----------------------------------------- ###
 def execSimple(next):
-	global debLevel, inp
+	global inp
 	if "command" not in next:		 return False
 	if next["command"] != "general": return False
 	if "cmdLine" not in next:		 return False
@@ -764,7 +763,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 
 	### ----------------------------------------- ###
 	def handle(self):
-		global threadsActive, debLevel 
+		global threadsActive
 		# self.request is the TCP socket connected to the client
 		data =""
 		while True:
@@ -782,7 +781,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 				U.logger.log(30,"bad command: json failed  "+unicode(buffer))
 				return
 
-		#U.logger.log(debLevel, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
+		#U.logger.log(G.debug, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
 			
 		for next in commands:
 			if execSimple(next): continue
@@ -899,12 +898,11 @@ def readParams():
 
 ### ----------------------------------------- ###
 if __name__ == "__main__":
-	global	currentGPIOValue, debLevel
+	global	currentGPIOValue
 	global execcommandsList, PWM, typeForPWM
 	global threadsActive
 	PWM 				= 100
 	typeForPWM			= "GPIO"
-	debLevel 			= 10
 	myPID				= str(os.getpid())
 	threadsActive		= {}
 	execcommandsList	= {}

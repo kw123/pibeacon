@@ -62,7 +62,7 @@ def setLogging():
 #################################
 def setLogLevel():
 	global streamhandler, permLogHandler, logger
-	logger.log(10, "cBY:{:<20} setting debuglevel to {}".format(G.program, G.debug))
+	logger.log(10, "cBY:{:<20} setting debuglevel to {}".format(G.program, "on" if  G.debug == 1 else "off"))
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
 	else:
@@ -2397,7 +2397,7 @@ def readJson(fName):
 		raw = f.read()
 		f.close()
 		data = json.loads(raw)
-		logger.log(10, u" readJson-data:{}\nddd: {}".format(data, raw) )
+		#logger.log(10, u" readJson-data:{}\nddd: {}".format(data, raw) )
 	except	Exception as e:
 		logger.log(30,u"cBY:{:<20} Line {} has error={}, fname:{}, data:{}".format(G.program, sys.exc_info()[-1].tb_lineno, e, fName, raw ))
 		return {}, ""

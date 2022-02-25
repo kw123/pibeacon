@@ -719,7 +719,7 @@ def BLEinkBirdPool01B(thisMAC, data0):
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
 	data = copy.deepcopy(data0)
-	verbose = False
+	verbose = True
 	nonSwitchBotActive = True
 	try:
 		if (time.time() - macList[thisMAC]["nextRead"] < 0 or time.time() - macList[thisMAC]["lastTesttt"] < macList[thisMAC]["readSensorEvery"]): return data

@@ -2574,15 +2574,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-
 			<State id="UUID">
 				<ValueType>String</ValueType>
 				<TriggerLabel>UUID</TriggerLabel>
 				<ControlPageLabel>UUID</ControlPageLabel>
 			</State>
-
-
 		</States>
 	</Device>
 
@@ -2815,16 +2811,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<States>
 
-			<State id="txPower">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>txPower</TriggerLabel>
-				<ControlPageLabel>txPower</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -2854,11 +2840,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="movementCount">
 				<ValueType>Float</ValueType>
@@ -3024,43 +3005,6 @@ Check only RPIs that are installed, checked RPi that do not exist will be ignore
 		</ConfigUI>
 
 		<States>
-
-			<State id="txPower">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>txPower</TriggerLabel>
-				<ControlPageLabel>txPower</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
 			<State id="sensorSetup">
 				<ValueType>String</ValueType>
 				<TriggerLabel>sensorSetup</TriggerLabel>
@@ -3224,29 +3168,10 @@ save ===
 
 		<States>
 
-
-			<State id="txPower">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>txPower</TriggerLabel>
-				<ControlPageLabel>txPower</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
 			<State id="button">
 				<ValueType>String</ValueType>
 				<TriggerLabel>button</TriggerLabel>
 				<ControlPageLabel>button</ControlPageLabel>
-			</State>
-
-
-
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -3414,23 +3339,6 @@ save===</Label>
 
 		<States>
 
-			<State id="txPower">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>txPower</TriggerLabel>
-				<ControlPageLabel>txPower</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -3592,66 +3500,6 @@ save ===
 		</ConfigUI>
 
 		<States>
-
-
-			<State id="txPower">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>txPower</TriggerLabel>
-				<ControlPageLabel>txPower</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-			<State id="AmbientTemperature">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperature</TriggerLabel>
-				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureChange10Minutes">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureChange10Minutes</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureChange10Minutes</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureChange1Hour</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureChange6Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureChange6Hours</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureChange6Hours</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-			</State>
-
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -3805,17 +3653,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 		</ConfigUI>
 
 		<States>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-
-
-
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -4152,12 +3989,6 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 		<States>
 
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -4329,17 +4160,6 @@ This Sensor does not display F only C ===</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-
-
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -4494,10 +4314,6 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 		</ConfigUI>
 
 		<States>
-
-
-
-
 			<State id="connected">
 				<ValueType>String</ValueType>
 				<TriggerLabel>connected</TriggerLabel>
@@ -4652,78 +4468,6 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 		</ConfigUI>
 
 		<States>
-
-
-
-			<State id="Moisture">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Moisture</TriggerLabel>
-				<ControlPageLabel>Moisture</ControlPageLabel>
-			</State>
-			<State id="MoistureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMaxToday</TriggerLabel>
-				<ControlPageLabel>MoistureMaxToday</ControlPageLabel>
-			</State>
-			<State id="MoistureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMinToday</TriggerLabel>
-				<ControlPageLabel>MoistureMinToday</ControlPageLabel>
-			</State>
-			<State id="MoistureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>MoistureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="MoistureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMinYesterday</TriggerLabel>
-				<ControlPageLabel>MoistureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="Conductivity">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Conductivity</TriggerLabel>
-				<ControlPageLabel>Conductivity</ControlPageLabel>
-			</State>
-			<State id="ConductivityMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ConductivityMaxToday</TriggerLabel>
-				<ControlPageLabel>ConductivityMaxToday</ControlPageLabel>
-			</State>
-			<State id="ConductivityMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ConductivityMinToday</TriggerLabel>
-				<ControlPageLabel>ConductivityMinToday</ControlPageLabel>
-			</State>
-			<State id="ConductivityMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ConductivityMaxYesterday</TriggerLabel>
-				<ControlPageLabel>ConductivityMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="ConductivityMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ConductivityMinYesterday</TriggerLabel>
-				<ControlPageLabel>ConductivityMinYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminance">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-
-			<State id="Version">
-				<ValueType>String</ValueType>
-				<TriggerLabel>Version</TriggerLabel>
-				<ControlPageLabel>Version</ControlPageLabel>
-			</State>
-
-			<State id="connected">
-				<ValueType>String</ValueType>
-				<TriggerLabel>connected</TriggerLabel>
-				<ControlPageLabel>connected</ControlPageLabel>
-			</State>
-
-
 		</States>
 	</Device>
 
@@ -4872,16 +4616,6 @@ You can find the MAC number using the plugin tool detect new beacons look for
 		</ConfigUI>
 
 		<States>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -5084,12 +4818,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 		<States>
 
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -5125,12 +4853,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -5330,12 +5052,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 		<States>
 
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -5375,11 +5091,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 
 		</States>
@@ -5748,13 +5459,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 		<States>
 
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
 			<State id="button">
 				<ValueType>string</ValueType>
 				<TriggerLabel>button</TriggerLabel>
@@ -5832,11 +5536,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 
 		</States>
@@ -5983,43 +5682,6 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 		</ConfigUI>
 
 		<States>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-
-
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
-
-
 		</States>
 	</Device>
 
@@ -6213,12 +5875,6 @@ set trigger and sensitivity parameters ===
 				<ControlPageLabel>button</ControlPageLabel>
 			</State>
 
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -6248,11 +5904,6 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6446,12 +6097,6 @@ set trigger and sensitivity parameters ===
 		</ConfigUI>
 
 		<States>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
 			<State id="accelerationVectorDelta">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
@@ -6481,11 +6126,6 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6621,11 +6261,6 @@ These sensor types are an onOff sensor. They have either a button, a mag sensor,
 				<ValueType>String</ValueType>
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6826,16 +6461,6 @@ set trigger and sensitivity parameters ===
 		</ConfigUI>
 
 		<States>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
-
-
-
-
 			<State id="counter">
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
@@ -6889,11 +6514,6 @@ set trigger and sensitivity parameters ===
 				<ValueType>Float</ValueType>
 				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
 				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>String</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
 			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -7034,11 +6654,6 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 				<TriggerLabel>counter</TriggerLabel>
 				<ControlPageLabel>counter</ControlPageLabel>
 			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
 			<State id="lastAliveMessage">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastAliveMessage</TriggerLabel>
@@ -7168,11 +6783,6 @@ The device will only send a message "ON" when button is pressed: state "onOff" w
 				<ValueType>Number</ValueType>
 				<TriggerLabel>counter</TriggerLabel>
 				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 			<State id="lastAliveMessage">
 				<ValueType>String</ValueType>
@@ -7320,11 +6930,6 @@ The device will only send messages when a button is pressed. The state "currentO
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
 
 		</States>
 	</Device>
@@ -7458,12 +7063,6 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
-			</State>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 
 		</States>
@@ -7612,12 +7211,6 @@ You can use either red/grey/green or temperature icon in the status column: set 
 				<ControlPageLabel>mode</ControlPageLabel>
 			</State>
 
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -7729,12 +7322,6 @@ Find MAC number through find new beacons or using the iphone app.
 				<ValueType>number</ValueType>
 				<TriggerLabel>lightCounter</TriggerLabel>
 				<ControlPageLabel>lightCounter</ControlPageLabel>
-			</State>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 
 		</States>
@@ -7873,12 +7460,6 @@ Find MAC number through find new beacons or using the iphone app.
 				<ValueType>number</ValueType>
 				<TriggerLabel>pressCounter</TriggerLabel>
 				<ControlPageLabel>pressCounter</ControlPageLabel>
-			</State>
-
-			<State id="rssi">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>rssi</TriggerLabel>
-				<ControlPageLabel>rssi</ControlPageLabel>
 			</State>
 
 		</States>
@@ -8413,50 +7994,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -8547,50 +8084,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -8680,50 +8173,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 	<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
 	</States>
 	</Device>
 
@@ -8814,51 +8263,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>String</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
-
 		</States>
 	</Device>
 
@@ -8937,55 +8341,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>String</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
-
-
-
-
-
 		</States>
 	</Device>
 
@@ -9076,10 +8431,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-
 		</States>
 
 	</Device>
@@ -9170,10 +8521,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-
 		</States>
 
 	</Device>
@@ -9273,51 +8620,6 @@ Find MAC number through find new beacons or using the iphone app.
 
 		</ConfigUI>
 		<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
-
 		</States>
 	</Device>
 
@@ -9530,52 +8832,6 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-
-
-
-			<State id="Pressure">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Pressure</TriggerLabel>
-				<ControlPageLabel>Pressure</ControlPageLabel>
-			</State>
-			<State id="PressureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxToday</TriggerLabel>
-				<ControlPageLabel>PressureMaxToday</ControlPageLabel>
-			</State>
-			<State id="PressureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinToday</TriggerLabel>
-				<ControlPageLabel>PressureMinToday</ControlPageLabel>
-			</State>
-			<State id="PressureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureMinYesterday</TriggerLabel>
-				<ControlPageLabel>PressureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="PressureChange4Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange4Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange4Hours</ControlPageLabel>
-			</State>
-			<State id="PressureChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange1Hour</TriggerLabel>
-				<ControlPageLabel>PressureChange1Hour</ControlPageLabel>
-			</State>
-			<State id="PressureChange12Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>PressureChange12Hours</TriggerLabel>
-				<ControlPageLabel>PressureChange12Hours</ControlPageLabel>
-			</State>
-
-
-
 			<State id="GasResistance">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>GasResistance</TriggerLabel>
@@ -9728,10 +8984,6 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-
-
-
-
 		</States>
 	</Device>
 
@@ -9840,33 +9092,6 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-
-			<State id="AmbientTemperature">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperature</TriggerLabel>
-				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -9976,33 +9201,6 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-
-			<State id="AmbientTemperature">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperature</TriggerLabel>
-				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -10135,8 +9333,6 @@ After some days of running in clean air, proposed setup is:
 
 		</ConfigUI>
 		<States>
-
-
 		</States>
 	</Device>
 
@@ -10857,6 +10053,11 @@ It measures CO2 and temp using infrared light absorption
 				<TriggerLabel>CO2offset</TriggerLabel>
 				<ControlPageLabel>CO2offset</ControlPageLabel>
 			</State>
+			<State id="raw">
+				<ValueType>String</ValueType>
+				<TriggerLabel>raw</TriggerLabel>
+				<ControlPageLabel>raw</ControlPageLabel>
+			</State>
 		</States>
 	</Device>
 
@@ -11104,31 +10305,6 @@ It measures CO2 VOC
 				<TriggerLabel>blue</TriggerLabel>
 				<ControlPageLabel>blue</ControlPageLabel>
 			</State>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
 			<State id="kelvin">
 				<ValueType>String</ValueType>
 				<TriggerLabel>kelvin</TriggerLabel>
@@ -11208,32 +10384,6 @@ It measures CO2 VOC
 		</ConfigUI>
 
 		<States>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>
@@ -11447,11 +10597,6 @@ It measures CO2 VOC
 				<TriggerLabel>violet</TriggerLabel>
 				<ControlPageLabel>violet</ControlPageLabel>
 			</State>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
 			<State id="LEDcurrent">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>LEDcurrent</TriggerLabel>
@@ -11624,32 +10769,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>visibleMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>
@@ -12410,31 +11529,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 		<States>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
 			<State id="IR">
 				<ValueType>String</ValueType>
 				<TriggerLabel>IR</TriggerLabel>
@@ -12627,34 +11721,6 @@ It measures CO2 VOC
 
 		</ConfigUI>
 	<States>
-
-
-			<State id="AmbientTemperature">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperature</TriggerLabel>
-				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-			</State>
-
 	</States>
 	</Device>
 
@@ -12857,32 +11923,6 @@ you can setup
 
 		</ConfigUI>
 		<States>
-
-			<State id="AmbientTemperature">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperature</TriggerLabel>
-				<ControlPageLabel>AmbientTemperature</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinToday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinToday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="AmbientTemperatureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AmbientTemperatureMinYesterday</TriggerLabel>
-				<ControlPageLabel>AmbientTemperatureMinYesterday</ControlPageLabel>
-			</State>
 			<State id="Movement">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Movement</TriggerLabel>
@@ -16742,46 +15782,6 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</ConfigUI>
 
 		<States>
-			<State id="illuminance">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="Moisture">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Moisture</TriggerLabel>
-				<ControlPageLabel>Moisture</ControlPageLabel>
-			</State>
-			<State id="Moisture_raw">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>Moisture_raw</TriggerLabel>
-				<ControlPageLabel>Moisture_raw</ControlPageLabel>
-			</State>
-			<State id="MoistureMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMaxToday</TriggerLabel>
-				<ControlPageLabel>MoistureMaxToday</ControlPageLabel>
-			</State>
-			<State id="MoistureMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMinToday</TriggerLabel>
-				<ControlPageLabel>MoistureMinToday</ControlPageLabel>
-			</State>
-			<State id="MoistureMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMaxYesterday</TriggerLabel>
-				<ControlPageLabel>MoistureMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="MoistureMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>MoistureMinYesterday</TriggerLabel>
-				<ControlPageLabel>MoistureMinYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminance">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -19736,31 +18736,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<TriggerLabel>speed</TriggerLabel>
 				<ControlPageLabel>speed</ControlPageLabel>
 			</State>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
-			</State>
 			<State id="measuredNumber">
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
@@ -19950,31 +18925,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>String</ValueType>
 				<TriggerLabel>speed</TriggerLabel>
 				<ControlPageLabel>speed</ControlPageLabel>
-			</State>
-			<State id="illuminance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
 			</State>
 			<State id="measuredNumber">
 				<ValueType>String</ValueType>
@@ -20214,31 +19164,6 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				<ValueType>Float</ValueType>
 				<TriggerLabel>ambientMinYesterday</TriggerLabel>
 				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminance">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxToday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxToday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMaxYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="illuminanceMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>illuminanceMinYesterday</TriggerLabel>
-				<ControlPageLabel>illuminanceMinYesterday</ControlPageLabel>
 			</State>
 
 
@@ -20961,7 +19886,7 @@ This device will get its battery level from its brother device,
 				<Label> OUTPUT type:</Label>
 				<List>
 					<Option value="0"        >set OUTPUT normal </Option>
-					<Option value="1"        >set OUTPUT invers </Option>
+					<Option value="1"        >set OUTPUT inverse </Option>
 				</List>
 			</Field>
 			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
@@ -21113,7 +20038,7 @@ This device will get its battery level from its brother device,
 				<Label> OUTPUT type:</Label>
 				<List>
 					<Option value="0"        >set OUTPUT normal </Option>
-					<Option value="1"        >set OUTPUT invers </Option>
+					<Option value="1"        >set OUTPUT inverse </Option>
 				</List>
 			</Field>
 			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >

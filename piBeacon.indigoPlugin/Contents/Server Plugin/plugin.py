@@ -341,7 +341,7 @@ _GlobalConst_allGPIOlist = [
 	, (u"12", u"GPIO12 = pin # 32")
 	, (u"16", u"GPIO16 = pin # 36")
 	, (u"20", u"GPIO20 = pin # 38")
-	, (u"21", u"uGPIO21 = pin # 40")]
+	, (u"21", u"GPIO21 = pin # 40")]
 
 _GlobalConst_ICONLIST	= [
 	[u"None", u"None"],
@@ -550,6 +550,9 @@ _devtypesToStates["realSensor"] 	= {"":"Real", "MinToday":"Real", "MaxYesterday"
 _devtypesToStates["integerSensor"]	= {"":"Integer", "MinToday":"Integer", "MaxYesterday":"Integer", "MinYesterday":"Integer", "MaxToday":"Integer", "AveToday":"Integer", "MeasurementsToday":"Integer", "Change5Minutes":"Integer", "Change10Minutes":"Integer", "Change20Minutes":"Integer", "Change1Hours":"Integer", "Change6Hours":"Integer", "Change12Hours":"Integer"}
 
 _addingstates = {}
+_addingstates["Conductivity"]			= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["Moisture"]				= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["illuminance"]			= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["AmbientTemperature"]		= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["Temperature"]			= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["CO2"] 					= {"addTag":True, "States":_devtypesToStates["integerSensor"]}
@@ -572,7 +575,10 @@ _addingstates["ouput"]					= {"addTag":False, "States":_devtypesToStates["ouput"
 
 
 _stateListToDevTypes = {}
-_stateListToDevTypes["Temperature"]				= {"DHT":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEminewS1TH":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEXiaomiMiVegTrug":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
+_stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
+_stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1, "apds9960":1}
+_stateListToDevTypes["Temperature"]				= {"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEminewS1TH":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEXiaomiMiVegTrug":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
 _stateListToDevTypes["Humidity"]				= {"DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1}
 _stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
@@ -4859,14 +4865,16 @@ class Plugin(indigo.PluginBase):
 					pinMappings += u"(" + u"{}".format(n) + ":" + new[n][u"gpio"]+u"," + new[n][u"outType"] +u"," +  new[n][u"initialValue"]  +u");"
 				else:
 					pinMappings += u"(" + u"{}".format(n) + ":-);"
+
 				if u"inverse" in dev.states:
-					if (dev.states[u"inverse"]) != (new[n][u"outType"]== u"1"): 				self.addToStatesUpdateDict(dev.id,u"inverse", new[n][u"outType"]==u"1" )
+					self.addToStatesUpdateDict(dev.id,u"inverse", new[n][u"outType"]==u"1" )
 				elif u"inverse_{:2d}".format(n) in dev.states:
-					if (dev.states[u"inverse_{:2d}".format(n)]) != (new[n][u"outType"]== u"1"): self.addToStatesUpdateDict(dev.id,u"inverse_{:2d}".format(n), new[n][u"outType"]==u"1")
+					self.addToStatesUpdateDict(dev.id,u"inverse_{:2d}".format(n), new[n][u"outType"]==u"1")
+
 				if u"initial" in dev.states:
-					if dev.states[u"initial"] != new[n][u"initialValue"]: 					 	self.addToStatesUpdateDict(dev.id,u"initial", new[n][u"initialValue"] )
+					self.addToStatesUpdateDict(dev.id,u"initial", new[n][u"initialValue"] )
 				elif u"initial{:2d}".format(n) in dev.states:
-					if dev.states[u"initial{:2d}".format(n)] != new[n][u"initialValue"]: 	 	self.addToStatesUpdateDict(dev.id,u"initial{:2d}".format(n), new[n][u"initialValue"] )
+					self.addToStatesUpdateDict(dev.id,u"initial{:2d}".format(n), new[n][u"initialValue"] )
 
 			valuesDict[u"description"] = pinMappings
 
@@ -5916,13 +5924,14 @@ class Plugin(indigo.PluginBase):
 						self.sendInitialValue = dev.id
 					pinMappings += u"{}".format(n) + u":" + xxx[n][u"gpio"]+ u"," + xxx[n][u"outType"]+ u"," + xxx[n][u"initialValue"]+u"|"
 					if u"inverse" in dev.states:
-						if (dev.states[u"inverse"] =="yes") != (xxx[n][u"outType"]=="1"): dev.updateStateOnServer(u"inverse", xxx[n][u"outType"]==u"1" )
+						dev.updateStateOnServer(u"inverse", xxx[n][u"outType"]==u"1" )
 					elif u"inverse_{:2d}".format(n) in dev.states:
-						if (dev.states[u"inverse_{:2d}".format(n)] =="yes") != (xxx[n][u"outType"]==u"1"): dev.updateStateOnServer(u"inverse_{:2d}".format(n), xxx[n][u"outType"]==u"1" )
+						dev.updateStateOnServer(u"inverse_{:2d}".format(n), xxx[n][u"outType"]==u"1" )
+
 					if u"initial" in dev.states:
-						if dev.states[u"initial"] != xxx[n][u"initialValue"]: dev.updateStateOnServer(u"initial", xxx[n][u"initialValue"])
+						dev.updateStateOnServer(u"initial", xxx[n][u"initialValue"])
 					elif u"initial{:2d}".format(n) in dev.states:
-						if dev.states[u"initial{:2d}".format(n)] != xxx[n][u"initialValue"]: dev.updateStateOnServer(u"initial{:2d}".format(n), xxx[n][u"initialValue"] )
+						dev.updateStateOnServer(u"initial{:2d}".format(n), xxx[n][u"initialValue"] )
 
 					for l in range(n, nChannels):
 						if l == n: continue
@@ -13150,7 +13159,7 @@ class Plugin(indigo.PluginBase):
 		data = u""
 		dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 		try:
-			#self.indiLOG.log(20,u"updateOutput from pi:{}; outputs:{}".format(piU, outputs) )
+			if self.decideMyLog(u"OutputDevice"):self.indiLOG.log(20,u"updateOutput from pi:{}; outputs:{}".format(piU, outputs) )
 							#  updateOutput from pi:11; outputs:{u'OUTPUTswitchbotRelay': {u'1631600841': {u'actualStatus': u'on'}}}
 
 			for output in outputs:
@@ -13183,6 +13192,7 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(10,u"dev not enabled send from pi:{} dev: {}".format(piU, dev.name) )
 						continue
 
+					self.addToStatesUpdateDict(dev.id,u"lastUpdateFromRPI",dateString)
 					data = outputs[output][devIds]
 					uData = u"{}".format(data)
 					if u"badSensor" in uData:
@@ -13191,12 +13201,12 @@ class Plugin(indigo.PluginBase):
 						except: pass
 						continue
 
-					if self.decideMyLog(u"SensorData"): self.indiLOG.log(5,u"{} received {}".format(output, uData) )
+					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"{} received {}".format(output, uData) )
 					self.setActualRelayStatus(dev, props, data)
 
 				for devIds in devUpdate:
 					if devIds in self.updateStatesDict:
-						if self.decideMyLog(u"SensorData"): self.indiLOG.log(5,u"pi# {}  {}  {}".format(piU, devIds, self.updateStatesDict) )
+						if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"pi# {}  {}  {}".format(piU, devIds, self.updateStatesDict) )
 						self.executeUpdateStatesDict(onlyDevID=devIds, calledFrom=u"updateOutput end")
 
 		except Exception, e:
@@ -13209,9 +13219,9 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def setActualRelayStatus(self, dev, props, data):
 		try:
-			if u"actualStatus" in data and  u"outType" in props: 
+			if u"actualGpioValue" in data and  u"outType" in props: 
 
-				upState = data[u"actualStatus"]
+				upState = data[u"actualGpioValue"]
 				actualStatus = upState.lower()
 				if actualStatus not in ["on", "off"]:
 					if props[u"outType"] == u"0": # not inverse
@@ -13221,9 +13231,10 @@ class Plugin(indigo.PluginBase):
 						if actualStatus == "low": upState = u"on"
 						else:               	  upState = u"off"
 
-				self.addToStatesUpdateDict(dev.id,u"status", upState)
+				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"{} update from  {}; actualStatus:{}, upState:{}".format(dev.name, data, actualStatus, upState) )
 				self.addToStatesUpdateDict(dev.id,u"actualStatus", actualStatus)
 				self.addToStatesUpdateDict(dev.id,u"onOffState", upState == "on")
+				self.addToStatesUpdateDict(dev.id,u"status", upState)
 
 			for xx in [u"batteryLevel",u"version",u"holdSeconds",u"mode",u"inverseDirection"]:
 				if xx in data: 
@@ -13497,7 +13508,7 @@ class Plugin(indigo.PluginBase):
 						try:
 							if abs( float(dev.states[u"CO2offset"]) - float(data[u"CO2offset"])	) > 1:
 								self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP"])
-							self.addToStatesUpdateDict(dev.id,u"calibration", data[u"calibration"])
+							self.addToStatesUpdateDict(dev.id,u"CO2calibration", data[u"calibration"])
 							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]),	decimalPlaces = 1)
 							self.addToStatesUpdateDict(dev.id,u"CO2offset", float(data[u"CO2offset"]),	decimalPlaces = 1)
 						except Exception, e:
@@ -14926,6 +14937,8 @@ class Plugin(indigo.PluginBase):
 			for state in dev.states:
 				## state  eg =  "temperatureChange1Hour"
 				if state.find(stateToUpdate+u"Change") == 0:
+					if state not in dev.states:
+						continue
 					upU = state.split(u"Change")[1]
 					if len(upU) < 2: continue
 					if upU.find(u"Hour") >-1:     updateN = u"Hour";   updateMinutes = 3600
