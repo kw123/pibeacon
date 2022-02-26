@@ -651,7 +651,8 @@ class Plugin(indigo.PluginBase):
 		self.indigoPreferencesPluginDir = self.getInstallFolderPath+u"Preferences/Plugins/"+self.pluginId+u"/"
 		self.indigoPluginDirOld			= self.userIndigoDir + self.pluginShortName+u"/"
 		self.PluginLogFile				= indigo.server.getLogsFolderPath(pluginId=self.pluginId) +u"/plugin.log"
-
+		self.waitForMAC2vendor 			= "notInitialized"
+		self.getDeviceStateListFirstCall = False
 
 		formats=	{   logging.THREADDEBUG: u"%(asctime)s %(msg)s",
 						logging.DEBUG:       u"%(asctime)s %(msg)s",
@@ -738,8 +739,6 @@ class Plugin(indigo.PluginBase):
 			self.initCARS()
 
 			self.readConfig()
-
-			self.initMac2Vendor()
 
 			self.startupFIXES1()
 
@@ -892,7 +891,7 @@ class Plugin(indigo.PluginBase):
 
 ####-----------------	 ---------
 	def initMac2Vendor(self):
-		self.waitForMAC2vendor = False
+		self.waitForMAC2vendor = "initializing"
 		self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get(u"enableMACtoVENDORlookup",u"21"))
 		if self.enableMACtoVENDORlookup != u"0":
 			self.M2V =  M2Vclass.MAP2Vendor( pathToMACFiles=self.indigoPreferencesPluginDir+u"mac2Vendor/", refreshFromIeeAfterDays = self.enableMACtoVENDORlookup, myLogger = self.indiLOG.log )
@@ -900,7 +899,9 @@ class Plugin(indigo.PluginBase):
 
 ####-----------------	 ---------
 	def getVendortName(self,MAC):
-		if self.enableMACtoVENDORlookup != u"0" and not self.waitForMAC2vendor:
+		if self.waitForMAC2vendor == "notInitialized": return ""
+
+		if self.enableMACtoVENDORlookup != u"0" and self.waitForMAC2vendor == "initializing":
 			self.waitForMAC2vendor = self.M2V.makeFinalTable()
 
 		return self.M2V.getVendorOfMAC(MAC)
@@ -1135,7 +1136,7 @@ class Plugin(indigo.PluginBase):
 								del xxx[n]
 								continue
 							if	u"initialValue" not in xxx[n]:
-								xxx[n][u"initialValue"] = u"-"
+								xxx[n][u"initialValue"] = u"float"
 								update=True
 					if update:
 						props[u"deviceDefs"] = json.dumps(xxx)
@@ -1153,7 +1154,7 @@ class Plugin(indigo.PluginBase):
 								del xxx[n]
 								continue
 							if	u"initialValue" not in xxx[n]:
-								xxx[n][u"initialValue"] = u"-"
+								xxx[n][u"initialValue"] = u"float"
 								update=True
 					if update:
 						props[u"deviceDefs"] = json.dumps(xxx)
@@ -4017,6 +4018,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			dev = indigo.devices[devId]
 			props = dev.pluginProps
+			#self.indiLOG.log(20,u"validateDeviceConfigUi: dev:{}, props: {}\n {}".format(dev.name, unicode(props), unicode(valuesDict)))
 			beacon = u""
 			if typeId in [u"beacon", u"rPI"]:
 				try:
@@ -4514,7 +4516,8 @@ class Plugin(indigo.PluginBase):
 
 
 				if	typeId	in [u"mhzCO2"]:
-					self.addToStatesUpdateDict(dev.id,u"CO2calibration", valuesDict[u"CO2normal"] )
+					#self.addToStatesUpdateDict(dev.id,u"CO2calibration", valuesDict[u"CO2normal"] )
+					self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1, u"devId":dev.id, u"updateItems":[{u"stateName":u"CO2calibration", u"value":valuesDict[u"CO2normal"] }]})
 
 				if	typeId	=="rainSensorRG11":
 						valuesDict[u"description"] = u"INP:"+valuesDict[u"gpioIn"]+u"-SW5:"+valuesDict[u"gpioSW5"]+u"-SW2:"+valuesDict[u"gpioSW2"]+u"-SW1:"+valuesDict[u"gpioSW1"]+u"-SW12V:"+valuesDict[u"gpioSWP"]
@@ -4532,7 +4535,8 @@ class Plugin(indigo.PluginBase):
 
 				if	typeId == u"Wire18B20" : # update serial number in states in case we jumped around with dev types.
 					if len(dev.states[u"serialNumber"]) < 5  and dev.description.find(u"sN= 28")>-1:
-						self.addToStatesUpdateDict(dev.id,u"serialNumber", dev.description.split(u"sN= u")[1] )
+						#self.addToStatesUpdateDict(dev.id,u"serialNumber", dev.description.split(u"sN= u")[1] )
+						self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1  , u"devId":dev.id, u"updateItems":[{u"stateName":u"serialNumber", u"value":dev.description.split(u"sN= u")[1] }]})
 
 				if	typeId.find(u"DHT") >-1:
 					if u"gpioPin" in valuesDict:
@@ -4867,14 +4871,18 @@ class Plugin(indigo.PluginBase):
 					pinMappings += u"(" + u"{}".format(n) + ":-);"
 
 				if u"inverse" in dev.states:
-					self.addToStatesUpdateDict(dev.id,u"inverse", new[n][u"outType"]==u"1" )
+					#self.addToStatesUpdateDict(dev.id,u"inverse", new[n][u"outType"]==u"1" )
+					self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1  , u"devId":dev.id, u"updateItems":[{u"stateName":u"inverse", u"value":new[n][u"outType"]==u"1" }]})
 				elif u"inverse_{:2d}".format(n) in dev.states:
-					self.addToStatesUpdateDict(dev.id,u"inverse_{:2d}".format(n), new[n][u"outType"]==u"1")
+					#self.addToStatesUpdateDict(dev.id,u"inverse_{:2d}".format(n), new[n][u"outType"]==u"1")
+					self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1  , u"devId":dev.id, u"updateItems":[{u"stateName":u"inverse_{:2d}".format(n), u"value":new[n][u"outType"]}]})
 
 				if u"initial" in dev.states:
-					self.addToStatesUpdateDict(dev.id,u"initial", new[n][u"initialValue"] )
+					self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1  , u"devId":dev.id, u"updateItems":[{u"stateName":u"initial", u"value":new[n][u"initialValue"]}]})
+					#self.addToStatesUpdateDict(dev.id,u"initial", new[n][u"initialValue"] )
 				elif u"initial{:2d}".format(n) in dev.states:
-					self.addToStatesUpdateDict(dev.id,u"initial{:2d}".format(n), new[n][u"initialValue"] )
+					#self.addToStatesUpdateDict(dev.id,u"initial{:2d}".format(n), new[n][u"initialValue"] )
+					self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1  , u"devId":dev.id, u"updateItems":[{u"stateName":u"initial{:2d}".format(n), u"value":new[n][u"initialValue"]}]})
 
 			valuesDict[u"description"] = pinMappings
 
@@ -5110,7 +5118,7 @@ class Plugin(indigo.PluginBase):
 		for devId in self.devUpdateList:
 			try:
 				dev = indigo.devices[int(devId)]
-				if dev.states[u"mute"] ==u"1":
+				if dev.states[u"mute"] == u"1":
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -5780,7 +5788,7 @@ class Plugin(indigo.PluginBase):
 			for n in range(nChan):
 				if u"gpio" in xxx[n]:
 					if u"initialValue" not in xxx[n]:
-						xxx[n][u"initialValue"] ="-"
+						xxx[n][u"initialValue"] ="float"
 						update= True
 					pinMappings += u"{}".format(n) + ":" + xxx[n][u"gpio"]+u"," + xxx[n][u"outType"]+u"," + xxx[n][u"initialValue"] + u"|"
 			valuesDict[u"pinMappings"] = pinMappings
@@ -10462,7 +10470,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 
-	###########################	   MAIN LOOP  ############################
+	###########################	   MAIN   ############################
 ####-------------------------------------------------------------------------####
 	def initConcurrentThread(self):
 		self.countP				 = 0
@@ -10478,6 +10486,11 @@ class Plugin(indigo.PluginBase):
 		self.startTime		  = time.time()
 		self.stackReady		  = False
 		self.socketServer	  = None
+
+		self.indiLOG.log(20,u"entering runConcurrentThread")
+
+		self.initMac2Vendor()
+
 
 
 		for ii in range(2):
@@ -13987,6 +14000,9 @@ class Plugin(indigo.PluginBase):
 ###-------------------------------------------------------------------------####
 	def getDeviceStateList(self, dev):
 		try:
+			if not self.getDeviceStateListFirstCall: self.indiLOG.log(20,u"populating device state lists")
+			self.getDeviceStateListFirstCall = True
+
 			# only refresh list every xx secs 
 			if dev.id in self.existingStateList:
 				if self.existingStateList[dev.id]["count"] > 5  and time.time() - self.existingStateList[dev.id]["lastSet"] < 120: 

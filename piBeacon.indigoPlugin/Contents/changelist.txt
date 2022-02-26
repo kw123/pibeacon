@@ -1,4 +1,10 @@
-Added features / changes in v7.138.552@ 2022-02-25
+Added features / changes in v7.138.554@ 2022-02-26
+===================================================
+   
+1. changed sequence of loading dev state definitions
+
+
+Added features / changes in v7.138.553@ 2022-02-25
 ===================================================
    
 1. made BLEconnect a threaded program with priority for switchbot. now response is much faster ~ 1-3 secs 

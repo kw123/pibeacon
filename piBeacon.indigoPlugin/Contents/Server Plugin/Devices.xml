@@ -19968,7 +19968,7 @@ This device will get its battery level from its brother device,
 				<List>
 					<Option value="down"      >set OUTPUT initially to low </Option>
 					<Option value="up"        >set OUTPUT initially to High </Option>
-					<Option value="-"        >do not set OUTPUT initially</Option>
+					<Option value="float"     >do not set OUTPUT initially (float)</Option>
 				</List>
 			</Field>
 			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
