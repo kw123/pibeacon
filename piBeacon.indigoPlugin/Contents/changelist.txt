@@ -1,3 +1,10 @@
+Added features / changes in v7.138.558@ 2022-03-01
+===================================================
+   
+1. The dev states for BLEconnect, beacon, and RPi dev types now only have Pi_xx_signal _Distance _Time for those RPi-xx that are configured
+   that shoud reduce the number of empty states. Eg if you have 3 RPi from 20*3=60 states to 3*3=9 for device types BLEconnect, beacon, and RPi (all those with Pi_00_Signal ... Pi_19_Signal. etc)
+
+
 Added features / changes in v7.138.554@ 2022-02-26
 ===================================================
    

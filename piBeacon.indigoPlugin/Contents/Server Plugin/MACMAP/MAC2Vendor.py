@@ -111,13 +111,15 @@ class MAP2Vendor:
 			f.close()
 			if "6" in test:
 				if len(test["6"]) < 10000:
-					return "initializing"
+					return 
 			else:
-					return "initializing"
+					return 
 
 			self.mac2VendorDict = test
-			self.myLog( u"MAP2Vendor initializing  finished, read from mac2Vendor.json file")
-			return True
+			if self.getFilesStatus != "finished": 
+				self.myLog( u"MAP2Vendor initializing  finished, read from mac2Vendor.json file")
+			self.getFilesStatus = "finished" 
+			return 
 			
 		if not ( self.isFileCurrent("oui") or
 				 self.isFileCurrent("mam" )  or
@@ -138,7 +140,7 @@ class MAP2Vendor:
 		f.write(json.dumps(self.mac2VendorDict))
 		f.close()
 
-		return "initialized"
+		return 
 
 
 	########################################
