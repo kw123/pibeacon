@@ -65,9 +65,9 @@ class MAP2Vendor:
 		if self.ML == "": 
 			return 
 		elif self.ML == "print":
-			print text
+			print (text)
 		else:
-			self.ML(20, text )
+			self.ML(30, text )
 
 		return 
 
@@ -96,10 +96,14 @@ class MAP2Vendor:
 
 	########################################
 	def isFileCurrent(self, fileName):
-		fn = self.filePath+fileName
-		if os.path.isfile(fn)  and os.path.getsize(fn) > self.minSizeOfFiles[fileName]:
-			if  time.time() - os.path.getmtime(fn) < self.refreshFromIeeAfterDays*24*60*60:
-				return True
+		try:
+			fn = self.filePath+fileName
+			if os.path.isfile(fn)  and os.path.getsize(fn) > self.minSizeOfFiles[fileName]:
+				if  time.time() - os.path.getmtime(fn) < self.refreshFromIeeAfterDays*24*60*60:
+					return True
+			return False
+		except  Exception as e:
+			self.myLog( u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 		return False
 
 	########################################

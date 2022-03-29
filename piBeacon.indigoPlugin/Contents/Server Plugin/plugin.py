@@ -5,6 +5,24 @@
 # Developed by Karl Wachs
 # karlwachs@me.com
 
+#
+#  compressed data
+#  other IO
+#
+#  
+#
+try:	import future
+except:	pass
+
+try:	import	six
+except:	pass
+
+try:	import builtins
+except:	pass
+
+try:	import past 
+except:	pass
+
 import os
 import sys
 import subprocess
@@ -16,7 +34,13 @@ import copy
 import math
 import socket
 import threading
-import SocketServer
+import traceback
+
+try:
+	import socketserver as SocketServer
+except:
+	import SocketServer
+
 try: import Queue
 except: import queue as Queue
 import cProfile
@@ -30,17 +54,16 @@ from checkIndigoPluginName import checkIndigoPluginName
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
 
 try:
-	# noinspection PyUnresolvedReferences
+	# noinsp18480ection PyUnresolvedReferences
 	import indigo
 except ImportError:
 	pass
 
-try:
-	unicode
-except:
-	str = unicode
+try: 	unicode
+except: unicode = str
+try: 	long
+except:	long = int
 
-import six
 ######### set new  pluginconfig defaults
 # this needs to be updated for each new property added to pluginprops. 
 # indigo ignores the defaults of new properties after first load of the plugin 
@@ -163,12 +186,12 @@ _rpiSensorList					 = [str(ii) for ii in range(_GlobalConst_numberOfiBeaconRPI, 
 _sqlLoggerDevTypes				 = [u"isBeaconDevice",u"isRPIDevice",u"isRPISensorDevice",u"isBLEconnectDevice", u"isSensorDevice", u"isBLESensorDevice","isBLElongConnectDevice"]
 _sqlLoggerDevTypesNotSensor		 = _sqlLoggerDevTypes[:-1]
 _sqlLoggerIgnoreStates = {u"isBeaconDevice":			u"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,batteryLevelLastUpdate,sensorvalue_ui,updateReason,lastStatusChange,iBeacon,mfg_info"
-				         ,u"isRPIDevice":				u"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,online,i2cactive,sensorvalue_ui,updateReason,lastStatusChange,last_MessageFromRpi"
-						 ,u"isBLEconnectDevice":		u"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,closestRPIText,closestRPITextLast,displayStatus,status,sensorvalue_ui,lastStatusChange"
-				         ,u"isRPISensorDevice":			u"displayStatus,status,sensorvalue_ui,lastStatusChange,last_MessageFromRpi"
-				         ,u"isBLESensorDevice":			u"displayStatus,status,sensorvalue_ui,lastStatusChange"
-				         ,u"isBLElongConnectDevice":	u"displayStatus,status,sensorvalue_ui,lastStatusChange"
-				         ,u"isSensorDevice":			u"displayStatus,status,sensorvalue_ui,lastStatusChange"}
+						,u"isRPIDevice":				u"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,online,i2cactive,sensorvalue_ui,updateReason,lastStatusChange,last_MessageFromRpi"
+						,u"isBLEconnectDevice":		u"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,closestRPIText,closestRPITextLast,displayStatus,status,sensorvalue_ui,lastStatusChange"
+						,u"isRPISensorDevice":			u"displayStatus,status,sensorvalue_ui,lastStatusChange,last_MessageFromRpi"
+						,u"isBLESensorDevice":			u"displayStatus,status,sensorvalue_ui,lastStatusChange"
+						,u"isBLElongConnectDevice":	u"displayStatus,status,sensorvalue_ui,lastStatusChange"
+						,u"isSensorDevice":			u"displayStatus,status,sensorvalue_ui,lastStatusChange"}
 _debugAreas = [u"Logic",u"DevMgmt",u"BeaconData",u"SensorData",u"OutputDevice",u"UpdateRPI",u"OfflineRPI",u"Fing",u"BLE",u"CAR",u"BC",u"all",u"Socket",u"StartSocket",u"Special",u"PlotPositions",u"SocketRPI",u"BatteryLevel",u"SQLlogger",u"SQLSuppresslog",u"Beep"]
 
 
@@ -240,7 +263,6 @@ _GlobalConst_emptyrPiProps	  ={
 	u"rssiOffset" :					0,
 	u"isRPIDevice" :				True,
 	u"useOnlyPrioTagMessageTypes":  u"0",
-	u"typeOfBeacon":  				u"rPI",
 	u"ipNumberRpiSetStatic":  			"0",
 	u"rpiDataAcquistionMethod":  	u"hcidump",
 	u"shutDownPinOutput" :			u"-1" }
@@ -543,7 +565,7 @@ _devtypesToStates["allDevHaveThese"]["lastUpdateFromRPI"] = "String"
 _devtypesToStates["allDevHaveThese"]["status"] = "String"	
 _devtypesToStates["allDevHaveThese"]["created"] = "String"	
 
-_devtypesToStates["ouput"] = {}
+_devtypesToStates["ouput"] = {} 
 _devtypesToStates["ouput"]["created"] = "String"	
 
 
@@ -578,10 +600,10 @@ _addingstates["ouput"]					= {"addTag":False, "States":_devtypesToStates["ouput"
 _stateListToDevTypes = {}
 _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
-_stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1, "apds9960":1}
-_stateListToDevTypes["Temperature"]				= {"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEminewS1TH":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEXiaomiMiVegTrug":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1}
+_stateListToDevTypes["Temperature"]				= {"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEminewS1TH":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
-_stateListToDevTypes["Humidity"]				= {"DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1}
+_stateListToDevTypes["Humidity"]				= {"DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1}
 _stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
 _stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
 _stateListToDevTypes["VOC"]						= {"sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1, "bme680":1}
@@ -745,27 +767,28 @@ class Plugin(indigo.PluginBase):
 
 			self.resetMinMaxSensors(init=True)
 
-			self.statusChanged == 99
+			self.statusChanged = 99
 			self.setGroupStatus()
 
 			self.checkPiEnabled()
 
 			if self.userIdOfServer != u"":
 				cmd = u"echo '"+self.passwordOfServer+u"' | sudo -S /usr/bin/xattr -rd com.apple.quarantine '"+self.pathToPlugin+u"pngquant'"
-				ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+				ret, err = self.readPopen(cmd)
 				if self.decideMyLog(u"Logic"): self.indiLOG.log(10,u"setting attribute for catalina  with:  {}".format(cmd))
 				if self.decideMyLog(u"Logic"): self.indiLOG.log(10,u" ......... result:{}".format(ret))
 
 			self.setSqlLoggerIgnoreStatesAndVariables()
 
- 			self.indiLOG.log(5,u" ..   startup(self): setting variables, debug ..   finished ")
+			self.indiLOG.log(5,u" ..   startup(self): setting variables, debug ..   finished ")
 
 			#self.indiLOG.log(20,u"_stateListToDevTypes:{}".format(json.dumps(_stateListToDevTypes, sort_keys=True, indent=2)))
 			#self.indiLOG.log(20,u"_devtypesToStates:{}".format(json.dumps(_devtypesToStates, sort_keys=True, indent=2)))
 
-		except Exception, e:
+
+		except Exception as e:
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
-			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			self.indiLOG.log(50,u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
 			self.sleep(2000)
@@ -869,8 +892,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -968,10 +991,10 @@ class Plugin(indigo.PluginBase):
 
 
 
-				except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+						self.exceptionHandler(40,e)
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -1069,8 +1092,8 @@ class Plugin(indigo.PluginBase):
 
 				self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
 
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 			try:
 				os.remove(self.indigoPreferencesPluginDir + u"config")
 			except:
@@ -1171,10 +1194,10 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
+		except Exception as e:
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
 			self.indiLOG.log(50,u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
-			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
 			self.sleep(2000)
 			exit(1)
@@ -1206,9 +1229,8 @@ class Plugin(indigo.PluginBase):
 				for ll in range(lx,len(_rpiBeaconList)):
 					self.beacons[mac][area].append({u"distance": 99999,u"lastSignal": 0, u"rssi": -999})
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -1233,9 +1255,9 @@ class Plugin(indigo.PluginBase):
 			if not os.path.exists(self.cameraImagesDir):
 				os.mkdir(self.cameraImagesDir)
 
-		except Exception, e:
+		except Exception as e:
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
-			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 			self.indiLOG.log(50,u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
 			self.sleep(2000)
@@ -1254,9 +1276,9 @@ class Plugin(indigo.PluginBase):
 
 			try: self.debugRPI	= int(self.pluginPrefs.get(u"debugRPI", -1))
 			except: self.debugRPI=-1
-		except Exception, e:
+		except Exception as e:
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
-			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 			self.indiLOG.log(50,u"Error in startup of plugin, plugin prefs are wrong ")
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
 		return
@@ -1445,7 +1467,7 @@ class Plugin(indigo.PluginBase):
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get(u"maxSocksErrorTime", u"600."))
 			except: self.maxSocksErrorTime	= 600.
 			self.compressRPItoPlugin		= self.pluginPrefs.get(u"compressRPItoPlugin", u"20000")
-			self.compressRPItoPlugin		= min(40000,self.compressRPItoPlugin)
+			self.compressRPItoPlugin		= min(40000,int(self.compressRPItoPlugin))
 			self.portOfServer				= self.pluginPrefs.get(u"portOfServer", u"8176")
 			self.userIdOfServer				= self.pluginPrefs.get(u"userIdOfServer", u"")
 			self.passwordOfServer			= self.pluginPrefs.get(u"passwordOfServer", u"")
@@ -1494,12 +1516,17 @@ class Plugin(indigo.PluginBase):
 			self.triggerList				= []
 			self.newADDRESS					= {}
 			self.trackRPImessages			= -1
-			self.pythonPath					= u"/usr/bin/python2.6"
-			if os.path.isfile(u"/usr/bin/python2.7"):
+			if os.path.isfile(u"/Library/Frameworks/Python.framework/Versions/Current/bin/python3"):
+				self.pythonPath				= u"/Library/Frameworks/Python.framework/Versions/Current/bin/python3"
+			elif os.path.isfile(u"/usr/local/bin/python"):
+				self.pythonPath				= u"/usr/local/bin/python"
+			elif os.path.isfile(u"/usr/bin/python2.7"):
 				self.pythonPath				= u"/usr/bin/python2.7"
-			elif os.path.isfile(u"/usr/bin/python2.6"):
-				self.pythonPath				= u"/usr/bin/python2.6"
-
+			else:
+				self.indiLOG.log(40,u"FATAL error:  none of python versions 2.7 3.x is installed  ==>  stopping INDIGOplotD")
+				self.quitNOW = "none of python versions 2.7 3.x is installed "
+				return
+			self.indiLOG.log(30,u"using '" +self.pythonPath +"' for utily programs")
 
 			self.trackSignalStrengthIfGeaterThan = [99999.,"i"]
 			self.trackSignalChangeOfRPI			 = False
@@ -1555,9 +1582,9 @@ class Plugin(indigo.PluginBase):
 			self.checkBeaconParametersDisabled						= self.pluginPrefs.get(u"checkBeaconParametersDisabled", False )
 
 
-		except Exception, e:
+		except Exception as e:
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
-			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			self.indiLOG.log(50,u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
 			self.sleep(2000)
@@ -1594,7 +1621,7 @@ class Plugin(indigo.PluginBase):
 			for group in _GlobalConst_groupList:
 				memberListNames.append(self.groupListUsedNames[group])
 
- 			for dev	in indigo.devices.iter(u"props.isBeaconDevice,props.isRPIDevice,props.isRPISensorDevice,props.isBLEconnectDevice"):
+			for dev	in indigo.devices.iter(u"props.isBeaconDevice,props.isRPIDevice,props.isRPISensorDevice,props.isBLEconnectDevice"):
 				if u"groupMember" not in dev.states: 					continue
 				if not dev.enabled:	 									continue
 
@@ -1711,9 +1738,8 @@ class Plugin(indigo.PluginBase):
 						if triggerGroup[group][tType]:
 							self.triggerEvent(group+u"-"+tType)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		self.setGroupStatusNextCheck = time.time() +  self.setGroupStatusrepeat
 		self.statusChanged = 0
 		return 
@@ -1888,9 +1914,9 @@ class Plugin(indigo.PluginBase):
 			if u"nstates" not in self.dataStats[u"updates"]:
 				self.resetDataStats()
 				return
-		except Exception, e:
+		except Exception as e:
 			self.resetDataStats()
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.exceptionHandler(40,e)
 		if u"data" not in self.dataStats:
 			self.resetDataStats()
 
@@ -1922,7 +1948,7 @@ class Plugin(indigo.PluginBase):
 				f = open(self.indigoPreferencesPluginDir + u"CARS", u"r")
 				self.CARS = json.loads(f.read())
 				f.close()
-			except Exception, e:
+			except Exception as e:
 				self.CARS={u"carId":{},u"beacon":{}}
 
 		for carIds in self.CARS[u"carId"]:
@@ -1937,8 +1963,8 @@ class Plugin(indigo.PluginBase):
 			delDD=[]
 			for carIds in self.CARS[u"carId"]:
 				try: indigo.devices[int(carIds)]
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					if u"{}".format(e).find(u"timeout waiting") > -1:
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return
@@ -1950,9 +1976,8 @@ class Plugin(indigo.PluginBase):
 			for carIds in delDD:
 				del self.CARS[u"carId"][carIds]
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -1968,9 +1993,8 @@ class Plugin(indigo.PluginBase):
 					self.updateCARS(beacon, beaconDev, beaconDev.states, force=True)
 					break
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,u"deleted beacon? .. car beacons beacon#  {}".format(beacon) )
 			self.indiLOG.log(40,u"for   indigoCarId {}".format(indigoCarIds) )
 
@@ -2182,9 +2206,8 @@ class Plugin(indigo.PluginBase):
 			if indigoCarIds in self.checkCarsNeed:
 				if self.decideMyLog(u"CAR"): self.indiLOG.log(5,u"{}-{} -7- update states:  checkCarsNeed last={:.0f}[secs]".format(carName, indigoCarIds, (time.time() - self.checkCarsNeed[indigoCarIds])))
 			if self.decideMyLog(u"CAR"): self.indiLOG.log(5,u"{}-{} -8- updateStatesList: {}".format(carName, indigoCarIds, self.updateStatesDict) )
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 		return
@@ -2206,9 +2229,8 @@ class Plugin(indigo.PluginBase):
 			else:
 				update, text = self.setupBeaconsForCARS(props, carIds)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			if u"{}".format(e).find(u"timeout waiting") > -1:
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 			self.indiLOG.log(40,u"devId "+carIds+ u" indigo lookup/save problem")
@@ -2225,9 +2247,8 @@ class Plugin(indigo.PluginBase):
 				self.executeUpdateStatesDict(onlyDevID=carIds,calledFrom = u"setupCARS")
 			if update:
 				self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			return props
 		return	props
 
@@ -2268,9 +2289,8 @@ class Plugin(indigo.PluginBase):
 				for b in delB:
 					del self.CARS[u"carId"][carIds][u"beacons"][b]
 					del self.CARS[u"beacon"][b]
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			if u"{}".format(e).find(u"timeout waiting") > -1:
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return 1/0
@@ -2366,8 +2386,8 @@ class Plugin(indigo.PluginBase):
 				else : # single zone manual, check if overwrite max duration
 					if u"sprinklerActiveZoneSetManualDuration" in indigo.variables:
 						try:	dur = max(0,float(indigo.variables[u"sprinklerActiveZoneSetManualDuration"].value ) )
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							dur = 0
 					if dur == 0:  # no overwrite, use max duration
 								dur = zoneMaxDurations[activeZone-1]
@@ -2546,9 +2566,8 @@ class Plugin(indigo.PluginBase):
 
 
 				self.executeUpdateStatesDict(onlyDevID=dev.id)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####------================------- sprinkler ------================-----------END
 
@@ -2665,8 +2684,8 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					dev = indigo.devices[self.beacons[beacon][u"indigoId"]]
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u"beacon: {} not an indigo device, removing from beacon list".format(beacon))
 					delList[beacon]= True
 					continue
@@ -2725,9 +2744,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = [u"all",u"rpi",u"beacon",u"CARS",u"sensors",u"output",u"force"], fromPGM=u"readconfig")
 			self.saveConfig()
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			exit(1)
 		return 
 
@@ -2745,9 +2763,8 @@ class Plugin(indigo.PluginBase):
 				f.close()
 				for tag in self.knownBeaconTags:
 					self.knownBeaconTags[tag][u"hexCode"] = self.knownBeaconTags[tag][u"hexCode"].upper()
-			except Exception, e:
-				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				try: f.close()
 				except: pass
 				return False
@@ -2779,10 +2796,9 @@ class Plugin(indigo.PluginBase):
 				self.knownBeaconTags[typeOfBeacon][u"hexCode"] = self.knownBeaconTags[typeOfBeacon][u"hexCode"].upper()
 			### knwon beacon tags section END ###
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				return False
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			return False
 		return True
 
 
@@ -2825,13 +2841,12 @@ class Plugin(indigo.PluginBase):
 					typeId = dev.deviceTypeId
 					if typeId not in self.RPI[piU][u"input"]:
 						self.RPI[piU][u"input"][typeId] = {}
-					if str(dev.id) not in self.RPI[piU][u"input"][typeId]:
+					if u"{}".format(dev.id) not in self.RPI[piU][u"input"][typeId]:
 						self.indiLOG.log(30,u"adding back input sensor {:20s}  type:{:30s} to RPI:{:1s}".format(dev.name, dev.deviceTypeId, piU))
-						self.RPI[piU][u"input"][typeId][str(dev.id)] = {}
+						self.RPI[piU][u"input"][typeId][u"{}".format(dev.id)] = {}
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -2846,13 +2861,12 @@ class Plugin(indigo.PluginBase):
 			typeId = dev.deviceTypeId
 			if typeId not in self.RPI[piU][u"output"]:
 				self.RPI[piU][u"output"][typeId] = {}
-			if str(dev.id) not in self.RPI[piU][u"output"][typeId]:
+			if u"{}".format(dev.id) not in self.RPI[piU][u"output"][typeId]:
 				self.indiLOG.log(30,u"adding back out device {} to RPI:{}".format(dev.name, piU))
-				self.RPI[piU][u"output"][typeId][str(dev.id)] = {}
+				self.RPI[piU][u"output"][typeId][u"{}".format(dev.id)] = {}
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -2866,9 +2880,8 @@ class Plugin(indigo.PluginBase):
 				self.checkDevToRPIlinksOneDevOutput(dev)
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -2883,8 +2896,8 @@ class Plugin(indigo.PluginBase):
 					f.close()
 					if oldName !=u"" and os.path.isfile(oldName):
 						subprocess.call(u"rm "+oldName, shell=True)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					out =copy.deepcopy(default)
 			else:
 				out = copy.deepcopy(default)
@@ -2894,13 +2907,12 @@ class Plugin(indigo.PluginBase):
 					out	 = json.loads(f.read())
 					f.close()
 					subprocess.call(u"rm "+oldName, shell=True)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					out = copy.deepcopy(default)
 			#self.indiLOG.log(10,u"getParamsFromFile out:{} ".format(u"{}".format(out)[0:100]) )
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return out
 
 ####-------------------------------------------------------------------------####
@@ -2911,9 +2923,8 @@ class Plugin(indigo.PluginBase):
 			f.write(json.dumps(self.beaconPositionsData))
 			f.close()
 			if self.decideMyLog(u"PlotPositions"): self.indiLOG.log(5,u"savebeaconPositionsFile {}".format(u"{}".format(self.beaconPositionsData[u"mac"])[0:100])  )
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -2923,9 +2934,8 @@ class Plugin(indigo.PluginBase):
 			self.beaconPositionsData[u"logLevel"]		= u"PlotPositions" in self.debugLevel
 			self.beaconPositionsData[u"logFile"]		= self.PluginLogFile
 			self.beaconPositionsData[u"distanceUnits"]	= self.distanceUnits
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -2971,8 +2981,8 @@ class Plugin(indigo.PluginBase):
 								u"textColor":			showBeaconTextColor ,
 								u"bType":				u"beacon" ,
 								u"status":				dev.states[u"status"]					}
-					except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+							self.exceptionHandler(40,e)
 
 			for dev in indigo.devices.iter(u"props.isBLEconnectDevice"):
 					try:
@@ -3009,8 +3019,8 @@ class Plugin(indigo.PluginBase):
 								u"textColor":			showBeaconTextColor ,
 								u"bType":				u"BLEconnect" ,
 								u"status":				dev.states[u"status"]					}
-					except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+							self.exceptionHandler(40,e)
 
 
 
@@ -3044,24 +3054,25 @@ class Plugin(indigo.PluginBase):
 								u"bType":				 u"RPI" ,
 								u"status":				 dev.states[u"status"]					}
 					except:
-							continue
-	#						 self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						continue
 
 			if changed or self.beaconPositionsUpdated>0:
 					self.savebeaconPositionsFile()
 					cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeBeaconPositionPlots.py' '"+self.indigoPreferencesPluginDir+u"plotPositions/' & "
+					#self.indiLOG.log(30,u" cmd:{}".format(cmd))
+
 					if self.decideMyLog(u"PlotPositions"):
 						self.indiLOG.log(10,u"makeNewBeaconPositionPlots .. beaconPositionsUpdated: {}".format(self.beaconPositionsUpdated))
 						self.indiLOG.log(10,u"makeNewBeaconPositionPlots cmd: {} ".format(cmd) )
 					subprocess.call(cmd, shell=True)
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return
-			if e != None	and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 
 		self.beaconPositionsUpdated		= 0
 		self.beaconPositionsLastCheck	= time.time()
@@ -3107,11 +3118,10 @@ class Plugin(indigo.PluginBase):
 						deltaDist = math.sqrt(deltaDist)
 						self.piToPiDistance[pi1][pi2][3] = deltaDist
 						self.piToPiDistance[pi2][pi1][3] = deltaDist
-					except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						self.exceptionHandler(40,e)
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return True
 
 ####-------------------------------------------------------------------------####
@@ -3130,8 +3140,8 @@ class Plugin(indigo.PluginBase):
 			Pjj = props[u"PosXYZ"].split(u",")
 			return [float(Pjj[0]),float(Pjj[1]),float(Pjj[2])]
 
-		except Exception, e:
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)  +u" fixing props, you might need to edit RPI#"+piU)
+		except Exception as e:
+			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)  +u" fixing props, you might need to edit RPI#"+piU)
 			props[u"PosXYZ"] ="0,0,0"
 			dev.replacePluginPropsOnServer(props)
 		return [0,0,0]
@@ -3222,15 +3232,15 @@ class Plugin(indigo.PluginBase):
 									dev= indigo.devices[piDevId]
 									anyChange = True
 
-						except Exception, e:
+						except Exception as e:
 							if u"{}".format(e).find(u"timeout waiting") > -1:
-								self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								self.exceptionHandler(40,e)
 								self.indiLOG.log(40,u"communication to indigo is interrupted")
 								return
 							self.sleep(0.2)
 							if self.RPI[piU][u"piDevId"] !=0:
 								try:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 									self.indiLOG.log(40,u"error normal if rpi has been deleted, removing from list: setting piDevId=0")
 								except: pass
 								self.delRPI(pi=piU, calledFrom=u"fixConfig")
@@ -3243,8 +3253,8 @@ class Plugin(indigo.PluginBase):
 								continue
 					if myIPrangeValid == "ok":
 						self.myIpNumberRange = myIPrange
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 
 			try:
 				if u"all" in checkOnly:
@@ -3342,8 +3352,8 @@ class Plugin(indigo.PluginBase):
 					for dev in delDEV:
 						self.indiLOG.log(30,u"fixConfig dev: {}  has no addressfield".format(dev.name))
 						# indigo.device.delete(dev)
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 
 			try:
 				if u"all" in checkOnly or "beacon" in checkOnly:
@@ -3425,17 +3435,17 @@ class Plugin(indigo.PluginBase):
 										self.beacons[beacon][u"updateSignalValuesSeconds"] = float(props[u"updateSignalValuesSeconds"])
 									else:
 										self.beacons[beacon][u"updateSignalValuesSeconds"] = 300
-								except Exception, e:
+								except Exception as e:
 									anyChange = True
 									if u"{}".format(e).find(u"timeout waiting") > -1:
-										self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+										self.exceptionHandler(40,e)
 										self.indiLOG.log(40,u"communication to indigo is interrupted")
 										return
 									elif u"{}".format(e).find(u"not found in database") >-1:
 										self.beacons[beacon][u"indigoId"] =0
 										continue
 									else:
-										self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+										self.exceptionHandler(40,e)
 										self.indiLOG.log(40,u"dev={}".format(dev.name))
 										return
 
@@ -3446,8 +3456,8 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(10, u"fixConfig:  deleting beacon:{}  {}".format(beacon, self.beacons[beacon]))
 						del self.beacons[beacon]
 
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 			#self.indiLOG.log(10,u"fixConfig time elapsed point C  "+ u"{}".format(time.time()- self.lastFixConfig) +u"     anyChange: "+ u"{}".format(anyChange))
 
 			try:
@@ -3471,9 +3481,9 @@ class Plugin(indigo.PluginBase):
 											for xyz in [u"PosX",u"PosY",u"PosZ"]:
 												if dev.states[xyz] != self.RPI[piU][xyz]: dev.updateStateOnServer(xyz, self.RPI[piU][xyz] )
 
-									except Exception, e:
+									except Exception as e:
 										if u"{}".format(e).find(u"timeout waiting") > -1:
-											self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+											self.exceptionHandler(40,e)
 											self.indiLOG.log(40,u"communication to indigo is interrupted")
 											return
 										elif u"{}".format(e).find(u"not found in database") >-1:
@@ -3482,12 +3492,12 @@ class Plugin(indigo.PluginBase):
 											self.indiLOG.log(10,	u"fixConfig anychange: (fix) set indigoID=0,  beacon, pi, devid "+ u"{}".format(beacon) +u"  "+ piU +u"  "+ u"{}".format(devId) )
 											continue
 										else:
-											self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+											self.exceptionHandler(40,e)
 											self.indiLOG.log(40,u"unknown error")
 											return
 
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 
 
 			if u"rpi" in checkOnly:
@@ -3502,9 +3512,8 @@ class Plugin(indigo.PluginBase):
 
 			self.executeUpdateStatesDict()
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -3525,9 +3534,8 @@ class Plugin(indigo.PluginBase):
 				else:
 					self.sensorMessages[devIds][item] = default
 				return 0
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return 1
 
 
@@ -3539,9 +3547,8 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.writeJson(self.sensorMessages,fName=self.indigoPreferencesPluginDir + u"sensorMessages")
 			return
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -3560,9 +3567,8 @@ class Plugin(indigo.PluginBase):
 				f.close()
 			return out
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return u""
 
 ####-------------------------------------------------------------------------####
@@ -3584,9 +3590,8 @@ class Plugin(indigo.PluginBase):
 			if only in [u"all"]:
 				self.writeJson( self.knownBeaconTags,   fName=self.indigoPreferencesPluginDir + u"all/knownBeaconTags", fmtOn=True)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -3765,9 +3770,8 @@ class Plugin(indigo.PluginBase):
 			self.beacons[beacon][u"expirationTime"]	  = float(props[u"expirationTime"])
 			self.beacons[beacon][u"updateSignalValuesSeconds"] = float(props[u"updateSignalValuesSeconds"])
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return 0
 
@@ -3809,9 +3813,8 @@ class Plugin(indigo.PluginBase):
 					self.sprinklerDeviceActive = True
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def deviceDeleted(self, dev):  ### indigo calls this
@@ -3853,9 +3856,8 @@ class Plugin(indigo.PluginBase):
 				if dev.address in self.beacons:
 					self.beacons[dev.address][u"enabled"] = False
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -3922,8 +3924,8 @@ class Plugin(indigo.PluginBase):
 
 						if typeId =="rPI" and piU == u"-1":
 								theDictList[0][u"newMACNumber"] = u"00:00:00:00:pi:00"
-					except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						self.exceptionHandler(40,e)
 
 				if typeId.find(u"beacon") >- 1:
 						beacon = dev.address
@@ -3963,8 +3965,8 @@ class Plugin(indigo.PluginBase):
 
 
 			return theDictList
-		except Exception, e:
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return super(Plugin, self).getDeviceConfigUiValues(pluginProps, typeId, devId)
 
@@ -3987,7 +3989,6 @@ class Plugin(indigo.PluginBase):
 		try:
 			dev = indigo.devices[devId]
 			props = dev.pluginProps
-			#self.indiLOG.log(20,u"validateDeviceConfigUi: dev:{}, props: {}\n {}".format(dev.name, unicode(props), unicode(valuesDict)))
 			beacon = u""
 			if typeId in [u"beacon", u"rPI"]:
 				try:
@@ -4027,8 +4028,8 @@ class Plugin(indigo.PluginBase):
 				if len(valuesDict[u"newuserIdPi"]) < 2:
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad userId for Pi")
 					return ( False, valuesDict, errorDict )
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up RPI--beacon Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up RPI--beacon Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4086,14 +4087,12 @@ class Plugin(indigo.PluginBase):
 				return (False, valuesDict, errorDict )
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			if u"{}".format(e).find(u"timeout waiting") > -1:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "communication to indigo is interrupted")
 			else:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "please fill out all fields")
-			return ( False, valuesDict, errorDict )
 
 		self.updateNeeded += u" fixConfig "
 		valuesDict, errorDict = self.setErrorCode(valuesDict,errorDict,  "  ??   error .. ?? " )
@@ -4109,9 +4108,8 @@ class Plugin(indigo.PluginBase):
 			self.delayedActions[u"data"].put( {u"actionTime":time.time()+1.1,u"devId":dev.id, u"updateItems":[u"setupCARS"]})
 			self.setupCARS(dev.id,valuesDict,mode="validate")
 			return True, errorDict, valuesDict
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			return False, errorDict, valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -4119,9 +4117,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			valuesDict[u"address"] = u"Pi-"+valuesDict[u"piServerNumber"]
 			return True, errorDict, valuesDict
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			return False, errorDict, valuesDict
 
 
@@ -4167,8 +4164,8 @@ class Plugin(indigo.PluginBase):
 			#indigo.server.log(u"validateDeviceConfigUi_BLEconnect  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
 
 			return (True, valuesDict, errorDict)
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up BLEconnect Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up BLEconnect Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4209,8 +4206,8 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"groupMember", memberList)
 					self.updateNeeded += u" fixConfig "
 				#self.indiLOG.log(20,u"fillMemberListState\ngroupListUsedNames:{}\ngroupStatusList:{}\nmemberList:{}\nstate:{}\n updateStatesDict:{}".format(self.groupListUsedNames, self.groupStatusList, memberList, dev.states[u"groupMember"], self.updateStatesDict))
-		except Exception, e:
-			self.indiLOG.log(40,u"fillMemberListState Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"fillMemberListState Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			self.indiLOG.log(40,u"fillMemberListState valuesDict:{}".format(valuesDict))
 		valuesDict["memberList"] = memberList
 		return  valuesDict
@@ -4242,8 +4239,8 @@ class Plugin(indigo.PluginBase):
 			self.saveConfig(only=u"RPIconf")
 			#indigo.server.log(u"validateDeviceConfigUi_rPISensor ipNumberRpiSetStatic:{}".format(valuesDict[u"ipNumberRpiSetStatic"]))
 			return (True, valuesDict, errorDict)
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up RPI-Sensor Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up RPI-Sensor Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4339,8 +4336,8 @@ class Plugin(indigo.PluginBase):
 					self.RPI[thisPi][u"PosX"] = float(xyz[0]) * self.distanceUnits
 					self.RPI[thisPi][u"PosY"] = float(xyz[1]) * self.distanceUnits
 					self.RPI[thisPi][u"PosZ"] = float(xyz[2]) * self.distanceUnits
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"bad input for xyz-coordinates:{}".format(valuesDict[u"PosXYZ"]) )
 
 
@@ -4348,8 +4345,8 @@ class Plugin(indigo.PluginBase):
 			self.updateNeeded += u" fixConfig "
 			self.saveConfig(only = u"RPIconf")
 			return (True, valuesDict, errorDict)
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up RPI Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up RPI Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4427,8 +4424,8 @@ class Plugin(indigo.PluginBase):
 
 
 			return ( True, valuesDict, errorDict )
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up iBeacon Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up iBeacon Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4499,7 +4496,7 @@ class Plugin(indigo.PluginBase):
 						valuesDict[u"description"] = u"reset-GPIO not used"
 
 				if	typeId == u"lidar360":
-						valuesDict[u"description"] = u"MotorFrq: {}Hz; {}º in 1 bin; {}; MinSignal: {}".format( int(10*float(valuesDict[u"motorFrequency"])), valuesDict[u"anglesInOneBin"], valuesDict[u"usbPort"],  valuesDict[u"minSignalStrength"])
+						valuesDict[u"description"] = u"MotorFrq: {}Hz; {} in 1 bin; {}; MinSignal: {}".format( int(10*float(valuesDict[u"motorFrequency"])), valuesDict[u"anglesInOneBin"], valuesDict[u"usbPort"],  valuesDict[u"minSignalStrength"])
 
 
 				if	typeId == u"Wire18B20" : # update serial number in states in case we jumped around with dev types.
@@ -4642,8 +4639,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,u"validating device error:{}     fields:{}".format(errorText, valuesDict))
 				valuesDict, errorDict  = self.setErrorCode(valuesDict, errorDict,  errorText)
 				return ( False, valuesDict, errorDict )
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up iBeacon Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up iBeacon Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4735,8 +4732,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(10, u"{}".format(valuesDict) )
 			self.updateNeeded += u" fixConfig "
 			return (True, valuesDict, errorDict )
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up INPUTRotatary Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up INPUTRotatary Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4778,8 +4775,8 @@ class Plugin(indigo.PluginBase):
 			self.updateNeeded += u" fixConfig "
 			return ( True, valuesDict, errorDict )
 
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up INPUTRotatary Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up INPUTRotatary Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
 			return ( False, valuesDict, errorDict )
 
@@ -4863,14 +4860,13 @@ class Plugin(indigo.PluginBase):
 			valuesDict[u"piDone"] = False
 			valuesDict[u"stateDone"] = False
 			return (True, valuesDict, errorDict)
-			self.updateNeeded += u" fixConfig "
 
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up OUTPUT-G Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up OUTPUT-G Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			try:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict, errorDict,  u"pgm error, check log")
-			except Exception, e:
-				self.indiLOG.log(40,u"setting up OUTPUT-G Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.indiLOG.log(40,u"setting up OUTPUT-G Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			return ( False, valuesDict, errorDict )
 
 
@@ -5064,8 +5060,8 @@ class Plugin(indigo.PluginBase):
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  error )
 				return ( False, valuesDict, errorDict )
 
-		except Exception, e:
-			self.indiLOG.log(40,u"setting up OUTPUT Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.indiLOG.log(40,u"setting up OUTPUT Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  u"pgm error, check log")
 		return ( False, valuesDict, errorDict )
 
@@ -5076,8 +5072,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict[u"MSG"] = error
 			errorDict[u"MSG"]  = error
 			self.indiLOG.log(40,u"validateDeviceConfigUi "+error)
-		except Exception, e:
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return   valuesDict, errorDict
 
 
@@ -5091,8 +5087,8 @@ class Plugin(indigo.PluginBase):
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-			except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+					self.exceptionHandler(40,e)
 		self.devUpdateList ={}
 
 ####-------------------------------------------------------------------------####
@@ -5118,9 +5114,9 @@ class Plugin(indigo.PluginBase):
 					if u"extraPage1Color"	in valuesDict: del valuesDict[u"extraPage1Color"]
 					valuesDict[u"scrollxy"]		= u"0"
 					valuesDict[u"showDateTime"] = u"0"
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 		return valuesDict
 
 
@@ -5171,30 +5167,30 @@ class Plugin(indigo.PluginBase):
 	def printDeviceDictCALLBACK(self, valuesDict=None, typeId=u""):
 		devId= int(valuesDict[u"printDeviceDict"])
 		dev=indigo.devices[devId]
-		self.myLog( text = dev.name+u"/"+ u"{}".format(devId)+u" -------------------------------",mType="printing dev info for" )
+		self.myLog( theText = dev.name+u"/"+ u"{}".format(devId)+u" -------------------------------",mType="printing dev info for" )
 		props=dev.pluginProps
 		states=dev.states
-		self.myLog( text = u"\n"+ u"{}".format(props),mType="props:")
-		self.myLog( text = u"\n"+ u"{}".format(states),mType="states:")
-		try:  self.myLog( text = dev.description,mType="description:")
+		self.myLog( theText = u"\n"+ u"{}".format(props),mType="props:")
+		self.myLog( theText = u"\n"+ u"{}".format(states),mType="states:")
+		try:  self.myLog( theText = dev.description,mType="description:")
 		except: pass
-		try:  self.myLog( text = dev.address,mType="address:")
+		try:  self.myLog( theText = dev.address,mType="address:")
 		except: pass
-		try:  self.myLog( text = dev.deviceTypeId,mType="deviceTypeId:")
+		try:  self.myLog( theText = dev.deviceTypeId,mType="deviceTypeId:")
 		except: pass
-		try:  self.myLog( text = u"{}".format(dev.enabled),mType="enabled:")
+		try:  self.myLog( theText = u"{}".format(dev.enabled),mType="enabled:")
 		except: pass
-		try:  self.myLog( text = dev.model,mType="model:")
+		try:  self.myLog( theText = dev.model,mType="model:")
 		except: pass
 		if u"piServerNumber" in props:
 			if props[u"piServerNumber"]!=u"":
 				pi= int(props[u"piServerNumber"])
 				piU = u"{}".format(pi)
-				self.myLog( text = u"\n"+self.writeJson(self.RPI[piU], fmtOn=True ),mType="RPI info:")
+				self.myLog( theText = u"\n"+self.writeJson(self.RPI[piU], fmtOn=True ),mType="RPI info:")
 		else:
 			for piU in _rpiBeaconList:
 				if u"rPiEnable"+piU in props:
-					self.myLog( text =	u"\n"+self.writeJson(self.RPI[piU], fmtOn=True ),mType="RPI info:")
+					self.myLog( theText =	u"\n"+self.writeJson(self.RPI[piU], fmtOn=True ),mType="RPI info:")
 
 
 		return valuesDict
@@ -5202,7 +5198,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmchangeLogfile(self, valuesDict=None, typeId=u"", devId=0):
-		self.myLog( text = u"  starting to modify "+self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py')
+		self.myLog( theText = u"  starting to modify "+self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py')
 		if not os.path.isfile(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py'): return valuesDict
 		f = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py', u"r")
 		g = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py-1', u"w")
@@ -5289,9 +5285,8 @@ class Plugin(indigo.PluginBase):
 								if v not in self.RPI[piU][item]:
 									self.RPI[piU][item].append(v)
 			return
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -5591,9 +5586,8 @@ class Plugin(indigo.PluginBase):
 				if u"gpio" in xxx[n]:
 					pinMappings += u"{}".format(n) + ":" + xxx[n][u"gpio"] + "|"
 			valuesDict[u"pinMappings"] = pinMappings
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 		return valuesDict
@@ -5796,9 +5790,8 @@ class Plugin(indigo.PluginBase):
 					if props[u"piServerNumber"] == piN:
 						xList.append( (u"{}".format(dev.id), u"{} {}".format(dev.name, dev.id) ))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return xList
 
@@ -6024,9 +6017,8 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(5,Text + piU+u"  action string:"+ u"{}".format(action)	 )
 				self.rPiRestartCommand[pi] = level	## which part need to restart on rpi
 				self.setONErPiV(piU,u"piUpToDate", action, resetQueue=True)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 
@@ -6183,9 +6175,8 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(10,u"set time of RPI# {}  finished, new delta time ={:6.1f}[secs]".format(piU,dt))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return
 
@@ -6214,9 +6205,8 @@ class Plugin(indigo.PluginBase):
 
 			return dt, retC
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 		return 0, -1
@@ -6397,15 +6387,15 @@ class Plugin(indigo.PluginBase):
 			if typeId in self.RPI[piU][u"output"] and u"{}".format(devId) in self.RPI[piU][u"output"][typeId]:
 				try:
 					default = (piU, u"Pi-" + piU + "-" + self.RPI[piU][u"ipNumberPi"] + u";  Name =" + indigo.devices[devIDpi].name)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u" devid " + u"{}".format(devIDpi))
 				continue
 			else:
 				try:
 					xList.append((piU, u"Pi-" + piU + u"-" + self.RPI[piU][u"ipNumberPi"] + u";  Name =" + indigo.devices[devIDpi].name))
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u" devid " + u"{}".format(devIDpi))
 
 		if default != u"":
@@ -6429,9 +6419,8 @@ class Plugin(indigo.PluginBase):
 				if self.beacons[mac][u"ignore"] <= 0 and self.beacons[mac][u"indigoId"] != 0:
 					listActive.append([mac, name + "- active, used"])
 			listActive = sorted(listActive, key=lambda tup: tup[1])
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			listActive = []
 		return listActive
 
@@ -6472,9 +6461,8 @@ class Plugin(indigo.PluginBase):
 			#self.indiLOG.log(20,u"listActive:{}\nlistDeleted:{}\nlistIgnored:{}\nlistOldIgnored:{}".format(listActive, listDeleted, listIgnored, listOldIgnored))
 
 			return  listOldIgnored + listDeleted + listIgnored + listActive
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return []
 
 
@@ -6503,9 +6491,8 @@ class Plugin(indigo.PluginBase):
 					pass
 			return sorted(listActive, key=lambda tup: tup[1])
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return []
 
 
@@ -6538,10 +6525,9 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.newBeaconsLogTimer = 0
 				valuesDict[u"MSG"]  = u"newBeaconsLogTimer:off"
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				valuesDict[u"MSG"]  = u"error, check log"
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			valuesDict[u"MSG"]  = u"error, check log"
 			self.newBeaconsLogTimer = 0
 		return valuesDict
 
@@ -6569,9 +6555,8 @@ class Plugin(indigo.PluginBase):
 				self.selectBeaconsLogTimer[valuesDict[u"selectBEACON"]]	 = length
 				valuesDict[u"MSG"]  = u"track beacon:{}".format(dev.name)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			return valuesDict
 		return valuesDict
 
@@ -6686,9 +6671,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(30,u"=== deleting  === replaced MAC number {}  of device {} with {} --	and deleted device {}    ===".format(oldMAC, oldName, newMAC, newName) )
 			valuesDict[u"MSG"] = u"replaced, moved MAC number"
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -6737,9 +6721,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(30,u"=== replaced MAC number {}  of device {} with {} --	and deleted device {}    ===".format(oldMAC, oldName, newMAC, newName) )
 			valuesDict[u"MSG"] = u"replaced, moved MAC number"
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -6819,9 +6802,9 @@ class Plugin(indigo.PluginBase):
 			self.beacons[mac][u"indigoId"] = dev.id
 			dev = indigo.devices[dev.id]
 
-		except Exception, e:
+		except Exception as e:
 				if u"{}".format(e).find(u"timeout waiting") > -1:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 
 
 
@@ -6868,8 +6851,8 @@ class Plugin(indigo.PluginBase):
 
 			self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"buttonConfirmMACnonactiveCALLBACK")
 			self.indiLOG.log(10,u"from initially {} beacons in internal list,  {} ignored/inactive were removed".format(ll0, ll0-len(self.beacons)) )
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -6883,9 +6866,9 @@ class Plugin(indigo.PluginBase):
 					try:
 						dd= indigo.devices[self.beacons[beacon][u"indigoId"]]
 						continue
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e).find(u"timeout waiting") >-1: continue
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 
 				#self.indiLOG.log(10,u"beacon= {} selected  (deleted/ignored) history .. can be used again -- 1".format(beacon) )
 				delB.append(beacon)
@@ -6907,8 +6890,8 @@ class Plugin(indigo.PluginBase):
 			ll2 = len(self.beacons)
 			self.indiLOG.log(10,u"from initially good {} beacons # of beacons removed from BEACONlist: {}".format(ll0, ll0-ll2) )
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		valuesDict[u"MSG"] = u"delete history initiated"
 		return valuesDict
 
@@ -6928,8 +6911,8 @@ class Plugin(indigo.PluginBase):
 					except:
 						pass
 			self.indiLOG.log(10,u"set all existing iBeacon devices to active")
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return valuesDict
 ####-------------------------------------------------------------------------####
@@ -6948,8 +6931,8 @@ class Plugin(indigo.PluginBase):
 					except:
 						pass
 			self.indiLOG.log(10,u"set all existing iBeacon devices to in active")
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return valuesDict
 ####-------------------------------------------------------------------------####
@@ -6967,8 +6950,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"buttonSetAllbeaconsTonoFastDownCALLBACK")
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			valuesDict[u"MSG"] = u"all beacon set to no Fast Down"
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 ###-------------------------------------------------------------------------####
 	def buttonSetAllbeaconsTonoSignalDeltaCALLBACK(self, valuesDict=None, typeId=u"", devId=0):
@@ -6985,8 +6968,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"buttonSetAllbeaconsTonoSignalDeltaCALLBACK")
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			valuesDict[u"MSG"] = u"all beacon set to no Signal Delta"
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 ###-------------------------------------------------------------------------####
 	def buttonSetAllbeaconsTonominSignalOffCALLBACK(self, valuesDict=None, typeId=u"", devId=0):
@@ -7002,8 +6985,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"buttonSetAllbeaconsTonominSignalOffCALLBACK")
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			valuesDict[u"MSG"] = u"all beacon set to no Signal min off "
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 ###-------------------------------------------------------------------------####
 	def buttonSetAllbeaconsTonominSignalOnCALLBACK(self, valuesDict=None, typeId=u"", devId=0):
@@ -7019,8 +7002,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"buttonSetAllbeaconsTonominSignalOnCALLBACK")
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 			valuesDict[u"MSG"] = u"all beacon set to no Signal min ON"
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 
@@ -7043,8 +7026,8 @@ class Plugin(indigo.PluginBase):
 				for ii in range(10):
 					if u"INPUTdevId"+str(ii) in props and len(props[u"INPUTdevId"+str(ii)]) >3:
 						valuesDict[u"i"+str(ii)] = True
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -7097,7 +7080,7 @@ class Plugin(indigo.PluginBase):
 						self.updatePULSE(dev, {"count":-1}, whichKeysToDisplay)
 
 				for ii in range(10):
-					if valuesDict[u"INPUT_"+str(ii)] == True:
+					if valuesDict[u"INPUT_"+str(ii)]:
 						if theType == u"INPUTcoincidence":
 							theType = u"INPUTpulse"
 							if u"INPUTdevId"+str(ii) in props and len(props[u"INPUTdevId"+str(ii)])>3:
@@ -7111,8 +7094,8 @@ class Plugin(indigo.PluginBase):
 			textToSend = json.dumps([{u"device": typeId, u"command":u"file",u"fileName":u"/home/pi/pibeacon/temp/"+theType+u".reset",u"fileContents":resetGPIOCount}])
 			self.sendtoRPI(self.RPI[piU][u"ipNumberPi"], piU, textToSend, calledFrom=u"resetGPIOCountCALLBACKmenu")
 
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -7186,8 +7169,8 @@ class Plugin(indigo.PluginBase):
 
 			
 			dev.replacePluginPropsOnServer(props)
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -7224,8 +7207,8 @@ class Plugin(indigo.PluginBase):
 
 			indigo.variable.updateValue(u"piBeacon_property", propertyContents)
 			retJ = json.dumps({propertyName:u"{}".format(propertyContents)}) #
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return retJ
 
@@ -7321,8 +7304,8 @@ class Plugin(indigo.PluginBase):
 				  json.dumps({u"outputDev":vd[u"outputDev"],"device": typeId})+u" error")
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom=u"setTEA5767CALLBACKmenu")
 			vd[u"MSG"] = u" ok"
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -7344,9 +7327,8 @@ class Plugin(indigo.PluginBase):
 			## show new ones on screen
 			vd = self.setdisplayPropsWindowCALLBACKbutton(valuesDict=vd)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return vd
 
 ####-------------------------------------------------------------------------####
@@ -7411,9 +7393,9 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u"setdisplayCALLBACKmenuv error in json conversion for "+ u"{}".format(cmds))
 					vd[u"MSG"] = u"error in json conversion"
 					return
@@ -7656,9 +7638,9 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"\n"+line+u"\n")
 				vd[u"MSG"] = u" ok"
 
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 					vd[u"MSG"] = u"error"
 			jData = {u"device": typeId,  "restoreAfterBoot": False, u"intensity":intensity, u"zoom":zoom,"repeat":repeat,"resetInitial":resetInitial,"startAtDateTime":startAtDateTime,
 				u"scrollxy":scrollxy, u"showDateTime":showDateTime,"scrollPages":scrollPages,"scrollDelay":scrollDelay,"scrollDelayBetweenPages":scrollDelayBetweenPages,
@@ -7669,11 +7651,10 @@ class Plugin(indigo.PluginBase):
 			textToSend = json.dumps([jData])
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom=u"setdisplayCALLBACKmenu")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u"error display check "+ u"{}".format(vd))
-				valuesDict[u"MSG"] = u"error in parameters"
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u"error display check "+ u"{}".format(vd))
+			valuesDict[u"MSG"] = u"error in parameters"
 		return vd
 
 
@@ -7687,9 +7668,8 @@ class Plugin(indigo.PluginBase):
 						ret	 =	self.addBrackets(ret,cType=lenItem)
 					else:
 						ret = int(ret)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return ret
 ####-------------------------------------------------------------------------####
 	def addBrackets(self,pos,cType=u"",default=[]):
@@ -7734,9 +7714,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,u"addBrackets error in input: pos= {}; wrong number of coordinates, should be: {}".format(pos, nItems) )
 
 			return pp
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,u"addBrackets error in input: cType:{};  default= {};  pos= {}".format(cType, default, pos) )
 		return default
 
@@ -7782,9 +7761,9 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u"error in json conversion for "+ u"{}".format(cmds))
 					vd[u"MSG"] = u"error in json conversion"
 					return
@@ -7974,9 +7953,9 @@ class Plugin(indigo.PluginBase):
 				line+="]'\n	 })\n"
 				line+= u"##=======   end   =====\n"
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"\n"+line+u"\n")
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(40,u"use this as a ppython script command:\n"+u"plug = indigo.server.getPlugin(\"com.karlwachs.piBeacon\")\nplug.executeAction(\"Neopixel\" , props ="+
 				  (json.dumps({u"outputDev":vd[u"outputDev"],"device": typeId, "restoreAfterBoot": False, u"intensity":intensity,"repeat":repeat,"resetInitial":resetInitial})).strip(u"}").replace(u"false",u"False").replace(u"true",u"True")+u"\n,\"command\":'"+json.dumps(cmds) +u"'})"+u"\n")
 				self.indiLOG.log(10,u"vd: "+ u"{}".format(vd))
@@ -7994,11 +7973,10 @@ class Plugin(indigo.PluginBase):
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom=u"setneopixelCALLBACKmenu")
 			vd[u"MSG"] = u" ok"
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u"error display check "+ u"{}".format(vd))
-				valuesDict[u"MSG"] = u"error in parameters"
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u"error display check "+ u"{}".format(vd))
+			valuesDict[u"MSG"] = u"error in parameters"
 		return vd
 
 
@@ -8039,9 +8017,8 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except Exception, e:
-					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u"error in json conversion for "+ u"{}".format(cmds))
 					vd[u"MSG"] = u"error in json conversion"
 					return
@@ -8185,18 +8162,17 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"\n"+line+u"\n")
 				vd[u"MSG"] = u" ok"
 
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 					vd[u"MSG"] = u"error"
 			textToSend = json.dumps([{u"device": typeId, u"repeat":repeat, u"waitForLast":waitForLast,u"dev.id":dev.id, u"startAtDateTime":startAtDateTime, u"command": cmds}])
 			self.sendtoRPI(ip, piServerNumber, textToSend, calledFrom=u"setStepperMotorCALLBACKmenu")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u"error stepperMotor check "+ u"{}".format(vd))
-				valuesDict[u"MSG"] = u"error in parameters"
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u"error stepperMotor check "+ u"{}".format(vd))
+			valuesDict[u"MSG"] = u"error in parameters"
 		return vd
 
 
@@ -8215,15 +8191,14 @@ class Plugin(indigo.PluginBase):
 					else:
 						cmds[nn][item]	 = json.loads(xxx)
 					return cmds, vd, True
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u" error in input: "+item+u" ii="+ u"{}".format(ii)+u" nn="+ u"{}".format(nn)+ " cmds="+	 u"{}".format(cmds) + " xxx="+  u"{}".format(xxx))
 					vd[u"MSG"] = u"error in parameter"
 				return cmds,vd, False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u"item " + u"{}".format(item)+ u"{}".format(ii)+u"  , vd "+ u"{}".format(vd))
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u"item " + u"{}".format(item)+ u"{}".format(ii)+u"  , vd "+ u"{}".format(vd))
 			return cmds,vd, False
 		return cmds,vd, True
 
@@ -8235,8 +8210,8 @@ class Plugin(indigo.PluginBase):
 			out= (json.dumps([{u"command":"file",u"fileName":fileName,"fileContents":fileContents,"fileMode":fileMode,"touchFile":touchFile}]))
 			if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,	u"sending file to  "+ip+u";  "+ out )
 			self.sendtoRPI(ip, piU, out, calledFrom=u"sendFileToRPIviaSocket")
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -8281,10 +8256,11 @@ class Plugin(indigo.PluginBase):
 			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			sock.settimeout(3.)
 			try:
-					# Connect to server and send data
-					sock.connect((ip, int(self.rPiCommandPORT)))
-					sock.sendall(theString + "\n")
-			except Exception, e:
+				# Connect to server and send data
+				sock.connect((ip, int(self.rPiCommandPORT)))
+				if sys.version_info[0] == 3: 	sock.sendall(bytes(theString + "\n",'utf-8'))
+				else:							sock.sendall(theString + "\n")
+			except Exception as e:
 					if u"{}".format(e) != u"None":
 						if	time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
 							if time.time() - self.RPIBusy[piU]  > 20: # supress warning if we just updated the RPI
@@ -8301,12 +8277,12 @@ class Plugin(indigo.PluginBase):
 						return -1
 			finally:
 					sock.close()
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e) != u"None":
 				if	time.time() > self.currentlyBooting: # NO MSG IF RPIS ARE BOOTING
 					if u"{}".format(e).find(u"onnection refused") ==-1:
 						self.indiLOG.log(40,u"error in socket-send to rPi:{} {}  cmd= {}..{}".format(piU, ip, theString[0:30],theString[-30:]) )
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 					else:
 						self.indiLOG.log(30,u"error in socket-send to rPi:{} (), connection refused,  rebooting/restarting RPI?".format(piU, ip) )
 					self.checkIPSendSocketOk[ip][u"count"] += 1
@@ -8325,9 +8301,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict[u"typeId"]		 = u"playSound"
 			valuesDict[u"cmd"]			 = u"playSound"
 			self.setPin(valuesDict)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			return valuesDict
 		return valuesDict
 
@@ -8359,9 +8334,8 @@ class Plugin(indigo.PluginBase):
 		try:
 				devId = int(valuesDict[u"devIdOfBeacon"])
 				return  self.getBeaconParametersCALLBACKmenu( valuesDict=valuesDict, devId=devId, force=True )
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -8467,7 +8441,9 @@ class Plugin(indigo.PluginBase):
 						if force or batteryLevel < 20  or (time.time() - batteryLevelLastUpdate) > (3600*17): # if successful today and battery level > 20% dont need to redo it again
 							#if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(10,u"getBeaconParameters pass 3" )
 							try:
-								dist = float( dev.states[u"Pi_{:02d}_Distance".format(int(piU))] )
+								stateDist = u"Pi_{:02d}_Distance".format(int(piU))
+								if stateDist not in dev.states: continue
+								dist = float( dev.states[stateDist] )
 								if dist < 99.:
 									dd = {u"battCmd":self.knownBeaconTags[typeOfBeacon][u"battCmd"]}
 									minTime[piU] += 10
@@ -8476,12 +8452,12 @@ class Plugin(indigo.PluginBase):
 									if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(10,u"getBeaconParameters requesting update from RPI:{:2s} for beacon: {:30s}; lastV: {:3d}; last successful check @: {}; distance to RPI:{:4.1f}; cmd:{}".format(piU, dev.name, dev.states[u"batteryLevel"], dev.states[u"batteryLevelLastUpdate"], dist, dd) )
 
 								elif force: # if successful today and battery level > 30% dont need to redo it again
-									 self.indiLOG.log(20,u"Battery level update outdated  for beacon: {:30s}; not doable on requested pi#{}, not visible on that pi".format(dev.name, piU ) )
+									self.indiLOG.log(20,u"Battery level update outdated  for beacon: {:30s}; not doable on requested pi#{}, not visible on that pi".format(dev.name, piU ) )
 
 								if (time.time() - batteryLevelLastUpdate) > (3600*24*3): # error message if last update > 3 days ago
-									 self.indiLOG.log(20,u"Battery level update outdated  for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name, dev.states[u"batteryLevel"], dev.states[u"batteryLevelLastUpdate"] ) )
-							except Exception, e:
-								self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.indiLOG.log(20,u"Battery level update outdated  for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name, dev.states[u"batteryLevel"], dev.states[u"batteryLevelLastUpdate"] ) )
+							except Exception as e:
+								self.exceptionHandler(40,e)
 
 						else:
 							if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(10,u"getBeaconParameters no update needed              for beacon: {:30s}; lastV: {:3d}; last successful check @: {}".format(dev.name, dev.states[u"batteryLevel"], dev.states[u"batteryLevelLastUpdate"] ) )
@@ -8517,9 +8493,8 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"BatteryLevel"): self.indiLOG.log(10,u"getBeaconParameters no active/requested beacons on rpi# {}".format(sorted(nothingFor)) )
 			valuesDict[u"MSG"]  = u"get BatL {} beacons on {} Pi".format(countB,countP)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return valuesDict
 
@@ -8554,9 +8529,8 @@ class Plugin(indigo.PluginBase):
 				out += u"\n{:45s}  {:18s} {:20s}  {:15s}  {:6d}  {:11s} {:12s} {} ".format( dev.name, mac, typeOfBeacon, dev.states[u"status"], int(piU), benabled, batlevel, lastU)
 			indigo.server.log(out)
 			valuesDict[u"MSG"]   = u"bat report in std indigo log"
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return valuesDict
 
@@ -8775,11 +8749,11 @@ class Plugin(indigo.PluginBase):
 							xxx= propsNEO[u"devType"].split(u"x")
 							ymax = int(xxx[0])
 							xmax = int(xxx[1])
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							return
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					return
 
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"{}".format(action) )
@@ -8802,8 +8776,8 @@ class Plugin(indigo.PluginBase):
 							position += u"[{}],".format(props0[mmm])
 						position  = position.strip(u",") +u"]"
 						position = json.loads(position)
-					except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"position data: ".format(position))
 						position=[]
 				chList =[]
@@ -8862,8 +8836,8 @@ class Plugin(indigo.PluginBase):
 				if u"speedOfChange" in props0 and props0[u"speedOfChange"] !=u"":
 					try:
 						valuesDict[u"speedOfChange0"]		  = int(props0[u"speedOfChange"])
-					except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						self.exceptionHandler(40,e)
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"props0 {}".format(props0) )
 
 				valuesDict[u"outputDev"]		 = devId
@@ -9003,9 +8977,8 @@ class Plugin(indigo.PluginBase):
 
 			self.setPinCALLBACKmenu(valuesDict, typeId)
 			return
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -9084,9 +9057,8 @@ class Plugin(indigo.PluginBase):
 					okList.append((ll[0],u"OUTPUT_"+ u"{}".format(ii)+u" "+ll[1]))
 					break
 			#self.indiLOG.log(10, u"{}".format(okList))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return okList
 
 
@@ -9201,11 +9173,11 @@ class Plugin(indigo.PluginBase):
 					startAtDateTime	   = startAtDateTimeIN.replace(u"-","").replace(u":","").replace(u" ","").replace(u"/","").replace(u".","").replace(u",","")
 					startAtDateTime	   = startAtDateTime.ljust(14,"0")
 					return	 max(0, self.getTimetimeFromDateString(startAtDateTime, fmrt= u"%Y%m%d%H%M%S") - time.time() )
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					return 0
-		except Exception, e:
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return 0
 
 
@@ -9405,8 +9377,8 @@ class Plugin(indigo.PluginBase):
 					out += cmd + u"," + u"{}".format(analogValue)
 					out += cmd + u"," + u"{}".format(rampTime)
 					if u"writeOutputToState" not in props or (u"writeOutputToState" in props and props[u"writeOutputToState"] == u"1"): self.addToStatesUpdateDict(dev.id, u"OUTPUT", out)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					outN = 0
 				try:
 					line = u"\n##=======use this as a python script in an action group action :=====\n"
@@ -9530,8 +9502,8 @@ class Plugin(indigo.PluginBase):
 					outN = int(output)
 					if u"OUTPUT_{:02d}".format(outN) in dev.states: self.addToStatesUpdateDict(dev.id,u"OUTPUT_{:02d}".format(outN), out)
 					if u"OUTPUT" in dev.states and ( u"writeOutputToState" not in props or (u"writeOutputToState" in props and props[u"writeOutputToState"] == u"1") ): self.addToStatesUpdateDict(dev.id,u"OUTPUT", out)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					outN = 0
 				try:
 					line = u"\n##=======use this as a python script in an action group action :=====\n"
@@ -9562,9 +9534,8 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(10,u"setPIN:   no condition met, returning")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmoldIPCALLBACK(self, valuesDict=None, typeId=u"", devId=0):
@@ -9614,9 +9585,8 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,	u"sending parameters file via socket: "+ u"{}".format(v)+u" \n"+fileContents)
 				self.sendFileToRPIviaSocket(ip,piU,u"/home/pi/pibeacon/parameters",fileContents,fileMode="w")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -9647,9 +9617,8 @@ class Plugin(indigo.PluginBase):
 			if len(fileContents) >0:
 				self.sendFileToRPIviaSocket(ip, piU, u"/home/pi/pibeacon/temp/extraPageForDisplay.inp",json.dumps(fileContents),fileMode="w",touchFile=False)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -9934,15 +9903,15 @@ class Plugin(indigo.PluginBase):
 
 									try:
 										dev = indigo.devices[dev.id]
-									except Exception, e:
+									except Exception as e:
 										if u"{}".format(e).find(u"timeout waiting") > -1:
-											self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+											self.exceptionHandler(40,e)
 											self.indiLOG.log(40,u"communication to indigo is interrupted")
 											return valuesDict
 										if u"{}".format(e).find(u"not found in database") ==-1:
-											self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+											self.exceptionHandler(40,e)
 											return valuesDict
-										self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+										self.exceptionHandler(40,e)
 
 									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 									self.addToStatesUpdateDict(dev.id,u"status", u"expired")
@@ -9955,7 +9924,7 @@ class Plugin(indigo.PluginBase):
 						else:
 							try:
 								dev= indigo.devices[self.RPI[piU][u"piDevId"]]
-							except Exception, e:
+							except Exception as e:
 								if u"{}".format(e).find(u"not found in database") >-1:
 									priProps			= copy.deepcopy(_GlobalConst_emptyrPiProps)
 									priProps["ipNumberPi"] = ipn
@@ -10033,7 +10002,7 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(10,u"rpiSensor exists, no need to make new one")
 							try:
 								dev= indigo.devices[self.RPI[piU][u"piDevId"]]
-							except Exception, e:
+							except Exception as e:
 								self.indiLOG.log(10,u"rpiSensor .. does not exists, failed to find")
 								if u"{}".format(e).find(u"not found in database") >-1:
 									dev= indigo.device.create(
@@ -10085,9 +10054,8 @@ class Plugin(indigo.PluginBase):
 
 			self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"buttonConfirmPiServerConfigCALLBACK")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 		self.RPI[piU][u"piOnOff"] = u"1"
@@ -10129,9 +10097,8 @@ class Plugin(indigo.PluginBase):
 					self.resetRPI(piU)
 				return
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,u"trying to delete indigo device for pi# {};  devID:{}; calledFrom:{}".format(pi, devID, calledFrom))
 		return
 
@@ -10156,9 +10123,9 @@ class Plugin(indigo.PluginBase):
 			try: self.enableFING	= valuesDict[u"enableFING"]
 			except: self.enableFING	= u"0"
 			self.debugLevel 		= []
-
 			for d in _debugAreas:
 				if valuesDict[u"debug"+d]: self.debugLevel.append(d)
+
 			try:
 				if self.debugRPI	!= int(valuesDict[u"debugRPI"]): self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
 				self.debugRPI		= int(valuesDict[u"debugRPI"])
@@ -10177,8 +10144,8 @@ class Plugin(indigo.PluginBase):
 				if yy != self.SQLLoggingEnable:
 					self.SQLLoggingEnable = yy
 					self.actionList[u"setSqlLoggerIgnoreStatesAndVariables"] = True
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				self.SQLLoggingEnable = {u"devices":True, u"variables":True}
 
 
@@ -10427,9 +10394,8 @@ class Plugin(indigo.PluginBase):
 				self.printConfig()
 
 			self.fixConfig(checkOnly = [u"all",u"rpi",u"force"],fromPGM=u"validatePrefsConfigUi")
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return True, valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -10463,7 +10429,7 @@ class Plugin(indigo.PluginBase):
 
 		self.startTime		  = time.time()
 		self.stackReady		  = False
-		self.socketServer	  = None
+		self.socServ	  = None
 
 		self.indiLOG.log(20,u"entering init runConcurrentThread")
 
@@ -10484,7 +10450,7 @@ class Plugin(indigo.PluginBase):
 
 		if self.indigoInputPORT > 0 and self.IndigoOrSocket == u"socket":
 			self.setCurrentlyBooting(50, setBy=u"initConcurrentThread")
-			self.socketServer, self.stackReady	= self.startTcpipListening(self.myIpNumber, self.indigoInputPORT)
+			self.socServ, self.stackReady	= self.startTcpipListening(self.myIpNumber, self.indigoInputPORT)
 			self.setCurrentlyBooting(40, setBy=u"initConcurrentThread")
 		else:
 			self.indiLOG.log(10,u" ..  subscribing to indigo variable changes" )
@@ -10556,7 +10522,7 @@ class Plugin(indigo.PluginBase):
 					pri  = u""
 				self.timeTrackWaitTime = 20
 				return cmd, pri
-		except Exception, e:
+		except Exception as e:
 			pass
 
 		self.timeTrackWaitTime = 60
@@ -10698,14 +10664,14 @@ class Plugin(indigo.PluginBase):
 		self.stopDelayedActionQueue()
 		time.sleep(1)
 
-		if self.socketServer is not None:
+		if self.socServ is not None:
 			self.indiLOG.log(10,u" ..   stopping tcpip stack")
-			self.socketServer.shutdown()
-			self.socketServer.server_close()
+			self.socServ.shutdown()
+			self.socServ.server_close()
 			time.sleep(1)
 			# kill procs that might still be waiting / ...
 			lsofCMD	 = u"/usr/sbin/lsof -i tcp:"+ u"{}".format(self.indigoInputPORT)
-			ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			ret, err = self.readPopen(lsofCMD)
 			#indigo.server.log(u".. stopping tcpip stack: lsof cmd result:\n{}".format(ret[0]))
 			self.killHangingProcess(ret)
 
@@ -10732,9 +10698,9 @@ class Plugin(indigo.PluginBase):
 				states.append(self.beacons[beacon][u"status"])
 				try:
 					name = indigo.devices[self.beacons[beacon][u"indigoId"]].name
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e).find(u"timeout waiting") > -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return
 					if u"{}".format(e).find(u"not found in database") >-1:
@@ -10758,9 +10724,8 @@ class Plugin(indigo.PluginBase):
 							self.indiLOG.log(10,u"fingscan plugin not reachable")
 							self.fingscanTryAgain = True
 						self.sleep(1)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return
 
@@ -10782,17 +10747,15 @@ class Plugin(indigo.PluginBase):
 			if len(msg) >0:
 				msg ={u"pluginId":self.pluginId,u"data":msg}
 				try:
-					if self.decideMyLog(u"BC"): self.myLog( text=u"updating BC with " + u"{}".format(msg),mType=u"BroadCast" )
+					if self.decideMyLog(u"BC"): self.myLog( theText=u"updating BC with " + u"{}".format(msg),mType=u"BroadCast" )
 					indigo.server.broadcastToSubscribers(u"deviceStatusChanged", json.dumps(msg))
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"updating sendBroadCastNOW has error Line {} has error={};    fingscan update failed".format(sys.exc_traceback.tb_lineno, e))
+						self.indiLOG.log(40,u"updating sendBroadCastNOW has error Line {} has error={};    fingscan update failed".format(sys.exc_info()[2].tb_lineno, e))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"updating sendBroadCastNOW has error Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			else:
-				x = True
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			x = True
 		return x
 
 
@@ -10809,9 +10772,8 @@ class Plugin(indigo.PluginBase):
 				xList += piU+u":"+ u"{}".format(self.RPI[piU][u"piUpToDate"])+u"; "
 				if not ok: self.RPI[piU][u"piUpToDate"]=[]
 			if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(5,u"printpiUpToDate list .. pi#:[actionLeft];.. ([]=ok): "+ xList	 )
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -10820,9 +10782,8 @@ class Plugin(indigo.PluginBase):
 			for piU in self.RPI:
 				if self.RPI[piU][item] !=[]:
 					return True
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return False
 
 ####-------------------------------------------------------------------------####
@@ -10896,9 +10857,8 @@ class Plugin(indigo.PluginBase):
 
 			self.freezeAddRemove	= False
 			self.initStatesOnServer = False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return anyChange
 
@@ -10907,13 +10867,12 @@ class Plugin(indigo.PluginBase):
 	def checkIfNewStates(self):
 		try:
 			if self.rePopulateStates:
-				self.rePopulateStates = False
 				self.indiLOG.log(20,u" updating dev states ")
 				for dev in indigo.devices.iter(self.pluginId):
 					dev.stateListOrDisplayStateIdChanged()	# update  states 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
+		self.rePopulateStates = False
 		return 
 
 
@@ -10931,9 +10890,8 @@ class Plugin(indigo.PluginBase):
 				for carId in delID:
 					del self.checkCarsNeed[carId]
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return
 
@@ -10960,9 +10918,8 @@ class Plugin(indigo.PluginBase):
 											else:
 												dev.updateStateOnServer(u"isBeepable",u"not capable")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -10979,9 +10936,8 @@ class Plugin(indigo.PluginBase):
 				self.actionList[u"setSqlLoggerIgnoreStatesAndVariables"] = False
 				self.setSqlLoggerIgnoreStatesAndVariables()
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		self.actionList[u"setTime"] = []
 		return
 
@@ -11001,15 +10957,14 @@ class Plugin(indigo.PluginBase):
 							dev.replacePluginPropsOnServer(props)
 							dev = indigo.devices[devId]
 							props = dev.pluginProps
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e) != u"None":
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"ok if replacing RPI")
 				self.newADDRESS={}
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -11030,9 +10985,8 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"sendInitialValuesToOutput init pin: sending to pi# {}; pin: {}  {};  deviceDefs: {}".format(piServerNumber, props[u"gpio"], cmd, props[u"deviceDefs"]) )
 					self.sendGPIOCommand(ip, int(piServerNumber), dev.deviceTypeId, cmd, GPIOpin=gpio, restoreAfterBoot="1", inverseGPIO =inverseGPIO )
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		self.sendInitialValue = u""
 		return
 
@@ -11055,9 +11009,9 @@ class Plugin(indigo.PluginBase):
 					if len(pi) >1:
 						self.setONErPiV(pi[1],"piUpToDate", [u"updateParamsFTP"])
 						if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(5,u"sending update to pi#{}".format(pi))
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 
 				self.updateNeeded = u""
 
@@ -11123,9 +11077,8 @@ class Plugin(indigo.PluginBase):
 							if u"resetOutputSSH" in self.RPI[piU][u"piUpToDate"]  and not  u"updateParamsFTP" in self.RPI[piU][u"piUpToDate"]:
 								self.sshToRPI(piU,fileToSend=u"resetOutputSSH.exp")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return anyChange
 
 
@@ -11153,9 +11106,8 @@ class Plugin(indigo.PluginBase):
 					if time.time() - self.RPI[piU][u"lastMessage"] < 330.:	continue
 					if self.decideMyLog(u"Logic"): self.indiLOG.log(5,u"pi server # {}  ip# {}  has not send a message in the last {:.0f} seconds".format(piU, self.RPI[piU][u"ipNumberPi"], time.time() - self.RPI[piU][u"lastMessage"]))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -11202,9 +11154,8 @@ class Plugin(indigo.PluginBase):
 				self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom=u"BLEconnectCheckPeriod end")
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -11227,13 +11178,12 @@ class Plugin(indigo.PluginBase):
 						dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 			self.saveSensorMessages(devId=u"")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				try:
-					self.indiLOG.log(40, u"{}".format(dev.pluginProps))
-				except:
-					pass
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			try:
+				self.indiLOG.log(40, u"{}".format(dev.pluginProps))
+			except:
+				pass
 		return
 
 
@@ -11301,9 +11251,8 @@ class Plugin(indigo.PluginBase):
 						else:
 							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 		return
@@ -11446,9 +11395,9 @@ class Plugin(indigo.PluginBase):
 
 						if u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols:self.beaconPositionsUpdated =3
 
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"BeaconsCheckPeriod communication to indigo is interrupted")
 							return
 
@@ -11461,13 +11410,13 @@ class Plugin(indigo.PluginBase):
 								if self.beacons[beacon][u"ignore"]	 == -1: # was special, device exists now, set back to normal
 									self.indiLOG.log(10,u"BeaconsCheckPeriod minute resetting ignore from -1 to 0 for beacon: {}   beaconDict: {}".format(beacon, self.beacons[beacon]))
 									self.beacons[beacon][u"ignore"] = 0
-							except Exception, e:
+							except Exception as e:
 								if u"{}".format(e).find(u"timeout waiting") > -1:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 									self.indiLOG.log(40,u"BeaconsCheckPeriod communication to indigo is interrupted")
 									return
 								if u"{}".format(e).find(u"not found in database") ==-1:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 									return
 
 								self.indiLOG.log(10,u"=== deleting device beaconDict: " + u"{}".format(self.beacons[beacon]))
@@ -11492,9 +11441,9 @@ class Plugin(indigo.PluginBase):
 									else:
 										self.addToStatesUpdateDict(dev.id,piXX+u"_Distance", 99999.,decimalPlaces=1)
 
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e) != u"None":
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 
 				if changed and beacon in self.CARS[u"beacon"]:
 					self.updateCARS(beacon, dev, self.beacons[beacon])
@@ -11502,11 +11451,10 @@ class Plugin(indigo.PluginBase):
 				if dev !=u"":
 					self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom=u"BeaconsCheckPeriod end")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				try: self.indiLOG.log(40,u"============= {}".format(dev.name))
-				except: pass
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			try: self.indiLOG.log(40,u"============= {}".format(dev.name))
+			except: pass
 		return anyChange
 
 ####-------------------------------------------------------------------------####
@@ -11543,9 +11491,9 @@ class Plugin(indigo.PluginBase):
 									self.beacons[beacon][u"ignore"] = 1
 									self.newIgnoreMAC += 1
 									indigo.device.delete(dev)
-						except Exception, e:
+						except Exception as e:
 							if u"{}".format(e) != u"None":
-								self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								self.exceptionHandler(40,e)
 							if u"{}".format(e).find(u"timeout waiting") >-1:
 								self.indiLOG.log(40,u"communication to indigo is interrupted")
 								return
@@ -11567,9 +11515,9 @@ class Plugin(indigo.PluginBase):
 							self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
 
 
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 
 			try:
 				if now.hour == 0:
@@ -11581,12 +11529,11 @@ class Plugin(indigo.PluginBase):
 					for piU in self.RPI:
 						self.sendFilesToPiFTP(piU, fileToSend=u"updateParamsFTP.exp")
 					self.updateRejectLists()
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def checkDay(self,now):
@@ -11603,9 +11550,8 @@ class Plugin(indigo.PluginBase):
 						self.getBeaconParametersCALLBACKmenu(valuesDict={u"piServerNumber":u"all"}, force=False)
 						self.lastDayChecked[ii] = now.day
 						return
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		try:
 		### report on bad ibeacon battery status
@@ -11640,9 +11586,8 @@ class Plugin(indigo.PluginBase):
 				self.lastDayChecked[len(self.checkBatteryLevelHours)] = now.day
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		##### second .. nothing yet
 
@@ -11663,9 +11608,8 @@ class Plugin(indigo.PluginBase):
 					self.RPI[piU][u"piMAC"]				 != u"" and
 					self.RPI[piU][u"ipNumberPiSendTo"]	 != u"" ):
 						self.indiLOG.log(10,u"pi# {} is configured but not enabled, mistake? This is checked once a day;  to turn it off set userId or password of unused rPi to empty ".format(piU))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def syncSensors(self):
@@ -11700,9 +11644,8 @@ class Plugin(indigo.PluginBase):
 				if self.mkSensorList(piU): anyChange =True
 			#indigo.server.log(u"syncSensors BT: "+ u"{}".format(anyChange)+u"  "+ u"{}".format(time.time() - ss))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return anyChange
 
 
@@ -11717,9 +11660,9 @@ class Plugin(indigo.PluginBase):
 				try:
 					dev=indigo.devices[int(devId)]
 					name=dev.name
-				except Exception, e:
+				except Exception as e:
 
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 					if u"{}".format(e).find(u"timeout waiting") > -1:
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return False
@@ -11739,9 +11682,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,u"fixing 2  {}   {}  pi {} sensor{}".format(name, devId, piU, sensor) )
 				self.RPI[piU][io][sensor][u"{}".format(devId)] = u""
 				anyChange = True
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return anyChange
 
 
@@ -11760,13 +11702,13 @@ class Plugin(indigo.PluginBase):
 							try:
 								devID = int(devIDrpi)
 								dev = indigo.devices[devID]
-							except Exception, e:
+							except Exception as e:
 								if u"{}".format(e).find(u"timeout waiting") > -1:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 									self.indiLOG.log(40,u"communication to indigo is interrupted")
 									return True
 								if u"{}".format(e).find(u" not found in database") ==-1:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 									return True
 
 								deldevID[devIDrpi] = 1
@@ -11805,8 +11747,8 @@ class Plugin(indigo.PluginBase):
 							else:
 								pass
 
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							if u"{}".format(e).find(u"not found in database") ==-1:
 								return True
 							self.indiLOG.log(40,u"removing input device from parameters for pi# {}  {}".format(piU, self.RPI[piU][io][sensor]) )
@@ -11823,9 +11765,8 @@ class Plugin(indigo.PluginBase):
 				anyChange = True
 				del self.RPI[piU][io][sensor]
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return anyChange
 
 ####----------------------reset sensor min max at midnight -----------------------------------####
@@ -11880,13 +11821,12 @@ class Plugin(indigo.PluginBase):
 										self.addToStatesUpdateDict(dev.id,ttx+u"AveToday",		dev.states[ttx], 			 decimalPlaces=decimalPlaces)
 										if ttx+u"MeasurementsToday" in dev.states: self.addToStatesUpdateDict(dev.id,ttx+u"MeasurementsToday",		1, 					 decimalPlaces=decimalPlaces)
 									self.pluginPrefs[u"resetMinMaxDayDoneToday"] = time.time()
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e) != u"None":
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 					self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom=u"resetMinMaxSensors")
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####----------------------reset sensor min max at midnight -----------------------------------####
 	def fillMinMaxSensors(self, dev, stateName, value, decimalPlaces):
@@ -11909,9 +11849,8 @@ class Plugin(indigo.PluginBase):
 					
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####----------------------reset rain sensor every hour/day/week/month/year -----------------------------------####
 	def rollOverRainSensors(self):
@@ -11950,9 +11889,8 @@ class Plugin(indigo.PluginBase):
 				
 				dev.replacePluginPropsOnServer(props)
 				self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom=u"rollOverRainSensors")
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -11986,8 +11924,8 @@ class Plugin(indigo.PluginBase):
 								sensorList+= u"*"+props[u"gain"]
 							sensorList+=u","
 
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					if u"{}".format(e).find(u"timeout waiting") > -1:
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return
@@ -11999,9 +11937,8 @@ class Plugin(indigo.PluginBase):
 				anyChange = True
 			self.RPI[piU][u"sensorList"] = sensorList
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return anyChange
 
 #####################################################################################################################################
@@ -12021,9 +11958,8 @@ class Plugin(indigo.PluginBase):
 			if len(newVar.value) < 3:			   return
 			self.addToDataQueue(newVar.name,json.loads(newVar.value), newVar.value )
 			return
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,newVar.value)
 
 
@@ -12109,9 +12045,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,varNameIN+u"  " + varUnicode[0:30])
 
 
@@ -12185,16 +12120,15 @@ class Plugin(indigo.PluginBase):
 					self.queueList = u""
 					if len(self.sendBroadCastEventsList): self.sendBroadCastNOW()
 					self.sleep(0.05)
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 
 
 			self.beaconMessages[u"state"] = u"stopped - exiting thread"
 			self.indiLOG.log(10,u" .. stopped   thread for beaconMessages, state is: {}".format(self.beaconMessages[u"state"]) )
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,varNameIN+u"  " + varUnicode[0:30])
 		return 
 ####-------------------------------------------------------------------------####
@@ -12260,9 +12194,8 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(30,u"rPi#:{} {}: piMAC empty ".format(piU, self.RPI[piU][u"ipNumberPi"]))
 						return beaconUpdatedIds
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,varUnicode)
 		return beaconUpdatedIds
 
@@ -12306,8 +12239,8 @@ class Plugin(indigo.PluginBase):
 					if dist  < closestDist:
 						closestDist = dist
 						closestName = dev.name
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 
 			if closestDist < cutOffForClosestBeacon:
 					cN = closestName+u"@"+ u"{}".format(closestDist)
@@ -12319,9 +12252,8 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(u"{}".format(rpiDev.id), u"closestiBeacon", u"None")
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -12382,8 +12314,8 @@ class Plugin(indigo.PluginBase):
 									self.beacons[piMAC][u"indigoId"] = indigoId
 									self.RPI[piU][u"piMAC"] = beacon
 									if self.decideMyLog(u"Logic"): self.indiLOG.log(5,u"MAC# from RPI  was updated")
-								except Exception, e:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								except Exception as e:
+									self.exceptionHandler(40,e)
 									if self.decideMyLog(u"Logic"): self.indiLOG.log(5,u"MAC# from RPI...	 indigoId: {} does not exist, ignoring".format(indigoId) )
 
 						# added to cover situation when RPI was set to expire by mistake ==>  reset it to ok
@@ -12391,9 +12323,8 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[beacon][u"ignore"] > 0: self.beacons[beacon][u"ignore"] = 0
 							self.beacons[beacon][u"lastUp"] = time.time()
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			return False, u"", u""
 
 		return True, piMAC, piNU
@@ -12447,7 +12378,7 @@ class Plugin(indigo.PluginBase):
 									break
 							if not alreadyUnderway:
 								self.actionList.append({u"action":"setTime",u"value":piU})
-								self.indiLOG.log(10,u"rPi {} do a time sync MAC --> RPI, time off by: {5.1f}[secs]".format(piU, time.time()-ts) )
+								self.indiLOG.log(10,u"rPi {:} do a time sync MAC --> RPI, time off by: {:5.1f}[secs]".format(piU, time.time()-ts) )
 					except: pass
 
 
@@ -12462,10 +12393,10 @@ class Plugin(indigo.PluginBase):
 			if (abs(time.time()-float(ts)) < 2. and tz == tzMAC)  or self.timeErrorCount[pi] > 1000:
 				self.timeErrorCount[pi] = 0
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -12479,9 +12410,8 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(10,u"no errors")
 					else:
 						self.indiLOG.log(10,u"errors:\n"+BLEreport[rep][1].strip(u"\n"))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -12490,10 +12420,9 @@ class Plugin(indigo.PluginBase):
 		try:
 			out = u"\ntrackMac report received  from RPI#:{}\n".format( piU)
 			out += report.replace(u";;",u"\n")
-			self.myLog(text= out)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.myLog(theText= out)
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -12574,7 +12503,7 @@ class Plugin(indigo.PluginBase):
 											elif rr[mac][ss[1]][ii] != u"":
 												out += u"{:>30} : {:}\n".format(pp, rr[mac][ss[1]][ii])
 
-										except Exception, e:
+										except Exception as e:
 											self.indiLOG.log(10,u"ServiceSections mac:{} serv{} data:{}".format(mac, ss, rr[mac][ss[1]]))
 
 
@@ -12585,11 +12514,10 @@ class Plugin(indigo.PluginBase):
 
 							else:
 								out += u"{:31s}: {}\n".format(item, rr[mac][item])
-			self.myLog(text= out)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-			self.myLog(text= out)
+			self.myLog(theText= out)
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.myLog(theText= out)
 			indigo.server.log(u"printBLEAnalysis :{}".format(report))
 		return
 
@@ -12638,9 +12566,8 @@ class Plugin(indigo.PluginBase):
 					if dev.states[u"hciInfo_"+program] != data:
 						dev.updateStateOnServer(u"hciInfo_"+program, data)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return 
 
 ####-------------------------------------------------------------------------####
@@ -12676,14 +12603,14 @@ class Plugin(indigo.PluginBase):
 
 			try:
 				dev = indigo.devices[self.RPI[piU][u"piDevId"]]
-			except Exception, e:
+			except Exception as e:
 
 				if u"{}".format(e).find(u"timeout waiting") > -1:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u"communication to indigo is interrupted")
 					return
 				if u"{}".format(e).find(u"not found in database") ==-1:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 					return
 				self.RPI[piU][u"piDevId"]=0
 				return
@@ -12718,14 +12645,13 @@ class Plugin(indigo.PluginBase):
 
 			self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom=u"addToDataQueue pi_IN_Alive")
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u"variable pi_IN_Alive wrong format: " + varUnicode+u" you need to push new upgrade to rPi")
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u"variable pi_IN_Alive wrong format: " + varUnicode+u" you need to push new upgrade to rPi")
 
 		return
 
@@ -12756,8 +12682,8 @@ class Plugin(indigo.PluginBase):
 
 				self.setStatusCol( dev, deviceStateName, x, UI, u"", u"",{})
 				return x
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return u""
 
 ####-------------------------------------------------------------------------####
@@ -12812,14 +12738,13 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u" pi" + piU+u"  RPI"+ u"{}".format(self.RPI[piU]) )
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u" pi" + piU+u"  RPI"+ u"{}".format(self.RPI[piU]) )
 		return
 ####-------------------------------------------------------------------------####
 	def checkSensorPiSetup(self, piSend, data, piNReceived):
@@ -12838,9 +12763,9 @@ class Plugin(indigo.PluginBase):
 			try:
 				dev= indigo.devices[devId]
 				Found =True
-			except Exception, e:
+			except Exception as e:
 
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				if u"{}".format(e).find(u"timeout waiting") > -1:
 					self.indiLOG.log(40,u"communication to indigo is interrupted")
 					return -1
@@ -12855,10 +12780,9 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id,u"online",u"up")
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40, u"{}".format(data))
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40, u"{}".format(data))
 		return 0
 
 
@@ -12872,14 +12796,14 @@ class Plugin(indigo.PluginBase):
 			else:
 				return dev.states[state]
 
-		except Exception, e1:
+		except Exception as e1:
 			try:  # rare case that updateStatesDict has been updated and clear whil we do this, then take new dev.state happens ~ 1/week with MANY devices
-				#self.indiLOG.log(5,u"in Line {} has error(s) ={}, getCurrentState not in dyn list, trying to use indigo state... " .format(sys.exc_traceback.tb_lineno, e1))
+				#self.indiLOG.log(5,u"in Line {} has error(s) ={}, getCurrentState not in dyn list, trying to use indigo state... " .format(sys.exc_info()[2].tb_lineno, e1))
 				ret =  indigo.devices[dev.id].states[state]
 				#self.indiLOG.log(5,u"...  was fixed using indigo states")
 				return ret
-			except Exception, e:
-				self.indiLOG.log(40,u"in Line {} has error(s) ={} {}".format(sys.exc_traceback.tb_lineno, e, e1))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"  .. called from= {};  state= {};  updateStatesDict= {}".format(fromMETHOD, state, self.updateStatesDict) )
 				try:	self.indiLOG.log(40,u"  .. dev= {}".format(dev.name) )
 				except: self.indiLOG.log(40,u"  .. device does not exist, just deleted? .. IndigoId={}".format(devIds) )
@@ -12915,8 +12839,8 @@ class Plugin(indigo.PluginBase):
 				if u"lastUp" in dev.states:
 					lastUp =  self.getTimetimeFromDateString(self.getCurrentState(dev,devIds,"lastUp", fromMETHOD="calcPostion1"))
 
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				lastUp	= 0
 
 			if dev.deviceTypeId == u"BLEconnect":
@@ -12952,8 +12876,8 @@ class Plugin(indigo.PluginBase):
 				try:
 					dist = self.getCurrentState(dev,devIds,piXX+u"_Distance", fromMETHOD="calcPostion4")
 					dist = float(dist)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+				except Exception as e:
+					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 					dist = 99999.
 
 				piTimeUse = piT2
@@ -12984,9 +12908,9 @@ class Plugin(indigo.PluginBase):
 				if currStatus != status :
 					if u"lastStatusChange" in dev.states:
 						try: lastStatusChangeDT  =  time.time() - self.getTimetimeFromDateString(dev.states[u"lastStatusChange"])
-						except Exception, e:
+						except Exception as e:
 								if u"{}".format(e) != u"None":
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 					if lastStatusChangeDT > 3.:
 						update = True
 						self.addToStatesUpdateDict(dev.id,u"status", status)
@@ -13027,9 +12951,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(devIds,pos[ii], newPos[ii],decimalPlaces=1)
 						deltaDistance +=dd
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return update, deltaDistance
 
 
@@ -13075,10 +12998,10 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog(u"BLE"): self.indiLOG.log(5,u"BLEconnect pi:{};  data:{} ".format(piU, info))
 				try:
 					dev = indigo.devices[int(devId)]
-				except Exception, e:
+				except Exception as e:
 
 					if u"{}".format(e).find(u"timeout waiting") > -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"BLEconnectupdate communication to indigo is interrupted")
 						return
 					self.indiLOG.log(10,u"BLEconnectupdate devId not defined in devices pi:{}; devId={}; info:{}".format( piU, devId, info))
@@ -13158,11 +13081,10 @@ class Plugin(indigo.PluginBase):
 
 				self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom=u"BLEconnectupdate end")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				if u"{}".format(e).find(u"timeout waiting") > -1:
-					self.indiLOG.log(40,u"communication to indigo is interrupted")
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			if u"{}".format(e).find(u"timeout waiting") > -1:
+				self.indiLOG.log(40,u"communication to indigo is interrupted")
 
 		return updateBLE
 
@@ -13188,14 +13110,14 @@ class Plugin(indigo.PluginBase):
 						dev = indigo.devices[devId]
 						props = dev.pluginProps
 						#self.indiLOG.log(40,u"piu:{};  dev:{};  props:{}".format(piU, dev.name, props))
-					except Exception, e:
+					except Exception as e:
 
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"communication to indigo is interrupted")
 							return
 						if u"{}".format(e).find(u"not found in database") ==-1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							return
 
 						self.indiLOG.log(40,u"bad devId send from pi :{}; devId: {}, deleted? ".format(piU, devIds) )
@@ -13222,11 +13144,10 @@ class Plugin(indigo.PluginBase):
 						if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"pi# {}  {}  {}".format(piU, devIds, self.updateStatesDict) )
 						self.executeUpdateStatesDict(onlyDevID=devIds, calledFrom=u"updateOutput end")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				if u"{}".format(e).find(u"timeout waiting") > -1:
-					self.indiLOG.log(40,u"updateOutput communication to indigo is interrupted")
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			if u"{}".format(e).find(u"timeout waiting") > -1:
+				self.indiLOG.log(40,u"updateOutput communication to indigo is interrupted")
 
 
 ####-------------------------------------------------------------------------####
@@ -13259,9 +13180,8 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id,u"brightnessLevel", 	int(data["position"]) )
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -13303,14 +13223,14 @@ class Plugin(indigo.PluginBase):
 						if devId == 0: continue
 						dev = indigo.devices[devId]
 						props = dev.pluginProps
-					except Exception, e:
+					except Exception as e:
 
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"communication to indigo is interrupted")
 							return
 						if u"{}".format(e).find(u"not found in database") ==-1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							return
 
 						self.indiLOG.log(10,u"bad devId send from pi:"+ piU+ u"devId: "+devIds+u" deleted?")
@@ -13524,8 +13444,8 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id,u"CO2calibration", data[u"calibration"])
 							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]),	decimalPlaces = 1)
 							self.addToStatesUpdateDict(dev.id,u"CO2offset", float(data[u"CO2offset"]),	decimalPlaces = 1)
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"props:{}\nstates:{}\n:data:{}".format(u"{}".format(props), dev.states, data) )
 
 					if u"VOC" in data:
@@ -13548,8 +13468,8 @@ class Plugin(indigo.PluginBase):
 							if updateProps0: props[doUpdate[0]] = doUpdate[1]; updateProps = updateProps or updateProps0
 							self.addToStatesUpdateDict(dev.id,u"raw", float(data[u"raw"]))
 
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(10, u"{}".format(props))
 
 
@@ -13585,8 +13505,8 @@ class Plugin(indigo.PluginBase):
 									self.addToStatesUpdateDict(dev.id,u"lightning", u"calibrating,- sensitivity ")
 								elif data[u"lightning"].find(u"Disturber") == 0:
 									self.addToStatesUpdateDict(dev.id,u"lightning", u"calibrating,- Disturber event ")
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40, u"{}".format(props) +u"\n"+ u"{}".format(data))
 						continue
 
@@ -13726,9 +13646,10 @@ class Plugin(indigo.PluginBase):
 										imageParams	  = json.dumps( {u"logFile":self.PluginLogFile, u"logLevel":props[u"imageFilelogLevel"],u"compress":props[u"imageFileCompress"],u"fileName":self.cameraImagesDir+props[u"imageFileName"],u"numberOfDots":props[u"imageFileNumberOfDots"],u"dynamic":props[u"imageFileDynamic"],u"colorBar":props[u"imageFileColorBar"]} )
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+u"' '"+dataRaw+u"' & "
 										if props[u"imageFilelogLevel"] == u"1": self.indiLOG.log(10,u"AMG88 command:{}".format(cmd))
+										#self.indiLOG.log(30,u" cmd:{}".format(cmd))
 										subprocess.call(cmd, shell=True)
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40, u"{}".format(props))
 							self.indiLOG.log(40, u"{}".format(len(data[u"rawData"]))+u"     "+data[u"rawData"])
 
@@ -13744,10 +13665,11 @@ class Plugin(indigo.PluginBase):
 									if u"imageFileName" in props and len(props[u"imageFileName"])>1:
 										imageParams	  = json.dumps( {u"logFile":self.PluginLogFile, u"logLevel":props[u"imageFilelogLevel"],"compress":props[u"imageFileCompress"],u"fileName":self.cameraImagesDir+props[u"imageFileName"],u"numberOfDots":props[u"imageFileNumberOfDots"],u"dynamic":props[u"imageFileDynamic"],u"colorBar":props[u"imageFileColorBar"]} )
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeCameraPlot.py' '" +imageParams+u"' '"+dataRaw+u"' & "
+										#self.indiLOG.log(30,u" cmd:{}".format(cmd))
 										if props[u"imageFilelogLevel"] == u"1": self.indiLOG.log(10,u"mlx90640 command:{}".format(cmd))
 										subprocess.call(cmd, shell=True)
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40, u"{}".format(props))
 							self.indiLOG.log(40, u"{}".format(len(data[u"rawData"]))+u"     "+data[u"rawData"])
 
@@ -13843,11 +13765,12 @@ class Plugin(indigo.PluginBase):
 													u"colorBackground":props[u"colorBackground"]}
 										#allData = json.dumps({u"imageParams":imageParams, u"data":data})
 										cmd = self.pythonPath + u" '" + self.pathToPlugin + u"makeLidar360Plot.py' '" +json.dumps(imageParams)+u"'  & "
+										#self.indiLOG.log(30,u" cmd:{}".format(cmd))
 										if props[u"logLevel"] in [u"1",u"3"] : self.indiLOG.log(10,u"lidar360 command:{}".format(cmd))
 										self.writeJson(data, fName=u"/tmp/makeLidar360.dat")
 										subprocess.call(cmd, shell=True)
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"props: {}".format(props))
 							self.indiLOG.log(40,u"triggervalues: {}".format(data[u"triggerValues"]) )
 
@@ -13862,10 +13785,9 @@ class Plugin(indigo.PluginBase):
 						self.executeUpdateStatesDict(onlyDevID=devIds, calledFrom=u"updateSensors end")
 			self.saveSensorMessages(devId=u"")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				self.indiLOG.log(40,u"pi# "+piU + "  " + u"{}".format(sensors))
+		except Exception as e:
+			self.exceptionHandler(40,e)
+			self.indiLOG.log(40,u"pi# {}  {}".format(piU, sensors))
 
 		return
 
@@ -13971,9 +13893,8 @@ class Plugin(indigo.PluginBase):
 				
 				dev.replacePluginPropsOnServer(props)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -13984,9 +13905,8 @@ class Plugin(indigo.PluginBase):
 			self.setStatusCol(dev,u"measurementCount",		 data[u"measurementCount"],	u"{}".format(data[u"measurementCount"]),				whichKeysToDisplay,"","",decimalPlaces=0)
 			self.setStatusCol(dev,u"movementCount",			 data[u"movementCount"],	u"{}".format(data[u"movementCount"]),				whichKeysToDisplay,"","",decimalPlaces=0)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -14002,6 +13922,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			if False and self.getDeviceStateListCalls < 500 and self.decideMyLog(u"Special"): self.indiLOG.log(20,u"populating device state lists, #:{} calls, dev:{}".format(self.getDeviceStateListCalls, dev.name))
 			self.getDeviceStateListCalls  += 1
+			#if called for one make it call for device 
+			self.rePopulateStates = True
 
 			statesCategoriesForDevtype = self.setstatesCategoriesForDevtype(dev)
 			#if self.decideMyLog(u"Special"): self.indiLOG.log(20,u"statesCategoriesForDevtype:{}".format(statesCategoriesForDevtype ))
@@ -14067,9 +13989,8 @@ class Plugin(indigo.PluginBase):
 			return newStateList
 
 		
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return {}
 
 ###-------------------------------------------------------------------------####
@@ -14079,11 +14000,10 @@ class Plugin(indigo.PluginBase):
 				for ll in stateList:
 					for xx in ll: 
 						if xx == "Key":
-							xList += unicode(ll[xx])+";"
+							xList += u"{};".format(ll[xx])
 				self.indiLOG.log(20,u"updating states:{}, len:{}, ret={}.. ".format(dev.name, len(stateList), xList[0:200]))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return 
 ####-------------------------------------------------------------------------####
 	def setstatesCategoriesForDevtype(self, dev):
@@ -14097,9 +14017,8 @@ class Plugin(indigo.PluginBase):
 			return test.strip(",").split(",")
 			 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return []
 
 ###-------------------------------------------------------------------------####
@@ -14188,12 +14107,12 @@ class Plugin(indigo.PluginBase):
 
 				for statename in [ "shortOpen", "longOpen", "light", "lightCounter", "pressCounter"]:
 					if  statename in data and  data[statename] != u"" and statename in dev.states:
-						 if  data[statename] != dev.states[statename]:
-										self.addToStatesUpdateDict(dev.id,statename,data[statename])
+						if  data[statename] != dev.states[statename]:
+							self.addToStatesUpdateDict(dev.id,statename,data[statename])
 
 				for statename in ["onOffState"]:
 					if  statename in data and  data[statename] != u"" and statename in dev.states:
-						 if  data[statename] != dev.states[statename]:
+						if  data[statename] != dev.states[statename]:
 										self.addToStatesUpdateDict(dev.id,statename,data[statename])
 										if data[statename]:
 											dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -14218,9 +14137,8 @@ class Plugin(indigo.PluginBase):
 
 				if  "lastUpdateFromRPI" in dev.states and  u"{}".format(pi) != u"{}".format(dev.states[u"lastUpdateFromRPI"]):
 									self.addToStatesUpdateDict(dev.id, u"lastUpdateFromRPI", pi)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 
 
@@ -14234,9 +14152,8 @@ class Plugin(indigo.PluginBase):
 
 				if u"onOff" in data and "onOffState" in dev.states: 		self.addToStatesUpdateDict(dev.id, u"onOffState", data[u"onOff"])
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 
 
@@ -14245,9 +14162,8 @@ class Plugin(indigo.PluginBase):
 		try:
 				if u"onOff" in data and "onOffState" in dev.states: 		self.addToStatesUpdateDict(dev.id, u"onOffState", data[u"onOff"])
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 
 
@@ -14352,9 +14268,8 @@ class Plugin(indigo.PluginBase):
 
 		# set to grey if expired	 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -14389,9 +14304,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -14412,9 +14326,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id,u"previousOnEvent", dev.states[u"currentOnEvent"])
 						self.addToStatesUpdateDict(dev.id,u"currentOnEvent", datetime.datetime.now().strftime(_defaultDateStampFormat))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -14446,9 +14359,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id,u"currentOffEvent", datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -14489,9 +14401,8 @@ class Plugin(indigo.PluginBase):
 							elif airQuality == u"Moderate":	 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							else:							 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40, u"{}".format(data))
 		return
 
@@ -14537,9 +14448,8 @@ class Plugin(indigo.PluginBase):
 				newStatus = self.setStatusCol(dev, u"Pressure", p, pu, whichKeysToDisplay, u"",newStatus, decimalPlaces = 0)
 				updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, p, props, u"Pressure", useFormat, whichKeysToDisplay, 0)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		#self.indiLOG.log(10,u"returning {} {} {} dat:{} ".format(useFormat, decimalPlaces, p, data) )
 		return newStatus, updateProps, doUpdate
 
@@ -14558,9 +14468,8 @@ class Plugin(indigo.PluginBase):
 				newStatus = self.setStatusCol(dev, u"Proximity", p, pu, whichKeysToDisplay, u"",newStatus, decimalPlaces = 0)
 				updateProps, doUpdate = self.updateChangedValuesInLastXXMinutes(dev, p, props, u"Proximity", useFormat, whichKeysToDisplay, 0)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		#self.indiLOG.log(10,u"returning {} {} {} dat:{} ".format(useFormat, decimalPlaces, p, data) )
 		return newStatus, updateProps, doUpdate
 
@@ -14581,9 +14490,8 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, u"Moisture_raw", raw)
 				newStatus = self.setStatusCol(dev, u"Moisture", relM, relMU, u"Moisture", indigo.kStateImageSel.TemperatureSensorOn, newStatus, decimalPlaces = 0)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		#self.indiLOG.log(10,u"returning {} {} {} dat:{} ".format(useFormat, decimalPlaces, p, data) )
 		return newStatus
 
@@ -14644,9 +14552,9 @@ class Plugin(indigo.PluginBase):
 							break
 
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e) != u"None":##
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"dev:{}, key:{}".format(dev.name, key))
 		return newStatus
 
@@ -14739,12 +14647,12 @@ class Plugin(indigo.PluginBase):
 									self.executeUpdateStatesDict(onlyDevID= u"{}".format(dev1.id), calledFrom=u"updateOneWire")
 									self.setONErPiV(piU,u"piUpToDate", [u"updateParamsFTP"])
 									self.saveConfig()
-							except Exception, e:
-								self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							except Exception as e:
+								self.exceptionHandler(40,e)
 								continue
 
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -14760,9 +14668,8 @@ class Plugin(indigo.PluginBase):
 				dev.replacePluginPropsOnServer(props)
 				props[doUpdate[0]] = doUpdate[1]
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -14943,21 +14850,19 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id,u"lastContinuousEventStopTime",dd)
 			#if self.decideMyLog(u"Special"): self.indiLOG.log(5,u"updatePULSE  ll-1:{}, minPointer:{}, cpm:{}, dc:{}, dt:{},  cps:{}\n     data:{}\n cllistmin:{},".format( ll-1, minPointer, countPerMinute, countList[-1][u"count"] - countList[minPointer][u"count"], countList[-1][u"time"] - countList[minPointer][u"time"] ,  countPerSecond,  data, countList[minPointer] ))
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
- ####-------------------------------------------------------------------------####
+####-------------------------------------------------------------------------####
 	def getNumberOfdecPoints(self, value, significantDigits=3):
 		decPoint = 1
 		try:
 			if value == 0: return decPoint
 			x = int(math.log10(abs(value)))
 			decPoints = max(0,min(7, significantDigits - x))
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return decPoints
 
 ####-------------------------------------------------------------------------####
@@ -15030,9 +14935,8 @@ class Plugin(indigo.PluginBase):
 
 			return True, [stateToUpdate+u"list",json.dumps(valueList).strip(u" ")]
 
-		except Exception, e:
-			#if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return False, []
 
 
@@ -15047,15 +14951,15 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(10,u"updateTEA5767 sensor: "+sensor+u"  "+ u"{}".format(channels))
 					freq   = channels[u"freq"]
 					Signal = channels[u"Signal"]
-					ch = u"Channel-{02d}".format(iii)
+					ch = u"Channel-{:02d}".format(iii)
 					self.addToStatesUpdateDict(devId,ch,"f="+ u"{}".format(freq)+u"; Sig="+ u"{}".format(Signal))
 					iii+=1
 				for ii in range(iii,41):
-					ch = u"Channel-{02d}".format(ii)
+					ch = u"Channel-{:02d}".format(ii)
 					self.addToStatesUpdateDict(devId,ch,"")
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e) != u"None":
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -15096,9 +15000,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def updateINPUT(self, dev, data, upState, nInputs, sensor):
@@ -15175,9 +15078,8 @@ class Plugin(indigo.PluginBase):
 								if dev.states[u"status"] != ssUI + unit:
 									self.addToStatesUpdateDict(dev.id,u"status", ssUI+unit)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def setStateColor(self, dev, props, ss):
@@ -15210,9 +15112,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return False
 
 
@@ -15225,11 +15126,11 @@ class Plugin(indigo.PluginBase):
 				icon = default.split(u"-")[UPdown]
 			try:
 				dev.updateStateImageOnServer(getattr(indigo.kStateImageSel, icon, None))
-			except Exception, e:
+			except Exception as e:
 				if UPdown ==0:					 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:							 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-		except Exception, e:
-			if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 			return
 
 
@@ -15288,8 +15189,8 @@ class Plugin(indigo.PluginBase):
 
 			self.updateRGB(dev, data, props[u"displayS"])
 
-		except Exception, e:
-			if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 
 
 
@@ -15316,8 +15217,8 @@ class Plugin(indigo.PluginBase):
 							ss, ssUI, unit = self.addmultOffsetUnit(data[input], dev.pluginProps)
 							self.setStatusCol( dev, input, ss, ssUI+unit, whichKeysToDisplay, u"","" )
 				self.setIcon(dev,props,u"SensorOff-SensorOn",1)
-		except Exception, e:
-			if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def updateADC121(self,dev,data,whichKeysToDisplay):
@@ -15441,7 +15342,7 @@ class Plugin(indigo.PluginBase):
 							val = math.pow(RR/a,1./k)
 
 						elif xType ==u"A13XX": # hall effect sensor
-							pp[u"unit"]		=u"º"
+							pp[u"unit"]		=u"¼"
 							pp[u"format"]	=u"%.2f"
 							val		= (ADC / MaxBits) * 360.0
 
@@ -15460,8 +15361,8 @@ class Plugin(indigo.PluginBase):
 
 						self.setStatusCol( dev, u"value", ss, ssUI+unit, whichKeysToDisplay, u"","" )
 						self.setStatusCol( dev, u"adc", ADC, u"{}".format(ADC), whichKeysToDisplay,"","" )
-		except Exception, e:
-			if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -15525,8 +15426,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id,u"status",UI)
 					self.addToStatesUpdateDict(dev.id,stateName ,x, decimalPlaces= decimalPlaces)
 
-		except Exception, e:
-			if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -15629,8 +15530,8 @@ class Plugin(indigo.PluginBase):
 				else:
 						self.setIcon(dev,props,u"SensorOff-SensorOn",0)
 
-		except Exception, e:
-			if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 
 
 
@@ -15777,7 +15678,7 @@ class Plugin(indigo.PluginBase):
 					except: pass
 					try: 	MINRange = eval(props[u"MINRange"])
 					except: pass
-					ui = (ui - MINRange) / max(MAXRange - MINRange,0001)
+					ui = (ui - MINRange) / max(MAXRange - MINRange,1)
 
 
 			if u"valueOrdivValue" in props and props[u"valueOrdivValue"] == u"1/value":
@@ -15799,9 +15700,8 @@ class Plugin(indigo.PluginBase):
 				ui = props[u"format"] % ui
 			else:
 				ui = u"{}".format(ui)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			ui   = u"{}".format(data)
 			unit = u""
 		return dd, ui, unit
@@ -15837,9 +15737,9 @@ class Plugin(indigo.PluginBase):
 					self.updateRGB( dev, data, upState, theType=theType)
 
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e) != u"None":
-				if self.decideMyLog(u"SensorData"): self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				if self.decideMyLog(u"SensorData"): self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def updateRGB(self, dev, data, upState, theType=u"",dispType =u""):
@@ -15867,15 +15767,14 @@ class Plugin(indigo.PluginBase):
 						self.setStatusCol(dev, u"illuminance", round(il,1), ilUI, upState, u"","",decimalPlaces=1 )
 					if u"kelvin" in dev.states:
 						k = int(self.calcKelvin(data))
-						self.setStatusCol(dev, u"kelvin", k, u"{}".format(k) + u"[ºK]", upState, u"","",decimalPlaces=0 )
+						self.setStatusCol(dev, u"kelvin", k, u"{}".format(k) + u"[¼K]", upState, u"","",decimalPlaces=0 )
 			if upState == u"red/green/blue":
 						self.addToStatesUpdateDict(dev.id,u"status", u"r/g/b: "+ u"{}".format(data[u'red'])+u"/"+ u"{}".format(data[u'green'])+u"/"+ u"{}".format(data[u'blue'])+unit )
 
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def updateRGB2(self, dev, color, data, upState,unit, dispType=u""):
@@ -15898,9 +15797,8 @@ class Plugin(indigo.PluginBase):
 				self.setStatusCol(dev, color, float(data[color]), u"color "+ u"{}".format(data[color])+unit, upState, u"","",decimalPlaces=dispType )
 				return 1
 			return 0
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return 0
 ####-------------------------------------------------------------------------####
 	def calcKelvin(self, data):	 # from adafruit
@@ -15931,7 +15829,7 @@ class Plugin(indigo.PluginBase):
 	def convTemp(self, temp):
 		try:
 			useFormat = u"{:."+ u"{}".format(self.tempDigits)+u"f}"
-			suff = u"ºC"
+			suff = u"¼C"
 			temp = float(temp)
 
 			if temp == 999.9:
@@ -15939,10 +15837,10 @@ class Plugin(indigo.PluginBase):
 
 			if self.tempUnits == u"Fahrenheit":
 				temp = temp * 9. / 5. + 32.
-				suff = u"ºF"
+				suff = u"¼F"
 			elif self.tempUnits == u"Kelvin":
 				temp += 273.15
-				suff = u"ºK"
+				suff = u"¼K"
 
 			temp = round(temp,self.tempDigits)
 			tempU = useFormat.format(temp)
@@ -16006,7 +15904,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def convGas(self, GasIN, dev, props):
-		 #data[u"GasResistance"], data[u"AirQuality"], data[u"GasBaseline"],data[u"SensorStatus"]
+		#data[u"GasResistance"], data[u"AirQuality"], data[u"GasBaseline"],data[u"SensorStatus"]
 		try:
 			bad = False
 			try:
@@ -16082,7 +15980,7 @@ class Plugin(indigo.PluginBase):
 			updateFINGnow = False
 			updateSignal = False
 			piXX = u"Pi_{:02d}".format(int(fromPiU))
-			if piXX+u"_Signal" not in dev.states: updateSignal, updateFINGnow, newStates
+			# ???  if piXX+u"_Signal" not in dev.states: updateSignal, updateFINGnow, newStates
 
 			if newStates[u"status"] == u"up" and rssi == -999. and time.time() > self.currentlyBooting:	## check for fast down signal ==-999
 				if self.decideMyLog(u"CAR") and self.decideMyLog(u"BeaconData"): self.indiLOG.log(5,u"testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, dev.states[piXX+u"_Signal"], dev.states[u"status"]))
@@ -16119,14 +16017,14 @@ class Plugin(indigo.PluginBase):
 					self.statusChanged = 12
 			return updateSignal, updateFINGnow, newStates
 
-		except Exception, e:
+		except Exception as e:
 
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return
-			if e != None	and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if e is not None	and u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 		return updateSignal, updateFINGnow, newStates
 
 
@@ -16228,14 +16126,14 @@ class Plugin(indigo.PluginBase):
 			return updateSignal, updateFINGnow, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
 
 
-		except Exception, e:
+		except Exception as e:
 
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return
-			if e != None	and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if e is not None	and u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 		return updateSignal, updateFINGnow, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
 
 ###-------------------------------------------------------------------------####
@@ -16301,8 +16199,8 @@ class Plugin(indigo.PluginBase):
 									self.RPI[fromPiU][u"piMAC"] = piMACSend
 									self.indiLOG.log(10,u"might have failed to replace RPI pi#: {}; piMACSend: {}; , you have to do it manually; beacon with type = rpi already exist ".format(fromPiU, piMACSend) )
 
-					except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"failed to replace RPI pi#= {};  piMACSend: {};  you have to do it manually".format(fromPiU, piMACSend) )
 
 
@@ -16319,14 +16217,14 @@ class Plugin(indigo.PluginBase):
 				indigoId = self.beacons[piMACSend][u"indigoId"]
 				try:
 					dev = indigo.devices[indigoId]
-				except Exception, e:
+				except Exception as e:
 
 					if u"{}".format(e).find(u"timeout waiting") > -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return beaconUpdatedIds
 					if u"{}".format(e).find(u"not found in database") ==-1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"updateBeaconStates beacons dict: "+ u"{}".format(self.beacons[piMACSend]))
 					return False, beaconUpdatedIds, updatepIP
 
@@ -16347,12 +16245,12 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(30,u"=== deleting beacon: {} replacing simple beacon with rPi model(1)".format(dev.name) )
 						del self.beacons[piMACSend]
 
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"beacons[piMACSend] pi#: {}; Pisend: {}; indigoID: {}; beaconsDict: {}".format(fromPiU,  piMACSend, indigoId, self.beacons[piMACSend] ) )
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"communication to indigo is interrupted")
 							return beaconUpdatedIds
 						self.indiLOG.log(40,u"smallErr", text =u" error ok if new / replaced RPI")
@@ -16407,15 +16305,15 @@ class Plugin(indigo.PluginBase):
 
 					try:
 						dev = indigo.devices[u"Pi_" + piMACSend]
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"communication to indigo is interrupted")
 							return  False, beaconUpdatedIds, updatepIP
 						if u"{}".format(e).find(u"not found in database") ==-1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							return  False, beaconUpdatedIds
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						return  False, beaconUpdatedIds, updatepIP
 
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -16445,12 +16343,12 @@ class Plugin(indigo.PluginBase):
 				self.fixConfig(checkOnly = [u"all",u"rpi",u"force"],fromPGM=u"updateBeaconStates1") # updateBeaconStates # ok only if new MAC for rpi ...
 				self.statusChanged = 14
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
-			if e != None	and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if e is not None	and u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 			keepThisMessage = False
 
 		return  keepThisMessage, beaconUpdatedIds, updatepIP
@@ -16474,15 +16372,15 @@ class Plugin(indigo.PluginBase):
 					name = dev.name
 					props = dev.pluginProps
 					newStates = copy.copy(dev.states)
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e).find(u"timeout waiting") > -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return setALLrPiVUpdate, dev, props, newStates, False
 					if u"{}".format(e).find(u"not found in database") ==-1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						return setALLrPiVUpdate, dev, props, newStates, False
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   + " indigoId:{}".format(self.beacons[mac][u"indigoId"]))
+					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)   + " indigoId:{}".format(self.beacons[mac][u"indigoId"]))
 					self.beacons[mac][u"indigoId"] = 0
 
 			else: # no indigoId found, double check
@@ -16554,10 +16452,10 @@ class Plugin(indigo.PluginBase):
 				try:
 					dev = indigo.devices[dev.id]
 					props = dev.pluginProps
-				except Exception, e:
+				except Exception as e:
 
 					if u"{}".format(e).find(u"timeout waiting") > -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return setALLrPiVUpdate, dev, props, newStates, False
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -16598,12 +16496,12 @@ class Plugin(indigo.PluginBase):
 
 				dev = indigo.devices[name]
 				newStates = copy.copy(dev.states)
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
-			if e != None and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if e is not None and u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 			keepThisMessage = False
 
 		return setALLrPiVUpdate, dev, props, newStates, keepThisMessage
@@ -16637,12 +16535,12 @@ class Plugin(indigo.PluginBase):
 
 			return True
 
-		except Exception, e:
+		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
-			if e != None	and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if e is not None	and u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 		return  False
 
 
@@ -16796,9 +16694,9 @@ class Plugin(indigo.PluginBase):
 						else:
 							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) and ( rssi !=-999 and self.beacons[mac][u"receivedSignals"][fromPiI][u"rssi"] !=-999)
 
-					except Exception, e:
+					except Exception as e:
 
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						logTRUEfromSignal = False
 
 
@@ -16829,9 +16727,9 @@ class Plugin(indigo.PluginBase):
 							#self.indiLOG.log(10,u"beaconPositionsUpdated; calcPostion:"+name+u" pi#="+fromPiU	  +u"   deltaDistance:"+ u"{}".format(deltaDistance)	  +u"   update:"+ u"{}".format(update)  )
 							self.beaconPositionsUpdated =6
 
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e) != u"None":
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 
 				if self.newBeaconsLogTimer >0:
 						try:
@@ -16841,8 +16739,8 @@ class Plugin(indigo.PluginBase):
 							if self.newBeaconsLogTimer < time.time():
 								self.indiLOG.log(10,u"new.beacon logging: resetting  newBeaconsLogTimer to OFF")
 								self.newBeaconsLogTimer =0
-						except Exception, e:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							self.exceptionHandler(40,e)
 
 				if self.selectBeaconsLogTimer !={}:
 					for sMAC in self.selectBeaconsLogTimer:
@@ -16870,9 +16768,9 @@ class Plugin(indigo.PluginBase):
 							dev = indigo.devices[self.beacons[piMACSend][u"indigoId"]]
 							dev.updateStateOnServer(u"{}".format(dev.id),u"note", u"PI-" + fromPiU)
 
-						except Exception, e:
+						except Exception as e:
 							if u"{}".format(e).find(u"timeout waiting") > -1:
-								self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								self.exceptionHandler(40,e)
 								self.indiLOG.log(40,u"communication to indigo is interrupted")
 								return beaconUpdatedIds
 
@@ -16881,14 +16779,14 @@ class Plugin(indigo.PluginBase):
 			if updateFINGnow:
 				self.updateFING(u"event")
 
-		except Exception, e:
+		except Exception as e:
 
 			if u"{}".format(e).find(u"timeout waiting") > -1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u"communication to indigo is interrupted")
 				return
-			if e != None	and u"{}".format(e).find(u"not found in database") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			if e is not None	and u"{}".format(e).find(u"not found in database") ==-1:
+				self.exceptionHandler(40,e)
 
 		if setALLrPiVUpdate == u"updateParamsFTP":
 			self.setALLrPiV(u"piUpToDate", [u"updateParamsFTP"])
@@ -16905,9 +16803,8 @@ class Plugin(indigo.PluginBase):
 			if newresult[0] == newFirstPart: return existing
 			newresult[0] = newFirstPart
 			return " ".join(newresult)
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return existing
 
 
@@ -16940,9 +16837,8 @@ class Plugin(indigo.PluginBase):
 			currClosestRPI	= int(deviBeacon.states[u"closestRPI"])
 			if currClosestRPI !=-1	and (time.time() - self.beacons[mac][u"receivedSignals"][currClosestRPI][u"lastSignal"]) <70.: # [u"receivedSignals"] =[rssi, timestamp,dist]
 				currMinDist	= self.beacons[mac][u"receivedSignals"][currClosestRPI][u"distance"]
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			currClosestRPI =-1; currMinDist = -9999.
 
 		for sMAC in self.selectBeaconsLogTimer:
@@ -16976,9 +16872,8 @@ class Plugin(indigo.PluginBase):
 				if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
 					self.indiLOG.log(10,u"sel.beacon logging: ClostR 3        :{}; currClosestRPI:{}, newClosestRPI:{},  newMinDist:{}   currMinDist:{}".format(mac, currClosestRPI, newClosestRPI, newMinDist,  currMinDist) )
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return newClosestRPI
 
 
@@ -17024,15 +16919,14 @@ class Plugin(indigo.PluginBase):
 								newMinDist   =  float(devBLE.states[piXX+u"_Distance"])
 								newClosestRPI  = pix
 					if self.decideMyLog(u"BLE"): self.indiLOG.log(5,u"findClosestRPIForBLEConnect loop pi:{}, newClosestRPI:{}, devdist:{}, newDist:{} deltaS:{}".format(piU, newClosestRPI, devBLE.states[piXX+u"_Distance"],newMinDist, deltaSec ) )
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 			# dont switch if: <	 4 dBm diff and	 not defined then keep current
 			if abs(newMinDist - currMinDist) < 2 and  currClosestRPI !=-1: #
 				newClosestRPI = currClosestRPI
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		if self.decideMyLog(u"BLE"): self.indiLOG.log(5,u"findClosestRPIForBLEConnect return w  newClosestRPI:{}".format(newClosestRPI) )
 
 		return newClosestRPI
@@ -17054,9 +16948,8 @@ class Plugin(indigo.PluginBase):
 			###self.indiLOG.log(10, u"{}".format(power)+u"  "+ u"{}".format(rssi) +u" " + u"{}".format(dist))
 			return dist
 
-		except	 Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	 Exception as e:
+			self.exceptionHandler(40,e)
 		return 99999.
 
 
@@ -17124,16 +17017,15 @@ class Plugin(indigo.PluginBase):
 						cmd1 = {u"device": typeId, u"command": cmd,	 u"restoreAfterBoot": restoreAfterBoot, u"devId": devId}
 
 			try: cmds = json.dumps([cmd1])
-			except Exception, e:
+			except Exception as e:
 				self.indiLOG.log(40,u"json error for cmds:{}".format(cmd1))
 				return
 
 			if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,	u"sendGPIOCommand: " + cmds)
 			self.sendtoRPI(ip, pi ,cmds, calledFrom=u"sendGPIOCommand")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -17151,9 +17043,8 @@ class Plugin(indigo.PluginBase):
 			if self.decideMyLog(u"OutputDevice"): self.indiLOG.log(5,u"sendGPIOCommand-s-: {}".format(cmds) )
 			self.sendtoRPI(ip, pi ,cmds, calledFrom=u"sendGPIOCommand")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 
@@ -17177,8 +17068,8 @@ class Plugin(indigo.PluginBase):
 				self.makeSupplicantFile(piU)
 
 
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -17258,10 +17149,10 @@ class Plugin(indigo.PluginBase):
 				f = open(self.indigoPreferencesPluginDir + u"all/knownBeaconTags", u"w")
 				f.write(json.dumps(self.knownBeaconTags))
 				f.close()
-			except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+					self.exceptionHandler(40,e)
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
@@ -17282,8 +17173,8 @@ class Plugin(indigo.PluginBase):
 			f.write(u"iface wlan0 inet manual\n")
 			f.write(u"   wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf\n")
 			f.close()
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -17301,8 +17192,8 @@ class Plugin(indigo.PluginBase):
 				f.write('   key_mgmt="' + self.key_mgmt + '"\n')
 			f.write(u"}\n")
 			f.close()
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -17354,19 +17245,19 @@ class Plugin(indigo.PluginBase):
 							piDev = indigo.devices[piID]
 							props = piDev.pluginProps
 							piDeviceExist=True
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"communication to indigo is interrupted")
 							return
 						if u"{}".format(e).find(u"not found in database") >-1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"RPI:{} devid:{} not in indigo, if RPI justd eleted, it will resolve itself ".format(piU ,piID))
 							self.delRPI(pi=piU, calledFrom=u"makeParametersFile")
 							self.updateNeeded += u",fixConfig"
 							self.fixConfig(checkOnly = [u"all",u"rpi",u"force"],fromPGM=u"makeParametersFile bad rpi")
 						else:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"RPI: {} error ..  piDevId not set:{}".format(piU ,self.RPI[piU]))
 							self.updateNeeded += u",fixConfig"
 							self.fixConfig(checkOnly = [u"all",u"rpi"],fromPGM=u"makeParametersFile2")
@@ -17379,9 +17270,8 @@ class Plugin(indigo.PluginBase):
 								out[u"rpiDataAcquistionMethod"]	  = self.rpiDataAcquistionMethod
 
 						if u"compressRPItoPlugin" in props:
-							try: 	out[u"compressRPItoPlugin"] =  int(props[u"compressRPItoPlugin"])
-							except: pass
-							out[u"compressRPItoPlugin"]= min(out[u"compressRPItoPlugin"],40000)
+							try: 	 min(self.compressRPItoPlugin, out[u"compressRPItoPlugin"],40000)
+							except: out[u"compressRPItoPlugin"] = self.compressRPItoPlugin
 
 						if u"eth0" in props and "wlan0" in props:
 							try: 	out[u"wifiEth"] =  {u"eth0":json.loads(props[u"eth0"]),u"wlan0":json.loads(props[u"wlan0"])}
@@ -17563,8 +17453,8 @@ class Plugin(indigo.PluginBase):
 						out = self.updateSensProps(out, props, u"BLEserial", elseSet=u"sequential")
 						out = self.updateSensProps(out, props, u"sendToIndigoSecs")
 
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					return u""
 
 
@@ -17589,12 +17479,12 @@ class Plugin(indigo.PluginBase):
 							try:
 								devId = int(devIdS)
 								dev = indigo.devices[devId]
-							except Exception, e:
+							except Exception as e:
 								if u"{}".format(e).find(u"timeout waiting") > -1:
-									self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+									self.exceptionHandler(40,e)
 									self.indiLOG.log(40,u"communication to indigo is interrupted")
 									return
-								self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								self.exceptionHandler(40,e)
 								continue
 
 							if not dev.enabled: continue
@@ -17827,8 +17717,8 @@ class Plugin(indigo.PluginBase):
 						if sens != {}:
 							out[u"sensors"][sensor] = sens
 							###if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(5,piU + "  sensor " + u"{}".format(out[u"sensors"][sensor]) )
-					except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40, u"{}".format(sens))
 
 				out[u"sensorList"] = self.RPI[piU][u"sensorList"]
@@ -18024,14 +17914,14 @@ class Plugin(indigo.PluginBase):
 					try:
 						if out[u"output"][typeId] == {}:
 							del out[u"output"][typeId]
-					except Exception, e:
+					except Exception as e:
 						self.indiLOG.log(30,u"creating parametersfile .. please fix device {}; rpi number:{} , outdput dev not linked ?, typeId: {}, out[output]: {}".format(devOut.name, piU, typeId, out[u"output"]))
 
 
 				out = self.writeJson(out, fName = self.indigoPreferencesPluginDir + u"interfaceFiles/parameters." + piU , fmtOn=self.parametersFileSort )
 
-		except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		if retFile: return out
 		return
 
@@ -18146,9 +18036,8 @@ class Plugin(indigo.PluginBase):
 					self.delayedActions[u"data"].put(action)
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		self.delayedActions[u"state"] = u"stopped - exiting thread"
 		self.indiLOG.log(10,u"delayedActions  update thread stopped, state is:{}".format(self.delayedActions[u"state"]) )
 		return
@@ -18194,9 +18083,8 @@ class Plugin(indigo.PluginBase):
 								self.startOneUpdateRPIqueue(piU, reason=u"active messages pending timeout")
 							elif self.rpiQueues[u"state"][piU] != u"running":
 								self.startOneUpdateRPIqueue(piU, reason=u"not running")
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -18329,9 +18217,9 @@ class Plugin(indigo.PluginBase):
 							self.rpiQueues[u"reset"][piU] = True
 							if self.decideMyLog(u"OfflineRPI"): self.indiLOG.log(10,u"device {} not enabled, no sending to RPI".format(indigo.devices[id].name) )
 							continue
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e) != u"None":
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(10,u"setting update queue for pi#{} to empty".format(piU))
 						self.rpiQueues[u"reset"][piU] = True
 
@@ -18342,9 +18230,9 @@ class Plugin(indigo.PluginBase):
 					self.RPIBusy[piU] = time.time()
 
 					if next[u"type"] == u"ftp":
-						retCode, text = self.execSendFilesToPiFTP(piU, fileToSend=next[u"fileToSend"], endAction= next[u"endAction"])
+						retCode = self.execSendFilesToPiFTP(piU, fileToSend=next[u"fileToSend"], endAction= next[u"endAction"])
 					else:
-						retCode, text = self.execSshToRPI(piU, fileToSend=next[u"fileToSend"], endAction= next[u"endAction"])
+						retCode = self.execSshToRPI(piU, fileToSend=next[u"fileToSend"], endAction= next[u"endAction"])
 
 					if retCode ==0: # all ok?
 						self.setRPIonline(piU)
@@ -18372,9 +18260,8 @@ class Plugin(indigo.PluginBase):
 					for nxt in addBack:
 						self.rpiQueues[u"data"][piU].put(nxt)
 				self.rpiQueues[u"reset"][piU] =False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		self.rpiQueues[u"state"][piU] = u"stopped - exiting thread"
 		self.indiLOG.log(10,u"rpi: {}  update thread stopped, state is:{}".format(piU,self.rpiQueues[u"state"][piU] ) )
 		return
@@ -18383,7 +18270,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def execSendFilesToPiFTP(self, piU, fileToSend=u"updateParamsFTP.exp",endAction="repeatUntilFinished"):
-		ret =[u"",u""]
+
 		try:
 			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10,u"enter  sendFilesToPiFTP #{}  fileToSend:".format(piU, fileToSend) )
 			if fileToSend==u"updateParamsFTP.exp": self.newIgnoreMAC = 0
@@ -18404,52 +18291,47 @@ class Plugin(indigo.PluginBase):
 			cmd0+=	piU + " '" + self.indigoPreferencesPluginDir + "' '" + self.pathToPlugin + "pi'" + " "+self.expectTimeout
 
 			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10,u"updating pi server config for # {} executing\n{}".format(piU, cmd0) )
-			p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-			ret = p.communicate()
+			ret, err = self.readPopen(cmd0)
 
 			if fileToSend == u"upgradeOpSysSSH.exp" :
-				return 0, ret
+				return 0
 
-			if len(ret[1]) > 0:
-				ret, ok = self.fixHostsFile(ret, piU)
-				if not ok: return 0, ret
-				self.indiLOG.log(10,u"return code from fix " + u"{}".format(ret) + u" trying again to configure PI")
-				p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-				ret = p.communicate()
+			if len(err) > 0:
+				ok = self.fixHostsFile(ret, piU)
+				if not ok: return 0
+				self.indiLOG.log(10,u"return code from fix {}  trying again to configure PI".format(ret))
+				ret, err = self.readPopen(cmd0)
 
-			if ret[0][-600:].find(u"sftp> ") > -1:
+			if ret[-600:].find(u"sftp> ") > -1:
 				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10,u"UpdateRPI seems to have been completed for pi# {}  {}".format(piU, fileToSend) )
-				return 0, [u"ok",""]
+				return 0
 			else:
 				self.sleep(2)  # try it again after 2 seconds
-				p = subprocess.Popen(cmd0, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-				ret = p.communicate()
-				if ret[0][-600:].find(u"sftp> ") > -1:
+				ret, err = self.readPopen(cmd0)
+				if ret[-600:].find(u"sftp> ") > -1:
 					if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10,u"UpdateRPI seems to have been completed for pi# {}  {}".format(piU, fileToSend) )
-					return 0, [u"ok",""]
+					return 0
 				else:
-					self.indiLOG.log(10,u"setup pi response (2) message>>>> \n{}\n<<<<<<".format(ret[0].strip(u"\n")) )
-					self.indiLOG.log(10,u"setup pi response (2) error>>>>>> \n{}\n<<<<<<".format(ret[1].strip(u"\n")) )
-					return 1, [u"offline",""]
-			return 0, ret
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		return 1, ret
+					self.indiLOG.log(10,u"setup pi response (2) message>>>> \n{}\n<<<<<<".format(ret.strip(u"\n")) )
+				return 1
+			return 0
+		except Exception as e:
+			self.exceptionHandler(40,e)
+		return 1
 
 
 
 
 ####-------------------------------------------------------------------------####
 	def execSshToRPI(self, piU, fileToSend=u"", endAction="repeatUntilFinished"):
-		ret=[u"",u""]
+
 		try:
 			if self.testPing(self.RPI[piU][u"ipNumberPi"]) != 0:
 				if self.decideMyLog(u"OfflineRPI") or self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(10,u" pi server # {} PI# {}  not online - does not answer ping - , skipping update".format(piU, self.RPI[piU][u"ipNumberPiSendTo"] ))
 				if endAction =="repeatUntilFinished":
-					return 1, ret
+					return 1
 				else:
-					return 0, ret
+					return 0
 
 			if fileToSend in [u"shutdownSSH.exp",u"rebootSSH.exp",u"resetOutputSSH.exp",u"shutdownSSH.exp"]:
 				batch =" &"
@@ -18483,104 +18365,103 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(10,u"getting iBeacon list from PI# {} using hci{} .. this will take > 30 secs \ncmd:{}".format(piU, hci, cmd) )
 
 			else:
-
 				cmd = u"/usr/bin/expect '" + self.pathToPlugin + fileToSend+u"' " + " " + self.RPI[piU][u"userIdPi"] + " " + self.RPI[piU][u"passwordPi"] + " " + prompt+u" "+ self.RPI[piU][u"ipNumberPiSendTo"]+ " "+self.expectTimeout+ " "+batch
+
 			if self.decideMyLog(u"UpdateRPI") : self.indiLOG.log(5,fileToSend+u" Pi# {}\n{}".format(piU, cmd) )
 			if batch == u" ":
-				ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(5,u"response: {}".format(ret) )
-				if len(ret[1]) > 0:
-					ret, ok = self.fixHostsFile(ret,piU)
+				ret, err = self.readPopen(cmd)
+				if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(5,u"response: {} - {}".format(ret, err) )
+				if len(err) > 0:
+					ok = self.fixHostsFile(ret,piU)
 					if not ok:
 						if endAction =="repeatUntilFinished":
-							return 1,ret
+							return 1
 						else:
-							return 0, ret
-					ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+							return 0
+					ret, err = self.readPopen(cmd)
 
 			else:
-				ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+				ret, err = self.readPopen(cmd0)
 
 			if fileToSend.find(u"shutdown") >-1:
-				return 0, ret
+				return 0
 
 			tag ="\nPi#{} - ".format(piU)
 
-			if len(ret[1]) > 0:
-				ret1= ret[1].replace(u"\n\n", u"\n").replace(u"\n", tag)
-				self.indiLOG.log(10,u"{} Pi# {}  {}".format(fileToSend, piU, ret1) )
+			if len(err) > 0:
+				err= err.replace(u"\n\n", u"\n").replace(u"\n", tag)
+				self.indiLOG.log(10,u"{} Pi# {}  {}".format(fileToSend, piU, err) )
 
 			if fileToSend.find(u"getStats") >-1:
 				try:
-					ret1= ((ret[0].split(u"===fix==="))[-1]).replace(u"\n\n", u"\n").replace(u"\n", tag)
-					self.indiLOG.log(10,u"stats from Pi# {}{}{}{}Stats end ===========".format(piU, tag, ret1, tag ) )
+					ret1= ((ret.split(u"===fix==="))[-1]).replace(u"\n\n", u"\n").replace(u"\n", tag)
+					self.indiLOG.log(10,u"stats from Pi# {}{}{}{}Stats end ===========".format(piU, tag, ret, tag ) )
 				except:
-					self.indiLOG.log(10,u"stats from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
+					self.indiLOG.log(10,u"stats from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace(u"\n\n", u"\n"), err.replace(u"\n\n", u"\n")) )
 
-				return 0, ret
+				return 0
 
 			if fileToSend.find(u"getiBeaconListbluetoothctSSH") >-1:
 				try:
-					if ret[0].find(u"error")> -1:
-						ret1= ret[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
+					if ret.find(u"error")> -1:
+						ret1= ret.replace(u"\n\n", u"\n").replace(u"\n", tag)
 						self.indiLOG.log(10,u"\nibeaconList bluetoothctl form Pi# {} error,  END ====".format(piU, tag, ret1, tag) )
 					else:
-						ret1= u"Discovery started\n"+(ret[0].split(u"Discovery started")[-1]).replace(u"[[0;93m", u"[").replace(u"[[0;92m", u"[").replace(u"[0m", u"").replace(u"\n", tag).split(u"- nohup:")[0]
+						ret1= u"Discovery started\n"+(ret.split(u"Discovery started")[-1]).replace(u"[[0;93m", u"[").replace(u"[[0;92m", u"[").replace(u"[0m", u"").replace(u"\n", tag).split(u"- nohup:")[0]
 						self.indiLOG.log(10,u"\nibeaconList form Pi# {} collected over 20 secs ==============:  {}{}{}bluetoothctl scan  END         ===================================".format(piU, tag, ret1, tag) )
 				except:
-					self.indiLOG.log(10,u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
+					self.indiLOG.log(10,u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace(u"\n\n", u"\n"), err.replace(u"\n\n", u"\n")) )
 
-				return 0, ret
+				return 0
 
 			if fileToSend.find(u"getiBeaconListbluetoothctAndhcidumpSSH") >-1:
 				try:
-					if ret[0].find(u"error")> -1:
-						ret1= ret[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
+					if ret.find(u"error")> -1:
+						ret1= ret.replace(u"\n\n", u"\n").replace(u"\n", tag)
 						self.indiLOG.log(10,u"\nibeaconList bluetoothctl form Pi# {} error,  END ====".format(piU, tag, ret1, tag) )
 					else:
-						ret1= u"Discovery started\n"+(ret[0].split(u"hcidump --raw")[-1]).replace(u"[[0;93m", u"[").replace(u"[[0;92m", u"[").replace(u"[0m", u"").replace(u"\n", tag).split(u"- nohup:")[0]
- 						xx= ret[0].replace(u"\nPi#"+piU+u" - ", u"")
-						xx= ret[0].replace(u"Pi#"+piU+u" - ", u"")
+						ret1= u"Discovery started\n"+(ret.split(u"hcidump --raw")[-1]).replace(u"[[0;93m", u"[").replace(u"[[0;92m", u"[").replace(u"[0m", u"").replace(u"\n", tag).split(u"- nohup:")[0]
+						xx= ret.replace(u"\nPi#"+piU+u" - ", u"")
+						xx= ret.replace(u"Pi#"+piU+u" - ", u"")
 						ret1 =u""
 						for line in xx:
- 							if line.find(u">") > 0: continue
+							if line.find(u">") > 0: continue
 
 						self.indiLOG.log(10,u"\nibeaconList form Pi# {} collected over 20 secs ==============:  {}{}{}bluetoothctl scan  END         ===================================".format(piU, tag, ret1, tag) )
 				except:
-					self.indiLOG.log(10,u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
+					self.indiLOG.log(10,u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace(u"\n\n", u"\n"), err.replace(u"\n\n", u"\n")) )
 
-				return 0, ret
+				return 0
 
 			if fileToSend.find(u"getiBeaconList") >-1:
 				try:
-					if ret[0].find(u"failed: Input/output error")> -1:
-						ret1= ret[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
+					if ret.find(u"failed: Input/output error")> -1:
+						ret1= ret.replace(u"\n\n", u"\n").replace(u"\n", tag)
 						self.indiLOG.log(10,u"\nibeaconList form Pi# {} error, try with other hci 0/1 channel {}{} {} END ====".format(piU, tag, ret1, tag) )
 					else:
-						ret1= ((ret[0].split(u"LE Scan ..."))[-1]).split(u"Killed")[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
+						ret1= ((ret.split(u"LE Scan ..."))[-1]).split(u"Killed")[0].replace(u"\n\n", u"\n").replace(u"\n", tag)
 						self.indiLOG.log(10,u"\nibeaconList form Pi# {} collected over 20 secs ==============:  {}{}{}ibeaconList  END         ===================================".format(piU, tag, ret1, tag) )
 				except:
-					self.indiLOG.log(10,u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
+					self.indiLOG.log(10,u"getiBeaconList from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace(u"\n\n", u"\n"), err.replace(u"\n\n", u"\n")) )
 
-				return 0, ret
+				return 0
 
 			if fileToSend.find(u"getLogFileSSH") >-1:
 				try:
-					ret1= ( ( (ret[0].split(u"tail -1000 /var/log/pibeacon.log"))[1] ).split(u"echo 'end token' >")[0] ).replace(u"\n\n", u"\n").replace(u"\n", tag)
+					ret1= ( ( (ret.split(u"tail -1000 /var/log/pibeacon.log"))[1] ).split(u"echo 'end token' >")[0] ).replace(u"\n\n", u"\n").replace(u"\n", tag)
 					self.indiLOG.log(10,u"{}pibeacon logfile from Pi# {}  ==============:  {}{}{}pibeacon logfile  END    ===================================\n".format(tag, piU, tag, ret1,tag) )
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e) != u"None":
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-						self.indiLOG.log(10,u"pibeacon logfile from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret[0].replace(u"\n\n", u"\n"), ret[1].replace(u"\n\n", u"\n")) )
+						self.exceptionHandler(40,e)
+						self.indiLOG.log(10,u"pibeacon logfile from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace(u"\n\n", u"\n"), err.replace(u"\n\n", u"\n")) )
 
-				return 0, ret
+				return 0
 
-			return 0, ret
+			return 0
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		return 1, ret
+		except Exception as e:
+			self.exceptionHandler(40,e)
+		return 1
 
 
 
@@ -18603,7 +18484,9 @@ class Plugin(indigo.PluginBase):
 			piU = u"{}".format(pi)
 			if self.decideMyLog(u"UpdateRPI"): self.indiLOG.log(5,u"setup pi response (1)\n" + u"{}".format(ret))
 			if ret[0].find(u".ssh/known_hosts:") > -1:
-				if (subprocess.Popen(u"/usr/bin/csrutil status" , shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].find(u"enabled")) >-1:
+				ret, err = self.readPopen(u"/usr/bin/csrutil status" )
+
+				if ret.find(u"enabled") >-1:
 					if self.decideMyLog(u"bigErr"):
 						self.indiLOG.log(40,u'ERROR can not update hosts known_hosts file,    "/usr/bin/csrutil status" shows system enabled SIP; please edit manually with \n"nano {}/.ssh/known_hosts"\n and delete line starting with {}'.format(self.MAChome, self.RPI[piU][u"ipNumberPiSendTo"]) )
 						self.indiLOG.log(40,u"trying to fix from within plugin, if it happens again you need to do it manually")
@@ -18617,25 +18500,23 @@ class Plugin(indigo.PluginBase):
 							if len(line) < 10: continue
 							f.write(line+u"\n")
 						f.close()
-					except Exception, e:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						self.exceptionHandler(40,e)
 
-					return [u"",u""], False
+					return False
 
-				fix1 = ret[0].split(u"Offending RSA key in ")
+				fix1 = ret.split(u"Offending RSA key in ")
 				if len(fix1) > 1:
 					fix2 = fix1[1].split(u"\n")[0].strip(u"\n").strip(u"\n")
 					fix3 = fix2.split(u":")
 					if len(fix3) > 1:
 						fixcode = u"/usr/bin/perl -pi -e 's/\Q$_// if ($. == u" + fix3[1] + ");' " + fix3[0]
 						self.indiLOG.log(40,u"wrong RSA key, trying to fix with: {}".format(fixcode) )
-						p = subprocess.Popen(fixcode, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-						ret = p.communicate()
+						subprocess.Popen(fixcode, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-		return ret, True
+		except Exception as e:
+			self.exceptionHandler(40,e)
+		return  True
 
 ####------------------rpi update queue management ----------------------------END
 ####------------------rpi update queue management ----------------------------END
@@ -18648,9 +18529,8 @@ class Plugin(indigo.PluginBase):
 		return
 		try:
 			self.setupFilesForPi(calledFrom=u"configureWifi")
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 ####-------------------------------------------------------------------------####
@@ -18671,9 +18551,8 @@ class Plugin(indigo.PluginBase):
 
 			if int(ret) ==0:  return 0
 			return 1
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		#indigo.server.log(  ipN+u"-3  "+ u"{}".format(ret) +u"  "+ u"{}".format(time.time() - ss)  )
 		return 1
@@ -18685,8 +18564,8 @@ class Plugin(indigo.PluginBase):
 		############## list of beacons in history
 		#				  1234567890123456	1234567890123456789012 1234567890 123456 123456789
 		#				  75:66:B5:0A:9F:DB beacon-75:66:B5:0A:9   expired		   0	  1346
-		self.myLog( text = u"#	defined beacons-------------", mType="pi configuration")
-		self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig    LastUp[s] ExpTime updDelay created   lastStatusChange",  mType=u"pi configuration")
+		self.myLog( theText = u"#	defined beacons-------------", mType="pi configuration")
+		self.myLog( theText = u"#  Beacon MAC        indigoName                 indigoId Status           type    txMin ignore sigDlt minSig    LastUp[s] ExpTime updDelay created   lastStatusChange",  mType=u"pi configuration")
 		for status in [u"ignored", u""]:
 			for beaconDeviceType in self.knownBeaconTags:
 				self.printBeaconInfoLine(status, beaconDeviceType)
@@ -18763,58 +18642,57 @@ class Plugin(indigo.PluginBase):
 			helpText += fff
 			helpText += u'=============== BLE SENSORS .. END ===========  \n'
 			helpText += u'  \n'
-			self.myLog( text = helpText, destination=u"")
-			self.myLog( text = helpText, destination="standard")
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.myLog( theText = helpText, destination=u"")
+			self.myLog( theText = helpText, destination="standard")
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
 	def printConfig(self):
 		try:
-			self.myLog( text = u" ========== Parameters START ================",														mType= u"pi configuration")
-			self.myLog( text = u"data path used               {}" .format(self.indigoPreferencesPluginDir),								mType= u"pi configuration")
-			self.myLog( text = u"debugLevel Indigo            {}-" .format(self.debugLevel),									    	mType= u"pi configuration")
-			self.myLog( text = u"debug which Pi#              {} " .format(self.debugRPI),												mType= u"pi configuration")
-			self.myLog( text = u"maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000)),	mType= u"pi configuration")
-			self.myLog( text = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),								mType= u"pi configuration")
-			self.myLog( text = u"myIp Number                  {}" .format(self.myIpNumber),												mType= u"pi configuration")
-			self.myLog( text = u"check RPI ip if registered   {}; turn off if rpi is in separate subnet" .format(self.checkRPIipForReject), mType= u"pi configuration")
-			self.myLog( text = u"blockNonLocalIp              {}" .format(self.blockNonLocalIp),										mType= u"pi configuration")
-			self.myLog( text = u".. ip#s accepted             {}.{}.x.x" .format(self.myIpNumberRange[0],self.myIpNumberRange[1]),		mType= u"pi configuration")
-			self.myLog( text = u"port# of indigoWebServer     {}" .format(self.portOfServer),											mType= u"pi configuration")
-			self.myLog( text = u"indigo UserID                ....{}" .format(self.userIdOfServer[4:]),									mType= u"pi configuration")
-			self.myLog( text = u"indigo Password              ....{}" .format(self.passwordOfServer[4:]),								mType= u"pi configuration")
-			self.myLog( text = u"WiFi key_mgmt                {}" .format(self.key_mgmt),												mType= u"pi configuration")
-			self.myLog( text = u"WiFi Password                ....{}" .format(self.wifiPassword[4:]),									mType= u"pi configuration")
-			self.myLog( text = u"WiFi SSID                    {}" .format(self.wifiSSID),												mType= u"pi configuration")
-			self.myLog( text = u"wifi OFF if ETH0             {}" .format(self.wifiEth),												mType= u"pi configuration")
-			self.myLog( text = u"Seconds UP to DOWN           {}" .format(self.secToDown),												mType= u"pi configuration")
-			self.myLog( text = u"enable FINGSCAN interface    {}" .format(self.enableFING),												mType= u"pi configuration")
-			self.myLog( text = u"beacon indigo folder Name    {}" .format(self.iBeaconDevicesFolderName),								mType= u"pi configuration")
-			self.myLog( text = u"accept newiBeacons           {}" .format(self.acceptNewiBeacons),										mType= u"pi configuration")
-			self.myLog( text = u"recycle indigo varibles      {}" .format(self.cycleVariables),											mType= u"pi configuration")
-			self.myLog( text = u"distance Units	              {}; 1=m, 0.01=cm , 0.0254=in, 0.3=f, 0.9=y".format(self.distanceUnits),	mType= u"pi configuration")
-			self.myLog( text = u"", 																									mType= u"pi configuration")
-			self.myLog( text = u" ========== EXPERT parameters for each PI:----------", 												mType= u"pi configuration")
-			self.myLog( text = u"port# on rPi 4 GPIO commands {}" .format(self.rPiCommandPORT),											mType= u"pi configuration")
-			self.myLog( text = u" ",																									mType= u"pi configuration")
+			self.myLog( theText = u" ========== Parameters START ================",														mType= u"pi configuration")
+			self.myLog( theText = u"data path used               {}" .format(self.indigoPreferencesPluginDir),								mType= u"pi configuration")
+			self.myLog( theText = u"debugLevel Indigo            {}-" .format(self.debugLevel),									    	mType= u"pi configuration")
+			self.myLog( theText = u"debug which Pi#              {} " .format(self.debugRPI),												mType= u"pi configuration")
+			self.myLog( theText = u"maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000)),	mType= u"pi configuration")
+			self.myLog( theText = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),								mType= u"pi configuration")
+			self.myLog( theText = u"myIp Number                  {}" .format(self.myIpNumber),												mType= u"pi configuration")
+			self.myLog( theText = u"check RPI ip if registered   {}; turn off if rpi is in separate subnet" .format(self.checkRPIipForReject), mType= u"pi configuration")
+			self.myLog( theText = u"blockNonLocalIp              {}" .format(self.blockNonLocalIp),										mType= u"pi configuration")
+			self.myLog( theText = u".. ip#s accepted             {}.{}.x.x" .format(self.myIpNumberRange[0],self.myIpNumberRange[1]),		mType= u"pi configuration")
+			self.myLog( theText = u"port# of indigoWebServer     {}" .format(self.portOfServer),											mType= u"pi configuration")
+			self.myLog( theText = u"indigo UserID                ....{}" .format(self.userIdOfServer[4:]),									mType= u"pi configuration")
+			self.myLog( theText = u"indigo Password              ....{}" .format(self.passwordOfServer[4:]),								mType= u"pi configuration")
+			self.myLog( theText = u"WiFi key_mgmt                {}" .format(self.key_mgmt),												mType= u"pi configuration")
+			self.myLog( theText = u"WiFi Password                ....{}" .format(self.wifiPassword[4:]),									mType= u"pi configuration")
+			self.myLog( theText = u"WiFi SSID                    {}" .format(self.wifiSSID),												mType= u"pi configuration")
+			self.myLog( theText = u"wifi OFF if ETH0             {}" .format(self.wifiEth),												mType= u"pi configuration")
+			self.myLog( theText = u"Seconds UP to DOWN           {}" .format(self.secToDown),												mType= u"pi configuration")
+			self.myLog( theText = u"enable FINGSCAN interface    {}" .format(self.enableFING),												mType= u"pi configuration")
+			self.myLog( theText = u"beacon indigo folder Name    {}" .format(self.iBeaconDevicesFolderName),								mType= u"pi configuration")
+			self.myLog( theText = u"accept newiBeacons           {}" .format(self.acceptNewiBeacons),										mType= u"pi configuration")
+			self.myLog( theText = u"recycle indigo varibles      {}" .format(self.cycleVariables),											mType= u"pi configuration")
+			self.myLog( theText = u"distance Units               {}; 1=m, 0.01=cm , 0.0254=in, 0.3=f, 0.9=y".format(self.distanceUnits),	mType= u"pi configuration")
+			self.myLog( theText = u"", 																									mType= u"pi configuration")
+			self.myLog( theText = u" ========== EXPERT parameters for each PI:----------", 												mType= u"pi configuration")
+			self.myLog( theText = u"port# on rPi 4 GPIO commands {}" .format(self.rPiCommandPORT),											mType= u"pi configuration")
+			self.myLog( theText = u" ",																									mType= u"pi configuration")
 
-			self.myLog( text = u"  # R# 0/1 IP#             beacon-MAC        indigoName                 Pos X,Y,Z    indigoID UserID    Password       If-rPI-Hangs   SensorAttached",mType= u"pi configuration")
+			self.myLog( theText = u"  # R# 0/1 IP#             beacon-MAC        indigoName                 Pos X,Y,Z    indigoID UserID    Password       If-rPI-Hangs   SensorAttached",mType= u"pi configuration")
 			for piU  in self.RPI:
 				try:
 					pi = int(piU)
 					if self.RPI[piU][u"piDevId"] == 0:	 continue
 					try:
 						dev = indigo.devices[self.RPI[piU][u"piDevId"]]
-					except Exception, e:
+					except Exception as e:
 						if u"{}".format(e).find(u"timeout waiting") > -1:
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							self.exceptionHandler(40,e)
 							self.indiLOG.log(40,u"communication to indigo is interrupted")
 							return
 
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"self.RPI[piU][piDevId] not defined for pi: {}".format(piU))
 						continue
 					line = piU.rjust(3) + " "
@@ -18832,17 +18710,17 @@ class Plugin(indigo.PluginBase):
 					line += self.RPI[piU][u"passwordPi"].ljust(15)
 					line += self.RPI[piU][u"enableRebootCheck"].ljust(14)
 					line += u"{}".format(self.RPI[piU][u"sensorList"]).strip(u"[]").ljust(15)
-					self.myLog( text = line, mType="pi configuration")
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					self.myLog( theText = line, mType="pi configuration")
+				except Exception as e:
+					self.exceptionHandler(40,e)
 					self.indiLOG.log(40,u"RPI#{} has problem:  disabled?".format(pi))
 
 
 
-			self.myLog( text = u"", mType="pi configuration")
+			self.myLog( theText = u"", mType="pi configuration")
 			if len(self.CARS[u"carId"]) > 0:
-				self.myLog( text = u" ==========  CARS =========================", mType="pi configuration")
-				self.myLog( text = u"CAR device-------------       HomeS     AwayS    BAT-beacon                     USB-beacon                     KEY0-beacon                    KEY1-beacon                    KEY2-beacon", mType= u"pi configuration")
+				self.myLog( theText = u" ==========  CARS =========================", mType="pi configuration")
+				self.myLog( theText = u"CAR device-------------       HomeS     AwayS    BAT-beacon                     USB-beacon                     KEY0-beacon                    KEY1-beacon                    KEY2-beacon", mType= u"pi configuration")
 				bNames = [u"beaconBattery",u"beaconUSB",u"beaconKey0",u"beaconKey1",u"beaconKey2"]
 				bN = [u" ",u" ",u" ",u" ",u" "]
 				bF = [u" ",u" ",u" ",u" ",u" "]
@@ -18873,7 +18751,7 @@ class Plugin(indigo.PluginBase):
 					out =  carName +u" "+homeSince+u" - "+awaySince
 					for n in range(len(bNames)):
 						out += u" " + bN[n].strip().ljust(30)
-					self.myLog( text = out, mType= u"pi configuration")
+					self.myLog( theText = out, mType= u"pi configuration")
 					out =  "         ....FastDown".ljust(30)+ " ".ljust(18)
 					for n in range(len(bNames)):
 						if bF[n] !=" ":
@@ -18881,8 +18759,8 @@ class Plugin(indigo.PluginBase):
 						else:
 							out += u" " + (u" ").ljust(30)
 
-					self.myLog( text = out, mType= u"pi configuration")
-				self.myLog( text = u"", mType= u"pi configuration")
+					self.myLog( theText = out, mType= u"pi configuration")
+				self.myLog( theText = u"", mType= u"pi configuration")
 				"""
 configuration         - ==========  defined beacons ==============
   08:31:46 pi configuration         -#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min on/off battery UUIDlastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created
@@ -18890,27 +18768,26 @@ configuration         - ==========  defined beacons ==============
   08:31:46 pi configuration         -6  00:EA:23:11:2B:E4 b-xy-Mazda -red-1-2        60052985 up       True                XY_1   -59      0      0    999 -999/-999random127/100 -09-05 09:20:18,l=0             45      90        0 2017-09-07 23:44:36 2020-09-14 08:07:49
 				"""
 			if True:
-				self.myLog( text = u" ==========  defined beacons ==============", mType= u"pi configuration")
-				self.myLog( text = u"#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ",
+				self.myLog( theText = u" ==========  defined beacons ==============", mType= u"pi configuration")
+				self.myLog( theText = u"#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ",
 						   mType= u"pi configuration")
 				for status in [u"up", u"down", u"expired"]:
 					for beaconDeviceType in self.knownBeaconTags:
 						self.printBeaconInfoLine(status, beaconDeviceType)
 
-				self.myLog( text = u"", mType= u"pi configuration")
+				self.myLog( theText = u"", mType= u"pi configuration")
 
 			if True:
-				self.myLog( text = u"update-thread status", mType= u"pi configuration")
-				self.myLog( text = u"pi# state       lastCheck lastActive   lastData", mType= u"pi configuration")
+				self.myLog( theText = u"update-thread status", mType= u"pi configuration")
+				self.myLog( theText = u"pi# state       lastCheck lastActive   lastData", mType= u"pi configuration")
 				if "state" in self.rpiQueues:
 					for piU in self.RPI:
 						if piU not in self.rpiQueues[u"state"]: continue
-						self.myLog( text = u"{:3s} {:10s} {:10.1f} {:10.1f}   >{:} ...".format( piU, self.rpiQueues[u"state"][piU], time.time()-self.rpiQueues[u"lastCheck"][piU], time.time()-self.rpiQueues[u"lastActive"][piU], self.rpiQueues[u"lastData"][piU][0:99] ),  mType= u"pi configuration")
-					self.myLog( text = u"", mType= u"pi configuration")
+						self.myLog( theText = u"{:3s} {:10s} {:10.1f} {:10.1f}   >{:} ...".format( piU, self.rpiQueues[u"state"][piU], time.time()-self.rpiQueues[u"lastCheck"][piU], time.time()-self.rpiQueues[u"lastActive"][piU], self.rpiQueues[u"lastData"][piU][0:99] ),  mType= u"pi configuration")
+					self.myLog( theText = u"", mType= u"pi configuration")
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -18930,7 +18807,7 @@ configuration         - ==========  defined beacons ==============
 			for group in _GlobalConst_groupList:
 				groupMemberNames[group] = u""
 
- 			for dev	in indigo.devices.iter(self.pluginId):
+			for dev	in indigo.devices.iter(self.pluginId):
 				if u"groupMember" not in dev.states:  continue
 				if dev.states[u"groupMember"] == u"": continue
 				out+= u"\n{:35s}: {}".format(dev.name, dev.states[u"groupMember"])
@@ -18967,9 +18844,8 @@ configuration         - ==========  defined beacons ==============
 			out+= u"\n"
 			self.indiLOG.log(20,out)
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 		return
 
@@ -18982,12 +18858,12 @@ configuration         - ==========  defined beacons ==============
 	def printTCPIPstats(self, all="yes"):
 
 		############## tcpip stats
-		if self.socketServer is not None or True:
+		if self.socServ is not None or True:
 			if all == u"yes":
 					startDate= time.strftime(_defaultDateStampFormat,time.localtime(self.dataStats[u"startTime"]))
-					self.myLog( text = u"", mType= u"pi TCPIP socket")
-					self.myLog( text = u"Stats for RPI-->INDIGO data transfers. Tracking started {}. Report TX errors if time between errors is <{:.0f} Min".format(startDate, self.maxSocksErrorTime/60), mType=	u"pi TCPIP socket")
-			self.myLog( text = u"IP              name          type      first               last                    #MSGs       #bytes bytes/MSG  maxBytes  bytes/min   MSGs/min", mType= u"pi TCPIP socket")
+					self.myLog( theText = u"", mType= u"pi TCPIP socket")
+					self.myLog( theText = u"Stats for RPI-->INDIGO data transfers. Tracking started {}. Report TX errors if time between errors is <{:.0f} Min".format(startDate, self.maxSocksErrorTime/60), mType=	u"pi TCPIP socket")
+			self.myLog( theText = u"IP              name          type      first               last                    #MSGs       #bytes bytes/MSG  maxBytes  bytes/min   MSGs/min", mType= u"pi TCPIP socket")
 
 			### self.dataStats[u"data"][IPN][name][type] = {u"firstTime":time.time(),"lastTime":0,"count":0,"bytes":0}
 
@@ -19030,14 +18906,14 @@ configuration         - ==========  defined beacons ==============
 
 							maxBytes   = max(maxBytN,maxBytes)
 
-							self.myLog( text = u"{} {} {} {} {} {} {} {} {}  {}  {}".format(IPN.ljust(15), name.ljust(12), xType.ljust(10), dtFT, dtLT, count, bytesT, bytesPerMsg, maxByt, bytesPerMin, msgsPerMin),mType=u" ")
+							self.myLog( theText = u"{} {} {} {} {} {} {} {} {}  {}  {}".format(IPN.ljust(15), name.ljust(12), xType.ljust(10), dtFT, dtLT, count, bytesT, bytesPerMsg, maxByt, bytesPerMin, msgsPerMin),mType=u" ")
 			if all == u"yes" and totMsg >0:
 				bytesPerMsg	  = u"{}".format(int(totBytes/totMsg)).rjust(9)
 				bytesPerMin	  = (u"%9.1f"% (totBytes/minMeasured)  ).rjust(9)
 				msgsPerMin	  = (u"%9.2f"% (totMsg/minMeasured)	   ).rjust(9)
 				maxBytes	  =	 u"{}".format(maxBytes).rjust(9)
-				self.myLog( text = u"total                                                                          {:10d}{:13d} {} {}  {}  {}".format(int(totMsg), int(totBytes), bytesPerMsg, maxBytes, bytesPerMin, msgsPerMin ),mType=u" ")
-				self.myLog( text = u" ===  Stats for RPI --> INDIGO data transfers ==  END total time measured: {:.0f} {} ; min measured: {:.0f}".format( int(time.strftime(u"%d", time.gmtime(secMeasured)))-1, time.strftime(u"%H:%M:%S", time.gmtime(secMeasured)), minMeasured ), mType=	 u"pi TCPIP socket")
+				self.myLog( theText = u"total                                                                          {:10d}{:13d} {} {}  {}  {}".format(int(totMsg), int(totBytes), bytesPerMsg, maxBytes, bytesPerMin, msgsPerMin ),mType=u" ")
+				self.myLog( theText = u" ===  Stats for RPI --> INDIGO data transfers ==  END total time measured: {:.0f} {} ; min measured: {:.0f}".format( int(time.strftime(u"%d", time.gmtime(secMeasured)))-1, time.strftime(u"%H:%M:%S", time.gmtime(secMeasured)), minMeasured ), mType=	 u"pi TCPIP socket")
 		return
 
 ####-------------------------------------------------------------------------####
@@ -19046,15 +18922,15 @@ configuration         - ==========  defined beacons ==============
 		nSecs = max(1,(time.time()-	 self.dataStats[u"updates"][u"startTime"]))
 		nMin  = nSecs/60.
 		startDate= time.strftime(_defaultDateStampFormat,time.localtime(self.dataStats[u"updates"][u"startTime"]))
-		self.myLog( text = u"",mType=u" " )
-		self.myLog( text = u"===    measuring started at: {}".format(startDate), mType="indigo update stats " )
-		self.myLog( text = u"updates: {:10d};   updates/sec: {:10.2f};   updates/minute: {:10.2f}".format(self.dataStats[u"updates"][u"devs"], self.dataStats[u"updates"][u"devs"] /nSecs, self.dataStats[u"updates"][u"devs"]  /nMin), mType= u"    device ")
+		self.myLog( theText = u"",mType=u" " )
+		self.myLog( theText = u"===    measuring started at: {}".format(startDate), mType="indigo update stats " )
+		self.myLog( theText = u"updates: {:10d};   updates/sec: {:10.2f};   updates/minute: {:10.2f}".format(self.dataStats[u"updates"][u"devs"], self.dataStats[u"updates"][u"devs"] /nSecs, self.dataStats[u"updates"][u"devs"]  /nMin), mType= u"    device ")
 		out = u"(#states #updates #updates/min) "
 		for ii in range(1,10):
 			out+= u"({:1d} {:1d} {:3.1f}) ".format(ii, self.dataStats[u"updates"][u"nstates"][ii], self.dataStats[u"updates"][u"nstates"][ii]/nMin)
 		out+= u"({:1d} {:1d} {:3.1f})".format(10, self.dataStats[u"updates"][u"nstates"][10], self.dataStats[u"updates"][u"nstates"][10]/nMin)
-		self.myLog( text = u"updates: {}".format(out), mType=  u"    #states")
-		self.myLog( text = u"===	total time measured: {}".format( time.strftime(u"%H:%M:%S", time.gmtime(nSecs)) ), mType= u"indigo update stats" )
+		self.myLog( theText = u"updates: {}".format(out), mType=  u"    #states")
+		self.myLog( theText = u"===	total time measured: {}".format( time.strftime(u"%H:%M:%S", time.gmtime(nSecs)) ), mType= u"indigo update stats" )
 		return
 
 
@@ -19079,11 +18955,11 @@ configuration         - ==========  defined beacons ==============
 						if u"batteryLevelLastUpdate" in dev.states:
 							batteryLevelLastUpdate = dev.states[u"batteryLevelLastUpdate"][4:]
 							if len(batteryLevelLastUpdate) < 10: batteryLevelLastUpdate = u"01-01 00:00:00"
-							batteryLevelLastUpdate += u",l="+str(dev.states[u"batteryLevel"])
+							batteryLevelLastUpdate += u",l={}".format(dev.states[u"batteryLevel"])
 							batteryLevelLastUpdate = batteryLevelLastUpdate
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e).find(u"timeout waiting") > -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 						self.indiLOG.log(40,u"communication to indigo is interrupted")
 						return
 					name = u" "
@@ -19109,7 +18985,7 @@ configuration         - ==========  defined beacons ==============
 					   u"{}".format(min(9999999,  int(self.beacons[beacon][u"updateSignalValuesSeconds"]) ) ).rjust(8)  + " " + \
 					   u"{}".format(self.beacons[beacon][u"created"]).ljust(19) +u" "+\
 					   lastStatusChange.ljust(19)
-				self.myLog( text = line, mType= u"pi configuration")
+				self.myLog( theText = line, mType= u"pi configuration")
 
 			if status == u"ignored":
 				for beacon in self.beacons:
@@ -19131,7 +19007,7 @@ configuration         - ==========  defined beacons ==============
 							   u"{}".format(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
 							   u"{}".format(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
 							   u"{}".format(self.beacons[beacon][u"created"]).ljust(19)
-						self.myLog( text = line, mType=	 u"pi configuration")
+						self.myLog( theText = line, mType=	 u"pi configuration")
 				for beacon in self.beacons:
 					if self.beacons[beacon][u"typeOfBeacon"] != type: continue
 					if self.beacons[beacon][u"status"] != status:	  continue
@@ -19151,12 +19027,12 @@ configuration         - ==========  defined beacons ==============
 							   u"{}".format(min(999999,int(self.beacons[beacon][u"expirationTime"]))).rjust(7) + " " + \
 							   u"{}".format(min(9999999,int(self.beacons[beacon][u"updateSignalValuesSeconds"]))).rjust(8) + " " + \
 							   u"{}".format(self.beacons[beacon][u"created"]).ljust(19)
-						self.myLog( text = line, mType= u"pi configuration")
+						self.myLog( theText = line, mType= u"pi configuration")
 
 
-		except Exception, e:
+		except Exception as e:
 			if	u"{}".format(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.exceptionHandler(40,e)
 
 
 
@@ -19165,10 +19041,11 @@ configuration         - ==========  defined beacons ==============
 		if u"UpdateRPI" in self.debugLevel: deb = u"1"
 		else: deb =u""
 		cmd = self.pythonPath + u" '" + self.pathToPlugin + u"updateRejects.py' "+ deb +u" & "
+		#self.indiLOG.log(30,u" cmd:{}".format(cmd))
 		if self.doRejects:	subprocess.call(cmd, shell=True)
 		else:				subprocess.call(u"rm '"+ self.indigoPreferencesPluginDir + "rejected/rejects*'  > /dev/null 2>&1 " , shell=True)
 
-
+		return 
 
 
 
@@ -19255,18 +19132,18 @@ configuration         - ==========  defined beacons ==============
 
 				if newStates != u"": newStates[key] = value
 
-			except Exception, e:
+			except Exception as e:
 				if u"{}".format(e).find(u"UnexpectedNullErrorxxxx") == -1:
 					if u"{}".format(e).find(str(devId)) == -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   )
+						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)   )
 						self.indiLOG.log(40,u"addToStatesUpdateDict: this happens when 2 update processes overlap. should not be a probelm if it happens not too frequently")
 						self.indiLOG.log(40,u"devId:{};  key:{}; value:{}; newStates:{};".format(devId, key, value, newStates))
 
 
 
-		except Exception, e:
+		except Exception as e:
 			if	u"{}".format(e).find(u"UnexpectedNullErrorxxxx") >-1: return newStates
-			self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			self.exceptionHandler(40,e)
 		self.executeUpdateStatesDictActive = u""
 		#if u"1076556263" == devId: self.indiLOG.log(10,u"addToStatesUpdateDict(2) {}, updateStatesDict".format(devId,self.updateStatesDict[devId]))
 		return newStates
@@ -19293,7 +19170,7 @@ configuration         - ==========  defined beacons ==============
 					try:
 						local = copy.deepcopy(self.updateStatesDict)
 						break
-					except Exception, e:
+					except Exception as e:
 						self.sleep(0.05)
 				self.updateStatesDict={}
 
@@ -19302,12 +19179,12 @@ configuration         - ==========  defined beacons ==============
 					try:
 						local = {onlyDevID: copy.deepcopy(self.updateStatesDict[onlyDevID])}
 						break
-					except Exception, e:
+					except Exception as e:
 						self.sleep(0.05)
 
 				try:
 					del self.updateStatesDict[onlyDevID]
-				except Exception, e:
+				except Exception as e:
 					pass
 			else:
 				self.executeUpdateStatesDictActive = u""
@@ -19431,9 +19308,9 @@ configuration         - ==========  defined beacons ==============
 				if trigStatus !=u"":
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+u"With_Status_Change",trigStatus)
-					except Exception, e:
+					except Exception as e:
 							self.indiLOG.log(40,u"status changed: {}".format(devnamechangedStat))
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   + u" trying again")
+							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)   + u" trying again")
 							time.sleep(0.5)
 							indigo.variable.updateValue(self.ibeaconNameDefault+u"With_Status_Change",trigStatus)
 							self.indiLOG.log(40,u"worked 2. time")
@@ -19442,17 +19319,17 @@ configuration         - ==========  defined beacons ==============
 				if trigRPIchanged !=u"":
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+u"With_ClosestRPI_Change",trigRPIchanged)
-					except Exception, e:
+					except Exception as e:
 							self.indiLOG.log(40,u"RPI   changed: {}".format(devnamechangedRPI))
-							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)   + u" trying again")
+							self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)   + u" trying again")
 							time.sleep(0.5)
 							indigo.variable.updateValue(self.ibeaconNameDefault+u"With_ClosestRPI_Change",trigRPIchanged)
 							self.indiLOG.log(40,u"worked 2. time")
 					self.triggerEvent(u"someClosestrPiHasChanged")
 
-		except Exception, e:
+		except Exception as e:
 			if	u"{}".format(e).find(u"UnexpectedNullErrorxxxx") ==-1:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.exceptionHandler(40,e)
 		self.executeUpdateStatesDictActive = u""
 		return
 
@@ -19472,9 +19349,8 @@ configuration         - ==========  defined beacons ==============
 					dev.updateStateOnServer(uu[u"key"],uu[u"value"])
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 			self.indiLOG.log(40,u"chList: "+ u"{}".format(chList))
 
 ###############################################################################################
@@ -19515,9 +19391,8 @@ configuration         - ==========  defined beacons ==============
 				if enableEval and oneFound and (textIn.find(u"+")>-1 or	 textIn.find(u"-")>-1 or textIn.find(u"/")>-1 or textIn.find(u"*")>-1):
 					textIn = u"{}".format(eval(textIn))
 			except: pass
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return textIn
 ####-------------------------------------------------------------------------####
 	def convertFtoC(self,textIn):
@@ -19538,8 +19413,8 @@ configuration         - ==========  defined beacons ==============
 			var = textOut[:end]
 			try:
 				vText= u"{:.1f}".format((float(var)-32.)*5./9.)
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				return textIn, False
 
 			try:
@@ -19550,9 +19425,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return textIn, False
 ####-------------------------------------------------------------------------####
 	def convertCtoF(self,textIn):
@@ -19573,8 +19447,8 @@ configuration         - ==========  defined beacons ==============
 			var = textOut[:end]
 			try:
 				vText= u"{:.1f}".format((float(var)*9./5.) + 32)
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				return textIn, False
 
 			try:
@@ -19585,9 +19459,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return textIn, False
 
 ####-------------------------------------------------------------------------####
@@ -19609,8 +19482,8 @@ configuration         - ==========  defined beacons ==============
 			var = textOut[:end]
 			try:
 				vText= eval(var)
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(10,var)
 				self.indiLOG.log(10,textOut[:50])
 				return textIn, False
@@ -19623,12 +19496,11 @@ configuration         - ==========  defined beacons ==============
 				textOut= textIn[:start]+vText+textOut[end+2:]
 				self.indiLOG.log(10,textOut)
 				return textOut, True
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				return textIn, False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return textIn, False
 
 
@@ -19666,9 +19538,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return textIn, False
 
 
@@ -19712,9 +19583,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return textIn, False
 
 
@@ -19769,6 +19639,22 @@ configuration         - ==========  defined beacons ==============
 		indigo.server.log(u"--------------------------------------------------------------------------------------------------------------")
 		return True
 
+
+####-----------------  exception logging ---------
+	def exceptionHandler(self, level, exception_error_message):
+
+		try: 
+			if u"{}".format(exception_error_message).find("None") >-1: return 
+		except: 
+			pass
+
+		filename, line_number, method, statement = traceback.extract_tb(sys.exc_info()[2])[-1]
+		#module = filename.split('/')
+		log_message = "'{}'".format(exception_error_message )
+		log_message +=  "\n{} @line {}: '{}'".format(method, line_number, statement)
+		self.indiLOG.log(level, log_message)
+
+
 ########################################
 ########################################
 ####-----------------  logging ---------
@@ -19781,7 +19667,7 @@ configuration         - ==========  defined beacons ==============
 		if   self.logFileActive ==u"standard":	self.logFile = u""
 		elif self.logFileActive ==u"indigo":	self.logFile = self.indigoPath.split(u"Plugins/")[0]+u"Logs/"+self.pluginId+u"/plugin.log"
 		else:									self.logFile = self.indigoPreferencesPluginDir +u"plugin.log"
-		self.myLog( text=u"myLogSet setting parameters -- logFileActive= {}; logFile= {};  debug plugin:{}   RPI#:{}".format(self.logFileActive, self.logFile, self.debugLevel, self.debugRPI) , destination=u"standard")
+		self.myLog( theText=u"myLogSet setting parameters -- logFileActive= {}; logFile= {};  debug plugin:{}   RPI#:{}".format(self.logFileActive, self.logFile, self.debugLevel, self.debugRPI) , destination=u"standard")
 
 
 
@@ -19803,8 +19689,8 @@ configuration         - ==========  defined beacons ==============
 						os.remove(fn + "-1.log")
 					os.rename(fn + ".log", fn + "-1.log")
 					indigo.server.log(u" reset logfile due to size > {:.1f} [MB]".format(self.maxLogFileSize/1024./1024.) )
-		except	Exception, e:
-				self.indiLOG.log(50, u"checkLogFiles Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				self.exceptionHandler(40,e)
 
 
 ####-----------------	 ---------
@@ -19814,79 +19700,79 @@ configuration         - ==========  defined beacons ==============
 			if msgLevel	 == u""	  and u"all" not in self.debugLevel: return False
 			if msgLevel in self.debugLevel:							 return True
 			return False
-		except	Exception, e:
+		except	Exception as e:
 			if u"{}".format(e) != u"None":
-				indigo.server.log( u"decideMyLog Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				indigo.server.log( u"decideMyLog Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 		return False
 
 ####-----------------  print to logfile or indigo log  ---------
-	def myLog(self,	 text=u"", mType=u"", errorType=u"", showDate=True, destination=u""):
+	def myLog(self, theText=u"", mType=u"", errorType=u"", showDate=True, destination=u""):
 
-
+		level = 20
+		try:	theText = theText.decode('utf-8')
+		except: pass
 		try:
 			if	self.logFileActive == u"standard" or destination.find(u"standard") >-1:
 				if errorType == u"smallErr":
 					self.indiLOG.error(u"------------------------------------------------------------------------------")
-					self.indiLOG.error(text)
+					self.indiLOG.error(theText)
 					self.indiLOG.error(u"------------------------------------------------------------------------------")
 
 				elif errorType == u"bigErr":
 					self.indiLOG.error(u"==================================================================================")
-					self.indiLOG.error(text)
+					self.indiLOG.error(theText)
 					self.indiLOG.error(u"==================================================================================")
 
 				elif mType == u"":
-					indigo.server.log(text)
+					indigo.server.log(theText)
 				else:
-					indigo.server.log(text, type=mType)
+					indigo.server.log(theText, type=mType)
 
 
 			if	self.logFileActive !="standard":
 
-				ts =u""
-				try:
-					if len(self.logFile) < 3: return # not properly defined
-					f =  open(self.logFile,"a")
-				except Exception, e:
-					indigo.server.log(u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				ts = u""
+				if False:
 					try:
-						f.close()
-					except:
-						pass
-					return
+						if len(self.logFile) < 3: return # not properly defined
+						f =  open(self.logFile,"a")
+					except Exception as e:
+						indigo.server.log(u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
+						try:
+							f.close()
+						except:
+							pass
+						return
 
 				if errorType == u"smallErr":
 					if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
-					f.write(u"----------------------------------------------------------------------------------\n")
-					f.write((ts+u" ".ljust(12)+u"-"+text+u"\n").encode(u"utf8"))
-					f.write(u"----------------------------------------------------------------------------------\n")
-					f.close()
+					self.indiLOG.log(level,u"----------------------------------------------------------------------------------")
+					self.indiLOG.log(level,u"{} {:12}-{}\n".format(ts, " ", theText))
+					self.indiLOG.log(level,u"----------------------------------------------------------------------------------")
 					return
 
 				if errorType == u"bigErr":
 					if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
-					f.write(u"==================================================================================\n")
-					f.write((ts+u" "+u" ".ljust(12)+u"-"+text+u"\n").encode(u"utf8"))
-					f.write(u"==================================================================================\n")
-					f.close()
+					self.indiLOG.log(level, u"==================================================================================")
+					self.indiLOG.log(level, u"{} {:12}-{}\n".format(ts, " ", theText))
+					self.indiLOG.log(level, u"==================================================================================")
 					return
 				if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
 				if mType == u"":
-					f.write((ts+u" " +u" ".ljust(25)  +u"-" + text + u"\n").encode(u"utf8"))
+					self.indiLOG.log(level,u"{} {:25} - {}".format(ts, " ", theText) )
 					#indigo.server.log((ts+u" " +u" ".ljust(25)  +u"-" + text + u"\n"))
 				else:
-					f.write((ts+u" " +mType.ljust(25) +u"-" + text + u"\n").encode(u"utf8"))
+					self.indiLOG.log(level,u"{} {:25} - {}".format(ts, mType, theText) )
 					#indigo.server.log((ts+u" " +mType.ljust(25) +u"-" + text + u"\n"))
-				f.close()
 				return
 
 
-		except	Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(50,u"myLog Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				indigo.server.log(text)
-				try: f.close()
-				except: pass
+		except	Exception as e:
+			self.exceptionHandler(40,e)
+			indigo.server.log(theText)
+			indigo.server.log(u"type: {}".format(type(theText)))
+			try: f.close()
+			except: pass
 
 
 ##################################################################################################################
@@ -19958,50 +19844,49 @@ configuration         - ==========  defined beacons ==============
 			if xType != u"ok" : # log if "errxxx" and previous event was less than xxx min ago
 				if time.time() - self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] < self.maxSocksErrorTime : # log if previous event was less than 10 minutes ago
 					dtLT = datetime.datetime.fromtimestamp(self.dataStats[u"data"][IPN][msgName][xType][u"lastTime"] ).strftime(_defaultDateStampFormat)
-					self.indiLOG.log(30,u"TCPIP socket error rate high for {} msg:{}, Type:{}; previous:{}".format(IPN, msgName, xType, dtLT) )
+					self.indiLOG.log(10,u"TCPIP socket error rate high for {} msg:{}, Type:{}; previous:{}".format(IPN, msgName, xType, dtLT) )
 					self.printTCPIPstats(all=IPN)
 				self.saveTcpipSocketStats()
 			elif u"Socket" in self.debugLevel:
 					pass
 
 
-		except Exception, e:
-			if u"{}".format(e) != u"None":
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			self.exceptionHandler(40,e)
 		return
 
 
 ####-------------------------------------------------------------------------####
 	def startTcpipListening(self, myIpNumber, indigoInputPORT):
-			socketServer = None
+			self.socServ = None
 			stackReady	 = False
 			self.indiLOG.log(10,u" ..   starting tcpip socket listener, for RPI data, might take some time, using: ip#={} ;  port#= {}".format(myIpNumber, indigoInputPORT) )
 			tcpStart = time.time()
 			lsofCMD	 =u"/usr/sbin/lsof -i tcp:{}".format(indigoInputPORT)
-			ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			if self.decideMyLog(u"StartSocket"): self.indiLOG.log(5,u" ..   startTcpipListening lsof output:{}".format(ret) )
+			ret, err = self.readPopen(lsofCMD)
+			if self.decideMyLog(u"StartSocket"): self.indiLOG.log(5,u" ..   startTcpipListening lsof output:{} - {}".format(ret, err) )
 			self.killHangingProcess(ret)
 			for ii in range(90):  #	 gives port busy for ~ 60 secs if restart, new start it is fine, error message continues even if it works -- indicator =ok: if lsof gives port number
 				try:
-					socketServer = ThreadedTCPServer((myIpNumber,int(indigoInputPORT)), ThreadedTCPRequestHandler)
+					socS = ThreadedTCPServer((myIpNumber,int(indigoInputPORT)), ThreadedTCPRequestHandler)
 					if self.decideMyLog(u"StartSocket"): self.indiLOG.log(5,u" ..   startTcpipListening try#: {:d} time elapsed: {:4.1f} secs; setting re-use = 1; timout = 5 ".format(ii, time.time()-tcpStart) )
-					socketServer.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+					socS.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 					#socketServer.socket.setsockopt(socket.SOL_SOCKET, socket.timeout, 5 )
-					socketServer.socket.settimeout( 5 )
-				except Exception, e:
+					socS.socket.settimeout( 5 )
+				except Exception as e:
 					if self.decideMyLog(u"StartSocket"): self.indiLOG.log(5,u" ..   startTcpipListening try#: {:d} time elapsed: {:4.1f} secs; resp: {}".format(ii, time.time()-tcpStart, e ) )
 
 				try:
-					ret = subprocess.Popen(lsofCMD, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-					if len(ret[0]) >0: #  if lsof gives port number it works..
-						if self.decideMyLog(u"StartSocket"): self.indiLOG.log(5,u" ..   startTcpipListening {}   output:\n{}".format(lsofCMD, ret[0].strip(u"\n")) )
-						TCPserverHandle = threading.Thread(target=socketServer.serve_forever)
+					ret, err = self.readPopen(lsofCMD)
+					if len(ret) >0: #  if lsof gives port number it works..
+						if self.decideMyLog(u"StartSocket"): self.indiLOG.log(5,u" ..   startTcpipListening {}   output:\n{}".format(lsofCMD, ret.strip(u"\n")) )
+						TCPserverHandle = threading.Thread(target=socS.serve_forever)
 						TCPserverHandle.daemon =True # don't hang on exit
 						TCPserverHandle.start()
 						break
-				except Exception, e:
+				except Exception as e:
 					if u"{}".format(e).find(u"serve_forever") == -1:
-						self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						self.exceptionHandler(40,e)
 					self.killHangingProcess(ret)
 
 				if	 ii <= 2:	tcpWaitTime = 7
@@ -20013,16 +19898,26 @@ configuration         - ==========  defined beacons ==============
 				stackReady = True
 
 
-			except Exception, e:
-				self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,u" ..   startTcpipListening tcpip stack did not load, restarting.. if this error continues, try restarting indigo server")
 				self.quitNow = u" tcpip stack did not load, restart"
-			return	socketServer, stackReady
+			return	socS, stackReady
+
+
+
+####-------------------------------------------------------------------------####
+	def readPopen(self, cmd):
+		try:
+			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			return ret.decode('utf_8'), err.decode('utf_8')
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 ####-------------------------------------------------------------------------####
 	def killHangingProcess(self, ret):
-
-			test = (ret[0].strip(u"\n")).split(u"\n")
+		try:
+			test = ret.strip("\n").split("\n")
 
 			if len(test) > 1:
 				try:
@@ -20031,8 +19926,10 @@ configuration         - ==========  defined beacons ==============
 						killcmd = u"/bin/kill -9 {}".format(pidTokill)
 						self.indiLOG.log(10,u" ..   startTcpipListening .. trying to kill hanging process with: {}, process:{} ".format(killcmd, xx) )
 						subprocess.call(killcmd, shell=True)
-				except Exception, e:
-					self.indiLOG.log(40,u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					self.exceptionHandler(40,e)
+		except Exception as e:
+			self.exceptionHandler(40,e)
 
 
 ####-------------------------------------------------------------------------####
@@ -20051,6 +19948,8 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			piName = u"none"
 			wrongIP = 0
 			idTag = "x-6-a"
+			header = ""
+			nBytes = 0
 
 			#indigo.server.log("hello")
 			if	indigo.activePlugin.ipNumberOK(self.client_address[0]):
@@ -20073,12 +19972,15 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 			# 3 secs should be enough even for slow network mostly one package, should all be send in one package
 			self.request.settimeout(10)
 			seqN = 0
-			nMaxSeq = 20
+			nMaxSeq = 1000
 			try: # to catch timeout
 				while True: # until end of message
 					if seqN > nMaxSeq: break # safety valve , nothing > 1Mb
+					piName = ""
+					nBytes = 0
 					seqN +=1
-					buff = self.request.recv(4096)#
+					buff = self.request.recv(4096)
+					
 					if not buff or len(buff) == 0:
 						break
 					if data0 == "":	data0  = buff
@@ -20086,135 +19988,140 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					len0  = len(data0)
 
 					### check if package is complete:
-					test = data0[:38].split(idTag)
-					if len(test) <3: continue
+					## first part is : "{}x-6-a{}x-6-a{} padded w blanks for 30 characters
+					try: 	header = data0[:30].decode('utf-8')
+					except:	header = data0[:30]
+					actualData = data0[30:]
+					#indigo.activePlugin.indiLOG.log(20,u"ThreadedTCPRequestHandler test {} type {}".format(test, type(test)) )
+
+					#indigo.activePlugin.indiLOG.log(20,u"ThreadedTCPRequestHandler header :{}, len:{}, seq:{} , type of header:{} type of actualData:{}".format(header, len0, seqN, type(header), type(actualData)) )
+					headerSplit = header.split(idTag)
+					if len(headerSplit) < 3: continue
 					try:
-							nBytes = int(test[0])
-							name   = test[2]
-							startOfData = len(str(nBytes)) + 2*len(idTag) + len(test[1])
-							dataS = [test[0],test[1],data0[startOfData:]]
-					except Exception, e:
-						indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+						nBytes = int(headerSplit[0])
+						piName = headerSplit[1]
+						isCompressed =  headerSplit[2].strip().find("+comp") > -1
+						#indigo.activePlugin.indiLOG.log(20,u"ThreadedTCPRequestHandler header :{}, nBytes:{}, name:{}, isCompressed:{}".format(header, nBytes, piName, isCompressed) )
+					except Exception as e:
+						indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 						break
 
 
-					if len(dataS) == 3 and int(dataS[0]) == len(dataS[2]):
+					if len(headerSplit) == 3 and nBytes == len(actualData):
 						break
 
 					#safety valves
 					if time.time() - tStart > maxWaitTime: break
 					if	len0 > nMaxSeq*4096: # check for overflow
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,u"unknown",u"errBuffOvfl" )
+						indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler time overflow ={}".format(time.time() - tStart ) )
 						self.request.close()
 						return
 
-			except Exception, e:
-				e = u"{}".format(e)
+			except Exception as e:
+				e = unicode(e)
 				sendError = e[0:min(10,len(e))]
 				self.request.settimeout(1)
-				self.request.send(sendError+u"; received bytes:"+ u"{}".format(len0) +" in "+ u"{}".format(seqN)+" packets")
-				self.request.close()
-				indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+
+				self.sendResponse("{}; received bytes:{} in {} packets".format(sendError, len0, seqN))	
+				indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 				if e.find(u"timed out") == -1:
 					indigo.activePlugin.handlesockReporting( self.client_address[0],len0, piName,e[0:min(10,len(e))] )
 				else:
-					indigo.activePlugin.indiLOG.log(30,u" .. received data  tries:{}, len:{}, dt:{:.1f}, data:{} ... {} ".format(seqN, len(data0), time.time()- tStart, data0[0:40], data0[-10:]) )
+					indigo.activePlugin.indiLOG.log(30,u" .. received data  tries:{}, len:{}, dt:{:.1f}, header:{}".format(seqN, nBytes, time.time()- tStart,header) )
 					indigo.activePlugin.handlesockReporting( self.client_address[0], len0, piName, u"timeout" )
 				return
 
 			self.request.settimeout(3)
 
 			try:
-				## dataS =split message should look like:  len-TAG-piName-TAG-data; -TAG- = x-6-a
-				if len(dataS) !=3: # tag not found
-					if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  x-6-a  tag not found: {} ... {}".format(data0[0:50], data0[-10:]) )
-					try: self.request.send(u"error-tag missing")
-					except: pass
-					self.request.send(u"error")
-					self.request.close()
+				## split message should look like:  len-TAG-piName-TAG-data; -TAG- = x-6-a
+				if piName == "": # tag not found
+					if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(10,u"TCPIP socket  \"x-6-a\"   not found in header: \"{}\", headerSplit:\"{}\", nbytes:{}, seqN:{}".format(header, headerSplit, nBytes, seqN) )
+					self.sendResponse("error-tag missing")
+					self.sendResponse("error")	
 					indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"errTag" )
 					return
 
-				expLength = int(dataS[0])
-				piName	  = dataS[1]
-				lenData	  = len(dataS[2])
+				lenData   = len(actualData)
 
-
-				if expLength != lenData: # expected # of bytes not received
-					if lenData < expLength:
-						if indigo.activePlugin.decideMyLog(u"Socket"): indigo.indiLOG.log(30,u"TCPIP socket length of {..} data too short, exp:{};   actual:{};   piName:; {}    ..    {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
-						try: self.request.send(u"error-lenDatawrong-{}".format(lenData0) )
-						except: pass
-						self.request.send(u"error,len-short")
-						self.request.close()
+				if lenData != nBytes: # expected # of bytes not received
+					if lenData < nBytes:
+						if indigo.activePlugin.decideMyLog(u"Socket"): indigo.indigoLOG.log(30,u"TCPIP socket length of {} data too short, len:{};   piName:; {}".format(header, nBytes, piName) )
+						self.sendResponse("error-lenDatawrong-{}".format(lenData0))	
+						self.sendResponse("error,len-short")	
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"tooShort" )
 						return
 					else:
 						# check if we received a complete package + extra
-						package1 = dataS[2][:expLength]
-						if package1[0:14].find(u"++compressed==") != -1:
-							package1 = zlib.decompress(package1[14:])
+						package1 = actualData
+						if isCompressed:
+							package1 = zlib.decompress(actualData)
 						try:
-							json.loads(package1)
-							dataS[2] = package1
-							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong -fixed- exp:{};  actual:{};  piName:{}; {}     ..     {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
+							json.loads(package1.decode('utf-8'))
+							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong -fixed- {};   nBytes:{};   piName:{} ".format(header, nBytes, piName) )
 						except:
-							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong exp:{};  actual:{};  piName:{}; {}     ..     {}".format(dataS[0], lenData, piName, dataS[2][0:50], data0[-10:]) )
-							try: self.request.send(u"error-lenDatawrong-{}".format(len0) )
-							except: pass
-							self.request.send(u"error-len-wrong")
-							self.request.close()
-							indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"tooLong" )
+							if indigo.activePlugindecideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket length of data wrong exp:{};   nBytes:{};   piName:; {}".format(header, nBytes, piName) )
+	
+							self.sendResponse("error-lenDatawrong-{}".format(lenData))	
+							indigo.activePlugin.handlesockReporting(self.client_address[0],lenData,piName,u"tooLong" )
 							return
 
-			except Exception, e:
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket, len:{0:d} data: {1}  ..  {2}".format(len0, data0[0:50], data0[-10:]) )
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"unknown" )
-				self.request.send(u"error-general")
-				self.request.close()
+			except Exception as e:
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30, u"TCPIP socket, len:{:d} header: {:} ".format(nBytes, header) )
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.handlesockReporting(self.client_address[0],lenData,piName,u"unknown" )
+				self.sendResponse("error-general")	
 				return
 
 			try:
-				if dataS[2][0:14] == u"++compressed==":
-					dataS[2] = zlib.decompress(dataS[2][14:])
-					if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(10,u"TCPIP socket  listener uncompressedfile len:{}".format(len(dataS[2])) )
-				dataJ = json.loads(dataS[2])  # dataJ = json object for data
-			except Exception, e:
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  json error; len of data: {0:d}  {1}     time used: {2:5.1f}".format(len0, u"{}".format(threading.currentThread()), time.time()-tStart )  )
-				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,data0[0:50]+u"  ..  {}".format(data0[-10:]) )
-				try: self.request.send(u"error-Json-{}".format(lenData) )
-				except: pass
-				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"errJson" )
-				self.request.send(u"error-json")
-				self.request.close()
+				if isCompressed:
+					dataJIn = zlib.decompress(actualData).decode('utf-8')
+					if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(10,u"TCPIP socket  listener pi:{}, compressed:{}/ uncompressedfile len:{}".format(piName, len(actualData), len(dataJIn)) )
+				else:
+					dataJIn = actualData.decode('utf-8')
+				dataJ = json.loads(dataJIn)  
+			except Exception as e:
+				indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket json error; len of data: {:d}  time used: {:5.1f}".format(nBytes, time.time()-tStart )  )
+				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,+u"{}  ..  {}".format(dataJIn[0:50], dataJIn[-10:]) )
+				self.sendResponse(u"error-Json-{}".format(lenData))	
+				indigo.activePlugin.handlesockReporting(self.client_address[0],nBytes,piName,u"errJson" )
 				return
 
 			if piName.find(u"pi_IN_") != 0 :
 				if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(30,u"TCPIP socket  listener bad piName {}".format(piName) )
-				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"badpiName" )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],nBytes,piName,u"badpiName" )
 			else:
 				wrongIP -= 1
 				#### now update Indigo dev/ states
-				indigo.activePlugin.addToDataQueue( piName, dataJ,dataS[2] )
-				indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"ok",msg=data0 )
+				#indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler adding to queue: {} --- {} bad ip count:{}".format(piName, dataJIn[:30], wrongIP))
+				indigo.activePlugin.addToDataQueue( piName, dataJ, dataJIn )
+				indigo.activePlugin.handlesockReporting(self.client_address[0],nBytes,piName,u"ok",msg=header )
 
-			try:
 				if wrongIP < 2:
 					if indigo.activePlugin.decideMyLog(u"Socket"):
-						indigo.activePlugin.indiLOG.log(10, u" sending ok to {} data: {}..{}".format(piName.ljust(13), dataS[2][0:50], dataS[2][-20:]) )
-					self.request.send(u"ok-{}-{}".format(len0,lenData) )
-			except: pass
-			self.request.close()
+						indigo.activePlugin.indiLOG.log(10, u" sending ok to {} data: {}..{}".format(piName.ljust(13),dataJIn[0:50], dataJIn[:-20]) )
+					self.sendResponse(u"ok-{}-{}".format(len0,lenData))
 
-
-
-		except Exception, e:
-			indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			indigo.activePlugin.indiLOG.log(30, u"TCPIP socket data:{}<<".format(data0[0:50]) )
-			indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName,u"Exception" )
-			self.request.close()
+			indigo.activePlugin.handlesockReporting(self.client_address[0],nBytes,piName,u"Exception" )
+
+		try:	self.request.close()
+		except: pass
 		return
+
+	def sendResponse(self, strSend):
+		try:
+			if indigo.activePlugin.decideMyLog(u"Socket"): indigo.activePlugin.indiLOG.log(10,u"TCPIP socket  closing connection {}".format(strSend) )
+			if sys.version_info[0] == 3: 	self.request.send(bytes(strSend,'utf-8'))
+			else:							self.request.send(strSend)
+			self.request.close()
+		except Exception as e:
+			indigo.activePlugin.indiLOG.log(30, u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
+
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####
 class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):

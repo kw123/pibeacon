@@ -128,7 +128,7 @@ def startHCI():
 			return 	useHCI,  myBLEmac, BLEid, bus 
 
 		else:
-			text = "BLEconnect: BLE STACK is not UP HCI-info:\n{}".format(HCIs)
+			text = "BLEconnect: BLE STACK is not UP HCI-info: useHCI:{},  myBLEmac:{}, BLEid:{}, \n{}".format(useHCI,  myBLEmac, BLEid, HCIs)
 			U.logger.log(20, text)
 			U.sendURL( data={"data":{"error":text}}, squeeze=False, wait=True )
 			U.sendURL( data={"data":{"hciInfo":"err-BLE-stack-not-up"}}, squeeze=False, wait=False )

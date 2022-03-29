@@ -249,11 +249,11 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		</List>    
 	</Field>
 
-	<Field id="compressRPItoPlugin"   type="menu"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field id="compressRPItoPlugin"   type="menu"  defualtValue="20000" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<List>
-			<Option value="10000"    >msg GT 10 KB </Option>
-			<Option value="200000"   >msg GT 20 KB </Option>
-			<Option value="400000"   >msg GT 40 KB </Option>
+			<Option value="10000"   >msg GT 10 KB </Option>
+			<Option value="20000"   >msg GT 20 KB </Option>
+			<Option value="40000"   >msg GT 40 KB </Option>
 		</List>    
 		<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
 	</Field>
@@ -656,7 +656,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	</Field>
 
 
-	<Field    id="beaconPositionsimageOutfile"  type="textfield"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600">               
+	<Field    id="beaconPositionsimageOutfile"  type="textfield"  visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"
+		tooltip="completePath and filename " >               
 		<Label>Output image path/filename:</Label></Field>
 
 	<Field id="beaconPositionsimageShowRPIs" type="menu"      visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 

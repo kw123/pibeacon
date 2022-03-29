@@ -3,42 +3,15 @@
   <component name="AnalysisUIOptions">
     <option name="SCOPE_TYPE" value="3" />
   </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="fb412742-e1ff-4b9f-8a1d-f1372d90d57e" name="Default Changelist" comment="" />
-    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
-    <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
-  </component>
-  <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="master.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/pi/master.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="440">
-              <caret line="1678" column="29" lean-forward="false" selection-start-line="1678" selection-start-column="29" selection-end-line="1678" selection-end-column="29" />
-              <folding>
-                <element signature="e#245#277#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="plugin.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Contents/Server Plugin/plugin.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="60">
-              <caret line="10235" column="15" lean-forward="true" selection-start-line="10235" selection-start-column="15" selection-end-line="10235" selection-end-column="15" />
-              <folding>
-                <element signature="e#132#141#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -118,12 +91,16 @@
       </list>
     </option>
   </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="86" />
     <option name="y" value="23" />
     <option name="width" value="2944" />
     <option name="height" value="1000" />
   </component>
+  <component name="ProjectId" id="26jVbB1a86cGADVipCLIx2tstAs" />
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
       <flattenPackages />
@@ -200,47 +177,22 @@
       </pane>
     </panes>
   </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
+    <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
+    <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
-  </component>
-  <component name="RunDashboard">
-    <option name="ruleStates">
-      <list>
-        <RuleState>
-          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
-        </RuleState>
-        <RuleState>
-          <option name="name" value="StatusDashboardGroupingRule" />
-        </RuleState>
-      </list>
-    </option>
+    <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RunManager">
-    <configuration name="plugin" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Contents/Server Plugin" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="piBeacon.indigoPlugin" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Contents/Server Plugin/plugin.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-    </configuration>
     <configuration default="true" type="PyRemoteDebugConfigurationType" factoryName="Python Remote Debug">
       <option name="PORT" value="5678" />
       <option name="HOST" value="localhost" />
@@ -253,10 +205,30 @@
       <option name="SUSPEND_AFTER_CONNECT" value="false" />
       <method v="2" />
     </configuration>
+    <configuration name="plugin" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="piBeacon.indigoPlugin" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Contents/Server Plugin" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Contents/Server Plugin/plugin.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
   </component>
-  <component name="ShelveChangesManager" show_recycled="false">
-    <option name="remove_strategy" value="false" />
-  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -274,6 +246,7 @@
       <workItem from="1557547202059" duration="5783000" />
       <workItem from="1557615546056" duration="10852000" />
       <workItem from="1557671924423" duration="6258000" />
+      <workItem from="1647937054481" duration="2280000" />
     </task>
     <servers />
   </component>
@@ -314,14 +287,21 @@
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
-    <watches-manager />
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Contents/Server Plugin/plugin.py</url>
+          <line>14101</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/piBeacon_indigoPlugin$plugin.coverage" NAME="plugin Coverage Results" MODIFIED="1557593556559" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Contents/Server Plugin" />

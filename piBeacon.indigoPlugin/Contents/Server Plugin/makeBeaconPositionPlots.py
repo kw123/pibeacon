@@ -22,7 +22,8 @@ import logging.handlers
 global logging, logger
 _defaultDateStampFormat				= u"%Y-%m-%d %H:%M:%S"
 
-
+try:	unicode
+except:	unicode = str
 
 #
 #################################
@@ -38,18 +39,21 @@ indigoDir		  = pluginDir.split("Plugins/")[0]
 
 piPositionsDir  = sys.argv[1]
 
-f=open(piPositionsDir+"positions.json")
+f = open(piPositionsDir+"positions.json")
 plotData = json.loads(f.read())
 f.close()
 
 ### logfile setup
-logLevel = plotData["logLevel"]
+logLevel = True# plotData["logLevel"]
 logfileName=plotData["logFile"]
 #logLevel = True
 
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
-#
+## disable fontmanager logging output 
+logging.getLogger('matplotlib.font_manager').disabled = True
+
+logLevel = True
 if not logLevel:
 	logger.setLevel(logging.ERROR)
 else:
@@ -60,7 +64,7 @@ try:
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	tStart= time.time()
 
-	distanceUnits			= max(0.0254, float(plotData["distanceUnits"]))
+	distanceUnits			= max(0.01, float(plotData["distanceUnits"]))
 
 	Yscale					= float(plotData["Yscale"])
 	Xscale					= float(plotData["Xscale"])
@@ -147,7 +151,7 @@ try:
 
 
 	imageOutfile			= plotData["Outfile"]
-	if imageOutfile =="":
+	if imageOutfile == "":
 		imageOutfile = piPositionsDir+"beaconPositions.png"
 
 
@@ -216,6 +220,8 @@ try:
 	piColor = "#00FF00"
   
 	logger.log(20,"time used {:4.2f} --   now loop though the beacons and add them".format((time.time()-tStart)) )
+#				   123456789 123456789 123456 123456 1234567 1234567 123 123456789 1 12345678 12345 1234 123456789 12 123456789 1 123456789 123456789   
+	logger.log(20,"name---------------------- nickN  color-- edgeClr typ symbol----  type---- dtRpi hatc status       random----- pos---------------" )
 	for mac in plotData["mac"]: # get the next beacon
 		try:
 				this  = plotData["mac"][mac]
@@ -281,7 +287,7 @@ try:
 					if this["status"] == u"up":
 						edgecolor= "#000000"
 				
-					logger.log(20,"{}  {} color:{} edgecolor:{} type:{} symbol:{} type:{} distanceToRPI:{:5.1f}  hatch:{}  status:{}, random:{:.3f},{:.3f}, pos:{}".format(this["name"].ljust(26) , this["nickName"].ljust(6), color.ljust(7), edgecolor.ljust(7), this["bType"][:3], symbol.ljust(11), Dtype.ljust(8), distanceToRPI, hatch.ljust(2),this["status"],randx,randy,pos) )
+					logger.log(20,"{:26} {:6} {:7} {:7} {:3} {:11} {:8} {:5.1f} {:4} {:12} {:.3f},{:.3f} {}".format(this["name"] , this["nickName"], color, edgecolor, this["bType"][:3], symbol, Dtype, distanceToRPI, hatch,this["status"],randx,randy,pos) )
 
 					if   Dtype == "circle":
 							circle = plt.Circle([pos[0],pos[1]], distanceToRPI, fc=color, ec=edgecolor,alpha=alpha,hatch=hatch)
@@ -308,8 +314,8 @@ try:
 							dx = - textDeltaXLabel*2
 						ax.text(pos[0] + dx ,pos[1]- textDeltaYLabel ,this["nickName"], color=this["textColor"] ,size="x-small")
 
-		except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
+		except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 	try:
 		if plotData["ShowCaption"] != "0":
 			logger.log(20,"Caption: text offset x= {:.2f};   y={:.2f}".format(textDeltaYCaption, textDeltaYCaption) )
@@ -340,15 +346,15 @@ try:
 				y = textDeltaYCaption 
 				ax.text(5* textDeltaXCaption,y, "{}".format( datetime.datetime.now().strftime(_defaultDateStampFormat)) ,size=captionTextSize)
 
-	except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
+	except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 
 	# 
-	logger.log(20,"time used {:4.2f} --   making the plot:".format((time.time()-tStart)))
+	logger.log(20,"time used {:4.2f} --   making the plot".format((time.time()-tStart)))
 	try: 	plt.savefig((piPositionsDir+"beaconPositions.png").encode('utf8'))	# this does not work ==>   ,bbox_inches = 'tight', pad_inches = 0)
-	except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
+	except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	try:	pngSize = os.path.getsize((piPositionsDir+"beaconPositions.png").encode('utf8'))/1024.
 	except: pnGsize = 0
@@ -364,22 +370,23 @@ try:
 			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
 			os.rename((piPositionsDir+"beaconPositions.xxx").encode('utf8'),(piPositionsDir+"beaconPositions.png").encode('utf8') )
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
-	except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
+	except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 	
 	try:
 		if imageOutfile != piPositionsDir+"beaconPositions.png":
 			logger.log(20,"time used {:4.2f} --   moving file to destination: '{}'".format((time.time()-tStart), imageOutfile) )
-			if os.path.isfile((imageOutfile).encode('utf8')): os.remove((imageOutfile).encode('utf8'))
-			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')):
-				os.rename((piPositionsDir+"beaconPositions.png").encode('utf8'),(imageOutfile).encode('utf8') )
-				if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
-	except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e))
+			if os.path.isfile(imageOutfile): os.remove((imageOutfile))
+			if os.path.isfile(piPositionsDir+"beaconPositions.png"):
+				pass		
+				os.rename( "{}beaconPositions.png".format(piPositionsDir), "{}".format(imageOutfile) )
+				if os.path.isfile("{}beaconPositions.png".format(piPositionsDir)): os.remove("{}beaconPositions.png".format(piPositionsDir))
+	except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
-except  Exception, e:
-	logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e))
+except  Exception as e:
+	logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 sys.exit(0)

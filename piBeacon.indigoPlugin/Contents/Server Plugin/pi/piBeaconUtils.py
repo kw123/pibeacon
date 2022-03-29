@@ -18,6 +18,8 @@ import threading
 try: import Queue
 except: import queue as Queue
 import zlib
+try: 	unicode
+except: unicode = str
 
 
 ##
@@ -1924,7 +1926,11 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac=""):
 					if HCIs[hh]["bus"] == defaultBus:
 						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
-
+				for hh in hciChannels:
+					if HCIs[hh]["bus"] != doNotUseHCI:
+						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
+						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
+				
 			else:
 				hh = hciChannel[0]
 				return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
@@ -1933,6 +1939,7 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac=""):
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	logger.log(20, "cBY:{:<20} BLEconnect: NO BLE STACK UP ".format(G.program))
+	logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac ))
 	return 0, -1, -1, -1
 
 #################################
@@ -2048,6 +2055,7 @@ def execSend():
 					
 					if "verbose" in all and all["verbose"]: verbose = True
 					else:									verbose = False
+					verbose = True
 					if verbose:	logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, unicode(all)[0:100]) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
@@ -2130,24 +2138,27 @@ def execSend():
 									lenStart = len(dataC)
 									if squeeze: dataC = dataC.replace(" ","")
 									if  len(dataC) > G.compressRPItoPlugin: 
-										data0 = "++compressed=="+zlib.compress(dataC)
-										compressed = True
+										if sys.version_info[0] == 3: data0 = zlib.compress(bytes(dataC,'utf-8'))
+										else:						 data0 = zlib.compress(dataC)
+										compressedTag = "+comp"
 									else: 
 										data0 = dataC
-										compressed = False
+										compressedTag = "+NOTC"
 									lld = len(data0)
 									if verbose: logger.log(20, "cBY:{:<20}  socket send data lengths  in:{} --> :sq:{} --> cmp:{} ".format(G.program, lenStart, len(dataC), lld))
-									sendData= "{}x-6-a{}x-6-a{}".format(lld, name, data0)
+									sendData= "{}x-6-a{}x-6-a{}".format(lld, name,compressedTag)
+									sendData= "{:<30}".format(sendData)+data0
 									try:
 										soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 										soc.settimeout(6.)
 										soc.connect((G.ipOfServer, G.indigoInputPORT))
-										if G.pythonVersion >= 3:
+										if sys.version_info[0] == 3: 
 											sendData = bytes(sendData,'utf-8')
 										len_sent = soc.send(sendData)
 										time.sleep(0.2+ min(10,lld/20000))
 										soc.settimeout(3.+ min(10,lld/10000))
 										response = soc.recv(512).decode('utf-8')
+										#logger.log(20, "cBY:{:<20}  socket send  response{} ".format(G.program, response))
 										if (response).find("ok") == 0:
 											MSGwasSend = True
 											if verbose: logger.log(20, "cBY:{:<20}  socket send  finished ".format(G.program))

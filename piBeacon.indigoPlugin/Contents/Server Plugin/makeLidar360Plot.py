@@ -45,9 +45,12 @@ logfileName		= imageParams["logFile"]
 
 
 
-logLevel		  = imageParams["logLevel"] in ["2","3"]
+logLevel		  = True#  imageParams["logLevel"] in ["2","3"]
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
+## disable fontmanager logging output 
+logging.getLogger('matplotlib.font_manager').disabled = True
+
 #logLevel = True
 if  not logLevel:
 	logger.setLevel(logging.ERROR)
@@ -160,8 +163,8 @@ try:
 	f = open(dataFile,"r")
 	data = json.loads(f.read())
 	f.close()
-except  Exception, e:
-	logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
+except  Exception as e:
+	logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 	exit()
 #
 
@@ -235,8 +238,8 @@ try:
 				dataToPlot["dots"][kk][0].append( int( scalefactor*(bins[ii][0]*value+xOffset) ) )	
 				dataToPlot["dots"][kk][1].append( int( scalefactor*(bins[ii][1]*value+yOffset) ) )	
 				dataToPlot["dots"][kk][2].append( dotSize[kk] )	
-			except Exception, e:
-				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
+			except Exception as e:
+				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_info()[2].tb_lineno, e, ii, kk))
 				break
 
 	
@@ -253,8 +256,8 @@ try:
 				dataToPlot["doNotTrigger"][1].append( int( scalefactor*(bins[ii2][1]*value+yOffset) ) )	
 				dataToPlot["doNotTrigger"][0].append( int( scalefactor*(xOffset) ) )	
 				dataToPlot["doNotTrigger"][1].append( int( scalefactor*(yOffset) ) )	
-			except Exception, e:
-				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_traceback.tb_lineno, e, ii, kk))
+			except Exception as e:
+				logger.log(20,"Line {} has error={}, ii: {}; kk:{}".format(sys.exc_info()[2].tb_lineno, e, ii, kk))
 				break
 	logger.log(20,"doNotTrigger:{},  {}".format(doNotUseDataRanges, dataToPlot["doNotTrigger"]) )
 
@@ -273,8 +276,8 @@ try:
 						if value == 0: continue
 						dataToPlot["trigger"][kk][LTGT][-1][0].append( int( scalefactor*(bins[jj][0]*value+xOffset) ) )	
 						dataToPlot["trigger"][kk][LTGT][-1][1].append( int( scalefactor*(bins[jj][1]*value+yOffset) ) )	
-				except Exception, e:
-					logger.log(20,"Line {} has error={}, ii: {}; tr:{}".format(sys.exc_traceback.tb_lineno, e, ii, tr))
+				except Exception as e:
+					logger.log(20,"Line {} has error={}, ii: {}; tr:{}".format(sys.exc_info()[2].tb_lineno, e, ii, tr))
 					break
 		#logger.log(20,"kk {}; pld:{}".format(kk, dataToPlot["trigger"][kk]))
 
@@ -418,8 +421,8 @@ try:
 				out+= "off-x/y/phi: {:.0f}/{:.0f}/{:.0f}".format(xOffset, yOffset,phiOffset)
 				ax.text(pos[0], pos[1], out,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
 				logger.log(30,out )
-		except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
+		except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	if showLegend !="":
 		plt.legend(fontsize = fontSize, loc=showLegend)
@@ -431,8 +434,8 @@ try:
 	try: 	
 			if frameTight : plt.savefig((imageOutfile).encode('utf8'), bbox_inches='tight')
 			else: 			plt.savefig((imageOutfile).encode('utf8'))
-	except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e) )
+	except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	try:	pngSize = os.path.getsize((imageOutfile).encode('utf8'))/1024.
 	except: pngSize = 0
@@ -454,15 +457,15 @@ try:
 			try: os.rename((xxxFileName).encode('utf8'),(imageOutfile).encode('utf8') )
 			except: pass
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
-		except  Exception, e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e)  )
+		except  Exception as e:
+			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 #### compress plotfile  ###################### END
 
 
 
 	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
-except  Exception, e:
-	logger.log(30,u"Line {} has error={}" .format(sys.exc_traceback.tb_lineno, e))
+except  Exception as e:
+	logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 sys.exit(0)

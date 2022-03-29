@@ -34,7 +34,7 @@ data			  = json.loads(sys.argv[2])
 
 imageOutfile	  = imageParams["fileName"] 
 logfileName		  = imageParams["logFile"]
-logLevel		  = imageParams["logLevel"] =="1"
+logLevel		  = True# imageParams["logLevel"] =="1"
 numberOfPixels	  = float(imageParams["numberOfDots"])
 imageFileDynamic  = imageParams["dynamic"] 
 compress		  = imageParams["compress"]	 =="1"
@@ -43,6 +43,9 @@ colorBar		  = imageParams["colorBar"].split(",")
 
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
+## disable fontmanager logging output 
+logging.getLogger('matplotlib.font_manager').disabled = True
+
 #
 if not logLevel:
 	logger.setLevel(logging.ERROR)

@@ -9,6 +9,10 @@ import smbus2
 import struct
 from datetime import timedelta
 
+try: 	unicode
+except: unicode = str
+
+
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G

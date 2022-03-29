@@ -7,7 +7,11 @@ import json
 import logging
 import logging.handlers
 global logging, logger
-  
+try:
+	unicode
+except:
+	str = unicode
+
 
 ####### main pgm / loop ############
 #################################
@@ -39,18 +43,20 @@ def readRejects():
 			except: pass
 			try:	os.remove(dataDir+"rejects."+pis)
 			except: pass
+
+
 		
 	try:
 		rejectExisting={}
 		nExistingMacs=""
 		if  os.path.isfile(dataDir+"rejectedByPi.json"): 
-			file=dataDir+"rejectedByPi.json"
-			f=open(file,"r")
+			file = dataDir+"rejectedByPi.json"
+			f = open(file, "r")
 			rejectExisting= json.loads(f.read())
 			f.close()
 			nExistingMacs = len(rejectExisting)
-	except:
-		logger.log(20,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		logger.log(20,"in Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 		pass
 	
 #################################
@@ -67,8 +73,8 @@ def writeRejects():
 		try:
 			items[1]=float(items[1])
 			timeSt  = time.strftime('%Y-%m-%d %H:%M:%S',  time.localtime(items[1]))
-		except  Exception, e:
-			logger.log(20,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except  Exception as e:
+			logger.log(20,"in Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			logger.log(20,items[1])
 			#exit()
 		reason  = items[2]
@@ -88,8 +94,8 @@ def writeRejects():
 					rejectExisting[mac]["rPi"]+=","+rPi
 				rejectExisting[mac]["rPi"] = rejectExisting[mac]["rPi"].strip(",")
 				rejectExisting[mac]["count"]+=1
-			except  Exception, e:
-				logger.log(20,"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except  Exception as e:
+				logger.log(20,"in Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 
 	
 	#print  rejectExisting   

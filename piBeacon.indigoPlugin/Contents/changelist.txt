@@ -1,3 +1,17 @@
+Added features / changes in v7.138.559@ 2022-03-02
+===================================================
+   
+1. prep for indigo 2022 and os 12.3
+2. added support for CO2 sensor sensirion scd30
+
+
+Added features / changes in v7.138.559@ 2022-03-02
+===================================================
+   
+1. The dev states for BLEconnect, beacon, and RPi dev types now only have Pi_xx_signal _Distance _Time for those RPi-xx that are configured
+   that shoud reduce the number of empty states. Eg if you have 3 RPi from 20*3=60 states to 3*3=9 for device types BLEconnect, beacon, and RPi (all those with Pi_00_Signal ... Pi_19_Signal. etc)
+2. added some more checks for #1
+
 Added features / changes in v7.138.558@ 2022-03-01
 ===================================================
    
