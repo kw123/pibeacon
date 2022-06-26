@@ -2055,7 +2055,7 @@ def execSend():
 					
 					if "verbose" in all and all["verbose"]: verbose = True
 					else:									verbose = False
-					verbose = True
+					verbose = False
 					if verbose:	logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, unicode(all)[0:100]) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]

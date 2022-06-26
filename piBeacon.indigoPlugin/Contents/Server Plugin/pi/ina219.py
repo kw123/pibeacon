@@ -10,6 +10,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "ina219"
 
 
@@ -133,8 +134,8 @@ class INA219:
 				return float(othernew>>3) *self.ina219_busMultiplier 
 			else:
 				return float(  ((result[0] << 8) | (result[1]) ) >>3) *self.ina219_busMultiplier 
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return ""
 		
 	def getShuntVoltage_mV(self):
@@ -147,8 +148,8 @@ class INA219:
 				return float(othernew) * self.ina219_ShuntVoltageMultiplier
 			else:
 				return (float((result[0] << 8) | (result[1])) * self.ina219_ShuntVoltageMultiplier)
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return ""
 
 	def getCurrent_mA(self):
@@ -161,8 +162,8 @@ class INA219:
 				return float(othernew )* self.ina219_currentMultiplier_mA
 			else:
 				return float((result[0] << 8) | (result[1])) *self.ina219_currentMultiplier_mA
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return ""
 
 	def getPower_mW(self):
@@ -175,8 +176,8 @@ class INA219:
 				return float(othernew )* self.ina219_powerMutiplier_mW
 			else:
 				return float((result[0] << 8) | (result[1]) )* self.ina219_powerMutiplier_mW
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return ""
  # ===========================================================================
 # read params
@@ -272,8 +273,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -295,9 +296,9 @@ def getValues(devId):
 			badSensor = 0
 			U.muxTCA9548Areset()
 			return data
-		except	Exception, e:
+		except	Exception as e:
 			if badSensor >2 and badSensor < 5: 
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				U.logger.log(30, u"Current>>" + unicode(Current)+"<<")
 			badSensor+=1
 	if badSensor >3: 
@@ -414,8 +415,8 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

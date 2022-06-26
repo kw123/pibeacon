@@ -20,6 +20,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "amg88xx"
 
 
@@ -169,8 +170,8 @@ class AMG88xx_class(object):
 			#set to 10 FPS
 			self._fpsc.FPS = AMG88xx_FPS_10
 			self.bus.write_byte_data(self.i2c_addr,AMG88xx_FPSC, self._fpsc.get())
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 
 
 	def readU16(self, reg, little_endian=True):
@@ -339,8 +340,8 @@ class AMG88xx_class(object):
 
 
 			return buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return ""
 
 		
@@ -457,8 +458,8 @@ def readParams():
 
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print sensors[sensor]
 		
 
@@ -478,8 +479,8 @@ def startSensor(devId,i2cAddress):
 	try:
 		amg88xxsensor[devId]  =	 AMG88xx_class(address=i2cAdd)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		amg88xxsensor[devId] =""
 	time.sleep(.1)
 
@@ -519,8 +520,8 @@ def getValues(devId):
 				"rawData":				json.dumps(oldPixels[devId]).replace(" ","")}
 		U.logger.log(0, unicode(ret)) 
 		badSensor = 0
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	U.muxTCA9548Areset()
@@ -662,8 +663,8 @@ while True:
 		#else:				 loopSleep = sensorRefreshSecs
 		if not quick:
 			time.sleep(loopSleep)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -15,6 +15,7 @@ import smbus
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "vcnl4010Distance"
 import  displayDistance as DISP
 
@@ -93,7 +94,7 @@ def readParams():
 			try:
 				if "dUnits" in sensors[sensor][devId] and sensors[sensor][devId]["dUnits"] !="":
 					distanceUnits = sensors[sensor][devId]["dUnits"]
-			except  Exception, e:
+			except  Exception as e:
 				pass
 
 			try:
@@ -138,8 +139,8 @@ def readParams():
 			exit()
 
 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -251,8 +252,8 @@ class VCNL40xx():
 			
 			return   distance, luminance, data
 			#return self._device.readU16BE(VCNL40xx_AMBIENTDATA)
-		except  Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except  Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return "","",[]
 
 
@@ -293,8 +294,8 @@ def readSensor():
 				return  distance, luminance #  return in cm/lux
 			time.sleep(0.02)
 		if badSensor >3: return "badSensor"
-	except  Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
 	return distance  , luminance	 
 
@@ -435,8 +436,8 @@ while True:
 				lastRead = tt
 		time.sleep(1)
 		#print "end of loop", loopCount
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

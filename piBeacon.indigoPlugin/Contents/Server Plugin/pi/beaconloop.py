@@ -37,6 +37,7 @@ import fcntl
 sys.path.append(os.getcwd())
 import	piBeaconUtils as U
 import	piBeaconGlobals as G
+import traceback
 import  pexpect
 G.program = "beaconloop"
 VERSION   = 8.50
@@ -96,8 +97,8 @@ def signedIntfrom8(string):
 	try:
 		intNumber = int(string,16)
 		if intNumber > 127: intNumber -= 256
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 	return intNumber
 
@@ -105,8 +106,8 @@ def signedIntfrom16(string):
 	try:
 		intNumber = int(string,16)
 		if intNumber > 32767: intNumber -= 65536
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 	return intNumber
 
@@ -114,8 +115,8 @@ def signedIntfrom24(string):
 	try:
 		intNumber = int(string,24)
 		if intNumber > 8388608: intNumber -= 16777216
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 	return intNumber
 
@@ -350,8 +351,8 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			U.sendURL( data={"data":{"hciInfo":"err-BLE-start-mac-empty"}}, squeeze=False, wait=False )
 			return 0, "", -1, useHCI
 
-	except Exception, e: 
-		U.logger.log(50,u"exit at restart BLE stack error  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e: 
+		U.logger.log(50,u"exit at restart BLE stack error  in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.sendURL( data={"data":{"hciInfo":"err-BLE-start"}}, squeeze=False, wait=False )
 		time.sleep(10)
 		writeFile("restartNeeded","bluetooth_startup.ERROR:{}".format(e))
@@ -372,7 +373,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 		try:
 			sock = bluez.hci_open_dev(devId)
 			U.logger.log(30, "ble thread started")
-		except	Exception, e:
+		except	Exception as e:
 			U.logger.log(30,"error accessing bluetooth device...".format(e))
 			if downCount > 2:
 				writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:{} FORCE ".format(e))
@@ -383,8 +384,8 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 		try:
 			hci_le_set_scan_parameters(sock)
 			hci_enable_le_scan(sock)
-		except	Exception, e:
-			U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			if unicode(e).find("Bad file descriptor") >-1:
 				writeFile("temp/rebootNeeded","bluetooth_startup.ERROR:Bad_file_descriptor...SSD.damaged? FORCE ")
 			if unicode(e).find("Network is down") >-1:
@@ -422,8 +423,8 @@ def restartLESCAN(useHCI, loglevel, force=False):
 			#cmd	 = "sudo hcitool -i {} lescan > /dev/null 2>&1 &".format(useHCI,G.homeDir)
 			ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
 			U.logger.log(loglevel,"cmd:{} .. ret:{}...  dT:{:.3f}".format(cmd, ret, time.time() - tt) )
-	except	Exception, e:
-		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 #################################
 def writeFile(outFile, text):
@@ -432,8 +433,8 @@ def writeFile(outFile, text):
 		f.write(text)
 		f.close()
 		#U.logger.log(20, u"===== writing to {}{} text:{}".format(G.homeDir, outFile, text))
-	except	Exception, e:
-		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		if unicode(e).find("Read-only file system:") >-1:
 			f = open(G.homeDir+"temp/rebootNeeded","w")
 			f.write("Read-only file system")
@@ -450,8 +451,8 @@ def downHCI(useHCI):
 		time.sleep(0.2)
 		subprocess.Popen("sudo service dbus restart &",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		time.sleep(0.2)
-	except	Exception, e:
-		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 
@@ -489,11 +490,11 @@ def startHCUIDUMPlistnr(hci):
 		time.sleep(0.1)
 		return  ""
 
-	except	Exception, e:
-		U.logger.log(20,"startConnect: in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20,"startConnect: in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return  "error "+ unicode(e)
-	except	Exception, e:
-		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return  "error"
 
 #################################
@@ -508,8 +509,8 @@ def stopHCUIDUMPlistener():
 		if ListenProcessFileHandle != "":
 			ListenProcessFileHandle.terminate()
 			ListenProcessFileHandle = ""
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -530,8 +531,8 @@ def readHCUIDUMPlistener():
 					return [messages.strip("\n")]
 			return []
 				
-		except	Exception, e:
-			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return []
 
 	try:
@@ -541,7 +542,7 @@ def readHCUIDUMPlistener():
 		#U.logger.log(20, u"readHCUIDUMPlistener lines:\n{}".format(lines))
 		#U.logger.log(20, u"readHCUIDUMPlistener messages\n{}".format(json.dumps(messages).replace(",","\n")))
 		return messages
-	except	Exception, e:
+	except	Exception as e:
 		if unicode(e).find("[Errno 35]") > -1:	 # "Errno 35" is the normal response if no data, if other error stop and restart
 			pass
 			#U.logger.log(20, u"Errno 35")
@@ -553,7 +554,7 @@ def readHCUIDUMPlistener():
 			#U.logger.log(20, u"Errno 11")
 		else:
 			if unicode(e) != "None":
-				out = "os.read(ListenProcessFileHandle.stdout.fileno(),{})  in Line {} has error={}".format(readBufferSize, sys.exc_traceback.tb_lineno, e)
+				out = "os.read(ListenProcessFileHandle.stdout.fileno(),{})  in Line {} has error={}".format(readBufferSize, traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 				try: out+= "fileNo: {}".format(ListenProcessFileHandle.stdout.fileno() )
 				except: pass
 				if unicode(e).find("[Errno 22]") > -1:  # "Errno 22" is  general read error "wrong parameter"
@@ -564,8 +565,8 @@ def readHCUIDUMPlistener():
 		time.sleep(0.5)
 		return []
 
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return []
 #################################
 def combineLines(lines):
@@ -609,8 +610,8 @@ def combineLines(lines):
 			readbuffer = ""
 	
 		return MSGs	
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return []
 
 	
@@ -624,7 +625,7 @@ def toReject(text):
 		f.write(str(time.time())+";"+text+"\n")
 		f.close()
 
-	except	Exception, e:
+	except	Exception as e:
 		if unicode(e).find("Read-only file system:") >-1:
 			f = open(G.homeDir+"temp/rebootNeeded","w")
 			f.write("Read-only file system")
@@ -782,8 +783,8 @@ def readParams(init=False):
 								BLEsensorMACs[mac][sensor]["marker"]  						= ""
 
 
-		except	Exception, e:
-			U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -837,8 +838,8 @@ def setEmptybeaconsThisReadCycle(mac):
 	global beaconsThisReadCycle
 	try:
 			beaconsThisReadCycle[mac]={"typeOfBeacon":"", "txPower":0, "rssi":0, "timeSt":0,"batteryLevel":"","mfg_info":"", "iBeacon":"","reason":0,"TLMenabled":False}
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################
 def readbeacon_ExistingHistory():
@@ -869,7 +870,7 @@ def writebeacon_ExistingHistory():
 		fg = open("{}temp/beacon_ExistingHistory".format(G.homeDir),"w")
 		fg.write(json.dumps(beacon_ExistingHistory))
 		fg.close()
-	except Exception, e:
+	except Exception as e:
 		if unicode(e).find("Read-only file system:") >-1:
 			subprocess.call("sudo reboot", shell=True)
 	return 
@@ -905,8 +906,8 @@ def emptyHistory(mac):
 			beacon_ExistingHistory[mac]["rssi"]		=[]
 			beacon_ExistingHistory[mac]["timeSt"]	=[]
 			beacon_ExistingHistory[mac]["reason"]	=[]
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 #################################
@@ -934,8 +935,8 @@ def copyToHistory(mac):
 
 		#U.logger.log(30,u"mac:{}; beacon_ExistingHistory:{}".format(mac, beacon_ExistingHistory[mac]))
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################, check if signal strength is acceptable for fastdown 
@@ -960,8 +961,8 @@ def fillHistory(mac):
 		if beaconsThisReadCycle[mac]["typeOfBeacon"] !="":	beacon_ExistingHistory[mac]["typeOfBeacon"]	= beaconsThisReadCycle[mac]["typeOfBeacon"]
 		stripOldHistory(mac)
 		#U.logger.log(20,u"mac {} beaconsThisReadCycle{}".format(mac,beaconsThisReadCycle[mac] ))
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -984,8 +985,8 @@ def checkMinMaxSignalAcceptMessage(mac, rssi):
 			
 		return True
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 		
 	
@@ -1048,8 +1049,8 @@ def composeMSG(timeAtLoopStart):
 					if  (beacon == trackMac or trackMac =="*") and logCountTrackMac >0:
 						writeTrackMac("MSG===  ","data:{}".format(newData), beacon)
 					beacon_ExistingHistory[beacon]["count"] = 1
-			except	Exception, e:
-				U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				U.logger.log(30, " error composing mac:{}, beaconsThisReadCycle \n{}".format(beacon, beaconsThisReadCycle[beacon]))
 
 		nMessages = len(data)
@@ -1064,8 +1065,8 @@ def composeMSG(timeAtLoopStart):
 				del beaconsOnline[be]
 		U.writeJson("{}temp/beaconsOnline".format(G.homeDir), beaconsOnline, sort_keys=False, indent=0)
 		return nMessages
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 0
 
 
@@ -1104,8 +1105,8 @@ def composeMSGForThisMacOnly(mac):
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac("MSG-s   ", "sending single msg:{}".format(data),mac)
 		return 1
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 0
 
 
@@ -1133,8 +1134,8 @@ def checkIfDeltaSignal(mac):
 			composeMSGForThisMacOnly(mac)	
 			return True
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,u"mac:{}\nbeaconsThisReadCycle:{}".format(mac, beaconsThisReadCycle ))
 
 	return False
@@ -1164,8 +1165,8 @@ def checkIfFastDownForAll():
 			composeMSGForThisMacOnly(beacon)	
 			emptyHistory(beacon)
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,u"mac {}:  beacon_ExistingHistory={}".format(beacon, beacon_ExistingHistory[beacon]))
 
 	return
@@ -1198,8 +1199,8 @@ def checkIfNewBeacon(mac):
 			composeMSGForThisMacOnly(mac)
 			return True
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 		
 
@@ -1271,8 +1272,8 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 			if sensor.find("BLEblueradio") >-1:
 				return  doBLEBLEblueradio( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return tx, bl, UUID, Maj, Min, False
 
 #################################
@@ -1525,8 +1526,8 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -1612,8 +1613,8 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -1773,8 +1774,8 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -1905,8 +1906,8 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -2140,8 +2141,8 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Mi
 
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -2169,8 +2170,8 @@ def tralingAv(sensor, mac, avType, retVal):
 			nn += 1.
 			yy += xx
 		if nn > 1: retVal = yy / nn
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return retVal
 
 
@@ -2448,8 +2449,8 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 
 		return tx, "", UUID, Maj, Min, False
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -2635,8 +2636,8 @@ def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 			BLEsensorMACs[mac][sensor]["accelerationZ"] 				= accelerationZ
 
 		return tx, batteryLevel, sensor, mac, "sensor", False
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return tx, "", UUID, Maj, Min, False
 
 
@@ -2843,8 +2844,8 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 		return tx, batteryLevel, sensor, mac, "sensor", False
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return tx, "", UUID, Maj, Min, False
 
 
@@ -2854,8 +2855,8 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0 # (changes to 0.9* 2700 @ 0C; to = 0.8*2700 @-10C )
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
 		return batteryLevel
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 0
 
 #################################
@@ -2887,8 +2888,8 @@ def domyBlueT( mac, rx, tx, hexData, UUID, Maj, Min,sensor):
 			U.sendURL({"sensors":data})
 			BLEsensorMACs[mac][sensor]["lastUpdate"] = time.time()
 		return tx, "", "myBlueT", mac, "sensor", True
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return tx, "", UUID, Maj, Min, True
 
 		#print RawData				
@@ -3072,8 +3073,8 @@ def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,s
 				BLEsensorMACs[mac][sensor]["illuminance"] 			= illuminance
 			return tx, batteryLevel, UUID, Maj, Min, False
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -3277,8 +3278,8 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, 
 				BLEsensorMACs[mac][sensor]["hum"] 					= hum
 			return tx, batteryLevel, UUID, Maj, Min, False
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,u"mac#{}; sensor:{}, sensType:{}, hexdata:{}".format(mac, sensor, sensType, hexData))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
@@ -3393,8 +3394,8 @@ offset	Allowed Values		description
 		# overwrite UUID etc for this ibeacon if used later
 		return str(txPower), str(batteryLevel), UUID, Maj, Min, False
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	# return incoming parameetrs
 	return tx, "", UUID, Maj, Min, False
 
@@ -3520,8 +3521,8 @@ def checkIFtrackMacIsRequested():
 		subprocess.call("rm {}temp/beaconloop.trackmac".format(G.homeDir), shell=True)
 		subprocess.call("rm {}temp/trackmac.log".format(G.homeDir), shell=True)
 		if trackMac =="*": logCountTrackMac *=3
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -3540,8 +3541,8 @@ def trackMacStopIf(hexstr, mac):
 			trackMac = ""
 			U.sendURL(data={"trackMac":trackMacText}, squeeze=False)
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################
 def writeTrackMac(textOut0, textOut2, mac):
@@ -3560,8 +3561,8 @@ def writeTrackMac(textOut0, textOut2, mac):
 		print (minSecs + textOut0+mac+", "+textOut2)
 		U.logger.log(20,minSecs+textOut0+mac+", "+textOut2)
 		trackMacText += minSecs+textOut0+mac+" "+textOut2+";;"
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -3574,8 +3575,8 @@ def fillHCIdump(hexstr):
 			outstring = "> " + " ".join([ hexstr[i:i+2] for i in range(0,len(hexstr),2) ])+"\n"
 			writeDumpDataHandle.write(outstring)
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return  hexstr[14:] # start w the MAC#, skip the preamble
 
 
@@ -3635,8 +3636,8 @@ def BLEAnalysisSocket(hci):
 		##                                                       FF 4C                                                                    
 		## ID packet Type                                        APPLE                                                                    
 		## 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	
 	BLEcollectStartTime = -1
 	return
@@ -3672,8 +3673,8 @@ def BLEAnalysisStart(hci):
 			return False
 
 		BLEanalysisdataCollectionTime = 25 # secs 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	BLEcollectStartTime = -1
 	return False
 
@@ -3882,8 +3883,8 @@ def BLEAnalysis():
 		time.sleep(5.+ min(10,ldd/20000.))
 		U.logger.log(20, "========== BLEanalysis finished ========\n")
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	BLEcollectStartTime = -1
 	return
 
@@ -3978,8 +3979,8 @@ def beep(useHCI):
 											else:			U.logger.log(20, "... unexpected, try again: {}-{}".format(expCommands.before,expCommands.after))
 									time.sleep(1)
 
-								except Exception, e:
-									U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+								except Exception as e:
+									U.logger.log(20, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 									if ii < ntriesConnect-1: 
 										U.logger.log(20, u"... error, try again")
 										time.sleep(1)
@@ -4039,8 +4040,8 @@ def beep(useHCI):
 									expCommands.kill(0)
 									expCommands = ""
 
-						except Exception, e:
-							U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 							time.sleep(1)
 					if expCommands !="":
 						try:	expCommands.sendline("quit\r" )
@@ -4055,8 +4056,8 @@ def beep(useHCI):
 					except: pass
 					try:	expCommands.kill(0)
 					except: pass
-	except Exception, e:
-			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+			U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return restart
 
@@ -4129,23 +4130,23 @@ def getBeaconParameters(useHCI):
 							elif shift < 0:	valueC /= -shift
 							valueD = max(0,valueC + offset)
 							valueF = min(100, int( ( valueD *100. )/norm ))
-						except Exception, e:
-							U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except Exception as e:
+							U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				U.logger.log(20,u"... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
 				if "sensors" not in data: data["sensors"] = {}
 				if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
 				if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] ={}
 				data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
-			except Exception, e:
+			except Exception as e:
 				if unicode(e).find("Timeout") == -1:
-					U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				else:
 					U.logger.log(20, u"Line {} has timeout".format(sys.exc_traceback.tb_lineno))
 				time.sleep(1)
 
 			
-	except Exception, e:
-			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+			U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	if data != {}:
 		U.sendURL(data, wait=True, squeeze=False)
@@ -4224,8 +4225,8 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="
 				writeTrackMac("tst-F   ","posFound: {}, dPos: {}, tag: {}, tagString: {}".format(posFound, dPos, tag, tagString), mac)
 
 		return posFound, dPos, Maj, Min
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,u"Mac#:{}".format(mac))
 	return -1,100, Maj, Min
 
@@ -4320,8 +4321,8 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 		if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 			writeTrackMac("parsE   "," lenTotal:{}, data:{}, hexstr:{}".format( totalLength, retData, hexstring), mac)
 		return 	retData	
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,u" hexstr:{}".format(hexstring))
 	return retData
 
@@ -4358,8 +4359,8 @@ def getTLMdata(mac, res, verbose = False):
 				if verbose: 
 					U.logger.log(20,u" mac:{:}, Vbat:{:}={:4d}; temp:{:}={:.2f}, advCount:{:}={:10d}, timeSince:{:}={:12.1f}, hex:{:}".format(mac, VbatH, Vbat, tempH, temp, advCountH, advCount, timeSinceH, timeSince, res))
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,u" hexstr:{}".format(hexstring))
 	return retData
 
@@ -4393,8 +4394,8 @@ def doLoopCheck(tt, sc, pc, sensor, useHCI):
 
 		return sensCheck, paramCheck 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return sensCheck, paramCheck 
 
 
@@ -4457,14 +4458,14 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 									 U.logger.log(20,"bHexStr:{} pos:{}, hex:{}, norm:{}, length:{}, andWith:{}, reverse:{}, res:{}".format(bHexStr, pos, Bstring, norm, length, andWith, reverse, results[ll] ) )
 								if mac == trackMac and logCountTrackMac >0:
 									writeTrackMac(cmd[0:3]+"-4   ", "val:{}".format(cmd[0:3],results[ll] ),  mac )
-					except	Exception, e:
-						U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						if mac == trackMac and logCountTrackMac >0:
-							writeTrackMac("        ", u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e), mac)
+							writeTrackMac("        ", u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e), mac)
 						results[ll] = ""
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return results[0], results[1], results[2], results[3], 
 
 
@@ -4624,8 +4625,8 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 			writeTrackMac("tag-9   ", "beaconsThisReadCycle ..mfg_info: {},rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel, ) ,mac)
 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return rejectThisMessage
 
 
@@ -4645,8 +4646,8 @@ def getBasicData(hexstr):
 		typeOfBeacon 	= hexstr[msgStart+8:msgStart+10]  #  FF = iBeacon
 		typeOfBeacon 	+= "-"+pType.upper() 
 		return 	msgStart, majEnd, uuidLen, UUID, Maj, Min, rssi,txPower, mfgID, pType, typeOfBeacon
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 	"", "", "", "", "", "", "", "", "", "",  ""
 
 
@@ -4675,8 +4676,8 @@ def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, batteryLevel
 		if TLMenabled: 					beaconsThisReadCycle[mac]["TLMenabled"]		= True
 		if typeOfBeacon != "other": 	beaconsThisReadCycle[mac]["typeOfBeacon"]	= typeOfBeacon # 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -4697,8 +4698,8 @@ def checkIfBLEprogramIsRunning(useHCI):
 			U.logger.log(30,u"hcidump or hcitool lescan  not up")
 			return False
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 
@@ -4987,7 +4988,7 @@ def execbeaconloop(test):
 											try: 
 												pkt = sock.recv(255)
 												Msgs = [(stringFromPacket(pkt)).upper()]
-											except Exception, e:
+											except Exception as e:
 												for ii in range(10):
 													if os.path.isfile(G.homeDir+"temp/stopBLE"):
 														U.logger.log(20,  "stopBLE is present, waiting for it to disappear")
@@ -5000,7 +5001,7 @@ def execbeaconloop(test):
 												else:
 													stopBLE = "stopBLE file NOT present"
 
-												U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out, {}".format(sys.exc_traceback.tb_lineno, e, stopBLE))
+												U.logger.log(50, u"in Line {} has error={}.. sock.recv error, likely time out, {}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, stopBLE))
 												time.sleep(1)
 												U.restartMyself(param="", reason="sock.recv error")
 				
@@ -5100,8 +5101,8 @@ def execbeaconloop(test):
 										if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 											writeTrackMac("Accpt   ", "{}".format(beaconsThisReadCycle[mac]) ,mac)
 
-									except	Exception, e:
-										U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)+ "  bad data, skipping")
+									except	Exception as e:
+										U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)+ "  bad data, skipping")
 										continue
 
 				
@@ -5165,8 +5166,8 @@ def execbeaconloop(test):
 									time.sleep(0.5)
 									U.restartMyself(param="", reason="too long a time w/o message")
 
-	except	Exception, e:
-		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, "  exiting loop due to error\n restarting "+G.program)
 		stopHCUIDUMPlistener()
 		time.sleep(20)

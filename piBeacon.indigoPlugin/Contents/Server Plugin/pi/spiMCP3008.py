@@ -13,6 +13,7 @@ import  sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "spiMCP3008"
 
 
@@ -45,8 +46,8 @@ def startMCP3008(devId):
                         spi1 = spidev.SpiDev()
                         spi1.open(0,1)
                     #print spiAdd, spi0,spi1    
-        except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             U.logger.log(30, u"spi channel used: "+ unicode(spiAdd)+";    dev= "+unicode(devId))
 
 def getMCP3008(sensor, data):
@@ -95,8 +96,8 @@ def getMCP3008(sensor, data):
                 v = int(1000*(((adc[1]&3) << 8) + adc[2])*3.3/1024.)
                 data[sensor][devId]["INPUT_0"]  =v
                 if devId in badSensors: del badSensors[devId]
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         data= incrementBadSensor(sensor,data)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
@@ -116,8 +117,8 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             if devId not in data[sensor]: data[sensor][devId]={}
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     return data 
 
 
@@ -300,7 +301,7 @@ while True:
                             if xxx > (G.deltaChangedSensor/100.): 
                                 changed= xxx
                                 break
-                        except  Exception, e:
+                        except  Exception as e:
                             #print e
                             #print lastData[sens][dd]
                             #print data[sens][dd]
@@ -313,8 +314,8 @@ while True:
             try:
                 #U.logger.log(10, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
-            except  Exception, e:
-                U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            except  Exception as e:
+                U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -338,8 +339,8 @@ while True:
             if tt - lastRead > 5:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -11,6 +11,7 @@ import time
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "bme680"
 
 
@@ -931,8 +932,8 @@ def readParams():
 
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 #################################
@@ -980,8 +981,8 @@ def startSensor(devId):
 		try:
 			time.sleep(1)
 			BMEsensor[devId]  	= BME680(i2c_addr=i2cAdd)
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			BMEsensor[devId] =""
 			U.muxTCA9548Areset()
 			return
@@ -1097,8 +1098,8 @@ def getValues(devId):
 						"AirQuality":	gasScore}
 			else: return ""
 			return data
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -1249,8 +1250,8 @@ while True:
 		time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 		lastMeasurement = time.time()
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

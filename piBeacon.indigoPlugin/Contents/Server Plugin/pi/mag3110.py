@@ -14,6 +14,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "mag3110"
 
 
@@ -27,7 +28,7 @@ class THESENSORCLASS():
 			self.busNumber			 = busNumber
 			try:
 				self.bus			= smbus.SMBus(self.busNumber)
-			except Exception, e:
+			except Exception as e:
 				U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
 				return 
 			
@@ -52,7 +53,7 @@ class THESENSORCLASS():
 				self.calibrations= U.loadCalibration(self.calibrationFile)
 				U.magCalibrate(self, force = False,calibTime=5)
 		except Exception ,e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return
 
 
@@ -64,7 +65,7 @@ class THESENSORCLASS():
 			byte = self.bus.read_byte_data(self.address, 1)
 			U.logger.log(10,'Found compass at {0}'.format(self.address))
 		except Exception ,e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return False
 
 		#warm up the compass
@@ -74,8 +75,8 @@ class THESENSORCLASS():
 		data |= (0 << 5)			# Disable reset cycle
 		try:
 			self.bus.write_byte_data(self.address, register, data)
-		except Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return False
 
 		# System operation
@@ -87,8 +88,8 @@ class THESENSORCLASS():
 		data |= (1 << 0)			# Active mode
 		try:
 			self.bus.write_byte_data(self.address, register, data)
-		except Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return False
 		return True
 
@@ -108,8 +109,8 @@ class THESENSORCLASS():
 			if temp < -30:	temp = -99
 			else:			temp += self.offsetTemp
 
-		except Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return [0,0,0,0],-1000
 
 		return [x,y,z],temp
@@ -158,8 +159,8 @@ def readParams():
 			 
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################
 def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declination, magResolution,enableCalibration):
@@ -172,8 +173,8 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 				theSENSORdict[devId].calibrate(calibTime=5)
 		else:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination, offsetTemp =offsetTemp)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -197,8 +198,8 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
@@ -277,8 +278,8 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -13,6 +13,7 @@ import smbus
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "vl6180xDistance"
 import  displayDistance as DISP
 
@@ -91,7 +92,7 @@ def readParams():
             try:
                 if "dUnits" in sensors[sensor][devId] and sensors[sensor][devId]["dUnits"] !="":
                     distanceUnits = sensors[sensor][devId]["dUnits"]
-            except  Exception, e:
+            except  Exception as e:
                 pass
 
             try:
@@ -126,8 +127,8 @@ def readParams():
             exit()
 
 
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -441,8 +442,8 @@ class vl6180x:
             U.logger.log(10, "Range status: " +unicode(self.get_register(self.__VL6180X_RESULT_RANGE_STATUS) & 0xF1)+";  distance="  +unicode(distance)+" mm")
             self.set_register(self.__VL6180X_SYSTEM_INTERRUPT_CLEAR, 0x07)
             return distance
-        except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         return -1
 
     def get_ambient_light(self, lastGain):
@@ -537,8 +538,8 @@ class vl6180x:
             lastGain =[gL,iPeriod]
             #print " ret:",als_calculated,als_raw, lastGain
             return als_calculated,  lastGain
-        except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         return 0,0
         
     def get_register(self, register_address):
@@ -601,8 +602,8 @@ def getDistance():
                     return  ("%7.1f"%(distance)).strip() #  return in cm/lux
 
         if badSensor >3: return "badSensor"
-    except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
     return ""        
 
@@ -622,8 +623,8 @@ def getLight():
                     return  ("%10d"%(lux)).strip() #  return in cm/lux
 
         if badSensor >3: return "badSensor"
-    except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             U.logger.log(30, u"lux>>" + unicode(lux)+"<<")
     return ""        
 
@@ -762,8 +763,8 @@ while True:
         if not quick:
             time.sleep(loopSleep)
         
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

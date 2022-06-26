@@ -18,6 +18,7 @@ sys.path.append(os.getcwd())
 print sys.path
 import	piBeaconUtils as U
 import	piBeaconGlobals as G
+import traceback
 
 
 def readParams():
@@ -38,8 +39,8 @@ def doActions():
 			return
 
 ### actions: [{1},{2},{3}]
-		except	Exception, e:
-			U.logger.log(30," in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+		except	Exception as e:
+			U.logger.log(30," in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e) )
 
 
 #################################
@@ -91,8 +92,8 @@ while True:
 		doActions()
 
 		time.sleep(0.1)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 
 

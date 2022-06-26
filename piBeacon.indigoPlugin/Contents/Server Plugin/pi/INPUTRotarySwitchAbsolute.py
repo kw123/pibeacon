@@ -33,6 +33,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "INPUTRotarySwitchAbsolute"
 
 
@@ -156,8 +157,8 @@ def getINPUTgpio(devId):
 
 			elif INPUTS[devId]["codeType"].find("bourns8Bit")>-1:	value = burnsTableToInt(value)
 
-	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return {"INPUT":value}
 
 
@@ -234,8 +235,8 @@ def startGPIO(devId):
 				GPIO.setup( INPUTS[devId]["pinO"][n], GPIO.OUT)
 				GPIO.output(INPUTS[devId]["pinO"][n], 1)
 		return
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,"start "+ G.program+ "  "+ unicode(sensors))
 	return
 
@@ -344,8 +345,8 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

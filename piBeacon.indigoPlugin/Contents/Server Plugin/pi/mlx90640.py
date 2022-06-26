@@ -24,6 +24,7 @@ import serial
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "mlx90640"
 
 
@@ -90,8 +91,8 @@ class MLX90640():
 			self.alphaCorrR2 = 1
 			self.alphaCorrR3 = 1 + self.KsTo2*(self.CT3-0)
 			self.alphaCorrR4 = self.alphaCorrR3*(1+self.KsTo3*(self.CT4-self.CT3))
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		
 	def getRegs(self,reg,num):
 		write = smbus2.i2c_msg.write(self.addr,[reg>>8,reg&0xFF])
@@ -110,8 +111,8 @@ class MLX90640():
 		ret = 0
 		try:
 			ret = math.sqrt(math.sqrt(max(0.,num)))
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={} .. value:{}".format(sys.exc_traceback.tb_lineno, e, num))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={} .. value:{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, num))
 		return ret 
 
 	def getTGC(self):
@@ -389,8 +390,8 @@ class MLX90640():
 			ret = self.root4((VIRcomp/(alphacomp*(1-self.KsTo2*273.15)+Sx))+Tar) - 273.15
 			#print i,j, pixOs, ret
 			return ret
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 
  # ===========================================================================
@@ -516,8 +517,8 @@ def readParams():
 
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print sensors[sensor]
 		
 
@@ -572,13 +573,13 @@ def startSensor(devId,i2cAddress):
 				try:
 					U.logger.log(30, u" i2cAdd {}".format(i2cAdd) )
 					sensorClass[devId]  =	  MLX90640(address=i2cAdd)
-				except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except	Exception as e:
+					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					sensorClass[devId] =""
 				time.sleep(1)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -625,8 +626,8 @@ def convertPixels(oldPix,pix,nx,ny):
 				"MovementAbs":			round(movementabs, 6)}
 			ret["rawData"] =json.dumps(pix).replace(" ","")
 			return ret
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return ""
 
 
@@ -679,8 +680,8 @@ def getValues(devId):
 
 		#U.logger.log(30, " pix {}".format( pix[devId]))
 		badSensor = 0
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	return val
@@ -826,8 +827,8 @@ while True:
 		#else:				 loopSleep = sensorRefreshSecs
 		if not quick:
 			time.sleep(loopSleep)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

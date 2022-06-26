@@ -9,6 +9,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 import math
 G.program = "mlx90614"
 
@@ -474,13 +475,13 @@ def doDisplay():
 				print "retry to write to display.inp"
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
-			except	Exception, e:
-				print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+			except	Exception as e:
+				print u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 				if unicode(e).find("No space left on device") >-1:
 					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
-	except	Exception, e:
-		print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+	except	Exception as e:
+		print u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 		print sValues
 
 
@@ -527,8 +528,8 @@ def incrementBadSensor(devId,sensor,data):
 			if devId not in data[sensor]: data[sensor][devId]={}
 			data[sensor][devId]["badSensor"]=True
 			badSensors[devId] =0
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return data 
 
 
@@ -585,8 +586,8 @@ def readParams():
 				
 			
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -721,8 +722,8 @@ def getMLX90614(sensor, data):
 					putValText(sensors[sensor][devId],[t,a],["temp","ambient"])
 				else:
 					data= incrementBadSensor(devId,sensor,data)
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		if sensor in data["sensors"] and data["sensors"][sensor]=={}: del data["sensors"][sensor]
 		U.muxTCA9548Areset()
 		return data
@@ -833,8 +834,8 @@ while True:
 				lastRead = tt
 		time.sleep(0.3)
 		#print "end of loop", loopCount
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

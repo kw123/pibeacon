@@ -3,7 +3,7 @@
 # by Karl Wachs
 # feb 5 2016
 
-masterVersion			= 12.10
+masterVersion			= 15.10
 ## changelog: 
 # 2020-04-05 added check for NTP
 # 2020-xx-xx 
@@ -25,10 +25,9 @@ import smbus
 
 sys.path.append(os.getcwd())
 import	piBeaconGlobals as G
+import traceback
 import	piBeaconUtils	as U
 G.program = "master"
-
-
 
 ####################      #########################
 def checkIfUARThciChannelIsOnRPI4():
@@ -69,8 +68,8 @@ def checkIfUARThciChannelIsOnRPI4():
 
 		U.sendURL( data={"data":{"error":text}}, squeeze=False, wait=True )
 
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 ####################      #########################
@@ -83,8 +82,8 @@ def checkIfGpioIsInstalled():
 			U.logger.log(30,"installing gpio wiringPi .... {}\n with: {}".format(unicode(ret), installGPIO))
 			ret = subprocess.Popen(installGPIO,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 			U.logger.log(30,"result of installing gpio wiringPi .... {}".format(unicode(ret)))
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -553,8 +552,8 @@ def readNewParams(force=0):
 		sensorEnabled =copy.copy(sensorList)
 		firstRead = False
 		return 
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -599,8 +598,8 @@ def setupX(action="leaveAlone"):
 			U.stopDisplay()
 			U.killOldPgm(-1,"startx")
 
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 ####################      #########################
@@ -649,8 +648,8 @@ def setACTIVEorKILL(tag,pgm,check,force=0):
 			if tag	in activePGMdict: del activePGMdict[tag] 
 		elif tag  in activePGMdict and force ==0:
 			del activePGMdict[tag] 
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -672,8 +671,8 @@ def doWeNeedToStartTouch(sensorsI, sensorsOld):
 						if "gpio" not in ss[nn]: return 1
 				U.logger.log(10, "enabled sensor " +sensor)
 			return 0
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,"start INPUTtouch12: "+ unicode(sensorsI))
 	return 0
 
@@ -726,7 +725,7 @@ def startBLEconnect():
 		return
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 
@@ -754,7 +753,7 @@ def checkIfDisplayIsRunning():
 			checkIfAliveFileOK("display",force="set")
 			return
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return
 	return
 
@@ -786,7 +785,7 @@ def checkIfNeopixelIsRunning(pgm= "neopixel"):
 			checkIfAliveFileOK("neopixel",force="set")
 			return
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return
 	return
 
@@ -809,7 +808,7 @@ def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters="
 				return
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 
@@ -849,8 +848,8 @@ def checkIfbeaconLoopIsRunning():
 					#print "checking if beaconloop running: are starting beaconlooop"
 					startProgam("beaconloop.py", params="", reason=" alive file is old ")
 
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 
@@ -878,8 +877,8 @@ def checkIfAliveFileOK(sensor,force=""):
 				lastUpdate=float(data)
 				f.close()
 				#print "alive test 1 for " , sensor,  lastUpdate
-			except	Exception, e:
-				#print " exception ",sys.exc_traceback.tb_lineno, e
+			except	Exception as e:
+				#print " exception ",traceback.extract_tb(sys.exc_info()[2])[-1][1], e
 				time.sleep(0.2)
 				if os.path.isfile(G.homeDir+"temp/alive."+sensor):
 						f = open(G.homeDir+"temp/alive."+sensor,"r")
@@ -894,8 +893,8 @@ def checkIfAliveFileOK(sensor,force=""):
 					try: f.close()
 					except: pass
 
-		except	Exception, e:
-			U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			lastUpdate=0
 		#print "alive test 2 for " , sensor, data
 			
@@ -910,8 +909,8 @@ def checkIfAliveFileOK(sensor,force=""):
 			sensorAlive[sensor] = tt
 		else:
 			sensorAlive[sensor] = lastUpdate
-	except	Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return alive
 
 
@@ -954,7 +953,7 @@ def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000,dir=""): # check if enoug
 
 		return retCode
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 ####################      #########################
@@ -976,7 +975,7 @@ def rebootWatchDog():
 
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 ####################      #########################
@@ -1072,7 +1071,7 @@ def getreading(adc_address,adc_channel):
 		valor = valor >> 4 # 4 LSB bits are ignored.
 		volts = valor/max_reading*vref
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return volts
 
@@ -1105,7 +1104,7 @@ def getAlechemyUPSdata():
 			Vtext = "VinOff"
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return Vin, Vtext, Vbat, int(100.*min(1, (Vbat - V_batt_min)/capacity)), Vout, TempC
 
@@ -1177,7 +1176,7 @@ def getupsv2UPSdata():
 			elif "Vout" 	in dd: Vout 	= float(dd.split(" ")[1])/1000.
 		return version, Vtext, batCap, Vout
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return version, "no connection", batCap, Vout
 
@@ -1204,7 +1203,7 @@ def getUPSdata():
 			return version, Vtext, Vin, Vbat, batCap, Vout, TempC
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return version, "no connection", Vin, Vbat, batCap, Vout, 0
 
@@ -1345,14 +1344,14 @@ def checkIfShutDownVoltage():
 				lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", 0)
 
 			except	Exception, e :
-					U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					return
 			U.logger.log(30, "checkIfShutDownVoltage: rebooting " )
 			#this will send and HTML to indigo and then issue a shutdown command
 			U.sendRebootHTML("battery empty", reboot=False, wait=15.)
 
 	except	Exception, e :
-			U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return 
 
@@ -1406,7 +1405,7 @@ def checkLogfiles():
 			subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
 			subprocess.call("sudo echo "" >  /var/log/pibeacon", shell=True)
 	except	Exception, e :
-		print u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		print u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 		return
 
 
@@ -1451,7 +1450,7 @@ def checkRamDisk(loopCount=99):
 			time.sleep(60) # give it some time, it should never happen here 
 			U.sendRebootHTML("change_in_ramdisk_for_logfiles")
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -1490,7 +1489,7 @@ def delayAndWatchDog():
 					
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -1530,7 +1529,7 @@ def checkSystemLOG():
 					U.doReboot(tt=15, text="restart due to register dump:", force=True)
 			
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 ####################      #########################
@@ -1587,7 +1586,7 @@ def doGPIOAfterBoot():
 
 		f.close()
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 	
@@ -1669,7 +1668,7 @@ def checkTempForFanOnOff(force = False):
 		lastTempValue = temp
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 	
@@ -1738,7 +1737,7 @@ def fixRcLocal(sleepTime):
 		U.logger.log(20, "writing callbeacon.py file")
 		subprocess.call("cp /home/pi/pibeacon/callbeacon.py /home/pi/callbeacon.py", shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
  
 
@@ -1762,7 +1761,7 @@ def checkFSCHECKfile():
 			U.logger.log(20, dataSend)
 			U.sendURL(sendAlive="alive",text=dataSend)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return 
 
@@ -1786,7 +1785,7 @@ def tryRestartNetwork():
 			if G.ipAddress != "" and G.networkType.find("indigo") > -1:
 				U.restartMyself(reason=u" ip number is back on")
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 ####################      #########################
@@ -1797,7 +1796,7 @@ def checkIfclearHostsFile():
 			U.logger.log(20, u"resetting file /home/pi/.ssh/known_hosts")
 			subprocess.call(u"sudo rm /home/pi/.ssh/known_hosts", shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -1806,7 +1805,7 @@ def checkPythonLibs():
 		subprocess.call(u"sudo /usr/bin/python3 {}checkForInclude-py3.py & ".format(G.homeDir), shell=True)
 		subprocess.call(u"sudo /usr/bin/python {}checkForInclude-py2.py & ".format(G.homeDir), shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -1851,7 +1850,7 @@ def checknetwork0():
 						U.logger.log(20, u"ip number found and connected to indigo  ip:{}".format( G.ipAddress))
 						break
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return indigoServerOn, changed, connected 
 
@@ -1892,7 +1891,7 @@ def checkIfFirstStart():
 								break
 						U.stopAdhocWifi()
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -1912,7 +1911,7 @@ def	checkForAdhocWeb():
 				U.stopAdhocWifi()
 				U.restartMyself(reason=u"starting back to normal from adhoc wifi")
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -1945,7 +1944,7 @@ def checkIfNetworkStarted2(indigoServerOn, changed, connected ):
 					break
 				time.sleep(10)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return indigoServerOn, changed, connected
 
 ####################      #########################
@@ -2011,7 +2010,7 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 							U.doReboot(tt=5, text="network came back")
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return restartCLock, indigoServerOn, changed, connected 
 
 ####################      #########################
@@ -2026,7 +2025,7 @@ def killOldPrograms():
 		for ff in G.specialOutputList:
 				U.killOldPgm(-1, ff+".py")
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -2041,7 +2040,7 @@ def checkInstallLibs():
 				U.logger.log(30, " master still waiting for installibs to finish")
 			time.sleep(5)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -2055,7 +2054,7 @@ def checkFileSystem():
 
 		subprocess.call("sudo chown -R  pi:pi	 "+G.homeDir, shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -2083,7 +2082,7 @@ def checkIfipNumberchanged(indigoServerOn, changed, connected):
 			if eth0IP == "" or wifi0IP == "": # avoid restart none is active
 				U.restartMyself(reason="changed ip number,.. eth0IP: {};  wifi0IP: {};  oldIP: {};  G.ipAddress:{};  G.eth0Active:{};  G.wifiActive:{}".format(eth0IP, wifi0IP, oldIP, G.ipAddress,G.eth0Active,G.wlanActive) )
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return indigoServerOn, changed, connected
 
 
@@ -2123,7 +2122,7 @@ def checkIpSTDprogramsAreRunning(lastCheckAlive):
 		if enableiBeacons != "0":
 			checkIfbeaconLoopIsRunning()
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return lastCheckAlive
 
@@ -2145,7 +2144,7 @@ def checkNTP():
 			 (G.useRTC != "" and G.useRTC != "0")  ):					 # RTC installed ...   ==>	set HW clock to NTP time stamp:
 				subprocess.call("sudo /sbin/hwclock -w", shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -2157,7 +2156,7 @@ def setupTempDir():
 			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
 		subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 ####################      #########################
@@ -2177,7 +2176,7 @@ def checkFilesystem():
 		#subprocess.call("sudo chown -R  pi:pi	 /run/user/1000/pibeacon", shell=True)
 		subprocess.call("sudo chmod a+x  /lib/udev/hwclock-set", shell=True)
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -2208,7 +2207,7 @@ def checkIfWOLsendToIndigoServer():
 		lastCheckWOL = time.time()
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 def getadhocIpNumber():
@@ -2221,7 +2220,7 @@ def getadhocIpNumber():
 			ip = lines.split(" address ")[1]
 			adhocIP = ip.split("\n")[0].strip()
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return adhocIP
 
 ####################      #########################
@@ -2263,7 +2262,7 @@ def checkstartOtherProgram():
 		return 
 
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -2443,7 +2442,6 @@ def execMaster():
 		readNewParams(force=2)
 		U.logger.log(20, "" )
 		U.logger.log(20, "=========START.. MASTER  v:{}".format(masterVersion) )
-		U.sendURL( data={"data":{"hciInfo":" "}}, squeeze=False, wait=False )
 
 		checkWiFiSetupBootDir()
 
@@ -2703,9 +2701,9 @@ def execMaster():
 				delayAndWatchDog()
 
 			except	Exception, e :
-				U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 execMaster()

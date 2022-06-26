@@ -14,6 +14,7 @@ import	sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 
 
 ### simple fully automatic lux sensor 0.045 .. 188,000 lux
@@ -58,8 +59,8 @@ def startSensor(devId,i2cADR):
 			#                       measure every 800mS, 	not Man= autorange, all cur goes into ADC,  not used if manual =0
 	 		SENSOR[devId].setParams(cont=0, 		   		manual=0, 			cdr=0, 					timer=0)
 			return 
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 #===========================================================================
@@ -82,9 +83,9 @@ def getValues():
 				values[devId] = {"illuminance":round(SENSOR[devId].getLuminosity(),2)}
 		badSensor = 0
 		return values
-	except	Exception, e:
+	except	Exception as e:
 		badSensor += 1
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return values
 
 # ===========================================================================
@@ -155,8 +156,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################
 #################################
@@ -267,8 +268,8 @@ def execMAX44009():
 					lastRead = tt
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
-		except Exception, e:
-			U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			time.sleep(5.)
 execMAX44009()
 try: 	G.sendThread["run"] = False; time.sleep(1)

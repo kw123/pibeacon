@@ -26,6 +26,7 @@ GPIO.setmode(GPIO.BCM)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "apds9960"
 
 
@@ -431,8 +432,8 @@ class APDS9960():
 				#print	"gesture bits:", val, out 
 				if( not self.WriteDataByte( self.APDS9960_GCONF4,out) ): return False
 				return True
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return False
 
 		""" 
@@ -522,8 +523,8 @@ class APDS9960():
 					#/* Determine best guessed gesture and clean up */
 					time.sleep(self.FIFO_PAUSE_TIME)
 					return motion, nearFar,UPdown,LEFTright
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return motion, nearFar,UPdown,LEFTright
 			
 
@@ -736,8 +737,8 @@ class APDS9960():
 				else									 : nearFAR = "MIDDLE"
 
 				U.logger.log(10,	"motion:"+ motion +";  nearFAR:"+nearFAR)  
-			except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					U.logger.log(30, "leftD:"+ unicode(leftD))
 			return motion ,nearFAR, udDel, lrDel	   
 
@@ -1640,8 +1641,8 @@ class APDS9960():
 			try:
 				#print	u"WriteByte"
 				self.BUS.write_quick(self.address) 
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return False
 			return True
 		
@@ -1658,8 +1659,8 @@ class APDS9960():
 				#print	u"WriteDataByte",hex(val), hex(reg)
 				self.BUS.write_byte_data(self.address,reg, val)
 				return True
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return False	   
 		
 
@@ -1678,8 +1679,8 @@ class APDS9960():
 				for i in range(ll):
 					self.BUS.write_block_data(self.address,val[i])
 				return True
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return False	   
 
 		""""
@@ -1692,8 +1693,8 @@ class APDS9960():
 		def ReadDataByte(self, reg):
 			try:
 				val = self.BUS.read_byte_data(self.address,reg)
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return False, 0
 			#print	u"ReadDataByte return",hex(reg), hex(val)
 			return True, val
@@ -1717,8 +1718,8 @@ class APDS9960():
 					lenOUT+=1
 				#print "ReadDataBlock", i+1, val 
 				return lenOUT, val
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return -1, []
 
 
@@ -1732,8 +1733,8 @@ class APDS9960():
 				lenOUT= len(ret)
 				#print "ReadDataBlock",ret
 				return lenOUT, ret
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return -1, []
 
 
@@ -1760,8 +1761,8 @@ class APDS9960():
 					
 				#print "ReadDataBlock", lenOut, val2
 				return lenOut, val2
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				return -1, []
 
 
@@ -1853,8 +1854,8 @@ def getinput(devid):
 				lastColorTime			= tt
 		
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	sensorDev.clearGestureFIFO()
 	return data
 
@@ -2001,8 +2002,8 @@ def readParams():
 								U.logger.log(30, "GPIO interrupt pin setup")
 								print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+	" GPIO interrupt pin setup"
 								interruptGPIOAlreadySetup = interruptGPIO
-					except Exception, e:
-						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					
 
 		if sensorUp == -1:
@@ -2012,8 +2013,8 @@ def readParams():
 			sensorsOld= copy.copy(sensors)
 
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
@@ -2148,8 +2149,8 @@ while True:
 					break
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

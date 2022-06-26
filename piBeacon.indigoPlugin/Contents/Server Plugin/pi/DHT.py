@@ -13,6 +13,7 @@ import	sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "DHT"
 import Adafruit_DHT
 
@@ -45,10 +46,10 @@ def getDHT3data():
 				dhtData = json.loads(f.read())
 				f.close()
 				os.remove(dht3DataFile)
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	if dhtData == {}: py3Started = 1
 	return dhtData
 		
@@ -72,15 +73,15 @@ def startDHT3():
 		subprocess.Popen("python3  DHT.py3 '{}' &".format(json.dumps(theDict)),shell=True)
 		py3Started = 0
 		time.sleep(3)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def stopDHT3():
 	global dht3stopFile
 	try:
 		subprocess.Popen("echo x > {}".format(dht3stopFile),shell=True)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -116,8 +117,8 @@ def getDATAdht(DHTpinI,Type,devId):
 			try: return float(t),float(h)
 			except: return "",""
 			#else: return "" ,""  
-		except	Exception, e:
-			U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(20, u" pin: "+ str(DHTpinI)+" return value: t="+ unicode(t)+"; h=" + unicode(h) )
 		lastSensorRead[devId] = time.time() 
 		return "",""
@@ -132,8 +133,8 @@ def getDHTdata():
 			dhtData[devId] = {"temp":"","hum":""}
 			t,h = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
 			dhtData[devId] = {"temp":t,"hum":h}
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return dhtData
 
 
@@ -168,8 +169,8 @@ def getDHT(dataI):
 					time.sleep(0.1)
 				else:
 					dataI = incrementBadSensor(devId, data)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	if sensor in dataI and data[sensor]== {}: del dataI[sensor]
 	return dataI
@@ -188,8 +189,8 @@ def incrementBadSensor(devId, dataI, theText="badSensor"):
 			if devId not in dataI[sensor]: dataI[sensor][devId]={}
 			dataI[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, u"theText{}".format(theText))
 	return dataI
 
@@ -347,7 +348,7 @@ while True:
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx
 								break
-						except	Exception, e:
+						except	Exception as e:
 							#print e
 							#print lastData[sens][dd]
 							#print data[sens][dd]
@@ -360,8 +361,8 @@ while True:
 			try:
 				#U.logger.log(10, u"sending url: "+unicode(data))
 				U.sendURL({"sensors":data})
-			except	Exception, e:
-				U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			time.sleep(0.05)
 
 		quick = U.checkNowFile(G.program)				 
@@ -385,8 +386,8 @@ while True:
 			if tt - lastRead > 5:
 				lastRead = tt
 				U.checkIfAliveNeedsToBeSend()
-	except	Exception, e:
-		U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 stopDHT3()
 sys.exit(0)

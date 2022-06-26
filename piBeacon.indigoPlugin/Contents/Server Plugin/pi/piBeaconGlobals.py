@@ -4,6 +4,7 @@
 ## do 
 # sys.path.append(os.getcwd())
 # import  piBeaconGlobals as G
+import traceback
 # then ref the variables as G.xxx
 # they will be valid across all imported modules if included.
 #

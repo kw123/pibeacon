@@ -14,6 +14,7 @@ import	sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 
 G.program = "ADS1x15"
 
@@ -398,8 +399,8 @@ class ADS1x15:
 			# Set pga value, so that getLastConversionResult() can use it,
 			# any function that accepts a pga value must update this.
 			self.pga = 6144
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -482,8 +483,8 @@ class ADS1x15:
 					val= ( (result[0] << 8) | (result[1]) )*pga/32768.0
 				#print self.ic, sps, pga, channel, val, result
 				return val
-		except	Exception, e:
-				U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -497,8 +498,8 @@ def startSensor(devId,i2cADR):
 			#U.logger.log(30, u"starting devId:{}".format(devId))
 			SENSOR[devId]=ADS1x15(address=i2cADR, ic=resModel[devId]) 
 			return 
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 #===========================================================================
@@ -531,9 +532,9 @@ def getValues():
 		#U.logger.log(30, u"getValues   inp:{},  v:{}".format(inp,  values))
 		badSensor = 0
 		return values
-	except	Exception, e:
+	except	Exception as e:
 		badSensor += 1
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, u"input:{}, len:{};  ".format(inp, len(inp)))
 	return values
 
@@ -624,8 +625,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################
 #################################
@@ -741,8 +742,8 @@ def execADS1x15():
 					lastRead = tt
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
-		except Exception, e:
-			U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			time.sleep(5.)
 execADS1x15()
 try: 	G.sendThread["run"] = False; time.sleep(1)

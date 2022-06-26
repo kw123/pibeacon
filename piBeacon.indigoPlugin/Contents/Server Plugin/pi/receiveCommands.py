@@ -23,6 +23,7 @@ GPIO.setwarnings(False)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "receiveCommands"
 
 allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice",
@@ -79,8 +80,8 @@ def OUTPUTi2cRelay(command):
 				else:						pulseDown = 0
 				if "nPulses" in values:		nPulses = int(values["nPulses"])
 				else:						nPulses = 0
-			except	Exception, e:
-				U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				exit(0)
 
 			inverseGPIO = False
@@ -137,10 +138,10 @@ def OUTPUTi2cRelay(command):
 				U.removeOutPutFromFutureCommands(pin, devType)
 			
 
-			except Exception, e:
-					U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
-  	except Exception, e:
-			U.logger.log(50, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except Exception as e:
+					U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+  	except Exception as e:
+			U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 ### ----------------------------------------- ###
@@ -200,8 +201,8 @@ def setGPIO(command):
 			else:						nPulses = 0
 			if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 			else:						bits = 0
-		except	Exception, e:
-			U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			exit(0)
 
 		inverseGPIO = False
@@ -320,8 +321,8 @@ def setGPIO(command):
 						GPIO.output(pin, False)
 						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 					if sleepForxSecs(pulseDown): break
-		except	Exception, e:
-			U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	U.removeOutPutFromFutureCommands(pin, devType)
 			
@@ -347,8 +348,8 @@ def sleepForxSecs(sleepTime):
 			time.sleep(dt)
 			if sleepTime <= tDone: return False
 		return False
-	except	Exception, e:
-		U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(20, u"threadsActive{}".format(threadsActive))
 	return False
 
@@ -398,8 +399,8 @@ def execCMDS(next):
 						if "touchFile" in next and next["touchFile"]:
 							subprocess.call("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" , shell=True)
 						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
-					except	Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 
 
@@ -409,8 +410,8 @@ def execCMDS(next):
 						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
 						f.write(next[u"device"]) 
 						f.close()
-				except	Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 
 
@@ -420,8 +421,8 @@ def execCMDS(next):
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
 						f.write(next["device"]+"\n") 
 						f.close()
-				except	Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 
 			if	cmd == "BLEAnalysis":
@@ -453,8 +454,8 @@ def execCMDS(next):
 						f=open(G.homeDir+"temp/setStepperMotor.inp","a")
 						f.write(cmdOut+"\n")
 						f.close()
-					except	Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 			
 			if device.lower()=="output-display":
@@ -470,8 +471,8 @@ def execCMDS(next):
 						f=open(G.homeDir+"display.inp","w")
 						f.write(cmdOut+"\n")
 						f.close()
-					except	Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 
 
@@ -489,8 +490,8 @@ def execCMDS(next):
 							f=open(G.homeDir+"neopixel.inp","w")
 							f.write(cmdOut+"\n")
 							f.close()
-					except	Exception, e:
-						U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 
 
@@ -582,8 +583,8 @@ def execCMDS(next):
 								try: del execcommandsList[threadName]
 								except:pass
 
-						except	Exception, e:
-							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						continue
 
 			if device=="setPCF8591dac":
@@ -603,8 +604,8 @@ def execCMDS(next):
 								try: del execcommandsList[threadName]
 								except:pass
 
-						except	Exception, e:
-							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						continue
 
 
@@ -613,8 +614,8 @@ def execCMDS(next):
 						try:
 							pinI = int(next["pin"])
 							pin = str(pinI)
-						except	Exception, e:
-							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 							U.logger.log(30,"bad pin "+unicode(next))
 							continue
 						#print "pin ok"
@@ -637,8 +638,8 @@ def execCMDS(next):
 						try:
 							pinI = int(next["pin"])
 							pin = str(pinI)
-						except	Exception, e:
-							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 							U.logger.log(30,"bad pin "+unicode(next))
 							continue
 						#print "pin ok"
@@ -665,8 +666,8 @@ def execCMDS(next):
 							cmdOut= "/usr/bin/python "+G.homeDir+"myoutput.py "+text+" &"
 							U.logger.log(10,"cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
-						except	Exception, e:
-							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						continue
 
 			if device=="playSound":
@@ -681,8 +682,8 @@ def execCMDS(next):
 							if cmdOut != "":
 								U.logger.log(10,"cmd= %s"%cmdOut)
 								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
-						except	Exception, e:
-							U.logger.log(30, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						continue
 
 			U.logger.log(30,"bad device number/number: "+device)
@@ -708,8 +709,8 @@ def stopThreadsIfEnded(all=False):
 
 		for threadName in stopThreads:
 			stopExecCmd(threadName)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 				 
 ### ----------------------------------------- ###
@@ -748,8 +749,8 @@ def execSimple(next):
 			U.stopNTP()
 			return True
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 	### ----------------------------------------- ###
@@ -776,8 +777,8 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 		#U.logger.log(10, "{} wrote:".format(self.client_address[0]))
 		try:
 			commands = json.loads(data.strip("\n"))
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				U.logger.log(30,"bad command: json failed  "+unicode(buffer))
 				return
 
@@ -814,8 +815,8 @@ def setupexecThreads(next):
 		threadsActive[threadName]["thread"].start()
 		return True
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 
@@ -830,8 +831,8 @@ def stopExecCmd(threadName):
 			threadsActive[threadName]["state"] = "stop"
 			time.sleep(0.07)
 			#U.logger.log(20, u"stop finished after wait thread={}".format(threadName))
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	try: 	del threadsActive[threadName]
 	except: pass
 	return 
@@ -860,8 +861,8 @@ def getcurentCMDS():
 				keep[threadName] = execcommandsList[threadName]
 				try:
 					next = execcommandsList[threadName]
-				except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except	Exception as e:
+					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					continue
 				setupexecThreads(next)
 
@@ -869,8 +870,8 @@ def getcurentCMDS():
 			f.write(json.dumps(keep))
 			f.close()
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -941,9 +942,9 @@ if __name__ == "__main__":
 		# Create the server, binding on port 9999
 		server = SocketServer.TCPServer((G.ipAddress, PORT), MyTCPHandler)
 
-	except	Exception, e:
+	except	Exception as e:
 		####  trying to kill the process thats blocking the port# 
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, "getting  socket does not work, trying to reset {}".format(str(PORT)) )
 		ret = subprocess.Popen("sudo ss -apn | grep :"+str(PORT),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
 		lines= ret.split("\n")
@@ -974,7 +975,7 @@ if __name__ == "__main__":
 		try:	
 			# Create the server, binding on port eg 9999
 			server = SocketServer.TCPServer((G.ipAddress, PORT), MyTCPHandler)
-		except	Exception, e:
+		except	Exception as e:
 			U.logger.log(30, "getting  socket does not work, try restarting master  "+ str(PORT) )
 			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True)
 			exit()

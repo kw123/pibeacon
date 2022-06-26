@@ -18,6 +18,7 @@ import smbus
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "vl503l0xDistance"
 import  displayDistance as DISP
 i2cbus = smbus.SMBus(1)
@@ -106,7 +107,7 @@ def readParams():
             try:
                 if "dUnits" in sensors[sensor][devId] and sensors[sensor][devId]["dUnits"] !="":
                     distanceUnits = sensors[sensor][devId]["dUnits"]
-            except  Exception, e:
+            except  Exception as e:
                 pass
             try:
                 if "acuracyDistanceMode" in sensors[sensor][devId]:
@@ -153,8 +154,8 @@ def readParams():
             exit()
 
 
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 def startSensor(mode):
@@ -176,8 +177,8 @@ def startSensor(mode):
                 U.logger.log(30, "==== ranging retcode wrong: "+unicode(retCode)+"  giving up after tries:"+unicode(ii) )
                 exit()
         U.logger.log(30, "==== ranging started ok ====")
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -316,8 +317,8 @@ def getDistance():
                     return  ("%7.1f"%(distance)).strip() #  return in cm
 
         if badSensor >3: return "badSensor"
-    except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
     return ""        
 
@@ -467,8 +468,8 @@ while True:
         if not quick: 
             time.sleep(loopSleep)
         #print "end of loop", loopCount
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

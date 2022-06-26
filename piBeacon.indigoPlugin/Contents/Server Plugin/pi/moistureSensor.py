@@ -13,6 +13,7 @@ import time
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "moistureSensor"
 
 

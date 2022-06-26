@@ -14,6 +14,7 @@ import copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "launchpgm"
 
 
@@ -67,8 +68,8 @@ def stopSensors(launchCmd):
 			U.killOldPgm(myPID, launchCmd)
 			## add any init code here for address # addr
 			U.logger.log(30, u"stopping	" + unicode(launchCmd) )
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"launchCmd used: " + unicode(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
@@ -80,8 +81,8 @@ def startSensors(launchCmd):
 			subprocess.call(launchCmd+" &", shell=True)
 			## add any init code here for address # addr
 			U.logger.log(30, u"starting	" + unicode(launchCmd) )
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"launchCmd used: " + unicode(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
@@ -94,8 +95,8 @@ def checkIfRunning(check):
 				return "running" if U.pgmStillRunning(check) else "not running"
 			else: 
 				return "not checked"
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"checking used: " + unicode(check) )
 
 
@@ -167,7 +168,7 @@ while True:	 # loop for ever
 				U.echoLastAlive(G.program)
 
 		except	Exception, e :
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 		time.sleep(sensorRefreshSecs) # sleep the requested amount
 		readParams()  # check if we have new parameetrs

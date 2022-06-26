@@ -16,6 +16,7 @@ import fcntl # used to access I2C parameters like addresses
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "setTEA5767"
 
 
@@ -62,8 +63,8 @@ def readParams():
         else:
             U.logger.log(30, u"stopping FM radio, no device defined in parameters file")
             exit()
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     U.logger.log(30,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
     return
          
@@ -115,8 +116,8 @@ def readNew():
             time.sleep(0.1)
             subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
     
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     U.logger.log(30,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
    
 class tea5767:
@@ -468,8 +469,8 @@ while (True):
             lastParams= tt
             U.echoLastAlive(G.program)
 
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     
     
 

@@ -35,6 +35,7 @@ import math
 import socket
 import threading
 import traceback
+import platform
 
 try:
 	import socketserver as SocketServer
@@ -48,7 +49,7 @@ import pstats
 import logging
 import zlib
 
-import MACMAP.MAC2Vendor as M2Vclass
+import MAC2Vendor
 from checkIndigoPluginName import checkIndigoPluginName 
 #import pydevd_pycharm
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
@@ -650,8 +651,9 @@ class Plugin(indigo.PluginBase):
 		self.pluginShortName 			= u"piBeacon"
 
 		self.quitNow					= u""
-		self.getInstallFolderPath		= indigo.server.getInstallFolderPath()+u"/"
-		self.indigoPath					= indigo.server.getInstallFolderPath()+u"/"
+###############  common for all plugins ############
+		self.getInstallFolderPath		= indigo.server.getInstallFolderPath()+"/"
+		self.indigoPath					= indigo.server.getInstallFolderPath()+"/"
 		self.indigoRootPath 			= indigo.server.getInstallFolderPath().split(u"Indigo")[0]
 		self.pathToPlugin 				= self.completePath(os.getcwd())
 
@@ -659,10 +661,9 @@ class Plugin(indigo.PluginBase):
 		self.indigoVersion 				= float(major)+float(minor)/10.
 		self.indigoRelease 				= release
 
-
 		self.pluginVersion				= pluginVersion
 		self.pluginId					= pluginId
-		self.pluginName					= pluginId.split(u".")[-1]
+		self.pluginName					= pluginId.split(".")[-1]
 		self.myPID						= os.getpid()
 		self.pluginState				= u"init"
 
@@ -671,11 +672,9 @@ class Plugin(indigo.PluginBase):
 
 		self.MAChome					= os.path.expanduser(u"~")
 		self.userIndigoDir				= self.MAChome + u"/indigo/"
-		self.indigoPreferencesPluginDir = self.getInstallFolderPath+u"Preferences/Plugins/"+self.pluginId+u"/"
-		self.indigoPluginDirOld			= self.userIndigoDir + self.pluginShortName+u"/"
+		self.indigoPreferencesPluginDir = self.getInstallFolderPath+u"Preferences/Plugins/"+self.pluginId+"/"
+		self.indigoPluginDirOld			= self.userIndigoDir + self.pluginShortName+"/"
 		self.PluginLogFile				= indigo.server.getLogsFolderPath(pluginId=self.pluginId) +u"/plugin.log"
-		self.waitForMAC2vendor 			= "notInitialized"
-		self.getDeviceStateListCalls = 0
 
 		formats=	{   logging.THREADDEBUG: u"%(asctime)s %(msg)s",
 						logging.DEBUG:       u"%(asctime)s %(msg)s",
@@ -684,41 +683,60 @@ class Plugin(indigo.PluginBase):
 						logging.ERROR:       u"%(asctime)s.%(msecs)03d\t%(levelname)-12s\t%(name)s.%(funcName)-25s %(msg)s",
 						logging.CRITICAL:    u"%(asctime)s.%(msecs)03d\t%(levelname)-12s\t%(name)s.%(funcName)-25s %(msg)s" }
 
-		date_Format = { logging.THREADDEBUG: u"%Y-%m-%d %H:%M:%S",
-						logging.DEBUG:       u"%Y-%m-%d %H:%M:%S",
-						logging.INFO:        u"%Y-%m-%d %H:%M:%S",
-						logging.WARNING:     u"%Y-%m-%d %H:%M:%S",
-						logging.ERROR:       u"%Y-%m-%d %H:%M:%S",
-						logging.CRITICAL:    u"%Y-%m-%d %H:%M:%S" }
+		date_Format = { logging.THREADDEBUG: u"%Y-%m-%d %H:%M:%S",		# 5
+						logging.DEBUG:       u"%Y-%m-%d %H:%M:%S",		# 10
+						logging.INFO:        u"%Y-%m-%d %H:%M:%S",		# 20
+						logging.WARNING:     u"%Y-%m-%d %H:%M:%S",		# 30
+						logging.ERROR:       u"%Y-%m-%d %H:%M:%S",		# 40
+						logging.CRITICAL:    u"%Y-%m-%d %H:%M:%S" }		# 50
 		formatter = LevelFormatter(fmt=u"%(msg)s", datefmt=u"%Y-%m-%d %H:%M:%S", level_fmts=formats, level_date=date_Format)
 
 		self.plugin_file_handler.setFormatter(formatter)
-		self.indiLOG = logging.getLogger(u"Plugin")
+		self.indiLOG = logging.getLogger(u"Plugin")  
 		self.indiLOG.setLevel(logging.THREADDEBUG)
 
 		self.indigo_log_handler.setLevel(logging.INFO)
 
-		indigo.server.log(u"initializing	 ... v:{}".format(pluginVersion))
-		self.indiLOG.log(10,u"initializing	 ... v:{}".format(pluginVersion))
+		self.indiLOG.log(20,u"initializing  ... ")
+		self.indiLOG.log(20,u"path To files:          =================")
+		self.indiLOG.log(10,u"indigo                  {}".format(self.indigoRootPath))
+		self.indiLOG.log(10,u"installFolder           {}".format(self.indigoPath))
+		self.indiLOG.log(10,u"plugin.py               {}".format(self.pathToPlugin))
+		self.indiLOG.log(10,u"indigo                  {}".format(self.indigoRootPath))
+		self.indiLOG.log(20,u"detailed logging        {}".format(self.PluginLogFile))
+		self.indiLOG.log(20,u"testing logging levels, for info only: ")
+		self.indiLOG.log( 0,u"logger  enabled for     0 ==> TEST ONLY ")
+		self.indiLOG.log( 5,u"logger  enabled for     THREADDEBUG    ==> TEST ONLY ")
+		self.indiLOG.log(10,u"logger  enabled for     DEBUG          ==> TEST ONLY ")
+		self.indiLOG.log(20,u"logger  enabled for     INFO           ==> TEST ONLY ")
+		self.indiLOG.log(30,u"logger  enabled for     WARNING        ==> TEST ONLY ")
+		self.indiLOG.log(40,u"logger  enabled for     ERROR          ==> TEST ONLY ")
+		self.indiLOG.log(50,u"logger  enabled for     CRITICAL       ==> TEST ONLY ")
+		self.indiLOG.log(10,u"Plugin short Name       {}".format(self.pluginShortName))
+		self.indiLOG.log(10,u"my PID                  {}".format(self.myPID))	 
+		self.indiLOG.log(10,u"Achitecture             {}".format(platform.platform()))	 
+		self.indiLOG.log(10,u"OS                      {}".format(platform.mac_ver()[0]))	 
+		self.indiLOG.log(10,u"indigo V                {}".format(indigo.server.version))	 
+		self.indiLOG.log(10,u"python V                {}.{}.{}".format(sys.version_info[0], sys.version_info[1] , sys.version_info[2]))	 
 
-		indigo.server.log(  u"path To files:          =================")
-		indigo.server.log(  u"indigo                  {}".format(self.indigoRootPath))
-		indigo.server.log(  u"installFolder           {}".format(self.indigoPath))
-		indigo.server.log(  u"plugin.py               {}".format(self.pathToPlugin))
-		indigo.server.log(  u"Plugin params           {}".format(self.indigoPreferencesPluginDir))
+		self.pythonPath = ""
+		if sys.version_info[0] >2:
+			if os.path.isfile(u"/Library/Frameworks/Python.framework/Versions/Current/bin/python3"):
+				self.pythonPath				= u"/Library/Frameworks/Python.framework/Versions/Current/bin/python3"
+		else:
+			if os.path.isfile(u"/usr/local/bin/python"):
+				self.pythonPath				= u"/usr/local/bin/python"
+			elif os.path.isfile(u"/usr/bin/python2.7"):
+				self.pythonPath				= u"/usr/bin/python2.7"
+		if self.pythonPath == "":
+				self.indiLOG.log(40,u"FATAL error:  none of python versions 2.7 3.x is installed  ==>  stopping {}".format(self.pluginId))
+				self.quitNOW = "none of python versions 2.7 3.x is installed "
+				exit()
+		self.indiLOG.log(20,u"using '{}' for utily programs".format(self.pythonPath))
 
-		self.indiLOG.log( 0,u"!!!!INFO ONLY!!!!  logger  enabled for   0             !!!!INFO ONLY!!!!")
-		self.indiLOG.log( 5,u"!!!!INFO ONLY!!!!  logger  enabled for   THREADDEBUG   !!!!INFO ONLY!!!!")
-		self.indiLOG.log(10,u"!!!!INFO ONLY!!!!  logger  enabled for   DEBUG         !!!!INFO ONLY!!!!")
-		self.indiLOG.log(20,u"!!!!INFO ONLY!!!!  logger  enabled for   INFO          !!!!INFO ONLY!!!!")
-		self.indiLOG.log(30,u"!!!!INFO ONLY!!!!  logger  enabled for   WARNING       !!!!INFO ONLY!!!!")
-		self.indiLOG.log(40,u"!!!!INFO ONLY!!!!  logger  enabled for   ERROR         !!!!INFO ONLY!!!!")
-		self.indiLOG.log(50,u"!!!!INFO ONLY!!!!  logger  enabled for   CRITICAL      !!!!INFO ONLY!!!!")
-
-		indigo.server.log(  u"check                   {}  <<<<    for detailed logging".format(self.PluginLogFile))
-		indigo.server.log(  u"Plugin short Name       {}".format(self.pluginShortName))
-		indigo.server.log(  u"my PID                  {}".format(self.myPID))
-		indigo.server.log(  u"set params for indigo V {}".format(self.indigoVersion))
+###############  END common for all plugins ############
+		self.waitForMAC2vendor 			= "notInitialized"
+		self.getDeviceStateListCalls 	= 0
 
 ####-------------------------------------------------------------------------####
 	def __del__(self):
@@ -918,7 +936,7 @@ class Plugin(indigo.PluginBase):
 		self.waitForMAC2vendor = "initializing"
 		self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get(u"enableMACtoVENDORlookup",u"21"))
 		if self.enableMACtoVENDORlookup != u"0":
-			self.M2V =  M2Vclass.MAP2Vendor( pathToMACFiles=self.indigoPreferencesPluginDir+u"mac2Vendor/", refreshFromIeeAfterDays = self.enableMACtoVENDORlookup, myLogger = self.indiLOG.log )
+			self.M2V =  MAC2Vendor.MAP2Vendor( pathToMACFiles=self.indigoPreferencesPluginDir+u"mac2Vendor/", refreshFromIeeAfterDays = self.enableMACtoVENDORlookup, myLogger = self.indiLOG.log )
 			self.waitForMAC2vendor = self.M2V.makeFinalTable()
 
 ####-----------------	 ---------
@@ -944,8 +962,6 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def initFileDir(self):
-
-
 
 			if not os.path.exists(self.indigoPreferencesPluginDir):
 				os.mkdir(self.indigoPreferencesPluginDir)
@@ -1289,10 +1305,12 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def setVariables(self):
 		try:
+			self.debugNewDevStates 			= False
 			self.cameraImagesDir			= self.indigoPreferencesPluginDir+u"cameraImages/"
 			self.knownBeaconTags 			= {}
 
-			self.setLogfile(u"indigo")  #    self.pluginPrefs.get(u"logFileActive2", u"standard"))
+			self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get(u"enableMACtoVENDORlookup",u"21"))
+
 			self.loopSleepTime				= 9.0
 			self.setGroupStatusrepeat		= self.loopSleepTime *3.3
 			self.setGroupStatusNextCheck 	= time.time() + self.setGroupStatusrepeat +10
@@ -1467,7 +1485,8 @@ class Plugin(indigo.PluginBase):
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get(u"maxSocksErrorTime", u"600."))
 			except: self.maxSocksErrorTime	= 600.
 			self.compressRPItoPlugin		= self.pluginPrefs.get(u"compressRPItoPlugin", u"20000")
-			self.compressRPItoPlugin		= min(40000,int(self.compressRPItoPlugin))
+			try:	self.compressRPItoPlugin	= min(40000, int(self.compressRPItoPlugin))
+			except:	self.compressRPItoPlugin	= 20000
 			self.portOfServer				= self.pluginPrefs.get(u"portOfServer", u"8176")
 			self.userIdOfServer				= self.pluginPrefs.get(u"userIdOfServer", u"")
 			self.passwordOfServer			= self.pluginPrefs.get(u"passwordOfServer", u"")
@@ -1516,17 +1535,6 @@ class Plugin(indigo.PluginBase):
 			self.triggerList				= []
 			self.newADDRESS					= {}
 			self.trackRPImessages			= -1
-			if os.path.isfile(u"/Library/Frameworks/Python.framework/Versions/Current/bin/python3"):
-				self.pythonPath				= u"/Library/Frameworks/Python.framework/Versions/Current/bin/python3"
-			elif os.path.isfile(u"/usr/local/bin/python"):
-				self.pythonPath				= u"/usr/local/bin/python"
-			elif os.path.isfile(u"/usr/bin/python2.7"):
-				self.pythonPath				= u"/usr/bin/python2.7"
-			else:
-				self.indiLOG.log(40,u"FATAL error:  none of python versions 2.7 3.x is installed  ==>  stopping INDIGOplotD")
-				self.quitNOW = "none of python versions 2.7 3.x is installed "
-				return
-			self.indiLOG.log(30,u"using '" +self.pythonPath +"' for utily programs")
 
 			self.trackSignalStrengthIfGeaterThan = [99999.,"i"]
 			self.trackSignalChangeOfRPI			 = False
@@ -1587,7 +1595,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(50,u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			self.indiLOG.log(50,u"Error in startup of plugin, waiting for 2000 secs then restarting plugin")
 			self.indiLOG.log(50,u"--------------------------------------------------------------------------------------------------------------")
-			self.sleep(2000)
+			for ii in range(2000):
+				self.sleep(1)
 			exit(1)
 
 		self.lastSaveConfig = 0
@@ -8320,6 +8329,14 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
+	def reloadDevStatesCALLBACKmenu(self, valuesDict=None, typeId=u"", devId=0):
+		valuesDict[u"MSG"]	 = u"updating dev states initiated"
+		self.indiLOG.log(30,u"updating dev states initiated")
+		self.checkIfNewStates(force=True)
+		return valuesDict
+
+
+####-------------------------------------------------------------------------####
 	def getBeaconParametersCALLBACKaction(self, action1=None, typeId=u"", devId=0):
 		return self.getBeaconParametersCALLBACKmenu(action1.props)
 
@@ -10134,8 +10151,6 @@ class Plugin(indigo.PluginBase):
 			self.cycleVariables = valuesDict[u"cycleVariables"]
 
 
-			self.setLogfile(u"indigo")  #valuesDict[u"logFileActive2"])
-
 			self.enableBroadCastEvents					= valuesDict[u"enableBroadCastEvents"]
 
 			try:
@@ -10534,7 +10549,7 @@ class Plugin(indigo.PluginBase):
 			if pri !=u"": pick = pri
 			else:		 pick = u'cumtime'
 			outFile		= self.indigoPreferencesPluginDir+u"timeStats"
-			indigo.server.log(u" print time track stats to: {}.dump / txt  with option: {}".format(outFile, pick) )
+			self.indiLOG.log(20,u" print time track stats to: {}.dump / txt  with option: {}".format(outFile, pick) )
 			self.pr.dump_stats(outFile+u".dump")
 			sys.stdout 	= open(outFile+u".txt", "w")
 			stats 		= pstats.Stats(outFile+u".dump")
@@ -10566,7 +10581,7 @@ class Plugin(indigo.PluginBase):
 			self.cProfileVariableLoaded = 0
 			self.do_cProfile  			= u"x"
 			self.timeTrVarName 			= u"enableTimeTracking_"+self.pluginShortName
-			indigo.server.log(u"testing if variable {} is == on/off/print-option to enable/end/print time tracking of all functions and methods (option:'',calls,cumtime,pcalls,time)".format(self.timeTrVarName))
+			self.indiLOG.log(10,u"testing if variable {} is == on/off/print-option to enable/end/print time tracking of all functions and methods (option:'',calls,cumtime,pcalls,time)".format(self.timeTrVarName))
 
 		self.lastTimegetcProfileVariable = time.time()
 
@@ -10574,7 +10589,7 @@ class Plugin(indigo.PluginBase):
 		if self.do_cProfile != cmd:
 			if cmd == u"on":
 				if  self.cProfileVariableLoaded ==0:
-					indigo.server.log(u"======>>>>   loading cProfile & pstats libs for time tracking;  starting w cProfile ")
+					self.indiLOG.log(20,u"======>>>>   loading cProfile & pstats libs for time tracking;  starting w cProfile ")
 					self.pr = cProfile.Profile()
 					self.pr.enable()
 					self.cProfileVariableLoaded = 2
@@ -10613,7 +10628,6 @@ class Plugin(indigo.PluginBase):
 			serverPlugin.restart(waitUntilDone=False)
 
 
-		self.indiLOG.log(10,u"killing 2")
 		subprocess.call(u"/bin/kill -9 "+ u"{}".format(self.myPID), shell=True )
 
 		return
@@ -10625,12 +10639,7 @@ class Plugin(indigo.PluginBase):
 
 		self.initConcurrentThread()
 
-
-		if self.logFileActive != u"standard":
-			indigo.server.log(u" ..  initialized")
-			self.indiLOG.log(5,u" ..  initialized, starting loop" )
-		else:
-			indigo.server.log(u" ..  initialized, starting loop ")
+		self.indiLOG.log(20,u" ..  initialized, starting loop" )
 		theHourToCheckversion = 12
 
 		########   ------- here the loop starts	   --------------
@@ -10864,15 +10873,24 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def checkIfNewStates(self):
+	def checkIfNewStates(self, force=False):
 		try:
-			if self.rePopulateStates:
-				self.indiLOG.log(20,u" updating dev states ")
+			if force: 
+				oldDebug = self.pluginPrefs.get("debugSpecial")
+				self.pluginPrefs["debugSpecial"] = True
+				self.getDebugLevels()
+			if self.rePopulateStates or force:
+				self.debugNewDevStates = True
+				self.indiLOG.log(30,u"updating dev states, try to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for mor info ")
 				for dev in indigo.devices.iter(self.pluginId):
-					dev.stateListOrDisplayStateIdChanged()	# update  states 
+					dev.stateListOrDisplayStateIdChanged()	# update  states, add keys if missing
 		except Exception as e:
 			self.exceptionHandler(40,e)
 		self.rePopulateStates = False
+		if force: 
+				self.pluginPrefs["debugSpecial"]  = oldDebug
+				self.getDebugLevels()
+		self.debugNewDevStates = False
 		return 
 
 
@@ -10882,7 +10900,7 @@ class Plugin(indigo.PluginBase):
 			if len(self.checkCarsNeed) > 0:
 				delID ={}
 				for carId in self.checkCarsNeed:
-					if self.checkCarsNeed[carId] >0 and time.time()> self.checkCarsNeed[carId]:
+					if self.checkCarsNeed[carId] > 0 and time.time() > self.checkCarsNeed[carId]:
 						self.updateAllCARbeacons(carId)
 						if self.checkCarsNeed[carId] == 0:
 							delID[carId] = 1
@@ -12676,9 +12694,9 @@ class Plugin(indigo.PluginBase):
 					old = dev.states[deviceStateName]
 					if old != x:
 						if x != u"none" and x != u"" and x != u"no_problem_detected":
-							self.indiLOG.log(40,u"RPi# {} has power state has problem   new:>>{}<<, previous:{}".format(piU, x, old) )
+							self.indiLOG.log(30,u"RPi# {} has power state has problem   new:>>{}<<, previous:{}".format(piU, x, old) )
 						if x == u"none" or x == u"no_problem_detected":
-							self.indiLOG.log(40,u"RPi# {} has power state has recovered  new:>>{}<<, previous:{}".format(piU, x, old) )
+							self.indiLOG.log(30,u"RPi# {} has power state has recovered  new:>>{}<<, previous:{}".format(piU, x, old) )
 
 				self.setStatusCol( dev, deviceStateName, x, UI, u"", u"",{})
 				return x
@@ -13920,10 +13938,10 @@ class Plugin(indigo.PluginBase):
 ###-------------------------------------------------------------------------####
 	def getDeviceStateList(self, dev):
 		try:
-			if False and self.getDeviceStateListCalls < 500 and self.decideMyLog(u"Special"): self.indiLOG.log(20,u"populating device state lists, #:{} calls, dev:{}".format(self.getDeviceStateListCalls, dev.name))
+			if self.getDeviceStateListCalls < 400 and self.debugNewDevStates: self.indiLOG.log(10,u"populating device state lists, #:{} calls, dev:{}".format(self.getDeviceStateListCalls, dev.name))
 			self.getDeviceStateListCalls  += 1
 			#if called for one make it call for device 
-			self.rePopulateStates = True
+			#self.rePopulateStates = True
 
 			statesCategoriesForDevtype = self.setstatesCategoriesForDevtype(dev)
 			#if self.decideMyLog(u"Special"): self.indiLOG.log(20,u"statesCategoriesForDevtype:{}".format(statesCategoriesForDevtype ))
@@ -13984,7 +14002,7 @@ class Plugin(indigo.PluginBase):
 							continue
 
 						newStateList.append(stateToBeadded)
-			if False and self.decideMyLog(u"Special"):
+			if self.debugNewDevStates:
 				self.printStatelist(dev, newStateList)
 			return newStateList
 
@@ -18651,15 +18669,15 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def printConfig(self):
 		try:
-			self.myLog( theText = u" ========== Parameters START ================",														mType= u"pi configuration")
+			self.myLog( theText = u" ========== Parameters START ================",															mType= u"pi configuration")
 			self.myLog( theText = u"data path used               {}" .format(self.indigoPreferencesPluginDir),								mType= u"pi configuration")
-			self.myLog( theText = u"debugLevel Indigo            {}-" .format(self.debugLevel),									    	mType= u"pi configuration")
+			self.myLog( theText = u"debugLevel Indigo            {}-" .format(self.debugLevel),												mType= u"pi configuration")
 			self.myLog( theText = u"debug which Pi#              {} " .format(self.debugRPI),												mType= u"pi configuration")
-			self.myLog( theText = u"maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000)),	mType= u"pi configuration")
-			self.myLog( theText = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),								mType= u"pi configuration")
+			self.myLog( theText = u"maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get(u"maxSizeOfLogfileOnRPI", 10000000)),		mType= u"pi configuration")
+			self.myLog( theText = u"automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),									mType= u"pi configuration")
 			self.myLog( theText = u"myIp Number                  {}" .format(self.myIpNumber),												mType= u"pi configuration")
 			self.myLog( theText = u"check RPI ip if registered   {}; turn off if rpi is in separate subnet" .format(self.checkRPIipForReject), mType= u"pi configuration")
-			self.myLog( theText = u"blockNonLocalIp              {}" .format(self.blockNonLocalIp),										mType= u"pi configuration")
+			self.myLog( theText = u"blockNonLocalIp              {}" .format(self.blockNonLocalIp),											mType= u"pi configuration")
 			self.myLog( theText = u".. ip#s accepted             {}.{}.x.x" .format(self.myIpNumberRange[0],self.myIpNumberRange[1]),		mType= u"pi configuration")
 			self.myLog( theText = u"port# of indigoWebServer     {}" .format(self.portOfServer),											mType= u"pi configuration")
 			self.myLog( theText = u"indigo UserID                ....{}" .format(self.userIdOfServer[4:]),									mType= u"pi configuration")
@@ -18667,17 +18685,17 @@ class Plugin(indigo.PluginBase):
 			self.myLog( theText = u"WiFi key_mgmt                {}" .format(self.key_mgmt),												mType= u"pi configuration")
 			self.myLog( theText = u"WiFi Password                ....{}" .format(self.wifiPassword[4:]),									mType= u"pi configuration")
 			self.myLog( theText = u"WiFi SSID                    {}" .format(self.wifiSSID),												mType= u"pi configuration")
-			self.myLog( theText = u"wifi OFF if ETH0             {}" .format(self.wifiEth),												mType= u"pi configuration")
+			self.myLog( theText = u"wifi OFF if ETH0             {}" .format(self.wifiEth),													mType= u"pi configuration")
 			self.myLog( theText = u"Seconds UP to DOWN           {}" .format(self.secToDown),												mType= u"pi configuration")
 			self.myLog( theText = u"enable FINGSCAN interface    {}" .format(self.enableFING),												mType= u"pi configuration")
 			self.myLog( theText = u"beacon indigo folder Name    {}" .format(self.iBeaconDevicesFolderName),								mType= u"pi configuration")
 			self.myLog( theText = u"accept newiBeacons           {}" .format(self.acceptNewiBeacons),										mType= u"pi configuration")
 			self.myLog( theText = u"recycle indigo varibles      {}" .format(self.cycleVariables),											mType= u"pi configuration")
 			self.myLog( theText = u"distance Units               {}; 1=m, 0.01=cm , 0.0254=in, 0.3=f, 0.9=y".format(self.distanceUnits),	mType= u"pi configuration")
-			self.myLog( theText = u"", 																									mType= u"pi configuration")
-			self.myLog( theText = u" ========== EXPERT parameters for each PI:----------", 												mType= u"pi configuration")
+			self.myLog( theText = u"", 																										mType= u"pi configuration")
+			self.myLog( theText = u" ========== EXPERT parameters for each PI:----------", 													mType= u"pi configuration")
 			self.myLog( theText = u"port# on rPi 4 GPIO commands {}" .format(self.rPiCommandPORT),											mType= u"pi configuration")
-			self.myLog( theText = u" ",																									mType= u"pi configuration")
+			self.myLog( theText = u" ",																										mType= u"pi configuration")
 
 			self.myLog( theText = u"  # R# 0/1 IP#             beacon-MAC        indigoName                 Pos X,Y,Z    indigoID UserID    Password       If-rPI-Hangs   SensorAttached",mType= u"pi configuration")
 			for piU  in self.RPI:
@@ -18795,7 +18813,7 @@ configuration         - ==========  defined beacons ==============
 		############## list groups with members
 		try:
 			out = u"printGroups============ "
-			out+= u"\ngroupListUsedNames:{:30s}".format(self.groupListUsedNames)
+			out+= u"\ngroupListUsedNames:{}".format(self.groupListUsedNames)
 			for gr in self.groupStatusList:
 				out+= u"\n{} : {}".format(gr,self.groupStatusList[gr])
 
@@ -19342,11 +19360,16 @@ configuration         - ==========  defined beacons ==============
 			self.dataStats[u"updates"][u"nstates"][min(len(chList),10)]+=1
 
 			if self.indigoVersion >6:
-				dev.updateStatesOnServer(chList)
-
+				try:
+					dev.updateStatesOnServer(chList)
+				except:
+					self.rePopulateStates = True # try to re-do state list
 			else:
 				for uu in chList:
-					dev.updateStateOnServer(uu[u"key"],uu[u"value"])
+					try:
+						dev.updateStateOnServer(uu[u"key"],uu[u"value"])
+					except:
+						self.rePopulateStates = True # try to re-do state list
 
 
 		except Exception as e:
@@ -19661,37 +19684,6 @@ configuration         - ==========  defined beacons ==============
 ########################################
 ########################################
 
-####----------------- ---------
-	def setLogfile(self, lgFile):
-		self.logFileActive =lgFile
-		if   self.logFileActive ==u"standard":	self.logFile = u""
-		elif self.logFileActive ==u"indigo":	self.logFile = self.indigoPath.split(u"Plugins/")[0]+u"Logs/"+self.pluginId+u"/plugin.log"
-		else:									self.logFile = self.indigoPreferencesPluginDir +u"plugin.log"
-		self.myLog( theText=u"myLogSet setting parameters -- logFileActive= {}; logFile= {};  debug plugin:{}   RPI#:{}".format(self.logFileActive, self.logFile, self.debugLevel, self.debugRPI) , destination=u"standard")
-
-
-
-####-----------------  check logfile sizes ---------
-	def checkLogFiles(self):
-		return
-		try:
-			self.lastCheckLogfile = time.time()
-			if self.logFileActive == u"standard": return
-
-			fn = self.logFile.split(u".log")[0]
-			if os.path.isfile(fn + ".log"):
-				fs = os.path.getsize(fn + ".log")
-				if fs > self.maxLogFileSize:
-					if os.path.isfile(fn + "-2.log"):
-						os.remove(fn + "-2.log")
-					if os.path.isfile(fn + "-1.log"):
-						os.rename(fn + ".log", fn + "-2.log")
-						os.remove(fn + "-1.log")
-					os.rename(fn + ".log", fn + "-1.log")
-					indigo.server.log(u" reset logfile due to size > {:.1f} [MB]".format(self.maxLogFileSize/1024./1024.) )
-		except	Exception as e:
-				self.exceptionHandler(40,e)
-
 
 ####-----------------	 ---------
 	def decideMyLog(self, msgLevel):
@@ -19712,60 +19704,27 @@ configuration         - ==========  defined beacons ==============
 		try:	theText = theText.decode('utf-8')
 		except: pass
 		try:
-			if	self.logFileActive == u"standard" or destination.find(u"standard") >-1:
-				if errorType == u"smallErr":
-					self.indiLOG.error(u"------------------------------------------------------------------------------")
-					self.indiLOG.error(theText)
-					self.indiLOG.error(u"------------------------------------------------------------------------------")
 
-				elif errorType == u"bigErr":
-					self.indiLOG.error(u"==================================================================================")
-					self.indiLOG.error(theText)
-					self.indiLOG.error(u"==================================================================================")
-
-				elif mType == u"":
-					indigo.server.log(theText)
-				else:
-					indigo.server.log(theText, type=mType)
-
-
-			if	self.logFileActive !="standard":
-
-				ts = u""
-				if False:
-					try:
-						if len(self.logFile) < 3: return # not properly defined
-						f =  open(self.logFile,"a")
-					except Exception as e:
-						indigo.server.log(u"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
-						try:
-							f.close()
-						except:
-							pass
-						return
-
-				if errorType == u"smallErr":
-					if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
-					self.indiLOG.log(level,u"----------------------------------------------------------------------------------")
-					self.indiLOG.log(level,u"{} {:12}-{}\n".format(ts, " ", theText))
-					self.indiLOG.log(level,u"----------------------------------------------------------------------------------")
-					return
-
-				if errorType == u"bigErr":
-					if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
-					self.indiLOG.log(level, u"==================================================================================")
-					self.indiLOG.log(level, u"{} {:12}-{}\n".format(ts, " ", theText))
-					self.indiLOG.log(level, u"==================================================================================")
-					return
+			ts = u""
+			if errorType == u"smallErr":
 				if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
-				if mType == u"":
-					self.indiLOG.log(level,u"{} {:25} - {}".format(ts, " ", theText) )
-					#indigo.server.log((ts+u" " +u" ".ljust(25)  +u"-" + text + u"\n"))
-				else:
-					self.indiLOG.log(level,u"{} {:25} - {}".format(ts, mType, theText) )
-					#indigo.server.log((ts+u" " +mType.ljust(25) +u"-" + text + u"\n"))
+				self.indiLOG.log(level,u"----------------------------------------------------------------------------------")
+				self.indiLOG.log(level,u"{} {:12}-{}\n".format(ts, " ", theText))
+				self.indiLOG.log(level,u"----------------------------------------------------------------------------------")
 				return
 
+			if errorType == u"bigErr":
+				if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
+				self.indiLOG.log(level, u"==================================================================================")
+				self.indiLOG.log(level, u"{} {:12}-{}\n".format(ts, " ", theText))
+				self.indiLOG.log(level, u"==================================================================================")
+				return
+			if showDate: ts = datetime.datetime.now().strftime(u"%H:%M:%S")
+			if mType == u"":
+				self.indiLOG.log(level,u"{} {:25} - {}".format(ts, " ", theText) )
+			else:
+				self.indiLOG.log(level,u"{} {:25} - {}".format(ts, mType, theText) )
+			return
 
 		except	Exception as e:
 			self.exceptionHandler(40,e)
@@ -20003,9 +19962,8 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 						isCompressed =  headerSplit[2].strip().find("+comp") > -1
 						#indigo.activePlugin.indiLOG.log(20,u"ThreadedTCPRequestHandler header :{}, nBytes:{}, name:{}, isCompressed:{}".format(header, nBytes, piName, isCompressed) )
 					except Exception as e:
-						indigo.activePlugin.indiLOG.log(40,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
+						indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
 						break
-
 
 					if len(headerSplit) == 3 and nBytes == len(actualData):
 						break
@@ -20014,7 +19972,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					if time.time() - tStart > maxWaitTime: break
 					if	len0 > nMaxSeq*4096: # check for overflow
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,u"unknown",u"errBuffOvfl" )
-						indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler time overflow ={}".format(time.time() - tStart ) )
+						indigo.activePlugin.indiLOG.log(30,u"ThreadedTCPRequestHandler buffer overflow ={}".format(time.time() - tStart ) )
 						self.request.close()
 						return
 
@@ -20028,7 +19986,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if e.find(u"timed out") == -1:
 					indigo.activePlugin.handlesockReporting( self.client_address[0],len0, piName,e[0:min(10,len(e))] )
 				else:
-					indigo.activePlugin.indiLOG.log(30,u" .. received data  tries:{}, len:{}, dt:{:.1f}, header:{}".format(seqN, nBytes, time.time()- tStart,header) )
+					indigo.activePlugin.indiLOG.log(30,u".. received data  tries:{}, len:{}, dt:{:.1f}, header:{}".format(seqN, nBytes, time.time() - tStart, header) )
 					indigo.activePlugin.handlesockReporting( self.client_address[0], len0, piName, u"timeout" )
 				return
 

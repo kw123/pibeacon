@@ -16,6 +16,7 @@ import  time,datetime
 import  json
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 
 def killOldPgm(myPID,pgmToKill):
         global debug
@@ -30,8 +31,8 @@ def killOldPgm(myPID,pgmToKill):
                 if pid == int(myPID): continue
                 U.logger.log(30, "killing "+pgmToKill)
                 subprocess.call("kill -9 "+str(pid), shell=True)
-        except Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        except Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def readParams():
         global debug
@@ -57,8 +58,8 @@ try:
     cmdOut= cmd["player"]+ " "+homeDir+"soundfiles/"++ cmd["file"] +" &"
     U.logger.log(10, cmdOut)
     subprocess.call(cmdOut, shell=True)
-except  Exception, e:
-    U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+except  Exception as e:
+    U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
         
 sys.exit(0)        

@@ -10,6 +10,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "l3g4200"
 
 
@@ -40,8 +41,8 @@ class THESENSORCLASS:
 
 			self.L3G4200SetCalibration()
 
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 
 
 	def L3G4200SetCalibration(self):
@@ -97,7 +98,7 @@ class THESENSORCLASS:
 				zGyro -= 65536
 
 			return xGyro, yGyro, zGyro
-		except	Exception, e:
+		except	Exception as e:
 			pass
 		return -9999999999990,0,0
 
@@ -109,7 +110,7 @@ class THESENSORCLASS:
 				temp -= 128
 			temp = 128 - temp  - 90	 # it goes down with rising temp so 128 - temp	- fudge factor 
 			return float(int(temp))
-		except	Exception, e:
+		except	Exception as e:
 			pass
 		return -99	  
 		
@@ -160,8 +161,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -180,9 +181,9 @@ def getValues(devId):
 			U.logger.log(10, unicode(data))
 			badSensor = 0
 			return data
-		except	Exception, e:
+		except	Exception as e:
 			if badSensor > 2 and badSensor < 5: 
-				U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e) +"  "+ unicode(badSensor))
+				U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e) +"  "+ unicode(badSensor))
 			badSensor+=1
 	if badSensor >3: return "badSensor"
 	return{"GYR":{"x":"", "y":"", "z":""},"temp":"" }	
@@ -256,8 +257,8 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

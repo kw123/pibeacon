@@ -18,6 +18,7 @@ import  smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "rainSensorRG11"
 GPIO.setmode(GPIO.BCM)
 
@@ -132,8 +133,8 @@ def readParams():
 				bucketSize[kk] = bucketSize0[kk]*rainScaleFactor
 
 			
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				
 
 def setupSensors():
@@ -449,8 +450,8 @@ def checkIfRelayON():
 					setModeTo("medSensitive", calledFrom="checkIfRelayON", powerCycle=False, force = False)
 					sendShortStatus(rainMsg["medSensitive"])
 					#eventStartedList = time.time()
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 			
@@ -471,8 +472,8 @@ def checkIfMSGtoBeSend(force =False):
 			checkIfDownGradedNeeded( force = True )
 		U.writeRainStatus(status)
 		lastCalcCheck = time.time()
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 def sendShortStatus(level):
@@ -733,8 +734,8 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

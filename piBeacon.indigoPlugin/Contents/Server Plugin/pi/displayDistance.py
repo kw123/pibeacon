@@ -14,6 +14,7 @@ import math
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 			
 #################################
 def displayDistance(dist,sensor,sensors, output,distanceUnits):
@@ -251,14 +252,14 @@ def displayDistance(dist,sensor,sensors, output,distanceUnits):
 				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor,"retry to write to display.inp"
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
-			except	Exception, e:
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+			except	Exception as e:
+				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 				if unicode(e).find("No space left on device") >-1:
 					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return
 	
@@ -291,6 +292,6 @@ def formatNumber(ddd, data,distanceUnits):
 				   dist = dist*0.01
 				   dist0 = ("%8.2f"%(dist)).replace(" ","")
  
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return dist1, dist, dist0, ud

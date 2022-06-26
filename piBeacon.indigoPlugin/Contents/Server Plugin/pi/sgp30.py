@@ -21,6 +21,7 @@ import threading
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "sgp30"
 
 
@@ -259,8 +260,8 @@ def readParams():
 			pass
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print sensors[sensor]
 		
 
@@ -293,8 +294,8 @@ def startSensor(devId, lastPowerUp=0, init=0):
 		#testSensor = sensorClass[devId].testSensor()
 		#U.logger.log(30, "SGP30 sensortest   #{}".format(hex(testSensor) ) )
 		#time.sleep(10)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(20, u"****  startup sensor did not work ****")
 		sensorClass[devId]  = ""
 		threadDict[devId]["state"] = "stop"
@@ -341,8 +342,8 @@ def startSensor2(devId, lastPowerUp=0, init=0):
 			threadDict[devId]["pause"] = False
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	time.sleep(.1)
 	return 
 
@@ -363,8 +364,8 @@ def warmUp(devId):
 		if ii < 29: U.logger.log(20,     "try:{:2d} warmup finished: CO2= {}, VOC= {}".format(ii,co2, voc) )
 		else: 		U.logger.log(20,     "****    warmup NOT finished: CO2= {}, VOC= {}".format(co2, voc) )
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(20, "****    warmup NOT finished")
 		sensorClass[devId]	 = ""
 
@@ -379,8 +380,8 @@ def getBaseLine(devId):
 		U.logger.log(20, "**** baseline from sensor: CO2eq ={}, TVOC = {}".format(co2Base, vocBase) )
 		if vocBase > 0 and co2Base > 0:
 			U.writeJson(G.homeDir+G.program+".baseline", {"co2Base":co2Base, "vocBase":vocBase} )
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(20, "****    could not read baseline from device")
 	return 
 
@@ -395,7 +396,7 @@ def readBaseLine(devId):
 					lastUpdateTime = os.stat(G.homeDir+G.program+".baseline").st_mtime
 				else:
 					lastUpdateTime  = time.time() -(24*60*60)*99
-		except	Exception, e:
+		except	Exception as e:
 				lastUpdateTime = time.time() -(24*60*60)*99
 		if time.time() - lastUpdateTime > (24*60*60)*2: 
 			U.logger.log(20, "**** baseline file too old to be used: {:.1f} days or older".format( (time.time() - lastUpdateTime)/(24*60*60) ) )
@@ -409,8 +410,8 @@ def readBaseLine(devId):
 			else:
 				U.logger.log(20, "**** baseline read from file:  NOT mature yet (co2Base  < 10)" )
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 #################################
@@ -426,8 +427,8 @@ def setBaseLine(devId):
 	try:	
 		U.logger.log(20, "setting baseline to : CO2eq ={}, TVOC = {}".format(co2Base, vocBase) )
 		sensorClass[devId].set_baseline(co2Base, vocBase)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -496,8 +497,8 @@ def getValues(devId):
 								co2eq, tvoc = sensorClass[devId].get_air_quality()
 								#U.logger.log(20,"co2eq:{}, tvoc:{},  delta time: {:.2f}".format(co2eq, tvoc,time.time()-lastRead ))
 								lastRead = time.time()
-							except Exception, e:
-								U.logger.log(20, u"in Line {} has error={}, will try again".format(sys.exc_traceback.tb_lineno, e))
+							except Exception as e:
+								U.logger.log(20, u"in Line {} has error={}, will try again".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 								time.sleep(1)
 								continue
 							if co2eq > 0:
@@ -516,8 +517,8 @@ def getValues(devId):
 							lastVOC =  VOC/n
 							values	 = {"CO2": int(CO2/n), "VOC":int(VOC/n)}
 							badSensor = 0
-					except	Exception, e:
-						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						badSensor+=1
 					if badSensor >3: values = "badSensor"
 
@@ -564,8 +565,8 @@ def getValues(devId):
 				quick = False
 			loopCount +=1
 
-		except Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			badSensor +=1
 	sensorClass[devId] = ""
 	return 
@@ -652,8 +653,8 @@ while True:
 				readParams()
 				lastRead = time.time()
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(2)

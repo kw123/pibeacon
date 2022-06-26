@@ -13,6 +13,7 @@ import RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 
 G.program  = "installLibs"
 
@@ -249,7 +250,7 @@ def setupLibs(upgradeOpSys):
 				cmd="cd "+G.homeDir0+"Adafruit_Python_GPIO; /usr/bin/python setup.py install"
 				ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 				U.logger.log(30, "Adafruit_Python_GPIO return \n"+ ret[0]+"\n"+ret[1])
-			except	Exception, e:
+			except	Exception as e:
 				U.logger.log(30, "Adafruit_Python_GPIO failed")
 
 

@@ -17,6 +17,7 @@ import smbus
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "myprogram"
 
 # ===========================================================================
@@ -112,8 +113,8 @@ def getSHT21(i2c=0):
             t =("%5.1f"%float(sensorSHT21[str(i2cAdd)].read_temperature())).strip()
             h =("%3d"%sensorSHT21[str(i2cAdd)].read_humidity()).strip()
             return t,h
-        except  Exception, e:
-                U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+                U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
                 U.logger.log(30, u"return  value: t="+ unicode(t)+";  h="+ unicode(h)  )
                 U.logger.log(30, u"i2c address used: "+ unicode(i2cAdd) )
         return "",""    
@@ -141,7 +142,7 @@ try:
     params = sys.argv[1]
     params = json.loads(params)
 except  Exception, e :
-    U.logger.log(30,u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+    U.logger.log(30,u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     params ={"devId":"","freeParameter":""}
 deviceID      = params["devId"]
 freeParameter = params["freeParameter"]

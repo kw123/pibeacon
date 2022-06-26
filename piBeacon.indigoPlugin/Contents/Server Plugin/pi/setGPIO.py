@@ -18,6 +18,7 @@ allowedCommands = ["up", "down", "pulseUp", "pulseDown", "continuousUpDown", "an
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "setGPIO"
 
 devType = "OUTPUTgpio"
@@ -81,8 +82,8 @@ try:
 	else:						nPulses = 0
 	if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 	else:						bits = 0
-except	Exception, e:
-	U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+except	Exception as e:
+	U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	exit(0)
 
 inverseGPIO = False
@@ -186,7 +187,7 @@ try:
 			
 
 
-except	Exception, e:
-	U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+except	Exception as e:
+	U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 exit(0)

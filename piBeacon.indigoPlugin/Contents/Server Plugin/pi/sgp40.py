@@ -9,6 +9,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "sgp40"
 
 
@@ -741,8 +742,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 
@@ -761,8 +762,8 @@ def startSensor(devId):
 			time.sleep(1)
 			SENSOR[devId]  = DFRobot_SGP40(bus = 1,relative_humidity = 50,temperature_c = 25)
 			SENSOR[devId].begin(10)
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			SENSOR[devId] = ""
 			return
 
@@ -788,8 +789,8 @@ def getValues(devId):
 				"VOC": VOC
 				}
 		return data
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -919,8 +920,8 @@ while True:
 		time.sleep( max(5, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 		lastMeasurement = time.time()
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

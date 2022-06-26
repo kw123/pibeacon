@@ -276,19 +276,21 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
-	<!--
-	<MenuItem id="restartPlugin">
-		<Name>Restart the plugin</Name>
+	<MenuItem id="reloadDeviceStates">
+		<Name>Re-load all dev states, add missing keys</Name>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
-             <Label>Restart the plugin, soft restart internally </Label>
+
+			<Field id="label1" type="label">
+				<Label>redefine dev states, use if error missing states not defined, check pibeacon.log file for detailed info</Label>
+			</Field>
+
              <Field  id="exec" type="button"	>
-				<Label>click to</Label><Title>RESTART</Title> <CallbackMethod>restartPluginCALLBACKmenu</CallbackMethod>
-             </Field>
+				<Label>click to</Label><Title>RELOAD</Title> <CallbackMethod>reloadDevStatesCALLBACKmenu</CallbackMethod>
+			</Field>
 
 		</ConfigUI>
 	</MenuItem>
--->
 	<MenuItem id="d10">
 		<Name>-------------manage iBeacons--------------------</Name>
 	</MenuItem>

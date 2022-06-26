@@ -17,6 +17,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "INPUTpulse"
 GPIO.setmode(GPIO.BCM)
 
@@ -289,8 +290,8 @@ def readParams():
 		U.logger.log(10,"GPIOdict: {}".format(GPIOdict) )
 		#print coincidence
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				
 
  
@@ -569,8 +570,8 @@ def execMain():
 
 			loopCount+=1
 			time.sleep(shortWait)
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			time.sleep(5.)
 
 execMain()

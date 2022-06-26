@@ -14,6 +14,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "mpu9255"
 
 MPU9255_DEFAULT_ADDRESS			=0x68
@@ -346,7 +347,7 @@ class MPU9255:
 		self.busNumber			 = busNumber
 		try:
 			self.bus			= smbus.SMBus(self.busNumber)
-		except Exception, e:
+		except Exception as e:
 			U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
 			return 
 			
@@ -415,8 +416,8 @@ def startSENSOR(devId, i2cAddress):
 		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= " +unicode(i2cAddress)+"  devId=" +unicode(devId))
 		theSENSORdict[devId] = MPU9255(i2cAddress=i2cAddress)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -472,8 +473,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -492,8 +493,8 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -576,8 +577,8 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

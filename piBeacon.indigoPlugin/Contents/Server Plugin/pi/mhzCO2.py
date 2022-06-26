@@ -19,6 +19,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "mhzCO2"
 #simple bitfield object
 
@@ -71,8 +72,8 @@ class mhz16_class_i2c:
 			self.send(self.cmd_calibrateZero)
 			time.sleep(0.1)
 			return
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		self.co2 = -1
  
 	def measure(self):
@@ -81,8 +82,8 @@ class mhz16_class_i2c:
 			self.send(self.cmd_measure)
 			self.parse(self.receive())
 			return
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		self.co2 = -1
  
 	def parse(self, response):
@@ -129,7 +130,7 @@ class mhz16_class_i2c:
 			while n > 0:
 				try: 
 					rx_level = self.read_register(self.RXLVL) # are there enough bytes available to read , should be 9.
-				except Exception, e:
+				except Exception as e:
 					time.sleep(0.004)
 					errcountMAX -= 1
 					if errcountMAX == 0: 
@@ -147,8 +148,8 @@ class mhz16_class_i2c:
 					break
 				
 			return buf
-		except	Exception, e:
-			U.logger.log(30, u"receive in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"receive in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return []
 
 class mhz_class_serial:
@@ -194,8 +195,8 @@ class mhz_class_serial:
 			self.send(self.cmd_measure)
 			self.parse(self.receive())
 			return
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		self.co2 = -1
 
 #################################		 
@@ -206,8 +207,8 @@ class mhz_class_serial:
 				#print "setting range:"+ r+ "  "+unicode(self.amplification[str(r)])
 				self.send(self.amplification[str(r)])
 				return
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################		 
 	def calibrate(self):
@@ -215,8 +216,8 @@ class mhz_class_serial:
 			self.send(self.cmd_calibrateZero)
 			self.parse(self.receive())
 			return
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		self.co2 = -1
 
 
@@ -243,8 +244,8 @@ class mhz_class_serial:
 		self.raw = response
 		try: 
 			ll = len(response)
-		except	Exception, e:
-			print u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+		except	Exception as e:
+			print u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 			return 
 		if ll != 9: return
 		for i in range (0, 9):
@@ -396,8 +397,8 @@ def readParams():
 			pass
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print sensors[sensor]
 		
 
@@ -434,8 +435,8 @@ def startSensor(devId,i2cAddress):
 			time.sleep(1)
 			mhz16sensor[devId].start()
 						
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		mhz16sensor[devId]	 =""
 	time.sleep(.1)
 
@@ -451,8 +452,8 @@ def restartSensor():
 		time.sleep(7)
 		GPIO.output(calibrationPin, True)
 		time.sleep(0.1)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	time.sleep(.1)
 
 
@@ -482,9 +483,9 @@ def calibrateSensor(devId):
 
 		 CO2offset[devId] = CO2normal[devId] - co2 
 		 #print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
-	except	Exception, e:
+	except	Exception as e:
 		print "ret =", ret
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	time.sleep(.1)
 
 
@@ -539,8 +540,8 @@ def getValues(devId,nMeasurements=5):
 			   ,"raw":			 ( round(raw,1)			   ) }
 		U.logger.log(10, unicode(ret)) 
 		badSensor = 0
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		mhz16sensor[devId].start()
@@ -733,8 +734,8 @@ while True:
 			time.sleep(5)
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

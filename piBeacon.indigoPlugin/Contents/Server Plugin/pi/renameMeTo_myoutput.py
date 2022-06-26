@@ -15,6 +15,7 @@ import os
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "myoutput"
 ## ===========================================================================
 # utils do not chnage
@@ -38,7 +39,7 @@ try:
         U.killOldPgm(myPID,"myoutput.py")# kill  old instances of myself if they are still running
 
         U.logger.log(30, "myoutput  received text :"+unicode(sys.argv))
-        print "myoutput  received text :"+unicode(sys.argv)
+        print ("myoutput  received text :"+unicode(sys.argv))
 
         # rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
         if len(sys.argv) >1 :
@@ -58,9 +59,9 @@ try:
                 GPIO.output(21, True)
 
 
-except  Exception, e:
-        U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-        print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        print (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 exit(0)
 

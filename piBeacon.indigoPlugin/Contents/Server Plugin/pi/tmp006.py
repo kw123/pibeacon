@@ -11,6 +11,7 @@ import math
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "tmp006"
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
@@ -146,8 +147,8 @@ class TMP006:
 		try:
 			Tdie = self.readRawDieTemperature()
 			return Tdie * 0.03125
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return ""
 		
 	def getdata(self):
@@ -182,8 +183,8 @@ class TMP006:
 			fVobj = (Vobj - Vos) + TMP006_C2*math.pow((Vobj - Vos), 2.0)
 			Tobj = math.sqrt(math.sqrt(math.pow(Tdie, 4.0) + (fVobj/S)))
 			return Tobj - 273.15
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			return ""
 
 
@@ -419,8 +420,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -440,9 +441,9 @@ def getValues(devId):
 		badSensor = 0
 		U.muxTCA9548Areset()
 		return data
-	except	Exception, e:
+	except	Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"temp>>" + unicode(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
@@ -560,8 +561,8 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

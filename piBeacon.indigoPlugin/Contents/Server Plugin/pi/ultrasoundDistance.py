@@ -18,6 +18,7 @@ GPIO.setmode(GPIO.BCM)
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 import  displayDistance as DISP
 G.program = "ultrasoundDistance"
 
@@ -83,8 +84,8 @@ def readParams():
 			try:
 				xx = sensors[sensor][devId]["sensorRefreshSecs"].split("#")
 				sensorRefreshSecs = float(xx[0])
-			except Exception, e:
-				U.logger.log(20, u"in Line {} has error={};  setting sensorRefreshSecs to 100".format(sys.exc_traceback.tb_lineno, e) )
+			except Exception as e:
+				U.logger.log(20, u"in Line {} has error={};  setting sensorRefreshSecs to 100".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e) )
 				sensorRefreshSecs = 100    
 
 			try:
@@ -105,7 +106,7 @@ def readParams():
 				if "units" in sensors[sensor][devId]:
 					units= sensors[sensor][devId]["units"]
 					distanceUnits = units
-			except  Exception, e:
+			except  Exception as e:
 				pass
 
 
@@ -130,8 +131,8 @@ def readParams():
 			except:                                                         actionLongDistanceLimit = -1
 
   
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -219,8 +220,8 @@ def getultrasoundDistance(devId):
 			return maxUse # set to max = 5 m
 		#print "res= ",result 
 		return  round(result , 2)# 
-	except  Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return ""        
  
  
@@ -262,8 +263,8 @@ def doAction(devId, distanceIN):
 				subprocess.call(actionLongDistance, shell=True)
 				actionDistanceOld =" long"
 
-	except  Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 #################################
@@ -414,8 +415,8 @@ while True:
 				lastRead = time.time()
 			if n > 800: break
 		#print "end of loop", loopCount
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

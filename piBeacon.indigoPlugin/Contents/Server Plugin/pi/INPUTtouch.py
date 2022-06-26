@@ -12,6 +12,7 @@ import struct
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "INPUTtouch"
 import smbus 
 
@@ -341,8 +342,8 @@ def getTouched16Serial(np):
 
 		return keys
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 def getTouched16i2c(np):
@@ -360,8 +361,8 @@ def getTouched16i2c(np):
 				if data[1] & jj !=0: keys[ii +8]=1
 			# pins[i] = 0/1 for i ..0..16 if pressed 
 		return keys
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 def startTouch12i2c():
@@ -387,9 +388,9 @@ def getTouched12i2c(np):
 			channelData[i] = (pin_bit & currentTap !=0) &0x01
 		return channelData
 
-	except	Exception, e:
+	except	Exception as e:
 		restartCount+=1
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -518,8 +519,8 @@ def getINPUTcapacitor(sensors,data,devType, NPads):
 					data[sensName][devId] = copy.copy(d)
 		if new: U.writeINPUTcount(INPUTcount)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return data,new
 
@@ -617,8 +618,8 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

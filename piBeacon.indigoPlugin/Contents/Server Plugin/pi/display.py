@@ -28,6 +28,7 @@ import math
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "display"
 U.setLogging()
 
@@ -40,6 +41,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 
 _defaultDateStampFormat			   = u"%Y-%m-%d %H:%M:%S"
 
@@ -76,8 +78,8 @@ class LCD1602():
 			time.sleep(0.005)
 			self.clear()			# Clear Screen
 			self.openlight()		# Enable the backlight
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 
 			
 
@@ -106,8 +108,8 @@ class LCD1602():
 			time.sleep(0.002)
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	def send_data(self,data):
 		try:
@@ -126,8 +128,8 @@ class LCD1602():
 			time.sleep(0.002)
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 	def clear(self):
@@ -188,8 +190,8 @@ class bigScreen :
 						os.putenv('SDL_VIDEODRIVER', driver)
 					try:
 						self.pygame.display.init()
-					except	Exception, e:
-						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except	Exception as e:
+						U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						U.logger.log(30, u"Driver: {0} failed.".format(driver))
 						continue
 					found = driver
@@ -243,8 +245,8 @@ class bigScreen :
 			self.pygame.font.init()
 			# Render the screen
 			self.pygame.display.update()
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 	def __del__(self):
@@ -380,8 +382,8 @@ class SSD1351:
 			self.__Setup() # Setup device screen.
 			#self.Clear() # Blank the screen.
 			return
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				U.logger.log(30, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
@@ -596,8 +598,8 @@ class st7735:
 			self.__Setup() # Setup device screen.
 			#self.Clear() # Blank the screen.
 			return
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				U.logger.log(30, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
@@ -1023,8 +1025,8 @@ def analogClockInit(inParms={}):
 			
 			## show first pic
 			analogClockShow()
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		
 		return 
 		
@@ -1084,8 +1086,8 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 
 			 
 
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 
 
 
@@ -1126,8 +1128,8 @@ def analogClockdrNumbers(angle,number,hand):
 			#print "number", angle,pos,number
 			
 			draw.text(pos, unicode(number), font=fontx[fontF], fill=(int(255.*multIntensity),int(255.*multIntensity),int(255.*multIntensity)))
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
@@ -1209,8 +1211,8 @@ def analogClockdrTheLine(angle,hand,ss=0):
 			return
 
 
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -1218,8 +1220,8 @@ def analogClockdrTheLine(angle,hand,ss=0):
 def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 		try:
 			draw.ellipse( (x0 - widthX , y0 - widthY , x0 + widthX , y0 + widthY ), fill=fill, outline=outline)
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 ################### ###################	  analogClock  ############################################### END
@@ -1246,8 +1248,8 @@ def digitalClockInit(inParms={}):
 				if pp in inParms:
 					digitalClockParams[pp] = copy.copy(inParms[pp])
 			digitalClockShow()
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 
 		
 	
@@ -1265,8 +1267,8 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 			draw.text(P, nowST, font=fontx[fontF], fill=(int(fillD[0]*multIntensity),int(fillD[1]*multIntensity),int(fillD[2]*multIntensity)))
 			 
 
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 
 
 
@@ -1343,21 +1345,21 @@ def readParams():
 					if "lightSensorOnForDisplay" in ddd:
 						try:	
 							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
-						except	Exception, e:
-								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 					if "lightSensorForDisplay-DevId-type" in ddd:
 						try:	
 							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
 							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
-						except	Exception, e:
-								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 					if "lightSensorSlopeForDisplay" in ddd:
 						try:	
 							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
-						except	Exception, e:
-								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					if "lightMinDimForDisplay" in ddd:
 						try:	
 							lightMinDimForDisplay = max(0.0, min(1., float(ddd["lightMinDimForDisplay"]) ) )
@@ -1411,7 +1413,7 @@ def checkRGBcolor(inV, defColor, RGBtype="RGB", minIntValue= 0):
 				return retV
 			except:
 				return defColor
-	except	Exception, e:
+	except	Exception as e:
 		return defColor
 
 
@@ -1501,8 +1503,8 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 				xmax = 16
 		fontDir= G.homeDir+"fonts/"
 
-	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}, exiting".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}, exiting".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			if unicode(e).find("fontDir") > 0:
 				U.logger.log(30," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
 			sys.exit()
@@ -1539,8 +1541,8 @@ def getScrollPages(data):
 				scrollDelayBetweenPages = float(data["scrollDelayBetweenPages"])
 			except: pass
 		return scrollPages, scrollDelay, scrollDelayBetweenPages, scrollxy
-	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def setScrollPages(scrollxy,scrollPages):
 	global maxPages
@@ -1593,8 +1595,8 @@ def mkfont(cmd):
 					fontx[fontF] = ImageFont.load(fontDir+font)
 				elif  font.lower().find(".ttf")>-1:
 					fontx[fontF] = ImageFont.truetype(fontDir+font, int(fontw))
-			except	Exception, e:
-					U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		else:
 			fontF = font+fontw
 	return fontF
@@ -1680,8 +1682,8 @@ def getLightSensorValue(force=False):
 		lastlightSensorValue = lightSensorValue
 		multIntensity = intensity * intensityDevice * lightSensorValue
 		return True
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 # ------------------    ------------------ 
@@ -1704,8 +1706,8 @@ def checkLightSensor():
 				lightSensorValue     = lightSensorValueRaw
 				multIntensity = intensity * intensityDevice * lightSensorValue
 				U.logger.log(10, " step up down light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensity, intensityDevice,  multIntensity) )
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -1730,9 +1732,9 @@ def zoomit(inVar):
 				var = int(var*zoom)
 			return   var
 
-	except Exception, e:
+	except Exception as e:
 		U.logger.log(40, u"zoomitE var:{}; type(var):{} ".format(var, type(var)) )
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return inVar
 
 ######### main	########
@@ -1857,9 +1859,9 @@ while runLoop:
 				if len(item) < 10: continue
 				data		= json.loads(item)
 				#print json.dumps(data,sort_keys=True, indent=2)
-			except	Exception, e:
+			except	Exception as e:
 				U.logger.log(30,"bad input "+ unicode(item) )
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
@@ -2618,9 +2620,9 @@ while runLoop:
 							subprocess.call("echo	 "+str(tt)+" > "+G.homeDir+"temp/alive.display", shell=True)
 
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
-					except	Exception, e:
+					except	Exception as e:
 						try:
-							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+							U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 							U.logger.log(30, unicode(cmd))
 						except: # hard delete logfiles
 							subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
@@ -2664,8 +2666,8 @@ while runLoop:
 			U.echoLastAlive(G.program)
 		loop +=1 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		items=[]
 
 U.logger.log(30, " exiting display end of loop") 	

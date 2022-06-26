@@ -13,6 +13,7 @@ import json
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "neopixel"
 import math
 import atexit
@@ -43,8 +44,8 @@ def applyIntensity(c):
 			ret[ii] = r
 		#U.logger.log(20, u"applyIntensity c: {}; ret: {};   {};   {};   {};   {}".format(c, ret, intensity, multIntensity, lightMaxDimForDisplay, lightMinDimForDisplay))
 		return ret
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, u"c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
 		return ret
 
@@ -325,8 +326,8 @@ def set_pixel(x, y, r, g, b):
 		index = get_index_from_xy(x, y)
 		if index is not None:
 			ws2812.setPixelColorRGB(index, r, g, b)
-	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def get_pixel(x, y):
 	"""Get the RGB value of a single pixel
@@ -476,15 +477,15 @@ class draw():
 					y = int(x * m + b)
 					self.PIXELS[max(0,min(self.maxY1,y))][x]=applyIntensity(pos[4:7])
 			return
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"pos " + unicode(pos))
 
 	def point(self,pos):
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] =applyIntensity(pos[2:5])
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"pos " + unicode(pos))
 		return 
 
@@ -531,8 +532,8 @@ class draw():
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))]= applyIntensity(pos[kk][2:5])
 			else:		 
 				U.logger.log(30,u" error type:"+cType+" pos:"+ unicode(pos) )
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 	def rotateCenter(self,phi=math.pi/2.):
@@ -652,8 +653,8 @@ class draw():
 				#print " end of loop ", jj 
 				
 				
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30," pixel len:"+ unicode(len(self.PIXELS))+"  "+ unicode(self.PIXELS)[0:100])
 			
 	def clear(self,RGB):
@@ -747,21 +748,21 @@ def readParams(pgmType="neopixel"):
 					if "lightSensorOnForDisplay" in ddd:
 						try:	
 							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
-						except	Exception, e:
-								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 					if "lightSensorForDisplay-DevId-type" in ddd:
 						try:	
 							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
 							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
-						except	Exception, e:
-								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 					if "lightSensorSlopeForDisplay" in ddd:
 						try:	
 							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
-						except	Exception, e:
-								U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 					if "lightMinDimForDisplay" in ddd:
 						try:	
 							lightMinDimForDisplay = max(0.0, min(255., float(ddd["lightMinDimForDisplay"]) ) )
@@ -772,8 +773,8 @@ def readParams(pgmType="neopixel"):
 						except: pass
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return	retCode
 					   
 def readNewInput():
@@ -803,8 +804,8 @@ def saveLastCommands(items):
 		f = open(G.homeDir+"neopixel.last","w")
 		f.write(json.dumps(items))	
 		f.close()
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def readLastCommands():
 	try:
@@ -813,8 +814,8 @@ def readLastCommands():
 			xxx = f.read()	
 			f.close()
 			return json.loads(xxx)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return []
 
 def deleteLastCommands():
@@ -883,8 +884,8 @@ def getLightSensorValue(force=False):
 		lastlightSensorValue = lightSensorValue
 		multIntensity =  intensityDevice * lightSensorValue
 		return True
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 
@@ -910,8 +911,8 @@ def checkLightSensor():
 				multIntensity = intensityDevice * lightSensorValue
 				#U.logger.log(20, " step read    light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensityDevice,  multIntensity) )
 				return True
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	
 #=============================
@@ -1051,15 +1052,15 @@ while True:
 				if len(item) < 1: continue
 				try:	
 					data = json.loads(item)
-				except	Exception, e:
+				except	Exception as e:
 					if loop >0:
-						U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						U.logger.log(30,unicode(item)[0:100])
 					data = item
 				#print json.dumps(data,sort_keys=True, indent=2)
-			except	Exception, e:
+			except	Exception as e:
 				U.logger.log(30,"bad input "+ unicode(item) )
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				continue
 
 			restoreAfterBoot = False
@@ -1225,7 +1226,7 @@ while True:
 									if "speed" in pos:
 										try: speed = int(pos["speed"])
 										except: 
-											#print	u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+											#print	u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 											pass
 									if tt- lastClock < 1 and speed ==1 and setClock =="":
 										#print	"tt- lastClock", tt- lastClock
@@ -1311,8 +1312,8 @@ while True:
 															#print aa,"ii",ii
 															ll = lin[ii][2:]
 															lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
-											except	Exception, e:
-												U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+											except	Exception as e:
+												U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 												U.logger.log(30, aa +"  "+ unicode(pos[aa]))
 									for ii in range(len(lin)):
 										lin[ii] =  [0,lin[ii][1], min(255,max(lin[ii][2],0)),min(255,max(lin[ii][3],0)),min(255,max(lin[ii][4],0)) ]
@@ -1349,8 +1350,8 @@ while True:
 
 								if checkIfnewInput(): break
 								
-						except	Exception, e:
-							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 							#U.logger.log(30, unicode(cmd))
 					if checkIfnewInput(): break
 					if cType == "clock": 
@@ -1364,8 +1365,8 @@ while True:
 			if checkIfnewInput():
 				items = readNewInput()
 			redoItems = checkLightSensor()
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				
 		if loop %20 ==0:
 			if readParams(pgmType=pgmType) ==1:
@@ -1375,8 +1376,8 @@ while True:
 		#print "neopixel sleep end item ", time.time() -ttx
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		items=[]
 
 U.logger.log(20, u"exiting at end")

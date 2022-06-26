@@ -14,6 +14,7 @@ import copy
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "mysensors"
 
 
@@ -52,8 +53,8 @@ def startMySensors(parameter):
 
             ## add any init code here for address # addr
             U.logger.log(30, u"starting my sensors " + unicode(parameter) )
-        except  Exception, e:
-            U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             U.logger.log(30, u"channel used: " + unicode(parameter) )
 
 def getMySensors(parameter):
@@ -63,8 +64,8 @@ def getMySensors(parameter):
             x = time.time()  # some dummy data
             v = [str(x), str(x/2), "0", "1", "2", "3", "4", "5", "6", "7"]  ## <-- this is your data to be send back
             return v
-        except  Exception, e:
-            U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         return ""
 
 
@@ -135,7 +136,7 @@ while True:  # loop for ever
                 U.echoLastAlive(G.program)
 
         except  Exception, e :
-            U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+            U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
         time.sleep(sensorRefreshSecs) # sleep the requested amount
         readParams()  # check if we have new parameetrs

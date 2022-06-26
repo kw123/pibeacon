@@ -18,6 +18,7 @@ import sys, os, time, json, subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "pmairquality"
 
 
@@ -90,8 +91,8 @@ class thisSensorClass:
 					# unpack and asign integers to list	 starting at pos 5 (=0...4)
 					try:
 						theValues = struct.unpack(">HHHHHHHHHHHHHH", complePackage[4:32])
-					except Exception, e:
-						U.logger.log(10, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+					except Exception as e:
+						U.logger.log(10, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 						U.logger.log(10,   "unpacking error	 len of package: {}".format(len(complePackage) ) )
 						complePackage = ""
 						continue
@@ -143,8 +144,8 @@ class thisSensorClass:
 				U.logger.log(10,  " > 10 um / 0.1L air:", acumValues[11] )
 				U.logger.log(10,  "---------------------------------------" )
 			return acumValues
-		except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, " bad read, ..	receivedCharacters"+ str(len(receivedCharacters))+":"+str(":".join("{:02x}".format(ord(c)) for c in receivedCharacters)))
 		return "badSensor"
 
@@ -251,8 +252,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,str(sensors[sensor]) )
 		
 
@@ -269,8 +270,8 @@ def startSensor(devId):
 		sP = U.getSerialDEV() 
 		thisSensor[devId]  = thisSensorClass(serialPort = sP)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		thisSensor[devId] =""
 	return
 
@@ -302,8 +303,8 @@ def getValues(devId):
 			U.logger.log(10, unicode(data)) 
 			badSensor = 0
 			return data
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	badSensor+=1
 	if badSensor >3: return "badSensor"
 	return ""
@@ -424,8 +425,8 @@ while True:
 							delta= current-lastValues2[devId][xx]
 							deltaN= max(deltaN,abs(delta) / max (0.5,(current+lastValues2[devId][xx])/2.))
 							lastValues[devId][xx] = current
-						except	Exception, e:
-							U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+						except	Exception as e:
+							U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 				else:
 					continue
 				if sensorWasBad or (   ( deltaN > deltaX[devId] ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or	quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
@@ -458,8 +459,8 @@ while True:
 				if quick: break
 				time.sleep(5.)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

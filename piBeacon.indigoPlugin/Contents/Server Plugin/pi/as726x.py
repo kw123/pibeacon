@@ -10,6 +10,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "as726x"
 
 
@@ -177,9 +178,9 @@ class Adafruit_AS726x(object):
 			self._norm = 16.*140. / (self._gain*self._integration_time*_counts_Per_mu_Watt)
 
 
-		except	Exception, e:
-			print u"init in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-			U.logger.log(30, u"init in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			print (u"init in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30, u"init in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return
 
 
@@ -258,9 +259,9 @@ class Adafruit_AS726x(object):
 			state |= (Adafruit_AS726x.GAIN.index(val) << 4)
 			self._virtual_write(_AS726X_CONTROL_SETUP, state)
 			return
-		except	Exception, e:
-			print u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-			U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			print (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	def set_Integration_time(self, val):
 		if not 2.8 <= val <= 714:
@@ -526,8 +527,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"readParams in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"readParams in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def setLED(devId,value):
 	global sensor, sensors,	 as726xsensor
@@ -539,8 +540,8 @@ def setLED(devId,value):
 			as726xsensor[devId].set_driver_led_current(value)
 			as726xsensor[devId].enable_driver_led(True)
 		U.muxTCA9548Areset()
-	except	Exception, e:
-		U.logger.log(30, u"setLED in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"setLED in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -567,9 +568,9 @@ def getValues(devId):
 		U.muxTCA9548Areset()
 		return data
 
-	except	Exception, e:
+	except	Exception as e:
 		if badSensor >-1 and badSensor < 5000: 
-			U.logger.log(30, u"getValues in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"getValues in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, unicode(data) )
 						
 		badSensor+=1
@@ -760,8 +761,8 @@ while True:
 		if rebootCount >20:
 			U.restartMyself(reason="badsensor")
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

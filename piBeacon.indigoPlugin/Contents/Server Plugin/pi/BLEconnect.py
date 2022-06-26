@@ -30,6 +30,7 @@ import threading
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "BLEconnect"
 VERSION = 6.4
 ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
@@ -40,8 +41,8 @@ def signedIntfrom16(string):
 	try:
 		intNumber = int(string,16)
 		if intNumber > 32767: intNumber -= 65536
-	except	Exception, e:
-		U.logger.log(20, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 	return intNumber
 
@@ -62,8 +63,8 @@ def checkIFQuickRequested():
 				if macList[ml]["type"] == "isBLElongConnectDevice":
 					macList[ml]["lastTesttt"]  = 0.
 					macList[ml]["nextRead"]  = 0.
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -163,8 +164,8 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0 # (changes to 0.9* 2700 @ 0C; to = 0.8*2700 @-10C )
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
 		return batteryLevel
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 0
 
 
@@ -218,8 +219,8 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, verbo
 					else:
 						if verbose: U.logger.log(20, u"connect error: waiting 1 sec;  .. {}-==-:{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 						time.sleep(1)
-				except Exception, e:
-					U.logger.log(20, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				except Exception as e:
+					U.logger.log(20, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 			#U.logger.log(20, u"connect error giving up")
@@ -228,8 +229,8 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, verbo
 
 		nonSwitchBotActive = False
 		return ""
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	nonSwitchBotActive = False
 	return ""
 
@@ -253,8 +254,8 @@ def disconnectGattcmd(expCommands, thisMAC, timeout, verbose=False):
 			expCommands.kill(0)
 			U.killOldPgm(-1,"gatttool",  param1=thisMAC,param2="",verbose=False)
 			return False
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 
@@ -277,8 +278,8 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout, verbose=False):
 				continue
 			ret = expCommands.expect("\n")
 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return False
 
 
@@ -305,8 +306,8 @@ def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose
 			else:
 				if verbose: U.logger.log(20,"... error: {}-{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 				continue
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return []
 
 
@@ -332,8 +333,8 @@ def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 			else:
 				if verbose: U.logger.log(20,"... error: {}-{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 				continue
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return []
 
 
@@ -373,8 +374,8 @@ def batchGattcmd(useHCI, thisMAC, cc, expectedTag, nBytes=0, repeat=3, verbose=F
 				if verbose: U.logger.log(20,"... error: {}".format( ret[1].strip() ))
 			time.sleep(0.5)
 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	currentActiveGattCommandisSwitchBot = False
 	return []
 
@@ -439,8 +440,8 @@ def tryToConnectSocket(thisMAC,BLEtimeout,devId):
 			U.logger.log(20, u"in Line {} has error ... sock.recv error, likely time out ".format(sys.exc_traceback.tb_lineno))
 			U.restartMyself(reason="sock.recv error", delay = 10)
 
-	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	U.logger.log(10, "{}:  {}".format(thisMAC, retdata))
 	errCount = 0
 	return retdata
@@ -490,8 +491,8 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 			if found: break
 			time.sleep(1)
 
-	except  Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			retdata = {}
 	
 	#U.logger.log(20, "{} return data: {}".format(thisMAC, retdata))
@@ -589,8 +590,8 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 			macList[thisMAC]["triesWOdata"] = 0
 			#U.logger.log(20, u"error, connected but no data, triesWOdata:{} repeast in {} secs".format(macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		data["badSensor"] = True
 	
 	#U.logger.log(20, "{} return data: {}".format(thisMAC, data))
@@ -701,8 +702,8 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 		return data
 
 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		nonSwitchBotActive = False
 		data["badSensor"] = True
 	
@@ -764,8 +765,8 @@ def BLEinkBirdPool01B(thisMAC, data0):
 		nonSwitchBotActive = False
 		return data
 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		data["badSensor"] = True
 	
 	if verbose: U.logger.log(20, "{}  return 99 data: {}".format(thisMAC, data))
@@ -1004,8 +1005,8 @@ def doSwitchBot():
 			if verbose: U.logger.log(20, "{} sType not found:{}".format(thisMAC, sType))
 			switchbotActive = ""
 			return 
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	
 		if verbose: U.logger.log(20, "{}  return  data: {}".format(thisMAC, switchBotConfig))
 	
@@ -1239,8 +1240,8 @@ def readParams():
 			#U.logger.log(30, u"BLEconnect - chechink devices (2):{}".format(macList))
 			return True
 			
-		except	Exception, e:
-			U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e) )
+		except	Exception as e:
+			U.logger.log(50,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e) )
 		return False
 
 
@@ -1301,8 +1302,8 @@ def tryToConnectToBLEconnect(thisMAC, BLEid):
 			macList[thisMAC]["up"] = False
 		return 
 
-	except	Exception, e:
-		U.logger.log(30,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 
@@ -1354,8 +1355,8 @@ def tryToConnectToSensorDevice(thisMAC):
 			time.sleep(5)
 			subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
 			
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, u"thisMAC:{}, data:{}".format(thisMAC, data))
 	return 
 
@@ -1379,8 +1380,8 @@ def startReadCommandThread():
 		threadDict = {}
 		threadDict["state"]   		= "start"
 		threadDict[u"thread"]  = threading.Thread(name=u'checkSwitchbotForCommand', target=checkSwitchbotForCommand)
-	except  Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except  Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
 

@@ -1,4 +1,11 @@
-Added features / changes in v7.138.559@ 2022-03-02
+Added features / changes in v2022.143.1@ 2022-05-26
+===================================================
+   
+1. runs under python 3
+   requires indigo 2022.1 or later
+
+
+Added features / changes in v7.141.1@ 2022-03-02
 ===================================================
    
 1. prep for indigo 2022 and os 12.3

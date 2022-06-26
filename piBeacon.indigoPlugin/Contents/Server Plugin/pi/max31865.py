@@ -18,6 +18,7 @@ except:
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "max31865"
 #!/usr/bin/python
 #The MIT License (MIT)
@@ -242,8 +243,8 @@ class max31865(object):
 								delta = newDelta
 					#print ii, temp, temp_C_numpy, delta
 					if delta < 10: temp = temp_C_numpy
-				except	Exception, e:
-					print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
+				except	Exception as e:
+					print  u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
 		if False:
 			temp_C_line =    (RTD_ADC/32.0)     			   - 256.0  + 18.2
 			print "==PT Resistance:                     %f ohms" % Res_RTD 
@@ -379,8 +380,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -398,9 +399,9 @@ def getValues(devId):
 		data = {"temp":round(temp,3)}
 		badSensor = 0
 		return data
-	except	Exception, e:
+	except	Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			U.logger.log(30, u"temp>>" + unicode(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
@@ -517,8 +518,8 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

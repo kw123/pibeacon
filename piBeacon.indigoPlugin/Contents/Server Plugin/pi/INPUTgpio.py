@@ -18,6 +18,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "INPUTgpio"
 
 
@@ -127,8 +128,8 @@ def getINPUTgpio(all,sens):
 								 d["INPUT_"+str(n)]=dd
 					INPUTlastvalue[str(gpioPIN)]=dd
 					##print d,new
-		except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return d,new
 
 
@@ -161,8 +162,8 @@ def startGPIO():
 					elif type == "inOpen":
 						GPIO.setup(gpioPIN, GPIO.IN)
 		return
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30,"startGPIO: "+ unicode(sensors))
 	return
 
@@ -281,8 +282,8 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

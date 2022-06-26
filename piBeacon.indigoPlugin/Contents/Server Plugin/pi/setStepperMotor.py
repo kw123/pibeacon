@@ -18,6 +18,7 @@ except: import queue as Queue
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "setStepperMotor"
 
 
@@ -207,9 +208,9 @@ def readParams():
 
 		return changed
 
-	except	Exception, e:
-		print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		print  (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(10)
 		return 3
 
@@ -569,9 +570,9 @@ def checkForNewImput():
 			actionQueue[devId].put((repeat,actions)) 
 			print "adding new commands",devId, stopMoveNOW[devId], repeat,actionQueue[devId].qsize() , actions
 
-		except Exception, e:
-			U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
-			print  u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e)
+		except Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			print  (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
    
 

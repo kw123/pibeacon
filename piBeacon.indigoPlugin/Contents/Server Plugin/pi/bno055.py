@@ -11,6 +11,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "bno055"
 
 
@@ -435,8 +436,8 @@ class BNO055():
 			error = self._read_byte(BNO055_SYS_ERR_ADDR)
 			# Return the results as a tuple of all 3 values.
 			return (status, self_test, error)
-		except	Exception, e:
-			U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	def get_calibration_status(self):
 		"""Read the calibration status of the sensors and return a 4 tuple with calibration status as follows:
@@ -580,8 +581,8 @@ class BNO055():
 		try:
 			heading, roll, pitch = self._read_vector(BNO055_EULER_H_LSB_ADDR)
 			return (heading/16.0, roll/16.0, pitch/16.0)
-		except	Exception, e:
-			U.logger.log(30, u"read_euler in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_euler in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0
 		
 	def read_magnetometer(self):
@@ -591,8 +592,8 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_MAG_DATA_X_LSB_ADDR)
 			return (x/16.0, y/16.0, z/16.0)
-		except	Exception, e:
-			U.logger.log(30, u"read_magnetometer in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_magnetometer in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0
 
 	def read_gyroscope(self):
@@ -602,8 +603,8 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_GYRO_DATA_X_LSB_ADDR)
 			return (x/900.0, y/900.0, z/900.0)
-		except	Exception, e:
-			U.logger.log(30, u"read_gyroscope in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_gyroscope in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0
 
 	def read_accelerometer(self):
@@ -613,8 +614,8 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_ACCEL_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
-		except	Exception, e:
-			U.logger.log(30, u"read_accelerometer in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_accelerometer in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0
 
 	def read_linear_acceleration(self):
@@ -624,8 +625,8 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
-		except	Exception, e:
-			U.logger.log(30, u"read_linear_acceleration in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_linear_acceleration in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0
 
 	def read_gravity(self):
@@ -635,8 +636,8 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_GRAVITY_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
-		except	Exception, e:
-			U.logger.log(30, u"read_gravity in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_gravity in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0
 
 	def read_quaternion(self):
@@ -648,16 +649,16 @@ class BNO055():
 			# Scale values, see 3.6.5.5 in the datasheet.
 			scale = (1.0 / (1<<14))
 			return (x*scale, y*scale, z*scale, w*scale)
-		except	Exception, e:
-			U.logger.log(30, u"read_quaternion in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_quaternion in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0,0,0,0
 
 	def read_temp(self):
 		"""Return the current temperature in Celsius."""
 		try:
 			return self._read_signed_byte(BNO055_TEMP_ADDR)
-		except	Exception, e:
-			U.logger.log(30, u"read_temp in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u"read_temp in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 		
 		
@@ -696,8 +697,8 @@ def startBNO(devId, i2cAddress):
 				time.sleep(1)
 				U.restartMyself(reason=" init not working, sensor does not report properly (IDs =0 )", doPrint=False)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 # read params
 # ===========================================================================
 
@@ -755,8 +756,8 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -833,8 +834,8 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
 		return data
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -921,8 +922,8 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception, e:
-		U.logger.log(30, u"in Line '%s' has error='%s'" % (sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 stry: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

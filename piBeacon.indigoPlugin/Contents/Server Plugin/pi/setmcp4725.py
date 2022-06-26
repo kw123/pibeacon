@@ -12,6 +12,7 @@ import copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "setmcp4725"
 
 
@@ -21,8 +22,8 @@ def setVoltage(bytes, persist=False):
 			bus.write_i2c_block_data(i2cAddress, 0x60, bytes)
 		else:
 			bus.write_i2c_block_data(i2cAddress, 0x40, bytes)
-	except	Exception, e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 ###########
 def readParams():
@@ -103,8 +104,8 @@ badi2c =0
 if cmd =="analogWrite":
 	try:
 		setVoltage(bytes,persist=False)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	exit()
 
 if cmd =="continuousUpDown":
@@ -116,8 +117,8 @@ if cmd =="continuousUpDown":
 			time.sleep(pulseUp)
 			setVoltage([0,0],persist=False)
 			time.sleep(pulseDown)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	exit()
 	
 if cmd =="pulseUp":
@@ -125,8 +126,8 @@ if cmd =="pulseUp":
 		setVoltage(bytes,persist=False)
 		time.sleep(pulseUp)
 		setVoltage([0,0],persist=False)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	exit()
 	
 if cmd =="pulseDown":
@@ -134,8 +135,8 @@ if cmd =="pulseDown":
 		setVoltage([0,0],persist=False)
 		time.sleep(pulseDown)
 		setVoltage(bytes,persist=False)
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	exit()
 	
 U.logger.log(30, u"cmd not implemented: "+cmd)

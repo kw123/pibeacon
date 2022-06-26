@@ -194,7 +194,7 @@ class RD200M:
 					else:
 						self.logger.debug("Received '{}'".format(binascii.hexlify(response).decode()))
 		except	Exception, e :
-				self.logger.debug("Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+				self.logger.debug("Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 

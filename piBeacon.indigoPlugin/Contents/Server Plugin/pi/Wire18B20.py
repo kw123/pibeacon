@@ -17,6 +17,7 @@ import re
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
+import traceback
 G.program = "Wire18B20"
 
 
@@ -55,8 +56,8 @@ def get18B20(sensor, data):
                             except: ret[line] ="bad data"
                             ##ret[line] = ("%.2f"%(float(t1[1])/1000.)).strip()
             tempList= ret # {"28-800000035de5": 21.6, ...}  
-        except  Exception, e:
-            U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+        except  Exception as e:
+            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             U.logger.log(30, u"return  value: data="+ unicode(data))
             tempList = {} 
 
@@ -98,8 +99,8 @@ def get18B20(sensor, data):
         else:
                 data= incrementBadSensor(devId0,sensor,data,text="badSensor, no info")
 
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
 
@@ -118,8 +119,8 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             if devId not in data[sensor]: data[sensor][devId]={}
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
-    except  Exception, e:
-        U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
     return data 
 
 
@@ -292,7 +293,7 @@ while True:
                             if xxx > (G.deltaChangedSensor/100.): 
                                 changed= xxx
                                 break
-                        except  Exception, e:
+                        except  Exception as e:
                             #print e
                             #print lastData[sens][dd]
                             #print data[sens][dd]
@@ -305,8 +306,8 @@ while True:
             try:
                 #U.logger.log(10, u"sending url: "+unicode(data))
                 U.sendURL({"sensors":data})
-            except  Exception, e:
-                U.logger.log(50, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+            except  Exception as e:
+                U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -330,8 +331,8 @@ while True:
             if tt - lastRead > 5:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
-    except  Exception, e:
-        U.logger.log(50,u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+    except  Exception as e:
+        U.logger.log(50,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

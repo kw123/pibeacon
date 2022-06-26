@@ -15,6 +15,7 @@ import subprocess
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 
 U.setLogging()
 

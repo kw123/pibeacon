@@ -14,6 +14,7 @@ import math
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "neopixelClock"
 import	RPi.GPIO as GPIO
 
@@ -39,9 +40,9 @@ def getWifiInfo(longShort=0):
 				wifiInfo = labels[1][longShort]
 			else:
 				wifiInfo = labels[2][longShort]
-	except Exception, e:
+	except Exception as e:
 
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return wifiInfo
 
 # ------------------    ------------------ 
@@ -77,8 +78,8 @@ def updatewebserverStatus():
 
 		U.writeJson(G.homeDir+"statusData."+ G.myPiNumber, xxx, sort_keys=True, indent=2 )
 		U.updateWebStatus(statusData)
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 def removebracketsetc(data):
 	out = unicode(data).replace("[","").replace("]","").replace(" ","")
@@ -165,8 +166,8 @@ def webServerInputExtraText():
 		out = json.dumps({"webServerInputHTML":webServerInputHTML,"defaults":defaults,"outputFile":G.homeDir+"temp/neopixelClock.cmd"})
 		U.logger.log(10, u"web status update:{}".format(out) )
 		U.updateWebINPUT(out)
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 #################################		 
 def readCommand():
@@ -260,8 +261,8 @@ def readCommand():
 		if restart in [2]:		
 			startNEOPIXEL()
 
-	except Exception, e:
-		U.logger.log(40, u"Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except Exception as e:
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return restart
 	
 
@@ -357,9 +358,9 @@ def readParams():
 
 		return changed
 
-	except	Exception, e:
-		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		print  u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(10)
 		return 3
 
@@ -556,9 +557,9 @@ def startNEOPIXEL(setClock="", off=False):
 			U.logger.log(20, u"starting /usr/bin/python "+G.homeDir+"neopixel.py neopixelClock &")
 		setNEOinput(out)
 
-	except	Exception, e:
-		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		print  u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 	return 
@@ -607,8 +608,8 @@ def setupGPIOs():
 		GPIO.setup(gpiopinSET["up"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 		GPIO.setup(gpiopinSET["down"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	return
 
@@ -634,9 +635,9 @@ def setExtraLEDoff():
 		if clockDict["extraLED"] !="":
 			clockDict["extraLED"]										= ""
 			saveParameters()
-	except	Exception, e:
-		print  u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e)
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		print  u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print "clockDict=", clockDict,"<<"
 		print "inp=", inp,"<<"
 		print "DEVID=", DEVID,"<<"
@@ -712,8 +713,8 @@ def getCurrentPatterns():
 			if	 clockDict["marks"]["SS"]["marks"] == []:				marksONoff = 2
 			elif clockDict["marks"]["HH"]["marks"] == [0]:				marksONoff = 4
 			else:														marksONoff = 3
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print "clockDict=", clockDict,"<<"
 
 
@@ -735,8 +736,8 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 			saveParameters()
 		if restart:
 			startNEOPIXEL()
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print "clockDict", clockDict
 		print "inp", inp
 		print "DEVID", DEVID
@@ -757,8 +758,8 @@ def setHHMarksTo(yy):
 		if xx in [0,1,2,3,4]: 
 			setPatternTo(marks=xx, save=False, restart=False)
 		U.logger.log(20, u"setHHMarksTo saved {}".format(clockDict["marks"]))
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return True
 
 #################################
@@ -774,8 +775,8 @@ def setMMModeTo(yy):
 			clockDict["ticks"][zz] = copy.deepcopy(ticksOptions[xx][zz])
 		getCurrentPatterns()
 		U.logger.log(20, u" saved {}".format(clockDict["ticks"][zz]))
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return True
 
 #################################
@@ -792,8 +793,8 @@ def setHHModeTo(yy):
 			clockDict["ticks"][zz] = copy.deepcopy(ticksOptions[xx][zz])
 		getCurrentPatterns()
 		U.logger.log(20, u" saved {}".format(clockDict["ticks"][zz]))
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, u"ticksOptions {} ".format(ticksOptions))
 	return True
 
@@ -846,8 +847,8 @@ def saveParameters():
 		f = open(G.homeDir+"neopixelClock.clockDict","w")
 		f.write(json.dumps(clockDict, sort_keys=True, indent=2))
 		f.close()
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 
@@ -966,13 +967,13 @@ def setLightfromSensor():
 			#U.logger.log(20, "setLightfromSensor  bf restartstartNEOPIXEL")
 			try:
 				startNEOPIXEL()
-			except	Exception, e:
-				U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+			except	Exception as e:
+				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 			
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockDict["clockLightSet"], LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor) 
 		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor))
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return
 
 
@@ -1326,8 +1327,8 @@ while True:
 
 		#print "setC",GPIO.input(gpiopinSET["setC"])
 			
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		U.logger.log(30, u"except at end of loop")
 		time.sleep(10.)
 		if unicode(e).find("string indices must be integers") >-1:

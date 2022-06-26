@@ -19,6 +19,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+import traceback
 G.program = "ccs811"
 #simple bitfield object
 from collections import OrderedDict
@@ -149,8 +150,8 @@ class ccs811_class(object):
 		
 			#default to read every second
 			self.setDriveMode(mode)
-		except	Exception, e:
-			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		
 
 
@@ -197,8 +198,8 @@ class ccs811_class(object):
 				
 				else:
 					return 0
-		except	Exception, e:
-			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return	0		
 
 
@@ -279,28 +280,28 @@ class ccs811_class(object):
 	def writeList(self, command,buf):
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
-		except	Exception, e:
-			U.logger.log(10, u"writeList	 in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(10, u"writeList	 in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 	def readList(self, command,	 length):
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
-		except	Exception, e:
-			U.logger.log(10, u"readList	in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(10, u"readList	in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return []
 
 	def readU8(self, reg):
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
-		except	Exception, e:
-			U.logger.log(10, u"readU8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(10, u"readU8  in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		return 0
 
 	def write8(self, reg,value):
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
-		except	Exception, e:
-			U.logger.log(10, u"write8  in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+		except	Exception as e:
+			U.logger.log(10, u"write8  in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
 
 
@@ -401,8 +402,8 @@ def readParams():
 			pass
 
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		print sensors[sensor]
 		
 
@@ -434,8 +435,8 @@ def startSensor(devId,i2cAddress):
 		try: temp = ccs811sensor[devId].calculateTemperature()
 		except: pass
 				
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		ccs811sensor[devId]	  =""
 	time.sleep(.1)
 
@@ -554,8 +555,8 @@ def getValues(devId):
 			countVOC  = 0
 			lastVOC	  = VOC
 			lastTemp  = TEMP
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		ccs811sensor[devId].start()
@@ -705,8 +706,8 @@ while True:
 			time.sleep(5)
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
-	except	Exception, e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_traceback.tb_lineno, e))
+	except	Exception as e:
+		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
