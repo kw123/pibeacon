@@ -534,14 +534,14 @@ Other beacons that send the battery level every second
 		<Name>Send a beep command to RPI to ibeacons</Name>
 		<ConfigUI>
 			<Field id="infoLabelINPUT0" type="label">
-				<Label>Selecet the beacon and the length of time for the beacon to receive the beep command
+				<Label>Select the beacon and the length of time for the beacon to receive the beep command
 the beacon must be able to digest the command, only qualified beacons are shown in the select list, and if state == up, and has to be enabled in beacon device edit
 During the time of beeping the regular ibeacon process is suspended. Very long beep times can lead to expiration of beacons
 the state isBeepable shows if is enabled, or buys or YES</Label>
 			</Field>
-			<Field id="selectbeaconForBeep" type="menu" defaultValue="-1">
+			<Field id="selectbeacon" type="menu" defaultValue="-1">
 				<Label>select the beacon</Label>
-				<List class="self" filter="" method="filterBeaconsThatCanBeep" dynamicReload="false" />
+				<List class="self" filter="beep" method="filterBeaconsThatCanBeepOrSetTime" dynamicReload="false" />
 			</Field>
 			<Field id="beepTime" type="menu" defaultValue="-1" tooltip="">
 				<List>
@@ -563,7 +563,7 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
                     <Label>Beep for xx secs:</Label>
 				</List>
 			</Field>
-			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number and then click on confirm ">
+			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number ">
 				<Label>select rPi to use for beep or choose closest</Label>
 				<List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
 			</Field>
@@ -571,6 +571,33 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 				<Label> ....after selection click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>sendBeepCommandCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
+ 
+	<MenuItem id="sendSetTimeOnDEvice">
+		<Name>Send a set Time and Zone command to RPI to beacon device</Name>
+		<ConfigUI>
+			<Field id="infoLabelINPUT0" type="label">
+				<Label>Select the beacon device  to receive the set time and zone command
+the device must be able to digest the command, only qualified devices (ie xiaomi LYWSD02) are shown in the select list
+During the time of setting time the regular ibeacon process is suspended (10-30secs).</Label>
+			</Field>
+			<Field id="selectbeacon" type="menu" defaultValue="-1">
+				<Label>select the device</Label>
+				<List class="self" filter="setTime" method="filterBeaconsThatCanBeepOrSetTime" dynamicReload="false" />
+			</Field>
+			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number">
+				<Label>select rPi to use for set time </Label>
+				<List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
+			</Field>
+			<Field id="execAll" type="button">
+				<Label> ....after selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>sendSetTimeAndZoneOnDeviceCALLBACKmenu</CallbackMethod>
 			</Field>
 			<Field id="MSG" type="textfield" defaultValue="">
 				<Label>message from Plugin:</Label>

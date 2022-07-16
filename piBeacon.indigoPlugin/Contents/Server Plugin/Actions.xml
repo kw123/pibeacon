@@ -3354,9 +3354,9 @@ the beacon must be able to digest the command, only qualified beacons are shown 
 During the time of beeping the regular ibeacon process is suspended. Very long beep times can lead to expiriation of beacons</Label> 
 			</Field>
 
-             <Field id="selectbeaconForBeep"   type="menu" defaultValue="-1"  >
+             <Field id="selectbeacon"   type="menu" defaultValue="-1"  >
                <Label>select the beacon</Label>
-                <List class="self" filter="" method="filterBeaconsThatCanBeep" dynamicReload="false"/>
+                <List class="self" filter="beep" method="filterBeaconsThatCanBeepOrSetTime" dynamicReload="false"/>
              </Field>
 
              <Field id="beepTime"   type="menu" defaultValue="-1" tooltip="" >

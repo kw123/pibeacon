@@ -64,7 +64,7 @@ def setLogging():
 #################################
 def setLogLevel():
 	global streamhandler, permLogHandler, logger
-	logger.log(10, "cBY:{:<20} setting debuglevel to {}".format(G.program, "on" if  G.debug == 1 else "off"))
+	logger.log(20, "cBY:{:<20} setting debuglevel to {}".format(G.program, "on" if  G.debug == 1 else "off"))
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
 	else:
@@ -386,6 +386,7 @@ def getNetwork():
 def getGlobalParams(inp):
 	try:
 		sensors ={}
+		oldDebug = G.debug
 		try:
 			if "debugRPI"			in inp:	 G.debug=				 		int(inp["debugRPI"])
 		except: pass
@@ -441,7 +442,7 @@ def getGlobalParams(inp):
 			except:							  G.enableMuxI2C=			   -1
 		else:
 											  G.enableMuxI2C=			   -1
-		setLogLevel()
+		if oldDebug != G.debug: setLogLevel()
 
 		if "timeZone"	 in inp:
 			if len(inp["timeZone"]) > 5 and G.timeZone !=	(inp["timeZone"]):

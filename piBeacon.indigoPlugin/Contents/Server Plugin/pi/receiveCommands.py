@@ -27,7 +27,7 @@ import traceback
 G.program = "receiveCommands"
 
 allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice",
-				"startCalibration","getBeaconParameters","beepBeacon","file","BLEreport","BLEAnalysis","trackMac"]
+				"startCalibration","getBeaconParameters","beepBeacon","updateTimeAndZone","file","BLEreport","BLEAnalysis","trackMac"]
 
 externalGPIO = False
 
@@ -419,6 +419,17 @@ def execCMDS(next):
 				try:
 						U.logger.log(20, u"execcmd. beep, write: ={}".format(next["device"]))
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
+						f.write(next["device"]+"\n") 
+						f.close()
+				except	Exception as e:
+						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				continue
+
+
+			if cmd =="updateTimeAndZone":
+				try:
+						U.logger.log(20, u"execcmd. updateTimeAndZone, write: ={}".format(next["device"]))
+						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
 						f.write(next["device"]+"\n") 
 						f.close()
 				except	Exception as e:

@@ -44,7 +44,7 @@ plotData = json.loads(f.read())
 f.close()
 
 ### logfile setup
-logLevel = True# plotData["logLevel"]
+logLevel = plotData["logLevel"]
 logfileName=plotData["logFile"]
 #logLevel = True
 
@@ -53,15 +53,15 @@ logger = logging.getLogger(__name__)
 ## disable fontmanager logging output 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
-logLevel = True
 if not logLevel:
-	logger.setLevel(logging.ERROR)
+	logger.setLevel(logging.WARNING)
 else:
 	logger.setLevel(logging.DEBUG)
 
 try:
 	# print start to logfile 
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
+	logger.log(20,"call as:\n{}".format(sys.argv) )
 	tStart= time.time()
 
 	distanceUnits			= max(0.01, float(plotData["distanceUnits"]))
@@ -347,17 +347,18 @@ try:
 				ax.text(5* textDeltaXCaption,y, "{}".format( datetime.datetime.now().strftime(_defaultDateStampFormat)) ,size=captionTextSize)
 
 	except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 
 	# 
 	logger.log(20,"time used {:4.2f} --   making the plot".format((time.time()-tStart)))
 	try: 	plt.savefig((piPositionsDir+"beaconPositions.png").encode('utf8'))	# this does not work ==>   ,bbox_inches = 'tight', pad_inches = 0)
 	except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	try:	pngSize = os.path.getsize((piPositionsDir+"beaconPositions.png").encode('utf8'))/1024.
 	except: pnGsize = 0
+	logger.log(20,"time used {:4.2f} --   saving plot;   file sizes: {:5.1f}[KB]".format(time.time()-tStart, pngSize ))
 	# 
 
 	try:
@@ -371,7 +372,7 @@ try:
 			os.rename((piPositionsDir+"beaconPositions.xxx").encode('utf8'),(piPositionsDir+"beaconPositions.png").encode('utf8') )
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 	except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
+			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 	
 	try:
 		if imageOutfile != piPositionsDir+"beaconPositions.png":
@@ -380,13 +381,14 @@ try:
 			if os.path.isfile(piPositionsDir+"beaconPositions.png"):
 				pass		
 				os.rename( "{}beaconPositions.png".format(piPositionsDir), "{}".format(imageOutfile) )
-				if os.path.isfile("{}beaconPositions.png".format(piPositionsDir)): os.remove("{}beaconPositions.png".format(piPositionsDir))
+				if os.path.isfile("{}beaconPositions.png".format(imageOutfile)) and os.path.isfile("{}beaconPositions.png".format(piPositionsDir)): 
+					os.remove("{}beaconPositions.png".format(piPositionsDir))
 	except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
+			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 except  Exception as e:
-	logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
+	logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 sys.exit(0)

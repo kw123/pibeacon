@@ -1274,7 +1274,7 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 	except	Exception as e:
 		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-	return tx, bl, UUID, Maj, Min, False
+	return mac, tx, bl, UUID, Maj, Min, False
 
 #################################
 
@@ -1541,9 +1541,6 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 
 		hexData = hexData[12:]
 		"""
-		govee package  structure:
-		afetr mac#:
-		GVH5177_C097:
 				        name string ------------------------                               th start:        
         1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD DA
 	pos:01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67   89 41 23 45 67 89 51 23 45 67 89 
@@ -1790,7 +1787,12 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj
 		hexData = hexData[12:]
 		"""
 		govee package  structure:
-		afetr mac#:
+
+
+		_D774
+		_15CB
+09475648
+		after mac#:
 		GVH5177_C097:
 				  name string ------------------------                                  mfg  type:        3byte data (1,2,3) + battery level
 		1F  0D   09 47 56 48 35 31 37 37 5F 43 30 39 37   03 03 88 EC   02 01 05   09   FF   01 00 01 01  03 68 C1   64
@@ -3987,7 +3989,7 @@ def beep(useHCI):
 
 							if not connected:
 								U.logger.log(20, u"connect error, giving up")
-								tryAgain = True
+								tryAgain = 0
 					
 							else:
 								startbeep = time.time()
@@ -4061,6 +4063,170 @@ def beep(useHCI):
 
 	return restart
 
+
+
+#################################
+def updateTimeAndZone(useHCI):
+	global beaconsOnline
+	try:	
+		restart = False
+
+		while True: 
+			if not os.path.isfile(G.homeDir+"temp/beaconloop.updateTimeAndZone"): break
+			f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","r")
+			deviceList = f.read().strip("\n").split("\n")
+			f.close()
+			subprocess.call("rm {}temp/beaconloop.updateTimeAndZone".format(G.homeDir), shell=True)
+			U.logger.log(20,u"updateTimeAndZone deviceList:{}".format(deviceList))
+
+			# devices: '{u'24:DA:11:21:2B:20': "xxx"}'
+			for devices in deviceList:
+				if len(devices) == 0: continue
+				devices = json.loads(devices)
+				if len(devices) == 0: continue
+				expCommands = ""
+				stopHCUIDUMPlistener()
+				U.killOldPgm(-1,"hcidump")
+				U.killOldPgm(-1,"hcitool")
+				U.killOldPgm(-1,"lescan")
+				restart = True
+				ret = subprocess.Popen("sudo /bin/hciconfig {} reset".format(useHCI),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+
+				#U.logger.log(20,"beepBeacon devices:{}".format(devices))
+				for mac in devices:
+					success = False
+					U.logger.log(20,"updateTimeAndZone mac:{}".format(mac))
+					if len(mac) < 10: continue
+			
+					tryAgain = 3
+					for kk in range(2):
+						tryAgain -= 1
+						if tryAgain < 0: break
+						if tryAgain != 2 and expCommands != "":
+							try: expCommands.sendline("disconnect")	
+							except: pass	
+
+						cmd = "sudo /usr/bin/gatttool -i {} -b {} -I".format(useHCI, mac) 
+						U.logger.log(20,cmd)
+						expCommands = pexpect.spawn(cmd)
+						ret = expCommands.expect([">","error",pexpect.TIMEOUT], timeout=10)
+						if ret == 0:
+							U.logger.log(20,u"... successful: {}-{}".format(expCommands.before,expCommands.after))
+							connected = True
+						else:
+							if ii < ntriesConnect-1:
+								if ret == 1:	U.logger.log(20, u"... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
+								elif ret == 2:	U.logger.log(20, u"... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
+								else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
+							expCommands.kill(0)
+							time.sleep(0.1)
+							continue
+
+						time.sleep(0.1)
+
+						try:
+
+							connected = False
+							ntriesConnect = 2
+							for ii in range(ntriesConnect):
+								try:
+									U.logger.log(20,u"expect connect ")
+									expCommands.sendline("connect ")
+									ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=15)
+									if ret == 0:
+										U.logger.log(20,u"... successful: {}".format(expCommands.after))
+										connected = True
+										break
+									else:
+										if ii < ntriesConnect-1: 
+											if ret == 1:	U.logger.log(20, u"... error, try again: {}-{}".format(expCommands.before,expCommands.after))
+											elif ret == 2:	U.logger.log(20, u"... timeout, try again: {}-{}".format(expCommands.before,expCommands.after))
+											else:			U.logger.log(20, "... unexpected, try again: {}-{}".format(expCommands.before,expCommands.after))
+									time.sleep(1)
+
+								except Exception as e:
+									U.logger.log(20, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+									if ii < ntriesConnect-1: 
+										U.logger.log(20, u"... error, try again")
+										time.sleep(1)
+
+							if not connected:
+								U.logger.log(20, u"connect error, giving up")
+								tryAgain = 0
+					
+							else:
+								correctTz = int(-time.timezone //3600 + time.localtime().tm_isdst)
+								correctTT = int(time.time()) + 0 # +1 for delay of writing
+
+								tsh = "{:8x}".format(correctTT)
+								correctTT = int(time.time()) + 1  # +1 for delay of writing
+								xx = correctTT
+								tsh = ""
+
+								ex =[256*256*256,256*256,256,1]
+								for ii in range(4):
+									temp = xx // ex[ii]
+									tsh =  "{:02x}".format(temp) + tsh
+									xx  = xx - temp*ex[ii]
+
+								if correctTz < 0:	tz = "f{:01x}".format(16-correctTz)
+								else:				tz = "0{:01x}".format(correctTz)
+								writeback =tsh + tz
+								cmdON		= ["char-write-req 3e {}".format(writeback)]
+								U.logger.log(20,"{}:   cmd:{},   timestamp:{}".format(mac, cmdON, correctTT) )
+								success = False
+								for ii in range(3):
+										for cc in cmdON:
+											U.logger.log(20,"sendline  cmd:{}".format( cc))
+											expCommands.sendline( cc )
+											ret = expCommands.expect([mac,"Error","failed",pexpect.TIMEOUT], timeout=5)
+											if ret == 0:
+												U.logger.log(20,u"... successful: {}-{}".format(expCommands.before,expCommands.after))
+												success = True
+												break
+											else:
+												if ii < ntriesConnect-1: 
+													if ret in[1,2]:	U.logger.log(20, u"... error, quit: {}-{}".format(expCommands.before,expCommands.after))
+													elif ret == 3:	U.logger.log(20, "... timeout, quit: {}-{}".format(expCommands.before,expCommands.after))
+													else:			U.logger.log(20, "... unexpected, quit: {}-{}".format(expCommands.before,expCommands.after))
+											time.sleep(1)
+											success = False
+										if success: break 
+
+								expCommands.sendline("disconnect" )
+								U.logger.log(20,u"sendline disconnect ")
+								ret = expCommands.expect([">","Error",pexpect.TIMEOUT], timeout=5)
+								if ret == 0:
+									U.logger.log(20,u"... successful: {}".format(expCommands.after))
+								else:
+									if ret == 1: 	U.logger.log(20, "... error: {}".format(expCommands.after))
+									elif ret == 2:	U.logger.log(20, "... timeout: {}".format(expCommands.after))
+									else: 			U.logger.log(20, "... unknown: {}".format(expCommands.after))
+									expCommands.kill(0)
+									expCommands = ""
+
+						except Exception as e:
+							U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+							time.sleep(1)
+						if success: break
+
+					if expCommands !="":
+						try:	expCommands.sendline("quit\r" )
+						except: pass
+						try:	expCommands.kill(0)
+						except: pass
+						expCommands = ""
+
+
+				if expCommands !="":
+					try:	expCommands.sendline("quit\r" )
+					except: pass
+					try:	expCommands.kill(0)
+					except: pass
+	except Exception as e:
+			U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+
+	return restart
 
 
 
@@ -4384,6 +4550,9 @@ def doLoopCheck(tt, sc, pc, sensor, useHCI):
 			if beep(useHCI):
 				U.restartMyself(param="", reason="beep")
 
+			if updateTimeAndZone(useHCI):
+				U.restartMyself(param="", reason="updateTimeAndZone")
+
 			if getBeaconParameters(useHCI):
 				U.restartMyself(param="", reason="get battery levels")
 
@@ -4591,7 +4760,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 		if mac == acceptNewBeaconMAC:
 			rejectThisMessage = False
 			if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-				writeTrackMac("tag-6   ", "accept THIS spec MAC #", mac)
+				writeTrackMac("tag-7   ", "accept THIS spec MAC #", mac)
 
 		if rejectThisMessage: # unknow beacon.. accept if RSSI > accept
 			if mac not in onlyTheseMAC:
@@ -4601,7 +4770,11 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 					#print " new beacon :", mac, rssi, acceptNewiBeacons
 					rejectThisMessage = False
 
-		batteryLevel, calibration, position, light  = checkForValueInfo( typeOfBeacon, tagFound, mac, hexstr )
+		BL, calibration, position, light  = checkForValueInfo( typeOfBeacon, tagFound, mac, hexstr )
+		if batteryLevel == "":
+			batteryLevel = BL
+		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+			writeTrackMac("tag-9   ", " batteryLevel>{}<".format(batteryLevel) ,mac)
 		if False and batteryLevel != "":
 			U.logger.log(20,u"batteryLevel:{}, calibration:{}, position:{}, light:{}".format(batteryLevel, calibration, position, light))
 		if batteryLevel == "" and batteryVoltage !=0: 
@@ -4622,7 +4795,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 		if not rejectThisMessage and mac in beaconsThisReadCycle: fillHistory(mac)
 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac("tag-9   ", "beaconsThisReadCycle ..mfg_info: {},rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel, ) ,mac)
+			writeTrackMac("tag-E   ", "beaconsThisReadCycle ..mfg_info: {},rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel) ,mac)
 
 
 	except	Exception as e:

@@ -43,50 +43,6 @@ These Variables are not needed by the user, but they need to exist, they go into
 		<Label>... VARIABLES folder:</Label>
 	</Field>
 
-	<Field    id="groupCountNameDefault"   type="textfield" >
-		<Label>... COUNT variables names start w:</Label>
-	</Field>
-
-	<Field id="groupCountNameDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>These variables count number of beacons-RPi-BLEconnect are home away.. 
-define the group names below</Label>
-	</Field>
-
-
-	<Field    id="groupName0"   type="textfield" >
-		<Label>... name for COUNT-Group1(def Family):</Label>
-	</Field>
-
-
-	<Field    id="groupName1"   type="textfield" >
-		<Label>... name for COUNT-Group2(def Guests):</Label>
-	</Field>
-
-
-	<Field    id="groupName2"   type="textfield" >
-		<Label>... name for COUNT-Group3(def Other1):</Label>
-	</Field>
-
-
-	<Field    id="groupName3"   type="textfield" >
-		<Label>... name for COUNT-Group4(def Other2):</Label>
-	</Field>
-
-
-	<Field    id="groupName4"   type="textfield" >
-		<Label>... name for COUNT-Group5(def Other3):</Label>
-	</Field>
-
-	<Field id="groupNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>The groups names will be used for variables and track /count totals of up / down  home / away states for all group members
-When you leave the name empty the variable will not be used / created, 
-They will also only be crated when needed ie when a groups has any members
-You need to put a device (RPI,beacon,BLEconnect) into one of these groups in device edit to make it part of one of these groups, ie to be counted
-This can be used to check if eg all familiy members are home/away or all rpi devices are on or one is down = away
-This is not used for trigger names they will continue to be called Family, Guests, Other1, Other2, Other3 as their names can not be changed dynamically</Label>
-	</Field>
-
-
 	<Field    id="ibeaconNameDefault"   type="textfield" >
 		<Label>...STATUS changed variables start w:</Label>
 	</Field>
@@ -128,6 +84,86 @@ This is not used for trigger names they will continue to be called Family, Guest
 	<Field id="enableFINGLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>This is used if you want to send status changes to fingscan plugin</Label>
 	</Field>
+
+
+
+	<Field id="infoLabelCountVariables" type="label" fontColor="green" >
+		<Label>== Variables populated with COUNTS of devices being home, present, online vs away, offline,..</Label>
+	</Field>
+
+	<Field    id="groupCountNameDefault"   type="textfield" >
+		<Label>... COUNT variables names start w:</Label>
+	</Field>
+
+	<Field id="groupCountNameDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>These variables count number of beacons-RPi-BLEconnect-sensors that are home away.. 
+Define the group names below: !! No spaces in names!! </Label>
+	</Field>
+
+	<Field    id="awayWhenNochangeInSeconds"   type="menu" default="600">
+		<Label>... number of seconds w/o message to be counted as away/offline:</Label>
+		<List>
+			<Option value="20"         >20 secs for testing</Option>
+			<Option value="60"         >60 secs</Option>
+			<Option value="90"         >90 secs</Option>
+			<Option value="120"        >2 minutes</Option>
+			<Option value="180"        >3 minutes</Option>
+			<Option value="240"        >4 minutes</Option>
+			<Option value="300"        >5 minutes</Option>
+			<Option value="360"        >6 minutes</Option>
+			<Option value="420"        >7 minutes</Option>
+			<Option value="480"        >8 minutes</Option>
+			<Option value="540"        >9 minutes</Option>
+			<Option value="600"        >10 minutes (default)</Option>
+			<Option value="900"        >15 minutes</Option>
+			<Option value="1200"       >20 minutes</Option>
+			<Option value="1600"       >30 minutes</Option>
+			<Option value="2500"       >45 minutes</Option>
+			<Option value="3600"       >1 hour</Option>
+			<Option value="7200"       >2 hours</Option>
+			<Option value="21600"      >6 hours</Option>
+			<Option value="43200"      >12 hours</Option>
+			<Option value="86400"      >1 day</Option>
+		</List>
+	</Field>
+	<Field id="awayWhenNochangeInSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>for sensors ONLY: they do not have state up/down, but temperature, humidity, ...</Label>
+	</Field>
+
+	<Field    id="groupName0"   type="textfield" >
+		<Label>... name for COUNT-Group1(def Family):</Label>
+	</Field>
+
+
+	<Field    id="groupName1"   type="textfield" >
+		<Label>... name for COUNT-Group2(def Guests):</Label>
+	</Field>
+
+
+	<Field    id="groupName2"   type="textfield" >
+		<Label>... name for COUNT-Group3(def Other1):</Label>
+	</Field>
+
+
+	<Field    id="groupName3"   type="textfield" >
+		<Label>... name for COUNT-Group4(def Other2):</Label>
+	</Field>
+
+
+	<Field    id="groupName4"   type="textfield" >
+		<Label>... name for COUNT-Group5(def Other3):</Label>
+	</Field>
+
+	<Field id="groupNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>The groups names will be used for variables and track /count totals of up / down  home / away states for all group members
+When you leave the name empty the variable will not be used / created, 
+They will also only be crated when needed ie when a groups has any members
+You need to put a device (RPI,beacon,BLEconnect,Sensor) into one of these groups in device edit to make it part of one of these groups, ie to be counted
+This can be used to check if eg all familiy members are home/away or all rpi devices are on or one is down = away
+This is not used for trigger names they will continue to be called Family, Guests, Other1, Other2, Other3 as their names can not be changed dynamically</Label>
+	</Field>
+
+
 
 
 	<Field id="simpleSeparator22" type="separator"/>
@@ -899,6 +935,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field    id="debugSQLlogger"      type="checkbox"         > <Label>     ..  (17) SQLlogger:</Label>  </Field>
 	<Field    id="debugSQLSuppresslog" type="checkbox"         > <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
 	<Field    id="debugBeep"           type="checkbox"         > <Label>     ..  (19) beacon Beep:</Label>  </Field>
+	<Field    id="debugUpdateTimeAndZone" type="checkbox"      > <Label>     ..  (20) set time and date on beacon:</Label>  </Field>
+updateTimeAndZone
 	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S) special debug (only for development):</Label>  </Field>
 	<Field    id="debugall"            type="checkbox"         > <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
