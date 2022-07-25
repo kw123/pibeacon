@@ -1100,10 +1100,10 @@ class Plugin(indigo.PluginBase):
 						if u"isBLESensorDevice" not in props:
 							props[u"isBLESensorDevice"] = True
 							upd = True
+						self.isBLESensorDevice[dev.address] = dev.id
 
 					if upd:
 						dev.replacePluginPropsOnServer(props)
-
 
 
 				self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + u"RPIconf", fmtOn=self.RPIFileSort)
@@ -1316,7 +1316,7 @@ class Plugin(indigo.PluginBase):
 			self.debugNewDevStates 			= False
 			self.cameraImagesDir			= self.indigoPreferencesPluginDir+u"cameraImages/"
 			self.knownBeaconTags 			= {}
-
+			self.isBLESensorDevice			= {}
 			self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get(u"enableMACtoVENDORlookup",u"21"))
 
 			self.loopSleepTime				= 9.0
@@ -3841,7 +3841,8 @@ class Plugin(indigo.PluginBase):
 					piNo = dev.states[u"note"].split(u"-")
 					try: 	self.RPI[str(int(piNo[-1]))][u"piOnOff"] = u"1"
 					except: pass
-
+			if dev.pluginProps.get('isBLESensorDevice', ''):
+				self.isBLESensorDevice[dev.address] = dev.id
 
 			if dev.deviceTypeId == u"sprinkler":
 					self.sprinklerDeviceActive = True
@@ -3855,13 +3856,17 @@ class Plugin(indigo.PluginBase):
 		props = dev.pluginProps
 
 		if u"address" in props:
-				beacon = props[u"address"]
-				if beacon in self.beacons and beacon.find(u"00:00:00:00") ==-1:
-					if u"indigoId" in self.beacons[beacon] and	self.beacons[beacon][u"indigoId"] == dev.id:
-						self.indiLOG.log(10,u"-setting beacon device in internal tables to 0:  " + dev.name+u"  "+ u"{}".format(dev.id)+u" enabled:"+ u"{}".format(dev.enabled)+ "  pluginState:"+ self.pluginState)
-						self.beacons[beacon][u"indigoId"] = 0
-						self.beacons[beacon][u"ignore"]	  = 1
-						self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
+			beacon = props[u"address"]
+			if beacon in self.beacons and beacon.find(u"00:00:00:00") ==-1:
+				if u"indigoId" in self.beacons[beacon] and	self.beacons[beacon][u"indigoId"] == dev.id:
+					self.indiLOG.log(10,u"-setting beacon device in internal tables to 0:  " + dev.name+u"  "+ u"{}".format(dev.id)+u" enabled:"+ u"{}".format(dev.enabled)+ "  pluginState:"+ self.pluginState)
+					self.beacons[beacon][u"indigoId"] = 0
+					self.beacons[beacon][u"ignore"]	  = 1
+					self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
+			if 	beacon in self.isBLESensorDevice and props.get("isBLESensorDevice",False):
+				del self.isBLESensorDevice[dev.address]
+
+
 		if dev.deviceTypeId.find(u"rPI") > -1:
 			try:
 				pi = dev.description.split(u"-")
@@ -3869,6 +3874,9 @@ class Plugin(indigo.PluginBase):
 					self.delRPI(pi=pi[1], calledFrom=u"deviceDeleted")
 			except:
 				pass
+
+
+
 		self.deviceStopComm(dev)
 		return
 
@@ -11812,8 +11820,8 @@ class Plugin(indigo.PluginBase):
 									return True
 
 								deldevID[devIDrpi] = 1
-								self.indiLOG.log(40,u"device not found in indigo DB, ok if device was just deleted")
-								self.indiLOG.log(40,u"removing input device from parameters for pi#:{}  devID={}".format(piU, devIDrpi))
+								self.indiLOG.log(30,u"device not found in indigo DB, ok if device was just deleted")
+								self.indiLOG.log(30,u"removing input device from parameters for pi#:{}  devID={}".format(piU, devIDrpi))
 								anyChange = True
 								continue
 
@@ -12937,7 +12945,7 @@ class Plugin(indigo.PluginBase):
 			lastStatusChangeDT = 99999
 			try:
 				if u"lastUp" in dev.states:
-					lastUp =  self.getTimetimeFromDateString(self.getCurrentState(dev,devIds,"lastUp", fromMETHOD="calcPostion1"))
+					lastUp =  float(self.getTimetimeFromDateString(self.getCurrentState(dev,devIds,"lastUp", fromMETHOD="calcPostion1")))
 
 			except Exception as e:
 				self.exceptionHandler(40,e)
@@ -12982,7 +12990,7 @@ class Plugin(indigo.PluginBase):
 
 				piTimeUse = piT2
 				if dist == 9999. and  lastUp != 0:
-					piTimeUse = lastUp
+					piTimeUse = float(lastUp)
 
 				if signal == -999:
 					if	 (time.time()- piTimeUse < expirationTime):
@@ -13161,7 +13169,7 @@ class Plugin(indigo.PluginBase):
 						if self.decideMyLog(u"BLE"): self.indiLOG.log(5,u"NOT UPDATING::::  updating time  status was up, is down now dist = 99999 for MAC: {}".format(mac) )
 						#self.addToStatesUpdateDict(dev.id,u"Pi_{:02d}_Time".format(piU),	datetime.datetime.now().strftime(_defaultDateStampFormat))
 				#self.executeUpdateStatesDict()
-				update, deltaDistance = self.calcPostion(dev,expirationTime)
+				update, deltaDistance = self.calcPostion(dev, expirationTime)
 				updateBLE = update or updateBLE
 
 				if rssi > -160:
@@ -16598,7 +16606,7 @@ class Plugin(indigo.PluginBase):
 				newStates = copy.copy(dev.states)
 
 
-				self.autoCreateCorrespondingSensorDev(mac, fromPiU, typeOfBeacon)
+			self.autoCreateCorrespondingSensorDev(mac, fromPiU, typeOfBeacon)
 
 		except Exception as e:
 			if u"{}".format(e).find(u"timeout waiting") > -1:
@@ -16616,51 +16624,40 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def autoCreateCorrespondingSensorDev(self, mac, fromPiU, typeOfBeacon):
 		try:
-			if typeOfBeacon in self.knownBeaconTags and "correspondingSensorType" in self.knownBeaconTags[typeOfBeacon]:
-				correspondingSensorType = self.knownBeaconTags[typeOfBeacon]["correspondingSensorType"]
-				if correspondingSensorType == "": return 
-				textHint = self.knownBeaconTags[typeOfBeacon]["text"]
-			else:
-				return
+			# check if dev already exists
+			if mac in self.isBLESensorDevice: return 
 
-			temp = False
-			hum = False
-			press = False
-			accell = False
-			motion = False
+			# check if type is supported
+			if typeOfBeacon not in self.knownBeaconTags: return 
+			sensorInfo = self.knownBeaconTags[typeOfBeacon]
+			correspondingSensorType = sensorInfo.get("correspondingSensorType", "")
+			if correspondingSensorType == "": return 
+			textHint = sensorInfo.get("text","")
+
+			# does not exist and type is supported: create corresponding BLE sensor device 
+
+			# set what should be displayed in status column
+			temp 	= False
+			hum 	= False
+			press 	= False
+			accell	= False
+			motion 	= False
 			contact = False
-			formal = False
-			if textHint.lower().find("temp") > -1: temp = True
-			if correspondingSensorType.lower().find("temp") > -1: temp = True
-			if correspondingSensorType.lower().find("press") > -1: press = True
-			if correspondingSensorType.lower().find("hum") > -1: hum = True
-			if correspondingSensorType.lower().find("moti") > -1: motion = True
-			if correspondingSensorType.lower().find("contact") > -1: contact = True
-			if correspondingSensorType.lower().find("formal") > -1: 
-					formal = True
-					temp = True
-					hum = True
-			if correspondingSensorType.lower().find("BLERuuviTag") > -1: 
-					temp = True
-					hum = True
-					press = True
-					accell = True
-			if correspondingSensorType.lower().find("BLEinkBirdPool01B") > -1: 
-					temp = True
-			found = ""
-			for sensDev in indigo.devices.iter(u"props.isSensorDevice"):
-				sensorPluginProps = sensDev.pluginProps
-				if sensDev.deviceTypeId != correspondingSensorType: continue
-				if "mac" not in sensorPluginProps: continue
-				if sensorPluginProps["mac"] != mac: continue
-				found = sensDev.name
-				break
-			if found != "": 
-				self.indiLOG.log(20,u"new beacon logging: corresponding sensor type device already exists:{} ".format(found))
-				return
+			formal 	= False
+			if textHint.lower().find("temp") > -1: 						temp 	= True
+			if textHint.lower().find("hum") > -1: 						hum 	= True
+			if textHint.lower().find("accell") > -1: 					accell 	= True
+			if textHint.lower().find("contact") > -1: 					contact = True
+			if textHint.lower().find("moti") > -1: 						moti 	= True
+			if textHint.lower().find("formal") > -1: 					formal 	= True
+			if correspondingSensorType.lower().find("temp") > -1: 		temp 	= True
+			if correspondingSensorType.lower().find("press") > -1: 		press 	= True
+			if correspondingSensorType.lower().find("hum") > -1: 		hum 	= True
+			if correspondingSensorType.lower().find("moti") > -1: 		motion 	= True
+			if correspondingSensorType.lower().find("contact") > -1: 	contact = True
+			if correspondingSensorType.lower().find("formal") > -1: 	formal 	= True
 
 			name = "s-x-{}-{}".format(correspondingSensorType, mac)
-			self.indiLOG.log(20,u"new beacon logging: corresponding senor device not found, will try to auto-create one:{}, please finish setup for new ruuvitag sensor device".format(name))
 			newprops = {}
 			newprops[u"mac"] 						= mac
 			newprops[u"isSensorDevice"] 			= True
@@ -16670,11 +16667,17 @@ class Plugin(indigo.PluginBase):
 			newprops[u"SupportsStatusRequest"] 		= False
 			newprops[u"AllowOnStateChange"] 		= False
 			newprops[u"AllowSensorValueChange"] 	= False
-			newprops[u"noI2cCheck"] 				= False
+			newprops[u"noI2cCheck"] 				= True
 			newprops[u"isBLESensorDevice"]			= True
 			rPiEnable = "rPiEnable"+ "{}".format(fromPiU)
 			newprops[rPiEnable]						= True
-			newprops[u"displayS"]					= "Temperature"
+			if formal:
+				newprops[u"displayS"]					= "Formaldehyde"
+			elif temp:
+				newprops[u"displayS"]					= "Temperature"
+			else:
+				newprops[u"displayS"]					= ""
+
 			if temp: newprops[u"offsetTemp"]		= "0"
 			if hum: newprops[u"offsetHum"]			= "0"
 			if press: newprops[u"offsetPress"]		= "0"
@@ -16688,6 +16691,10 @@ class Plugin(indigo.PluginBase):
 				newprops[u"updateIndigoDeltaAccelVector"] = "50"
 				newprops[u"updateIndigoDeltaMaxXYZ"]	= "50"
 
+			self.indiLOG.log(20,u"beacon:  corresponding BLE-sensor device not found, will try to create one:{}.. details in plugin.log\n                                   =====> please finish setup for new BLE type sensor device in device edit".format(name))
+			self.indiLOG.log(10,u"...      beacontype: {}".format(typeOfBeacon))
+			self.indiLOG.log(10,u"...      info:       {}".format(self.knownBeaconTags[typeOfBeacon]))
+			self.indiLOG.log(10,u"...      props:      {}".format(newprops))
 			dev = indigo.device.create(
 				protocol		= indigo.kProtocol.Plugin,
 				address			= mac,
@@ -16915,9 +16922,9 @@ class Plugin(indigo.PluginBase):
 
 				if updateSignal and "note" in dev.states and dev.states[u"note"].find(u"beacon") >-1:
 					try:
-						props=dev.pluginProps
-						expirationTime=props[u"expirationTime"]
-						update, deltaDistance =self.calcPostion(dev, expirationTime, rssi=rssi)
+						props = dev.pluginProps
+						expirationTime = float(props[u"expirationTime"])
+						update, deltaDistance = self.calcPostion(dev, expirationTime, rssi=rssi)
 						if ( update or (deltaDistance > self.beaconPositionsdeltaDistanceMinForImage) ) and u"showBeaconOnMap" in props and props[u"showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols:
 							#self.indiLOG.log(10,u"beaconPositionsUpdated; calcPostion:"+name+u" pi#="+fromPiU	  +u"   deltaDistance:"+ u"{}".format(deltaDistance)	  +u"   update:"+ u"{}".format(update)  )
 							self.beaconPositionsUpdated =6
@@ -16926,7 +16933,7 @@ class Plugin(indigo.PluginBase):
 						if u"{}".format(e) != u"None":
 							self.exceptionHandler(40,e)
 
-				if self.newBeaconsLogTimer >0:
+				if self.newBeaconsLogTimer > 0:
 						try:
 							created = self.getTimetimeFromDateString(dev.states[u"created"])
 							if created + self.newBeaconsLogTimer > 2*time.time():

@@ -1076,7 +1076,7 @@
     "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
   }, 
   "BLERuuviTag":  {
-    "text":"Ruuvi-beacon (not the sensor part)",
+    "text":"Ruuvi-beacon w temp, hum, press, accell",
     "Maj":"",
     "Min":"",
     "battCmd": "msg", 

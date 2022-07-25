@@ -1,9 +1,16 @@
+Added features / changes in v2022.146.4@ 2022-07-25
+===================================================
+   
+1. streamlined and improved  autocreate of BLE sensors type device (temp, humidity, pressure, motion, Formaldehyde ) (eg ruuvitag, govee)
+2. added check for properties if not set in device edit 
+
+
 Added features / changes in v2022.146.3@ 2022-07-16
 ===================================================
    
-1. added autocreate of BLE sensors type device(temp, humidity, motion, ... ) (eg ruuvitag, govee)  when ruuvi beacons gets created
-   these devices are represented as 2 indigo devices one a beacon and the otehr the sensor
-   with this addon the sensor type get created at teh same time when the beacon type gets detected and created. 
+1. added autocreate of BLE sensors type device(temp, humidity, motion, ... ) (eg ruuvitag, govee)  when BLE-sensor type beacons gets created
+   these devices are represented as 2 indigo devices one a beacon and the other the sensor
+   with this addon the sensor type gets created at the same time when the beacon type gets detected and created. 
 
 2. fixed batterylevel for beacons that are also sensor type devices (eg govee, ruuvi,..)
 
@@ -12,8 +19,6 @@ Added features / changes in v2022.146.3@ 2022-07-16
 4. added option in config for individual sensor devices be part of a group1..4  for home/away
 
 added function #3 and #4 enable to see quickly how many sensor devices that are (not) online and total number of sensors
-
-
 
 
 

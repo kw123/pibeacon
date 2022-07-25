@@ -4104,7 +4104,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Formaldehyde" hidden="no"> <Label>Property to display in the State Column:</Label>
      defaultValue="Formaldehyde" hidden="no"> <Label>Property to display in the State Column:</Label>
 			<List>
 				<Option value="Formaldehyde" >Formaldehyde</Option>
