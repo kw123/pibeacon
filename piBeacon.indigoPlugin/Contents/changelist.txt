@@ -1,3 +1,11 @@
+Added features / changes in v2022.146.5@ 2022-07-27
+===================================================
+   
+1. fixed BLEconnect program on RPi,
+  iPhones are not supported anymore as they do not answer BLE pings anymore, only BLE connect sensors and switches like switchbot.
+2. supressed matplot logging in beacon plot
+
+
 Added features / changes in v2022.146.4@ 2022-07-25
 ===================================================
    

@@ -50,18 +50,21 @@ logfileName=plotData["logFile"]
 
 logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
-## disable fontmanager logging output 
-logging.getLogger('matplotlib.font_manager').disabled = True
 
 if not logLevel:
 	logger.setLevel(logging.WARNING)
 else:
 	logger.setLevel(logging.DEBUG)
 
+## disable fontmanager logging output 
+logging.getLogger('matplotlib.font_manager').disabled = True
+logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
+
+
 try:
 	# print start to logfile 
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
-	logger.log(20,"call as:\n{}".format(sys.argv) )
+	logger.log(20,"called as:\n{}".format(sys.argv) )
 	tStart= time.time()
 
 	distanceUnits			= max(0.01, float(plotData["distanceUnits"]))
