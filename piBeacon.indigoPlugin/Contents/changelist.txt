@@ -1,4 +1,4 @@
-Added features / changes in v2022.146.5@ 2022-07-27
+Added features / changes in v2022.146.6@ 2022-07-27
 ===================================================
    
 1. fixed BLEconnect program on RPi,

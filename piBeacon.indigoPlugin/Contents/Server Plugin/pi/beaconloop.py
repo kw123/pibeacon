@@ -4068,29 +4068,29 @@ def beep(useHCI):
 #################################
 def updateTimeAndZone(useHCI):
 	global beaconsOnline
-'''
-============
-for XiaomiTimeLYWSD02 
-cmd = "gatttool -i {} -I -b {}".format(hci, MAC)
-then do expect ... 
-tt = char-read-hnd 3e
+	'''
+	============
+	for XiaomiTimeLYWSD02 
+	cmd = "gatttool -i {} -I -b {}".format(hci, MAC)
+	then do expect ... 
+	tt = char-read-hnd 3e
 
-currTime = int(tt[0:2],16) * 1 + int(tt[2:4],16) * 256 +int(tt[4:6],16) * 8*256 +int(tt[6:8],16) * 256*256
-currTS   = int(tt[8:10])
-if currTS > 127: currTS = 256 - currTS
+	currTime = int(tt[0:2],16) * 1 + int(tt[2:4],16) * 256 +int(tt[4:6],16) * 8*256 +int(tt[6:8],16) * 256*256
+	currTS   = int(tt[8:10])
+	if currTS > 127: currTS = 256 - currTS
 
-write back:
-correctTz = -time.timezone /3600 + time.localtime().tm_isdst 
-correctTT = int(time.time()) + 1  # +1 for delay of writing
+	write back:
+	correctTz = -time.timezone /3600 + time.localtime().tm_isdst 
+	correctTT = int(time.time()) + 1  # +1 for delay of writing
 
-tt = "{:8x}".format(correctTT)
-if ts < 0:  tsh = "f{:01x}".format(16-correctTz)
-else:		tsh = "0{:01x}".format(correctTz)
+	tt = "{:8x}".format(correctTT)
+	if ts < 0:  tsh = "f{:01x}".format(16-correctTz)
+	else:		tsh = "0{:01x}".format(correctTz)
 
-writeback = tt + tsh
-char-write-req 3e writeback
-==============
-'''
+	writeback = tt + tsh
+	char-write-req 3e writeback
+	==============
+	'''
 	try:	
 		restart = False
 

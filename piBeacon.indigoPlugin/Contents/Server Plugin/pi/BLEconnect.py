@@ -1234,8 +1234,8 @@ def readParams():
 
 							#U.logger.log(30, u"=== holdSeconds:{}".format(inp["output"]["OUTPUTswitchbotRelay"][devId]["holdSeconds"]))
 						switchBotPresent = True
-				U.logger.log(30, u" switchBotConfig:{}".format(switchBotConfig))
-				#U.logger.log(20, u" BLEconnect - switchBotConfig {}".format(switchBotConfig))
+			#U.logger.log(20, u" switchBotConfig:{}".format(switchBotConfig))
+			#U.logger.log(20, u" BLEconnect - switchBotConfig {}".format(switchBotConfig))
 			switchBotPresent = xxx
 
 			if len(macList) == 0 and not switchBotPresent:
@@ -1243,7 +1243,7 @@ def readParams():
 				exit()
 
 			#U.logger.log(30, u"BLEconnect - chechink devices (2):{}".format(macList))
-			U.logger.log(30, u"macList:{}".format(macList))
+			#U.logger.log(30, u"macList:{}".format(macList))
 			return True
 			
 		except	Exception as e:
