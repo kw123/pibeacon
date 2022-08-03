@@ -2150,11 +2150,11 @@ def checkNTP():
 ####################      #########################
 def setupTempDir():
 	try:
-		if	os.path.isdir(G.homeDir+"temp"):
-			subprocess.call("rm  "+G.homeDir+"temp/* > /dev/null 2>&1", shell=True)
-		else:
+		if	not os.path.isdir(G.homeDir+"temp"):
 			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
-		subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
+		if subprocess.Popen("df | grep tempfs ", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].find(G.homeDir+"temp") == -1:
+			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
+		subprocess.call("sudo rm "+G.homeDir+"temp/*", shell=True)
 	except	Exception, e :
 		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
@@ -2427,11 +2427,11 @@ def execMaster():
 
 		G.last_masterStart = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-		killOldPrograms()
 
 		# just in case the file is present, is created by calling master w nohup. it is terminal output, can be Gbytes
 		subprocess.Popen("sudo rm {}nohup.out > /dev/null 2>&1".format(G.homeDir),shell=True)
 
+		killOldPrograms()
 
 		subprocess.call("/usr/bin/python "+G.homeDir+"copyToTemp.py", shell=True)
 		subprocess.call("nohup sudo /bin/bash "+G.homeDir+"master.sh > /dev/null 2>&1 ", shell=True)
@@ -2444,7 +2444,6 @@ def execMaster():
 		U.logger.log(20, "=========START.. MASTER  v:{}".format(masterVersion) )
 
 		checkWiFiSetupBootDir()
-
 
 		checkLogfiles()
 
@@ -2493,8 +2492,29 @@ def execMaster():
 		U.logger.log(20, "=========START5.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
 		checkForAdhocWeb()
+		if os.path.isfile(G.homeDir+"temp/rebootNeeded"): 	os.remove(G.homeDir+"temp/rebootNeeded")
+		if os.path.isfile(G.homeDir+"temp/restartNeeded"):	os.remove(G.homeDir+"temp/restartNeeded")
+		GPIO.setwarnings(False)
+
+		checkRamDisk()
+
+		lastrebootWatchDogTime = time.time() - rebootWatchDogTime*60. +30.
+		subprocess.call("shutdown - c >/dev/null 2>&1", shell=True)
+		## stop any pending shutdowns
+
+
+		# check if all libs for sensors etc are installed
+		checkInstallLibs()
 
 		U.logger.log(20, "=========START6.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
+
+		#(re)start beaonloop for bluez / iBeacons
+		if enableiBeacons == "1": 
+			startProgam("beaconloop.py", params="", reason=" at startup ")
+			checkIfAliveFileOK("beaconloop",force="set")
+
+		time.sleep(2)
+		startBLEconnect()
 
 		indigoServerOn, changed, connected  = checkIfNetworkStarted2(indigoServerOn, changed, connected )
 
@@ -2509,29 +2529,9 @@ def execMaster():
 			time.sleep(50)
 			exit()
 
-
 		if os.path.isfile(G.homeDir+"temp/rebootNeeded"): 	os.remove(G.homeDir+"temp/rebootNeeded")
 		if os.path.isfile(G.homeDir+"temp/restartNeeded"):	os.remove(G.homeDir+"temp/restartNeeded")
 
-
-		# check if all libs for sensors etc are installed
-
-		checkInstallLibs()
-
-		GPIO.setwarnings(False)
-
-
-
-		#(re)start beaonloop for bluez / iBeacons
-		if enableiBeacons == "1": 
-			startProgam("beaconloop.py", params="", reason=" at startup ")
-			checkIfAliveFileOK("beaconloop",force="set")
- 
-		checkRamDisk()
-
-		lastrebootWatchDogTime = time.time() - rebootWatchDogTime*60. +30.
-		subprocess.call("shutdown - c >/dev/null 2>&1", shell=True)
-		## stop any pending shutdowns
 
 		beforeLoop			 = False
 		# main loop every 30 seconds
@@ -2590,7 +2590,7 @@ def execMaster():
 			loopCount += 1
 
 			if abs(tAtLoopSTart	 - time.time()) > 30:
-				if G.networkType.find("indigo") >-1 and G.wifiType =="normal":
+				if G.networkType.find("indigo") >-1 and G.wifiType == "normal":
 					U.restartMyself(reason="new time set, delta="+unicode(tAtLoopSTart	- time.time()))
 		
 			if shutdownSignalFromUPS_InitTime > 0 and time.time() - shutdownSignalFromUPS_InitTime >100: #   2 minutes after start
@@ -2633,9 +2633,7 @@ def execMaster():
 					checkIfNightReboot()
 					if datetime.datetime.now().hour > rebootHour: rebooted = False
 
-
 				checkSystemLOG()
-
 
 
 		######### start / stop  wifi  &  web servers 

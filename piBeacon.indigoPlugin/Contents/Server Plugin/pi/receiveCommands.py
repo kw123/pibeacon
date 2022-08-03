@@ -365,7 +365,7 @@ def execCMDS(next):
 
 			#print next
 			#print "next command: "+unicode(next)
-			U.logger.log(20,"{:.2f} next command: {}".format(time.time(), next))
+			#U.logger.log(20,"{:.2f} next command: {}".format(time.time(), next))
 			cmd= next["command"]
 
 			for cc in next:
@@ -785,7 +785,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 				break
 			data+=buffer 
 		
-		#U.logger.log(10, "{} wrote:".format(self.client_address[0]))
+		#U.logger.log(20, u"===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
 		try:
 			commands = json.loads(data.strip("\n"))
 		except	Exception as e:

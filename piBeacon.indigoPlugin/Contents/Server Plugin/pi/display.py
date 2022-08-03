@@ -1833,7 +1833,7 @@ except:
 	subprocess.call("cp "+G.homeDir+"display.inp "+G.homeDir+"temp/display.inp ", shell=True )
 
 time.sleep(0.1)
-data = json.loads(items[0])
+#data = json.loads(items[0])
 
 fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev,matrix)
 

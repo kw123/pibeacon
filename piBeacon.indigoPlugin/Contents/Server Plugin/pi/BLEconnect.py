@@ -790,6 +790,7 @@ def checkSwitchbotForCommand():
 	maxwaitForSwitchBot = 60
 	switchbotActive = ""
 	nonSwitchBotActive = False
+	U.logger.log(20, u"checkSwitchbotForCommand start")
 	while threadDict["state"] != "stop":
 		time.sleep(0.5)
 		if not switchBotPresent: 
@@ -801,13 +802,14 @@ def checkSwitchbotForCommand():
 		jData = U.checkForNewCommand("switchbot.cmd")
 	
 		if len(jData) > 0:
-			#U.logger.log(20, u" ADDING TO QUEUE  switchbotActive:{}".format(switchbotActive))
+			U.logger.log(20, u" ADDING TO QUEUE  switchbotActive:{}, data:{}".format(switchbotActive, jData))
 			switchbotQueue.put([0,jData])
 
-		if switchbotActive == "" and not switchbotQueue.empty(): 
+		if switchbotActive in["","delayed"] and not switchbotQueue.empty(): 
 			doSwitchBot()
 			#U.logger.log(20, u" returning from doSwitchBot")
 
+	U.logger.log(20, u"checkSwitchbotForCommand finish")
 
 	return 
 
@@ -826,7 +828,7 @@ def doSwitchBot():
 
 	switchbotActive	= "active"
 	switchbotAction = time.time() 
-	verbose = False
+	verbose = True
 	# jData= {"mac":mac#,"onOff":"0/1","statusRequest":True}
 	if  switchbotQueue.empty(): 
 		U.logger.log(20, u" empty:{}")
@@ -835,7 +837,7 @@ def doSwitchBot():
 
 	retryCount, jData = switchbotQueue.get()
 	switchbotQueue.task_done()
-	#U.logger.log(20, u" retrycount:{}; jData:{}, empty:{}".format(retryCount, jData, switchbotQueue.empty()))
+	#U.logger.log(20, u" retrycount:{}; jData:{}".format(retryCount, jData))
 	if retryCount > 3: 
 		switchbotActive = ""
 		return 
@@ -851,7 +853,7 @@ def doSwitchBot():
 			return 
 
 		checkParams = False
-		retData ={}
+		retData = {}
 		thisMAC = jData["mac"].upper()
 
 		sType = switchBotConfig[thisMAC]["sType"]
@@ -1002,12 +1004,12 @@ def doSwitchBot():
 			else:
 				if verbose: U.logger.log(20, "{} direction not in command:{}".format(thisMAC))
 				switchbotActive = ""
-				return 
+			return 
 
 		else:
 			if verbose: U.logger.log(20, "{} sType not found:{}".format(thisMAC, sType))
 			switchbotActive = ""
-			return 
+		return 
 	except  Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	
@@ -1389,6 +1391,8 @@ def startReadCommandThread():
 		threadDict = {}
 		threadDict["state"]   		= "start"
 		threadDict[u"thread"]  = threading.Thread(name=u'checkSwitchbotForCommand', target=checkSwitchbotForCommand)
+		threadDict[u"thread"].start()
+
 	except  Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 

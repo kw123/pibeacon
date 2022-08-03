@@ -18,10 +18,25 @@ U.setLogging()
 G.program 		= "copyToTemp"
 
 
+def setupTempDir():
+	try:
+		if	not os.path.isdir(G.homeDir+"temp"):
+			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
+		# check if already tempfs type, if not create 
+		if subprocess.Popen("df | grep tempfs ", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].find(G.homeDir+"temp") == -1:
+			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
+		subprocess.call("sudo rm "+G.homeDir+"temp/*", shell=True)
+	except	Exception, e :
+		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+	return 
+
+
 if __name__ == "__main__":
 	timeLastFile	= 0
 	myPID			= str(os.getpid())
 	U.killOldPgm(myPID, G.program+".py")
+
+	setupTempDir()
 
 	subprocess.call("chmod a+w -R "+G.homeDir+"*", shell=True)
 	subprocess.call("chown -R pi:pi "+G.homeDir+"*", shell=True)

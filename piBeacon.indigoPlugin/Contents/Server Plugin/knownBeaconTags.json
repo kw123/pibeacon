@@ -1,6 +1,6 @@
 {
   "Switchbot":  {
-    "text":"Switch bot",
+    "text":"SwitchBot switch",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=25,norm=1,and=127", 
@@ -9,6 +9,7 @@
     "pos": 2, 
     "posDelta": 0, 
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "correspondingSwitchbotDevice":"OUTPUTswitchbotRelay",
     "sequence":0,
     "sensorFunctions":"",
     "textForMenu":"",
@@ -17,7 +18,7 @@
     "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB06"
   },
   "SwitchbotRemote":  {
-    "text":"Switch bot remote",
+    "text":"SwitchBot remote",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=25,norm=1,and=127", 
@@ -34,7 +35,7 @@
     "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB07"
   },
    "SwitchbotTempHum":  {
-    "text":"Switch bot Temp hum",
+    "text":"SwitchBot Temp hum",
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=25,norm=1,and=127", 
@@ -52,7 +53,7 @@
     "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB09"
   },
   "SwitchbotMotion":  {
-   "text":"Switch bot motion sensor",
+   "text":"SwitchBot motion sensor",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
@@ -70,7 +71,7 @@
     "hexCode":"0201060DFF6909MAC#########"
   },
  "SwitchbotContact":  {
-    "text":"Switch bot contact sensor",
+    "text":"SwitchBot contact sensor",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
@@ -88,13 +89,14 @@
     "hexCode":"02010610FF6909MAC#########"
   },
  "SwitchbotCurtain":  {
-    "text":"Switch bot curtain",
+    "text":"SwitchBot curtain",
     "Maj":"",
     "Min":"",
     "calCmd":   "msg:pos=24,norm=128,and=128,nType=bool", 
     "battCmd":  "msg:pos=25,norm=1,and=127,nType=int", 
     "posCmd":   "msg:pos=26,norm=1,and=127,nType=int", 
     "lightCmd": "msg:pos=27,norm=16,and=240,nType=int", 
+    "correspondingSwitchbotDevice":"OUTPUTswitchbotCurtain",
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 2, 
@@ -210,7 +212,7 @@
 	"hexCode": "0D0303F5FE08094C595753443032"
    },
   "XiaomiMiFlower_Care":  {
-    "text":"Xiaomi Mi - Flower care / VegTrug",
+    "text":"Xiaomi Mi - Flower care / VegTrug temp, Cond, Illum, Moist",
     "Maj":"",
     "Min":"",
     "battCmd": "off", 
@@ -218,6 +220,7 @@
     "dBm": "-59", 
     "pos": 0, 
     "posDelta": 0, 
+    "correspondingBLEConnectSensorType":"BLEXiaomiMiVegTrug",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
     "sensorFunctions":"",
