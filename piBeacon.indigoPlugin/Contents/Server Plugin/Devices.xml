@@ -7624,8 +7624,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="false"></Field>
@@ -22092,7 +22092,10 @@ This device will get its battery level from its brother device,
    the beacon device with the same mac number,
    IF it is set to beacon type = switchbot 
 To force an update of the mode and switch time  use 
-  menu/piBeacon/Set params on switchbot bot </Label>
+  menu/piBeacon/Set params on switchbot bot 
+For the read settings from the device to work you need to set up the device on the phone app,
+  otherwise the mode and time settings can not be read
+  on/off etc  works w/o setup. (have not figured out what to init on the device)</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -22107,19 +22110,19 @@ To force an update of the mode and switch time  use
 				<Label>mode of device:</Label>
 				<List>
 						<Option value="cmdPressNormal" >press normal direction </Option>
-						<Option value="cmdPressInverse" >press inverse direction </Option>
+				<!--	<Option value="cmdPressInverse" >press inverse direction </Option> -->
 						<Option value="cmdSwitchNormal" >switch normal direction </Option>
-						<Option value="cmdSwitchInverse" >switch inverse direction </Option>
-						<Option value="donotset"  >do not set</Option>
+				<!--	<Option value="cmdSwitchInverse" >switch inverse direction </Option> -->
+						<Option value="donotset"  >do not set, use phone to set</Option>
 				</List>
 			</Field>
 
 
 			<Field id="holdSeconds" type="menu"     defaultValue="-1" hidden="no" >
-				<Label>length of time to hold switch:</Label>
+				<Label>length of time to hold switch(only for press mode):</Label>
 				<List>
-					<Option value="0" >0 secs </Option>
-					<Option value="1" >1 secs </Option>
+					<Option value="0" >0 sec </Option>
+					<Option value="1" >1 sec </Option>
 					<Option value="2" >2 secs </Option>
 					<Option value="3" >3 secs </Option>
 					<Option value="4" >4 secs </Option>
@@ -22144,12 +22147,34 @@ To force an update of the mode and switch time  use
 					<Option value="23" >23 secs </Option>
 					<Option value="24" >24 secs </Option>
 					<Option value="25" >25 secs </Option>
-					<Option value="26" >26 secs </Option>
-					<Option value="27" >27 secs </Option>
-					<Option value="28" >28 secs </Option>
-					<Option value="29" >29 secs </Option>
 					<Option value="30" >30 secs </Option>
-					<Option value="-1"  >do not set</Option>
+					<Option value="35" >35 secs </Option>
+					<Option value="40" >40 secs </Option>
+					<Option value="45" >45 secs </Option>
+					<Option value="50" >50 secs </Option>
+					<Option value="55" >55 secs </Option>
+					<Option value="60" >60 secs </Option>
+					<Option value="65" >65 secs </Option>
+					<Option value="70" >70 secs </Option>
+					<Option value="80" >80 secs </Option>
+\					<Option value="90" >90 secs </Option>
+					<Option value="100" >100 secs </Option>
+					<Option value="110" >110 secs </Option>
+					<Option value="120" >120 secs </Option>
+					<Option value="130" >130 secs </Option>
+					<Option value="140" >140 secs </Option>
+					<Option value="150" >150 secs </Option>
+					<Option value="160" >160 secs </Option>
+					<Option value="170" >170 secs </Option>
+					<Option value="180" >180 secs </Option>
+					<Option value="190" >190 secs </Option>
+					<Option value="200" >200 secs </Option>
+					<Option value="220" >220 secs </Option>
+					<Option value="230" >230 secs </Option>
+					<Option value="240" >240 secs </Option>
+					<Option value="250" >250 secs </Option>
+					<Option value="255" >255 secs </Option>
+					<Option value="-1"  >do not set, use phone to set</Option>
 				</List>
 			</Field>
 
