@@ -4,6 +4,8 @@
     "Maj":"",
     "Min":"",
     "battCmd": "msg:pos=25,norm=1,and=127", 
+    "modeCmd": "msg:pos=24,norm=1,and=128,nType=string,resultON=onOffMode,resultOFF=pressMode", 
+    "onOffCmd": "msg:pos=24,norm=1,and=64,nType=string,resultON=off,resultOFF=on", 
     "beepCmd": "off", 
     "dBm": "-61", 
     "pos": 2, 
@@ -70,7 +72,7 @@
     "subType":{},
     "hexCode":"0201060DFF6909MAC#########"
   },
- "SwitchbotContact":  {
+  "SwitchbotContact":  {
     "text":"SwitchBot contact sensor",
     "Maj":"",
     "Min":"",
@@ -88,7 +90,7 @@
     "subType":{},
     "hexCode":"02010610FF6909MAC#########"
   },
- "SwitchbotCurtain":  {
+  "SwitchbotCurtain":  {
     "text":"SwitchBot curtain",
     "Maj":"",
     "Min":"",
@@ -135,12 +137,34 @@
     "dBm": "-61", 
     "pos": 2, 
     "posDelta": 0, 
+ 	"correspondingSensorType":"BLEiSensor-*",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
     "sequence":0,
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "subtypeOfBeacon":{"pos":40, 
+			"mask":31, 
+			"length":2, 
+			"intHex":"int",
+			"devTypeID":{
+				"01":"BLEiSensor-onOff",
+				"02":"BLEiSensor-onOff",
+				"03":"BLEiSensor-onOff",
+				"04":"BLEiSensor-onOff",
+				"05":"BLEiSensor-onOff",
+				"06":"BLEiSensor-onOff",
+				"07":"BLEiSensor-onOff",
+				"08":"BLEiSensor-onOff",
+				"09":"BLEiSensor-onOff",
+				"0A":"BLEiSensor-onOff",
+				"0C":"BLEiSensor-TempHum",
+				"16":"BLEiSensor-on",		
+				"19":"BLEiSensor-RemoteKeyFob",	
+				"1A":"WirelessKeypad"
+			}
+	},
     "hexCode": "02010609086953656E736F7220XXFF"
   },
   "XiaomiFormaldehyde":  {
@@ -283,7 +307,7 @@
     "hexCode":"09475648"
   }, 
   "iBSxx":  {
-    "text":"INGISCS iBS01 .. 04",
+    "text":"INGISCS iBS01 .. 04 ",
     "Maj":"",
     "Min":"",
     "battCmd": "msg", 
@@ -886,7 +910,6 @@
     "subType":{},
     "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
   }, 
-
   "Smart_tracker":  {
     "text":"Smart tracker",
     "Maj":"",

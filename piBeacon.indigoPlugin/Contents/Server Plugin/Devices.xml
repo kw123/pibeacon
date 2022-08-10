@@ -7013,7 +7013,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
@@ -7151,7 +7151,7 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
@@ -7304,7 +7304,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
@@ -7325,7 +7325,7 @@ The device will only send messages when a button is pressed. The state "currentO
 			<Field id="mac" type="textfield"     defaultValue=""  >
 			<Label>Enter MAC number for this device: </Label>
 			</Field>
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="no"> </Field>
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -7350,7 +7350,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="currentOnType" hidden="no"> <Label>Property to display in the State Column:</Label>
      defaultValue="status"> <Label>Property to display in the State Column:</Label>
 			<List>
 				<Option value="status"  >status</Option>
@@ -7941,7 +7941,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
-			<Label>==  To setup this  Temp Hum BLE "switchbot"
+			<Label>==  To setup this  Contact sensor BLE "switchbot"
 Find MAC number through find new beacons or using the iphone app.
 
 ===

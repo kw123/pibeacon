@@ -1,3 +1,11 @@
+Added features / changes in v2022.148.8@ 2022-08-010
+===================================================
+   
+1. increased speed to switchbot relay and more reliable
+   added autocreate for iSensor devices lik ruuvitag
+
+
+
 Added features / changes in v2022.147.7@ 2022-08-05
 ===================================================
    

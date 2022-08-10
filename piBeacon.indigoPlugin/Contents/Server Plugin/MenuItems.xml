@@ -6,7 +6,7 @@
 			<Field  id="xx" type="button" tooltip="">
 				<Title>PRINT</Title>
 				<CallbackMethod>buttonprintHelpMenu</CallbackMethod>
-                    <Label>click on PRINT to send Help text to indigo log file as well as piBeacon.log</Label>
+					<Label>click on PRINT to send Help text to indigo log file as well as piBeacon.log</Label>
 				</Field>
 		</ConfigUI>
 	</MenuItem>
@@ -44,9 +44,9 @@ Then the rPi will start sending data to plugin
 			</Field>
 			<Field enabledBindingId="enablePiEntries" id="piOnOff" type="menu" defaultValue="1">
 				<List>
-                    <Option value="0">off </Option>
-                    <Option value="1">On </Option>
-                    <Option value="delete">DELETE </Option>
+					<Option value="0">off </Option>
+					<Option value="1">On </Option>
+					<Option value="delete">DELETE </Option>
 				</List>
 				<Label>Enable THIS rPi/delete config:</Label>
 			</Field>
@@ -61,19 +61,19 @@ Then the rPi will start sending data to plugin
 			</Field>
 			<Field enabledBindingId="enablePiEntries" id="authKeyOrPassword" type="menu" defaultValue="assword">
 				<List>
-                    <Option value="assword">uses std Login/Password</Option>
-                    <Option value="login:">uses authkey (uses login: as prompt, skips password entry)</Option>
+					<Option value="assword">uses std Login/Password</Option>
+					<Option value="login:">uses authkey (uses login: as prompt, skips password entry)</Option>
 				</List>
 				<Label>normal login, or authkey - no password entry:</Label>
 			</Field>
 			<Field enabledBindingId="enablePiEntries" id="enableRebootCheck" type="menu" defaultValue="restartLoop">
 				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
 				<List>
-                    <Option value="doNothing">do nothing (not recommended)</Option>
-                    <Option value="restartLoop">restart progams on rPi(default) </Option>
-                    <Option value="rebootloop">reboot rPi if internal problem</Option>
-                    <Option value="restartLoop-pingBoot">restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
-                    <Option value="rebootloop-pingBoot">reboot rPi </Option>
+					<Option value="doNothing">do nothing (not recommended)</Option>
+					<Option value="restartLoop">restart progams on rPi(default) </Option>
+					<Option value="rebootloop">reboot rPi if internal problem</Option>
+					<Option value="restartLoop-pingBoot">restart progams on rPi / reboot if no succesfull ping to indigo for 5 minutes</Option>
+					<Option value="rebootloop-pingBoot">reboot rPi </Option>
 				</List>
 			</Field>
 			<Field enabledBindingId="enablePiEntries" id="confirmPiServerConfig" type="button" tooltip="">
@@ -81,7 +81,7 @@ Then the rPi will start sending data to plugin
 				<Title>CONFIRM</Title>
 				<CallbackMethod>buttonConfirmPiServerConfigCALLBACK</CallbackMethod>
 				<Field id="infoLabelend" type="label">
-                    <Label>!!!!! do not hit ENTER or click CLOSE before CONFIRM !!!!!</Label>
+					<Label>!!!!! do not hit ENTER or click CLOSE before CONFIRM !!!!!</Label>
 				</Field>
 			</Field>
 		</ConfigUI>
@@ -545,22 +545,22 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 			</Field>
 			<Field id="beepTime" type="menu" defaultValue="-1" tooltip="">
 				<List>
-                    <Option value="-1">off</Option>
-                    <Option value="1">1 sec</Option>
-                    <Option value="2">2 sec</Option>
-                    <Option value="3">3 sec</Option>
-                    <Option value="4">4 sec</Option>
-                    <Option value="5">5 sec</Option>
-                    <Option value="7">7 sec</Option>
-                    <Option value="10">10 sec</Option>
-                    <Option value="15">15 sec</Option>
-                    <Option value="20">20 sec</Option>
-                    <Option value="25">25 sec</Option>
-                    <Option value="30">30 sec</Option>
-                    <Option value="35">35 sec</Option>
-                    <Option value="40">40 sec</Option>
-                    <Option value="45">45 sec</Option>
-                    <Label>Beep for xx secs:</Label>
+					<Option value="-1">off</Option>
+					<Option value="1">1 sec</Option>
+					<Option value="2">2 sec</Option>
+					<Option value="3">3 sec</Option>
+					<Option value="4">4 sec</Option>
+					<Option value="5">5 sec</Option>
+					<Option value="7">7 sec</Option>
+					<Option value="10">10 sec</Option>
+					<Option value="15">15 sec</Option>
+					<Option value="20">20 sec</Option>
+					<Option value="25">25 sec</Option>
+					<Option value="30">30 sec</Option>
+					<Option value="35">35 sec</Option>
+					<Option value="40">40 sec</Option>
+					<Option value="45">45 sec</Option>
+					<Label>Beep for xx secs:</Label>
 				</List>
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number ">
@@ -629,19 +629,19 @@ You should not run it more often than once a minute</Label>
 			</Field>
 			<Field id="minRSSI" type="menu" defaultValue="-60" tooltip=" the low (higher - number), the more beacons will be used">
 				<List>
-                    <Option value="-40">-40 dBm, use only if you put your beacon VERY close to the RPI</Option>
-                    <Option value="-45">-45 dBm</Option>
-                    <Option value="-50">-50 dBm</Option>
-                    <Option value="-55">-55 dBm</Option>
-                    <Option value="-60">-60 dBm default, should catch everything in 20cm range</Option>
-                    <Option value="-65">-65 dBm</Option>
-                    <Option value="-70">-70 dBm</Option>
-                    <Option value="-75">-75 dBm</Option>
-                    <Option value="-80">-80 dBm</Option>
-                    <Option value="-85">-85 dBm</Option>
-                    <Option value="-90">-90 dBm</Option>
-                    <Option value="-95">-95 dBm</Option>
-                    <Option value="-99">-99 dBm  .. this should catch everything in range</Option>
+					<Option value="-40">-40 dBm, use only if you put your beacon VERY close to the RPI</Option>
+					<Option value="-45">-45 dBm</Option>
+					<Option value="-50">-50 dBm</Option>
+					<Option value="-55">-55 dBm</Option>
+					<Option value="-60">-60 dBm default, should catch everything in 20cm range</Option>
+					<Option value="-65">-65 dBm</Option>
+					<Option value="-70">-70 dBm</Option>
+					<Option value="-75">-75 dBm</Option>
+					<Option value="-80">-80 dBm</Option>
+					<Option value="-85">-85 dBm</Option>
+					<Option value="-90">-90 dBm</Option>
+					<Option value="-95">-95 dBm</Option>
+					<Option value="-99">-99 dBm  .. this should catch everything in range</Option>
 				</List>
                <Label>Signal level (RSSI) cutoff (signal must be GT):</Label>
 			</Field>
@@ -681,7 +681,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<List class="self" filter="" method="filterMACs" dynamicReload="true" />
 			</Field>
              <Field id="mac" type="textfield" defaultValue="" tooltip="">
-                    <Label>b) mac # eg: aa:bb:cc:12:34:56 or * for all</Label>
+					<Label>b) mac # eg: aa:bb:cc:12:34:56 or * for all</Label>
 			</Field>
 			<Field id="execprintBLEAnalysisCALLBACK" type="button">
 				<Label>After selection click</Label>
@@ -714,20 +714,20 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Field id="newBeaconsLogTimer" type="menu" defaultValue="no" tooltip="">
 				<Label>enter minutes</Label>
 				<List>
-                    <Option value="0">  off</Option>
-                    <Option value="1">  for 1 minute</Option>
-                    <Option value="2">  for 2 minutes</Option>
-                    <Option value="3">  for 3 minutes</Option>
-                    <Option value="4">  for 4 minutes</Option>
-                    <Option value="5">  for 5 minutes</Option>
-                    <Option value="7">  for 7 minutes</Option>
-                    <Option value="10">  for 10 minutes</Option>
-                    <Option value="15">  for 15 minutes</Option>
-                    <Option value="30">  for 30 minutes</Option>
-                    <Option value="60">  for 1 hour</Option>
-                    <Option value="120">  for 2 hours</Option>
-                    <Option value="1440">  for 1 day</Option>
-                    <Option value="44000">  for 1 month</Option>
+					<Option value="0">  off</Option>
+					<Option value="1">  for 1 minute</Option>
+					<Option value="2">  for 2 minutes</Option>
+					<Option value="3">  for 3 minutes</Option>
+					<Option value="4">  for 4 minutes</Option>
+					<Option value="5">  for 5 minutes</Option>
+					<Option value="7">  for 7 minutes</Option>
+					<Option value="10">  for 10 minutes</Option>
+					<Option value="15">  for 15 minutes</Option>
+					<Option value="30">  for 30 minutes</Option>
+					<Option value="60">  for 1 hour</Option>
+					<Option value="120">  for 2 hours</Option>
+					<Option value="1440">  for 1 day</Option>
+					<Option value="44000">  for 1 month</Option>
 				</List>
 			</Field>
 			<Field id="idbuttonsetTimer" type="button" tooltip="">
@@ -755,12 +755,12 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Field id="selectBEACONlen" type="menu" defaultValue="17" tooltip="">
 				<Label>enter number of char</Label>
 				<List>
-                    <Option value="17">  complete MAC#  = all 6 pairs </Option>
-                    <Option value="14">  first  5 pairs in MAC#</Option>
-                    <Option value="11">  first  4 pairs in MAC#</Option>
-                    <Option value="8">  first  3 pairs in MAC#</Option>
-                    <Option value="5">  first  2 pairs in MAC#</Option>
-                    <Option value="2">  first    pair  in MAC#</Option>
+					<Option value="17">  complete MAC#  = all 6 pairs </Option>
+					<Option value="14">  first  5 pairs in MAC#</Option>
+					<Option value="11">  first  4 pairs in MAC#</Option>
+					<Option value="8">  first  3 pairs in MAC#</Option>
+					<Option value="5">  first  2 pairs in MAC#</Option>
+					<Option value="2">  first    pair  in MAC#</Option>
 				</List>
 			</Field>
 			<Field id="idselectBEACON" type="button" tooltip="">
@@ -785,27 +785,27 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Field id="trackSignalStrengthIfGeaterThan" type="menu" defaultValue="0">
 				<Label>pick min change of signal to log [dBm]</Label>
 				<List>
-                    <Option value="9999,-">  off</Option>
-                    <Option value="5,x" >  5  dBm exclude ON-off/off-ON</Option>
-                    <Option value="10,x">  10 dBm exclude ON-off/off-ON</Option>
-                    <Option value="15,x">  15 dBm exclude ON-off/off-ON</Option>
-                    <Option value="20,x">  20 dBm exclude ON-off/off-ON</Option>
-                    <Option value="25,x">  25 dBm exclude ON-off/off-ON</Option>
-                    <Option value="30,x">  30 dBm exclude ON-off/off-ON</Option>
-                    <Option value="35,x">  35 dBm exclude ON-off/off-ON</Option>
-                    <Option value="40,x">  40 dBm exclude ON-off/off-ON</Option>
-                    <Option value="45,x">  45 dBm exclude ON-off/off-ON</Option>
-                    <Option value="50,x">  50 dBm exclude ON-off/off-ON</Option>
-                    <Option value="5,i" >  5  dBm include ON-off/off-ON</Option>
-                    <Option value="10,i">  10 dBm include ON-off/off-ON</Option>
-                    <Option value="15,i">  15 dBm include ON-off/off-ON</Option>
-                    <Option value="20,i">  20 dBm include ON-off/off-ON</Option>
-                    <Option value="25,i">  25 dBm include ON-off/off-ON</Option>
-                    <Option value="30,i">  30 dBm include ON-off/off-ON</Option>
-                    <Option value="35,i">  35 dBm include ON-off/off-ON</Option>
-                    <Option value="40,i">  40 dBm include ON-off/off-ON</Option>
-                    <Option value="45,i">  45 dBm include ON-off/off-ON</Option>
-                    <Option value="50,i">  50 dBm include ON-off/off-ON</Option>
+					<Option value="9999,-">  off</Option>
+					<Option value="5,x" >  5  dBm exclude ON-off/off-ON</Option>
+					<Option value="10,x">  10 dBm exclude ON-off/off-ON</Option>
+					<Option value="15,x">  15 dBm exclude ON-off/off-ON</Option>
+					<Option value="20,x">  20 dBm exclude ON-off/off-ON</Option>
+					<Option value="25,x">  25 dBm exclude ON-off/off-ON</Option>
+					<Option value="30,x">  30 dBm exclude ON-off/off-ON</Option>
+					<Option value="35,x">  35 dBm exclude ON-off/off-ON</Option>
+					<Option value="40,x">  40 dBm exclude ON-off/off-ON</Option>
+					<Option value="45,x">  45 dBm exclude ON-off/off-ON</Option>
+					<Option value="50,x">  50 dBm exclude ON-off/off-ON</Option>
+					<Option value="5,i" >  5  dBm include ON-off/off-ON</Option>
+					<Option value="10,i">  10 dBm include ON-off/off-ON</Option>
+					<Option value="15,i">  15 dBm include ON-off/off-ON</Option>
+					<Option value="20,i">  20 dBm include ON-off/off-ON</Option>
+					<Option value="25,i">  25 dBm include ON-off/off-ON</Option>
+					<Option value="30,i">  30 dBm include ON-off/off-ON</Option>
+					<Option value="35,i">  35 dBm include ON-off/off-ON</Option>
+					<Option value="40,i">  40 dBm include ON-off/off-ON</Option>
+					<Option value="45,i">  45 dBm include ON-off/off-ON</Option>
+					<Option value="50,i">  50 dBm include ON-off/off-ON</Option>
 				</List>
 			</Field>
 			<Field id="idbuttontrackSignalStrengthIfGeaterThan" type="button" tooltip="">
@@ -824,8 +824,8 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Field id="trackSignalChangeOfRPI" type="menu" defaultValue="0">
 				<Label>ibeacon :</Label>
 				<List>
-                    <Option value="0">  off</Option>
-                    <Option value="1">  ON</Option>
+					<Option value="0">  off</Option>
+					<Option value="1">  ON</Option>
 				</List>
 			</Field>
 			<Field id="idbuttontrackSignalChangeOfRPI" type="button" tooltip="">
@@ -1065,30 +1065,30 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="typeId" type="menu" defaultValue="all" tooltip="">
 				<List>
-                    <Option value="BLEconnect">BLE-connect devices</Option>
-                    <Option value="beaconloop">iBeacons</Option>
-                    <Option value="rainSensorRG11">rain Sensor RG11 - reset only</Option>
-                    <Option value="INPUTgpio">INPUT - gpio</Option>
-                    <Option value="INPUTtouch12">INPUT - capacitor-12</Option>
-                    <Option value="INPUTtouch16">INPUT - capacitor-16</Option>
-                    <Option value="simplei2csensors">sensor values for regular i2c sensors </Option>
-                    <Option value="INPUTRotarySwitchIncremental"> INPUT Rotatary Incremental Switch</Option>
-                    <Option value="DHT">sensor values for DHT sensors </Option>
-                    <Option value="Wire18B20">sensor values for onewire  sensors </Option>
-                    <Option value="spiMCP3008">sensor values for spiMCP3008  sensors </Option>
-                    <Option value="ultrasoundDistance">ultrasound Distance</Option>
-                    <Option value="vcnl40xxDistance">vcnl40xx Distance</Option>
-                    <Option value="vl6180xDistance">vl6180x Distance</Option>
-                    <Option value="vl503l0xDistance">vl503l0x Distance</Option>
-                    <Option value="apds9960">apds9960 gesture</Option>
-                    <Option value="mysensor">mysensor</Option>
-                    <Option value="ina219">ina219</Option>
-                    <Option value="bno095">bno095</Option>
-                    <Option value="sgp30">sgp30</Option>
-                    <Option value="mag3110">mag3110</Option>
-                    <Option value="pmairquality">pmairquality</Option>
-                    <Option value="myprogram">myprogram</Option>
-                    <Option value="all">all</Option>
+					<Option value="BLEconnect">BLE-connect devices</Option>
+					<Option value="beaconloop">iBeacons</Option>
+					<Option value="rainSensorRG11">rain Sensor RG11 - reset only</Option>
+					<Option value="INPUTgpio">INPUT - gpio</Option>
+					<Option value="INPUTtouch12">INPUT - capacitor-12</Option>
+					<Option value="INPUTtouch16">INPUT - capacitor-16</Option>
+					<Option value="simplei2csensors">sensor values for regular i2c sensors </Option>
+					<Option value="INPUTRotarySwitchIncremental"> INPUT Rotatary Incremental Switch</Option>
+					<Option value="DHT">sensor values for DHT sensors </Option>
+					<Option value="Wire18B20">sensor values for onewire  sensors </Option>
+					<Option value="spiMCP3008">sensor values for spiMCP3008  sensors </Option>
+					<Option value="ultrasoundDistance">ultrasound Distance</Option>
+					<Option value="vcnl40xxDistance">vcnl40xx Distance</Option>
+					<Option value="vl6180xDistance">vl6180x Distance</Option>
+					<Option value="vl503l0xDistance">vl503l0x Distance</Option>
+					<Option value="apds9960">apds9960 gesture</Option>
+					<Option value="mysensor">mysensor</Option>
+					<Option value="ina219">ina219</Option>
+					<Option value="bno095">bno095</Option>
+					<Option value="sgp30">sgp30</Option>
+					<Option value="mag3110">mag3110</Option>
+					<Option value="pmairquality">pmairquality</Option>
+					<Option value="myprogram">myprogram</Option>
+					<Option value="all">all</Option>
 				</List>
 				<Label>device type that should be asked to send new data:</Label>
 			</Field>
@@ -1114,14 +1114,14 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="typeId" type="menu" defaultValue="all" tooltip="">
 				<List>
-                    <Option value="mag3110">mag3110</Option>
-                    <Option value="bme680">bme680 air quality sensor</Option>
-                    <Option value="mhz-I2C,mhz-SERIAL">MH-Zxx CO2 sensor</Option>
-                    <Option value="lidar360">lidar360</Option>
-                    <Option value="sgp30">sgp30</Option>
-                    <Option value="myprogram">myprogram</Option>
-                    <Option value="mysensor">mysensor</Option>
-                    <Option value="all">all</Option>
+					<Option value="mag3110">mag3110</Option>
+					<Option value="bme680">bme680 air quality sensor</Option>
+					<Option value="mhz-I2C,mhz-SERIAL">MH-Zxx CO2 sensor</Option>
+					<Option value="lidar360">lidar360</Option>
+					<Option value="sgp30">sgp30</Option>
+					<Option value="myprogram">myprogram</Option>
+					<Option value="mysensor">mysensor</Option>
+					<Option value="all">all</Option>
 				</List>
 				<Label>device type that should be asked to recalibrate:</Label>
 			</Field>
@@ -1136,21 +1136,85 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		<Name>-------------set values on output/display devices  ----------</Name>
 	</MenuItem>
 	<MenuItem id="OUTPUTswitchBotParams">
-		<Name>Set params on switchbot bot </Name>
+		<Name>Set params on switchbot bot..</Name>
 		<ConfigUI>
 			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select dev ">
 				<List class="indigo.devices" filter="self.OUTPUTswitchbotRelay"  />
-				<Label>select switchbot bot device:</Label>
+				<Label>Select switchbot bot device:</Label>
+			</Field>
+			<Field id ="sep0"  type="separator"/>
+			<Field id="infoLabel00" type="label" >
+				<Label>Send config to selected switchbot</Label>
 			</Field>
 			<Field id="exec" type="button">
-				<Label> ....after selection click</Label>
+				<Label>To set config parameters click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>setSWITCHBOTBOTCALLBACKmenu</CallbackMethod>
 			</Field>
+			<Field id ="sepl1"  type="separator"/>
+
+			<Field id="infoLabel01" type="label" >
+				<Label>Send on/off pulse command to switchbot 
+The minimum execution time for one press is 2.7 secs (arm down, arm up), it is added to off time
+Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</Label>
+			</Field>
+
+
+			<Field id="pulses" type="menu" defaultValue="2" tooltip="">
+				<Label>Number of pulses</Label>
+				<List>
+					<Option value="1">1</Option>
+					<Option value="2">2</Option>
+					<Option value="3">3</Option>
+					<Option value="4">4</Option>
+					<Option value="5">5</Option>
+					<Option value="6">6</Option>
+					<Option value="7">7</Option>
+					<Option value="8">8</Option>
+				</List>
+			</Field>
+			<Field id="pulseLengthOn" type="menu" defaultValue="0" tooltip="">
+				<Label>Secs pulse ON</Label>
+				<List>
+					<Option value="0">short click</Option>
+					<Option value="1">1 secs</Option>
+					<Option value="2">2 secs</Option>
+					<Option value="3">3 secs</Option>
+					<Option value="4">4 secs</Option>
+					<Option value="5">5 secs</Option>
+					<Option value="6">6 secs</Option>
+					<Option value="7">7 secs</Option>
+					<Option value="8">8 secs</Option>
+				</List>
+			</Field>
+			<Field id="pulseLengthOff" type="menu" defaultValue="2.0" tooltip="">
+				<Label>Secs pulse OFF</Label>
+				<List>
+					<Option value="0.0">0.0 secs</Option>
+					<Option value="0.5">0.5 secs</Option>
+					<Option value="1.0">1.0 secs</Option>
+					<Option value="2.0">2.0 secs</Option>
+					<Option value="2.5">2.5 secs</Option>
+					<Option value="3.0">3.0 secs</Option>
+					<Option value="3.5">3.5 secs</Option>
+					<Option value="4">4 secs</Option>
+					<Option value="5">5 secs</Option>
+					<Option value="6">6 secs</Option>
+					<Option value="7">7 secs</Option>
+					<Option value="8">8 secs</Option>
+				</List>
+			</Field>
+
+			<Field id="exec2" type="button">
+				<Label>To send pulses to switchbot click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>sendPulsesToSwitchBotCALLBACKmenu</CallbackMethod>
+			</Field>
+
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="OUTPUTgpio">
-		<Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>
+		<Name>Set GPIO Pin on rPi to HIGH-LOW.. </Name>
 		<ConfigUI>
 			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pdev ">
 				<List class="self" filter="" method="filterOUTPUTdevicesACTION" />
@@ -1167,13 +1231,13 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="cmd" type="menu" default="up">
 				<List>
-                    <Option value="down">LOW  = 0 </Option>
-                    <Option value="up">HIGH = 1</Option>
-                    <Option value="pulseUp">one pulse UP </Option>
-                    <Option value="pulseDown">one pulse down </Option>
-                    <Option value="continuousUpDown">continuous pulses Up Down</Option>
-                    <Option value="analogWrite">set out to analog volage (PWM-mode)</Option>
-                    <Option value="disable">disable pin</Option>
+					<Option value="down">LOW  = 0 </Option>
+					<Option value="up">HIGH = 1</Option>
+					<Option value="pulseUp">one pulse UP </Option>
+					<Option value="pulseDown">one pulse down </Option>
+					<Option value="continuousUpDown">continuous pulses Up Down</Option>
+					<Option value="analogWrite">set out to analog volage (PWM-mode)</Option>
+					<Option value="disable">disable pin</Option>
 				</List>
 				<Label>set output of pin/variable  to</Label>
 			</Field>
@@ -1191,8 +1255,8 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="restoreAfterBoot" visibleBindingId="cmd" visibleBindingValue="down,up,pulseDown,pulseUp,analogWrite" type="menu" default="0">
 				<List>
-                    <Option value="1">yes, set to above value</Option>
-                    <Option value="0">no keep it inactive </Option>
+					<Option value="1">yes, set to above value</Option>
+					<Option value="0">no keep it inactive </Option>
 				</List>
 				<Label>After reboot set pin to:</Label>
 			</Field>
@@ -1207,7 +1271,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="OUTPUTi2cRelay">
-		<Name>Set i2c relay to HIGH-LOW ... </Name>
+		<Name>Set i2c relay to HIGH-LOW.. </Name>
 		<ConfigUI>
 			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<List class="self" filter="" method="filterOUTPUTrelaydevicesACTION" />
@@ -1221,19 +1285,19 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Field id="GPIOpin" type="menu">
 				<Label>pick relay# on board:</Label>
 				<List>
-                    <Option value="1">relay# 1</Option>
-                    <Option value="2">relay# 2</Option>
-                    <Option value="3">relay# 3</Option>
-                    <Option value="4">relay# 4</Option>
+					<Option value="1">relay# 1</Option>
+					<Option value="2">relay# 2</Option>
+					<Option value="3">relay# 3</Option>
+					<Option value="4">relay# 4</Option>
 				</List>
 			</Field>
 			<Field id="cmd" type="menu" default="up">
 				<List>
-                    <Option value="down">LOW  = 0 </Option>
-                    <Option value="up">HIGH = 1</Option>
-                    <Option value="pulseUp">one pulse UP </Option>
-                    <Option value="pulseDown">one pulse down </Option>
-                    <Option value="continuousUpDown">continuous pulses Up Down</Option>
+					<Option value="down">LOW  = 0 </Option>
+					<Option value="up">HIGH = 1</Option>
+					<Option value="pulseUp">one pulse UP </Option>
+					<Option value="pulseDown">one pulse down </Option>
+					<Option value="continuousUpDown">continuous pulses Up Down</Option>
 				</List>
 				<Label>set output of relay to</Label>
 			</Field>
@@ -1248,8 +1312,8 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="restoreAfterBoot" visibleBindingId="cmd" visibleBindingValue="down,up,pulseDown,pulseUp" type="menu" default="0">
 				<List>
-                    <Option value="1">yes, set to above value</Option>
-                    <Option value="0">no keep it inactive </Option>
+					<Option value="1">yes, set to above value</Option>
+					<Option value="0">no keep it inactive </Option>
 				</List>
 				<Label>After reboot set relay to(not implemented yet):</Label>
 			</Field>
@@ -1264,7 +1328,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="setMCP4725">
-		<Name>Set output voltage of DAC-MCP4725 to.. </Name>
+		<Name>Set output voltage of DAC-MCP4725 to..</Name>
 		<ConfigUI>
 			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<List class="indigo.devices" filter="self.setMCP4725" />
@@ -1272,14 +1336,14 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="cmd" type="menu" default="up">
 				<List>
-                    <Option value="pulseUp">one pulse UP </Option>
-                    <Option value="pulseDown">one pulse down </Option>
-                    <Option value="continuousUpDown">continuous pulses Up Down</Option>
-                    <Option value="analogWrite">set out to analog volage , constant</Option>
-                    <Option value="rampUp">set ramp voltage up to ..</Option>
-                    <Option value="rampDown">set ramp voltage down from ... to 0</Option>
-                    <Option value="rampUpDown">set ramp voltage Up to .. down to 0</Option>
-                    <Option value="disable">disable</Option>
+					<Option value="pulseUp">one pulse UP </Option>
+					<Option value="pulseDown">one pulse down </Option>
+					<Option value="continuousUpDown">continuous pulses Up Down</Option>
+					<Option value="analogWrite">set out to analog volage , constant</Option>
+					<Option value="rampUp">set ramp voltage up to ..</Option>
+					<Option value="rampDown">set ramp voltage down from ... to 0</Option>
+					<Option value="rampUpDown">set ramp voltage Up to .. down to 0</Option>
+					<Option value="disable">disable</Option>
 				</List>
 				<Label>set output of pin/variable  to</Label>
 			</Field>
@@ -1303,8 +1367,8 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="restoreAfterBoot" type="menu" default="0">
 				<List>
-                    <Option value="1">yes, set to above value</Option>
-                    <Option value="0">no keep it inactive </Option>
+					<Option value="1">yes, set to above value</Option>
+					<Option value="0">no keep it inactive </Option>
 				</List>
 				<Label>After reboot set pin to:</Label>
 			</Field>
@@ -1316,7 +1380,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="setPCF8591dac">
-		<Name>Set output voltage of DAC-PCF8591 to.. </Name>
+		<Name>Set output voltage of DAC-PCF8591 to..</Name>
 		<ConfigUI>
 			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<List class="indigo.devices" filter="self.setPCF8591dac" />
@@ -1324,14 +1388,14 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="cmd" type="menu" default="up">
 				<List>
-                    <Option value="pulseUp">one pulse UP </Option>
-                    <Option value="pulseDown">one pulse down </Option>
-                    <Option value="continuousUpDown">continuous pulses Up Down</Option>
-                    <Option value="analogWrite">set out to analog volage , constant</Option>
-                    <Option value="rampUp">set ramp voltage up to ..</Option>
-                    <Option value="rampDown">set ramp voltage down from ... to 0</Option>
-                    <Option value="rampUpDown">set ramp voltage Up to .. down to 0</Option>
-                    <Option value="disable">disable</Option>
+					<Option value="pulseUp">one pulse UP </Option>
+					<Option value="pulseDown">one pulse down </Option>
+					<Option value="continuousUpDown">continuous pulses Up Down</Option>
+					<Option value="analogWrite">set out to analog volage , constant</Option>
+					<Option value="rampUp">set ramp voltage up to ..</Option>
+					<Option value="rampDown">set ramp voltage down from ... to 0</Option>
+					<Option value="rampUpDown">set ramp voltage Up to .. down to 0</Option>
+					<Option value="disable">disable</Option>
 				</List>
 				<Label>set output of pin/variable  to</Label>
 			</Field>
@@ -1355,8 +1419,8 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="restoreAfterBoot" type="menu" default="0">
 				<List>
-                    <Option value="1">yes, set to above value</Option>
-                    <Option value="0">no keep it inactive </Option>
+					<Option value="1">yes, set to above value</Option>
+					<Option value="0">no keep it inactive </Option>
 				</List>
 				<Label>After reboot set pin to:</Label>
 			</Field>
@@ -1368,7 +1432,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="i2cTEA5767">
-		<Name>Set FM radio TEA5767 parameters</Name>
+		<Name>Set FM radio TEA5767 parameters..</Name>
 		<ConfigUI>
 			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select pi- server number ">
 				<List class="indigo.devices" filter="self.setTEA5767" />
@@ -1379,42 +1443,42 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="mute" type="menu" default="0">
 				<List>
-                    <Option value="1">mute</Option>
-                    <Option value="0">un-mute </Option>
-                    <Option value="">leave as is</Option>
+					<Option value="1">mute</Option>
+					<Option value="0">un-mute </Option>
+					<Option value="">leave as is</Option>
 				</List>
 				<Label>Mute radio:</Label>
 			</Field>
 			<Field id="mono" type="menu" default="0">
 				<List>
-                    <Option value="1">mono</Option>
-                    <Option value="0">stereo</Option>
-                    <Option value="">leave as is</Option>
+					<Option value="1">mono</Option>
+					<Option value="0">stereo</Option>
+					<Option value="">leave as is</Option>
 				</List>
 				<Label>Stereo/Mono:</Label>
 			</Field>
 			<Field id="restart" type="menu" default="0">
 				<List>
-                    <Option value="0">do not restart</Option>
-                    <Option value="1">restart radio</Option>
+					<Option value="0">do not restart</Option>
+					<Option value="1">restart radio</Option>
 				</List>
 				<Label>restart the radio:</Label>
 			</Field>
 			<Field id="scan" type="menu" default="0">
 				<List>
-                    <Option value="1">SCAN</Option>
-                    <Option value="0">no scan</Option>
+					<Option value="1">SCAN</Option>
+					<Option value="0">no scan</Option>
 				</List>
 				<Label>Scan for Stations:</Label>
 			</Field>
 			<Field id="minSignal" type="menu" default="11" visibleBindingId="scan" visibleBindingValue="1">
 				<List>
-                    <Option value="9">9</Option>
-                    <Option value="10">10</Option>
-                    <Option value="11">11</Option>
-                    <Option value="12">12</Option>
-                    <Option value="13">13</Option>
-                    <Option value="14">14</Option>
+					<Option value="9">9</Option>
+					<Option value="10">10</Option>
+					<Option value="11">11</Option>
+					<Option value="12">12</Option>
+					<Option value="13">13</Option>
+					<Option value="14">14</Option>
 				</List>
 				<Label>Min Signal for Scan to accept channel:</Label>
 			</Field>
@@ -1430,7 +1494,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		<CallbackMethod>resetSprinklerStats</CallbackMethod>
 	</MenuItem>
 	<MenuItem id="myoutput">
-		<Name>Set MYOUPUT.py  parameters on rPi </Name>
+		<Name>Set MYOUPUT.py  parameters on rPi..</Name>
 		<ConfigUI>
 			<Label>send command string to myoutput.py program on rPi</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
@@ -1448,7 +1512,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="playSoundFile">
-		<Name>Play SOUND file on rPi </Name>
+		<Name>Play SOUND file on rPi..</Name>
 		<ConfigUI>
 			<Label>Play sound file on rPi</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
@@ -1457,8 +1521,8 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			</Field>
 			<Field id="cmd" type="menu" defaultValue="omxplayer" tooltip="">
 				<List>
-                    <Option value="omxplayer">omxplayer for .mp3 files</Option>
-                    <Option value="aplay">aplay     for .wav files</Option>
+					<Option value="omxplayer">omxplayer for .mp3 files</Option>
+					<Option value="aplay">aplay     for .wav files</Option>
 				</List>
 				<Label>which player to use:</Label>
 			</Field>
