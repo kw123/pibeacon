@@ -985,7 +985,6 @@ class Plugin(indigo.PluginBase):
 		try:
 			for dev in indigo.devices.iter("props.isBeaconDevice,props.isRPIDevice,props.isRPISensorDevice,props.isBLEconnectDevice"):
 				if not dev.enabled: continue
-				props = dev.pluginProps
 				try:
 					if "lastStatusChange" in dev.states:
 						dateString	= datetime.datetime.now().strftime(_defaultDateStampFormat)
@@ -1125,22 +1124,59 @@ class Plugin(indigo.PluginBase):
 						upd = True
 
 					if dev.deviceTypeId in _BLEsensorTypes:
-						if "isBLESensorDevice" not in props:
+						if "isBLESensorDevice" not in props or not props["isBLESensorDevice"]:
 							props["isBLESensorDevice"] = True
 							upd = True
-						self.isBLESensorDevice[dev.address] = dev.id
+						self.isBLESensorDevice[props["mac"]] = dev.id
 
-					if dev.deviceTypeId in _BLEconnectSensorTypes:
-						if "isBLElongConnectDevice" not in props:
+					if dev.deviceTypeId in _BLEconnectSensorTypes :
+						if "isBLElongConnectDevice" not in props or not props["isBLElongConnectDevice"]:
 							props["isBLElongConnectDevice"] = True
 							upd = True
-						self.isBLElongConnectDevice[dev.address] = dev.id
+						self.isBLElongConnectDevice[props["mac"]] = dev.id
 
 
 					if dev.deviceTypeId == "OUTPUTswitchbotRelay":
 						if "SupportsStatusRequest" not in props or not props["SupportsStatusRequest"]:
 							props["SupportsStatusRequest"] = True
 							upd = True
+
+
+					if "piServerNumber" in props and "rPiEnable0" in props:
+						del props["piServerNumber"]
+						upd = True
+
+					if "piServerNumber" in props:
+						newAdress = "Pi-" + props["piServerNumber"]
+						if "mac" in dev.states: newAdress +=" "+dev.states["mac"]
+						if props["address"] != newAdress:
+							props["address"] = newAdress
+							upd = True
+
+
+					if "rPiEnable0" in props:
+						testpiU  =[]
+						if "mac" in props:
+							newAddress = props["mac"]
+							if dev.address != newAddress:
+								props["address"] = newAddress
+								upd = True
+							for piU in _rpiBeaconList:
+								if self.RPI[piU]["piOnOff"] == "1":
+									if "rPiEnable"+piU in props and props["rPiEnable"+piU]:
+											newAddress+= piU+","
+							newAddress = newAddress.strip(",")
+							if "description" in props:
+								if props["description"] != newAddress:
+										props["description"] = newAddress
+										if True or self.decideMyLog("Init"): self.indiLOG.log(5,"updating address for {}  to :{}".format(dev.name, newAddress) )
+										anyChange = True
+										upd
+							else:
+								props["description"] = newAddress
+								if self.decideMyLog("Init"): self.indiLOG.log(5,"updating address for {}  to :{}".format(dev.name, newAddress) )
+								anyChange = True
+								upd
 
 					if upd:
 						dev.replacePluginPropsOnServer(props)
@@ -2655,7 +2691,7 @@ class Plugin(indigo.PluginBase):
 
 
 			self.RPI = self.getParamsFromFile(self.indigoPreferencesPluginDir+"RPIconf")
-			if self.RPI =={}:
+			if self.RPI == {}:
 				self.indiLOG.log(10,self.indigoPreferencesPluginDir + "RPIconf file does not exist or has bad data, will do a new setup ")
 
 
@@ -2664,11 +2700,9 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(20,"RPIconf adding # of rpi  from 20 ..40 ")
 
 			delRPI =[]
-			for piU in self.RPI:
+			for piU in copy.deepcopy(self.RPI):
 				if piU not in _rpiList:
-					delRPI.append(piU)
-			for piU in delRPI:
-				del self.RPI[piU]
+					del self.RPI[piU]
 
 
 
@@ -2683,18 +2717,13 @@ class Plugin(indigo.PluginBase):
 					if piProp == "enableiBeacons":
 						self.RPI[piU][piProp] = "1"
 
-
-				delProp=[]
-				for piProp in self.RPI[piU]:
+				for piProp in copy.deepcopy(self.RPI[piU]):
 					if piProp not in _GlobalConst_emptyRPI:
-						delProp.append(piProp)
-				for piProp in delProp:
-					del self.RPI[piU][piProp]
-				delSen={}
-				for sensor in self.RPI[piU]["input"]:
-					if sensor not in _GlobalConst_allowedSensors and sensor not in _BLEsensorTypes: delSen[sensor]=1
-				for sensor in delSen :
-					del self.RPI[piU]["input"][sensor]
+						del self.RPI[piU][piProp]
+				for sensor in copy.deepcopy(self.RPI[piU]["input"]):
+					if sensor not in _GlobalConst_allowedSensors and sensor not in _BLEsensorTypes:
+						self.indiLog(30,"removing sensor:{}, from PI:{}, not in allowed sensors ".format(sensor, piU))
+						del self.RPI[piU]["input"][sensor]
 
 
 
@@ -2817,7 +2846,7 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(5," ..   config read from files")
 			self.fixConfig(checkOnly = ["all", "rpi", "beacon", "CARS", "sensors", "output", "force"], fromPGM="readconfig")
-			self.saveConfig()
+			self.saveConfig(calledFrom="readConfig")
 
 		except Exception as e:
 			self.exceptionHandler(40,e)
@@ -3610,7 +3639,7 @@ class Plugin(indigo.PluginBase):
 
 			if anyChange or (time.time() - self.lastSaveConfig) > 100:
 				self.lastSaveConfig = time.time()
-				self.saveConfig()
+				self.saveConfig(calledFrom="fixconfig")
 
 			self.executeUpdateStatesDict()
 
@@ -3674,11 +3703,12 @@ class Plugin(indigo.PluginBase):
 		return ""
 
 ####-------------------------------------------------------------------------####
-	def saveConfig(self, only="all"):
+	def saveConfig(self, only="all", calledFrom=""):
 
 		try:
 			if only in ["all", "RPIconf"]:
 				self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + "RPIconf", fmtOn=self.RPIFileSort)
+				#self.indiLOG.log(20," saving RPIconf: {}, RPI:{}".format(calledFrom, self.RPI))
 
 			if only in ["all"]:
 				self.saveCARS()
@@ -3911,10 +3941,10 @@ class Plugin(indigo.PluginBase):
 				except: pass
 
 			if dev.pluginProps.get('isBLESensorDevice', False):
-				self.isBLESensorDevice[dev.address.upper()] = dev.id
+				self.isBLESensorDevice[dev.address] = dev.id
 
 			if dev.pluginProps.get('isBLElongConnectDevice', False):
-				self.isBLElongConnectDevice[(dev.address).upper()] = dev.id
+				self.isBLElongConnectDevice[dev.address] = dev.id
 
 			if dev.pluginProps.get('isSwitchbotDevice', False):
 				self.isSwitchbotDevice[dev.pluginProps.get('mac').upper()] = dev.id
@@ -3930,32 +3960,31 @@ class Plugin(indigo.PluginBase):
 	def deviceDeleted(self, dev):  ### indigo calls this
 		props = dev.pluginProps
 
-		if "address" in props:
-			beacon = props["address"]
+		if "mac" in dev.states: mac = dev.states["mac"]
+		else:					mac = props["address"]
+		if self.isValidMAC(mac):
 
-			if beacon in self.beacons and beacon.find("00:00:00:00") ==-1:
-				if "indigoId" in self.beacons[beacon] and	self.beacons[beacon]["indigoId"] == dev.id:
+			if mac in self.beacons and mac.find("00:00:00:00") ==-1:
+				if "indigoId" in self.beacons[mac] and	self.beacons[mac]["indigoId"] == dev.id:
 					self.indiLOG.log(10,"-setting beacon device in internal tables to 0:  " + dev.name+"  "+ "{}".format(dev.id)+" enabled:"+ "{}".format(dev.enabled)+ "  pluginState:"+ self.pluginState)
-					self.beacons[beacon]["indigoId"] = 0
-					self.beacons[beacon]["ignore"]	  = 1
+					self.beacons[mac]["indigoId"] = 0
+					self.beacons[mac]["ignore"]	  = 1
 					self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
 
-			if 	beacon in self.isBLESensorDevice and props.get("isBLESensorDevice",False):
-				del self.isBLESensorDevice[dev.address]
+			if 	mac in self.isBLESensorDevice and props.get("isBLESensorDevice",False):
+				del self.isBLESensorDevice[mac]
 
-			if 	beacon in self.isBLElongConnectDevice and props.get("isBLElongConnectDevice",False):
-				del self.isBLElongConnectDevice[dev.address]
+			if 	mac in self.isBLElongConnectDevice and props.get("isBLElongConnectDevice",False):
+				del self.isBLElongConnectDevice[mac]
 
-		if props.get("isSwitchbotDevice", False) and props.get("mac","xx") in self.isSwitchbotDevice:
-			mac =  props.get("mac","zz")
-			if self.isValidMAC(mac):
+			if props.get("isSwitchbotDevice", False) and  mac in self.isSwitchbotDevice:
 				devdel = self.isSwitchbotDevice[mac]
 				if devdel == dev.id:
 					del self.isSwitchbotDevice[mac]
 
 		if dev.deviceTypeId.find("rPI") > -1:
 			try:
-				pi = dev.description.split("-")
+				pi = dev.states["note"].split("-")
 				if len(pi) > 0:
 					self.delRPI(pi=pi[1], calledFrom="deviceDeleted")
 			except:
@@ -4209,6 +4238,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40," bad device type:   {}   not in registed types:\n,_GlobalConst_allowedSensors:{}\n _BLEsensorTypes:{}\n _GlobalConst_allowedOUTPUT:{}\n... ".format(typeId, _GlobalConst_allowedSensors, _BLEsensorTypes, _GlobalConst_allowedOUTPUT))
 
 
+			self.saveConfig(only = "RPIconf", calledFrom="validateDeviceConfigUi")
+
 
 			if retCode:
 				valuesDict = self.fillMemberListState(dev, valuesDict)
@@ -4369,7 +4400,6 @@ class Plugin(indigo.PluginBase):
 			self.setONErPiV(thisPi,"piUpToDate", ["updateParamsFTP"])
 			self.rPiRestartCommand[int(thisPi)] 	= "master"
 			self.updateNeeded 					   += " fixConfig "
-			self.saveConfig(only="RPIconf")
 			#indigo.server.log("validateDeviceConfigUi_rPISensor ipNumberRpiSetStatic:{}".format(valuesDict["ipNumberRpiSetStatic"]))
 			return (True, valuesDict, errorDict)
 		except Exception as e:
@@ -4473,10 +4503,7 @@ class Plugin(indigo.PluginBase):
 				self.exceptionHandler(40,e)
 				self.indiLOG.log(40,"bad input for xyz-coordinates:{}".format(valuesDict["PosXYZ"]) )
 
-
-
 			self.updateNeeded += " fixConfig "
-			self.saveConfig(only = "RPIconf")
 			return (True, valuesDict, errorDict)
 		except Exception as e:
 			self.indiLOG.log(40,"setting up RPI Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
@@ -4574,25 +4601,49 @@ class Plugin(indigo.PluginBase):
 			try: 	piUx = valuesDict["piServerNumber"]
 			except: pass
 			pix = int(piUx)
-			valuesDict["address"] = "PI-"
-			onPi = "on Pi: "
+			if "piServerNumber" in valuesDict:
+				newAddress = valuesDict["mac"]
+				newDescription = ""
+			if "rPiEnable0" in valuesDict:
+				newAddress = valuesDict["mac"]
+				newDescription = "Pi-"
+
+			#self.indiLOG.log(20," into validate sens {}  valuesDict:{}".format(dev.name, valuesDict))
+
+			atLeastOnePiSelected = False
+			for piU in self.RPI:
+				if ("rPiEnable"+piU in valuesDict and valuesDict["rPiEnable"+piU]) and self.RPI[piU]["piDevId"] >0:
+					atLeastOnePiSelected = True
+					break
+
 			for piU in self.RPI:
 				pi = int(piU)
-				if ( pi == pix or pix == 999 or (pi >= _GlobalConst_numberOfiBeaconRPI and pix == 800) or ("rPiEnable"+piU in valuesDict and valuesDict["rPiEnable"+piU])) and self.RPI[piU]["piDevId"] >0:
-					self.updateNeeded += " fixConfig "
-					self.rPiRestartCommand[pi] += ", sensor"
-					self.setONErPiV(piU, "piUpToDate",["updateParamsFTP"])
 
-					if typeId not in self.RPI[piU]["input"]:
-						self.RPI[piU]["input"][typeId]={}
-					if "{}".format(dev.id) not in self.RPI[piU]["input"][typeId]:
-						self.RPI[piU]["input"][typeId]["{}".format(dev.id)] = ""
-					if self.RPI[piU]["piOnOff"] == "1":
-						valuesDict["address"] =  "PI-"+piU
-						onPi += piU+ ","
-						valuesDict["description"] = onPi.strip(",")
+				delpiu = True
+				if self.RPI[piU]["piDevId"] >0 and self.RPI[piU]["piOnOff"] == "1": 
+					# for sensor on a singlerpi
+					if "piServerNumber" in valuesDict:
+						if pi == pix:
+							if typeId not in self.RPI[piU]["input"]:
+								self.RPI[piU]["input"][typeId]={}
+							if "{}".format(dev.id) not in self.RPI[piU]["input"][typeId]:
+								self.RPI[piU]["input"][typeId]["{}".format(dev.id)] = ""
+							newAddress += piU+ ","
+							delpiu = False
+						
+					# this is for BLE etc with possible multiple rpi
+					if "rPiEnable"+piU in valuesDict and valuesDict["rPiEnable"+piU] :
+							if typeId not in self.RPI[piU]["input"]:
+								self.RPI[piU]["input"][typeId]={}
+							if "{}".format(dev.id) not in self.RPI[piU]["input"][typeId]:
+								self.RPI[piU]["input"][typeId]["{}".format(dev.id)] = ""
+							self.updateNeeded += " fixConfig "
+							self.rPiRestartCommand[pi] += ", sensor"
+							self.setONErPiV(piU, "piUpToDate",["updateParamsFTP"])
+							newDescription += piU+ ","
+							delpiu = False
 
-				else:
+				if delpiu:
 					### remove if not on this pi:
 					if piU in self.RPI and "input" in self.RPI[piU]:
 						if typeId in self.RPI[piU]["input"] and "{}".format(dev.id) in self.RPI[piU]["input"][typeId]:
@@ -4601,7 +4652,13 @@ class Plugin(indigo.PluginBase):
 							del self.RPI[piU]["input"][typeId]
 						if typeId not in self.RPI[piU]["input"] and typeId in self.RPI[piU]["sensorList"]:
 							self.RPI[piU]["sensorList"] = self.RPI[piU]["sensorList"].replace(typeId+",","")
-					continue
+						#self.indiLOG.log(20,"+++ removing from  piU:{}  ".format(piU))
+
+				else:
+					if valuesDict["address"] != newAddress and newAddress !="":
+						valuesDict["address"] = newAddress
+					if newDescription != "" and ("description" not in valuesDict or valuesDict["description"] != newDescription):
+						valuesDict["description"] = newDescription
 
 				if  typeId in _BLEsensorTypes or ("isBLElongConnectDevice" in valuesDict and valuesDict["isBLElongConnectDevice"]):
 					if not self.isValidMAC(valuesDict["mac"]):
@@ -4744,7 +4801,7 @@ class Plugin(indigo.PluginBase):
 					if "deltaDist" not in props or (props["deltaDist"] != valuesDict["deltaDist"]):
 						self.rPiRestartCommand[pi] += "vl6180xDistance,"
 
-				elif "vcnl4010Distance" == typeId :
+				if "vcnl4010Distance" == typeId :
 					self.rPiRestartCommand[pi] += "vcnl4010Distance,"
 					if "sensorRefreshSecs" not in props or (props["sensorRefreshSecs"] != valuesDict["sensorRefreshSecs"]):
 						self.rPiRestartCommand[pi] += "vcnl4010Distance,"
@@ -4762,6 +4819,9 @@ class Plugin(indigo.PluginBase):
 
 				self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				valuesDict["MSG"] = errorText
+
+				#self.indiLOG.log(20,"+++ validate sensor  dev.name:{}  piU:{}   input:{}".format(dev.name, piU, self.RPI[piU]["input"]))
+
 
 			if errorText == "":
 				self.updateNeeded += " fixConfig "
@@ -11856,27 +11916,32 @@ class Plugin(indigo.PluginBase):
 		try:
 			anyChange = False
 			#ss = time.time()
-			for dev in indigo.devices.iter("props.isSensorDevice ,props.isOutputDevice"):
+			for dev in indigo.devices.iter("props.isSensorDevice, props.isOutputDevice"):
 				sensor = dev.deviceTypeId
 				devId  = dev.id
 				props  = dev.pluginProps
-				if "piServerNumber" in props:
+				testpiU  =[]
+				if "rPiEnable0" in props:
+					for piU in _rpiBeaconList:
+						testpiU.append(piU)
+				elif "piServerNumber" in props:
+						testpiU.append(props["piServerNumber"])
+
+				for pix in testpiU:
 					try:
-						pi = int(props["piServerNumber"])
+						pi = int(pi)
 						piU = "{}".format(pi)
 					except:
-						self.indiLOG.log(10,"device not fully defined, please edit {} pi# not defined:  {}".format(dev.name, "{}".format(props)))
 						continue
-
 					if self.checkDevToPi(piU, devId, dev.name, "input", "in",  sensor, _GlobalConst_allowedSensors + _BLEsensorTypes): anyChange= True
 					#indigo.server.log("syncSensors A01: "+ "{}".format(anyChange)+"  "+ "{}".format(time.time() - ss))
 					if self.checkDevToPi(piU, devId, dev.name, "output", "out", sensor, _GlobalConst_allowedOUTPUT):  anyChange= True
 
-				if "description" in props and	props["description"] !="" and props["description"] != dev.description:
-					dev.description =  props["description"]
-					dev.replaceOnServer()
-					anyChange = True
-			#indigo.server.log("syncSensors AT: "+ "{}".format(anyChange)+"  "+ "{}".format(time.time() - ss))
+					if "description" in props:
+						if props["description"] !="" and props["description"] != dev.description:
+							dev.description =  props["description"]
+							dev.replaceOnServer()
+							anyChange = True
 
 			for piU in self.RPI:
 				self.checkSensortoPi(piU, "input")
@@ -11965,7 +12030,7 @@ class Plugin(indigo.PluginBase):
 								anyChange = True
 								continue
 
-							if "piServerNumber" in props:
+							if "piServerNumber" in props and "rPiEnable"+piU not in props:
 								if sensor != dev.deviceTypeId or devID != dev.id or piU != props["piServerNumber"]:
 									self.indiLOG.log(10,"sensor/devid/pi/wrong for  pi#: {}  devID= {} props{}\n >>>>> removing sensor <<<<".format(piU, self.RPI[piU][io][sensor], "{}".format(props)) )
 									self.RPI[piU][io][sensor] = {}
@@ -11975,15 +12040,19 @@ class Plugin(indigo.PluginBase):
 										if props["address"] != "Pi-" + piU:
 											props["address"] = "Pi-" + piU
 											if self.decideMyLog("Logic"): self.indiLOG.log(5,"updating address for {}".format(piU) )
-					
 											dev.replacePluginPropsOnServer(props)
 											anyChange = True
 									else:
-										props["address"] = "Pi-" + piU
-				
-										dev.replacePluginPropsOnServer(props)
-										if self.decideMyLog("Logic"): self.indiLOG.log(5,"updating address for {}".format(piU) )
-										anyChange = True
+											props["address"] = "Pi-" + piU
+											dev.replacePluginPropsOnServer(props)
+											if self.decideMyLog("Logic"): self.indiLOG.log(5,"updating address for {}".format(piU) )
+											anyChange = True
+
+							if  "rPiEnable"+piU in props:
+								if sensor != dev.deviceTypeId or devID != dev.id or not props["rPiEnable"+piU]:
+									self.indiLOG.log(10,"sensor/devid/pi/wrong for  pi#: {}  devID= {} props{}\n >>>>> removing sensor <<<<".format(piU, self.RPI[piU][io][sensor], "{}".format(props)) )
+									self.RPI[piU][io][sensor] = {}
+									anyChange = True
 							else:
 								pass
 
@@ -12906,6 +12975,7 @@ class Plugin(indigo.PluginBase):
 				###self.indiLOG.log(10,"updateStateIf : "+statename+"  "+ "{}".format(varJson[statename]))
 				if deviceStateName == "Temperature":
 					x, UI, decimalPlaces, useFormat = self.convTemp(varJson[stateName])
+					self.updateChangedValuesInLastXXMinutes(dev, x, UI, "Temperature", useFormat, "", decimalPlaces=decimalPlaces)
 				elif makeString:
 					x  = varJson[stateName].strip("{").strip("}")
 					UI = x
@@ -14496,77 +14566,39 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
 							self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
 							self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
-							self.addToStatesUpdateDict(dev.id, "sensorValue", True, uiValue="on")
+							self.addToStatesUpdateDict(dev.id, "sensorValue", 		1, uiValue="on")
 							if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 							else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 							stChanged = True
 					else:
 						if dev.states["onOffState"]:
 							self.addToStatesUpdateDict(dev.id, "onOffState",  False)
-							self.addToStatesUpdateDict(dev.id, "sensorValue", False, uiValue="off")
+							self.addToStatesUpdateDict(dev.id, "sensorValue", 0, uiValue="off")
 							if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 							else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							stChanged = True
 				else: pass
 
 				#{"BLEiSensor-RemoteKeyFob":{"431446557":{"sensorType":"RemoteKeyFob","SOS":true,"rssi":-76,"home":false,"away":false,"counter":1,"disarm":false,"sendsAlive":false}}}
-			if "SOS" 		in data and "SOS" 			in dev.states:
-				if data["SOS"]:
-					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
-					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
-					self.addToStatesUpdateDict(dev.id, "previousOnType", 	dev.states["currentOnType"])
-					self.addToStatesUpdateDict(dev.id, "currentOnType",  	"SOS")
-					self.addToStatesUpdateDict(dev.id, "sensorValue", 2, uiValue="SOS")
-					self.setStatusCol(dev, "status", 1, "SOS", whichKeysToDisplay, "","")
-					self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
-					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
-				self.addToStatesUpdateDict(dev.id, "SOS", 					data["SOS"])
-
-			if "home" 		in data and "home" 			in dev.states:
-				if data["home"]:
-					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
-					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
-					self.addToStatesUpdateDict(dev.id, "previousOnType", 	dev.states["currentOnType"])
-					self.addToStatesUpdateDict(dev.id, "currentOnType",  	"home")
-					self.addToStatesUpdateDict(dev.id, "sensorValue", 2, uiValue="home")
-					self.setStatusCol(dev, "status", 2, "home", whichKeysToDisplay, "","")
-					self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
-					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
-				self.addToStatesUpdateDict(dev.id, "home", 				data["home"])
-
-			if "away" 		in data and "away" 			in dev.states:
-				if data["away"]:
-					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
-					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
-					self.addToStatesUpdateDict(dev.id, "previousOnType", 	dev.states["currentOnType"])
-					self.addToStatesUpdateDict(dev.id, "currentOnType",  	"away")
-					self.addToStatesUpdateDict(dev.id, "sensorValue", 3, uiValue="away")
-					self.setStatusCol(dev, "status", 3, "away", whichKeysToDisplay, "","")
-					self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
-					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
-				self.addToStatesUpdateDict(dev.id, "away", 				data["away"])
-
-			if "disarm" 	in data and "disarm" 		in dev.states:
-				if data["disarm"]:
-					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
-					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
-					self.addToStatesUpdateDict(dev.id, "previousOnType", 	dev.states["currentOnType"])
-					self.addToStatesUpdateDict(dev.id, "sensorValue", 4, uiValue="disarm")
-					self.addToStatesUpdateDict(dev.id, "currentOnType",  	"disarm")
-					self.setStatusCol(dev, "status", 4, "disarm", whichKeysToDisplay, "","")
-					self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
-					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "image":"off", "updateItems":[{"stateName":"onOffState", "value":False}]})
-				self.addToStatesUpdateDict(dev.id, "disarm", 				data["disarm"])
+			for xState in["SOS", "home", "away", "disarm"]:
+				if xState 		in data and xState 			in dev.states:
+					if data[xState]:
+						self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
+						self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
+						self.addToStatesUpdateDict(dev.id, "previousOnType", 	dev.states["currentOnType"])
+						self.addToStatesUpdateDict(dev.id, "currentOnType",  	xState)
+						self.addToStatesUpdateDict(dev.id, "sensorValue", 		2, uiValue=xState)
+						self.addToStatesUpdateDict(dev.id, "status", 			data[xState], uiValue=xState )
+						self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
+						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						self.delayedActions["data"].put( {"actionTime":time.time()+3.  , "devId":dev.id, "image":"off", "updateItems":[{"stateName":"onOffState", "value":False}, {"stateName":xState, "value":False}]})
+					self.addToStatesUpdateDict(dev.id, xState, 					data[xState])
 
 			if "bits" 		in data  and "bits" 		in dev.states:	self.addToStatesUpdateDict(dev.id, "bits", 				data["bits"])
-			if "state" 		in data  and "state" 		in dev.states:	self.addToStatesUpdateDict(dev.id, "state", 				data["state"])
-			if "sensorType" in data and "sensorType" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "sensorType", 			data["sensorType"])
-			if "sendsAlive" in data and "sendsAlive" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "sendsAlive", 			data["sendsAlive"])
-			if "lowVoltage" in data and "lowVoltage" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "lowVoltage", 			data["lowVoltage"])
+			if "state" 		in data  and "state" 		in dev.states:	self.addToStatesUpdateDict(dev.id, "state", 			data["state"])
+			if "sensorType" in data and "sensorType" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "sensorType", 		data["sensorType"])
+			if "sendsAlive" in data and "sendsAlive" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "sendsAlive", 		data["sendsAlive"])
+			if "lowVoltage" in data and "lowVoltage" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "lowVoltage", 		data["lowVoltage"])
 			if "tampered" 	in data  and "tampered" 	in dev.states:	self.addToStatesUpdateDict(dev.id, "tampered", 			data["tampered"])
 
 			if 						"lastAliveMessage" in dev.states: 	self.addToStatesUpdateDict(dev.id, "lastAliveMessage", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
@@ -14595,6 +14627,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
 					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
 					self.addToStatesUpdateDict(dev.id, "onOffState",  		True)
+					self.addToStatesUpdateDict(dev.id, "status",  		True)
 					if not inverse:	dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 					else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 					stChanged = True
@@ -14602,6 +14635,7 @@ class Plugin(indigo.PluginBase):
 
 			else:
 				if dev.states["onOffState"]:
+					self.addToStatesUpdateDict(dev.id, "status",  		False)
 					self.addToStatesUpdateDict(dev.id, "onOffState",  		False)
 					self.addToStatesUpdateDict(dev.id, "previousOffEvent", 	dev.states["currentOffEvent"])
 					self.addToStatesUpdateDict(dev.id, "currentOffEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
@@ -14941,7 +14975,7 @@ class Plugin(indigo.PluginBase):
 									self.updateChangedValuesInLastXXMinutes(dev1, x, props, "Temperature", useFormat, whichKeysToDisplay, decimalPlaces)
 									self.executeUpdateStatesDict(onlyDevID= "{}".format(dev1.id), calledFrom="updateOneWire")
 									self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
-									self.saveConfig()
+									self.saveConfig(calledFrom="oneWire")
 							except Exception as e:
 								self.exceptionHandler(40,e)
 								continue
@@ -16876,27 +16910,27 @@ class Plugin(indigo.PluginBase):
 
 
 
-			if not ( correspondingSensorType !="" or correspondingBLEConnectSensorType !="" or correspondingSwitchbotDevice !=""): return   
+			if correspondingSensorType == "" and correspondingBLEConnectSensorType =="" and correspondingSwitchbotDevice == "": return   
 
 
 			textHint = sensorInfo.get("text","")
 			newprops = {}
-			if subtypeOfBeacon:
+			if subtypeOfBeacon !="":
 				devType 									= subtypeOfBeacon
 				isSens 										= True
 				newprops["isBLESensorDevice"]				= True
 				name 										= "s-{}-{}-{}".format(fromPiU, devType, mac)
-			elif correspondingSensorType:
+			elif correspondingSensorType !="":
 				devType 									= correspondingSensorType
 				isSens 										= True
 				newprops["isBLESensorDevice"]				= True
 				name 										= "s-{}-{}-{}".format(fromPiU, devType, mac)
-			elif correspondingBLEConnectSensorType:
+			elif correspondingBLEConnectSensorType !="":
 				devType										= correspondingBLEConnectSensorType
 				isSens 										= True
 				newprops["isBLElongConnectDevice"]			= True
-				name 										= "s-()-{}-{}".format(fromPiU, devType, mac)
-			elif correspondingSwitchbotDevice:
+				name 										= "s-{}-{}-{}".format(fromPiU, devType, mac)
+			elif correspondingSwitchbotDevice !="":
 				devType 									= correspondingSwitchbotDevice
 				newprops["isSwitchbotDevice"]				= True
 				name 										= "o-{}-{}-{}".format(fromPiU, devType, mac)
@@ -16917,14 +16951,13 @@ class Plugin(indigo.PluginBase):
 			illum 	= False
 			moist 	= False
 			swit	= False
-			contact	= False
 			button	= False
 
 			if textHint.lower().find("temp") > -1:		temp 	= True
 			if textHint.lower().find("hum") > -1:		hum 	= True
 			if textHint.lower().find("accell") > -1:	accell 	= True
 			if textHint.lower().find("contact") > -1:	contact = True
-			if textHint.lower().find("switch") > -1: 	swit	= True
+			if textHint.find("switch") > -1: 			swit	= True
 			if textHint.lower().find("moti") > -1:		motion 	= True
 			if textHint.lower().find("formal") > -1:	formal 	= True
 			if textHint.lower().find("button") > -1:	button 	= True
@@ -16943,7 +16976,11 @@ class Plugin(indigo.PluginBase):
 			newprops["mac"] 								= mac
 			if isSens:
 				newprops["isSensorDevice"] 					= True
-				newprops["SupportsSensorValue"] 			= True
+				if devType != "SwitchbotContact":
+					newprops["SupportsSensorValue"] 		= True
+				else:
+					newprops["SupportsSensorValue"] 		= False
+
 				newprops["SupportsStatusRequest"] 			= False
 				newprops["AllowOnStateChange"] 				= False
 				newprops["AllowSensorValueChange"] 			= False
@@ -16956,6 +16993,8 @@ class Plugin(indigo.PluginBase):
 				newprops["SupportsStatusRequest"] 			= True
 				newprops["SupportsBatteryLevel"] 			= True
 				newprops["piServerNumber"]					= "{}".format(fromPiU)
+				rPiEnable 									= "rPiEnable"+ "{}".format(fromPiU)
+				newprops[rPiEnable]							= True
 			if button:
 				newprops["SupportsBatteryLevel"] 			= False
 
@@ -16979,11 +17018,9 @@ class Plugin(indigo.PluginBase):
 				if hum: newprops["offsetHum"]				= "0"
 				if press: newprops["offsetPress"]			= "0"
 				descr = "on Pi:{}".format(fromPiU)
-				addr = mac
 				newprops["isBLESensorDevice"]					= True
 			else:
 				descr = mac
-				addr = "Pi-{}".format(fromPiU)
 			newprops["minSendDelta"]						= "4"
 			newprops["updateIndigoTiming"]					= "60"
 			newprops["updateIndigoDeltaTemp"]				= "1.0"
@@ -17007,7 +17044,7 @@ class Plugin(indigo.PluginBase):
 			try:
 				dev = indigo.device.create(
 					protocol		= indigo.kProtocol.Plugin,
-					address			= addr,
+					address			= mac,
 					name			= name,
 					description		= descr,
 					pluginId		= self.pluginId,
@@ -17017,6 +17054,7 @@ class Plugin(indigo.PluginBase):
 					)
 			except Exception as e:
 				self.exceptionHandler(40,e)
+				self.indiLOG.log(40,"name: {}".format(name))
 				return 
 
 			dev.updateStateOnServer("created", datetime.datetime.now().strftime(_defaultDateStampFormat) )
@@ -17978,6 +18016,7 @@ class Plugin(indigo.PluginBase):
 				out["sensors"]				 = {}
 				for sensor in self.RPI[piU]["input"]:
 					try:
+
 						if sensor not in _GlobalConst_allowedSensors and sensor not in _BLEsensorTypes: continue
 						if len(self.RPI[piU]["input"][sensor]) == 0: continue
 						sens = {}
@@ -17993,10 +18032,12 @@ class Plugin(indigo.PluginBase):
 									return
 								self.exceptionHandler(40,e)
 								continue
+							if dev.id == 714584532: self.indiLOG.log(20,"====== dev:{}, piU:{}, enabled:{}, input:{}".format(dev.name, piU, dev.enabled, self.RPI[piU]["input"]))
 
 							if not dev.enabled: continue
 							props = dev.pluginProps
 							sens[devIdS] = {}
+							if dev.id == 714584532: self.indiLOG.log(20,"pass 1 sens:{}".format(sens))
 
 							if "deviceDefs" in props:
 								try:    sens[devIdS] = {"INPUTS":json.loads(props["deviceDefs"])}
@@ -18032,6 +18073,8 @@ class Plugin(indigo.PluginBase):
 							if "noI2cCheck" not in props or  not props["noI2cCheck"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, "i2cAddress")
 
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "sendToRpi")
+							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "numberOfMeasurementToAverage")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "numberOfMeasurementToAverage")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "sensorRefreshSecs")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "readSensorEvery")
@@ -18217,16 +18260,20 @@ class Plugin(indigo.PluginBase):
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "relayType")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "python3")
 							sens[devIdS] = self.updateSensProps(sens[devIdS], props, "bleHandle")
+							if dev.id == 714584532: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))
 
-	
+							if dev.id == 714584532: self.indiLOG.log(20,"dev:{}, sens[devIdS]:{} ".format(dev.name, sens[devIdS] ))
+
 							dev.replacePluginPropsOnServer(props)
 
+						if dev.id == 714584532: self.indiLOG.log(20,"pass 91 sens:{}".format(sens))
 						if sens != {}:
+							if dev.id == 714584532: self.indiLOG.log(20,"pass 92 sens:{}".format(sens))
 							out["sensors"][sensor] = sens
 							###if self.decideMyLog("OfflineRPI"): self.indiLOG.log(5,piU + "  sensor " + "{}".format(out["sensors"][sensor]) )
 					except Exception as e:
 						self.exceptionHandler(40,e)
-						self.indiLOG.log(40, "{}".format(sens))
+						#self.indiLOG.log(40, "{}".format(sens))
 
 				out["sensorList"] = self.RPI[piU]["sensorList"]
 
@@ -19585,7 +19632,7 @@ configuration         - ==========  defined beacons ==============
 	######################
 	def actionControlSensor(self, action, dev):
 		if dev.address in self.beacons:
-			self.beacons[dev.address]["lastUp"] = time.time()
+			self.beacons[address]["lastUp"] = time.time()
 		elif "note" in dev.states and dev.states["note"].find("Pi") ==0:
 			pi= dev.states["note"].split("-")[1]
 			self.RPI[piU]["lastMessage"]=time.time()

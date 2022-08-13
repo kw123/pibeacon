@@ -1,3 +1,11 @@
+Added features / changes in v2022.148.9@ 2022-08-13
+===================================================
+   
+1. improved coexistance of trugveg ... and switchbot devices 
+   switchbot has better priority now, wait time for trugveg to finish is now max 4 secs, down from 15.
+
+
+
 Added features / changes in v2022.148.8@ 2022-08-010
 ===================================================
    

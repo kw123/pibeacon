@@ -7928,7 +7928,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
+
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="false">
+				<Label>switch off to suppress Sensorvalues in main display</Label>
+			</Field>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>

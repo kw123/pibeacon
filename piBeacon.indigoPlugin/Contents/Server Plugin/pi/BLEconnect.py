@@ -182,10 +182,9 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, rando
 	try:
 		nTries = 1
 		for kk in range(nTries):
-			if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  
-				nonSwitchBotActive = False
+			if checkForSwitchBotPrio():
 				return ""
-			nonSwitchBotActive = True
+			nonSwitchBotActive = "connectGATT0"
 			cmd = "sudo /usr/bin/gatttool -i {} -b {} {} -I".format(useHCI,  thisMAC, "-t random " if random else ""  ) 
 			if verbose: U.logger.log(20,"{} ;  expecting: '>'".format(cmd))
 			expCommands = pexpect.spawn(cmd)
@@ -207,17 +206,17 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, rando
 			#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
 			for ii in range(repeat):
 				try:
-					if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  
-						nonSwitchBotActive = False
+					if checkForSwitchBotPrio():
 						return ""
 					if verbose: U.logger.log(20,"send connect try#:{}  expecting: Connection successful ".format(ii))
+					nonSwitchBotActive = "connectGATT1"
 					expCommands.sendline("connect")
 					ret = expCommands.expect(["Connection successful","Error", pexpect.TIMEOUT], timeout=timeoutConnect)
 					if ret == 0:
 						if verbose: U.logger.log(20,"connect successful: {}-==-:{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
 						#ret = expCommands.expect(".*", timeout=0.5)
 						#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands.before,expCommands.after))
-						nonSwitchBotActive = False
+						nonSwitchBotActive = ""
 						return expCommands
 					else:
 						if verbose: U.logger.log(20, u"connect error: waiting 1 sec;  .. {}-==-:{}".format(escape_ansi(expCommands.before),escape_ansi(expCommands.after)))
@@ -228,16 +227,22 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, repeat=1, rando
 
 			#U.logger.log(20, u"connect error giving up")
 
+		nonSwitchBotActive = "connectGATT2"
 		if expCommands != "": disconnectGattcmd(expCommands, thisMAC, 2)
 
-		nonSwitchBotActive = False
+		nonSwitchBotActive = ""
 		return ""
 	except  Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 	return ""
 
-
+#################################
+def checkForSwitchBotPrio():
+	if switchBotPresent and switchbotActive in ["waiting", "waitingForPrio"]:  
+		nonSwitchBotActive = ""
+		return True
+	return False
 
 #################################
 def disconnectGattcmd(expCommands, thisMAC, timeout, verbose=False):	
@@ -268,7 +273,7 @@ def writeGattcmd(expCommands, cc, expectedTag, timeout, verbose=False):
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	try:		
 		for ii in range(3):
-			if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  return False
+			if checkForSwitchBotPrio():  return False
 
 			if verbose: U.logger.log(20,"sending cmd:{}, expecting:'{}'".format(cc, expectedTag.encode('ascii', errors='ignore')))
 			expCommands.sendline( cc )
@@ -292,7 +297,7 @@ def writeAndListenGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	try:
 		for kk in range(2):
-			if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  return []
+			if checkForSwitchBotPrio():  return []
 			if verbose:  U.logger.log(20,"sendline  cmd:{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
@@ -320,7 +325,7 @@ def readGattcmd(expCommands, cc, expectedTag, nBytes, timeout, verbose=False):
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	try:
 		for kk in range(2):
-			if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  return []
+			if checkForSwitchBotPrio():  return []
 			if verbose: U.logger.log(20,"sendline  cmd:{}, expecting:'{}'".format(cc, expectedTag))
 			expCommands.sendline( cc )
 			ret = expCommands.expect([expectedTag,"Error","failed",pexpect.TIMEOUT], timeout=timeout)
@@ -390,7 +395,7 @@ def tryToConnectSocket(thisMAC,BLEtimeout,devId):
 	global switchBotPresent, switchbotActive
 
 	retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
-	if switchBotPresent and switchbotActive in ["active","waiting", "waitingForPrio"]:  return retdata
+	if checkForSwitchBotPrio():  return retdata
 	if time.time() - lastConnect < 3: time.sleep( max(0,min(0.5,(3.0- (time.time() - lastConnect) ))) )
 	U.logger.log(20, u"starting for {}, using devid:{}".format(thisMAC, devId))
 
@@ -459,11 +464,9 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 	global switchBotPresent, switchbotActive, nonSwitchBotActive
 
 	try:
-		nonSwitchBotActive = True
+		nonSwitchBotActive = "tryToConnectCommandLine"
 		retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
-		if switchBotPresent and switchbotActive in ["active","waiting", "waitingForPrio"]:  
-			nonSwitchBotActive = False
-			return retdata
+		if checkForSwitchBotPrio():  return retdata
 		if time.time() - lastConnect < 3: 
 			time.sleep( max(0,min(0.5,(3.0- (time.time() - lastConnect) ))) )
 
@@ -501,7 +504,7 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 			retdata = {}
 	
 	#U.logger.log(20, "{} return data: {}".format(thisMAC, retdata))
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 	return retdata
 
 
@@ -510,7 +513,7 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
-	nonSwitchBotActive = True
+	nonSwitchBotActive = "BLEXiaomiMiTempHumSquare"
 	data = copy.deepcopy(data0)
 	try:
 		verbose = False
@@ -533,13 +536,11 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 		minWaitAfterBadRead = max(5,macList[thisMAC]["readSensorEvery"]/3)
 		macList[thisMAC]["nextRead"] = time.time() + minWaitAfterBadRead
 		for ii in range(1):
-			if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  
-				nonSwitchBotActive = False
-				return ""
+			if checkForSwitchBotPrio(): return ""
 
 			startCMD = time.time()
 
-			expCommands = connectGATT(useHCI, thisMAC, 5, 25, repeat=2, verbose=verbose)
+			expCommands = connectGATT(useHCI, thisMAC, 4, 25, repeat=2, verbose=verbose)
 			if expCommands == "":
 				macList[thisMAC]["nextRead"] = time.time() + minWaitAfterBadRead
 				macList[thisMAC]["triesWOdata"] +=1
@@ -550,13 +551,16 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 					data["connected"] = False
 					data["triesWOdata"] = macList[thisMAC]["triesWOdata"]
 				#U.logger.log(20, u"not connected, triesWOdata:{}, repeat in {} secs".format(macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
-				nonSwitchBotActive = False
+				nonSwitchBotActive = ""
 				return data
 
 			readData = []
 
 			for nn in range(2):
-				if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  return ""
+				if checkForSwitchBotPrio():
+					disconnectGattcmd(expCommands, thisMAC, 2)
+					return ""
+
 				readData = writeAndListenGattcmd(expCommands, "char-write-req 0038 0100", "value:", 5, 15, verbose=verbose)
 				if readData != []: break
 				time.sleep(1)
@@ -584,7 +588,7 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 						data["dataChanged"]	= True
 				macList[thisMAC]["lastTesttt"] = time.time()
 				macList[thisMAC]["lastData"]  = copy.deepcopy(data)
-				nonSwitchBotActive = False
+				nonSwitchBotActive = ""
 				return data
 
 			macList[thisMAC]["triesWOdata"] += 1
@@ -600,7 +604,7 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 	
 	#U.logger.log(20, "{} return data: {}".format(thisMAC, data))
 	
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 	return data
 
 
@@ -610,7 +614,7 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
-	nonSwitchBotActive = True
+	nonSwitchBotActive = "BLEXiaomiMiVegTrug0"
 	data = copy.deepcopy(data0)
 	try:
 		if time.time() - macList[thisMAC]["nextRead"] < 0 or time.time() - macList[thisMAC]["lastTesttt"] < macList[thisMAC]["readSensorEvery"]: return data
@@ -641,7 +645,11 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 		"""
 			
 		if verbose: U.logger.log(20, u"{},  tries:{}, DT:{}".format(thisMAC, macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
-		expCommands = connectGATT(useHCI, thisMAC, 5,15, verbose=verbose)
+		expCommands = connectGATT(useHCI, thisMAC, 4,5, verbose=verbose)
+		if checkForSwitchBotPrio(): 
+			disconnectGattcmd(expCommands, thisMAC, 2)
+			return {}  
+		nonSwitchBotActive = "BLEXiaomiMiVegTrug1"
 		if expCommands == "":
 			macList[thisMAC]["triesWOdata"] +=1
 			data["triesWOdata"] = macList[thisMAC]["triesWOdata"]
@@ -649,25 +657,31 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 				macList[thisMAC]["triesWOdata"] = 0
 				#U.logger.log(20, u"thisMAC:{}, error, not connected, sending not connected to indigo, triesWOdata:{}, retrying in {} secs".format(thisMAC, macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
 				U.logger.log(20, u"thisMAC:{}, error, not connected, triesWOdata:{} retrying in {} secs".format(thisMAC, macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
+			macList[thisMAC]["lastTesttt"] = time.time() - 90
 			return data
 
 		result1 = []
 		result2 = []
 
 		for nn in range(1):
-			if switchBotPresent and switchbotActive in["waiting", "waitingForPrio"]:  return ""
+			if checkForSwitchBotPrio(): return
 			if not writeGattcmd(expCommands, "char-write-req 33 A01F", "Characteristic value was written successfully", 5, verbose=verbose):
-									continue
+				nonSwitchBotActive = ""
+				return
 
 			result1 = readGattcmd(expCommands, "char-read-hnd 38", "Characteristic value/descriptor:", 7, 5, verbose=verbose)
+			if checkForSwitchBotPrio(): return
 			if result1 == []:		continue
 
 			result2 = readGattcmd(expCommands, "char-read-hnd 35", "Characteristic value/descriptor:", 16, 5, verbose=verbose)
+			if checkForSwitchBotPrio(): return
 			if result2 == []:		continue
 
 			break
 
+		nonSwitchBotActive = "BLEXiaomiMiVegTrug2"
 		disconnectGattcmd(expCommands, thisMAC, 2)
+		nonSwitchBotActive = "BLEXiaomiMiVegTrug3"
 
 		if verbose: U.logger.log(20, u"connect results:{} - {}".format(result1, result2))
 
@@ -676,7 +690,8 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 			if macList[thisMAC]["triesWOdata"] >= maxTrieslongConnect:
 				macList[thisMAC]["triesWOdata"] = 0
 				if verbose: U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
-			nonSwitchBotActive = False
+			macList[thisMAC]["lastTesttt"] = time.time() - 90
+			nonSwitchBotActive = ""
 			return data
 
 		data["batteryLevel"]		= int(result1[0],16)
@@ -693,7 +708,7 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 		if macList[thisMAC]["lastData"] == {}:
 			macList[thisMAC]["lastData"] 			= copy.deepcopy(data)
 			macList[thisMAC]["lastData"]["temp"]	= -10000.
-			macList[thisMAC]["lastTesttt"] 			= 0.
+			macList[thisMAC]["lastTesttt"] 			= time.time() - 90
 
 		if ( abs(data["temp"] 			- macList[thisMAC]["lastData"]["temp"])			> 0.5 	or
 			 abs(data["moisture"]  		- macList[thisMAC]["lastData"]["moisture"])		> 2 	or
@@ -702,18 +717,18 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 			macList[thisMAC]["lastData"]  = copy.deepcopy(data)
 			data["dataChanged"]			=  True
 		if verbose: U.logger.log(20, "{} return data: {}".format(thisMAC, data))
-		nonSwitchBotActive = False
+		nonSwitchBotActive = ""
 		return data
 
 
 	except  Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		nonSwitchBotActive = False
+		nonSwitchBotActive = ""
 		data["badSensor"] = True
 	
 	if verbose: U.logger.log(20, "{} return data: {}".format(thisMAC, data))
 	
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 	return data
 
 
@@ -724,8 +739,8 @@ def BLEinkBirdPool01B(thisMAC, data0):
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
 	data = copy.deepcopy(data0)
-	verbose = True
-	nonSwitchBotActive = True
+	verbose = False
+	nonSwitchBotActive = "BLEinkBirdPool01B"
 	try:
 		if (time.time() - macList[thisMAC]["nextRead"] < 0 or time.time() - macList[thisMAC]["lastTesttt"] < macList[thisMAC]["readSensorEvery"]): return data
 
@@ -746,7 +761,7 @@ def BLEinkBirdPool01B(thisMAC, data0):
 			if macList[thisMAC]["triesWOdata"] >= maxTrieslongConnect:
 				macList[thisMAC]["triesWOdata"] = 0
 				if verbose: U.logger.log(20, u"error connected but do data, send not connetced to indigo, triesWOdata:{}, retrying in {} secs".format(macList[thisMAC]["triesWOdata"], minWaitAfterBadRead))
-			nonSwitchBotActive = False
+			nonSwitchBotActive = ""
 			return data
 
 		data["temp"]  				= round( signedIntfrom16(result[1]+result[0]) /100. + macList[thisMAC]["offsetTemp"], 1)
@@ -766,7 +781,7 @@ def BLEinkBirdPool01B(thisMAC, data0):
 		macList[thisMAC]["lastTesttt"] = time.time()
 		macList[thisMAC]["lastData"]  = copy.deepcopy(data)
 		if verbose: U.logger.log(20, "{} return ok data: {}".format(thisMAC, data))
-		nonSwitchBotActive = False
+		nonSwitchBotActive = ""
 		return data
 
 	except  Exception as e:
@@ -775,7 +790,7 @@ def BLEinkBirdPool01B(thisMAC, data0):
 	
 	if verbose: U.logger.log(20, "{}  return 99 data: {}".format(thisMAC, data))
 	
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 	return data
 
 
@@ -790,7 +805,7 @@ def checkSwitchbotForCommand():
 
 	maxwaitForSwitchBot = 60
 	switchbotActive = ""
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 	U.logger.log(20, u"checkSwitchbotForCommand start")
 	while threadDict["state"] != "stop":
 		time.sleep(0.5)
@@ -853,15 +868,17 @@ def doSwitchBot():
 	#### check out for definistions of commands and returns
 	#### https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/blob/latest/devicetypes/bot.md
 
-	while nonSwitchBotActive: 
-		U.logger.log(20, u" WAITING FOR PRIO")
+	for ii in range (10):
+		if nonSwitchBotActive == "": break
+		U.logger.log(20, u" WAITING FOR PRIO, waiting for:{}".format(nonSwitchBotActive))
 		switchbotActive = "waitingForPrio"
 		time.sleep(0.5)
+	nonSwitchBotActive = ""
 
 	switchbotActive	= "active"
 	switchbotAction = time.time() 
 	verbose = True
-	verbose2 = True
+	verbose2 = False
 	# jData= {"mac":mac#,"onOff":"0/1","statusRequest":True}
 	if  switchbotQueue.empty(): 
 		U.logger.log(20, u" empty:{}")
@@ -907,7 +924,7 @@ def doSwitchBot():
 		readHandle = switchBotConfig[thisMAC]["blehandleStatus"]
 
 		if verbose2: U.logger.log(20, "{} trying to connect".format(thisMAC))
-		expCommands = connectGATT(useHCI, thisMAC, 5,15, repeat=2, random=True, verbose=verbose)
+		expCommands = connectGATT(useHCI, thisMAC, 4,15, repeat=2, random=True, verbose=verbose)
 		if expCommands == "":
 			U.logger.log(20, "{} failed to connect ".format(thisMAC))
 			switchbotQueue.put([retryCount, jData])
@@ -1087,10 +1104,10 @@ def doSwitchBot():
 				switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 				switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
 				switchbotActive = ""
-				expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+				expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 				return 
 		switchbotActive = ""
-		expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+		expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 		return 
 
 		if sType == "switchbotcurtain":
@@ -1105,7 +1122,7 @@ def doSwitchBot():
 						cmd = "{}{}{:02x}".format(switchBotConfig[thisMAC]["positionCmd"],switchBotConfig[thisMAC]["modeOfDevice"], int(jData["pos"]))
 					except:
 						U.logger.log(20, u"{} bad command given:{}".format(thisMAC, jData["pos"]))
-						expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+						expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 						return 
 
 				blecmd = "--char-write-req -t random --handle=0x{} --value={}".format(switchBotConfig[thisMAC]["blehandle"], cmd )	
@@ -1120,7 +1137,7 @@ def doSwitchBot():
 					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 
 					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 					switchbotActive = ""
-					expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+					expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 					return 
 				else:
 					switchbotQueue.put([retryCount, jData])
@@ -1128,13 +1145,13 @@ def doSwitchBot():
 			else:
 				if verbose2: U.logger.log(20, "{} direction not in command:{}".format(thisMAC))
 				switchbotActive = ""
-			expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+			expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 			return 
 
 		else:
 			if verbose2: U.logger.log(20, "{} sType not found:{}".format(thisMAC, sType))
 			switchbotActive = ""
-		expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+		expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 		return 
 	except  Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
@@ -1142,7 +1159,7 @@ def doSwitchBot():
 		if verbose2: U.logger.log(20, "{}  return  data: {}".format(thisMAC, switchBotConfig))
 	
 	switchbotActive = ""
-	expCommands = disconnectGattcmd(expCommands, thisMAC, 5, verbose=verbose)
+	expCommands = disconnectGattcmd(expCommands, thisMAC, 2, verbose=verbose)
 	return  
 
 
@@ -1250,7 +1267,7 @@ def readParams():
 							macListNew[thisMAC]={"type":"isBLElongConnectDevice",
 												 "updateIndigoTiming":60,
 												 "lastSend":0,
-												 "readSensorEvery":120,
+												 "readSensorEvery":180,
 												 "lastTesttt":time.time()-1000.,
 												 "lastMsgtt":time.time()-1000. ,
 												 "lastData": {},
@@ -1468,6 +1485,7 @@ def tryToConnectToSensorDevice(thisMAC):
 		else:
 			return 
 
+		if data is None or len(data) == 0: return 
 		dataSend = {}
 		#U.logger.log(20, "BLEconnect: data:{}".format(data))
 		if data["badSensor"]:
@@ -1512,7 +1530,7 @@ def startReadCommandThread():
 	currentActiveGattCommandisSwitchBot = False
 	maxwaitForSwitchBot = 60
 	switchbotActive = ""
-	nonSwitchBotActive = False
+	nonSwitchBotActive = ""
 
 	U.logger.log(30, u"start switchbot thread ")
 	switchbotQueue = Queue.Queue()
@@ -1544,8 +1562,10 @@ def execBLEconnect():
 	global lastSignal
 	global restartCount
 	global nowTest, nowP
-	global switchBotConfig, switchbotActive, switchBotPresent, switchbotQueue
+	global switchBotConfig, switchbotActive, switchBotPresent, switchbotQueue, nonSwitchBotActive
 
+
+	nonSwitchBotActive		= ""
 	switchbotActive			= ""
 	switchBotPresent		= False
 	switchBotConfig			= {}

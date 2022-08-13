@@ -33,6 +33,7 @@ import json
 
 import math
 import fcntl
+#import codex
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils as U
@@ -42,6 +43,10 @@ import  pexpect
 G.program = "beaconloop"
 VERSION   = 8.50
 
+try:
+	unicode()
+except:
+	unicode = str
 
 #################################  BLE iBeaconScanner  ----> start
 # BLE iBeaconScanner based on https://github.com/adamf/BLE/blob/master/ble-scanner.py
@@ -122,10 +127,10 @@ def signedIntfrom24(string):
 
 
 def intFrom8(hexString, start):
- 	return int(hexString[start:start+2],16)
+	return int(hexString[start:start+2],16)
 
 def intFrom16(hexString, start):
- 	return int(hexString[start:start+4],16)
+	return int(hexString[start:start+4],16)
 
 
 def rshift(val, n):
@@ -239,7 +244,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				if ret[1] != "":
 					time.sleep(0.2)
 					ret = subprocess.call(cmd, shell=True) # enable bluetooth
-					U.logger.log(logLevelStart)
+					U.logger.log(logLevelStart,"restarting bluetooth")
 
 				cmd = "sudo hciconfig "+hci+" up"
 				ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
@@ -473,8 +478,8 @@ def startHCUIDUMPlistnr(hci):
 		ListenProcessFileHandle = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 		##pid = ListenProcessFileHandle.pid
 		msg = unicode(ListenProcessFileHandle.stderr)
-		if msg.find("open file") == -1:	# try this again
-			U.logger.log(40,"uType {}; IP#: {}; error connecting {}".format(uType, ipNumber, msg) )
+		if msg.find("open file") == -1 and msg.find("io.BufferedReader") == -1:	# try this again
+			U.logger.log(40,"hci#: {}; error connecting {}".format(hci, msg) )
 			time.sleep(20)
 			return  "error "+ unicode(msg)
 
@@ -513,6 +518,19 @@ def stopHCUIDUMPlistener():
 		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return 
 
+####-------------------------------------------------------------------------####
+def openEncoding(ff, readOrWrite):
+	if sys.version_info[0]  > 2:
+		return open( ff, readOrWrite, encoding="utf-8")
+	else:
+		return codecs.open( ff ,readOrWrite, "utf-8")
+
+def toBytesIfPy3(text):
+	if sys.version_info[0]  > 2:
+		return bytes(text,"utf8")
+	else:
+		return text
+
 
 #################################
 def readHCUIDUMPlistener():
@@ -523,7 +541,7 @@ def readHCUIDUMPlistener():
 		messages =[]
 		try:
 			if os.path.isfile(readFrom):
-				f = open(readFrom)
+				f= openEncoding(readFrom,"r")
 				messages = f.read()
 				f.close()
 				subprocess.call("rm {}".format(readFrom), shell=True)
@@ -536,7 +554,8 @@ def readHCUIDUMPlistener():
 		return []
 
 	try:
-		lines = os.read(ListenProcessFileHandle.stdout.fileno(),readBufferSize) 
+		lines = (os.read(ListenProcessFileHandle.stdout.fileno(),readBufferSize)).decode("utf8") 
+		#U.logger.log(20, "{}".format(lines))
 		if len(lines) == 0: return []
 		messages = combineLines(lines)
 		#U.logger.log(20, u"readHCUIDUMPlistener lines:\n{}".format(lines))
@@ -1109,7 +1128,7 @@ def composeMSGForThisMacOnly(mac):
 def checkIfDeltaSignal(mac):
 	global collectMsgs, loopMaxCallBLE, signalDelta
 	global onlyTheseMAC, beaconsThisReadCycle, beacon_ExistingHistory
- 	global reasonMax
+	global reasonMax
 
 	try:
 		if mac not in beacon_ExistingHistory: 			 return False
@@ -1257,6 +1276,7 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 			if sensor.find("BLEXiaomiMiTempHumClock") >-1:
 				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
+
 			if sensor.find("BLEXiaomiMiformaldehyde") >-1:
 				return  doBLEXiaomiMi( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor)
 
@@ -1268,7 +1288,7 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min):
 
 	except	Exception as e:
 		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-	return mac, tx, bl, UUID, Maj, Min, False
+	return  tx, bl, UUID, Maj, Min, False
 
 #################################
 
@@ -1292,7 +1312,7 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
 			01 23 4567 89 112345 678921234567 89312345
 
 		type2
- 						     bb : int("xx",16)&0b01111111
+						     bb : int("xx",16)&0b01111111
 			0A 09 163DFD7300 D6001001C0
 			01 23 4567891123 4567892123
 
@@ -1327,7 +1347,7 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, 
                              01234567891123
 		"""
 		doPrint 		= False
-		if False and  doPrint: U.logger.log(20, u"mac:{}, sens:{}; len(hexData):{}; hexData:{};".format(mac, sensor, len(hexData), hexData ))
+		if False and doPrint: U.logger.log(20, u"mac:{}, sens:{}; len(hexData):{}; hexData:{};".format(mac, sensor, len(hexData), hexData ))
 		if   "110201060DFF6909"+macplain in  hexData: dType = 1
 		elif "1402010610FF6909"+macplain in  hexData: dType = 4
 		elif "0A09163DFD73"  			 in  hexData: dType = 2
@@ -1541,8 +1561,8 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 	pos:                                                                 01 23 45 67 89 11 23 45 
         for other devices: 
 																		 00 0D 48 D0 E1
-																		 00 0D 62 00 64 00
- 																		 00 0D 48 90 00 low battery
+																	 00 0D 62 00 64 00
+																		 00 0D 48 90 00 low battery
 																		 00 0D 48 D0 64
 																		 00 0D 48 D0 DF 95%
 																					 BB tt TT HH 	
@@ -2186,14 +2206,14 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 														 				               LL = length of data 
 														 								  FT = FF = frame type =GAP_AD_TYPE_MANU_SPECIFIC_DATA
 														 								     FW--- = 00 = firmware 
- 																						        devID--- = DB 97 46
- 																							             data----  = 43 02 07
+																						        devID--- = DB 97 46
+																							             data----  = 43 02 07
 																									     TP  = typeID = 43 = 01000011 = sends alive, and gas sensor
 																									        EV  = eventData
 																									           CB  = control byte = counter
 																									eg:  Data  send alive 3= gas sensor
- 																							                EV 02 = alarm  (= 0010 = alarm, 1000 = alive )
- 																							                   CB = 07/08 = count= 04..05..06..07..08.. 
+																							                EV 02 = alarm  (= 0010 = alarm, 1000 = alive )
+																							                   CB = 07/08 = count= 04..05..06..07..08.. 
  
 																							                      CS = 04,05 = check sum = byte 0 +..byte7
 
@@ -2236,7 +2256,7 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		if    deviceByte &  0b00010000 !=0: remote = True
 		else:								remote = False
 
-		if False and mac =="AC:9A:22:9B:03:CD":
+		if False :# and mac =="AC:9A:22:37:B8:88":
 			U.logger.log(20, " mac:{}  TagPos1:{}  TagPos2:{}, deviceByte:{}, typeID:{}, remote:{},   hex:{}".format( mac, TagPos1, TagPos2, deviceByte, typeID, remote, hexData[32:]) )
 
 		if TagPos2 == 0: 
@@ -2490,6 +2510,7 @@ def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 		Bstring 			= HexStr[batPos+2:batPos+4]+HexStr[batPos:batPos+2]
 		batteryVoltage		= (int(Bstring,16) & 0b0000111111111111)*10 # in mV
 		batteryLevel 		= batLevelTempCorrection(batteryVoltage, 20.) # no correction
+		#if mac =="00:81:F9:86:02:52": U.logger.log(20,u"{} bat v:{:4}, batL:{:3}, Bstring:{}".format(mac, batteryVoltage, batteryLevel, Bstring))
 
 		data   = {sensor:{devId:{}}}
 		data[sensor][devId] ={"batteryVoltage":batteryVoltage,"batteryLevel":batteryLevel,"type":sensor,"mac":mac,"rssi":float(rx),"txPower":-60}
@@ -2921,7 +2942,7 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 #################################
 def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2700.):
 	try:
-		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0 # (changes to 0.9* 2700 @ 0C; to = 0.8*2700 @-10C )
+		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0 
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
 		return batteryLevel
 	except	Exception as e:
@@ -4347,7 +4368,7 @@ def getBeaconParameters(useHCI):
 		cmd = "sudo /bin/hciconfig {} down;sudo /bin/hciconfig {} up".format(useHCI, useHCI)
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
- 		timeoutSecs = 15
+		timeoutSecs = 15
 		for mac in devices:
 			if len(mac) < 10: continue
 			if False and mac not in beaconsOnline:
@@ -4555,7 +4576,7 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 					for ii in range(ll):
 						x = res[ii*2:ii*2+2]
 						if x == "00":  dd+= "~"
-						dd +=x.decode("hex") 
+						dd +=x.decode("hex")
 					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 						writeTrackMac("parsM   ","res:{}, dd:{}, ll:{}".format( res, dd, ll ), mac)
 
@@ -4569,7 +4590,7 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 					for ii in range(ll):
 						x = res[ii*2:ii*2+2]
 						if x == "00":  dd+= "~"
-						dd +=x.decode("hex") 
+						dd +=x.decode("hex")
 					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 						writeTrackMac("parsM   ","res:{}, dd:{}, ll:{}".format( res, dd, ll ), mac)
 
@@ -4704,7 +4725,7 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 				if cmd not in knownBeaconTags[tag]: continue
 				if type(knownBeaconTags[tag][cmd]) != type({}) and knownBeaconTags[tag][cmd].find("msg:") >-1:
 					# parameter format:     "battCmd": "msg:pos=-3,norm=255",  or just "msg" then the sensor part will deliver the info 
- 					try:
+					try:
 						params	=  knownBeaconTags[tag][cmd]
 						params	= params.split("msg:")
 						if  False and tag == "SwitchbotCurtain":
@@ -5044,7 +5065,7 @@ def execbeaconloop(test):
 	global restartBLE
 	global batteryLevelUUID
 	global bleServiceSections
- 	global BLEcollectStartTime
+	global BLEcollectStartTime
 	global BLEanalysisdataCollectionTime
 	global writeDumpDataHandle
 	global switchbotData
@@ -5370,7 +5391,12 @@ def execbeaconloop(test):
 										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 											writeTrackMac("basic   ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}".format(UUID, Maj, Min, rssi, txPower) ,mac)
 
-										txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr, UUID, Maj, Min)
+										try:
+											txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr, UUID, Maj, Min)
+										except	Exception as e:
+											U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+											U.logger.log(30, " {} has exception".format(mac))
+											continue
 										dtinner[4] = max(dtinner[4], time.time() - startofInnerLoop )
 
 							
