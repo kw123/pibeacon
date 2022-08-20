@@ -1,3 +1,11 @@
+Added features / changes in v2022.148.10@ 2022-08-21
+===================================================
+   
+1. fixed; BLEconenct "display status error message
+2. fixe: cmd0, cmds not found error messages
+ 
+
+
 Added features / changes in v2022.148.9@ 2022-08-13
 ===================================================
    

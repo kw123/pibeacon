@@ -4733,9 +4733,9 @@ class Plugin(indigo.PluginBase):
 
 
 				if typeId in ["PCF8591", "ADS1x15"]:
-					if "displayS" 	in valuesDict:  			 		valuesDict["displayS"] 	= "INPUT"
-					if "input" 		in valuesDict:  			 	valuesDict["description"]	+= " C#="+valuesDict["input"]+";"
-					if "resModel" 	in valuesDict:  			 		valuesDict["description"] 	+= "M="+valuesDict["resModel"]+";"
+					if "displayS" 	in valuesDict:  					valuesDict["displayS"] 	= "INPUT"
+					if "input" 		in valuesDict:  					valuesDict["description"]	+= " C#="+valuesDict["input"]+";"
+					if "resModel" 	in valuesDict:  					valuesDict["description"] 	+= "M="+valuesDict["resModel"]+";"
 					if "gain" 		in valuesDict:  			 		valuesDict["description"] 	+= "G="+valuesDict["gain"]+";"
 					try:
 						o = float(valuesDict["offset"])
@@ -17568,7 +17568,7 @@ class Plugin(indigo.PluginBase):
 						cmd1 = {"device": typeId, "command": cmd,	 "restoreAfterBoot": restoreAfterBoot, "devId": devId}
 
 
-			if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,	"sendGPIOCommand: " + cmds)
+			if self.decideMyLog("OutputDevice"): self.indiLOG.log(5, "sendGPIOCommand: {}".format(cmd1))
 			self.sendtoRPI(ip, pi, [cmd1], calledFrom="sendGPIOCommand")
 
 		except Exception as e:
@@ -19814,8 +19814,12 @@ configuration         - ==========  defined beacons ==============
 												chList.append({"key": "lastStatusChange", "value":dateString})
 									except: pass
 
-								if dev.deviceTypeId =="beacon" or dev.deviceTypeId.find("rPI") > -1 or dev.deviceTypeId == "BLEconnect":
-									chList.append({"key":"displayStatus", "value":self.padDisplay(value)+dateString[5:] })
+								if dev.deviceTypeId =="beacon" or dev.deviceTypeId.find("rPI") > -1: # or dev.deviceTypeId == "BLEconnect":
+
+									if dev.deviceTypeId == "BLEconnect":
+										chList.append({"key":"status", "value":self.padDisplay(value)+dateString[5:] })
+									else:
+										chList.append({"key":"displayStatus", "value":self.padDisplay(value)+dateString[5:] })
 									if	 value == "up":
 										chList.append({"key":"onOffState", "value":True, "uiValue":self.padDisplay(value)+dateString[5:] })
 										dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)

@@ -18,7 +18,7 @@ try:
 	bluezPresent = True
 except:
 	bluezPresent = False
-
+ 
 import struct
 import array
 import fcntl
