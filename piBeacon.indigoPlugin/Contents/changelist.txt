@@ -1,8 +1,17 @@
+Added features / changes in v2022.148.11@ 2022-08-21
+===================================================
+   
+1. fixed: value transformation for adc type sensor  1/value was off by factor of 10
+   (11/value instead of 1/value) 
+2.  made BLEconnect devices work again ie iphones using BLE ping from rpi to phone
+
+
+
 Added features / changes in v2022.148.10@ 2022-08-21
 ===================================================
    
-1. fixed; BLEconenct "display status error message
-2. fixe: cmd0, cmds not found error messages
+1. fixed: BLEconenct "display status" error message
+2. fixed: cmd0, cmds not found error messages
  
 
 

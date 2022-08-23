@@ -990,7 +990,7 @@ class Plugin(indigo.PluginBase):
 						dateString	= datetime.datetime.now().strftime(_defaultDateStampFormat)
 						dateString2 = dev.states["lastStatusChange"]
 						if len(dateString2) < 10:
-								dev.updateStateOnServer("lastStatusChange",dateString)
+								dev.updateStateOnServer("lastStatusChange", dateString)
 						else:
 							dateString = dateString2
 
@@ -2966,9 +2966,9 @@ class Plugin(indigo.PluginBase):
 				if pix < 0: continue
 
 				if pi == pix:
-					if "input" not in self.RPI[piU]: self.RPI[piU]["input"] ={}
+					if "input" not in self.RPI[piU]: self.RPI[piU]["input"] = {}
 					#if pi ==11: self.indiLOG.log(10,"checking ... rpi:{} input:{}".format(piU,  self.RPI[piU]["input"]))
-					if "piDevId" not in self.RPI[piU] or self.RPI[piU]["piDevId"] <=0: continue
+					if "piDevId" not in self.RPI[piU] or self.RPI[piU]["piDevId"] <= 0 or self.RPI[piU]["piOnOff"] != "1": continue
 					typeId = dev.deviceTypeId
 					if typeId not in self.RPI[piU]["input"]:
 						self.RPI[piU]["input"][typeId] = {}
@@ -4300,7 +4300,7 @@ class Plugin(indigo.PluginBase):
 			active = ""
 			for piU in _rpiBeaconList:
 				pi = int(piU)
-				if valuesDict["rPiEnable"+piU] and self.RPI[piU]["piDevId"] >0:
+				if valuesDict["rPiEnable"+piU] and self.RPI[piU]["piDevId"] >0 and self.RPI[piU]["piOnOff"] == "1":
 					if typeId not in self.RPI[piU]["input"]:
 						self.RPI[piU]["input"][typeId]={}
 					if "{}".format(dev.id) not in self.RPI[piU]["input"][typeId]:
@@ -4312,6 +4312,7 @@ class Plugin(indigo.PluginBase):
 						del	 self.RPI[piU]["input"][typeId]["{}".format(dev.id)]
 				valuesDict["description"] = "on Pi "+ active.strip(",")
 				valuesDict["address"] = BLEMAC
+				#self.indiLOG.log(20,"validateDeviceConfigUi_BLEconnect  description={}".format(valuesDict["description"]))
 
 				### remove if not on this pi:
 				if typeId in self.RPI[piU]["input"] and self.RPI[piU]["input"][typeId] == {}:
@@ -11432,6 +11433,7 @@ class Plugin(indigo.PluginBase):
 				elif dt <= 2 * expirationTime:
 					status = "down"
 
+				if self.decideMyLog("BLE"): self.indiLOG.log(5,"BLEconnectCheckPeriod:  {} = lastUP:{}, dt:{}, status:{}, oldStatus:{}".format(dev.name, lastUp, dt, status, dev.states["status"]))
 
 				if dev.states["status"] != status or self.initStatesOnServer or force:
 					self.statusChanged = 3
@@ -13359,7 +13361,7 @@ class Plugin(indigo.PluginBase):
 				if rssi < -160: upD = "down"
 				else:			upD = "up"
 
-				if upD=="up":
+				if upD == "up":
 					dist = round( self.calcDist(txPower,  rssi) / self.distanceUnits, 1)
 					if self.decideMyLog("BLE"): self.indiLOG.log(5,"rssi txP dist dist-Corrected.. rssi:{} txPower:{}  dist:{}  rssiCaped:{}".format(rssi, txPower, dist, min(txPower,rssi)))
 					self.addToStatesUpdateDict(dev.id,piXX+"_Time",	datetime.datetime.now().strftime(_defaultDateStampFormat)  )
@@ -13367,7 +13369,7 @@ class Plugin(indigo.PluginBase):
 					if abs(dev.states[piXX+"_Distance"] - dist) > 0.5 and abs(dev.states[piXX+"_Distance"] - dist)/max(0.5,dist) > 0.05:
 						self.addToStatesUpdateDict(dev.id,piXX+"_Distance", dist,decimalPlaces=1)
 				else:
-					dist=99999.
+					dist = 99999.
 					if dev.states["status"] == "up":
 						if self.decideMyLog("BLE"): self.indiLOG.log(5,"NOT UPDATING::::  updating time  status was up, is down now dist = 99999 for MAC: {}".format(mac) )
 						#self.addToStatesUpdateDict(dev.id, "Pi_{:02d}_Time".format(piU),	datetime.datetime.now().strftime(_defaultDateStampFormat))
@@ -15453,7 +15455,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setIcon(self, dev,iconProps,default,UPdown):
+	def setIcon(self, dev, iconProps, default, UPdown):
 		try:
 			if "iconPair" in iconProps and	 iconProps ["iconPair"] !="":
 				icon = iconProps ["iconPair"].split("-")[UPdown]
@@ -15999,8 +16001,8 @@ class Plugin(indigo.PluginBase):
 				except: mult2 = float(props["mult2"])
 
 			if "resistorSensor" in props and props["resistorSensor"] != "0":
-				feedVolt = float(props["feedVolt"])
-				feedResistor = float(props["feedResistor"])
+				feedVolt = max(1.,float(props["feedVolt"]))
+				feedResistor = max(1., float(props["feedResistor"]))
 				if props["resistorSensor"] == "ground": # sensor is towards ground
 					ui = feedResistor / max(((feedVolt / max(ui, 0.0001)) - 1.), 0.001)
 				elif props["resistorSensor"] == "V+": # sensor is towards V+
@@ -16017,7 +16019,7 @@ class Plugin(indigo.PluginBase):
 
 
 			if "valueOrdivValue" in props and props["valueOrdivValue"] == "1/value":
-				ui = 11. / max(ui, 0.000001)
+				ui = 1. / max(ui, 0.000001)
 
 			if "logScale" in props and props["logScale"] == "1":
 					ui = math.log10(max(0.00000001,ui))
@@ -19814,10 +19816,10 @@ configuration         - ==========  defined beacons ==============
 												chList.append({"key": "lastStatusChange", "value":dateString})
 									except: pass
 
-								if dev.deviceTypeId =="beacon" or dev.deviceTypeId.find("rPI") > -1: # or dev.deviceTypeId == "BLEconnect":
+								if dev.deviceTypeId =="beacon" or dev.deviceTypeId.find("rPI") > -1 or dev.deviceTypeId == "BLEconnect":
 
 									if dev.deviceTypeId == "BLEconnect":
-										chList.append({"key":"status", "value":self.padDisplay(value)+dateString[5:] })
+										chList.append({"key":"status", "value":value, "uiValue":self.padDisplay(value)+dateString[5:] })
 									else:
 										chList.append({"key":"displayStatus", "value":self.padDisplay(value)+dateString[5:] })
 									if	 value == "up":

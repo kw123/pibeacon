@@ -486,7 +486,7 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 			#U.logger.log(20, cmd)
 			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			parts = ret[0].strip("\n").split("\n")
-			U.logger.log(20, "cmd:{}; {}  1. try ret: {} --- err>>{}<<".format(cmd, thisMAC, ret[0].strip("\n"), ret[1].strip("\n")))
+			#U.logger.log(20, "cmd:{}; {}  1. try ret: {} --- err>>{}<<".format(cmd, thisMAC, ret[0].strip("\n"), ret[1].strip("\n")))
 
 			found = False
 			for line in parts:

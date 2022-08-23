@@ -2723,7 +2723,10 @@ def checkIfThrottled():
 		}
 
 		tempInfo = (subprocess.Popen("/opt/vc/bin/vcgencmd get_throttled" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
-		try:	temp = bin(int(tempInfo.split("=")[1],0))
+		try:	code = tempInfo.split("=")[1][:-1]
+		except: return "err_in_proc"
+		
+		try:	temp = bin(int(code,0))
 		except: return "err_in_proc"
 		msg = ""
 		for position, message in MESSAGES.iteritems():
@@ -2731,7 +2734,9 @@ def checkIfThrottled():
 			if len(temp) > position and temp[0 - position - 1] == '1':
 				msg += message+";"
 		if msg == "": return "no_problem_detected"
-		return  msg.strip(";")
+		retCode = "code:{}={}".format(code, msg).strip(";")
+		logger.log(20, "retCode: {}".format(retCode))
+		return  retCode
 	except Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
