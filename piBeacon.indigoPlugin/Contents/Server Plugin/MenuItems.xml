@@ -110,8 +110,8 @@ Then the rPi will start sending data to plugin
 			</Field>
 			<Field id="buttonSendAllandReboot" type="button" tooltip="send and sync pgm and config files ">
 				<Label>click to</Label>
-				<Title>send program and config files</Title>
-				<CallbackMethod>buttonSendAllandRebootsshCALLBACK</CallbackMethod>
+				<Title>send program and config files and restart master</Title>
+				<CallbackMethod>buttonSendAllandsshCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="buttonSendAllAllandReboot" type="button" tooltip="">
 				<Label>click to</Label>
@@ -1159,6 +1159,43 @@ The minimum execution time for one press is 2.7 secs (arm down, arm up), it is a
 Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</Label>
 			</Field>
 
+			<Field id="stop" type="menu" defaultValue="0" tooltip="">
+				<Label>STOP currently running execution on RPI</Label>
+				<List>
+					<Option value="0">do not stop</Option>
+					<Option value="1">stop</Option>
+				</List>
+			</Field>
+
+			<Field id="repeat" type="menu" defaultValue="2" tooltip="">
+				<Label>Repeat below set nTimes</Label>
+				<List>
+					<Option value="0">0 times</Option>
+					<Option value="1">1 time</Option>
+					<Option value="2">2</Option>
+					<Option value="3">3</Option>
+					<Option value="4">4</Option>
+					<Option value="5">5</Option>
+					<Option value="6">6</Option>
+					<Option value="7">7</Option>
+					<Option value="8">8</Option>
+				</List>
+			</Field>
+			<Field id="repeatDelay" type="menu" defaultValue="0" tooltip="">
+				<Label>Secs delay between sets</Label>
+				<List>
+					<Option value="0">no delay</Option>
+					<Option value="1">1 secs</Option>
+					<Option value="2">2 secs</Option>
+					<Option value="3">3 secs</Option>
+					<Option value="4">4 secs</Option>
+					<Option value="5">5 secs</Option>
+					<Option value="6">6 secs</Option>
+					<Option value="7">7 secs</Option>
+					<Option value="8">8 secs</Option>
+				</List>
+			</Field>
+
 
 			<Field id="pulses" type="menu" defaultValue="2" tooltip="">
 				<Label>Number of pulses</Label>
@@ -1190,7 +1227,7 @@ Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</
 			<Field id="pulseLengthOff" type="menu" defaultValue="2.0" tooltip="">
 				<Label>Secs pulse OFF</Label>
 				<List>
-					<Option value="0.0">0.0 secs</Option>
+					<Option value="0.0">0.0 secs this should be used with press config = short on pulse(s)</Option>
 					<Option value="0.5">0.5 secs</Option>
 					<Option value="1.0">1.0 secs</Option>
 					<Option value="2.0">2.0 secs</Option>
@@ -1202,6 +1239,25 @@ Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</
 					<Option value="6">6 secs</Option>
 					<Option value="7">7 secs</Option>
 					<Option value="8">8 secs</Option>
+				</List>
+			</Field>
+			<Field id="pulseDelay" type="menu" defaultValue="0.0" visibleBindingId="pulseLengthOn"	visibleBindingValue="0">
+				<Label>Secs pulse delay between cyles, for short pulses (off=0, on=0)</Label>
+				<List>
+					<Option value="0.0">0.0 secs </Option>
+					<Option value="0.5">0.5 secs</Option>
+					<Option value="1.0">1.0 secs</Option>
+					<Option value="2.0">2.0 secs</Option>
+					<Option value="2.5">2.5 secs</Option>
+					<Option value="3.0">3.0 secs</Option>
+					<Option value="3.5">3.5 secs</Option>
+					<Option value="4">4 secs</Option>
+					<Option value="5">5 secs</Option>
+					<Option value="6">6 secs</Option>
+					<Option value="7">7 secs</Option>
+					<Option value="8">8 secs</Option>
+					<Option value="9">9 secs</Option>
+					<Option value="10">10 secs</Option>
 				</List>
 			</Field>
 

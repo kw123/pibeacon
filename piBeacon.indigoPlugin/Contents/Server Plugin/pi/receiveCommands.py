@@ -366,7 +366,7 @@ def execCMDS(next):
 			#print next
 			#print "next command: "+unicode(next)
 			#U.logger.log(20,"{:.2f} next command: {}".format(time.time(), next))
-			cmd= next["command"]
+			cmd = next["command"]
 
 			for cc in next:
 				if cc == "startAtDateTime":
@@ -386,15 +386,16 @@ def execCMDS(next):
 					continue
 
 
-			if cmd =="file":
+			if cmd == "file":
 				if "fileName" in next and "fileContents" in next:
 					#print next
 					try:
 						m = "w"
-						if "fileMode" in next and next["fileMode"].lower() =="a": m="a"
-						#print "write to",next["fileName"], json.dumps(next["fileContents"]), m
-						f = open(next["fileName"],m)
-						f.write("{}".format(json.dumps(next["fileContents"]) )) 
+						if "fileMode" in next and next["fileMode"].lower() == "a": m = "a"
+						fc = json.dumps(next["fileContents"])
+						#U.logger.log(20,"write to next {}  {}".format(next["fileName"], fc ))
+						f = open(next["fileName"], m)
+						f.write("{}".format(fc)) 
 						f.close()
 						if "touchFile" in next and next["touchFile"]:
 							subprocess.call("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" , shell=True)
@@ -404,7 +405,7 @@ def execCMDS(next):
 				continue
 
 
-			if cmd =="getBeaconParameters":
+			if cmd == "getBeaconParameters":
 				try:
 						U.logger.log(20, u"execcmd. getBeaconParameters, write: ={}".format(next["device"]))
 						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
@@ -415,7 +416,7 @@ def execCMDS(next):
 				continue
 
 
-			if cmd =="beepBeacon":
+			if cmd == "beepBeacon":
 				try:
 						U.logger.log(20, u"execcmd. beep, write: ={}".format(next["device"]))
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
@@ -426,7 +427,7 @@ def execCMDS(next):
 				continue
 
 
-			if cmd =="updateTimeAndZone":
+			if cmd == "updateTimeAndZone":
 				try:
 						U.logger.log(20, u"execcmd. updateTimeAndZone, write: ={}".format(next["device"]))
 						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
@@ -793,7 +794,7 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 				U.logger.log(30,"bad command: json failed  "+unicode(buffer))
 				return
 
-		#U.logger.log(G.debug*20, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
+		#U.logger.log(20, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
 			
 		for next in commands:
 			if execSimple(next): continue

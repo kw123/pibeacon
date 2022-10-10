@@ -5,42 +5,44 @@ Name/type     recom v  FormFactor      hole    auto    has     isBeepable  Batte
               mened                    4 key   detect  beeper  byPlugin    reading  Type                               button   .. comments  
 -----------------------------------------------------------------------------------------------------------------------------------  
 ++ rechargeable, beep and battery reading ===  
-Nonda_Aiko       10 x  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register  
-Nonda_iHere      10 x  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register          
-Smart_tracker    10 X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register  
+Nonda_Aiko          x  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register  
+Nonda_iHere         x  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register          
+Smart_tracker       X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register  
   
 ++ repl battery, beep and Battery reading  
-NutFind 3        10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
- == Nutale       10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
+NutFind 3           x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+ == Nutale          x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
+Nut pro             x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
   
-Vozni_iTrack     10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
-SpotyPal         10 x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+Vozni_iTrack        x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+SpotyPal            x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
 Rinex_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register,   
 Njoii_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex  
+Musegear  in EU     x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex, regular, mini and card  
   
 ++ communication is proprietory, works for one but not expandable to others   
-XY_1             10 1  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
-XY_2             10 2  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
-XY_3             10 3  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_1                1  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_2                2  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_3                3  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
   
   
 beep no battery reading ===  
-Innway-Tag         7 x  square         yes     yes     yes     yes         no       cr2032                    no       no      beep, register, battery  
-Innway-Chip        7 x  square 2.5mm   no      yes     yes     yes         no       rechargebale              no       no      beep, register, battery  
-Innway-Card        7 x  creditC 1.5mm  no      yes     yes     yes         no       rechargebale              no       no      beep, register, battery  thinnest ebacon
+Innway-Tag         7 x  square         yes     yes     yes     yes         no       cr2032                    no       no      beep, register,   
+Innway-Chip        7 x  square 2.5mm   no      yes     yes     yes         no       rechargebale              no       no      beep, register,   
+Innway-Card        7 x  creditC 1.5mm  no      yes     yes     yes         no       rechargebale              no       no      beep, register,   thinnest ebacon
           
-Cube              7 x  square          yes     yes     yes     yes         no       cr2032                    no       no      beep, register  
-Orbit             7 x  round           yes     yes     yes     yes         ?        cr2032, sp tool repl Bat. no       no      beep, register  
+Cube               7 x  square         yes     yes     yes     yes         no       cr2032                    no       no      beep, register  
+Orbit              7 x  round          yes     yes     yes     yes         ?        cr2032, sp tool repl Bat. no       no      beep, register  
   
   
-Safedome          7 x  creditC 1.8mm   no      yes      no      no          no       wireless-rechargeable     no       no     register, battery level  thinnest ebacon
+Safedome          7 x  creditC 1.8mm   no      yes      no      no          no       wireless-rechargeable     no       no     register,  battery  thinnest ebacon
   
                        ===ibeacon + Sensors  see also sensor section 
 ruuviTag          8 x  round Big       no      yes     no      no          yes      cr2450 1Y                 T,H,P,A  no      display of sensors values  
 myBueT            4 x  oval small      yes     yes     no      no          no       cr2032 3 M                T        yes     no app, only send ibeacon msg w T  
   
 Satech .. not recommended SOS button disables the device, needs a power cyle   
-		STixx sensors, acceleration, temp, humidity, on/off  
+		  STixx sensors, acceleration, temp, humidity, on/off  
   
   
 ++ pure iBeacon types ===  
@@ -52,7 +54,7 @@ SocialRetail     10 x  USB             no      yes     no      no          no   
 SocialRetail     10 x  BIG             no      yes     no      no          no       AAA > xYears              no       no      iBeacon,EddyStone, conf: TX, repeat, for car signals presence  
 Radius            3 x  round           no      yes     no      no          no       cr2032 ~ 3 months         no       yes     iBeacon, conf: TX, repeat, for testing strick standard only  
 Radius           10 x  USB             no      yes     no      no          no       USB                       no       no      iBeacon, conf: TX, repeat, for car or laptop, signals ON  
-Radius RB CCard  8  x  creditC 3.8mm   no      yes     no      no          no       non replaceble            no       no      iBeacon, for wallet 
+Radius RBE Card  8  x  creditC 3.8mm   no      yes     no      no          no       non replaceble            no       no      iBeacon, for wallet, no beep  
 
 cheap ibeacon ~$5   likely working,    ?       no      no      no          no       cr2032 mostly             no       no      pure iBeacon, edystone..some have signal config  
   
@@ -64,7 +66,7 @@ OralB               1  toothbrush      no      yes     no      no          no   
   
   
 Not recommended  
-xy_4                4    not working, still testing  
+xy_4                4    not working
 tile                 > 2018    not working  
 swiftFind == ZenLif      intrusive, no actions possible   
 iSearching type devices  either constantly beeps when disconnected, or difficult to connect to 

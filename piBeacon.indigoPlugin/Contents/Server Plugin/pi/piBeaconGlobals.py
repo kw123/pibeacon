@@ -99,6 +99,7 @@ compressRPItoPlugin = 20000
 ipNumberRpiStatic	= False
 ipNumberPi			= ""
 networkRestartTries = 0
+lastVcode			= ""
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
 import sys

@@ -534,12 +534,12 @@ def readNewParams(force=0):
 					U.logger.log(30, u"BLEdirectSensorDeviceActive:{}, sensor:{}, devID:{} sensor[]:{}".format(BLEdirectSensorDeviceActive, sensor, devId,sensors[sensor][devId] ))
 					break
 
-		BLEdirectSwitchbotActive = False
-		if "output" in inp and "OUTPUTswitchbotRelay" in inp["output"]:
-			U.logger.log(30, u"BLEdirectSwitchbotActive:{}".format(inp["output"]["OUTPUTswitchbotRelay"] ))
-			BLEdirectSwitchbotActive = True
+		BLEdirectSwitchbotActive = True
+		if "output" not in inp or ( "OUTPUTswitchbotRelay" not in inp["output"] and "OUTPUTswitchbotCurtain" not in inp["output"]):
+			#U.logger.log(30, u"BLEdirectSwitchbotActive:{}".format(inp["output"]["OUTPUTswitchbotRelay"] ))
+			BLEdirectSwitchbotActive = False
 		else:
-			U.logger.log(30, u"BLEdirectSwitchbotActive: not active: {}".format(inp["output"]))
+			U.logger.log(30, u"BLEdirectSwitchbotActive: active: {}".format(inp["output"]))
 
 		
 
@@ -2512,9 +2512,8 @@ def execMaster():
 		if enableiBeacons == "1": 
 			startProgam("beaconloop.py", params="", reason=" at startup ")
 			checkIfAliveFileOK("beaconloop",force="set")
-
-		time.sleep(2)
-		startBLEconnect()
+			time.sleep(2)
+			startProgam("BLEconnect.py", params="", reason=" at startup ")
 
 		indigoServerOn, changed, connected  = checkIfNetworkStarted2(indigoServerOn, changed, connected )
 

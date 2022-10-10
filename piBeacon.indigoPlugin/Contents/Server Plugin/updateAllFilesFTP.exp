@@ -35,8 +35,6 @@ expect "sftp>" {  send  "put callbeacon.py  /home/pi/callbeacon.py\r" }
 expect "sftp>" {  send  "mkdir  /home/pi/pibeacon\r" }
 expect "sftp>" {  send  "put -r * /home/pi/pibeacon/ \r" }
 expect "sftp>" {  send  "lcd '$piPath//interfaceFiles' \r" }
-expect "sftp>" {  send  "put 'interfaces.$ipParms'  /home/pi/pibeacon/interfaces\r" }
-expect "sftp>" {  send  "put 'wpa_supplicant.conf.$ipParms'  /home/pi/pibeacon/wpa_supplicant.conf\r" }
 expect "sftp>" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
 expect "sftp>" {  send  "lcd '$piPath//all' \r" }
 expect "sftp>" {  send  "put *  /home/pi/pibeacon/ \r" }

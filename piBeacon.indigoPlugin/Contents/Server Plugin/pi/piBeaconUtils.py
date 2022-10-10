@@ -1886,7 +1886,7 @@ def getSerialDEV():
 
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
-def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac=""): 
+def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHCI2=""): 
 	# default is UART or USB, used if no other choice selected
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
@@ -1901,6 +1901,8 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac=""):
 			hciChannels = hciChannels[0:len(HCIs)]
 			if doNotUseHCI in hciChannels:
 				hciChannels.remove(doNotUseHCI)
+			if doNotUseHCI2 in hciChannels:
+				hciChannels.remove(doNotUseHCI2)
 
 			if tryBLEmac != "":
 				for hh in hciChannels:
@@ -1930,6 +1932,10 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac=""):
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] != doNotUseHCI:
 						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
+						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
+
+			elif defaultBus == "":
+				for hh in hciChannels:
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 				
 			else:
@@ -2712,22 +2718,33 @@ def getTemperatureOfRPI():
 def checkIfThrottled():
 	try:
 		MESSAGES = {
-			0:  'E#0 Under-volt',
-			1:  'E#1 ARM freq capped',
-			2:  'E#2 Curr throttled',
-			3:  'E#3 Soft temp limit active',
-			16: 'E#16 Under-volt occd since reb.',
-			17: 'E#17 Throttled occd since reb.',
-			18: 'E#18 ARM freq capped occd since reb.',
-			19: 'E#19 Soft temp limit occd'
+			0:  'E#0_Under-volt',
+			1:  'E#1_ARM_freq_capped',
+			2:  'E#2_Curr_throttled',
+			3:  'E#3_Soft_temp_limit_active',
+			16: 'E#16_Under-volt_occd_since_reb.',
+			17: 'E#17_Throttled_occd_since_reb.',
+			18: 'E#18_ARM_freq_capped_occd_since_reb.',
+			19: 'E#19_Soft_temp_limit_occd'
 		}
+		#0x50005 =  327685 =
+		#' 1010000000000000101
+		#  8 6 4 2 1 8 6 4 2 0
+		#111100000000000001010
+		#||||             ||||_ under-voltage
+		#||||             |||_ currently throttled
+		#||||             ||_ arm frequency capped
+		#||||             |_ soft temperature reached
+		#||||_ under-voltage has occurred since last reboot
+		#|||_ throttling has occurred since last reboot
+		#||_ arm frequency capped has occurred since last reboot
+		#|_ soft temperature reached since last reboot		
 
 		tempInfo = (subprocess.Popen("/opt/vc/bin/vcgencmd get_throttled" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		try:	code = tempInfo.split("=")[1][:-1]
-		except: return "err_in_proc"
-		
+		except: return "err_in_proc_check_power"
 		try:	temp = bin(int(code,0))
-		except: return "err_in_proc"
+		except: return "err_in_proc_check_power"
 		msg = ""
 		for position, message in MESSAGES.iteritems():
 			#Check for the binary digits to be "on" for each warning message
@@ -2735,7 +2752,9 @@ def checkIfThrottled():
 				msg += message+";"
 		if msg == "": return "no_problem_detected"
 		retCode = "code:{}={}".format(code, msg).strip(";")
-		logger.log(20, "retCode: {}".format(retCode))
+		G.lastVcode = retCode
+		if retCode != G.lastVcode:
+			logger.log(20, "retCode: {}".format(retCode))
 		return  retCode
 	except Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

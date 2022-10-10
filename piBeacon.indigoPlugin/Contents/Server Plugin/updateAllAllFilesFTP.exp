@@ -38,8 +38,6 @@ expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/fonts\r" }
 expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/displayfiles\r" }
 expect "sftp>" {  send  "put -r * /home/pi/pibeacon/ \r" }
 expect "sftp>" {  send  "lcd '$piPath//interfaceFiles' \r" }
-expect "sftp>" {  send  "put 'interfaces.$ipParms'  /home/pi/pibeacon/interfaces\r" }
-expect "sftp>" {  send  "put 'wpa_supplicant.conf.$ipParms'  /home/pi/pibeacon/wpa_supplicant.conf\r" }
 expect "sftp>" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
 expect "sftp>" {  send  "lcd '$piPath/rejected' \r" }
 expect "sftp>" {  send  "get /home/pi/pibeacon/rejects 'rejects.$ipParms'\r" }

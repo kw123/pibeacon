@@ -49,209 +49,6 @@ except: pass
 
 
 
-
-# ===========================================================================
-# Adafruit_I2C Class
-# ===========================================================================
-
-class Adafruit_I2C(object):
-	@staticmethod
-	def getPiRevision():
-		"Gets the version number of the Raspberry Pi board"
-		# Revision list available at: http://elinux.org/RPi_HardwareHistory#Board_Revision_History
-		try:
-			with open('/proc/cpuinfo', 'r') as infile:
-				for line in infile:
-					# Match a line of the form "Revision : 0002" while ignoring extra
-					# info in front of the revsion (like 1000 when the Pi was over-volted).
-					match = re.match('Revision\s+:\s+.*(\w{4})$', line)
-					if match and match.group(1) in ['0000', '0002', '0003']:
-						# Return revision 1 if revision ends with 0000, 0002 or 0003.
-						return 1
-					elif match:
-						# Assume revision 2 if revision ends with any other 4 chars.
-						return 2
-				# Couldn't find the revision, assume revision 0 like older code for compatibility.
-				return 0
-		except:
-			return 0
-
-	@staticmethod
-	def getPiI2CBusNumber():
-		# Gets the I2C bus number /dev/i2c#
-		return 1 
-
-	def __init__(self, address, busnum=-1, debug=False):
-		self.address = address
-		# By default, the correct I2C bus is auto-detected using /proc/cpuinfo
-		# Alternatively, you can hard-code the bus version below:
-		# self.bus = smbus.SMBus(0); # Force I2C0 (early 256MB Pi's)
-		# self.bus = smbus.SMBus(1); # Force I2C1 (512MB Pi's)
-		self.bus = smbus.SMBus(busnum if busnum >-1 else Adafruit_I2C.getPiI2CBusNumber())
-		self.debug = debug
-
-	def reverseByteOrder(self, data):
-		"Reverses the byte order of an int (16-bit) or long (32-bit) value"
-		# Courtesy Vishal Sapre
-		byteCount = len(hex(data)[2:].replace('L','')[::2])
-		val				= 0
-		for i in range(byteCount):
-			val		   = (val << 8) | (data & 0xff)
-			data >>= 8
-		return val
-
-	def errMsg(self):
-		print "Error accessing 0x%02X: Check your I2C address" % self.address
-		return -1
-
-	def write8(self, reg, value):
-		"Writes an 8-bit value to the specified register/address"
-		try:
-			self.bus.write_byte_data(self.address, reg, value)
-			if self.debug:
-				print "I2C: Wrote 0x%02X to register 0x%02X" % (value, reg)
-		except IOError, err:
-			return self.errMsg()
-
-	def write16(self, reg, value):
-		"Writes a 16-bit value to the specified register/address pair"
-		try:
-			self.bus.write_word_data(self.address, reg, value)
-			if self.debug:
-				print ("I2C: Wrote 0x%02X to register pair 0x%02X,0x%02X" %
-				 (value, reg, reg+1))
-		except IOError, err:
-			return self.errMsg()
-
-	def writeRaw8(self, value):
-		"Writes an 8-bit value on the bus"
-		try:
-			self.bus.write_byte(self.address, value)
-			if self.debug:
-				print "I2C: Wrote 0x%02X" % value
-		except IOError, err:
-			return self.errMsg()
-
-	def writeList(self, reg, list):
-		"Writes an array of bytes using I2C format"
-		try:
-			if self.debug:
-				print "I2C: Writing list to register 0x%02X:" % reg
-				print list
-			self.bus.write_i2c_block_data(self.address, reg, list)
-		except IOError, err:
-			return self.errMsg()
-
-	def readList(self, reg, length):
-		"Read a list of bytes from the I2C device"
-		try:
-			results = self.bus.read_i2c_block_data(self.address, reg, length)
-			if self.debug:
-				print ("I2C: Device 0x%02X returned the following from reg 0x%02X" %
-				 (self.address, reg))
-				print results
-			return results
-		except IOError, err:
-			return self.errMsg()
-
-	def readU8(self, reg):
-		"Read an unsigned byte from the I2C device"
-		try:
-			result = self.bus.read_byte_data(self.address, reg)
-			if self.debug:
-				print ("I2C: Device 0x%02X returned 0x%02X from reg 0x%02X" %
-				 (self.address, result & 0xFF, reg))
-			return result
-		except IOError, err:
-			return self.errMsg()
-
-	def readS8(self, reg):
-		"Reads a signed byte from the I2C device"
-		try:
-			result = self.bus.read_byte_data(self.address, reg)
-			if result > 127: result -= 256
-			if self.debug:
-				print ("I2C: Device 0x%02X returned 0x%02X from reg 0x%02X" %
-				 (self.address, result & 0xFF, reg))
-			return result
-		except IOError, err:
-			return self.errMsg()
-
-	def readU16(self, reg, little_endian=True):
-		"Reads an unsigned 16-bit value from the I2C device"
-		try:
-			result = self.bus.read_word_data(self.address,reg)
-			# Swap bytes if using big endian because read_word_data assumes little
-			# endian on ARM (little endian) systems.
-			if not little_endian:
-				result = ((result << 8) & 0xFF00) + (result >> 8)
-			if (self.debug):
-				print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
-			return result
-		except IOError, err:
-			return self.errMsg()
-
-	def readU16BE(self, register):
-		"""Read an unsigned 16-bit value from the specified register, in big
-		endian byte order."""
-		return self.readU16(register, little_endian=False)
-
-
-	def readU16Rev(self, reg):
-		"Reads an unsigned 16-bit value from the I2C device with rev byte order"
-		try:
-			lobyte = self.readU8(reg)
-			hibyte = self.readU8(reg+1)
-			result = (hibyte << 8) + lobyte
-			if (self.debug):
-				print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
-			return result
-		except IOError, err:
-			return self.errMsg()
-
-	def readU16LE(self, register):
-		"""Read an unsigned 16-bit value from the specified register, in little
-		endian byte order."""
-		return self.readU16(register, little_endian=True)
-
-
-
-	def readS16(self, reg, little_endian=True):
-		"Reads a signed 16-bit value from the I2C device"
-		try:
-			result = self.readU16(reg,little_endian)
-			if result > 32767: result -= 65536
-			return result
-		except IOError, err:
-			return self.errMsg()
-
-	def readS16BE(self, register):
-		"""Read a signed 16-bit value from the specified register, in big
-		endian byte order."""
-		return self.readS16(register, little_endian=False)
-
-	def readS16Rev(self, reg):
-		"Reads a signed 16-bit value from the I2C device with rev byte order"
-		try:
-			lobyte = self.readS8(reg)
-			hibyte = self.readU8(reg+1)
-			result = (hibyte << 8) + lobyte
-			if (self.debug):
-				print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
-			return result
-		except IOError, err:
-			return self.errMsg()
- 
-	def readS16LE(self, register):
-		"""Read a signed 16-bit value from the specified register, in little
-		endian byte order."""
-		return self.readS16(register, little_endian=True)
-
-	def readS16BE(self, register):
-		"""Read a signed 16-bit value from the specified register, in big
-		endian byte order."""
-		return self.readS16(register, little_endian=False)
-
 # ===========================================================================
 # ADS1x15 Class
 #
@@ -377,46 +174,28 @@ class ADS1x15:
 
 
 	# Constructor
-	def __init__(self, address=0x4a, ic=__IC_ADS1115, debug=False):
+	def __init__(self, address=0x4a, debug=False):
 		try:
-			# Depending on if you have an old or a new Raspberry Pi, you
-			# may need to change the I2C bus.  Older Pis use SMBus 0,
-			# whereas new Pis use SMBus 1.	If you see an error like:
-			# 'Error accessing 0x48: Check your I2C address '
-			# change the SMBus number in the initializer below!
-			self._Device = Adafruit_I2C(address)
-			self.address = address
-			self.debug = debug
-
-			# Make sure the IC specified is valid
-			if ((ic < self.__IC_ADS1015) | (ic > self.__IC_ADS1115)):
-				if (self.debug):
-					print "ADS1x15: Invalid IC specfied: ", ic
-				return
-			else:
-				self.ic = ic
-
-			# Set pga value, so that getLastConversionResult() can use it,
-			# any function that accepts a pga value must update this.
-			self.pga = 6144
+			self.bus 		= smbus.SMBus(1)
+			self.address 	= address
+			self.debug 		= debug
 		except	Exception as e:
 				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 
-
-
-	def readADCSingleEnded(self, channel=0, pga=6144, sps=250):
+	def readADC(self, channel=0, pga=6144, sps=250, singleOrDiff="single"):
 		try:
-			"Gets a single-ended ADC reading from the specified channel in mV. \
+			"Gets a ADC reading  in mV. \
 			The sample rate for this mode (single-shot) can be used to lower the noise \
 			(low sps) or to lower the power consumption (high sps) by duty cycling, \
 			see datasheet page 14 for more info. \
 			The pga must be given in mV, see page 13 for the supported values."
 
 			# With invalid channel return -1
-			if (channel > 3):
-				if (self.debug):
-					print "ADS1x15: Invalid channel specified: %d" % channel
+			if channel not in [0,1,2,3,"0-1","0-3","1-3","2-3"] :
+				if True or (self.debug):
+					U.logger.log(30, "ADS1x15: Invalid channel specified: {}".format(channel))
 				return -1
+			#U.logger.log(20, "ADS1x15: channel:{}, pga:{}, sps:{}, singleOrDiff:{}".format(channel, pga, sps, singleOrDiff))
 
 			# Disable comparator, Non-latching, Alert/Rdy active low
 			# traditional comparator, single-shot mode
@@ -429,74 +208,66 @@ class ADS1x15:
 			# Set sample per seconds, defaults to 250sps
 			# If sps is in the dictionary (defined in init) it returns the value of the constant
 			# othewise it returns the value for 250sps. This saves a lot of if/elif/else code!
-			if (self.ic == self.__IC_ADS1015):
-			  config |= self.spsADS1015.setdefault(sps, self.__ADS1015_REG_CONFIG_DR_1600SPS)
-			else:
-				if ( (sps not in self.spsADS1115) & self.debug):
-					print "ADS1x15: Invalid pga specified: %d, using 6144mV" % sps
-				config |= self.spsADS1115.setdefault(sps, self.__ADS1115_REG_CONFIG_DR_250SPS)
+			if ( (sps not in self.spsADS1115) & self.debug):
+					U.logger.log(20, "ADS1x15: Invalid pga specified: {}, using 6144mV".format(sps))
+			config |= self.spsADS1115.setdefault(sps, self.__ADS1115_REG_CONFIG_DR_250SPS)
 
 			# Set PGA/voltage range, defaults to +-6.144V
 			if ( (pga not in self.pgaADS1x15) & self.debug):
-				print "ADS1x15: Invalid pga specified: %d, using 6144mV" % sps
+				U.logger.log(20, "ADS1x15: Invalid pga specified: {}, using 6144mV".format(sps))
 			config |= self.pgaADS1x15.setdefault(pga, self.__ADS1015_REG_CONFIG_PGA_6_144V)
-			self.pga = pga
 
 			# Set the channel to be converted
-			if channel == 3:
-				config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_3
-			elif channel == 2:
-				config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_2
-			elif channel == 1:
-				config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_1
+			if singleOrDiff == "single": # single ended pin 
+				if   channel == 3: 		config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_3
+				elif channel == 2:		config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_2
+				elif channel == 1:		config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_1
+				else:					config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_0
 			else:
-				config |= self.__ADS1015_REG_CONFIG_MUX_SINGLE_0
+				#  differential 
+				if   channel == "2-3":	config |= self.__ADS1015_REG_CONFIG_MUX_DIFF_2_3 
+				elif channel == "1-3":	config |= self.__ADS1015_REG_CONFIG_MUX_DIFF_1_3
+				elif channel == "0-3":	config |= self.__ADS1015_REG_CONFIG_MUX_DIFF_0_3
+				else:					config |= self.__ADS1015_REG_CONFIG_MUX_DIFF_0_1
+
+
 
 			# Set 'start single-conversion' bit
 			config |= self.__ADS1015_REG_CONFIG_OS_SINGLE
 
 			# Write config register to the ADC
-			bytes = [(config >> 8) & 0xFF, config & 0xFF]
-			#print "channel	 bytes written: " , channel, bytes
-			self._Device.writeList(self.__ADS1015_REG_POINTER_CONFIG, bytes)
+			theBytes = [(config >> 8) & 0xFF, config & 0xFF]
+			if self.debug: U.logger.log(20,  "channel  bytes written: {}, {}".format(channel, bytes))
+			self.bus.write_i2c_block_data(self.address, self.__ADS1015_REG_POINTER_CONFIG, theBytes)
 
 			# Wait for the ADC conversion to complete
 			# The minimum delay depends on the sps: delay >= 1/sps
-			# We add 0.1ms to be sure
-			delay = 1.0/sps+0.02
+			# We add 1ms to be sure
+			delay = 1.0/sps+0.001
 			time.sleep(delay)
 
 			# Read the conversion results
-			result = self._Device.readList(self.__ADS1015_REG_POINTER_CONVERT, 2)
-			if (self.ic == self.__IC_ADS1015):
-				# Shift right 4 bits for the 12-bit ADS1015 and convert to mV
-				val= ( ((result[0] << 8) | (result[1] & 0xFF)) >> 4 )*pga/2048.0
-				#print val, result
-				return val
-			else:
-				# Return a mV value for the ADS1115
-				# (Take signed values into account as well)
-				val = (result[0] << 8) | (result[1])
-				if  val > 0x7FFF:
-					val= (val - 0xFFFF)*pga/32768.0
-				else:
-					val= ( (result[0] << 8) | (result[1]) )*pga/32768.0
-				#print self.ic, sps, pga, channel, val, result
-				return val
+			result = self.bus.read_i2c_block_data(self.address, self.__ADS1015_REG_POINTER_CONVERT, 2)
+			# Return a mV value for the ADS1115
+			# (Take signed values into account as well)
+			val = (result[0] << 8) | (result[1])
+			if  val > 0x7FFF:						val = (val - 0xFFFF)*pga/32768.0
+			else:									val = ( (result[0] << 8) | (result[1]) )*pga/32768.0
+			if self.debug: U.logger.log(20,  "sps:{}, pga:{}, channel:{}, val:{}, result:{}".format( sps, pga, channel, val, result))
+			return val
+
 		except	Exception as e:
 				U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-
-
-
+		return ""
 #
 #################################
 def startSensor(devId,i2cADR):
-	global SENSOR, sensors, sensor, resModel
+	global SENSOR, sensors, sensor
 
 	try:
 		if devId not in SENSOR:
 			#U.logger.log(30, u"starting devId:{}".format(devId))
-			SENSOR[devId]=ADS1x15(address=i2cADR, ic=resModel[devId]) 
+			SENSOR[devId]=ADS1x15(address=i2cADR) 
 			return 
 	except	Exception as e:
 		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
@@ -507,7 +278,7 @@ def startSensor(devId,i2cADR):
 # ===========================================================================
  
 def getValues():
-	global SENSOR, sensors, sensor, input, gain, resModel
+	global SENSOR, sensors, sensor, inputChannel, gain, sps
 	global badSensor, i2cAddress
 
 
@@ -515,21 +286,22 @@ def getValues():
 	if sensor not in sensors:
 		U.logger.log(30, "error sensor:{} , sensors:{}".format(sensor, sensors))
 		return {}  
+	#U.logger.log(20, u"getValues i2cAddress {}".format(i2cAddress))
 	try:
-		#U.logger.log(30, u"getValues   i2cAddress:{}".format(i2cAddress))
 		for i2c in i2cAddress:
 			for devId in i2cAddress[i2c]:
 				values[devId] = ""
-				inp = input[devId].split("-")
-				v = 0; v1 = 0
-				v =  (SENSOR[devId].readADCSingleEnded(channel=int(inp[0]), pga=gain[devId], sps=250))
-				if len(inp) == 2:
-					v1 =  (SENSOR[devId].readADCSingleEnded(channel=int(inp[1]), pga=gain[devId], sps=250))
-				values[devId] = {"INPUT":round(v-v1,2)}
-					#U.logger.log(30, u"getValues    devId: {:14s},  v:{}, gain[devId]:{}, conversionFactor:{}".format(devId, values[devId], gain[devId], conversionFactor))
+				#U.logger.log(20, u"getValues devId:{}  inputChannel[devId]:{}".format(devId, inputChannel[devId]))
+				v = 0
+				if inputChannel[devId].find("-") > -1:
+					v =  (SENSOR[devId].readADC(channel=inputChannel[devId] , pga=gain[devId], sps=sps[devId], singleOrDiff="diff"))
+				else:
+					v =  (SENSOR[devId].readADC(channel=int(inputChannel[devId]), pga=gain[devId], sps=sps[devId], singleOrDiff="single"))
+				values[devId] = {"INPUT":round(v,2)}
+				#U.logger.log(30, u"getValues    devId: {:14s},  v:{}, gain[devId]:{}, conversionFactor:{}".format(devId, values[devId], gain[devId], conversionFactor))
 				
 
-		#U.logger.log(30, u"getValues   inp:{},  v:{}".format(inp,  values))
+		#U.logger.log(20, u"getValues   v:{}".format( values))
 		badSensor = 0
 		return values
 	except	Exception as e:
@@ -547,7 +319,7 @@ def readParams():
 	global sensorList, sensors, sensor, SENSOR
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global rawOld
-	global deltaX, input, gain, resModel, i2cAddress
+	global deltaX, inputChannel, gain, resModel, i2cAddress, sps
 	global oldRaw, lastRead
 
 	try:
@@ -598,18 +370,21 @@ def readParams():
 			try:	deltaX[devId] = float(sensors[sensor][devId]["deltaX"])/100.
 			except:	deltaX[devId] = 0.1
 
-			try:	input[devId] = sensors[sensor][devId]["input"]
-			except:	input[devId] = "0"
+			try:	inputChannel[devId] = sensors[sensor][devId]["input"]
+			except:	inputChannel[devId] = "0"
 
+			gain[devId] = 6144
 			try:	gain[devId] = int(sensors[sensor][devId]["gain"])
 			except:	gain[devId] = 6144
 			if str(gain[devId]) not in ["6144","4096","2048","1024","512","256"]: gain[devId] = 6144
 
-			try: 	resModel[devId] = 0x01 if int(sensors[sensor][devId]["resModel"]) == 16 else 0x00
-			except: resModel[devId] = 0x01
+
+			sps[devId] = 250
+			try:	sps[devId] = int(sensors[sensor][devId]["sps"])
+			except:	sps[devId] = 250
 
 
-			U.logger.log(30,"==== Start {} ===== @ i2c:{}; inputC:{};  deltaX:{}, gain:{}, resModel:{}".format(G.program, i2cADDR, input[devId], deltaX[devId], gain[devId], resModel[devId] ) )
+			U.logger.log(30,"==== Start {} ===== @ i2c:{}; inputChannel:{};  deltaX:{}, gain:{}, sps:{}".format(G.program, i2cADDR, inputChannel[devId], deltaX[devId], gain[devId], sps[devId]) )
 			startSensor(devId, i2cADDR)
 		U.logger.log(30,    "==== Start {}... sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{},all i2c->devids:{}".format(G.program, sendToIndigoEvery, minSendDelta, sensorRefreshSecs, i2cAddress))
 				
@@ -636,18 +411,18 @@ def readParams():
 #################################
 #################################
 def execADS1x15():			 
-	global sensorList, sensors, sensor, SENSOR, gain, input, resModel
+	global sensorList, sensors, sensor, SENSOR, gain, sps, inputChannel
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global sValues, displayInfo
 	global oldRaw, lastRead
-	global input, deltaX, i2cAddress
+	global deltaX, i2cAddress
 	global badSensor
 
 	badSensor			= 0
 	i2cAddress			= {}
-	resModel			= {}
 	gain				= {}
-	input				= {}
+	sps					= {}
+	inputChannel		= {}
 	sensorRefreshSecs	= 5
 	minSendDelta		= 4
 	sendToIndigoEvery	= 90

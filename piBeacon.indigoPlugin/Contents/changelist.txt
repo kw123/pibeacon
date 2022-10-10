@@ -1,3 +1,70 @@
+Added features / changes in v2022.151.13@ 2022-09-20
+===================================================
+   
+1. made switchbot operation work more smoothly, timing, error recovery ..
+
+2. added an action that stops any switchbot actions pending on an rpi
+   eg when you got multiple triggers and the first responding action worked, no need to have the action executed many times
+     like when the door is open no need to trigger open magnet n times more  
+
+3. added option in the switchbot action to have a sensor(BLE only) on one RPi that triggers 
+   a switchbot action on another (or same) rpi w/o indigo being up. 
+   the sensor RPI will send a command to the switchbot rpi through sftp
+   eg a BLE sensor with button press signal (ge ibs04-button) can be received on rpi-1, 
+     rpi-1 sends a press/on command to rpi-2 for a switchbot to move the arm.
+     Indigo is not involved.
+     This is useful if the button is out of reach of the rpi where the switchbot is managed and indiogo is down
+   To setup create an action in indigo "Set switchbot relay to on/off or pulses.."
+
+4. added option to have ON/OFF sensors stay longer ON for xx secs. Some of these sensors go from on-off within 0.2 secs. 
+   This gives the indigo dev state more time to show the ON state
+
+5. added option for on/off sensor to show arbitray text in display like moving / stopped etc.
+
+6. added support for musegear finder beacons (regular, mini, wallet). They can be purchased from amazon in Europe
+   They can be beeped (to find its location) and the plugin gets the battery level.
+   They have the itrack software similar to Rinex, Njoii, Spotypal etc, which can be bought in the USA
+
+6.1 added support for NUT - pro beacon 
+
+7. Added a virtual device "garage door". (similar to the virtual device Car) 
+   This dev type tracks the states of a garage door:
+	Closed, opening, stopped, open, closing, position
+	This device needs 3 on/off magnet sensors(eg switchbot connect) and several magnets
+	The sensors are positioned at: at closed position, open position; on the moving door
+	Magnets are at:
+	- One on door, moving between open sensor and closed sensor to indicate open/closed
+	- Several magnets on the rail where the sensor on the door moves by and gets triggers by the magnets
+	  the magnets should be placed >1 "second" apart, something like 20-30 cm
+	  But the speed of the door changes, eg at close it slows down. There the magents should be closer together
+	  But not too close as the sensor might not be ready for the next trigger
+	  With these magnets the plugin counts the magnets passed aand calculates the current position (0-100%)
+
+	The dev states used for the sensors are onoffState and one that indicates the moving changes
+	eg lastMotion of the sensor that is mounted on the door. 
+ 
+8. for ADS-1115 ADC added samples per second option, removed un-used code and made differential measurement (eg input0 -input1)  
+   a single measurement instead of 2 single and then subtract 
+
+
+
+
+Added features / changes in v2022.148.12@ 2022-09-03
+===================================================
+   
+1. improved auto create function for  "switchbot"  devices 
+2. some smaller bug fixes (beacon beep works again)
+3. added direct command from BLE switch devices to switchbot w/o going through indigo
+   this enables a faster response BLEswitch --> switch bot, now limited only by "ble connect" to switchbot, that sometimes takes sveral seconds
+4. cleanedup groups:
+   each beacon is in BEACON group, each rpi is in PI group, each senor is in SENSOR broup, each BLEconnect device is in BLEconnect group
+   now also shown in dev state "groupmember"
+   and properly shown in report 
+
+
+
+
+
 Added features / changes in v2022.148.11@ 2022-08-21
 ===================================================
    

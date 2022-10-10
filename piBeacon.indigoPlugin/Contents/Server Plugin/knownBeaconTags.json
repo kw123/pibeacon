@@ -17,7 +17,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB06"
+    "hexCode2":  "",
+    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB06-"
   },
   "SwitchbotRemote":  {
     "text":"SwitchBot remote",
@@ -34,7 +35,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB07"
+    "hexCode2":  "",
+    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB07-"
   },
    "SwitchbotTempHum":  {
     "text":"SwitchBot Temp hum",
@@ -52,7 +54,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB09"
+    "hexCode2":  "",
+    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB09-"
   },
   "SwitchbotMotion":  {
    "text":"SwitchBot motion sensor",
@@ -70,6 +73,7 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "hexCode2":  "",
     "hexCode":"0201060DFF6909MAC#########"
   },
   "SwitchbotContact":  {
@@ -88,6 +92,7 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "hexCode2":  "",
     "hexCode":"02010610FF6909MAC#########"
   },
   "SwitchbotCurtain":  {
@@ -109,7 +114,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB08"
+    "hexCode2":  "",
+    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB08-"
   },
   "Satech":  {
     "text":"Satech STiExx sensors",
@@ -126,7 +132,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "0E0201060A09426561636F6E666967"
+    "hexCode2":  "",
+    "hexCode": "0E0201060A09426561636F6E666967-"
   },
   "iSensor":  {
     "text":"ISensor Gas,Co, water... Alarm, press button to ID",
@@ -165,6 +172,7 @@
 				"1A":"WirelessKeypad"
 			}
 	},
+    "hexCode2":  "",
     "hexCode": "02010609086953656E736F7220XXFF"
   },
   "XiaomiFormaldehyde":  {
@@ -182,7 +190,7 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"        M J H F D 1 _   formaldehyde + T + H honeywell",
-	"hexCode": "190E094D4A484644315F"
+	"hexCode": "190E094D4A484644315F-"
    },
   "XiaomiMiBLETempHumSquare":  {
     "text":"Xiaomi MiJia MI temp humidity square, req gatttool connection, only w 2. BLE dongle",
@@ -198,7 +206,7 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"       L Y W S D 0 3 M M C  TH sensor w display, small square w lipo cr2032 battery requires gattool connection",
-	"hexCode": "0C0B094C5957534430334D4D43"
+	"hexCode": "0C0B094C5957534430334D4D43-"
    },
   "XiaomiMiBLETempHumRound":  {
     "text":"Xiaomi MiJia MI temp humidity round(LYWSDCGQ) ",
@@ -215,7 +223,7 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"       M J _ H T _ V 1",
-	"hexCode": "1A09094D4A5F48545F5631"
+	"hexCode": "1A09094D4A5F48545F5631-"
    },
   "XiaomiMiBLETempHumClock":  {
     "text":"Xiaomi MiJia MI clock w temp humidity",
@@ -233,7 +241,7 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"...             L Y W S D 0 2",
-	"hexCode": "0D0303F5FE08094C595753443032"
+	"hexCode": "0D0303F5FE08094C595753443032-"
    },
   "XiaomiMiFlower_Care":  {
     "text":"Xiaomi Mi - Flower care / VegTrug temp, Cond, Illum, Moist",
@@ -251,7 +259,8 @@
     "textForMenu":"",
     "comment":"       F l o w e r  c a r e",
     "subType":{},
-    "hexCode":"0D0C09466C6F7765722063617265"
+    "hexCode2":  "",
+    "hexCode":"0D0C09466C6F7765722063617265-"
   }, 
   "InkBirdTempPool01B":  {
     "text":"Ink Bird Temp Pool 01B",
@@ -269,7 +278,8 @@
     "textForMenu":"",
     "comment":"name Tag: tps= 74 70 73",
     "subType":{},
-    "hexCode":"1004097470730AFF"
+    "hexCode2":  "",
+    "hexCode":"1004097470730AFF-"
   }, 
   "BLEsensorbug":  {
     "text":"Blueradio sensor bug ",
@@ -286,7 +296,8 @@
     "textForMenu":"",
     "comment":"  S e n s o r B u g + # ",
     "subType":{},
-    "hexCode":"0953656E736F72427567"
+    "hexCode2":  "",
+    "hexCode":"0953656E736F72427567-"
   },       
   "BLEgoveeTempHum":  {
     "text":"Govee Temp Hum .. sensors",
@@ -304,6 +315,7 @@
     "textForMenu":"",
     "comment":"  G V H  .. sensor # ",
     "subType":{},
+    "hexCode2":  "",
     "hexCode":"09475648"
   }, 
   "iBSxx":  {
@@ -321,7 +333,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "0201061XFFXX008XBC"
+    "hexCode2":  "",
+    "hexCode": "0201061XFFXX008XBC-"
   },  
   "aprilBeacon":  {
     "text":"April Beacon",
@@ -345,7 +358,8 @@
     "textForMenu":"",
     "comment":"abeacon_ == 61 62 65 61 63 6f 6e 5f",
     "subType":{},
-    "hexCode": "0E0D0961626561636F6E5F"
+    "hexCode2":  "",
+    "hexCode": "0E0D0961626561636F6E5F-"
   }, 
   "Jaalee":  {
     "text":"Jaalee",
@@ -362,7 +376,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524"
+    "hexCode2":  "",
+    "hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524-"
   }, 
   "Minew_F4S":  {
     "text":"Minew FS4 with beep and battery",
@@ -379,7 +394,8 @@
     "textForMenu":"",
     "comment":"not really a minew beacon, can be beeped need to find comamnd for battery and beep",
     "subType":{},
-    "hexCode": "1B0201060303E1FF0E16E1FFA1XXXXRMAC########XXXXXXXX463453"
+    "hexCode2":  "",
+    "hexCode": "1B0201060303E1FF0E16E1FFA1XXXXRMAC########XXXXXXXX463453-"
 },
   "Minew_Acc":  {
     "text":"Minew (eg E8, S1) xyz-Accel, disab all but accel. in beaconSET+ app",
@@ -396,7 +412,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########"
+    "hexCode2":  "",
+    "hexCode":"1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########-"
  },
   "Minew_TH":  {
     "text":"Minew (eg S1) Humidity or Ext Temp Probe",
@@ -413,7 +430,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########"
+    "hexCode2":  "",
+    "hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########-"
 },
   "Minew_Light":  {
     "text":"Minew Light info",
@@ -430,7 +448,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########"
+    "hexCode2":  "",
+    "hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########-"
 },
   "Minew_LightOnOff":  {
     "text":"Minew Light on-off",
@@ -447,7 +466,8 @@
     "textForMenu":"",
     "comment":" simple light on/off sensor, no config possible",
     "subType":{},
-    "hexCode": "150201060303E1FF0D16E1FFA102XXXXRMAC########"
+    "hexCode2":  "",
+    "hexCode": "150201060303E1FF0D16E1FFA102XXXXRMAC########-"
 },
   "Minibeacon":  {
     "text":"Minibeacon",
@@ -464,7 +484,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F"
+    "hexCode2":  "",
+    "hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F-"
 },
   "pebbleBee":  {
     "text":"Pebble bee card",
@@ -481,6 +502,7 @@
     "textForMenu":"",
     "comment":" id = 43415244=CARD and - = data ends here",
     "subType":{},
+    "hexCode2":  "",
     "hexCode": "06050943415244-"
   }, 
   "BlackCard":  {
@@ -498,7 +520,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1X020104030225FAXXFF0E05A00033E2"
+    "hexCode2":  "",
+    "hexCode": "1X020104030225FAXXFF0E05A00033E2-"
   }, 
   "BlueCharm_BC011":  {
     "text":"BlueCharm BC011",
@@ -522,7 +545,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73"
+    "hexCode2":  "",
+    "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73-"
   }, 
   "BlueCharm_BC0631":  {
     "text":"BlueCharm BC0631",
@@ -546,7 +570,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061"
+    "hexCode2":  "",
+    "hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061-"
   }, 
   "Cube":  {
     "text":"Cube",
@@ -571,7 +596,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "0F020106030300F007094355424500"
+    "hexCode2":  "",
+    "hexCode": "0F020106030300F007094355424500-"
   }, 
   "UDM_PRO":  {
     "text":"UDM-PRO",
@@ -588,7 +614,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"19XXXXXXXXXXXXXXXX080855444D2D50524F"
+    "hexCode2":  "",
+    "hexCode":"19XXXXXXXXXXXXXXXX080855444D2D50524F-"
   }, 
   "Nuki_":  {
     "text":"Nuki_xxx door locks",
@@ -605,6 +632,7 @@
     "textForMenu":"",
     "comment":" Nuki_ ... 15A434A5",
     "subType":{},
+    "hexCode2":  "",
     "hexCode":"0F0E094E756B695F"
   }, 
   "Feasy_BP103_Triangle":  {
@@ -622,13 +650,14 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033"
+    "hexCode2":  "",
+    "hexCode":"1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033-"
   }, 
   "Feasy_BP109_USB":  {
     "text":"Feasy BP109 USB",
     "Maj":"",
     "Min":"",
-    "battCmd": "msg:pos=19,norm=101", 
+    "battCmd": "msg:pos=19,norm=1.009", 
     "beepCmd": "off", 
     "dBm": "-40", 
     "pos": 0, 
@@ -638,7 +667,8 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"",           
-    "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039"
+    "hexCode2":  "",
+    "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039-"
   }, 
   "Feasy_BP104_AAA":  {
     "text":"Feasy BP104 AAA",
@@ -654,7 +684,8 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"",              
-    "hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034"
+    "hexCode2":  "",
+    "hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034-"
   }, 
   "Innway":  {
     "text":"Innway",
@@ -679,7 +710,8 @@
     "textForMenu":"",
     "comment":" mfg - 49 6E 6E 77 61 79 20   54 61 67    = Innway Tag // 49 6E 6E 77 61 79 20   43 61 72 64 = Innway Card //49 6E 6E 77 61 79 20   43 68 69 70 = Innway Chip",
     "subType":{},
-    "hexCode": "1X020106030301E00X09496E6E776179"
+    "hexCode2":  "",
+    "hexCode": "1X020106030301E00X09496E6E776179-"
   }, 
   "Safedome":  {
     "text":"Safedome",
@@ -703,7 +735,8 @@
     "textForMenu":"",
     "comment":" mfg - 0A 09 09 73 61 66 65 64 6F 6D 65  safedome  73 61 66 65 64 6F 6D 65, other: 08 02 01 05 04 FF 4D 46 01",
     "subType":{},
-    "hexCode": "0A090973616665646F6D65"
+    "hexCode2":  "",
+    "hexCode": "0A090973616665646F6D65-"
   }, 
   "Nonda_Aiko":  {
     "text":"Nonda Aiko ",
@@ -735,7 +768,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A"
+    "hexCode2":  "",
+    "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A-"
   }, 
   "Nonda_iHere":  {
     "text":"Nonda iHere",
@@ -750,12 +784,8 @@
       "uuid": "2A19"
     }, 
     "beepCmd": {
-      "cmdON": [
-        "char-write-cmd 0x0011  02"
-      ], 
-      "cmdOff": [
-        "char-write-cmd 0x0011 00"
-      ], 
+      "cmdON": ["char-write-cmd 0x0011  02"], 
+      "cmdOff": ["char-write-cmd 0x0011 00"], 
       "random": "public"
     }, 
     "dBm": "-50", 
@@ -767,7 +797,8 @@
     "textForMenu":"",
     "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
     "subType":{},
-    "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A"
+    "hexCode2":  "",
+    "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A-"
   }, 
   "NutFinder3x":  {
     "text":"Nut3, nutale V-UUID=xx00003x",
@@ -782,8 +813,8 @@
       "uuid": "2A19"
     }, 
     "beepCmd": {
-      "cmdON": [        "char-write-req 0x0025 04"      ], 
-      "cmdOff": [        "char-write-req 0x0025 03"      ], 
+      "cmdON": ["char-write-req 0x0025 04"], 
+      "cmdOff": ["char-write-req 0x0025 03"], 
       "random": "public"
     }, 
     "dBm": "-61", 
@@ -794,11 +825,12 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
-    "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"56":{"beep":"0x001B 04","random":"randomON"},"3C":{"beep":"0x0025 04","random":"public"}},
-    "hexCode": "1C0201060303031805FFxx00003X09160A18MAC#########"
+    "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"45":{"beep":"0x001B 04","random":"randomON"},"3X":{"beep":"0x0025 04","random":"public"}},
+    "hexCode2":  "",
+    "hexCode": "1C0201060303031805FFD200003X09160A18MAC#########-"
   }, 
   "NutFinder4x":  {
-    "text":"Nut3, nutale V-UUID=xx00004x",
+    "text":"Nut4, nutale V-UUID=xx000045",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -822,8 +854,38 @@
     "sensorFunctions":"",
     "textForMenu":"",
     "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
-    "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"56":{"beep":"0x001B 04","random":"randomON"},"3C":{"beep":"0x0025 04","random":"public"}},
-    "hexCode": "1C0201060303031805FFxx00004x09160A18MAC#########"
+    "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"45":{"beep":"0x001B 04","random":"randomON"},"3X":{"beep":"0x0025 04","random":"public"}},
+    "hexCode2":  "",
+    "hexCode": "1C0201060303031805FFD25900004509160A18MAC#########-"
+  }, 
+  "NutFinder46":  {
+    "text":"Nut4, pro V-UUID=xx000046 ",
+    "Maj":"",
+    "Min":"",
+    "battCmd": {
+      "bits": 127, 
+      "shift": 0,
+      "offset": 0,
+      "norm": 100, 
+      "random": "randomON", 
+      "uuid": "2A19"
+    }, 
+    "beepCmd": {
+      "cmdON": [ "char-write-req 0x0010 04" ], 
+      "cmdOff": [ "char-write-req 0x0010 03"], 
+      "random": "randomON"
+    }, 
+    "dBm": "-61", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"check detect new beacons for 'UUID-FF : xx0000??'",
+    "subType":{"46":{"beep":"0x0010 04","random":"randomON"},"45":{"beep":"0x001B 04","random":"randomON"},"3X":{"beep":"0x0025 04","random":"public"}},
+    "hexCode2":  "",
+    "hexCode": "1C0201060303031805FF5900004609160A18MAC#########-"
   }, 
   "OralB":  {
     "text":"OralB toothbrush",
@@ -840,7 +902,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "120201050EFFDC000201"
+    "hexCode2":  "",
+    "hexCode": "120201050EFFDC000201-"
   }, 
   "Orbit":  {
     "text":"Orbit",
@@ -857,7 +920,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "0F020106030300F007094F52"
+    "hexCode2":  "",
+    "hexCode": "0F020106030300F007094F52-"
   }, 
   "Radius":  {
     "text":"Radius",
@@ -874,7 +938,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6"
+    "hexCode2":  "",
+    "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6-"
   }, 
    "RBE":  {
     "text":"Radius RBE Card/Chip",
@@ -891,7 +956,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1D17FF18010154RMAC########000000000000XXXXXXXXXXXX0409524245"
+    "hexCode2":  "",
+    "hexCode": "1D17FF18010154RMAC########000000000000XXXXXXXXXXXX0409524245-"
   },
  "rPI":  {
     "text":"RPI",
@@ -908,7 +974,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5"
+    "hexCode2":  "",
+    "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5-"
   }, 
   "Smart_tracker":  {
     "text":"Smart tracker",
@@ -940,7 +1007,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "14020106070304180F18C0FF020A0005"
+    "hexCode2":  "",
+    "hexCode": "14020106070304180F18C0FF020A0005-"
   }, 
   "SocialRetail":  {
     "text":"SocialRetail",
@@ -957,7 +1025,44 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "E2C56DB5DFFB48D2B060D0F5A71096E0"
+    "hexCode2":  "",
+    "hexCode": "E2C56DB5DFFB48D2B060D0F5A71096E0-"
+  }, 
+  "SwiftFinder":  {
+    "text":"SwiftFinder",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 0, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"",
+    "subType":{},
+    "hexCode2":  "",
+    "hexCode": "0F02010603030A18070953-"
+  }, 
+  "Tovala":  {
+    "text":"Tovala oven",
+    "Maj":"",
+    "Min":"",
+    "battCmd": "off", 
+    "beepCmd": "off", 
+    "dBm": "-59", 
+    "pos": 42, 
+    "posDelta": 0, 
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
+    "sequence":0,
+    "sensorFunctions":"",
+    "textForMenu":"",
+    "comment":"",
+    "subType":{},
+    "hexCode2":  "",
+    "hexCode": "546F76616C61"
   }, 
   "SpotyPal":  {
     "text":"SpotyPal",
@@ -994,41 +1099,9 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "match":  true,
+    "hexCode2":  "",
     "hexCode": "0A090953706F747950616C"
-  }, 
-  "SwiftFinder":  {
-    "text":"SwiftFinder",
-    "Maj":"",
-    "Min":"",
-    "battCmd": "off", 
-    "beepCmd": "off", 
-    "dBm": "-59", 
-    "pos": 0, 
-    "posDelta": 0, 
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
-    "sequence":0,
-    "sensorFunctions":"",
-    "textForMenu":"",
-    "comment":"",
-    "subType":{},
-    "hexCode": "0F02010603030A18070953"
-  }, 
-  "Tovala":  {
-    "text":"Tovala oven",
-    "Maj":"",
-    "Min":"",
-    "battCmd": "off", 
-    "beepCmd": "off", 
-    "dBm": "-59", 
-    "pos": 42, 
-    "posDelta": 0, 
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0, 
-    "sequence":0,
-    "sensorFunctions":"",
-    "textForMenu":"",
-    "comment":"",
-    "subType":{},
-    "hexCode": "546F76616C61"
   }, 
   "Vozni_iTrack":  {
     "text":"Vozni - iTrack app",
@@ -1064,10 +1137,12 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1X02010X030202180AFF4B4D02RMAC########-" 
-  }, 
-  "Rinex_Njoii_iTrack":  {
-    "text":"Rinex & Njoii - iTrack app",
+    "hexCode2":  "",
+    "match":  true,
+    "hexCode": "1X02010X030202180AFF4B4D02RMAC########" 
+  }, 	   
+  "ITrack":  {
+    "text":"ITrack: Rinex & Njoii & Musegear",
     "Maj":"",
     "Min":"",
     "battCmd": {
@@ -1099,9 +1174,10 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1A02010X030202180AFF4B4DX2RMAC########07096954726163" 
+    "hexCode2":  "070969547261636B",
+    "hexCode":  "1X02010X030202180XFF4B4DXXRMAC########-" 
   }, 
-  "BLERuuviTag":  {
+ "BLERuuviTag":  {
     "text":"Ruuvi-beacon w temp, hum, press, accell",
     "Maj":"",
     "Min":"",
@@ -1117,6 +1193,7 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "hexCode2":  "",
     "hexCode": "FF990405"
   }, 
   "XY_1":  {
@@ -1134,7 +1211,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "07775DD0111B11E491910800200C9A66"
+    "hexCode2":  "",
+    "hexCode": "07775DD0111B11E491910800200C9A66-"
   }, 
   "XY_2":  {
     "text":"XY_2",
@@ -1151,7 +1229,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "08885DD0111B11E491910800200C9A66"
+    "hexCode2":  "",
+    "hexCode": "08885DD0111B11E491910800200C9A66-"
   }, 
   "XY_3":  {
     "text":"XY_3",
@@ -1168,7 +1247,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "04000000005F78000900580509585934"
+    "hexCode2":  "",
+    "hexCode": "04000000005F78000900580509585934-"
   }, 
   "XY_4":  {
     "text":"XY_4",
@@ -1185,7 +1265,8 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
-    "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859"
+    "hexCode2":  "",
+    "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859-"
   }, 
   "myblueT":  {
     "text":"MyblueT",
@@ -1202,6 +1283,7 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "hexCode2":  "",
     "hexCode": "myBlueT"
   }, 
   "iBeacon":  {
@@ -1219,6 +1301,7 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "hexCode2":  "",
     "hexCode": "1AFF4C000"
   }, 
   "other":  {
@@ -1236,6 +1319,7 @@
     "textForMenu":"",
     "comment":"",
     "subType":{},
+    "hexCode2":  "",
     "hexCode": "X"
   }
 }

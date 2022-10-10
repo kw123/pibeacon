@@ -60,33 +60,6 @@ These Variables are not needed by the user, but they need to exist, they go into
 		<Label>This is only for: dev/states = Pi_x_Time etc, variables: pi_IN_xx. This saves SQL logger cpu and disk-space. There is no (good) reason to write them to the SQL logger</Label>
 	</Field>
 
-	<Field    id="enableBroadCastEvents" type="menu"   tooltip="if enabled any change of status of a up/down devices will send indigo broadcast  to read the status and use it to determine home or away events">
-		<List>
-			<Option value="0"          >disable</Option>
-			<Option value="all"        >ENABLE ALL:   for all devices that have an up/ down status</Option>
-			<Option value="individual" >ENABLE INDIVIDUAL:  individual devices must be enabled in device edit</Option>
-		</List>
-		<Label>Enable indigo Broadcast of up/ down status:</Label>
-	</Field>
-
-	<Field id="enableBroadCastEventsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>This is used if you want to send BC of status changes to eg fingscan, homeAway plugins</Label>
-	</Field>
-
-	<Field    id="enableFING"   type="menu"  tooltip="if enabled any change of status of a iBeacon will trigger fing to read the status and use it to determine home or away events">
-		<Label>Trigger FINGSCAN:</Label>
-		<List>
-			<Option value="0"  > disable </Option>
-			<Option value="1"  > enable </Option>
-		</List>    
-	</Field>
-
-	<Field id="enableFINGLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>This is used if you want to send status changes to fingscan plugin</Label>
-	</Field>
-
-
-
 	<Field id="infoLabelCountVariables" type="label" fontColor="green" >
 		<Label>== Variables populated with COUNTS of devices being home, present, online vs away, offline,..</Label>
 	</Field>
@@ -96,7 +69,7 @@ These Variables are not needed by the user, but they need to exist, they go into
 	</Field>
 
 	<Field id="groupCountNameDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>These variables count number of beacons-RPi-BLEconnect-sensors that are home away.. 
+		<Label>These variables count number of beacons-RPi-BLEconnect-sensors-... that are home/away /up/down present/.. 
 Define the group names below: !! No spaces in names!! </Label>
 	</Field>
 
@@ -158,9 +131,10 @@ Define the group names below: !! No spaces in names!! </Label>
 		<Label>The groups names will be used for variables and track /count totals of up / down  home / away states for all group members
 When you leave the name empty the variable will not be used / created, 
 They will also only be crated when needed ie when a groups has any members
-You need to put a device (RPI,beacon,BLEconnect,Sensor) into one of these groups in device edit to make it part of one of these groups, ie to be counted
+You need to put a device (RPI,beacon,BLEconnect,Sensor, BLE, etc) into one of these groups in device edit to make it part of one of these groups, ie to be counted
 This can be used to check if eg all familiy members are home/away or all rpi devices are on or one is down = away
-This is not used for trigger names they will continue to be called Family, Guests, Other1, Other2, Other3 as their names can not be changed dynamically</Label>
+This is not used for trigger names they will continue to be called Family, Guests, Other1, Other2, Other3 as their names can not be changed dynamically
+All BEACONS, RPI, BLEconnect, and SENSORS device types have predefined groups and are members of them, so that you can see eg how many BEACONS are home/ away </Label>
 	</Field>
 
 
@@ -318,27 +292,6 @@ userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. f
 			<Option value="none"   >use do not use security ie no userid or password </Option>
 		</List>    
 		<Label>DIGEST, BASIC or no  authentication:</Label> 
-	</Field>
-
-	<Field id="infoLabelwifi" type="label" fontSize="small" >
-		<Label>
-WIFI ... to CREATE config files (interfaces and wpa_supplicant.conf) on the PI ~/piBeacon directory, they will NOT be activated. YOU can move/activate them with "sudo python interface.py" on the RPI</Label>
-	</Field>
-
-	<Field id="wifiSSID"   type="textfield"   >
-		<Label>...  SSID of your router:</Label> 
-	</Field>
-
-	<Field id="wifiPassword"   type="textfield"   >
-		<Label>... WiFi password of your router:</Label> 
-	</Field>
-
-	<Field    id="key_mgmt"   type="menu"  >
-		<Label>... Security :</Label>
-		<List>
-			<Option value="NONE"     >NONE </Option>
-			<Option value="WPA-PSK"  >WPA-PSK </Option>
-		</List>    
 	</Field>
 
 
@@ -926,8 +879,6 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field    id="debugStartSocket"    type="checkbox"         > <Label>     ..  (8.0) tcpip socket comm RPI to indigo Setup:</Label>  </Field>
 	<Field    id="debugSocket"         type="checkbox"         > <Label>     ..  (8.1) tcpip socket comm RPI to indigo:</Label>  </Field>
 	<Field    id="debugOfflineRPI"     type="checkbox"         > <Label>     ... (9)  show error messages if RPI is offline:</Label>  </Field>
-	<Field    id="debugFing"           type="checkbox"         > <Label>     ... (10) send data to Fingscan:</Label>  </Field>
-	<Field    id="debugBC"             type="checkbox"         > <Label>     ... (11) send BC to status update listeners:</Label>  </Field>
 	<Field    id="debugBLE"            type="checkbox"         > <Label>     ... (12) BLE-connect:</Label>  </Field>
 	<Field    id="debugCAR"            type="checkbox"         > <Label>     ... (13) CAR type devices:</Label>  </Field>
 	<Field    id="debugPlotPositions"  type="checkbox"         > <Label>     ..  (15) beacon position plots:</Label>  </Field>
@@ -936,8 +887,9 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field    id="debugSQLSuppresslog" type="checkbox"         > <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
 	<Field    id="debugBeep"           type="checkbox"         > <Label>     ..  (19) beacon Beep:</Label>  </Field>
 	<Field    id="debugUpdateTimeAndZone" type="checkbox"      > <Label>     ..  (20) set time and date on beacon:</Label>  </Field>
-updateTimeAndZone
-	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S) special debug (only for development):</Label>  </Field>
+	<Field    id="debugGarageDoor"     type="checkbox"         > <Label>     ..  (21) garage door:</Label>  </Field>
+	<Field    id="debugDelayedActions" type="checkbox"         > <Label>     ..  (22) delayed actions (for dev):</Label>  </Field>
+	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S)  special debug (only for development):</Label>  </Field>
 	<Field    id="debugall"            type="checkbox"         > <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
 	<Field id="infoLabel227" type="label"> <Label>DETAILED cpu-time tracking;  set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>

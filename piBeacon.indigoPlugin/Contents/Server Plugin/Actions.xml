@@ -21,8 +21,8 @@
 			</Field>
 			<Field id="cmd"	type="menu" default="up"	 >
 			    <List>
-					<Option value= "down"			 >LOW  = 0 </Option>
-					<Option value= "up"			   >HIGH = 1</Option>
+					<Option value= "down"			  >LOW  = 0 </Option>
+					<Option value= "up"				  >HIGH = 1</Option>
 					<Option value= "pulseUp"          >one pulse UP </Option>
 					<Option value= "pulseDown"        >one pulse down </Option>
 					<Option value= "continuousUpDown" >continuous pulses Up Down</Option>
@@ -52,7 +52,7 @@
 			<Label>After reboot set pin to:</Label>
 			</Field>
 			<Field id="startAtDateTime"  type="textfield" default="0" >
-			    <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+			    <Label>Start: delay by secs (eg 5.5) or set Date (eg YYYY-mm-dd HH:MM:SS)  when to start:</Label>
 			</Field>
 		</ConfigUI>
     </Action>
@@ -107,28 +107,168 @@
 			<Label>After reboot set relay to(not implemented yet):</Label>
 			</Field>
 			<Field id="startAtDateTime"  type="textfield" default="0" >
-			    <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
+			    <Label>Start: delay by secs (eg 5.5) or set Date (eg YYYY-mm-dd HH:MM:SS)  when to start:</Label>
 			</Field>
 		</ConfigUI>
     </Action>
 
    <Action id="setOUTPUTswitchBotParams">
-		<Name>Set switchbot relay to pulse on/off.. </Name>
+		<Name>Set switchbot relay to on/off or pulses.. </Name>
 			<CallbackMethod>sendPulsesToSwitchBotCALLBACKaction</CallbackMethod>
 		<ConfigUI>
-			<Field id="outputDev" type="menu" defaultValue="0" tooltip="select dev ">
-				<List class="indigo.devices" filter="self.OUTPUTswitchbotRelay"  />
-				<Label>select switchbot bot device:</Label>
-			</Field>
-			<Field id ="sepldub"  type="separator"/>
 
-			<Field id="infoLabel01" type="label" >
-				<Label>The minimum execution time for one press is 2.7 secs (arm down, arm up), it is added to off time</Label>
+
+			<Field id="infoLabel00" type="label" >
+				<Label>This action allows to send simple on/off comands or pulses to a switchbot device
+you can set length of on/off and time between pulses.
+it supports 2 modes: batch and interactive these are 2 ways of using gatttool
+
+You can also use this action to setup a direct action bewteen 2 rpi using a BLE on/off sensor as a trigger and a switchbot as a target
+  This will work w/o indigo beeing up. This is not stored as an indigo action
+
+Make sure the switch bot is properly configured,  ie as press or normal
+</Label>
 			</Field>
 
-			<Field id="pulses" type="menu" defaultValue="2" tooltip="">
-				<Label>Number of pulses</Label>
+
+			<Field  id="refreshCallbackMethod" type="textfield" defaultValue="dynamicCallbackSetSwitchbotactionsFields" hidden="true"></Field>
+
+			<Field  id="sensorVisible" 					type="checkbox" hidden="true" defaultValue="true" ></Field>
+			<Field  id="stopVisible" 					type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="switchBotModeVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="sensorTriggerValueVisible"		type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="repeatVisible"					type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="repeatDelayVisible"				type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="pulsesVisible"					type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="pulseLengthOnVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="pulseLengthOffVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="pulseDelayVisible"				type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="execRPItoRPIVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="outputDevVisible"				type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="infoLabelSAVEVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="infoLabelActionVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="infoLabelDIRECTVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="stopActionsForSecondsVisible"	type="checkbox" hidden="true" defaultValue="false" ></Field>
+
+
+			<Field id="selectActionType" type="menu" defaultValue="regular" tooltip="select dev ">
 				<List>
+					<Option value="deleteRPIaction">delete an RPI stored action</Option>
+					<Option value="addRPIAction">add an RPI stored action</Option>
+					<Option value="regular">regular indigo action</Option>
+				</List>
+				<Label>select action type:</Label>
+			</Field>
+
+
+			<Field id="outputDev" type="menu" defaultValue="0" visibleBindingId="outputDevVisible" visibleBindingValue="true"  tooltip="select dev  ">
+				<List class="indigo.devices" filter="self.OUTPUTswitchbotRelay"  />
+				<Label>select switchbot bot target device:</Label>
+			</Field>
+
+			<Field id ="sepldub"  type="separator" visibleBindingId="infoLabelDIRECTVisible" visibleBindingValue="false" />
+
+			<Field id="infoLabelDIRECT" type="label" visibleBindingId="infoLabelDIRECTVisible" visibleBindingValue="true"  >
+				<Label>Select the sensor and the RPI which hosts it </Label>
+			</Field>
+			<Field id="sensor" type="menu" defaultValue="0" visibleBindingId="sensorVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Select sensor that triggers the action</Label>
+				<List class="self"  method="filterSensorForRpiAction"  dynamicReload="true" />
+			</Field>
+
+			<Field id="sensorPi" type="menu" defaultValue="0" visibleBindingId="sensorVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Select rpi on which sensor is tracked</Label>
+				<List class="self"  method="filterRPIForSensorForRpiAction" dynamicReload="true"/>
+			</Field>
+
+			<Field id="sensorTriggerValue" type="menu" defaultValue="0" visibleBindingId="sensorTriggerValueVisible" visibleBindingValue="true" tooltip="">
+				<Label>Sensor Trigger Value</Label>
+				<List>
+					<Option value="on">on</Option>
+					<Option value="off">off</Option>
+				</List>
+			</Field>
+
+			<Field id="infoLabelAction" type="label" visibleBindingId="infoLabelActionVisible" visibleBindingValue="true"  >
+				<Label>Define the action that the switchbot should execute</Label>
+			</Field>
+
+			<Field id="stop" type="menu" defaultValue="0" visibleBindingId="stopVisible" visibleBindingValue="true" tooltip="">
+				<Label>STOP currently running execution on RPI</Label>
+				<List>
+					<Option value="0">do not stop</Option>
+					<Option value="1">stop</Option>
+				</List>
+			</Field>
+
+			<Field id="stopActionsForSeconds" type="menu" defaultValue="0" visibleBindingId="stopActionsForSecondsVisible" visibleBindingValue="true" tooltip="">
+				<Label>STOP stop current and future actions on RPI</Label>
+				<List>
+					<Option value="0">only current</Option>
+					<Option value="3">current and 3 more seconds</Option>
+					<Option value="4">current and 4 more seconds</Option>
+					<Option value="5">current and 5 more seconds</Option>
+					<Option value="6">current and 6 more seconds</Option>
+					<Option value="7">current and 7 more seconds</Option>
+					<Option value="8">current and 8 more seconds</Option>
+					<Option value="9">current and 9 more seconds</Option>
+					<Option value="10">current and 10 more seconds</Option>
+					<Option value="15">current and 15 more seconds</Option>
+					<Option value="20">current and 20 more seconds</Option>
+					<Option value="30">current and 30 more seconds</Option>
+					<Option value="40">current and 40 more seconds</Option>
+					<Option value="50">current and 50 more seconds</Option>
+					<Option value="60">current and 60 more seconds</Option>
+				</List>
+			</Field>
+
+			<Field id="switchBotMode" type="menu" defaultValue="batch" visibleBindingId="switchBotModeVisible" visibleBindingValue="true" tooltip="">
+				<Label>gatttool mode</Label>
+				<List>
+					<Option value="batch">command line / batch (no pulses)</Option>
+					<Option value="interactive">interactive for complicated pulses</Option>
+				</List>
+			</Field>
+
+			<Field id="repeat" type="menu" defaultValue="2" visibleBindingId="repeatVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Repeat below set nTimes</Label>
+				<List>
+					<Option value="0">0 times = execute once</Option>
+					<Option value="1">1 time = execute twice</Option>
+					<Option value="2">2</Option>
+					<Option value="3">3</Option>
+					<Option value="4">4</Option>
+					<Option value="5">5</Option>
+					<Option value="6">6</Option>
+					<Option value="7">7</Option>
+					<Option value="8">8</Option>
+				</List>
+			</Field>
+
+			<Field id="repeatDelay" type="menu" defaultValue="0" visibleBindingId="repeatDelayVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Secs delay between sets</Label>
+				<List>
+					<Option value="0"  >no delay</Option>
+					<Option value="1.0">1   secs</Option>
+					<Option value="1.5">1.5 secs</Option>
+					<Option value="2.0">2   secs</Option>
+					<Option value="2.5">2.5 secs</Option>
+					<Option value="3.0">3   secs</Option>
+					<Option value="3.5">3.5 secs</Option>
+					<Option value="4.0">4   secs</Option>
+					<Option value="4.5">4.5 secs</Option>
+					<Option value="5.0">5 secs</Option>
+					<Option value="6.0">6 secs</Option>
+					<Option value="7.0">7 secs</Option>
+					<Option value="8.0">8 secs</Option>
+				</List>
+			</Field>
+
+			<Field id="pulses" type="menu" defaultValue="2" visibleBindingId="pulsesVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Number of pulses / simple on or Off</Label>
+				<List>
+					<Option value="on">on</Option>
+					<Option value="off">off</Option>
 					<Option value="1">1</Option>
 					<Option value="2">2</Option>
 					<Option value="3">3</Option>
@@ -139,36 +279,78 @@
 					<Option value="8">8</Option>
 				</List>
 			</Field>
-			<Field id="pulseLengthOn" type="menu" defaultValue="0" tooltip="">
+
+			<Field id="pulseLengthOn" type="menu" defaultValue="0" visibleBindingId="pulseLengthOnVisible" visibleBindingValue="true" tooltip="">
 				<Label>Secs pulse ON</Label>
 				<List>
 					<Option value="0">short click</Option>
-					<Option value="1">1 secs</Option>
-					<Option value="2">2 secs</Option>
-					<Option value="3">3 secs</Option>
-					<Option value="4">4 secs</Option>
+					<Option value="1.0">1   secs</Option>
+					<Option value="1.5">1.5 secs</Option>
+					<Option value="2.0">2   secs</Option>
+					<Option value="2.5">2.5 secs</Option>
+					<Option value="3.0">3   secs</Option>
+					<Option value="3.5">3.5 secs</Option>
+					<Option value="4.0">4   secs</Option>
+					<Option value="4.5">4.5 secs</Option>
+					<Option value="5.0">5 secs</Option>
+					<Option value="6.0">6 secs</Option>
+					<Option value="7.0">7 secs</Option>
+					<Option value="8.0">8 secs</Option>
+				</List>
+			</Field>
+
+			<Field id="infoLabel01" type="label" visibleBindingId="pulseLengthOffVisible" visibleBindingValue="true">
+				<Label>The minimum execution time for one press is 2.7 secs (arm down, arm up), it is added to off time</Label>
+			</Field>
+			<Field id="pulseLengthOff" type="menu" defaultValue="2.0" visibleBindingId="pulseLengthOffVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Secs pulse OFF</Label>
+				<List>
+					<Option value="0.0">0.0 secs this should be used with press config = short on pulse(s)</Option>
+					<Option value="0.5">0.5 secs</Option>
+					<Option value="1.0">1   secs</Option>
+					<Option value="1.5">1.5 secs</Option>
+					<Option value="2.0">2   secs</Option>
+					<Option value="2.5">2.5 secs</Option>
+					<Option value="3.0">3   secs</Option>
+					<Option value="3.5">3.5 secs</Option>
+					<Option value="4.0">4   secs</Option>
+					<Option value="4.5">4.5 secs</Option>
 					<Option value="5">5 secs</Option>
 					<Option value="6">6 secs</Option>
 					<Option value="7">7 secs</Option>
 					<Option value="8">8 secs</Option>
 				</List>
 			</Field>
-			<Field id="pulseLengthOff" type="menu" defaultValue="2.0" tooltip="">
-				<Label>Secs pulse OFF</Label>
+
+			<Field id="pulseDelay" type="menu" defaultValue="0.0" visibleBindingId="pulseDelayVisible" visibleBindingValue="true" >
+				<Label>Secs between sets, eg for short on/off</Label>
 				<List>
-					<Option value="0.0">0.0 secs</Option>
+					<Option value="0.0">0.0 secs </Option>
 					<Option value="0.5">0.5 secs</Option>
 					<Option value="1.0">1.0 secs</Option>
-					<Option value="2.0">2.0 secs</Option>
+					<Option value="1.5">1.5 secs</Option>
+					<Option value="2.0">2   secs</Option>
 					<Option value="2.5">2.5 secs</Option>
-					<Option value="3.0">3.0 secs</Option>
+					<Option value="3.0">3   secs</Option>
 					<Option value="3.5">3.5 secs</Option>
+					<Option value="4.0">4   secs</Option>
+					<Option value="4.5">4.5 secs</Option>
 					<Option value="4">4 secs</Option>
 					<Option value="5">5 secs</Option>
 					<Option value="6">6 secs</Option>
 					<Option value="7">7 secs</Option>
 					<Option value="8">8 secs</Option>
+					<Option value="9">9 secs</Option>
+					<Option value="10">10 secs</Option>
 				</List>
+			</Field>
+
+			<Field  id="execRPItoRPI" type="button" visibleBindingId="execRPItoRPIVisible" visibleBindingValue="true"  >
+			    <Label> ....after selection click to setup/delete action on the RPIs</Label><Title>SETUP/DELETE</Title> <CallbackMethod>setupRPItoRPIactionCALLBACKaction</CallbackMethod>
+			</Field>
+			<Field id="infoLabelSAVE" type="label" visibleBindingId="infoLabelSAVEVisible" visibleBindingValue="true"  >
+				<Label>After adding an RPi to RPi action you can save, but this action is not useful in indigo besides a record of the RPi to RPi action in case you like to delete it later.
+After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 		</ConfigUI>
