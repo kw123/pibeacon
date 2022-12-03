@@ -37,7 +37,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			data = f.read()
 			f.close()
 		except Exception as e:
-			U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			return 
 		if len(data) < 2: 
 			U.logger.log(40, u"data read {}".format(data))

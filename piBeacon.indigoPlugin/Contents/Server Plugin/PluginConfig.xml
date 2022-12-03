@@ -368,6 +368,9 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 					<Option value='{"on":"dontChange", "useIP":"useIf"}'	>do not change , must be set by user, use wlan0 IP# if eth0 not used</Option>
 		</List> 
 	</Field>
+	<Field id="infoLabel45Other" type="label" fontSize="small" >
+		<Label>- other RPI settings</Label>
+	</Field>
 
 	<Field    id="piUpdateWindow"   type="menu" >
 		<Label>Update indigo states of rPi devices :</Label>
@@ -383,19 +386,6 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 		<Label>rPi PORT to receive GPIO commands (0=off):</Label>
 	</Field>
 
-
-	<Field id="rebootSeconds"   type="menu"  tooltip="set reboot vs restart loop in setup rPi " >
-		<Label>Should the rPi systems reboot/restart loop after:</Label>
-		<List>
-			<Option value="300"      >5  minutes - for testing </Option>
-			<Option value="3600"     >1  hour </Option>
-			<Option value="43200"    >12 hours </Option>
-			<Option value="86400"    >1 day </Option>
-			<Option value="604800"   >1 week </Option>
-			<Option value="9999999999999" >do not use this feature </Option>
-		</List>
-	</Field>
-
 	<Field id="rebootHour"   type="menu"  tooltip="this is an OR with the above option" >
 		<Label>Should the rPi systems reboot themselves after midnight:</Label>
 		<List>
@@ -404,6 +394,8 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 			<Option value="2"   >at 2:00 am </Option>
 			<Option value="3"   >at 3:00 am </Option>
 			<Option value="4"   >at 4:00 am </Option>
+			<Option value="22"  >at 22:00  </Option>
+			<Option value="23"  >at 23:00  </Option>
 			<Option value="-1"  >do not use this feature</Option>
 		</List>
 	</Field>
@@ -838,6 +830,27 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field id="beaconPositionsimageCompress" type="checkbox" visibleBindingId="beaconPositionsUpdateTime" visibleBindingValue="30,60,120,300,600"> 
 		<Label>compress png File:</Label>
 	</Field>
+
+
+	<Field id="simpleSeparatorpy3" type="separator"/>
+		<Field id="py3"         type="label" fontColor="green" >
+			<Label>== python version on rpi:...</Label>
+		</Field>
+
+		<Field    id="usePython3"   type="menu" defaultValue="0" >
+			<Label>Use python3 where ever possible:</Label>
+			<List>
+				<Option value="0"		>use setting in rPi device edit </Option>
+				<Option value="1"		>yes, for all rPi, ignore rPi setting </Option>
+				<Option value="-1"		>no, ignore rPi seeting</Option>
+			</List>
+		</Field>
+
+	<Field id="debugpy3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>starting with rpi op-sys 11   ONLY PY3 will be used, as py2 is not fully supported anymore </Label>
+	</Field>
+
+
 
 	<Field id="simpleSeparator57" type="separator"/>
 

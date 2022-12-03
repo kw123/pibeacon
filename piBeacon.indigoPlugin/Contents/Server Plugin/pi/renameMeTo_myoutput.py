@@ -15,7 +15,7 @@ import os
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "myoutput"
 ## ===========================================================================
 # utils do not chnage
@@ -38,20 +38,19 @@ try:
         myPID = str(os.getpid())
         U.killOldPgm(myPID,"myoutput.py")# kill  old instances of myself if they are still running
 
-        U.logger.log(30, "myoutput  received text :"+unicode(sys.argv))
-        print ("myoutput  received text :"+unicode(sys.argv))
+        U.logger.log(30, "myoutput  received text :{}".format(sys.argv))
 
         # rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
         if len(sys.argv) >1 :
             text = sys.argv[1]
 
             #eg reboot if you send the reboot command
-            if unicode(text).find("reboot") > -1 :
+            if "{}".format(text).find("reboot") > -1 :
                 subprocess.call("reboot", shell=True)
 
 
             # if set gpoio high ..
-            elif unicode(text).find("gpio 21 high") > -1:
+            elif "{}".format(text).find("gpio 21 high") > -1:
                 import RPi.GPIO as GPIO
                 GPIO.setmode(GPIO.BCM)
                 GPIO.setwarnings(False)
@@ -60,8 +59,7 @@ try:
 
 
 except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-        print (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(20,"", exc_info=True)
 
 exit(0)
 

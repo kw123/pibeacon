@@ -9,167 +9,181 @@ import logging
 
 
 import sys, os, time, json, datetime,subprocess,copy
-import smbus, struct
+import smbus
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
-G.program = "lsm303"
 
-# The MIT License (MIT)
-#
-# Copyright (c) 2016 Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+G.program	= "lsm303"
+
+# Copyright 2020 jackw01. Released under the MIT license.
+__version__	= '1.0.0'
 
 
-# Minimal constants carried over from Arduino library:
+LSM303_ADDRESS_ACCEL					= 0x19 # 0011001x
+LSM303_REGISTER_ACCEL_CTRL_REG1_A		= 0x20
+LSM303_REGISTER_ACCEL_CTRL_REG2_A		= 0x21
+LSM303_REGISTER_ACCEL_CTRL_REG3_A		= 0x22
+LSM303_REGISTER_ACCEL_CTRL_REG4_A		= 0x23
+LSM303_REGISTER_ACCEL_CTRL_REG5_A		= 0x24
+LSM303_REGISTER_ACCEL_CTRL_REG6_A		= 0x25
+LSM303_REGISTER_ACCEL_REFERENCE_A		= 0x26
+LSM303_REGISTER_ACCEL_STATUS_REG_A		= 0x27
+LSM303_REGISTER_ACCEL_OUT_X_L_A			= 0x28
+LSM303_REGISTER_ACCEL_OUT_X_H_A			= 0x29
+LSM303_REGISTER_ACCEL_OUT_Y_L_A			= 0x2A
+LSM303_REGISTER_ACCEL_OUT_Y_H_A			= 0x2B
+LSM303_REGISTER_ACCEL_OUT_Z_L_A			= 0x2C
+LSM303_REGISTER_ACCEL_OUT_Z_H_A			= 0x2D
+LSM303_REGISTER_ACCEL_FIFO_CTRL_REG_A	= 0x2E
+LSM303_REGISTER_ACCEL_FIFO_SRC_REG_A	= 0x2F
+LSM303_REGISTER_ACCEL_INT1_CFG_A		= 0x30
+LSM303_REGISTER_ACCEL_INT1_SOURCE_A		= 0x31
+LSM303_REGISTER_ACCEL_INT1_THS_A		= 0x32
+LSM303_REGISTER_ACCEL_INT1_DURATION_A	= 0x33
+LSM303_REGISTER_ACCEL_INT2_CFG_A		= 0x34
+LSM303_REGISTER_ACCEL_INT2_SOURCE_A		= 0x35
+LSM303_REGISTER_ACCEL_INT2_THS_A		= 0x36
+LSM303_REGISTER_ACCEL_INT2_DURATION_A	= 0x37
+LSM303_REGISTER_ACCEL_CLICK_CFG_A		= 0x38
+LSM303_REGISTER_ACCEL_CLICK_SRC_A		= 0x39
+LSM303_REGISTER_ACCEL_CLICK_THS_A		= 0x3A
+LSM303_REGISTER_ACCEL_TIME_LIMIT_A		= 0x3B
+LSM303_REGISTER_ACCEL_TIME_LATENCY_A	= 0x3C
+LSM303_REGISTER_ACCEL_TIME_WINDOW_A		= 0x3D
 
-## for chinese board, but does not work right and mag
-#LSM303_ADDRESS_ACCEL = 0x1d   # 0011001x
+LSM303_ADDRESS_MAG							= 0x1E # 0011110x
+LSM303_REGISTER_MAG_CRA_REG_M				= 0x00
+LSM303_REGISTER_MAG_CRB_REG_M				= 0x01
+LSM303_REGISTER_MAG_MR_REG_M				= 0x02
+LSM303_REGISTER_MAG_OUT_X_H_M				= 0x03
+LSM303_REGISTER_MAG_OUT_X_L_M				= 0x04
+LSM303_REGISTER_MAG_OUT_Z_H_M				= 0x05
+LSM303_REGISTER_MAG_OUT_Z_L_M				= 0x06
+LSM303_REGISTER_MAG_OUT_Y_H_M				= 0x07
+LSM303_REGISTER_MAG_OUT_Y_L_M				= 0x08
+LSM303_REGISTER_MAG_SR_REG_Mg				= 0x09
+LSM303_REGISTER_MAG_IRA_REG_M				= 0x0A
+LSM303_REGISTER_MAG_IRB_REG_M				= 0x0B
+LSM303_REGISTER_MAG_IRC_REG_M				= 0x0C
+LSM303_REGISTER_MAG_TEMP_OUT_H_M			= 0x31
+LSM303_REGISTER_MAG_TEMP_OUT_L_M			= 0x32
 
-LSM303_ADDRESS_ACCEL = 0x19	  # 0011001x
+MAG_GAIN ={}
+MAG_GAIN["130"]								= 0x20 # +/- 1.3
+MAG_GAIN["190"]								= 0x40 # +/- 1.9
+MAG_GAIN["250"]								= 0x60 # +/- 2.5
+MAG_GAIN["400"]								= 0x80 # +/- 4.0
+MAG_GAIN["470"]								= 0xA0 # +/- 4.7
+MAG_GAIN["560"]								= 0xC0 # +/- 5.6
+MAG_GAIN["810"]								= 0xE0 # +/- 8.1
 
-LSM303_ADDRESS_MAG	 = 0x1e	  # 0011110x
+MAG_RATE = {}
+MAG_RATE["0.7"]								= 0x00 # 0.75 H
+MAG_RATE["1.5"]								= 0x01 # 1.5 Hz
+MAG_RATE["3.0"]								= 0x62 # 3.0 Hz
+MAG_RATE["7.5"]								= 0x03 # 7.5 Hz
+MAG_RATE["15"]								= 0x04 # 15 Hz
+MAG_RATE["30"]								= 0x05 # 30 Hz
+MAG_RATE["75"]								= 0x06 # 75 Hz
+MAG_RATE["210"]								= 0x07 # 210 Hz
 
-										 # Default	  Type
-LSM303_REGISTER_ACCEL_CTRL_REG1_A = 0x20 # 00000111	  rw
-LSM303_REGISTER_ACCEL_CTRL_REG4_A = 0x23 # 00000000	  rw
-LSM303_REGISTER_ACCEL_OUT_X_L_A	  = 0x28
-LSM303_REGISTER_MAG_CRA_REG_M	  = 0x00
-LSM303_REGISTER_MAG_CRB_REG_M	  = 0x01
-LSM303_REGISTER_MAG_MR_REG_M	  = 0x02
-LSM303_REGISTER_MAG_OUT_X_H_M	  = 0x03
+ACCEL_MS2_PER_LSB	= 0.00980665 # meters/second^2 per least significant bit
 
-# Gain settings for set_mag_gain()
-g_1_3 = 0b00100000 #0x20 # +/- 1.3 Gauss = 130uT
-g_1_9 = 0b01000000 #0x40 # +/- 1.9
-g_2_5 = 0b01100000 #0x60 # +/- 2.5
-g_4_0 = 0b10000000 #0x80 # +/- 4.0
-g_4_7 = 0b10100000 #0xA0 # +/- 4.7
-g_5_6 = 0b11000000 #0xC0 # +/- 5.6
-g_8_1 = 0b11100000 #0xE0 # +/- 8.1
-LSM303_magGain = [g_1_3,g_1_9,g_2_5,g_4_0,g_4_7,g_5_6,g_8_1]
+GAUSS_TO_MICROTESLA	= 100.0
 
+class THESENSORCLASS(object):
+#	'LSM303 3-axis accelerometer/magnetometer'
 
-class THESENSORCLASS():
-	"""LSM303 accelerometer & magnetometer."""
+	def __init__(self, accelerationGain="1", magGain="4.7", magFregRate ="3.0" ):
+		# 'Initialize the sensor'
+		self._bus	= smbus.SMBus(1)
 
-	def __init__(self, accelerationGain=1,magGain=0) :
-		try:
-			accel_address=LSM303_ADDRESS_ACCEL
-			self.i2cAddA = accel_address
-			mag_address=LSM303_ADDRESS_MAG
-			i2c=None
-			"""Initialize the LSM303 accelerometer & magnetometer.	The hires
-			boolean indicates if high resolution (12-bit) mode vs. low resolution
-			(10-bit, faster and lower power) mode should be used.
-			"""
-			# Setup I2C interface for accelerometer and magnetometer.
-			import Adafruit_GPIO.I2C as I2C
-			i2c = I2C
-			self._accel = i2c.get_i2c_device(accel_address)
-			self._mag	= i2c.get_i2c_device(mag_address)
+		# Enable the accelerometer - all 3 channels
+		self._bus.write_i2c_block_data(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG1_A, [0b01000111])
 
-			# Enable the accelerometer
-			self.set_acc_gain(accelerationGain=int(accelerationGain))
-
-			# Enable the magnetometer
-			self.set_mag_gain(magGain=int(magGain))
-
-		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-
-
-	def set_acc_gain(self,accelerationGain=1):
 		# Select hi-res (12-bit) or low-res (10-bit) output mode.
 		# Low-res mode uses less power and sustains a higher update rate,
 		# output is padded to compatible 12-bit units.
-		self._accel.write8(LSM303_REGISTER_ACCEL_CTRL_REG1_A, 0x27) #= 0b00100111  = normal power enable xyz
-		if accelerationGain	 == 0:
-			self._accel.write8(LSM303_REGISTER_ACCEL_CTRL_REG4_A, 0b00000000)
-			self.accfactor = [2./2048, 2./2048,2./2048]
-		elif accelerationGain ==1:
-			self._accel.write8(LSM303_REGISTER_ACCEL_CTRL_REG4_A, 0b00001000)
-			self.accfactor = [4./2048, 4./2048,4./2048] # g/LSB
-		elif accelerationGain ==2:
-			self._accel.write8(LSM303_REGISTER_ACCEL_CTRL_REG4_A, 0b00011000)
-			self.accfactor = [8./2048, 8./2048,8./2048]
+		if accelerationGain=="1":	self._bus.write_i2c_block_data(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG4_A, [0b00001000])
+		else:						self._bus.write_i2c_block_data(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_CTRL_REG4_A, [0b00000000])
 
-	def set_mag_gain(self,magGain=0):
-		# Set the magnetometer gain.  Gain should be one of the following constants: 
-		#self._mag.write8(LSM303_REGISTER_MAG_CRA_REG_M, 0b00000000)  # 15Hz data out rate 
-		self._mag.write8(0x00, 0b00010000)	# 15Hz data out rate 
-		#print " mag gain", bin(LSM303_magGain[magGain])
-		self._mag.write8(0x01, LSM303_magGain[magGain] )
-		if magGain ==  0 :	self.magfactor = [100./1055, 100./1055,100./950] # uT/ LSB
-		if magGain ==  1 :	self.magfactor = [100./795,	 100./795, 100./710]
-		if magGain ==  2 :	self.magfactor = [100./635,	 100./635, 100./570]
-		if magGain ==  3 :	self.magfactor = [100./430,	 100./430, 100./385]
-		if magGain ==  4 :	self.magfactor = [100./375,	 100./375, 100./335]
-		if magGain ==  5 :	self.magfactor = [100./320,	 100./320, 100./285]
-		if magGain ==  6 :	self.magfactor = [100./230,	 100./230, 100./205]
+		# Enable the magnetometer
+		self._bus.write_i2c_block_data(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_MR_REG_M, [0b00000000])
 
+		if magGain in MAG_GAIN:
+			self.set_mag_gain(MAG_GAIN[magGain])
 
-	def readData(self):
-		try:
-			"""Read the accelerometer and magnetometer value.  A tuple of tuples will
-			be returned with:
-			  ((accel X, accel Y, accel Z), (mag X, mag Y, mag Z))
-			"""
-			# Read the accelerometer as signed 16-bit little endian values.
-			accel_raw = self._accel.readList(LSM303_REGISTER_ACCEL_OUT_X_L_A | 0x80, 6)
-			accel = struct.unpack('<hhh', accel_raw)
-			# Convert to 12-bit values by shifting unused bits.
-			accel = [accel[0] >> 4, accel[1] >> 4, accel[2] >> 4]
-			for ii in range(3):
-				accel[ii] *=  self.accfactor[ii]   
+		if magFregRate in MAG_RATE:
+			self.set_mag_rate(MAG_RATE[magFregRate])
 
-			# Read the magnetometer.
-			mag_raw = self._mag.readList(LSM303_REGISTER_MAG_OUT_X_H_M, 6)
-			magx = struct.unpack('>hhh', mag_raw)
-			mag =[0,0,0]
-			for ii in range(3):
-				mag[ii] = magx[ii] * self.magfactor[ii] 
-			print magx, accel
-			  
-			return (accel, mag)
+	def read_accel(self):
+		#'Read raw acceleration in meters/second squared'
+		# Read as signed 12-bit little endian values
+		accel_bytes	= self._bus.read_i2c_block_data(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_OUT_X_L_A | 0x80, 6)
+		accel_raw	= struct.unpack('<hhh', bytearray(accel_bytes))
 
-		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		return (
+			(accel_raw[0] >> 4) * ACCEL_MS2_PER_LSB,
+			(accel_raw[1] >> 4) * ACCEL_MS2_PER_LSB,
+			(accel_raw[2] >> 4) * ACCEL_MS2_PER_LSB,
+		)
+
+	def set_mag_gain(self, gain):
+		#'Set magnetometer gain'
+		self._gain	= gain
+		if gain	== MAG_GAIN["130"]	:
+			self._lsb_per_gauss_xy	= 1100
+			self._lsb_per_gauss_z	= 980
+		elif gain	== MAG_GAIN["190"]	:
+			self._lsb_per_gauss_xy	= 855
+			self._lsb_per_gauss_z	= 760
+		elif gain	== MAG_GAIN["250"]	:
+			self._lsb_per_gauss_xy	= 670
+			self._lsb_per_gauss_z	= 600
+		elif gain	== MAG_GAIN["400"]	:
+			self._lsb_per_gauss_xy	= 450
+			self._lsb_per_gauss_z	= 400
+		elif gain	== MAG_GAIN["470"]	:
+			self._lsb_per_gauss_xy	= 400
+			self._lsb_per_gauss_z	= 355
+		elif gain	== MAG_GAIN["560"]	:
+			self._lsb_per_gauss_xy	= 330
+			self._lsb_per_gauss_z	= 295
+		elif gain	== MAG_GAIN["810"]	:
+			self._lsb_per_gauss_xy	= 230
+			self._lsb_per_gauss_z	= 205
+
+		self._bus.write_i2c_block_data(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_CRB_REG_M, [self._gain])
+
+	def set_mag_rate(self, rate):
+		#'Set magnetometer rate'
+		self._bus.write_i2c_block_data(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_CRA_REG_M, [(rate & 0x07) << 2])
+
+	def read_mag(self):
+		#'Read raw magnetic field in microtesla'
+		# Read as signed 16-bit big endian values
+		mag_bytes	= self._bus.read_i2c_block_data(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M, 6)
+		mag_raw	= struct.unpack('>hhh', bytearray(mag_bytes))
+
+		return (
+			mag_raw[0] / self._lsb_per_gauss_xy * GAUSS_TO_MICROTESLA,
+			mag_raw[2] / self._lsb_per_gauss_xy * GAUSS_TO_MICROTESLA,
+			mag_raw[1] / self._lsb_per_gauss_z * GAUSS_TO_MICROTESLA,
+		)
 		
 
 
 		
-def startSENSOR(devId, i2cAddress):
+def startSENSOR(devId, i2cAddress,magGain,accelerationGain,magFregRate):
 	global theSENSORdict
 	try:
-		if G.accelerationGain =="": G.accelerationGain = 1
-		if G.magGain =="":			G.magGain		   = 0
-		G.accelerationGain = int(G.accelerationGain)
-		G.magGain		   = int(G.magGain)
-		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+"	devId=" +unicode(devId)+"  accelerationGain="+unicode(G.accelerationGain)+"	 magGain="+unicode(G.magGain))
-		theSENSORdict[devId] = THESENSORCLASS(accelerationGain=G.accelerationGain,magGain=G.magGain) 
+		U.logger.log(30,"==== Start "+G.program+"	===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
+		theSENSORdict[devId] = THESENSORCLASS(magGain=magGain, accelerationGain=accelerationGain, magFregRate=magFregRate) 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -181,35 +195,30 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
-		if inp == "": return
-		if lastRead2 == lastRead: return
-		lastRead   = lastRead2
-		if inpRaw == oldRaw: return
-		oldRaw	   = inpRaw
+		inp,inpRaw,lastRead2	= U.doRead(lastTimeStamp=lastRead)
+		if inp	== "": return
+		if lastRead2	== lastRead: return
+		lastRead	= lastRead2
+		if inpRaw	== oldRaw: return
+		oldRaw		= inpRaw
 		externalSensor=False
 		sensorsOld= copy.copy(sensors)
 
-		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
-
+		if "sensors"			in inp:	 sensors	=				 (inp["sensors"])
 
 		U.getGlobalParams(inp)
 		
-		
- 
 		if sensor not in sensors:
-			U.logger.log(30, G.program+"is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(30, G.program+"is not in parameters	= not enabled, stopping "+G.program )
 			exit()
 			
-				
 		for devId in sensors[sensor]:
-			changed=  U.getMAGReadParameters(sensors[sensor][devId],devId) 
-			if	changed.find("accelerationGain") >-1  or changed.find("magGain") >-1: 
+			changed =  U.getMAGReadParameters(sensors[sensor][devId],devId) 
+			if changed.find("magGain") >-1  or changed.find("accelerationGain") >-1 or changed.find("magFregRate") >-1: 
 				U.restartMyself(reason="new gain seetungs require restart ",doPrint=False)
 
-				
 			if devId not in theSENSORdict:
-				startSENSOR(devId, G.i2cAddress)
+				startSENSOR(devId, G.i2cAddress, sensors[sensor][devId]["magGain"], sensors[sensor][devId]["accelerationGain"], sensors[sensor][devId]["magFregRate"])
 				
 		deldevID={}		   
 		for devId in theSENSORdict:
@@ -217,12 +226,12 @@ def readParams():
 				deldevID[devId]=1
 		for dd in  deldevID:
 			del theSENSORdict[dd]
-		if len(theSENSORdict) ==0: 
+		if len(theSENSORdict)	==0: 
 			####exit()
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -230,28 +239,29 @@ def readParams():
 def getValues(devId):
 	global sensor, sensors,	 theSENSORdict
 	try:
-		data = {}
-		ACC,MAG=  theSENSORdict[devId].readData()
-		MAG = U.applyOffsetNorm(MAG,sensors[sensor][devId],["magOffsetX","magOffsetY","magOffsetZ",],"magDivider") 
+		data	= {}
+		MAG=  theSENSORdict[devId].read_mag()
+		ACC	= theSENSORdict[devId].read_accel()
+		MAG	= U.applyOffsetNorm(MAG,sensors[sensor][devId],["magOffsetX","magOffsetY","magOffsetZ",],"magDivider") 
 
 		#print ACC, MAG
-		EULER = U.getEULER(MAG)
-
+		EULER	= U.getEULER(MAG)
 			
-		data["ACC"]	  = fillWithItems(ACC,["x","y","z"],3)
-		data["MAG"]	  = fillWithItems(MAG,["x","y","z"],2)
-		data["EULER"] = fillWithItems(EULER,["heading","roll","pitch"],2)
-		for xx in data:
-			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
+		data["ACC"]		= fillWithItems(ACC,["x","y","z"],3)
+		data["MAG"]		= fillWithItems(MAG,["x","y","z"],2)
+		data["EULER"]	= fillWithItems(EULER,["heading","roll","pitch"],2)
+		#for xx in data:
+		#	U.logger.log(20, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return {"MAG":"bad"}
 
-def fillWithItems(theList,theItems,digits):
+#################################
+def fillWithItems(theList, theItems, digits):
 	out={}
 	for ii in range(len(theItems)):
-		out[theItems[ii]] = round(theList[ii],digits)
+		out[theItems[ii]]	= round(theList[ii],digits)
 	return out
 
 
@@ -285,7 +295,7 @@ readParams()
 
 time.sleep(1)
 
-lastRead = time.time()
+lastRead	= time.time()
 
 U.echoLastAlive(G.program)
 
@@ -302,38 +312,37 @@ thresholdDefault	= 0.1
 sumTest				={"dim":"MAG","limits":[0,250.]}
 singleTest			={"dim":"MAG","coord":"heading","limits":[-9999.,400.]}
 
-startTime = time.time()
+startTime	= time.time()
 while True:
 	try:
-		tt = time.time()
+		tt	= time.time()
 		if sensor in sensors:
-			skip =False
+			skip	=False
 			
 		if sensor in sensors:
 			for devId in sensors[sensor]:
-				if devId not in lastValue: lastValue[devId] = copy.copy(lastValueDefault)
-				if devId not in G.threshold: G.threshold[devId] = thresholdDefault
-				values = getValues(devId)
-				lastValue =U.checkMGACCGYRdata(
-					values,lastValue,testDims,testCoords,testForBadSensor,devId,sensor,quick)
+				if devId not in lastValue: lastValue[devId]	= copy.copy(lastValueDefault)
+				if devId not in G.threshold: G.threshold[devId]	= thresholdDefault
+				values	= getValues(devId)
+				lastValue	= U.checkMGACCGYRdata(values,lastValue,testDims,testCoords,testForBadSensor,devId,sensor,quick)
 					#sumTest=sumTest,singleTest=singleTest)
 
 		loopCount +=1
 
-		quick = U.checkNowFile(G.program)				 
+		quick	= U.checkNowFile(G.program)				 
 		U.echoLastAlive(G.program)
 
 		tt= time.time()
 		if tt - lastRead > 5.:	
 			readParams()
-			lastRead = tt
+			lastRead	= tt
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
-try: 	G.sendThread["run"] = False; time.sleep(1)
+try: 	G.sendThread["run"]	= False; time.sleep(1)
 except: pass
 ys.exit(0)
 

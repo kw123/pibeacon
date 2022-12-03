@@ -16,7 +16,7 @@ import fcntl # used to access I2C parameters like addresses
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "setTEA5767"
 
 
@@ -64,7 +64,7 @@ def readParams():
             U.logger.log(30, u"stopping FM radio, no device defined in parameters file")
             exit()
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
     U.logger.log(30,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
     return
          
@@ -96,7 +96,7 @@ def readNew():
             fastMinSignal   = int(inpNew["minSignal"])
         if u"restart"                in inpNew:  
             restart   = (inpNew["restart"] =="1")
-        if len(unicode(inp))> 200 and (updateF or updateM or updateO) and fastScan !=1:
+        if len("{}".format(inp))> 200 and (updateF or updateM or updateO) and fastScan !=1:
             device = "setTEA5767"
             if device in inp["output"]:
                 for devId in inp["output"][device]:
@@ -117,7 +117,7 @@ def readNew():
             subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
     
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
     U.logger.log(30,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
    
 class tea5767:
@@ -162,7 +162,6 @@ class tea5767:
         self.bus  = smbus.SMBus(1)
         self.add  = i2cAddress# I2C address circuit 
         U.logger.log(10, u"FM Radio Module TEA5767 init")
-        print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " FM Radio Module TEA5767 init"
 
         # open two file streams, one for reading and one for writing
         # the specific I2C channel is selected with bus
@@ -260,8 +259,7 @@ class tea5767:
                 self.bus.write_i2c_block_data(self.add, freqH, data) # Setting a new frequency to the circuit 
                 break
             except Exception , e:
-                print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" write error" , e
-
+               pass
         if scan ==1 :  
             time.sleep(0.3)
             ret = self.file_read.read(5)
@@ -335,7 +333,7 @@ U.setLogging()
 
 myPID          = str(os.getpid())
 readParams()
-U.logger.log(10, G.program+"  command :" + unicode(sys.argv))
+U.logger.log(10, G.program+"  command :{}".format(sys.argv))
 
 
 command =""
@@ -452,7 +450,6 @@ while (True):
             oldHLSI        = HLSI
             if len(okFrequencies) > 0:
                 #for ii in range(len(okFrequencies)):
-                #    print ii, okFrequencies[ii]
                 data={}
                 data["setTEA5767"]={}
                 data["setTEA5767"][devIdFound] = {"channels":okFrequencies}
@@ -470,7 +467,7 @@ while (True):
             U.echoLastAlive(G.program)
 
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
     
     
 

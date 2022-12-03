@@ -11,7 +11,7 @@ import pexpect
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "beepBeacon"
 
 
@@ -117,14 +117,14 @@ def doScan():
 
 
 				except Exception as e:
-					U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+					U.logger.log(30,"", exc_info=True)
 					time.sleep(1)
 				try:	expCommands.sendline("quit\r" )
 				except: pass
 
 		expCommands.close()		
 	except Exception as e:
-			U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	if restartBLE:
 		subprocess.call("rm "+G.homeDir+"temp/stopBLE", shell=True)

@@ -26,7 +26,7 @@ GPIO.setmode(GPIO.BCM)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "apds9960"
 
 
@@ -433,7 +433,7 @@ class APDS9960():
 				if( not self.WriteDataByte( self.APDS9960_GCONF4,out) ): return False
 				return True
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return False
 
 		""" 
@@ -524,7 +524,7 @@ class APDS9960():
 					time.sleep(self.FIFO_PAUSE_TIME)
 					return motion, nearFar,UPdown,LEFTright
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 			return motion, nearFar,UPdown,LEFTright
 			
 
@@ -738,8 +738,8 @@ class APDS9960():
 
 				U.logger.log(10,	"motion:"+ motion +";  nearFAR:"+nearFAR)  
 			except	Exception as e:
-					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-					U.logger.log(30, "leftD:"+ unicode(leftD))
+					U.logger.log(30,"", exc_info=True)
+					U.logger.log(30, "leftD:{}".format(leftD))
 			return motion ,nearFAR, udDel, lrDel	   
 
 		def doPRINT(self,label,theList,nrec):
@@ -1546,7 +1546,7 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def setGestureIntEnable(self, enable):
-			print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" enable /disable gesture interrupt :", enable
+			#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" enable /disable gesture interrupt :", enable
 			#/* Read value from GCONF4 register */
 			retCode, val = self.ReadDataByte(self.APDS9960_GCONF4)
 			if( not retCode ): return False
@@ -1642,7 +1642,7 @@ class APDS9960():
 				#print	u"WriteByte"
 				self.BUS.write_quick(self.address) 
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return False
 			return True
 		
@@ -1660,7 +1660,7 @@ class APDS9960():
 				self.BUS.write_byte_data(self.address,reg, val)
 				return True
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return False	   
 		
 
@@ -1680,7 +1680,7 @@ class APDS9960():
 					self.BUS.write_block_data(self.address,val[i])
 				return True
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return False	   
 
 		""""
@@ -1694,7 +1694,7 @@ class APDS9960():
 			try:
 				val = self.BUS.read_byte_data(self.address,reg)
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return False, 0
 			#print	u"ReadDataByte return",hex(reg), hex(val)
 			return True, val
@@ -1719,7 +1719,7 @@ class APDS9960():
 				#print "ReadDataBlock", i+1, val 
 				return lenOUT, val
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return -1, []
 
 
@@ -1734,7 +1734,7 @@ class APDS9960():
 				#print "ReadDataBlock",ret
 				return lenOUT, ret
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return -1, []
 
 
@@ -1762,7 +1762,7 @@ class APDS9960():
 				#print "ReadDataBlock", lenOut, val2
 				return lenOut, val2
 			except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				return -1, []
 
 
@@ -1855,7 +1855,7 @@ def getinput(devid):
 		
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	sensorDev.clearGestureFIFO()
 	return data
 
@@ -1900,8 +1900,7 @@ def readParams():
  
 		if sensor not in sensors:
 			U.logger.log(30, sensor+" is not in parameters = not enabled, stopping "+G.program+".py" )
-			U.logger.log(30, unicode(sensors) )
-			print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ sensor+" is not in parameters = not enabled, stopping "+G.program+".py"
+			U.logger.log(30, "{}".format(sensors) )
 			exit()
 
 
@@ -1948,17 +1947,14 @@ def readParams():
 				sensorDev= APDS9960(i2cAdd=i2cAddress)
 				sensorDev.init()
 				U.logger.log(30, "starting sensorDev")
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " starting sensorDev", sensorDev
-				U.logger.log(30,	 " starting sensorDev", unicode(sensorDev))
+				U.logger.log(30,	 " starting sensorDev", "{}".format(sensorDev))
 
 				if refreshColor >=0:
 
 					if	sensorDev.enableLightSensor(False) :
 						U.logger.log(30,	 "enableLightSensor ok")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " enableLightSensor ok"
 					else:
 						U.logger.log(30, "enableLightSensor bad exit ")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " enableLightSensor bad exit "
 						exit()
 					#Wait for initialization and calibration to finish
 					time.sleep(1)
@@ -1966,27 +1962,21 @@ def readParams():
 				if refreshProximity >=0:
 					if sensorDev.setProximityGain(1):
 						U.logger.log(30, "setProximityGain ok")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " setProximityGain ok"
 					else:
 						U.logger.log(30, "setProximityGain bad exit")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " setProximityGain bad exit"
 						exit()
 
 					if sensorDev.enableProximitySensor(False):
 						U.logger.log(30, "enableProximitySensor ok")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " enableProximitySensor ok"
 					else:
 						U.logger.log(30, "enableProximitySensor bad exit")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " enableProximitySensor bad exit"
 						exit()
 
 				if enableGesture:
 					if sensorDev.enableGestureSensor(True):
 						U.logger.log(30, "enableGestureSensor ok")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " enableGestureSensor ok"
 					else:
 						U.logger.log(30, "enableGestureSensor bad exit")
-						print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+ " enableGestureSensor bad exit"
 						exit()
 
 				
@@ -2000,10 +1990,9 @@ def readParams():
 								GPIO.add_event_detect(interruptGPIO,GPIO.FALLING)
 								GPIO.add_event_callback(interruptGPIO,gestureInterrupt)
 								U.logger.log(30, "GPIO interrupt pin setup")
-								print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+	" GPIO interrupt pin setup"
 								interruptGPIOAlreadySetup = interruptGPIO
 					except Exception as e:
-						U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 					
 
 		if sensorUp == -1:
@@ -2014,7 +2003,7 @@ def readParams():
 
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
@@ -2095,7 +2084,6 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 readParams()
 
 if U.getIPNumber() > 0:
-	print " no ip number "
 	time.sleep(10)
 	exit()
 
@@ -2150,7 +2138,7 @@ while True:
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

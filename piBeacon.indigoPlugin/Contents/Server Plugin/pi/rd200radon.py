@@ -163,7 +163,6 @@ class RD200M:
 		integer = data[2]
 		decimal = data[3]
 		radon = float(str(integer) + "." + str(decimal)) * 37  # * 37 converts pCi/L to bq/m3
-		print ("Radon is {} bq/m3, {}".format(radon, self.status[status]))
 		self.logger.info("Radon is {} bq/m3, {}".format(radon, self.status[status]))
 		return True
 
@@ -194,7 +193,7 @@ class RD200M:
 					else:
 						self.logger.debug("Received '{}'".format(binascii.hexlify(response).decode()))
 		except	Exception, e :
-				self.logger.debug("Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				self.logger.debug("", exc_info=True)
 
 
 

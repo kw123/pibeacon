@@ -15,7 +15,6 @@ import subprocess
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
 
 U.setLogging()
 
@@ -70,4 +69,4 @@ try:
 except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
-		if verbose: U.logger.log(20, u"Line {} has error={}".format( sys.exc_info()[-1].tb_lineno, e))
+		if verbose: U.logger.log(30,"", exc_info=True)

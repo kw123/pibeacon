@@ -11,7 +11,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "bno055"
 
 
@@ -228,7 +228,7 @@ class BNO055():
 				f = open(G.homeDir +G.program+".calib","r")
 				calib = json.loads(f.read())
 				f.close()
-				U.logger.log(10,"INIT: read calibration from file: "+ unicode(calib))
+				U.logger.log(10,"INIT: read calibration from file: {}".format(calib))
 				return calib
 		except:
 			try: f.close()
@@ -437,7 +437,7 @@ class BNO055():
 			# Return the results as a tuple of all 3 values.
 			return (status, self_test, error)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 
 	def get_calibration_status(self):
 		"""Read the calibration status of the sensors and return a 4 tuple with calibration status as follows:
@@ -582,7 +582,7 @@ class BNO055():
 			heading, roll, pitch = self._read_vector(BNO055_EULER_H_LSB_ADDR)
 			return (heading/16.0, roll/16.0, pitch/16.0)
 		except	Exception as e:
-			U.logger.log(30, u"read_euler in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 		
 	def read_magnetometer(self):
@@ -593,7 +593,7 @@ class BNO055():
 			x, y, z = self._read_vector(BNO055_MAG_DATA_X_LSB_ADDR)
 			return (x/16.0, y/16.0, z/16.0)
 		except	Exception as e:
-			U.logger.log(30, u"read_magnetometer in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
 	def read_gyroscope(self):
@@ -604,7 +604,7 @@ class BNO055():
 			x, y, z = self._read_vector(BNO055_GYRO_DATA_X_LSB_ADDR)
 			return (x/900.0, y/900.0, z/900.0)
 		except	Exception as e:
-			U.logger.log(30, u"read_gyroscope in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
 	def read_accelerometer(self):
@@ -615,7 +615,7 @@ class BNO055():
 			x, y, z = self._read_vector(BNO055_ACCEL_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
 		except	Exception as e:
-			U.logger.log(30, u"read_accelerometer in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
 	def read_linear_acceleration(self):
@@ -626,7 +626,7 @@ class BNO055():
 			x, y, z = self._read_vector(BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
 		except	Exception as e:
-			U.logger.log(30, u"read_linear_acceleration in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
 	def read_gravity(self):
@@ -637,7 +637,7 @@ class BNO055():
 			x, y, z = self._read_vector(BNO055_GRAVITY_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
 		except	Exception as e:
-			U.logger.log(30, u"read_gravity in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
 	def read_quaternion(self):
@@ -650,7 +650,7 @@ class BNO055():
 			scale = (1.0 / (1<<14))
 			return (x*scale, y*scale, z*scale, w*scale)
 		except	Exception as e:
-			U.logger.log(30, u"read_quaternion in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0,0,0,0
 
 	def read_temp(self):
@@ -658,7 +658,7 @@ class BNO055():
 		try:
 			return self._read_signed_byte(BNO055_TEMP_ADDR)
 		except	Exception as e:
-			U.logger.log(30, u"read_temp in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0
 		
 		
@@ -666,7 +666,7 @@ class BNO055():
 def startBNO(devId, i2cAddress):
 	global BNO055sensor
 	try:
-		U.logger.log(30,"==== Start BNO055 ===== @ i2c= " +unicode(i2cAddress)+"	 devId=" +unicode(devId))
+		U.logger.log(30,"==== Start BNO055 ===== @ i2c= {}".format(i2cAddress)+"	 devId={}".format(devId))
 		if resetPin !=-1:
 			BNO055sensor[devId] = BNO055(i2cAddress=i2cAddress, resetPin=resetPin)
 		else:
@@ -677,7 +677,6 @@ def startBNO(devId, i2cAddress):
 			if not BNO055sensor[devId].begin():
 				raise RuntimeError('BEGIN: Failed to initialize BNO055! Is the sensor connected?')
 
-		# Print system status and self test result.
 		status, self_test, error = BNO055sensor[devId].get_system_status()
 		U.logger.log(10,'BEGIN: System status:	  {0}'.format(status&0b01111111)+ "	   (5 is normal)")
 		U.logger.log(10,'BEGIN: Self test result:	  0x{0:02X}'.format(self_test)+ " (0x0F is normal)")
@@ -698,7 +697,7 @@ def startBNO(devId, i2cAddress):
 				U.restartMyself(reason=" init not working, sensor does not report properly (IDs =0 )", doPrint=False)
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 # read params
 # ===========================================================================
 
@@ -757,7 +756,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -773,7 +772,7 @@ def getValues(devId):
 			status = BNO055sensor[devId]._read_byte(BNO055_SYS_STAT_ADDR)&0b01111111
 			if CALsys < 2  or (CALgyro + CALaccel +CALmag) <4  or status !=0b00000101 :
 				if badSelfTest > 0:
-					U.logger.log(10,"CHECK STATUS: badSelfTest count= " +unicode(badSelfTest)+"  not calibrated, wait and try again: "+ unicode({"SYS":str(CALsys),"GYR":str(CALgyro),"ACC":str(CALaccel),"MAG":str(CALmag)}))
+					U.logger.log(10,"CHECK STATUS: badSelfTest count= {}".format(badSelfTest)+"  not calibrated, wait and try again: {}".format({"SYS":str(CALsys),"GYR":str(CALgyro),"ACC":str(CALaccel),"MAG":str(CALmag)}))
 					status, self_test, error = BNO055sensor[devId].get_system_status()
 					U.logger.log(10,'CHECK STATUS: Self test result : 0x{0:02X}'.format(self_test)+ "(0x0F is normal)")
 					U.logger.log(10,'CHECK STATUS: status result	  : 0x{0:b}'.format(status&0b01111111)+" (101 is normal)")
@@ -783,7 +782,7 @@ def getValues(devId):
 				time.sleep(0.3)
 				continue
 			if badSelfTest > 3:
-					U.logger.log(10,"CHECK STATUS: SelfTest ok  again , badSelfTest was: "+unicode(badSelfTest)+ ";  "+ unicode({"SYS":str(CALsys),"GYR":str(CALgyro),"ACC":str(CALaccel),"MAG":str(CALmag)}))
+					U.logger.log(10,"CHECK STATUS: SelfTest ok  again , badSelfTest was: {}".format(badSelfTest)+ ";  {}".format({"SYS":str(CALsys),"GYR":str(CALgyro),"ACC":str(CALaccel),"MAG":str(CALmag)}))
 			badSelfTest =0
 			break
 			
@@ -832,10 +831,10 @@ def getValues(devId):
 
 		#print data
 		for xx in data:
-			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
+			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -923,7 +922,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 stry: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

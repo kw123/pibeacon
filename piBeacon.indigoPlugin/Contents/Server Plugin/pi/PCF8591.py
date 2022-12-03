@@ -15,7 +15,6 @@ import	sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
 
 G.program = "PCF8591"
 
@@ -55,7 +54,7 @@ def getValues(devId):
 		#U.logger.log(20, u"devID {} v={}".format(devId, v))
 
 	except	Exception as e:
-		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		data= ""
 		U.muxTCA9548Areset()
 	return data
@@ -71,7 +70,7 @@ def startSensor(devId):
 			SENSOR[devId]=smbus.SMBus(1)
 			U.muxTCA9548Areset()
 	except	Exception as e:
-		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		U.muxTCA9548Areset()
 	return 
 		
@@ -156,7 +155,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 ###############################
 #################################
@@ -269,7 +268,7 @@ def execPCF():
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
 		except Exception as e:
-			U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 execPCF()
 try: 	G.sendThread["run"] = False; time.sleep(1)

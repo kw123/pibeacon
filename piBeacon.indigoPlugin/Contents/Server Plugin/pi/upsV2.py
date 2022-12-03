@@ -20,7 +20,6 @@ class UPS2:
 		
 	def getData(self):
 		# first flush and wait for new data , sending every 1 sec
-		print "inWaiting() bf flush:",self.ser.inWaiting()
 		#self.ser.flushInput()		
 		#time.sleep(0.1)
 		##
@@ -35,7 +34,6 @@ class UPS2:
 		good  = ""
 		for ii in range(10):
 			nn = self.ser.inWaiting()
-			print "inWaiting", nn
 			if  nn !=0:
 				time.sleep(0.01)
 				nn = self.ser.inWaiting()
@@ -45,14 +43,11 @@ class UPS2:
 				if len(uart_string) > 30 and uart_string[-2] =="$" and uart_string[0] =="$": break
 				if len(uart_string) > 50 : break
 				if uart_string[0] !="$": continue
-				print "uart_string not complete - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
 				time.sleep(0.2)
 				nn = self.ser.inWaiting()
 				uart_string += self.ser.read(nn)
 				if len(uart_string) > 30 and uart_string[-2] =="$": 
-					print "uart_string not complete after 2. read - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
 					break
-				print "uart_string  after continue to read not complete - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
 				
 				
 			else:
@@ -99,7 +94,6 @@ def shutdownSignalFromUPS(channel):
 	if GPIO.input(shutdownSignalFromUPSPin) !=0:
 		print("detect LOW bat capacity::: system back up")
 		return
-	print "shutting down"
 	#U.doReboot(tt=10, text="shutdown by UPS signal battery capacity", cmd="sudo sync; wait 2; sudo shutdown now")
 	
 
@@ -118,7 +112,6 @@ if __name__ == "__main__":
 	while True:
 		version, vin, batcap, vout = getInfo.getData()
 		
-		print datetime.datetime.now().strftime("%M:%S")
 		print("UPS Version:         {}".format(version) )
 		print("Battery Capacity:    {} %".format(batcap))
 		print("UPS Output Voltage:  {} mV".format(vout))

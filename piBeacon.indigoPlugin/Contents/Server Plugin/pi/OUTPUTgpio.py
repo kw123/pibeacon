@@ -18,7 +18,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "OUTPUTgpio"
 
 
@@ -44,7 +44,6 @@ def readParams():
 		restart = False
 			
 		if "OUTPUTgpio-1-ONoff" not in output:
-			print "OUTPUTgpio-1-ONoff not in output" 
 			exit()
 				
 		if restart:
@@ -142,7 +141,7 @@ while True:
 		loopCount+=1
 				
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

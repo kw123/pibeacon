@@ -14,7 +14,7 @@ import copy
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "mysensors"
 
 
@@ -52,10 +52,10 @@ def startMySensors(parameter):
             # do your init here
 
             ## add any init code here for address # addr
-            U.logger.log(30, u"starting my sensors " + unicode(parameter) )
+            U.logger.log(30, u"starting my sensors {}".format(parameter) )
         except  Exception as e:
-            U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-            U.logger.log(30, u"channel used: " + unicode(parameter) )
+            U.logger.log(20,"", exc_info=True)
+            U.logger.log(30, u"channel used: {}".format(parameter) )
 
 def getMySensors(parameter):
         try:
@@ -65,7 +65,7 @@ def getMySensors(parameter):
             v = [str(x), str(x/2), "0", "1", "2", "3", "4", "5", "6", "7"]  ## <-- this is your data to be send back
             return v
         except  Exception as e:
-            U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+            U.logger.log(20,"", exc_info=True)
         return ""
 
 
@@ -95,7 +95,6 @@ U.setLogging()
 readParams()           # get parameters send from indigo
 
 if U.getIPNumber() > 0:
-    print "mysensor  no ip number  exit "
     time.sleep(10)
     exit()
 
@@ -136,7 +135,7 @@ while True:  # loop for ever
                 U.echoLastAlive(G.program)
 
         except  Exception, e :
-            U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+            U.logger.log(20,"", exc_info=True)
 
         time.sleep(sensorRefreshSecs) # sleep the requested amount
         readParams()  # check if we have new parameetrs

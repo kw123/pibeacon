@@ -12,7 +12,7 @@ import  sys, os, time, json, datetime,subprocess,copy
 isys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "myprogram"
 
 
@@ -48,7 +48,7 @@ def getMyprogram(sensor, data):
             else:
                 data= incrementBadSensor(devId,sensor,data)
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data
 
@@ -66,7 +66,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
     return data 
 
 
@@ -99,7 +99,7 @@ def readParams():
         oldSensor  = sensorList
         sensorList = []
         sensorsOld = copy.copy(sensors)
-        outputOld  = unicode(output)
+        outputOld  = "{}".format(output)
 
 
         U.getGlobalParams(inp)
@@ -126,7 +126,7 @@ def checkIfAliveNeedsToBeSend():
         if time.time() - G.lastAliveSend> 330:  # do we have to send alive signal to plugin?
             U.sendURL(sendAlive=True )
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
     return
 
 
@@ -170,7 +170,6 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
     if U.getIPNumber() > 0:
-        print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" "+G.program+" no ip number working, giving up"
         time.sleep(10)
 
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -230,15 +229,14 @@ while True:
                             #print data[sens][dd]
                             changed= 7
                             break
-#        print "changed", changed,     tt-lastMsg, G.sendToIndigoSecs ,  tt-lastMsg, G.deltaChangedSensor, data
         if data !={} and (      changed >0 or   ( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200  )       ):
             lastMsg = tt
             lastData=copy.copy(data)
             try:
-                #U.logger.log(10, u"sending url: "+unicode(data))
+                #U.logger.log(10, u"sending url: {}".format(data))
                 U.sendURL({"sensors":data})
             except  Exception as e:
-                U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+                U.logger.log(30,"", exc_info=True)
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -263,7 +261,7 @@ while True:
                 lastRead = tt
                 checkIfAliveNeedsToBeSend()
     except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

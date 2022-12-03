@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 ## adopted from adafruit 
 #
-#
+# py prept
 
 import sys, os, time, json, datetime,subprocess,copy
 import smbus
@@ -10,7 +10,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "ina219"
 
 
@@ -135,7 +135,7 @@ class INA219:
 			else:
 				return float(  ((result[0] << 8) | (result[1]) ) >>3) *self.ina219_busMultiplier 
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			return ""
 		
 	def getShuntVoltage_mV(self):
@@ -149,7 +149,7 @@ class INA219:
 			else:
 				return (float((result[0] << 8) | (result[1])) * self.ina219_ShuntVoltageMultiplier)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			return ""
 
 	def getCurrent_mA(self):
@@ -163,7 +163,7 @@ class INA219:
 			else:
 				return float((result[0] << 8) | (result[1])) *self.ina219_currentMultiplier_mA
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			return ""
 
 	def getPower_mW(self):
@@ -177,7 +177,7 @@ class INA219:
 			else:
 				return float((result[0] << 8) | (result[1]) )* self.ina219_powerMutiplier_mW
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			return ""
  # ===========================================================================
 # read params
@@ -213,7 +213,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program, G.program) )
 			exit()
 			
 				
@@ -258,7 +258,7 @@ def readParams():
 
 				
 			if devId not in INAsensor:
-				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress)+";	  shuntResistor= "+ unicode(shuntResistor))
+				U.logger.log(30,"==== Start {} ===== @ i2c= {};	  shuntResistor= {}".format(G.program, i2cAddress, shuntResistor))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				INAsensor[devId] = INA219(i2cAddress=i2cAdd, shuntResistor=shuntResistor)
 				U.muxTCA9548Areset()
@@ -274,7 +274,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -292,14 +292,17 @@ def getValues(devId):
 			Current		 = INAsensor[devId].getCurrent_mA()
 			Power		 = INAsensor[devId].getPower_mW()
 			#print "SV:",ShuntVoltage, "   BV:",BusVoltage, "  C:",Current, "  P:",Power
-			data = {"ShuntVoltage":("%7.1f"%ShuntVoltage).strip(), "BusVoltage":("%7d"%BusVoltage).strip(), "Power":("%7d"%Power).strip(), "Current":("%7.1f"%Current).strip()}
+			data = {"ShuntVoltage":("%7.1f"%ShuntVoltage).strip(), 
+					"BusVoltage":("%7d"%BusVoltage).strip(), 
+					"Power":("%7d"%Power).strip(), 
+					"Current":("%7.1f"%Current).strip()}
 			badSensor = 0
 			U.muxTCA9548Areset()
 			return data
 		except	Exception as e:
 			if badSensor >2 and badSensor < 5: 
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-				U.logger.log(30, u"Current>>" + unicode(Current)+"<<")
+				U.logger.log(30,"", exc_info=True)
+				U.logger.log(30, u"Current>>{}".format(Current)+"<<")
 			badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -416,7 +419,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

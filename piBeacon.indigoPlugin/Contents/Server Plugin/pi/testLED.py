@@ -20,9 +20,7 @@ for pin in pins:
 	PIGPIO.set_PWM_dutycycle(pin, 0)
 
 while True:
-	print "enter r,b,g" 
 	rgb = input()
 	if len(rgb) != 3: continue
-	print rgb
 	for p in range(3):
 		PIGPIO.set_PWM_dutycycle( pins[p], int(rgb[p]) )

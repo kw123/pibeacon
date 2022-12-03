@@ -14,7 +14,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "mpu9255"
 
 MPU9255_DEFAULT_ADDRESS			=0x68
@@ -413,11 +413,11 @@ class MPU9255:
 def startSENSOR(devId, i2cAddress):
 	global theSENSORdict
 	try:
-		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= " +unicode(i2cAddress)+"  devId=" +unicode(devId))
+		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
 		theSENSORdict[devId] = MPU9255(i2cAddress=i2cAddress)
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -474,7 +474,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -491,10 +491,10 @@ def getValues(devId):
 		data["EULER"] = fillWithItems(EULER,["heading","roll","pitch"],2)
 		data["temp"] = temp
 		for xx in data:
-			U.logger.log(10, (xx).ljust(11)+" "+unicode(data[xx]))
+			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -578,7 +578,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

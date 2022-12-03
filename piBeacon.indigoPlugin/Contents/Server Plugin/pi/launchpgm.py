@@ -14,7 +14,7 @@ import copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "launchpgm"
 
 
@@ -67,10 +67,10 @@ def stopSensors(launchCmd):
 			# do your init here
 			U.killOldPgm(myPID, launchCmd)
 			## add any init code here for address # addr
-			U.logger.log(30, u"stopping	" + unicode(launchCmd) )
+			U.logger.log(30, u"stopping	{}".format(launchCmd) )
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"launchCmd used: " + unicode(launchCmd) )
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
@@ -80,10 +80,10 @@ def startSensors(launchCmd):
 			# do your init here
 			subprocess.call(launchCmd+" &", shell=True)
 			## add any init code here for address # addr
-			U.logger.log(30, u"starting	" + unicode(launchCmd) )
+			U.logger.log(30, u"starting	{}".format(launchCmd) )
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"launchCmd used: " + unicode(launchCmd) )
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
@@ -96,8 +96,8 @@ def checkIfRunning(check):
 			else: 
 				return "not checked"
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"checking used: " + unicode(check) )
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"checking used: {}".format(check) )
 
 
 # ===========================================================================
@@ -127,7 +127,6 @@ U.setLogging()
 readParams()		   # get parameters send from indigo
 
 if U.getIPNumber() > 0:
-	print G.program+ " no ip number	 exit "
 	time.sleep(10)
 	exit()
 
@@ -168,7 +167,7 @@ while True:	 # loop for ever
 				U.echoLastAlive(G.program)
 
 		except	Exception, e :
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 		time.sleep(sensorRefreshSecs) # sleep the requested amount
 		readParams()  # check if we have new parameetrs

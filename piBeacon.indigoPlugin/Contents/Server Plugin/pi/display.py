@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+## ok for py3 but not for LED pixel board 
+
 import spidev
 import sys
-import time
+import os, subprocess, copy
+import time, datetime
 import RPi.GPIO as gpio
 from PIL import Image
 from PIL import ImageDraw
@@ -14,51 +18,38 @@ import numpy as np
 #import pygame
 
 
-import	os, subprocess, copy
-import	time,datetime
 import	json
 import	smbus
 
 import threading
 import signal
-import os
 import math
 
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "display"
 U.setLogging()
 
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import time
-import sys
-import os
-import smbus
-sys.path.append(os.getcwd())
-import	piBeaconUtils	as U
-import	piBeaconGlobals as G
-import traceback
-
+#
 _defaultDateStampFormat			   = u"%Y-%m-%d %H:%M:%S"
 
 
 class setupKillMyself:
-  def __init__(self):
-    signal.signal(signal.SIGINT, self.doExit)
-    signal.signal(signal.SIGTERM, self.doExit)
+	def __init__(self):
+		signal.signal(signal.SIGINT, self.doExit)
+		signal.signal(signal.SIGTERM, self.doExit)
 
-  def doExit(self, signum, frame):
-	global klillMyselfTimeout
-	if klillMyselfTimeout > 0 and time.time() - klillMyselfTimeout > 20: # need to ignore for some seconds, receiving signals at startup 
-		try: outputDev.delPy()
-		except: pass
-		U.logger.log(30, u"exiting display, received kill signal ")
-		os.kill(os.getpid(), signal.SIGTERM)
-		sys.exit()
+	def doExit(self, signum, frame):
+		global klillMyselfTimeout
+		if klillMyselfTimeout > 0 and time.time() - klillMyselfTimeout > 20: # need to ignore for some seconds, receiving signals at startup 
+			try: outputDev.delPy()
+			except: pass
+			U.logger.log(30, u"exiting display, received kill signal ")
+			os.kill(os.getpid(), signal.SIGTERM)
+			sys.exit()
 
 
 class LCD1602():
@@ -79,7 +70,7 @@ class LCD1602():
 			self.clear()			# Clear Screen
 			self.openlight()		# Enable the backlight
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 		return 
 			
 
@@ -109,7 +100,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 	def send_data(self,data):
 		try:
@@ -129,7 +120,7 @@ class LCD1602():
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 
 	def clear(self):
@@ -191,13 +182,13 @@ class bigScreen :
 					try:
 						self.pygame.display.init()
 					except	Exception as e:
-						U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 						U.logger.log(30, u"Driver: {0} failed.".format(driver))
 						continue
 					found = driver
 					break
 	
-				if found =="":
+				if found == "":
 					U.logger.log(30, u"bigscreen no driver out of :{};  found -- exiting".format(found) )
 					raise Exception('No suitable video driver found!')
 					return 
@@ -246,7 +237,7 @@ class bigScreen :
 			# Render the screen
 			self.pygame.display.update()
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 
 	def __del__(self):
@@ -383,7 +374,7 @@ class SSD1351:
 			#self.Clear() # Blank the screen.
 			return
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				U.logger.log(30, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
@@ -599,7 +590,7 @@ class st7735:
 			#self.Clear() # Blank the screen.
 			return
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				U.logger.log(30, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
@@ -1007,9 +998,9 @@ def analogClockInit(inParms={}):
 				analogClockParams[xx]["fill"]  = getFill("screen", analogClockParams[xx]["fill"], minIntValue=minIntValue)
 			#print " into analogClockParams init2", analogClockParams
 				
-			analogClockParams["mode"]	=  unicode(analogClockParams["mode"]).split(",")
+			analogClockParams["mode"]	=  str(analogClockParams["mode"]).split(",")
 			if len(analogClockParams["mode"]) !=3: 
-				analogClockParams["mode"]	=  unicode(defparams["mode"]).split(",")
+				analogClockParams["mode"]	=  str(defparams["mode"]).split(",")
 			
 			if defparams["radius"] != analogClockParams["radius"]:
 				scale = (analogClockParams["radius"][0] / defparams["radius"][0] + analogClockParams["radius"][1] / defparams["radius"][1]  )*0.5
@@ -1026,7 +1017,7 @@ def analogClockInit(inParms={}):
 			## show first pic
 			analogClockShow()
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 		
 		return 
 		
@@ -1087,7 +1078,7 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 			 
 
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 		return 
 
 
@@ -1127,9 +1118,9 @@ def analogClockdrNumbers(angle,number,hand):
 			fontF =	 mkfont(analogClockParams)
 			#print "number", angle,pos,number
 			
-			draw.text(pos, unicode(number), font=fontx[fontF], fill=(int(255.*multIntensity),int(255.*multIntensity),int(255.*multIntensity)))
+			draw.text(pos, "{}".format(number), font=fontx[fontF], fill=(int(255.*multIntensity),int(255.*multIntensity),int(255.*multIntensity)))
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
@@ -1197,7 +1188,7 @@ def analogClockdrTheLine(angle,hand,ss=0):
 				dy1=  (math.cos(da-angle) * y1	- math.sin(da-angle) *x1 )	 # y start
 				dx2=  (math.cos(da-angle) * x2	+ math.sin(da-angle) *y2 )	 # x start
 				dy2=  (math.cos(da-angle) * y2	- math.sin(da-angle) *x2 )	 # y start
-				#if hand =="ss": print "%3d %7.3f %7.3f %7.3f %7.3f %7.3f"%(ss, angle, dx1,dy1,dx2,dy2)
+
 				Px[0]+=dx1	*R[0]/R[1]
 				Py[0]+=dy1	*R[1]/R[0]
 				Px[1]+=dx2	*R[0]/R[1]
@@ -1205,14 +1196,14 @@ def analogClockdrTheLine(angle,hand,ss=0):
 				
 				Px[2]+=				 math.cos(da-angle) * R[0] * End						 # x end
 				Py[2]+=		  Flip * math.sin(da-angle) * R[1] * End						 # y end   .. of line
-				#print Px, Py, fill
+
 				draw.polygon( [(Px[0], Py[0]),(Px[1], Py[1]), (Px[2], Py[2])], fill = fill )
 
 			return
 
 
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 
 
@@ -1221,7 +1212,7 @@ def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 		try:
 			draw.ellipse( (x0 - widthX , y0 - widthY , x0 + widthX , y0 + widthY ), fill=fill, outline=outline)
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 
 ################### ###################	  analogClock  ############################################### END
@@ -1249,7 +1240,7 @@ def digitalClockInit(inParms={}):
 					digitalClockParams[pp] = copy.copy(inParms[pp])
 			digitalClockShow()
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 		return 
 		
 	
@@ -1268,7 +1259,7 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 			 
 
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 		return 
 
 
@@ -1346,20 +1337,20 @@ def readParams():
 						try:	
 							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
 						except	Exception as e:
-								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+								U.logger.log(30,"", exc_info=True)
 
 					if "lightSensorForDisplay-DevId-type" in ddd:
 						try:	
 							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
 							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
 						except	Exception as e:
-								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+								U.logger.log(30,"", exc_info=True)
 
 					if "lightSensorSlopeForDisplay" in ddd:
 						try:	
 							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
 						except	Exception as e:
-								U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+								U.logger.log(30,"", exc_info=True)
 					if "lightMinDimForDisplay" in ddd:
 						try:	
 							lightMinDimForDisplay = max(0.0, min(1., float(ddd["lightMinDimForDisplay"]) ) )
@@ -1430,33 +1421,40 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 	try:
 		if devType.lower().find("rgbmatrix") >-1:
 			if matrix == "":
-				from rgbmatrix import Adafruit_RGBmatrix
+				if devType.lower() == "rgbmatrix16x16":
+					ymax = 16
+					xmax = 16
+				elif devType.lower() == "rgbmatrix32x16":
+					ymax = 16
+					xmax = 32
+				elif devType.lower() == "rgbmatrix32x32":
+					ymax = 32
+					xmax = 32
+				elif devType.lower() == "rgbmatrix64x32":
+					ymax = 32
+					xmax = 64
+				elif devType.lower() == "rgbmatrix96x32":
+					ymax = 32
+					xmax = 96
+
+				if int(sys.version[0]) >=3:
+					from rgbmatrix import RGBMatrix as Adafruit_RGBmatrix
+					from rgbmatrix import RGBMatrixOptions
+					options = RGBMatrixOptions()
+					options.rows = xmax
+					options.cols = ymax
+					options.chain_length = 1
+					options.parallel = 1
+					options.hardware_mapping = 'regular'  # If you have an Adafruit HAT: 'adafruit-hat'
+					matrix = RGBMatrix(options = options)
+
+				else:
+					sys.path.append(os.getcwd()+"/neopix2")
+					from rgbmatrix import Adafruit_RGBmatrix
 			
-		if devType.lower() == "rgbmatrix16x16":
-			if matrix == "":
-				matrix = Adafruit_RGBmatrix(16, 1)
-			ymax = 16
-			xmax = 16
-		elif devType.lower() == "rgbmatrix32x16":
-			if matrix == "":
-				matrix = Adafruit_RGBmatrix(32, 1)
-			ymax = 16
-			xmax = 32
-		elif devType.lower() == "rgbmatrix32x32":
-			if matrix == "":
-				matrix = Adafruit_RGBmatrix(32, 1)
-			ymax = 32
-			xmax = 32
-		elif devType.lower() == "rgbmatrix64x32":
-			if matrix == "":
-				matrix = Adafruit_RGBmatrix(32, 2)
-			ymax = 32
-			xmax = 64
-		elif devType.lower() == "rgbmatrix96x32":
-			if matrix == "":
-				matrix = Adafruit_RGBmatrix(32, 3)
-			ymax = 32
-			xmax = 96
+					matrix = Adafruit_RGBmatrix(ymax, xmax//32)
+
+
 		elif devType.lower()== "ssd1306":
 			if outputDev == "":
 				outputDev = ssd1306(port=port, address=i2cAddress) 
@@ -1504,8 +1502,8 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 		fontDir= G.homeDir+"fonts/"
 
 	except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}, exiting".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			if unicode(e).find("fontDir") > 0:
+			U.logger.log(30,"", exc_info=True)
+			if "{}".format(e).find("fontDir") > 0:
 				U.logger.log(30," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
 			sys.exit()
 
@@ -1542,7 +1540,7 @@ def getScrollPages(data):
 			except: pass
 		return scrollPages, scrollDelay, scrollDelayBetweenPages, scrollxy
 	except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 def setScrollPages(scrollxy,scrollPages):
 	global maxPages
@@ -1596,7 +1594,7 @@ def mkfont(cmd):
 				elif  font.lower().find(".ttf")>-1:
 					fontx[fontF] = ImageFont.truetype(fontDir+font, int(fontw))
 			except	Exception as e:
-					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+					U.logger.log(30,"", exc_info=True)
 		else:
 			fontF = font+fontw
 	return fontF
@@ -1683,7 +1681,7 @@ def getLightSensorValue(force=False):
 		multIntensity = intensity * intensityDevice * lightSensorValue
 		return True
 	except Exception as e:
-		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(40,"", exc_info=True)
 	return False
 
 # ------------------    ------------------ 
@@ -1707,7 +1705,7 @@ def checkLightSensor():
 				multIntensity = intensity * intensityDevice * lightSensorValue
 				U.logger.log(10, " step up down light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensity, intensityDevice,  multIntensity) )
 	except Exception as e:
-		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(40,"", exc_info=True)
 
 
 
@@ -1733,8 +1731,8 @@ def zoomit(inVar):
 			return   var
 
 	except Exception as e:
+		U.logger.log(40,"", exc_info=True)
 		U.logger.log(40, u"zoomitE var:{}; type(var):{} ".format(var, type(var)) )
-		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
 	return inVar
 
 ######### main	########
@@ -1860,8 +1858,8 @@ while runLoop:
 				data		= json.loads(item)
 				#print json.dumps(data,sort_keys=True, indent=2)
 			except	Exception as e:
-				U.logger.log(30,"bad input "+ unicode(item) )
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"bad input {}".format(item) )
+				U.logger.log(30,"", exc_info=True)
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
@@ -1869,7 +1867,7 @@ while runLoop:
 				time.sleep(0.2)
 				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 			if i2cAddress != lasti2cAddress :  # restart  myself if new device type
-				U.logger.log(30, " restarting due to new device type, old="+unicode(lasti2cAddress)+" new="+i2cAddress)
+				U.logger.log(30, " restarting due to new device type, old={}, new=".format(lasti2cAddress, i2cAddress))
 				time.sleep(0.2)
 				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 
@@ -1956,7 +1954,7 @@ while runLoop:
 							fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev, matrix, overwriteXmax=xwindowSize[0] , overwriteYmax=xwindowSize[1], reset = "reset" )
 							U.logger.log(20, "=== 3 start new disp dev: = sizes:{}; {}".format(xmax, ymax))
 
- 					U.logger.log(10, "=== starting image ===")
+					U.logger.log(10, "=== starting image ===")
 					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
 					draw =ImageDraw.Draw(imData)
 					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
@@ -1994,8 +1992,9 @@ while runLoop:
 				U.logger.log(10, "item:"+item )
 				for cmd in data["command"]:
 					try:
+						if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 						
-						U.logger.log(10, unicode(cmd) )
+						U.logger.log(10, "{}".format(cmd) )
 						if "type" not in cmd: continue
 						cType = cmd["type"]
 						if cType == "" or cType == "0":	 continue
@@ -2088,7 +2087,7 @@ while runLoop:
 								maxPages		= 1
 
 						if cType == "NOP" :
-								U.logger.log(10,u"skipping display ..	 NOP")
+								U.logger.log(10,u"skipping display .. NOP")
 								continue
 
 						npage+=1
@@ -2101,9 +2100,9 @@ while runLoop:
 						width=0
 						if "width" in cmd:
 							# handle "", 1, "1", [3,4], "3,4" ,"[3,4]"
-							if "," in unicode(cmd["width"]):
+							if "," in "{}".format(cmd["width"]):
 								try:
-									w = unicode(cmd["width"]).strip("[").strip("]").split(",")
+									w = "{}".format(cmd["width"]).strip("[").strip("]").split(",")
 									width = [zoomit(w[0]),zoomit(w[1])]
 								except: 
 									width =[1,1]
@@ -2125,14 +2124,14 @@ while runLoop:
 											TextForLCD[1]	= cmd["text"]
 									else:
 										fontF =	 mkfont(cmd)
-										#U.logger.log(20,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fontF:" + unicode(fontF)+" fill:" + unicode(fill))
+										#U.logger.log(20,u"cType:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"]+" fontF:{}".format(fontF)+" fill:{}".format(fill))
 										#U.logger.log(20,u"text pos:{}, zomit:{} ".format(pos,zoomit(pos)) )
 										draw.text(zoomit(pos), cmd["text"], font=fontx[fontF], fill=fill)
 
 
 						elif cType == "dateString":	 ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								theText = datetime.datetime.now().strftime(cmd["text"])
 								fontF =	 mkfont(cmd)
 								draw.text(zoomit(pos), theText, font=fontx[fontF], fill=fill)
@@ -2140,7 +2139,7 @@ while runLoop:
 
 						elif cType == "line":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								if type(pos[0]) == type([]) or type(pos[0]) == type(()):
 									for xx in pos:
 										draw.line(zoomit(xx),fill=fill,width=width)
@@ -2149,7 +2148,7 @@ while runLoop:
 
 						elif cType == "dot":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								p = zoomit(pos)
 								if isinstance(width,int):
 									dotWRadius( p[0], p[1],	 fill, width,	 width,	  outline=None)
@@ -2159,7 +2158,7 @@ while runLoop:
 				
 						elif cType == "vBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								p = zoomit(pos)
 								p =[p[0],p[1],p[0],p[1],p+p[2]]
 								draw.line(p,fill=fill,width=width)
@@ -2167,8 +2166,8 @@ while runLoop:
 
 						elif cType == "hBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
-								#print u"cType:	 "+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill)
+								U.logger.log(10,u"cType:	"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
+								#print u"cType:	 "+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill)
 								p = zoomit(pos)
 								p =[p[0],p[1],p[0]+p[2],p[1]]
 								draw.line(p,fill=fill,width=width)
@@ -2176,7 +2175,7 @@ while runLoop:
 
 						elif cType == "vBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								p = zoomit(pos)
 								draw.line([p[0]+width/2,p[1]	   ,p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
 								draw.line([p[0]-width/2,p[1]	   ,p[0]-width/2,p[1]+p[3]]	,fill=fill,width=1)
@@ -2187,7 +2186,7 @@ while runLoop:
 
 						elif cType == "hBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								p = zoomit(pos)
 								draw.line([p[0],		  p[1]-width/2 ,p[0]+p[3] ,p[1]-width/2]   ,fill=fill,width=1)
 								draw.line([p[0],		  p[1]+width/2 ,p[0]+p[3] ,p[1]+width/2]   ,fill=fill,width=1)
@@ -2198,7 +2197,7 @@ while runLoop:
 
 						elif cType == "labelsForPreviousObject":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" width:" + unicode(width)+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
 								if len(lastPos) ==3:
 									fontF 		= mkfont(cmd)
 									direction 	= lastPos[0]
@@ -2239,7 +2238,7 @@ while runLoop:
 
 						elif cType == "hist":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
 								p = zoomit(pos)
 								x0= pos[0]
 								y0= pos[1]
@@ -2253,11 +2252,11 @@ while runLoop:
  
 						elif cType == "point":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
 								p = zoomit(pos)
 								if isinstance(p[0], list):
 									for x in p:
-										U.logger.log(10, unicode(cmd))
+										U.logger.log(10, "{}".format(cmd))
 										draw.point(x,fill=fill)
 								else:		 
 									draw.point(p,fill=fill)
@@ -2265,20 +2264,20 @@ while runLoop:
 
 						elif cType == "ellipse":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
 								draw.ellipse(zoomit(pos),fill=fill)
 
 
 						elif cType == "rectangle":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:	"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill)+" multIntensity:" + unicode(multIntensity))
+								U.logger.log(10,u"cType:	"+cType+" pos:{}".format(pos) +" fill:{}".format(fill)+" multIntensity:{}".format(multIntensity))
 								draw.rectangle(zoomit(pos), fill=fill)
 
 
 						elif cType == "triangle":  ###########################################################################
 							# pos:[x0,y0,length,value], width =wdith, fill = color of thermomether, 
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
 								p = zoomit(pos)
 								draw.polygon( [(p[0], p[1]),(p[2], p[3]),(p[4], p[5])], fill = fill )
 
@@ -2287,7 +2286,7 @@ while runLoop:
 					
 						elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:"+ unicode(pos) +" text:" + cmd["text"]+" fill:" + unicode(fill))
+								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"]+" fill:{}".format(fill))
 								imData = Image.open("/home/pi/pibeacon/displayfiles/"+cmd["text"])
 								p = zoomit(pos)
 								if devType.lower().find("rgbmatrix")== -1 and devType.lower() not in ["ssd1351"]: 
@@ -2338,7 +2337,7 @@ while runLoop:
 									fontF =	 mkfont({"font":"8x13.pil","width":"0"})
 									draw.text((dx,dy+10)	, HM+":"+sec	 , font=fontx[fontF], fill=fill)
 
-								U.logger.log(10,u"cType:"+cType+" fill:" + unicode(fill)+" font"+str(fontF)+" at:"+str(dx)+" "+ str(dy))
+								U.logger.log(10,u"cType:"+cType+" fill:{}".format(fill)+" font"+str(fontF)+" at:"+str(dx)+" "+ str(dy))
 
 							elif cType == "date" : ###########################################################################
 								if devType.lower()	== "ssd1351": 
@@ -2378,6 +2377,7 @@ while runLoop:
 								 
 								tt= time.time()
 								#print "tt - lastAnalog", tt - lastAnalog 
+								if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 								if int(tt)	== lastAnalog: 
 									time.sleep( 1.02 - (tt - lastAnalog) ) 
 								lastAnalog = int(time.time())
@@ -2393,6 +2393,7 @@ while runLoop:
 								 
 								tt= time.time()
 								#print "tt - lastAnalog", tt - lastAnalog 
+								if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 								if int(tt)	== lastDigital: 
 									time.sleep( 1.02 - (tt - lastDigital) ) 
 								lastDigital = int(time.time())
@@ -2402,7 +2403,7 @@ while runLoop:
 
 						if "display" not in cmd or cmd["display"] != "wait":  ###########################################################################
 
-							U.logger.log(10, u"displaying	 "+ cmd["type"]+ "	 scrollxy:"+scrollxy+"	 delay:"+str(scrollDelay))
+							U.logger.log(10, u"displaying  "+ cmd["type"]+ "  scrollxy:"+scrollxy+"  delay:"+str(scrollDelay))
 							
 							if flipDisplay =="1":
 								imData = imData.transpose(PIL.Image.ROTATE_180)
@@ -2411,9 +2412,11 @@ while runLoop:
 							
 								if scrollPages <=1: # single page no need to map anything		 
 									outputDev.sendImage(imData)
+									if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 									if scrollDelayBetweenPages >0: time.sleep(scrollDelayBetweenPages)
 
 								else:
+									if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 									if scrollxy.lower().find("left")> -1:
 										for ii in range(0,xmax*(scrollPages-1),4):
 											shifted = imData.crop(box=(ii,0,ii+xmax,ymax))
@@ -2619,22 +2622,33 @@ while runLoop:
 							lastAlive =tt
 							subprocess.call("echo	 "+str(tt)+" > "+G.homeDir+"temp/alive.display", shell=True)
 
+						if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
 					except	Exception as e:
 						try:
-							U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-							U.logger.log(30, unicode(cmd))
+							U.logger.log(30,"", exc_info=True)
+							U.logger.log(30, "{}".format(cmd))
 						except: # hard delete logfiles
 							subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
 							subprocess.call("sudo echo "" >  /var/log/pibeacon.log", shell=True)
 
 				newRead = False
 				if os.path.isfile(G.homeDir+"temp/display.inp"): break
+				if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 
 		time.sleep(0.1) 
 		items=[]
 		try:
-			if os.path.isfile(G.homeDir+"temp/display.inp"):
+			if os.path.isfile(G.homeDir+"temp/rebooting.now"):
+				try: outputDev.delPy()
+				except: pass
+				klillMyselfTimeout = -1 # killing myself..
+				U.logger.log(30, " exiting - stop was requested ") 	
+				os.kill(os.getpid(), signal.SIGTERM)
+				runLoop = False
+				break
+
+			if os.path.isfile(G.homeDir+"temp/display.inp") :
 				readParams()
 				i2cAddress = U.getI2cAddress(data, default ="")
 				if i2cAddress != lasti2cAddress:
@@ -2667,7 +2681,7 @@ while runLoop:
 		loop +=1 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		items=[]
 
 U.logger.log(30, " exiting display end of loop") 	

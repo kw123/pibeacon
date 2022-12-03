@@ -18,7 +18,7 @@ except: import queue as Queue
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "setStepperMotor"
 
 
@@ -83,7 +83,6 @@ def readParams():
 			if devId in lastDict and lastDict[devId] == theDict: continue
 			lastDict[devId] = theDict
 
-			print theDict
 			mt = theDict["motorType"]
 
 			if not ( mt.find("unipolar") > -1 or mt.find("bipolar") > -1 or mt.find("DRV8834") > -1 or mt.find("A4988") > -1 ): continue
@@ -173,7 +172,6 @@ def readParams():
 				isSleep[devId]   = False
 
 			else:
-				print " stopping  motorType not defined",  motorType
 				exit()
 
 			defineGPIOin(gpiopinSET[devId]["pin_sensor0"])
@@ -209,8 +207,7 @@ def readParams():
 		return changed
 
 	except	Exception as e:
-		print  (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(10)
 		return 3
 
@@ -440,9 +437,6 @@ def move(devId, actions): #steps, delay, direction, stopForGPIO):
 					if iGPIO in stopForGPIO:
 						if stopForGPIO[iGPIO] >-1:
 							stop 	 = getPinValue(devId,"pin_sensor"+str(iGPIO))
-							if stop == stopForGPIO[iGPIO]:
-								print "stop for GPIO", stop
-								#return -iSteps
 					iSteps += 1
 				if motorType[devId].find("DRV8834") >-1:
 					makeStepDRV8834(devId,dir)
@@ -501,7 +495,6 @@ def checkForNewImput():
 		try:
 			inpNew = json.loads(item)
 		except:
-			print " can not load ", item
 			continue
 
 		#print inpNew
@@ -566,13 +559,10 @@ def checkForNewImput():
 			if stopMoveNOW[devId]: 
 				print" clear queue bf " ,actionQueue[devId].qsize() 
 				actionQueue[devId].queue.clear()
-				print" clear queue af",actionQueue[devId].qsize() 
 			actionQueue[devId].put((repeat,actions)) 
-			print "adding new commands",devId, stopMoveNOW[devId], repeat,actionQueue[devId].qsize() , actions
 
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			print  (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 	return 
    
 
@@ -631,7 +621,7 @@ U.setLogging()
 
 myPID	=   str(os.getpid())
 readParams()
-U.logger.log(10, G.program+"  command :" + unicode(sys.argv))
+U.logger.log(10, G.program+"  command :{}".format(sys.argv))
 
 
 

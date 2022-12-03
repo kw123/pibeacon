@@ -12,7 +12,7 @@ import copy
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "setPCF8591dac"
 devType = "i2cPCF8591dac"
 
@@ -31,7 +31,7 @@ U.setLogging()
 
 myPID       = str(os.getpid())
 readParams()
-U.logger.log(10, "setPCF8591  command :" + unicode(sys.argv))
+U.logger.log(10, "setPCF8591  command :{}".format(sys.argv))
 
 command = json.loads(sys.argv[1])
 
@@ -54,7 +54,7 @@ if "startAtDateTime" in command:
             U.logger.log(10, "delayStart delayed by: "+ str(delayStart))
             time.sleep(delayStart)
     except  Exception as e:
-        U.logger.log(30,  u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+        U.logger.log(30,"", exc_info=True)
 
 
 bus = smbus.SMBus(1)
@@ -117,4 +117,4 @@ try:
             
 
 except  Exception as e:
-    U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+    U.logger.log(30,"", exc_info=True)

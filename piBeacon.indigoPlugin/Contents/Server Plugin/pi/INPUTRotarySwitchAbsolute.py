@@ -4,6 +4,8 @@
 # Feb 3 2019
 # version 0.95
 ##
+## py3 prept 
+
 ## read encoded n pin rotaty switch, send integer value to indogo every 90 secs or if changed
 #### grey code = only 1 bit changes pre step
 ####    eg http://www.grayhill.com/assets/1/7/mech_encoder_26.pdf
@@ -33,7 +35,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "INPUTRotarySwitchAbsolute"
 
 
@@ -59,7 +61,6 @@ def readParams():
 		restart = False
 			
 		if G.program  not in sensors:
-			print G.program + "  not in sensors" 
 			exit()
 		oldINPUTS  = copy.deepcopy(INPUTS)
 		restart    = False
@@ -158,7 +159,7 @@ def getINPUTgpio(devId):
 			elif INPUTS[devId]["codeType"].find("bourns8Bit")>-1:	value = burnsTableToInt(value)
 
 	except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 	return {"INPUT":value}
 
 
@@ -236,8 +237,8 @@ def startGPIO(devId):
 				GPIO.output(INPUTS[devId]["pinO"][n], 1)
 		return
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30,"start "+ G.program+ "  "+ unicode(sensors))
+		U.logger.log(30,"", exc_info=True)
+		U.logger.log(30,"start {}  {}".format(G.program, sensors))
 	return
 
 
@@ -346,7 +347,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

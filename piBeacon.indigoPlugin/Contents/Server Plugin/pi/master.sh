@@ -2,8 +2,10 @@
 
 home="/home/pi/pibeacon/"
 cd $home
+usePython3="/usr/bin/python"
+if [ $# != "0" ];then usePython3="/usr/bin/python3 -E";fi
 
-echo "This scripts checks every 90 secs if master.py is running --  if not,  will restart it"
+echo "This scripts checks every 90 secs if master.py is running --  if not,  will restart it, using $usePython3"
 
 # kill calling sudo bash  master.sh  and old master.sh tasks..
 #                  list of master pids    excl grep       excl myself     get pid #s from line(s) in col 2
@@ -42,7 +44,7 @@ while true; do
 					else 
 						#echo " restarting master"
 						echo "$(date '+%Y-%m-%d %H:%M:%S') master.sh: master.py not running restarting with  >>sudo /usr/bin/python master.py<<" >> permanent.log
-						nohup sudo /usr/bin/python master.py > /dev/null 2>&1 &
+						nohup sudo $usePython3 master.py > /dev/null 2>&1 &
 				fi
 			fi
 	fi

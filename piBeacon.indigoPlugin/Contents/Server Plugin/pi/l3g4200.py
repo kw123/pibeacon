@@ -10,7 +10,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "l3g4200"
 
 
@@ -42,7 +42,7 @@ class THESENSORCLASS:
 			self.L3G4200SetCalibration()
 
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return 
 
 	def L3G4200SetCalibration(self):
@@ -148,7 +148,7 @@ def readParams():
 			U.getMAGReadParameters(sensors[sensor][devId],devId)
 
 			if devId not in theSENSORdict:
-				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(G.i2cAddress))
+				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(G.i2cAddress))
 				theSENSORdict[devId] = THESENSORCLASS(i2cAddress=G.i2cAddress)
 				
 		deldevID={}		   
@@ -162,7 +162,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -178,12 +178,12 @@ def getValues(devId):
 				continue
 			temp = theSENSORdict[devId].getTemp() - G.offsetTemp[devId]
 			data = {"GYR":{"x":x, "y":y, "z":z},"temp":temp}
-			U.logger.log(10, unicode(data))
+			U.logger.log(10, "{}".format(data))
 			badSensor = 0
 			return data
 		except	Exception as e:
 			if badSensor > 2 and badSensor < 5: 
-				U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e) +"  "+ unicode(badSensor))
+				U.logger.log(30,"", exc_info=True)
 			badSensor+=1
 	if badSensor >3: return "badSensor"
 	return{"GYR":{"x":"", "y":"", "z":""},"temp":"" }	
@@ -258,7 +258,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

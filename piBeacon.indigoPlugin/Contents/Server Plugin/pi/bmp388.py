@@ -11,15 +11,13 @@ import time
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "bmp388"
 
 
 import time
 import sys
-import smbus
-import spidev
-import RPi.GPIO as GPIO
+
 from math import pow
 
  	
@@ -55,7 +53,7 @@ class bmp388():
 			self.get_calib_data()
 			self.set_config()
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
   
   
 	def get_calib_data(self):
@@ -342,7 +340,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 
@@ -362,7 +360,7 @@ def startSensor(devId):
 			time.sleep(1)
 			BMP388SENSOR[devId]  = bmp388(i2cAdd=i2cAdd)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 			BMP388SENSOR[devId] = ""
 			U.muxTCA9548Areset()
 			return
@@ -395,7 +393,7 @@ def getValues(devId):
 				}
 		return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -526,7 +524,7 @@ while True:
 		lastMeasurement = time.time()
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

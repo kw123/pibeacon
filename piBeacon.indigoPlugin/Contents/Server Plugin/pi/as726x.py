@@ -10,7 +10,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "as726x"
 
 
@@ -179,8 +179,7 @@ class Adafruit_AS726x(object):
 
 
 		except	Exception as e:
-			print (u"init in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"init in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return
 
 
@@ -239,7 +238,6 @@ class Adafruit_AS726x(object):
 		if self._conversion_mode == val:
 			return
 		self._conversion_mode = val
-		print "as726x...setting new conversion_mode", val
 		state = self._virtual_read(_AS726X_CONTROL_SETUP)
 		state &= ~(val << 2)
 		self._virtual_write(_AS726X_CONTROL_SETUP, state | (val << 2))
@@ -253,15 +251,13 @@ class Adafruit_AS726x(object):
 			if self._gain == val:
 				return
 			self._gain = val
-			print "as726x...setting new gain:", val, "	 intTime:", self._integration_time,"  norm:", self._norm
 			state = self._virtual_read(_AS726X_CONTROL_SETUP)
 			state &= ~(0x3 << 4)
 			state |= (Adafruit_AS726x.GAIN.index(val) << 4)
 			self._virtual_write(_AS726X_CONTROL_SETUP, state)
 			return
 		except	Exception as e:
-			print (u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 
 	def set_Integration_time(self, val):
 		if not 2.8 <= val <= 714:
@@ -271,7 +267,6 @@ class Adafruit_AS726x(object):
 		self._norm = 16.*140. / (self._gain*xval*_counts_Per_mu_Watt)
 		if self._integration_time == xval:
 			return
-		print "as726x... setting new integrationTime", xval, "	 gain:", self._gain ,"	norm:", self._norm
 		self._integration_time = xval
 		self._virtual_write(_AS726X_INT_T, val)
 		return
@@ -507,7 +502,7 @@ def readParams():
 
 
 			if devId not in as726xsensor:
-				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= " +unicode(i2cAddress) )
+				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= {}".format(i2cAddress) )
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				as726xsensor[devId] = Adafruit_AS726x(i2cAddress=i2cAdd)
 				as726xsensor[devId].set_Conversion_mode(as726xsensor[devId].MODE_2)
@@ -528,7 +523,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"readParams in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 def setLED(devId,value):
 	global sensor, sensors,	 as726xsensor
@@ -541,7 +536,7 @@ def setLED(devId,value):
 			as726xsensor[devId].enable_driver_led(True)
 		U.muxTCA9548Areset()
 	except	Exception as e:
-		U.logger.log(30, u"setLED in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return 
 
 
@@ -570,8 +565,7 @@ def getValues(devId):
 
 	except	Exception as e:
 		if badSensor >-1 and badSensor < 5000: 
-			U.logger.log(30, u"getValues in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, unicode(data) )
+			U.logger.log(30,"{}".format(data), exc_info=True)
 						
 		badSensor+=1
 	if badSensor >3: 
@@ -762,7 +756,7 @@ while True:
 			U.restartMyself(reason="badsensor")
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

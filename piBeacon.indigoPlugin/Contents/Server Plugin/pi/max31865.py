@@ -18,7 +18,7 @@ except:
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "max31865"
 #!/usr/bin/python
 #The MIT License (MIT)
@@ -244,20 +244,7 @@ class max31865(object):
 					#print ii, temp, temp_C_numpy, delta
 					if delta < 10: temp = temp_C_numpy
 				except	Exception as e:
-					print  u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
-		if False:
-			temp_C_line =    (RTD_ADC/32.0)     			   - 256.0  + 18.2
-			print "==PT Resistance:                     %f ohms" % Res_RTD 
-			print "RTD ADC Code:                        %d" % RTD_ADC
-			print "R_REF                                %d "% self.referenceResistor 
-			print "self.resistorAt0C                    %d "% self.resistorAt0C
-			print " comp                                %.3f "%self.comp
-			print " ratio                               %.3f "%self.ratio
-			print "Straight Line Approx. Temp:simple    %f degC " % temp_C_line
-			print "Straight Line Approx. Temp:          %f degC " % temp_CL
-			print "Callendar-Van Dusen Temp (degC > 0): %f degC " % temp_C
-			print "Solving Full C-V-D using numpy:      %f" %  temp_C_numpy
-			print ""	
+					U.logger.log(30,"", exc_info=True)
 		
 		if temp_C < 0:
 			temp = min(0,temp)
@@ -381,7 +368,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -392,7 +379,6 @@ def getValues(devId):
 	temp = "" 
 	try:
 		temp	 = max31865sensor[devId].readTemp()
-		## print str(devId), temp
 		if temp ==""  or not temp:
 			badSensor+=1
 			return "badSensor"
@@ -401,8 +387,8 @@ def getValues(devId):
 		return data
 	except	Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"temp>>" + unicode(temp)+"<<")
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"temp>>{}<<".format(temp))
 		badSensor+=1
 	if badSensor >3: 
 		return "badSensor"
@@ -519,7 +505,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

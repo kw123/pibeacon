@@ -6,7 +6,9 @@
 ##
 ##	  --- utils 
 #
-#	 
+#	
+## ok for py3
+ 
 import sys 
 import os 
 import time
@@ -18,16 +20,25 @@ U.setLogging()
 G.program 		= "copyToTemp"
 
 
+####-------------------------------------------------------------------------####
+def readPopen(cmd):
+		try:
+			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			return ret.decode('utf_8'), err.decode('utf_8')
+		except Exception as e:
+			U.logger.log(20,"", exc_info=True)
+
+
 def setupTempDir():
 	try:
 		if	not os.path.isdir(G.homeDir+"temp"):
 			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
 		# check if already tempfs type, if not create 
-		if subprocess.Popen("df | grep tempfs ", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].find(G.homeDir+"temp") == -1:
+		if readPopen("df | grep tempfs ")[0].find(G.homeDir+"temp") == -1:
 			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
 		subprocess.call("sudo rm "+G.homeDir+"temp/*", shell=True)
-	except	Exception, e :
-		U.logger.log(40, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+	except	Exception as e:
+		U.logger.log(30,"", exc_info=True)
 	return 
 
 
@@ -62,13 +73,11 @@ if __name__ == "__main__":
 				
 		###print G.program, doCopy 
 		if doCopy >0:
-				##print G.program, doCopy
-				U.logger.log(30,u"copying to files to temp dir files={}".format(G.parameterFileList))
+				U.logger.log(10,u"copying to files to temp dir files={}".format(G.parameterFileList))
 				for fileName in G.parameterFileList:
 					if os.path.isfile(G.homeDir+fileName):
 							cmd = "sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName
 							subprocess.call(cmd, shell=True)
-							#U.logger.log(30,cmd)
 				try:  
 					timeLastFile = os.path.getmtime(G.homeDir+"temp/touchFile")
 				except:	 timeLastFile = -10

@@ -18,7 +18,7 @@ import  smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "rainSensorRG11"
 GPIO.setmode(GPIO.BCM)
 
@@ -53,7 +53,7 @@ def readParams():
 			exit()
 
 		sens= sensors[sensor]
-		found ={str(ii):{"RISING":0,"GPIOchanged":0,"BOTH":0 } for ii in range(100)}
+		found ={"{}".format(ii):{"RISING":0,"GPIOchanged":0,"BOTH":0 } for ii in range(100)}
 		for devId in sens:
 			sss= sens[devId]
 			if "relayType" in sss:	relayType = sss["relayType"]
@@ -134,7 +134,7 @@ def readParams():
 
 			
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 				
 
 def setupSensors():
@@ -172,12 +172,12 @@ def GPIOchanged(gpio):
 	if gpio != gpioIn: return 
 	gpioStatus1 = getGPIO(gpioIn,calledFrom="event1") 
 	simpleCount +=1
-	U.logger.log(10,	"into GPIOchanged, GPIO in: " +str(gpioStatus1)+" "+str(lastGPIOStatus)+";	 count: "+str(simpleCount)+ " since last %.4f"%(time.time() - lastClick)+";	 inGPIOchanged: "+str(inGPIOchanged))
+	U.logger.log(10,	"into GPIOchanged, GPIO in: {}".format(gpioStatus1)+" {}".format(lastGPIOStatus)+"; count: {}".format(simpleCount)+ " since last %.4f"%(time.time() - lastClick)+";	 inGPIOchanged: {}".format(inGPIOchanged))
 	if time.time() - ProgramStart < 0: return 
 	if time.time() - lastClick < 0.06: return  # click come at > 50 msec so they must be > that apart 
 
 	gpioStatus2 = getGPIO(gpioIn,calledFrom="event2") 
-	U.logger.log(10,	"gpio"+str(gpio)+ " "+ str(gpioStatus1)+"  "+str(gpioStatus2)+ " since last %.4f"%(time.time() - lastClick) )
+	U.logger.log(10,	"gpio{}".format(gpio)+ " {}".format(gpioStatus1)+"  {}".format(gpioStatus2)+ " since last %.4f"%(time.time() - lastClick) )
 	lastClick2 = lastClick
 	lastClick  = time.time()
 	U.logger.log(10, "accepted  currentMode "+ status["currentMode"])
@@ -211,7 +211,7 @@ def GPIOchanged(gpio):
 		# calc amount of rain etc	  
 		bucket = bucketSize[status["currentMode"] ]
 		accumBuckets(bucket)
-		U.logger.log(10,status["currentMode"] +"	"+str(bucket)+"	 "+ str(newRainTime))
+		U.logger.log(10,status["currentMode"] +"	{}".format(bucket)+"   {}".format(newRainTime))
 		U.writeRainStatus(status)
 
 
@@ -272,7 +272,7 @@ def GPIOchanged(gpio):
 		# calc amount of rain etc	  
 		bucketsize = bucketSize[status["currentMode"] ]
 		accumBuckets(bucketsize)
-		U.logger.log(10,status["currentMode"] +";	  bucketsize:"+str(bucketsize)+";	 buckets:"+str(status["values"]["nMesSinceLastReset"])+";	 newRainTime: "+ str(newRainTime)  )
+		U.logger.log(10,status["currentMode"] +";   bucketsize:{}".format(bucketsize)+";	 buckets:{}".format(status["values"]["nMesSinceLastReset"])+";  newRainTime: {}".format(newRainTime)  )
 
 
 		if status["currentMode"]  == "highSensitive":
@@ -306,7 +306,7 @@ def setModeTo(newMode, calledFrom="", powerCycle=True, force = False):
 
 	#if time.time() - ProgramStart < 20: return 
 
-	U.logger.log(10, "try to set new mode	 "+newMode+ " from "+status["currentMode"]+"  tt - nextModeSwitchNotBefore: "+str(time.time() - nextModeSwitchNotBefore) +" called from: "+calledFrom )
+	U.logger.log(10, "try to set new mode	 "+newMode+ " from "+status["currentMode"]+"  tt - nextModeSwitchNotBefore: {}".format(time.time() - nextModeSwitchNotBefore) +" called from: "+calledFrom )
 	if (time.time() - nextModeSwitchNotBefore < 0) and not force: 
 		return False
 		
@@ -434,10 +434,10 @@ def checkIfRelayON():
 			if cyclePower:
 				if sensorMode == "checkIfIsRaining":
 					if time.time()- eventStartedList[nEvenstStarted-1] < maxONTime: return 
-					U.logger.log(30, "resetting device in \"check if raining mode\", signal relay is ON for > "+str(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
+					U.logger.log(30, "resetting device in \"check if raining mode\", signal relay is ON for > {}".format(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
 				else:
 					if time.time()- eventStartedList[nEvenstStarted-1] < 5: return 
-					U.logger.log(30, "hanging? resetting device, signal relay is on for > "+str(maxONTime)+"secs: "+str( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
+					U.logger.log(30, "hanging? resetting device, signal relay is on for > {}".format(maxONTime)+"secs: {}".format( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
 					powerCyleRelay()
 				eventStartedList= [time.time()-(7+5*(nEvenstStarted-ii)) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
 			else:
@@ -451,7 +451,7 @@ def checkIfRelayON():
 					sendShortStatus(rainMsg["medSensitive"])
 					#eventStartedList = time.time()
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 			
@@ -473,7 +473,7 @@ def checkIfMSGtoBeSend(force =False):
 		U.writeRainStatus(status)
 		lastCalcCheck = time.time()
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 def sendShortStatus(level):
@@ -735,7 +735,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

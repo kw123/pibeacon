@@ -19,7 +19,7 @@ import threading
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "lidar360"
 
 '''Simple and lightweight module for working with Lidar rangefinder scanners.
@@ -127,7 +127,7 @@ class Lidar(object):
 			self.connect()
 			self.start_motor()
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 
 	def _process_scan(self, raw):
@@ -145,7 +145,7 @@ class Lidar(object):
 			distance = (_b2i(raw[3]) + (_b2i(raw[4]) << 8)) / 4.
 			return new_scan, quality, angle, distance
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 
 
@@ -163,7 +163,7 @@ class Lidar(object):
 			except serial.SerialException as err:
 				raise LidarException('{}-Failed to connect to the sensor due to: {}'.format(self.port, err) )
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def disconnect(self):
 		try:
@@ -172,7 +172,7 @@ class Lidar(object):
 				return
 			self._serial_port.close()
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def set_pwm(self, pwm):
 		try:
@@ -180,7 +180,7 @@ class Lidar(object):
 			payload = struct.pack("<H", int(pwm * MAX_MOTOR_PWM))
 			self._send_payload_cmd(SET_PWM_BYTE, payload)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def start_motor(self):
 		try:
@@ -194,7 +194,7 @@ class Lidar(object):
 			self.motor_running = True
 			U.logger.log(20,'{}-Starting motor .. done'.format(self.port))
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 	def stop_motor(self):
 		try:
@@ -207,7 +207,7 @@ class Lidar(object):
 			self._serial_port.dtr = True
 			self.motor_running = False
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 	def _send_payload_cmd(self, cmd, payload):
 		try:
@@ -222,7 +222,7 @@ class Lidar(object):
 			self._serial_port.write(req)
 			U.logger.log(10,'{}Command sent: {}'.format(self.port,req))
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 	def _send_cmd(self, cmd):
 		try:
@@ -231,7 +231,7 @@ class Lidar(object):
 			self._serial_port.write(req)
 			U.logger.log(10,'{}-Command sent: {}'.format(self.port,req) )
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 	def _read_descriptor(self):
 		try:
@@ -245,7 +245,7 @@ class Lidar(object):
 			is_single = _b2i(descriptor[-2]) == 0
 			return _b2i(descriptor[2]), is_single, _b2i(descriptor[-1])
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 		return "","",""
 	def _read_response(self, dsize):
 		try:
@@ -257,7 +257,7 @@ class Lidar(object):
 				raise LidarException('{}-Wrong body size'.format(self.port) )
 			return data
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 	def get_info(self):
 		'''Get device information
@@ -287,7 +287,7 @@ class Lidar(object):
 			}
 			return data
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}  -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, self.port) )
+			U.logger.log(30,"", exc_info=True)
 
 	def get_health(self):
 		try:
@@ -318,14 +318,14 @@ class Lidar(object):
 			error_code = (_b2i(raw[1]) << 8) + _b2i(raw[2])
 			return status, error_code
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def clear_input(self):
 		try:
 			'''Clears input buffer by reading all available data'''
 			self._serial_port.read_all()
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def stop(self):
 		try:
@@ -336,7 +336,7 @@ class Lidar(object):
 			time.sleep(.001)
 			self.clear_input()
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def reset(self):
 		try:
@@ -346,7 +346,7 @@ class Lidar(object):
 			self._send_cmd(RESET_BYTE)
 			time.sleep(.002)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	def iter_measurments(self, max_buf_meas=500):
 		try:
@@ -402,7 +402,7 @@ class Lidar(object):
 						self._serial_port.read(data_in_buf//dsize*dsize)
 				yield self._process_scan(raw)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return 
 
 	def iter_scans(self, max_buf_meas=500, min_len=5):
@@ -436,7 +436,7 @@ class Lidar(object):
 				if quality > 0 and distance > 0:
 					scan.append((quality, angle, distance))
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return 
 
 
@@ -618,7 +618,7 @@ def readParams():
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		
 
 
@@ -666,7 +666,7 @@ def startSensor(devId, restart=False):
 					#sensorCLASS[devId].disconnect()
 					#exit()
 				except	Exception as e:
-					U.logger.log(30, u"in Line {} has error={} -{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, usbPortUsed[devId]))
+					U.logger.log(30,"", exc_info=True)
 					time.sleep(1)
 					sensorCLASS[devId] = ""
 					usbPortUsed[devId] = ""
@@ -706,7 +706,7 @@ def startSensor(devId, restart=False):
 		time.sleep(.1)
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e, usbPortUsed[devId]))
+		U.logger.log(30,"", exc_info=True)
 		sensorCLASS[devId] = ""
 		return False
 	return True
@@ -832,7 +832,7 @@ def getValues(devId):
 						values[-1][bin] += float(v)
 						entries[-1][bin] += 1
 					except	Exception as e:
-						U.logger.log(30, u"in Line {} has error={}, bin:{}, entries:{} --{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e,bin, entries,  usbPortUsed[devId]))
+						U.logger.log(30,"", exc_info=True)
 
 				for ii in range(useBins):
 					values[-1][ii]  = int( values[-1][ii]/max(1.,entries[-1][ii]))
@@ -917,7 +917,7 @@ def getValues(devId):
 										upD[kk] 		= 0
 						trV[nn]["calibrated"]["nonZero"] = trV[0]["calibrated"]["nonZero"]	
 				except	Exception as e:
-					U.logger.log(20, u"in Line {} has error={} --{}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e,  usbPortUsed[devId]))
+					U.logger.log(30,"", exc_info=True)
 					U.logger.log(20, u"trV {} kk{}, kki{}, nn:{}".format(trV, kk, kki, nn))
 				
 
@@ -998,7 +998,7 @@ def getValues(devId):
 						 usbPortUsed[devId],test,test0, time.time() - tStart, nM, countNotcalibratedBins, trV[-1]["current"]["GT"], trV[-1]["current"]["LT"], trV[-1]["calibrated"]["GT"], trV[-1]["calibrated"]["LT"],  triggerCalibrated[devId], triggerLast[devId] )
 					 )
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 	U.logger.log(30, u"{}-exit getsensor due error in iter_measurments".format({ usbPortUsed[devId]}))
 	lastAliveSend[devId]  = 0
 	return 
@@ -1110,7 +1110,7 @@ while True:
 
 		time.sleep(loopSleep)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

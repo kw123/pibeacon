@@ -18,7 +18,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "INPUTgpio"
 
 
@@ -61,12 +61,12 @@ def readParams():
 						for devId in sensors[sensor]:
 							if devId  not in oldSensors[sensor]:
 								restart=True
-								U.logger.log(30, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	)
+								U.logger.log(30, "new sensor def:{}".format( sensors[sensor][devId]["INPUTS"])	)
 								break
 							if sensors[sensor][devId]["INPUTS"] != oldSensors[sensor][devId]["INPUTS"]:
 								restart=True
-								U.logger.log(30, "new sensor def:" + unicode( sensors[sensor][devId]["INPUTS"])	 )
-								U.logger.log(30, "old sensor def:" + unicode(oldSensors[sensor][devId]["INPUTS"]) )
+								U.logger.log(30, "new sensor def:{}".format( sensors[sensor][devId]["INPUTS"])	 )
+								U.logger.log(30, "old sensor def:{}".format(oldSensors[sensor][devId]["INPUTS"]) )
 								break
 					if restart: break
 				
@@ -81,8 +81,8 @@ def getINPUTgpio(all,sens):
 		d={}
 		new=False
 		try:
+				#U.logger.log(20, u" all{}, sens:{}".format(all, sens))
 				for n in range(len(sens["INPUTS"])):
-					#U.logger.log(10, u" n{}, sens:{}".format(n, sens[n])
 					if "gpio" not in sens["INPUTS"][n]: continue
 					if "lowHighAs" in  sens:
 						lowHighAs =	 sens["lowHighAs"]
@@ -97,7 +97,7 @@ def getINPUTgpio(all,sens):
 						if GPIO.input(gpioPIN) ==0: dd="0"
 						else:						dd="1"
 					if all:
-						if count !="off":
+						if count != "off":
 							if count == "up":
 								if INPUTlastvalue[str(gpioPIN)] != "1" and dd == "1":
 									INPUTcount[str(gpioPIN)]+=1
@@ -125,11 +125,11 @@ def getINPUTgpio(all,sens):
 									new = True
 						else:
 							 if INPUTlastvalue[str(gpioPIN)] != dd:
-								 d["INPUT_"+str(n)]=dd
-					INPUTlastvalue[str(gpioPIN)]=dd
-					##print d,new
+								 d["INPUT_"+str(n)] = dd
+					INPUTlastvalue[str(gpioPIN)] = dd
+					#U.logger.log(20, u" d{}, new:{}".format(d, new))
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 		return d,new
 
 
@@ -148,23 +148,24 @@ def startGPIO():
 				ss = sensors[sensor][devId]["INPUTS"]
 				for nn in range(len(ss)):
 					if "gpio" not in ss[nn]: continue
+					U.logger.log(20,"ss: {},".format(ss))
 					gpioPIN = int(ss[nn]["gpio"])
-					type	= ss[nn]["inpType"]
+					theType	= ss[nn]["inpType"]
 					count	= ss[nn]["count"]
-					if	 count =="off":
+					if	 count == "off":
 						INPUTcount[str(gpioPIN)] = 0
-					if	 type == "open":
+					if	 theType == "open":
 						GPIO.setup(gpioPIN, GPIO.IN)
-					elif type == "high":
+					elif theType == "high":
 						GPIO.setup(gpioPIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-					elif type == "low":
+					elif theType == "low":
 						GPIO.setup(gpioPIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-					elif type == "inOpen":
+					elif theType == "inOpen":
 						GPIO.setup(gpioPIN, GPIO.IN)
 		return
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30,"startGPIO: "+ unicode(sensors))
+		U.logger.log(30,"", exc_info=True)
+		U.logger.log(30,"startGPIO: {}".format(sensors))
 	return
 
 
@@ -234,7 +235,7 @@ qCount = 0
 
 G.tStart = time.time() 
 lastRead = time.time()
-shortWait =0.15
+shortWait = 0.15
 sensBase = G.program+"-"
 
 while True:
@@ -256,7 +257,7 @@ while True:
 				if newAll: U.writeINPUTcount(INPUTcount)
 				if ddd != {}:
 					data0[sensor] = ddd
-		#U.logger.log(10, "data:{}".format(data))
+		#U.logger.log(20, "data:{}".format(data0))
 
 		if	data0 != {}:
 			#print " sensors", data0, lastData
@@ -283,7 +284,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

@@ -4,6 +4,7 @@
 # Feb 3 2019
 # version 0.95
 ##
+## py prept 
 ## read  encoded continuous incremantal rotaty switch, send integer value to indogo every 90 secs or if changed
 ##   2 gpios are read. they go 1 0 1 0 .. most have 0=ON and 1 = off
 ## one full step is 
@@ -35,7 +36,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "INPUTRotarySwitchIncremental"
 
 
@@ -63,7 +64,6 @@ def readParams():
 		restart = False
 			
 		if G.program  not in sensors:
-			print G.program + "  not in sensors" 
 			stopProgram()
 
 		oldINPUTS  = copy.deepcopy(INPUTS)
@@ -188,7 +188,6 @@ def pigEVENTthread(pin, level, tick):
 	elif level == 0: level = "D"
 	else:			 level = "N"
 
-	if debug > 2: print "pigEVENT:", pin, level, " A:",str(stateA)[0], " B:",str(stateB)[0],  " since last %.3f"%(tick - lastTick)/1000., "msecs"
 	lastTick = tick
 	threadDict["queue"].put(( pin, stateA, stateB, tick/1000. ))
 	return 
@@ -214,7 +213,6 @@ def gpioEVENTthread(pin):
 	if pin == pinB and stateB: level = "U" 
 	if pin == pinA and stateA: level = "U"
 
-	if debug > 2: print "rpiEVENT:", pin, level, " A:",str(stateA)[0], " B:",str(stateB)[0],  " since last %.3f"%(tick - lastTick), "msecs"
 	lastTick = tick
 	threadDict["queue"].put(( pin, stateA, stateB, tick ))
 	return 
@@ -233,7 +231,7 @@ def workQueue():
 				if threadDict["stopThread"]: return 
 			time.sleep(0.2)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return
 
 
@@ -247,7 +245,7 @@ def startGPIO(devId):
 	try:
 		pinsToDevid[INPUTS[devId]["pinA"]] = devId
 		pinsToDevid[INPUTS[devId]["pinB"]] = devId
-		U.logger.log(30, "pinsToDevid "+unicode(pinsToDevid))
+		U.logger.log(30, "pinsToDevid {}".format(pinsToDevid))
 
 		if useWhichGPIO == "pig":
 			if PIGPIO == "":
@@ -302,14 +300,13 @@ def startGPIO(devId):
 				GPIO.add_event_detect( INPUTS[devId]["pinB"], GPIO.BOTH, callback=workEvent ) 
 
 		else:
-			print " error useWhichGPIO not defined"
 			exit()
 		
 
 		return
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30,"start "+ G.program+ "  "+ unicode(sensors))
+		U.logger.log(30,"", exc_info=True)
+		U.logger.log(30,"start {}  {} ".format(G.program, sensors))
 	return
 
 
@@ -337,48 +334,40 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 			if tt == -1:  
 				tt = time.time()
 
-			if debug > 1: print str(devIDUsed)[-3:-1],"+into event %7.4f"%(tt - IP["lastChangeTime"])," %7.4f"%(tt - IP["lastEvent"]),"; pin", pin,"; cycle", str(IP["newCycle"])[0], ";  dir", str(IP["direction"])[0], ";  A",str(stateA)[0], ";  B",str(stateB)[0], ";  AL",str(IP["pinALastValue"])[0], ";  BL",str(IP["pinBLastValue"])[0], ";  CS",countSignals[devIDUsed], ";  C",counts[devIDUsed]
-
 
 			if  IP["ignorePinValue"] == 1 and not useThreads: 
 				if pin == pinB :
 					if stateB == IP["pinBLastValue"]:
 						if  IP["direction"] == "+":
 							if not stateB: 
-								if debug > 0: print "fix B1;  A:", str(stateA)[0],  "; B:",str(stateB)[0], "; dir", str(IP["direction"])[0]
 								stateB = True
 				else:
 					if stateA == IP["pinALastValue"]:
 						if  IP["direction"] == "-":
 							if not stateA  == 1: 
-								if debug > 0: print "fix A1;  A:", str(stateA)[0],  "; B:",str(stateB)[0], "; dir", str(IP["direction"])[0]
 								stateA = True
 							
 			elif  IP["ignorePinValue"] == 2 and not useThreads: 
 				if pin == pinB :
 					if stateB == IP["pinBLastValue"]:
-						if debug > 0: print "fix B2;  A:", str(stateA)[0],  "; B:",str(stateB)[0], "; dir", str(IP["direction"])[0]
 						stateB = not stateB
 				else:
 					if stateA == IP["pinALastValue"]:
-						if debug > 0: print "fix A2;  A:", str(stateA)[0],  "; B:",str(stateB)[0], "; dir", str(IP["direction"])[0]
 						stateA = not stateA
 
 							
 			elif  IP["ignorePinValue"] == 3: 
 				if pin == pinB :
 					if stateB == IP["pinBLastValue"]:
-						if debug > 0: print "fix 3 B; A:", str(stateA)[0],  "; B:",str(stateB)[0], "; dir",str(IP["direction"])[0]
 						executePinChange(devIDUsed, pin, stateA, not stateB, tt)
 				else:
 					if stateA == IP["pinALastValue"]:
-						if debug > 0: print "fix 3 A; A:", str(stateA)[0],  "; B:",str(stateB)[0], "; dir", str(IP["direction"])[0]
 						executePinChange(devIDUsed, pin, not stateA, stateB, tt)
 
 			executePinChange(devIDUsed, pin, stateA, stateB, tt)
 
 	except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 			return 
 
@@ -396,7 +385,6 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 			countSignals[devIDUsed] += 1
 
 			if stateA ==  IP["pinALastValue"] and stateB ==  IP["pinBLastValue"]:
-				if debug > 0: print " no change", pin, stateA, stateB
 				return 
 
 			# save last values..
@@ -404,10 +392,8 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 				IP["newCycle"] = True
 
 			if (tt - IP["lastChangeTime"]) > IP["resetTimeCheck"] and not IP["newCycle"] and countSignals[devIDUsed]	> 4: 
-				if debug >0: print " reset newCycle lastChangeTime"
 				IP["newCycle"] = True
 			if (tt - IP["lastEvent"])      > IP["resetTimeCheck"] and not IP["newCycle"] and countSignals[devIDUsed]	> 4: 
-				if debug >0: print " reset newCycle lastEvent"
 				IP["newCycle"] = True
 
 			if (not IP["pinALastValue"]) and (not IP["pinBLastValue"]): IP["newCycle"]= True
@@ -423,8 +409,6 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 							IP["newCycle"]       	= False
 							IP["lastEvent"]      	= tt
 							countSignals[devIDUsed]	=0
-						else:
-							print "reject A"
 					else:
 						if ( stateB ==  IP["pinBLastValue"] or not  IP["distinctTransition"] ) or ( not IP["pinALastValue"] and  not IP["pinBLastValue"] ):
 							counts[devIDUsed] 		-= 1
@@ -432,8 +416,6 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 							IP["newCycle"]       	= False
 							IP["lastEvent"]      	= tt
 							countSignals[devIDUsed]	= 0
-						else:
-							print "reject B"
 					newData = True
 
 			if 	countSignals[devIDUsed] > 4 and IP["incrementIfGT4Signals"] and (tt- IP["lastEvent"]) > IP["resetTimeCheck"]:
@@ -442,11 +424,8 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 				IP["newCycle"]       = False
 				IP["lastEvent"]      = tt
 				countSignals[devIDUsed]  =0
-				if debug > 0: print "fixing count due to countSignal > 4"
 
 
-			# debug		
-			if debug > 1:  print str(devIDUsed)[-3:-1],"=exit event %7.4f"%(tt - IP["lastChangeTime"])," %7.4f"%(tt - IP["lastEvent"]),"; pin", pin,"; cycle", str(IP["newCycle"])[0], ";  dir", str(IP["direction"])[0], ";  A",str(stateA)[0], ";  B",str(stateB)[0], ";  AL",str(IP["pinALastValue"])[0], ";  BL",str(IP["pinBLastValue"])[0],";  CS",countSignals[devIDUsed], ";  C",counts[devIDUsed]
 
 			if stateA !=  IP["pinALastValue"] or stateB !=  IP["pinBLastValue"]:
 				IP["lastChangeTime"] = tt#
@@ -455,7 +434,7 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 			IP["pinALastValue"] = stateA
 			IP["pinBLastValue"] = stateB
 	except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 	return 
 
 
@@ -610,7 +589,7 @@ while True:
 
 		newData = False
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
 stopProgram()

@@ -10,7 +10,7 @@ class MyDiscoverer(bluetooth.DeviceDiscoverer):
         self.done = False
     
     def device_discovered(self, address, device_class, name):
-        print "%s - %s" % (address, name)
+		return 
 
     def inquiry_complete(self):
         self.done = True

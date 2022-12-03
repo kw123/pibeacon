@@ -20,7 +20,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "amg88xx"
 
 
@@ -171,7 +171,7 @@ class AMG88xx_class(object):
 			self._fpsc.FPS = AMG88xx_FPS_10
 			self.bus.write_byte_data(self.i2c_addr,AMG88xx_FPSC, self._fpsc.get())
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return 
 
 	def readU16(self, reg, little_endian=True):
@@ -199,8 +199,6 @@ class AMG88xx_class(object):
 		"Writes an 8-bit value to the specified register/address"
 		try:
 			self.bus.write_byte_data(self.i2c_addr, reg, value)
-			if self.debug:
-				print "I2C: Wrote 0x%02X to register 0x%02X" % (value, reg)
 		except IOError, err:
 			return self.errMsg()
 
@@ -211,7 +209,7 @@ class AMG88xx_class(object):
 
 	def setInterruptLevels(self, high, low, hysteresis):
 
-		highConv = int(high / AMG88xx_PIXEL_TEMP_CONVERSION)
+		highConv = int(high // AMG88xx_PIXEL_TEMP_CONVERSION)
 		highConv = constrain(highConv, -4095, 4095)
 		self._inthl.INT_LVL_H = highConv & 0xFF
 
@@ -219,14 +217,14 @@ class AMG88xx_class(object):
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTHL, self._inthl.get())
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTHH, self._inthh.get())
 
-		lowConv = int(low / AMG88xx_PIXEL_TEMP_CONVERSION)
+		lowConv = int(low // AMG88xx_PIXEL_TEMP_CONVERSION)
 		lowConv = constrain(lowConv, -4095, 4095)
 		self._intll.INT_LVL_L = lowConv & 0xFF
 		self._intlh.INT_LVL_L = (lowConv & 0xF) >> 4
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTLL, self._intll.get())
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTLH, self._intlh.get())
 
-		hysConv = int(hysteresis / AMG88xx_PIXEL_TEMP_CONVERSION)
+		hysConv = int(hysteresis // AMG88xx_PIXEL_TEMP_CONVERSION)
 		hysConv = constrain(hysConv, -4095, 4095)
 		self._ihysl.INT_HYS = hysConv & 0xFF
 		self._ihysh.INT_HYS = (hysConv & 0xF) >> 4
@@ -285,7 +283,7 @@ class AMG88xx_class(object):
 			blockSize	= 32
 			blockSize2	= blockSize/2
 			lines		= 8
-			nBlocks		= AMG88xx_PIXEL_ARRAY_SIZE / blockSize * 2
+			nBlocks		= AMG88xx_PIXEL_ARRAY_SIZE // blockSize * 2
 			buf = copy.copy(oldPixels)
 			rawData	   =""
 			for ii in range(nBlocks):
@@ -327,10 +325,10 @@ class AMG88xx_class(object):
 						k2 = k +   lines
 						m  = j + i*lines  
 						m2 = m + 1
-						vertical1	  +=  ( (buf[k]	 - oldPixels[k2])  / max(0.1,oldPixels[k2] + buf[k])  ) 
-						vertical2	  +=  ( (buf[k2] - oldPixels[k] ) / max(0.1,oldPixels[k]  + buf[k2]) ) 
-						horizontal1	  +=  ( (buf[m]	 - oldPixels[m2])  / max(0.1,oldPixels[m2] + buf[m])  )
-						horizontal2	  +=  ( (buf[m2] - oldPixels[m] ) / max(0.1,oldPixels[m]  + buf[m2]) )
+						vertical1	  +=  ( (buf[k]	 - oldPixels[k2])  // max(0.1,oldPixels[k2] + buf[k])  ) 
+						vertical2	  +=  ( (buf[k2] - oldPixels[k] ) // max(0.1,oldPixels[k]  + buf[k2]) ) 
+						horizontal1	  +=  ( (buf[m]	 - oldPixels[m2])  // max(0.1,oldPixels[m2] + buf[m])  )
+						horizontal2	  +=  ( (buf[m2] - oldPixels[m] ) // max(0.1,oldPixels[m]  + buf[m2]) )
 						###print i,j,k,k2,m,m2
 
 				vertical1	= 100.*(vertical1/nVal) 
@@ -341,7 +339,7 @@ class AMG88xx_class(object):
 
 			return buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return ""
 
 		
@@ -443,8 +441,8 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if amg88xxsensor[devId] =="":
 					return
-			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
-					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
+			U.logger.log(30," new parameters read: i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+
+					   ";  deltaX:{}".format(deltaX[devId])+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) )
 				
 		deldevID={}		   
 		for devId in amg88xxsensor:
@@ -459,8 +457,7 @@ def readParams():
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		print sensors[sensor]
+		U.logger.log(30,"", exc_info=True)
 		
 
 
@@ -469,7 +466,7 @@ def startSensor(devId,i2cAddress):
 	global sensors,sensor
 	global startTime
 	global amg88xxsensor, oldPixels
-	U.logger.log(30,"==== Start amg88xx ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(30,"==== Start amg88xx ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
 
 
@@ -480,7 +477,7 @@ def startSensor(devId,i2cAddress):
 		amg88xxsensor[devId]  =	 AMG88xx_class(address=i2cAdd)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		amg88xxsensor[devId] =""
 	time.sleep(.1)
 
@@ -518,10 +515,10 @@ def getValues(devId):
 				"MinimumPixel":			( "%7.1f"%( minV				) ).strip(), 
 				"temp":					( "%7.1f"%( average				) ).strip(),
 				"rawData":				json.dumps(oldPixels[devId]).replace(" ","")}
-		U.logger.log(0, unicode(ret)) 
+		U.logger.log(0, "{}".format(ret)) 
 		badSensor = 0
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	U.muxTCA9548Areset()
@@ -664,7 +661,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -305,7 +305,9 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 				<Label>Current or new setting:</Label>
 			</Field>
 			<Field id="MSGLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>either current setting or new setting after you press execute</Label>
+				<Label>Shown are either current setting or new setting after you press execute
+After you have added new beacon(s), switch off "accept any new beacon" and  "beacons of type x" and "beacons w name x" 
+or your device folder might fill up quickly</Label>
 			</Field>
 
 	<Field id="acceptNewiBeaconsLabel1" type="label" >  
@@ -345,16 +347,37 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 	<Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>Use allow new beacons of Type "x" or 
 Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
-After you have added new beacon, switch off "accept any new beacon" and  "beacons of type x"
-or your device folder might fill up quickly </Label>
+ </Label>
 	</Field>
 	<Field    id="acceptNewBeaconMAC"   type="textfield" defaultValue="" tooltip="accepts only beacon with this MAC #">
 		<Label>Accept new Beacon with THIS MAC #:</Label>
 		</Field>
 
 	<Field id="acceptNewiBeaconsLabel3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>Use for accepting single beacon with know mac</Label>
+		<Label>Use for accepting single beacon with known mac</Label>
 	</Field>
+
+	<Field id="acceptNewiBeaconsLabel9" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>Some beacons send manufacturer name in the broadcast. Here you can select known names or enter any string in the field below
+Some manufactures (eg NUT) have beacons w different types but the same mfg name
+The mfg name is in the section type 09 of the BLE message 
+After the beacon is added the plugin will automatically detect the beaconType if known 
+and enable battery and beep etc functions</Label>
+	</Field>
+		<Field    id="acceptNewMFGNameBeacons"   type="menu" defaultValue="off" tooltip="if the nme of beacon mfg is a match it will accpet a new beacon with that signature">
+		<Label>Accept new iBeacons w Mfg-Name:</Label>
+             <List class="self" filter="" method="filterBeaconKnownMfgNames" dynamicReload="false"/>
+      </Field>
+
+
+	<Field    id="acceptNewMFGNameBeaconsText"   type="textfield" defaultValue="" tooltip="accepts only beacon with this mfg name #">
+		<Label>Accept new Beacon with THIS MFG-Name #:</Label>
+		</Field>
+
+	<Field id="acceptNewMFGNameBeaconsTextLabel3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>Use for accepting beacon with know mfg name not in list</Label>
+	</Field>
+
 	<Field id="execAcceptNewBeaconsCALLBACK" type="button">
 				<Label>After selections click</Label>
 				<Title>EXECUTE</Title>

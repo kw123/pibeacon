@@ -9,17 +9,19 @@
 # -*- coding: utf-8 -*-
 ####################
 
+
+## ok for py3
+
 import sys, os, time, json, datetime,subprocess,copy
 import math
 import copy
-from collections import OrderedDict
 import smbus
 
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "mhzCO2"
 #simple bitfield object
 
@@ -28,7 +30,6 @@ G.program = "mhzCO2"
 
 class mhz16_class_i2c:
 	ppm			= 0
-	 
 	IOCONTROL	= 0X0E << 3
 	FCR			= 0X02 << 3
 	LCR			= 0X03 << 3
@@ -38,7 +39,8 @@ class mhz16_class_i2c:
 	RHR			= 0x00 << 3
 	TXLVL		= 0X08 << 3
 	RXLVL		= 0X09 << 3
-		 
+
+
 	def __init__(self, address = 0x4d, sensorType=1):
 		self.i2c_addr = address
 		self.i2c	  = smbus.SMBus(1)
@@ -50,16 +52,16 @@ class mhz16_class_i2c:
 		else:
 			self.cmd_measure	   = [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
 			self.cmd_calibrateZero = [0xFF,0x87,0x87,0x00,0x00,0x00,0x00,0x00,0xF2]	 # does not work 
-#			 self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+#			self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
 			self.beginData		   = 2 
 			self.commandByteReturn = self.cmd_measure[2]
-	 
+
 	def start(self):
 		try:
 			self.write_register(self.IOCONTROL, 0x08)
 		except IOError:
 			pass
-					 
+
 		self.write_register(self.FCR, 0x07)
 		self.write_register(self.LCR, 0x83)
 		self.write_register(self.DLL, 0x60)
@@ -73,7 +75,7 @@ class mhz16_class_i2c:
 			time.sleep(0.1)
 			return
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
  
 	def measure(self):
@@ -83,7 +85,7 @@ class mhz16_class_i2c:
 			self.parse(self.receive())
 			return
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
  
 	def parse(self, response):
@@ -111,21 +113,21 @@ class mhz16_class_i2c:
 	def read_register(self, reg_addr):
 		time.sleep(0.001)
 		return self.i2c.read_byte_data(self.i2c_addr, reg_addr)
-		 
+
 	def write_register(self, reg_addr, val):
 		time.sleep(0.001)
 		self.i2c.write_byte_data(self.i2c_addr, reg_addr, val)
-		 
+
 	def send(self, command):
 		self.commandByte= command[2]
 		if self.read_register(self.TXLVL) >= len(command):	# can we send enough bytes , should be 9
 			self.i2c.write_i2c_block_data(self.i2c_addr, self.THR, command)
- 
+
 	def receive(self):
 		try:
 			n	  = 9
 			buf	  = []
-			start = time.clock()
+			start = time.time()
 			errcountMAX = 2
 			while n > 0:
 				try: 
@@ -134,7 +136,7 @@ class mhz16_class_i2c:
 					time.sleep(0.004)
 					errcountMAX -= 1
 					if errcountMAX == 0: 
-						U.logger.log(10, u"receive read_register too may tries stopping read,	 has error='%s'" % ( e))
+						U.logger.log(10, u"receive read_register too may tries stopping read,  has error='%s'" % ( e))
 						return buf
 					continue
 					
@@ -144,12 +146,12 @@ class mhz16_class_i2c:
 				buf.extend(self.i2c.read_i2c_block_data(self.i2c_addr, self.RHR, rx_level))
 				n = n - rx_level
  
-				if time.clock() - start > 0.2:
+				if time.time() - start > 0.2:
 					break
 				
 			return buf
 		except	Exception as e:
-			U.logger.log(30, u"receive in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return []
 
 class mhz_class_serial:
@@ -160,16 +162,14 @@ class mhz_class_serial:
 	
 	
 		if sensorType ==1:
-			self.cmd_measure	   = [0xFF,0x01,0x9C,0x00,0x00,0x00,0x00,0x00,0x63]
-			self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
-			self.beginData		   = 4 
+			self.cmd_measure		= [0xFF,0x01,0x9C,0x00,0x00,0x00,0x00,0x00,0x63]
+			self.cmd_calibrateZero	= [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+			self.beginData			= 4 
 			self.commandByteReturn = self.cmd_measure[2]
 		else:
-			self.cmd_measure	   = [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
-			self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
-#			 self.cmd_calibrateZero = [0xFF,0x87,0x87,0x00,0x00,0x00,0x00,0x00,0xF2]  # does not work 
-#			 self.cmd_calibrateZero = [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
-			self.beginData		   = 2 
+			self.cmd_measure	 	= [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
+			self.cmd_calibrateZero	= [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
+#			self.beginData		   = 2 
 			self.commandByteReturn = self.cmd_measure[2]
 
 		self.amplification={ "1000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x03, 0xE8, 0x7B],
@@ -177,7 +177,7 @@ class mhz_class_serial:
 							 "3000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x0B, 0xB8, 0xA3],
 							 "5000":[0xFF, 0x01, 0x99, 0x00, 0x00, 0x00, 0x13, 0x88, 0xCB]}
 	
-		print "mhz_class port: ", serialPort
+		U.logger.log(20, "mhz_class port:{} ".format(serialPort))
 		self.port = serialPort
 		#print 'Trying port %s ' % self.port
 		self.co2 = -1
@@ -196,7 +196,7 @@ class mhz_class_serial:
 			self.parse(self.receive())
 			return
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
 
 #################################		 
@@ -204,11 +204,10 @@ class mhz_class_serial:
 		r = str(range)
 		try:
 			if r in self.amplification:
-				#print "setting range:"+ r+ "  "+unicode(self.amplification[str(r)])
 				self.send(self.amplification[str(r)])
 				return
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 #################################		 
 	def calibrate(self):
@@ -217,7 +216,7 @@ class mhz_class_serial:
 			self.parse(self.receive())
 			return
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
 
 
@@ -245,7 +244,7 @@ class mhz_class_serial:
 		try: 
 			ll = len(response)
 		except	Exception as e:
-			print u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
+			U.logger.log(30,"", exc_info=True)
 			return 
 		if ll != 9: return
 		for i in range (0, 9):
@@ -266,7 +265,7 @@ class mhz_class_serial:
 
 #################################		 
 def readParams():
-	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
+	global sensorList, sensors, logDir, sensor, sensorRefreshSecs, displayEnable
 	global rawOld,i2cAddress
 	global deltaX, mhz16, minSendDelta
 	global oldRaw, lastRead
@@ -279,9 +278,9 @@ def readParams():
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
-		lastRead   = lastRead2
+		lastRead 	= lastRead2
 		if inpRaw == oldRaw: return
-		oldRaw	   = inpRaw
+		oldRaw		= inpRaw
 		
 		externalSensor=False
 		sensorList=[]
@@ -290,25 +289,24 @@ def readParams():
 
 		
 		U.getGlobalParams(inp)
-		  
-		if "sensorList"			in inp:	 sensorList=			 (inp["sensorList"])
-		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
 
-		 
- 
+
+		if "sensorList"			in inp: sensorList=			(inp["sensorList"])
+		if "sensors"			in inp: sensors =				(inp["sensors"])
+
 		if sensor not in sensors:
 			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
-			
+
 
 		U.logger.log(10, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
-				xx	   = str(inp["sensorRefreshSecs"]).split("#")
+				xx = str(inp["sensorRefreshSecs"]).split("#")
 				sensorRefreshSecs = float(xx[0]) 
 			except:
-				sensorRefreshSecs = 91	  
+				sensorRefreshSecs = 91
 		deltaX={}
 		restart = False
 		for devId in sensors[sensor]:
@@ -319,7 +317,7 @@ def readParams():
 					xx = sensors[sensor][devId]["sensorRefreshSecs"].split("#")
 					sensorRefreshSecs = float(xx[0]) 
 			except:
-				sensorRefreshSecs = 5	 
+				sensorRefreshSecs = 91
 			
 			old = i2cAddress
 			i2cAddress = U.getI2cAddress(sensors[sensor][devId],default="")
@@ -339,8 +337,6 @@ def readParams():
 			if old != interfaceType: 
 				#U.logger.log(20, "new interface")
 				restart = True
-
-
 
 			try:
 				if "deltaX" in sensors[sensor][devId]: 
@@ -381,12 +377,12 @@ def readParams():
 
 				
 			if devId not in mhz16sensor or restart:
-				U.logger.log(20," new / changed parameters read: i2cAddress:{};	 minSendDelta:{};  deltaX:{};  sensorRefreshSecs:{};  restart:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs, restart))
+				U.logger.log(20," new / changed parameters read: i2cAddress:{};  minSendDelta:{};  deltaX:{};  sensorRefreshSecs:{};  restart:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs, restart))
 				startSensor(devId, i2cAddress)
 				if mhz16sensor[devId] =="":
 					return
 				
-		deldevID={}		   
+		deldevID={}
 		for devId in mhz16sensor:
 			if devId not in sensors[sensor]:
 				deldevID[devId]=1
@@ -398,8 +394,8 @@ def readParams():
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		print sensors[sensor]
+		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
 
@@ -422,7 +418,7 @@ def startSensor(devId,i2cAddress):
 		else:
 			try:import serial
 			except: pass
-			sP = U.getSerialDEV()	  
+			sP = U.getSerialDEV()
 			GPIO.setwarnings(False)
 			GPIO.setmode(GPIO.BCM)
 			GPIO.setup(calibrationPin, GPIO.OUT)
@@ -436,8 +432,8 @@ def startSensor(devId,i2cAddress):
 			mhz16sensor[devId].start()
 						
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		mhz16sensor[devId]	 =""
+		U.logger.log(30,"", exc_info=True)
+		mhz16sensor[devId] =""
 	time.sleep(.1)
 
 	U.muxTCA9548Areset()
@@ -453,7 +449,7 @@ def restartSensor():
 		GPIO.output(calibrationPin, True)
 		time.sleep(0.1)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	time.sleep(.1)
 
 
@@ -463,35 +459,33 @@ def restartSensor():
 def calibrateSensor(devId):
 	global sensors, sensor
 	global mhz16sensor
-	global CO2normal, CO2offset,sensitivity	  
+	global CO2normal, CO2offset,sensitivity
 	
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
 	#print "calibrating"
 	ret ="" 
 	try: 
-		 CO2offset[devId] = 0  
-		 mhz16sensor[devId].calibrate()
-		 time.sleep(5)
-		 ret = getValues(devId,nMeasurements=3)
-		 if ret == "badSensor":
-			print " calibration did not work exit " 
-			print ret
+		CO2offset[devId] = 0  
+		mhz16sensor[devId].calibrate()
+		time.sleep(5)
+		ret = getValues(devId,nMeasurements=3)
+		if ret == "badSensor":
+			U.logger.log(20, " calibration did not work exit ")
 			time.sleep(5)
 			return
 			
-		 co2 = ret["CO2"]
+		co2 = ret["CO2"]
 
-		 CO2offset[devId] = CO2normal[devId] - co2 
-		 #print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
+		CO2offset[devId] = CO2normal[devId] - co2 
+		#print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
 	except	Exception as e:
-		print "ret =", ret
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	time.sleep(.1)
 
 
 #################################
 def getValues(devId,nMeasurements=5):
-	global sensor, sensors,	 mhz16sensor, badSensor
+	global sensor, sensors, mhz16sensor, badSensor
 	global startTime, CO2offset, CO2normal, sensitivity
 
 	ret = "badSensor"
@@ -503,11 +497,11 @@ def getValues(devId,nMeasurements=5):
 		if mhz16sensor[devId] =="": 
 			badSensor +=1
 			return "badSensor"
-		nnn		 = max(2,nMeasurements)
-		raw		 = 0
-		nMeas	 = 0.
-		addIfBad = 2
-		ii		 = 0
+		nnn			= max(2,nMeasurements)
+		raw			= 0
+		nMeas		= 0.
+		addIfBad 	= 2
+		ii			= 0
 		while ii < nnn:
 			ii+=1
 			mhz16sensor[devId].measure()
@@ -534,14 +528,14 @@ def getValues(devId,nMeasurements=5):
 		raw /= nMeas 
 		CO2 = raw + CO2offset[devId]
 		#print "raw, CO2, CO2offset, CO2normal", raw, CO2, CO2offset[devId], CO2normal[devId]
-		ret	 = {"CO2":			 ( round(CO2,1)			   )
-			   ,"CO2offset":	 ( round(CO2offset[devId],1)	  )
+		ret = {"CO2":			 ( round(CO2,1)			   )
+			   ,"CO2offset":	 ( round(CO2offset[devId],1) )
 			   ,"CO2calibration":( round(CO2normal[devId],1) ) 
 			   ,"raw":			 ( round(raw,1)			   ) }
-		U.logger.log(10, unicode(ret)) 
+		U.logger.log(10, "{}".format(ret)) 
 		badSensor = 0
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		mhz16sensor[devId].start()
@@ -609,7 +603,7 @@ lastRead = time.time()
 
 U.echoLastAlive(G.program)
 
-#					  used for deltax comparison to trigger update to indigo
+#					used for deltax comparison to trigger update to indigo
 lastValues0			= {"CO2":0}
 lastValues			= {}
 lastData			= {}
@@ -623,11 +617,11 @@ loopSleep			= 1
 sensorWasBad		= False
 
 
-calibTime		 = time.time()
+calibTime			= time.time()
 needCalibration = False
 calibrationWaitTime = 60 # secs
 
-calibrating		  = 20
+calibrating			= 20
 
 loopCount = 0
 while True:
@@ -637,8 +631,8 @@ while True:
 		if sensor in sensors:
 			for devId in sensors[sensor]:
 				if devId not in lastValues: 
-					lastValues[devId]		  = copy.copy(lastValues0)
-					timeOKCalibration[devId ] = 0
+					lastValues[devId]			= copy.copy(lastValues0)
+					timeOKCalibration[devId ]	= 0
 				
 				if loopCount ==0:
 					calibTime = time.time()
@@ -664,24 +658,24 @@ while True:
 						U.restartMyself(reason=" back from bad sensor, need to restart to get sensors reset",doPrint=False)
 					
 					data["sensors"][sensor][devId] = values
-					needCalibration	 = False
-					x1 =	   data["sensors"][sensor][devId]["CO2"] - CO2normal[devId] 
+					needCalibration = False
+					x1 = data["sensors"][sensor][devId]["CO2"] - CO2normal[devId] 
 
 					if	 sensitivity[devId] =="small" : recalib = [20,20]
 					elif sensitivity[devId] =="medium": recalib = [30,30]
 					else							  : recalib = [50,50]
 
-					if (  x1 < -recalib[0]	 )	 or	  (	 abs(x1) > recalib[1] and time.time() - calibTime < calibrationWaitTime	  ): 
+					if (  x1 < -recalib[0] ) or  ( abs(x1) > recalib[1] and time.time() - calibTime < calibrationWaitTime ): 
 						#print "delta calib",  data["sensors"][sensor][devId]["CO2"], CO2normal[devId],data["sensors"][sensor][devId]["CO2"] - CO2normal[devId] , time.time() - calibTime 
-						needCalibration	 = True
+						needCalibration = True
 					else:
 						if abs(x1)	> recalib[1]:
 							if time.time() - timeOKCalibration[devId] > timeaboveCalibrationMAX[devId]:
 								#print "time for recalibration after %d [sec]"%(time.time() - timeOKCalibration)
-								needCalibration	 = True
+								needCalibration = True
 						else:
 							timeOKCalibration[devId] = time.time()
-							calibrating				-= 1
+							calibrating -= 1
 					deltaN = 0
 					delta  = 99999
 					for xx in lastValues0:
@@ -693,7 +687,7 @@ while True:
 						except: pass
 					#print "delta %.4f" % deltaN, deltaX[devId]
 					#print " delta co2 compared to last:", delta
-					if	 time.time() - calibTime > calibrationWaitTime: 
+					if time.time() - calibTime > calibrationWaitTime: 
 						data["sensors"][sensor][devId]["calibration"] ="set"
 					elif (	(time.time() - calibTime) > calibrationWaitTime/3)	and delta < abs(recalib[0]):
 						data["sensors"][sensor][devId]["calibration"] ="set Preliminary"
@@ -702,7 +696,8 @@ while True:
 				else:
 					continue
 				#print "G.sendToIndigoSecs), G.lastAliveSend , minSendDelta",G.sendToIndigoSecs, G.lastAliveSend , minSendDelta
-				if (( deltaN > deltaX[devId]   or  (  time.time() -	 G.lastAliveSend  > abs(G.sendToIndigoSecs) ) or  quick	  ) and	 ( time.time() - G.lastAliveSend > minSendDelta ) ):
+				#U.logger.log(20,"{}, {}, {}, {}, {}".format(deltaN > deltaX[devId], (  time.time() - G.lastAliveSend  > abs(G.sendToIndigoSecs) ) , quick,  ( time.time() - G.lastAliveSend > minSendDelta ), calibrating ))
+				if (( deltaN > deltaX[devId]   or  (  time.time() - G.lastAliveSend  > abs(G.sendToIndigoSecs) ) or  quick  ) and ( time.time() - G.lastAliveSend > minSendDelta ) ):
 					sendData = True
 
 		#print "calibrating", calibrating
@@ -711,11 +706,11 @@ while True:
 		loopCount +=1
 
 		##U.makeDATfile(G.program, data)
-		quick = U.checkNowFile(G.program)				 
+		quick = U.checkNowFile(G.program)
 		U.echoLastAlive(G.program)
 
 		if loopCount %5 ==0 and not quick:
-			if time.time() - lastRead > 5.:	 
+			if time.time() - lastRead > 5.:
 				readParams()
 				lastRead = time.time()
 
@@ -735,7 +730,7 @@ while True:
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

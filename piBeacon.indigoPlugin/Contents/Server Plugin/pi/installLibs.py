@@ -9,11 +9,9 @@
 import sys, os, subprocess, copy
 import time,datetime
 import json
-import RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
 
 G.program  = "installLibs"
 
@@ -26,7 +24,7 @@ def setupLibs(upgradeOpSys):
 		U.logger.log(30,"==== check if nameserver works")
 		cmd= "/bin/ping -c 3 -i 1 -W 3 -q www.google.com " # not /sbin/ like on a mac!!
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		if unicode(ret).find("unknown host www.google.com") >-1:
+		if "{}".format(ret).find("unknown host www.google.com") >-1:
 			U.logger.log(30, " nameserver wrong , need to fix, add it to /etc/network/interfaces file ")
 			if subprocess.Popen("cat /etc/network/interfaces ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].find("nameserver")==-1:
 				subprocess.Popen("cp /home/pi/interfaces /etc/network/ ",shell=True)
@@ -85,7 +83,6 @@ def setupLibs(upgradeOpSys):
 		if False:
 			if upgradeOpSys.find("force")>-1 or upgradeOpSys.find("dist-upgrade"):
 				cmd="apt-get -y update"
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs ==== getting "+cmd+"  this might take an hour"
 				U.logger.log(30, "==== getting "+cmd+"  updates")
 				ret=subprocess.Popen(cmd +" &",shell=True)
 				time.sleep(10)
@@ -98,7 +95,6 @@ def setupLibs(upgradeOpSys):
 				U.logger.log(30,"==== "+cmd+" finished ")
 
 				cmd="apt-get -y upgrade"
-				print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" installLibs ==== getting "+cmd+"  this might take an hour"
 				ret=subprocess.Popen(cmd +" &",shell=True)
 				time.sleep(10)
 				for ii in range(300) :	# max 3 hours
@@ -179,31 +175,31 @@ def setupLibs(upgradeOpSys):
 		cmd="apt-get install -y python-dev"
 		U.logger.log(30, "==== installing "+cmd)
 		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,"python-dev return "+ret[0]+"\n"+ret[1])
+		U.logger.log(30,"python-dev return {}, {}".format(ret[0], ret[1]))
 
 		time.sleep(1)
 		cmd="apt-get install python-bluez"
 		U.logger.log(30, "==== installing "+cmd)
 		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,	  ret[0]+"\n"+ret[1])
+		U.logger.log(30,"{}, {}".format(ret[0], ret[1]))
 
 		time.sleep(1)
 		cmd="apt-get -y install python-smbus"
 		U.logger.log(30, "==== installing "+cmd)
 		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,	  ret[0]+"\n"+ret[1])
+		U.logger.log(30,"{}, {}".format(ret[0], ret[1]))
 
 		time.sleep(1)
 		cmd="apt-get -y install i2c-tools"
 		U.logger.log(30, "==== installing "+cmd)
 		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,	  ret[0]+"\n"+ret[1])
+		U.logger.log(30,"{}, {}".format(ret[0], ret[1]))
 
 		time.sleep(1)
 		cmd="cd "+G.homeDir0+" ;git clone https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code.git"
 		U.logger.log(30, "==== installing "+cmd)
 		ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-		U.logger.log(30,	  ret[0]+"\n"+ret[1])
+		U.logger.log(30,"{}, {}".format(ret[0], ret[1]))
 
 
 		time.sleep(1)
@@ -211,34 +207,14 @@ def setupLibs(upgradeOpSys):
 		if not os.path.isfile(G.homeDir0+"py-spidev-master/setup.py"):
 			cmd="cd "+G.homeDir0+" ;wget https://github.com/Gadgetoid/py-spidev/archive/master.zip; mkdir py-spidev-master"
 			ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-			U.logger.log(30,	  ret[0]+"\n"+ret[1])
+			U.logger.log(30,"{}, {}".format(ret[0], ret[1]))
 
 			cmd="echo 'A'| unzip master.zip; rm master.zip; cd "+G.homeDir0+"py-spidev-master; sudo /usr/bin/python setup.py install;cd "+G.homeDir
 			U.logger.log(30, "==== installing "+cmd)
 			ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-			U.logger.log(30,	  ret[0]+"\n"+ret[1])
+			U.logger.log(30,"{}, {}".format(ret[0], ret[1]))
 			U.logger.log(30, "==== installing "+cmd+" done")
 
-
-		try:
-			import Adafruit_DHT
-			DHTinstalled=True
-		except:
-			DHTinstalled=False
-		
-		print "DHTinstalled",DHTinstalled
-		time.sleep(1)
-		if (not os.path.isfile(G.homeDir0+"Adafruit_Python_DHT/setup.py"))	or upgradeOpSys.lower().find("dht") >-1 or upgradeOpSys.lower().find("force")>-1 or (not DHTinstalled):
-			cmd="cd "+G.homeDir0+"; git clone https://github.com/adafruit/Adafruit_Python_DHT.git"
-			U.logger.log(30, "==== getting  "+cmd)
-			try:
-				ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-				U.logger.log(30,"Adafruit_Python_DHT return "+ret[0]+"\n"+ret[1])
-				cmd="cd "+G.homeDir0+"Adafruit_Python_DHT; sudo /usr/bin/python setup.py install"
-				ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-				U.logger.log(30, "Adafruit_Python_DHT return "+ ret[0]+"\n"+ret[1])
-			except:	   # installed
-				U.logger.log(30, "install failed for Adafruit_Python_DHT")
 
 		time.sleep(1)
 		if not os.path.isfile(G.homeDir0+"Adafruit_Python_GPIO/setup.py") or  upgradeOpSys.lower().find("force")>-1:
@@ -293,7 +269,6 @@ def doRead():
 def doReboot(tt=1,text="",cmd=""):
 	global rebootCommand
 	U.logger.log(30,text)
-	print " rebooting / shutdown ", text
 	time.sleep(tt)
 	if cmd =="":
 		subprocess.call(rebootCommand, shell=True)
@@ -328,7 +303,7 @@ myPID			= str(os.getpid())
 upgradeOpSys =""
 try:
 	upgradeOpSys = sys.argv[1]
-	U.logger.log(30," installLibs	 will do a complete upgrade of the opsys , this might take a LOOONG time")
+	U.logger.log(30," installLibs     will do a complete upgrade of the opsys , this might take a LOOONG time")
 	# kill some of the programs that might be in conflict with installing new opsys s..
 	U.killOldPgm(myPID,"callbeacon.py")
 	U.killOldPgm(myPID,"beaconloop.py")
@@ -339,7 +314,7 @@ try:
 	U.killOldPgm(myPID,"display.py")
 	subprocess.call("rm " + G.homeDir + "installLibs.done	 >/dev/null 2>&1", shell=True)
 	test[0] = -1
-	arguments = unicode(sys.argv)
+	arguments = "{}".format(sys.argv)
 except:
 	U.logger.log(30," installLibs no opsys upgrade requested")
 	arguments = ""
@@ -353,7 +328,6 @@ doU= False
 for ii in range(1,len(test)):
 	if test[ii]:
 		doU=True
-		print "test:" , test
 		break
 
 if test[0] < 4.0 or	 doU:

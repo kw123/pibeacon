@@ -9,14 +9,10 @@ import smbus2
 import struct
 from datetime import timedelta
 
-try: 	unicode
-except: unicode = str
-
-
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "sensirionscd30"
 
 
@@ -234,25 +230,30 @@ class SCD30:
 		self._send_command(0x4600, 1, [interval])
 
 	def read_measurement(self):
-		"""Reads out a CO2, temperature and humidity measurement.
+		try:
+			"""Reads out a CO2, temperature and humidity measurement.
 
-		Must only be called if a measurement is available for reading, i.e.
-		get_data_ready() returned 1.
+			Must only be called if a measurement is available for reading, i.e.
+			get_data_ready() returned 1.
 
-		Returns:
-			tuple of measurement values (CO2 ppm, Temp 'C, RH %) or None.
-		"""
-		data = self._send_command(0x0300, num_response_words=6)
+			Returns:
+				tuple of measurement values (CO2 ppm, Temp 'C, RH %) or None.
+			"""
+			data = self._send_command(0x0300, num_response_words=6)
 
-		if data is None or len(data) != 6:
-			U.logger.log(30, "Failed to read measurement, received: ".format( self._pretty_hex(data)) )
-			return "","",""
+			if data is None or len(data) != 6:
+				U.logger.log(30, "Failed to read measurement, received: ".format( self._pretty_hex(data)) )
+				return "","",""
 
-		co2_ppm = interpret_as_float((data[0] << 16) | data[1])
-		temp_celsius = interpret_as_float((data[2] << 16) | data[3])
-		rh_percent = interpret_as_float((data[4] << 16) | data[5])
+			co2_ppm = interpret_as_float((data[0] << 16) | data[1])
+			temp_celsius = interpret_as_float((data[2] << 16) | data[3])
+			rh_percent = interpret_as_float((data[4] << 16) | data[5])
 
-		return (co2_ppm, temp_celsius, rh_percent)
+			return (co2_ppm, temp_celsius, rh_percent)
+		except	Exception as e:
+			U.logger.log(30,"", exc_info=True)
+
+
 
 	def set_auto_self_calibration(self, active: bool):
 		"""(De-)activates the automatic self-calibration feature.
@@ -329,7 +330,7 @@ class SCD30:
 			U.logger.log(30, u"in offset {} offset_ticks={} ".format(offset, offset_ticks))
 			return self._send_command(0x5403, 0, [offset_ticks])
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={} ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30,"", exc_info=True)
 			return 0 
 
 	def soft_reset(self):
@@ -353,7 +354,7 @@ class SENSORclass():
 			self.scd30.start_periodic_measurement()
 			time.sleep(2)
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30,"", exc_info=True)
 		return 
 
 	def getData(self): 
@@ -365,7 +366,7 @@ class SENSORclass():
 				else: 
 					time.sleep(0.2)
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={} ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30,"", exc_info=True)
 
 		return "","",""
 # ===========================================================================
@@ -461,7 +462,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 
@@ -505,7 +506,7 @@ def startSensor(devId):
 			sensorTemperatureOffset	= SENSOR[devId].scd30.get_temperature_offset()
 
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
 	U.muxTCA9548Areset()
@@ -526,6 +527,12 @@ def getValues(devId):
 			return "badSensor"
 
 		CO2, temp, hum = 	SENSOR[devId].getData()
+		if type(temp) != type(0.1): 
+			badSensor += 1
+			if badSensor > 5: return "badSensor"
+			return ""
+
+		#U.logger.log(20, u"CO2:{}, temp:{}, hum:{}".format(CO2, temp, hum))
 		if "offsetTemp" in sensors[sensor][devId]: temp += float(sensors[sensor][devId]["offsetTemp"])
 		if "offsetHum"  in sensors[sensor][devId]: hum  += float(sensors[sensor][devId]["offsetHum"])
 		if "offsetCO2"  in sensors[sensor][devId]: CO2  += float(sensors[sensor][devId]["offsetCO2"])
@@ -533,7 +540,7 @@ def getValues(devId):
 		badSensor = 0
 		return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 5: return "badSensor"
 	return ""
@@ -657,7 +664,7 @@ def execSensor():
 			lastMeasurement = time.time()
 
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 
 

@@ -18,7 +18,7 @@ import datetime
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "as3935"
 
 
@@ -244,7 +244,7 @@ class RPi_AS3935:
 	def read_data(self):
 		try:	ret = self.i2cbus.read_i2c_block_data(self.address, 0x00)
 		except: ret=[]
-		U.logger.log(10, unicode(ret))
+		U.logger.log(10, "{}".format(ret))
 		return ret
 		
 # ===========================================================================
@@ -375,11 +375,11 @@ def readParams():
 				startSensor(devId )
 				if as3935sensor[devId] =="":
 					return
-				U.logger.log(30,"new parameters read: \n  i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+";"+
-						"  interruptGPIO:"+unicode(interruptGPIO)+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) +"\n"+
-						"  minStrikes:"+unicode(minStrikes)		 +";  calibrationDynamic:"+unicode(calibrationDynamic) +"  inside:"+str(inside)+";"+
-						"  tuneCapacitor:"+unicode(tuneCapacitor)+ " = "+CapValue[tuneCapacitor]+"pF;"+
-						"  minNoiseFloor:"+unicode(minNoiseFloor)			+"	noiseFloor:"+str(noiseFloor)+"\n"+
+				U.logger.log(30,"new parameters read: \n  i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+";"+
+						"  interruptGPIO:{}".format(interruptGPIO)+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) +"\n"+
+						"  minStrikes:{}".format(minStrikes)		 +";  calibrationDynamic:{}".format(calibrationDynamic) +"  inside:"+str(inside)+";"+
+						"  tuneCapacitor:{}".format(tuneCapacitor)+ " = "+CapValue[tuneCapacitor]+"pF;"+
+						"  minNoiseFloor:{}".format(minNoiseFloor)			+"	noiseFloor:"+str(noiseFloor)+"\n"+
 						"  restart:"+str(restart))
 				
 		deldevID={}		   
@@ -394,8 +394,8 @@ def readParams():
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30,unicode(sensors[sensor]) ) 
+		U.logger.log(30,"", exc_info=True)
+		U.logger.log(30,"{}".format(sensors[sensor]) ) 
 		
 
 
@@ -407,7 +407,7 @@ def startSensor(devId):
 	global as3935sensor 
 	global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO, noiseFlorSet,calibrationDynamic, noiseFloor, CapValue
 	
-	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
@@ -424,7 +424,7 @@ def startSensor(devId):
 		else: badSensor = False
 						
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		data={"sensors":{sensor:{devId:{"eventType":"badsensor"}}}}
 		badSensor = True
 	if badSensor:
@@ -499,7 +499,7 @@ def handle_interrupt(channel):
 				continue
 
 			else:
-				U.logger.log(10, "unknown read error, reason: "+unicode(reason))
+				U.logger.log(10, "unknown read error, reason: {}".format(reason))
 				restartNeededCounter +=1
 				continue
 
@@ -510,7 +510,7 @@ def handle_interrupt(channel):
 
 
 			data["sensors"][sensor][devId]=msg
-			U.logger.log(10,	" sending:"+ unicode(data))
+			U.logger.log(10,	" sending:{}".format(data))
 			U.sendURL(data,squeeze=False)
 			msg["lastEvent"] = lastEvent
 			msg["lastTime"]	 = lastTime

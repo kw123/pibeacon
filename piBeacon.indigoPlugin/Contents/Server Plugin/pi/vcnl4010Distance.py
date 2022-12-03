@@ -15,7 +15,7 @@ import smbus
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "vcnl4010Distance"
 import  displayDistance as DISP
 
@@ -25,37 +25,39 @@ import  displayDistance as DISP
 
 #################################		
 def readParams():
-	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist,displayEnable
-	global output, sensorActive, timing, tof, distanceUnits
+	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist, deltaDistAbs,displayEnable
+	global output, sensorActive, timing, sensCl, distanceUnits
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionLongDistance, actionLongDistanceLimit
 	global distanceOffset, distanceMax
 	global oldRaw, lastRead
 	try:
 
+
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
-		if inp == "": return
-		if lastRead2 == lastRead: return
+		if inp == "": return False
+		if lastRead2 == lastRead: return False
 		lastRead   = lastRead2
-		if inpRaw == oldRaw: return
+		if inpRaw == oldRaw: return False
 		oldRaw	 = inpRaw
 
 
-		externalSensor=False
+		externalSensor = False
 		sensorList=[]
 		sensorsOld= copy.copy(sensors)
 
 		U.getGlobalParams(inp)
 		  
-		if "sensorList"		 in inp:  sensorList=			 (inp["sensorList"])
-		if "sensors"			in inp:  sensors =			   (inp["sensors"])
-		if "distanceUnits"	  in inp:  distanceUnits=		  (inp["distanceUnits"])
+		if "sensorList"		in inp:  sensorList=		inp["sensorList"]
+		if "sensors"		in inp:  sensors =			inp["sensors"]
+		if "distanceUnits"	in inp:  distanceUnits=		inp["distanceUnits"]
 		
-		if "output"			 in inp:  output=				 (inp["output"])
-   
- 
+		if "output"			 in inp:  output=			inp["output"]
+
 		if sensor not in sensors:
-			U.logger.log(30, "40xx Distance  is not in parameters = not enabled, stopping vl6180xDistance.py" )
-			exit()
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping".format(G.program) )
+			time.sleep(1)
+			U.killOldPgm(-1,G.program+".py")
+			sys.exit(0)
 			
  
 		sensorChanged = doWeNeedToStartSensor(sensors,sensorsOld,sensor)
@@ -66,7 +68,8 @@ def readParams():
 				os.remove(G.homeDir+"temp/"+sensor+".dat")
 				
 		dynamic = False
-		deltaDist={}
+		deltaDist = {}
+		deltaDistAbs = {}
 		for devId in sensors[sensor]:
 			deltaDist[devId]  = 0.1
 			try:
@@ -86,17 +89,17 @@ def readParams():
 			except:
 				display = False	
 
-			try:
-				if "deltaDist" in sensors[sensor][devId]: 
-					deltaDist[devId]= float(sensors[sensor][devId]["deltaDist"])/100.
-			except:
-				pass
+			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100.
+			except: deltaDist[devId] = 0.1
+
+			try:	deltaDistAbs[devId] = float(sensors[sensor][devId].get("deltaDistAbs",10))
+			except: deltaDistAbs[devId] = 10.
+
 			try:
 				if "dUnits" in sensors[sensor][devId] and sensors[sensor][devId]["dUnits"] !="":
 					distanceUnits = sensors[sensor][devId]["dUnits"]
 			except  Exception as e:
 				pass
-
 			try:
 				if "actionShortDistance" in sensors[sensor][devId]:			ctionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
 			except:															ctionShortDistance = ""
@@ -122,25 +125,26 @@ def readParams():
 				if True:												maxCurrent = 8
 				if "maxCurrent" in sensors[sensor][devId]:				maxCurrent = int(sensors[sensor][devId]["maxCurrent"])
 			except:														maxCurrent = 8
-			if devId not in distanceOffset:
-					distanceOffset[devId] = 2000
+			if devId not in distanceMax:
 					distanceMax[devId]	= int(5000*(maxCurrent/2.))
 
 			#print sensorChanged, sensorActive, distanceMax
 			if sensorChanged == 1:
 				if not sensorActive:
 					U.logger.log(30,"==== Start ranging =====")
-					tof = VCNL40xx(address=0x13,maxCurrent=maxCurrent)
+					sensCl = VCNL40xx(address=0x13,maxCurrent=maxCurrent)
 			sensorActive = True
 			
 			
 		if sensorChanged == -1:
 			U.logger.log(30, "==== stop  ranging =====")
 			exit()
+			return  True
 
 
 	except  Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
+	return  True
 
 
 
@@ -233,84 +237,110 @@ class VCNL40xx():
 		# VCNL4010 address, 0x13(19)
 		# Select command register, 0x80(128)
 		#		0xFF(255)	Enable ALS and proximity measurement, LP oscillator
-		self.bus.write_byte_data(0x13, VCNL40xx_COMMAND, 0xff)# 1<<1|1<<2)
+		self.bus.write_byte_data(self.address, VCNL40xx_COMMAND, 0xff)# 1<<1|1<<2)
 		# VCNL4010 address, 0x13(19)
 		# set ir-led current 
-		self.bus.write_byte_data(0x13, VCNL40xx_IRLED,maxCurrent) #  0-20 = 0- 200mA
+		self.bus.write_byte_data(self.address, VCNL40xx_IRLED,maxCurrent) #  0-20 = 0- 200mA
 		# Select proximity rate register, 0x82(130)
-		self.bus.write_byte_data(0x13, VCNL4010_PROXRATE,1<<1|1) # = 00000011 = 16 measuremnts per second
+		self.bus.write_byte_data(self.address, VCNL4010_PROXRATE,1<<1|1) # = 00000011 = 16 measuremnts per second
 		# VCNL4010 address, 0x13(19)
 		# Select ambient light register, 0x84(132)
-		self.bus.write_byte_data(0x13, VCNL40xx_AMBIENTPARAMETER, 1<<7|1<<6|1<<5|1<<4|1<<3|1<<2) # 1 1110000 = cont. conversion + 10 samples per second + 1000 = auto offset
+		self.bus.write_byte_data(self.address, VCNL40xx_AMBIENTPARAMETER, 1<<7|1<<6|1<<5|1<<4|1<<3|1<<2) # 1 1110000 = cont. conversion + 10 samples per second + 1000 = auto offset
 
 
 	def read_Data(self, timeout_sec=1):
 		try:
-			data = self.bus.read_i2c_block_data(0x13, 0x85, 4)
+			data = self.bus.read_i2c_block_data(self.address, 0x85, 4)
 			luminance = data[0] * 256 + data[1]
-			distance  = data[2] * 256 + data[3] 
+			distance  = max(1, data[2] * 256 + data[3] - 8*256 -90)
 			
 			return   distance, luminance, data
 			#return self._device.readU16BE(VCNL40xx_AMBIENTDATA)
 		except  Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		return "","",[]
 
 
 	   
 #################################
 def readSensor():
-	global sensor, sensors,  tof, badSensor, distanceOffset, distanceMax
+	global sensor, sensors,  sensCl, badSensor, distanceMax
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+	global distance0Offset, distance0Max
 	distance   = "badSensor"
 	luminance  = ""
 	try:
-		for ii in range(4):
-			distance0,luminance, data = tof.read_Data()
-			if distance0 != "":
-				distance = distance0 - distanceOffset[devId]
-				distance = max(0,distanceMax[devId]- distance)
-				#print "in getsensor", data,luminance, distance0, distance,  "min=",distanceOffset[devId], "max=",distanceMax[devId]
+		for ii in range(2):
+			tof0, luminance, data = sensCl.read_Data()
+			if tof0 != "":
+				#if tof0 < distance0Offset: distance0Offset= tof0
+				#if tof0 > distance0Max: distance0Max = tof0
+				tof = max (1, tof0 - distance0Offset)
+				distance = (distance0Max / tof )/20.# in cm 
 				badSensor = 0
-				#print " bf action test ", actionShortDistance, actionMediumDistance, actionLongDistance
-				if actionShortDistance !="":
-					if actionDistanceOld !="short"  and distance <= actionShortDistanceLimit:
-						if actionDistanceOld != "short":
-							subprocess.call(actionShortDistance, shell=True)
-							actionDistanceOld ="short"
-						
-				if actionMediumDistance !="":
-					if actionDistanceOld !="medium"  and distance >  actionShortDistanceLimit and distance < actionLongDistanceLimit:
-						if actionDistanceOld != "medium":
-							subprocess.call(actionMediumDistance, shell=True)
-							actionDistanceOld ="medium"
-						
-				if actionLongDistance !="":
-					if actionDistanceOld !="long"	and distance >=  actionLongDistanceLimit:
-						if actionDistanceOld != "long":
-							subprocess.call(actionLongDistance, shell=True)
-							actionDistanceOld ="long"
 								
 				return  distance, luminance #  return in cm/lux
 			time.sleep(0.02)
-		if badSensor >3: return "badSensor"
+
+		badSensor += 1
+		if badSensor >30: 
+			badSensor = 0
+			return "badSensor", ""
 	except  Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
-	return distance  , luminance	 
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"distance>>{}<<".format(distance))
+	return "",""	 
 
 
 
+#################################
+def doAction(distance):
+	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+
+	try:
+		if actionShortDistance == "" and actionMediumDistance == "" and actionMediumDistance == "": return 
+
+		if distance != "" and distance !=0:
+
+			if	 distance > actionLongDistanceLimit:	region = "long"
+			elif distance < actionShortDistanceLimit:	region = "short"
+			else:										region = "medium"
+
+			# check reset of last action, if last was short distamce must have been not short at least once ...  
+			if actionDistanceOld != "":
+				if   actionDistanceOld == "short"   	and region == "short":	actionDistanceOld = ""
+				elif actionDistanceOld == "long"    	and region == "long":	actionDistanceOld = ""
+				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
+
+			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
+				subprocess.call(actionShortDistance, shell=True)
+				actionDistanceOld = "short"
+					
+			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
+				subprocess.call(actionMediumDistance, shell=True)
+				actionDistanceOld = "medium"
+					
+			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
+				subprocess.call(actionLongDistance, shell=True)
+				actionDistanceOld = " long"
+
+	except  Exception as e:
+			U.logger.log(30,"", exc_info=True)
 
 
 ############################################
-global distanceOffset, distanceMax, inpRaw
-global sensor, sensors, first, tof, badSensor, sensorActive
+global distanceOffset, distanceMax, inpRaw, deltaDist, deltaDistAbs, deltaDistAbs
+global sensor, sensors, first, badSensor, sensorActive
 global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-global oldRaw,  lastRead
-oldRaw				  = ""
-lastRead				= 0
-		
+global oldRaw,  lastRead, sensCl, distance0Offset, distance0Max
+
+distance0Offset				= 140
+distance0Max				= 63397
+sensCl						= ""
+
+oldRaw						= ""
+lastRead					= 0
+maxRange					= 20.
 
 actionShortDistance			= ""
 actionShortDistanceLimit	= 5.
@@ -337,7 +367,7 @@ output						= {}
 badSensor					= 0
 sensorActive				= False
 loopSleep					= 0.1
-
+sendEvery					= 30.
 U.setLogging()
 
 myPID	   = str(os.getpid())
@@ -360,68 +390,79 @@ U.echoLastAlive(G.program)
 lastDist			= {}
 lastData			= {}
 lastTime			= {}
-maxDeltaSpeed	   = 40. # = mm/sec
 lastSend			= 0
-lastDisplay		 = 0
-maxDeltaSpeed	   = 40. # = mm/sec
+lastDisplay			= 0
+maxDeltaSpeed		= 40. # = mm/sec
 lastRead			= time.time()
-G.lastAliveSend	 = time.time() -1000
-lastLux   = -999999
-lastLux2  = 0
-tt0 = time.time()
+G.lastAliveSend	 	= time.time() -1000
+lastLux				= -999999
+lastLux2			= 0
+tt0					= time.time()
+
 while True:
 	try:
+		if sensCl == "":
+			time.sleep(20)
+			break
 		tt = time.time()
-		data={}
-		data["sensors"]	 = {}
+		data = {}
+		data["sensors"]     = {}
 		if sensor in sensors:
+			data["sensors"][sensor] = {}
 			for devId in sensors[sensor]:
+				data["sensors"][sensor][devId] = {}
 				if devId not in lastDist: 
 					lastDist[devId] =-500.
 					lastTime[devId] =0.
-				distance,lux =readSensor()
-				data["sensors"][sensor] = {devId:{}}
+				dist, lux =readSensor()
 
-				if distance =="badSensor":
+				if dist == "":
+					continue
+
+				if dist == "badSensor":
 					U.logger.log(30," bad sensor")
 					data["sensors"][sensor][devId]["distance"]="badSensor"
 					U.sendURL(data)
 					lastDist[devId] =-100.
 					continue
-				else:
-					data["sensors"][sensor][devId]["distance"] = distance
 
-				if lux !="": 
+				if lux != "": 
 							data["sensors"][sensor][devId]["lux"] =lux
 							lastLux2 = lastLux
 							lastLux  = float(lux)
 				else:
-							data["sensors"][sensor][devId]["lux"] =lastLux
+							data["sensors"][sensor][devId]["lux"] = lastLux
 
+				#U.logger.log(20, "{}  {}".format(dist, lux) ) 
+				dist = round(float(dist),1)
+				doAction(dist)
+				if dist > maxRange: dist = 999
+				delta  = dist - lastDist[devId]
+				deltaA = abs(dist - lastDist[devId])
+				deltaT = max(tt   - lastTime[devId],0.01)
+				speed  = delta / deltaT
+				deltaN = abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
 
-				dist = float(distance)
-				delta=  dist - lastDist[devId]
-				deltaT =  max(tt   - lastTime[devId],0.01)
-				speed  =  delta / deltaT
-				deltaN= abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
-				if (  
-					( deltaN > deltaDist[devId] ) or  
-					( (tt - G.lastAliveSend) > abs(sensorRefreshSecs))  or 
-					( quick )  or 
-					( speed > maxDeltaSpeed )  or 
-					( abs(lastLux2 - lastLux)/ max(1.,lastLux2 + lastLux) > deltaDist[devId] )  ): # 10%
-						data["sensors"][sensor][devId]["speed"] = speed
-						G.lastAliveSend = tt
-						U.sendURL(data)
-				lastDist[devId]  = dist
-				lastTime[devId]  = tt
+				trigDD 	= deltaN > deltaDist[devId]
+				trigDDa	= deltaA > deltaDistAbs[devId]
+				trigDT	= tt - sendEvery > lastTime[devId] 
+				trigQi	= quick
+				trigL	= abs(lastLux2 - lastLux) / max(1.,lastLux2 + lastLux) > deltaDist[devId]
+				if trigDD or trigDDa or trigDT or trigQi or trigL: 
+							data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},L:{:1}".format(trigDD, trigDDa, trigDT, trigQi, trigL)
+							data["sensors"][sensor][devId]["distance"]	= dist
+							data["sensors"][sensor][devId]["speed"] 	= speed
+							U.sendURL(data)
+							lastDist[devId]  = dist
+							lastTime[devId]  = tt
+							G.lastAliveSend = tt
 
-				if displayEnable =="1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - G.lastAliveSend >10. or quick):
+				if displayEnable == "1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - G.lastAliveSend >10. or quick):
 					lastDisplay = tt
 					DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-					U.logger.log(10, unicode(dist)+"  "+unicode(deltaDist) )   
+					U.logger.log(10, "{}  {}".format(dist, deltaDist) )   
 					#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
-		quick = False
+
 		loopCount +=1
 		
 		U.makeDATfile(G.program, data)
@@ -430,14 +471,16 @@ while True:
 
 		U.echoLastAlive(G.program)
 
-		if loopCount %20 ==0 and not quick:
+		
+		#U.logger.log(20, "loopCount:{}  quick:{}".format(loopCount, quick) )   
+		if loopCount %20 == 0 and not quick:
 			if tt - lastRead > 5.:  
-				readParams()
+				if readParams(): break 
 				lastRead = tt
 		time.sleep(1)
 		#print "end of loop", loopCount
 	except  Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

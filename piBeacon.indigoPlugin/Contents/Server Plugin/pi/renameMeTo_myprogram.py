@@ -17,7 +17,7 @@ import smbus
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "myprogram"
 
 # ===========================================================================
@@ -114,9 +114,9 @@ def getSHT21(i2c=0):
             h =("%3d"%sensorSHT21[str(i2cAdd)].read_humidity()).strip()
             return t,h
         except  Exception as e:
-                U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-                U.logger.log(30, u"return  value: t="+ unicode(t)+";  h="+ unicode(h)  )
-                U.logger.log(30, u"i2c address used: "+ unicode(i2cAdd) )
+                U.logger.log(20,"", exc_info=True)
+                U.logger.log(30, u"return  value: t={}".format(t)+";  h={}".format(h)  )
+                U.logger.log(30, u"i2c address used: {}".format(i2cAdd) )
         return "",""    
 
 
@@ -136,13 +136,13 @@ U.setLogging()
 
 
 readParams()           # get parameters send from indigo
-U.logger.log(30,"input params: " +unicode(sys.argv))
+U.logger.log(30,"input params: {}".format(sys.argv))
    
 try:
     params = sys.argv[1]
     params = json.loads(params)
 except  Exception, e :
-    U.logger.log(30,u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+    U.logger.log(30,"", exc_info=True)
     params ={"devId":"","freeParameter":""}
 deviceID      = params["devId"]
 freeParameter = params["freeParameter"]

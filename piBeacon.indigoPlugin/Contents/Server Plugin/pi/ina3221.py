@@ -3,6 +3,7 @@
 ## adopted from adafruit 
 #
 #
+# py3 prept 
 
 import sys, os, time, json, datetime,subprocess,copy
 import smbus
@@ -10,7 +11,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "ina3221"
 
 
@@ -255,7 +256,7 @@ def readParams():
 
 
 			if devId not in INAsensor:
-				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= " +unicode(i2cAddress)+";	shuntResistor= "+ str(shuntResistor))
+				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= {}".format(i2cAddress)+";	shuntResistor= "+ str(shuntResistor))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				INAsensor[devId] = INA3221(i2cAddress=i2cAdd,shunt_resistor=shuntResistor)
 				U.muxTCA9548Areset()
@@ -271,7 +272,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -288,16 +289,16 @@ def getValues(devId):
 				ShuntVoltage,Current = INAsensor[devId].getShuntVoltageCurrent(ii)
 				BusVoltage			 = INAsensor[devId].getBusVoltage_V(ii)
 				#print ii, "SV:",ShuntVoltage, "   BV:",BusVoltage, "  C:",Current
-				data["ShuntVoltage"+str(ii+1)] =("%7.1f"%ShuntVoltage).strip()
-				data["BusVoltage"+str(ii+1)]   =("%7.3f"%BusVoltage).strip()
-				data["Current"+str(ii+1)]	   =("%7.1f"%Current).strip()
+				data["ShuntVoltage{}".format(ii+1)] = ("%7.1f"%ShuntVoltage).strip()
+				data["BusVoltage{}".format(ii+1)]   = ("%7.3f"%BusVoltage).strip()
+				data["Current{}".format(ii+1)]	    = ("%7.1f"%Current).strip()
 			badSensor = 0
 			U.muxTCA9548Areset()
 			return data
 		except	Exception as e:
 			if badSensor >2 and badSensor < 5: 
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-				U.logger.log(30, u"Current>>" + unicode(Current)+"<<")
+				U.logger.log(30,"", exc_info=True)
+				U.logger.log(30, u"Current>>{}".format(Current)+"<<")
 			badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -403,7 +404,7 @@ while True:
 					 (	tt - G.lastAliveSend  > abs(G.sendToIndigoSecs) ) or  
 					 ( quick										   )   ) and  \
 				   ( ( tt - minSendDelta  > G.lastAliveSend			  )	  ): 
-						## print " sending",deltaN ,deltaX[devId],	tt - G.lastAliveSend ,tt - minSendDelta	 , sensorRefreshSecs, G.sendToIndigoSecs
+
 						U.sendURL(data)
 						lastCurrent[devId]	= current
 
@@ -422,7 +423,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

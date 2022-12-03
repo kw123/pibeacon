@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 ####################
 
+
+## ok for py3
+
 import sys, os, time, json, datetime,subprocess,copy
 import smbus
 import math
@@ -11,7 +14,6 @@ import time
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
 G.program = "bme680"
 
 
@@ -751,8 +753,8 @@ class BME680(BME680Data):
 		return min(max(calc_hum,0),100000)
 
 	def _calc_gas_resistance(self, gas_res_adc, gas_range):
-		var1 = ((1340 + (5 * self.calibration_data.range_sw_err)) * (lookupTable1[gas_range])) >> 16
-		var2 = (((gas_res_adc << 15) - (16777216)) + var1)
+		var1 = int(   (1340 + (5 * self.calibration_data.range_sw_err)) * (lookupTable1[gas_range])   ) >> 16
+		var2 = (((int(gas_res_adc) << 15) - (16777216)) + var1)
 		var3 = ((lookupTable2[gas_range] * var1) >> 9)
 		calc_gas_res = ((var3 + (var2 >> 1)) / var2)
 
@@ -933,7 +935,7 @@ def readParams():
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 #################################
@@ -982,7 +984,7 @@ def startSensor(devId):
 			time.sleep(1)
 			BMEsensor[devId]  	= BME680(i2c_addr=i2cAdd)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			BMEsensor[devId] =""
 			U.muxTCA9548Areset()
 			return
@@ -1049,9 +1051,9 @@ def getValues(devId):
 			if StateOfSensorCalibration[devId] != "calibrated":	SensorStatus = "calibrating"
 
 			if heatSt >0:   # wait at least 25secs and heat ok
-				if time.time() - startTime > 80 and StateOfSensorCalibration[devId] != "calibrated":  # wait at least 60secs and heat ok
+				if time.time() - startTime > 80 and StateOfSensorCalibration[devId] != "calibrated":  # wait at least 80secs and heat ok
 						gasBurnIn[devId].append(float(gas))
-						if len(gasBurnIn[devId])  > 2: U.logger.log(20, "StateOfSensorCalibration:{}, gas:{}, gasBaseLine:{},  delta: {}, gasBurnIn: {}".format(StateOfSensorCalibration[devId], gas, gasBaseLine[devId], abs(gasBurnIn[devId][-1]-gasBurnIn[devId][-2])/max(1,(gasBurnIn[devId][-1]+gasBurnIn[devId][-2])), gasBurnIn[devId][-3:]  ) )
+						#if len(gasBurnIn[devId])  > 2: U.logger.log(20, "StateOfSensorCalibration:{}, gas:{}, gasBaseLine:{},  delta: {}, gasBurnIn: {}".format(StateOfSensorCalibration[devId], gas, gasBaseLine[devId], abs(gasBurnIn[devId][-1]-gasBurnIn[devId][-2])/max(1,(gasBurnIn[devId][-1]+gasBurnIn[devId][-2])), gasBurnIn[devId][-3:]  ) )
 						if len(gasBurnIn[devId])  > 200: 
 							U.logger.log(20, "resetting gasBurnIn, too long" )
 							gasBurnIn[devId] = []
@@ -1059,7 +1061,7 @@ def getValues(devId):
 						if len(gasBurnIn[devId])  > 12 and abs(gasBurnIn[devId][-1]-gasBurnIn[devId][-2])/max(1,(gasBurnIn[devId][-1]+gasBurnIn[devId][-2])) < 0.0002: # wait for 13+ cycles, last measurements must be stable
 							if StateOfSensorCalibration[devId] in ["need new baseline","startUP","calibrating"] or ( calibrateSetting[devId].find("dynamic") and (gas > gasBaseLine[devId]*1.01) ):
 								gasBaseLine[devId] = sum(gasBurnIn[devId][-8:])/(8.) # take ave of last 8 measurments
-								U.logger.log(30," calibrated: after {:.0f} sec;  nof samples:{}	baseline:{} heatStatus:{}".format(time.time()-startTime, len(gasBurnIn[devId]), gasBaseLine[devId], heatSt) )
+								U.logger.log(20," calibrated: after {:.0f} sec;  nof samples:{}	baseline:{} heatStatus:{}".format(time.time()-startTime, len(gasBurnIn[devId]), gasBaseLine[devId], heatSt) )
 								# save new calibration data to file 
 								if gasBaseLine[devId] > getBaseLine(devId):
 									saveBaseLine(gasBaseLine[devId],devId)
@@ -1097,9 +1099,10 @@ def getValues(devId):
 						"SensorStatus":	SensorStatus,
 						"AirQuality":	gasScore}
 			else: return ""
+			#U.logger.log(20,"BME680:{}".format(data))
 			return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -1251,7 +1254,7 @@ while True:
 		lastMeasurement = time.time()
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

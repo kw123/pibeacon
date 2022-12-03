@@ -4,7 +4,6 @@
 ## do 
 # sys.path.append(os.getcwd())
 # import  piBeaconGlobals as G
-import traceback
 # then ref the variables as G.xxx
 # they will be valid across all imported modules if included.
 #
@@ -41,7 +40,7 @@ badCount6			= 0
 badCount7			= 0
 badCount8			= 0
 badCount9			= 0
-sendToIndigoSecs	= 90
+sendToIndigoSecs	= 90 # send update at least every xx seconds
 deltaChangedSensor	= 5
 networkStatus		= "no"	 # "no" = no network what so ever / "local" =only local can't find anything else/ "inet" = internet yes, indigo no / "indigoLocal" = indigo not internet / "indigoInet" = indigo with internet
 ntpStatus			= "not started" #	/ "started, working" / "started, not working" / "temp disabled" / "stopped, after not working"
@@ -54,6 +53,7 @@ deltaX				={}
 magOffset			={}
 magDivider			={}
 magResolution		={}
+magFregRate			=""
 magGain				=""
 accelerationGain	=""
 declination			={}
@@ -91,20 +91,23 @@ last_masterStart	= ""
 wifiID				= ""
 sendThread			= {}
 rebootIfNoMessagesSeconds = 99999999999
-osVersion 			= 0
 ipOfRouter			= ""
 enableRebootCheck	= "restartLoop"
 pythonVersion		= 2
-compressRPItoPlugin = 20000
+compressRPItoPlugin = 2000
 ipNumberRpiStatic	= False
 ipNumberPi			= ""
 networkRestartTries = 0
 lastVcode			= ""
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
+"""
 import sys
-sys.path.append("/home/pi/.local/lib/python2.7/site-packages/")
-
+if sys.version[0] != "3":
+	sys.path.append("/home/pi/.local/lib/python2.7/site-packages/")
+else:
+	sys.path.append("/home/pi/.local/lib/python3.7/site-packages/")
+"""
 
 ACTIONS={"LS":"ls",
 		 "REBOOT":		   "sudo reboot",
@@ -113,12 +116,6 @@ ACTIONS={"LS":"ls",
 		 
 programFiles=[			"beaconloop",
 						"master",
-						"INPUTgpio",
-						"INPUTpulse",
-						"INPUTRotarySwitchIncremental",
-						"INPUTRotarySwitchAbsolute",
-						"INPUTtouch12",
-						"INPUTtouch16",
 						"installLibs",
 						"mysensors",
 						"myprogram",
@@ -126,7 +123,6 @@ programFiles=[			"beaconloop",
 						"myoutput",
 						"simplei2csensors",
 						"BLEconnect",
-						"setGPIO",
 						"playsound",
 						"checkSystemLOG",
 						"copyToTemp"]
@@ -137,13 +133,20 @@ specialOutputList=[		"display",
 						"setPCF8591dac",
 						"spiMCP3008",
 						"setTEA5767",
-						"neopixel",
+						"neopixel2",
+						"neopixel3",
 						"sundial",
 						"setStepperMotor",
 						"neopixelClock",
 						"OUTPUTgpio"]
 
 specialSensorList =[ 	"amg88xx",
+						"INPUTgpio",
+						"INPUTpulse",
+						"INPUTRotarySwitchIncremental",
+						"INPUTRotarySwitchAbsolute",
+						"INPUTtouch12",
+						"INPUTtouch16",
 						"lidar360",
 						"mlx90640",
 						"as726x",
@@ -190,17 +193,32 @@ parameterFileList   =[	"beacon_parameters",
 						"parameters",
 						"knownBeaconTags"]
 
-python3Apps			=[ "moistureSensor","sensirionscd30"]
+python2SensorsMustDo	= ["neopixel2"]
+python3SensorsMustDo	= ["moistureSensor", "sensirionscd30","neopixel3","vl503l0xDistance","vl503l1xDistance","vcnl4010Distance","vl6180xDistance","ultrasoundDistance"]
+python3SensorsCanDo		= [	"ADS1x15", 
+							"simplei2csensors",
+							"INPUTgpio","INPUTpulse",
+							"bme680",
+							"mhzCO2",
+							"DHT",
+							"sgp30","sgp40",
+							"lsm303",
+							"display",
+							"Wire18B20"]
+python3Apps				= ["beaconloop", "BLEconnect", "copyToTemp", "receiveCommands"]
 
-loggerSet 		   = False
+appDoesNotExist			= ["INPUTcoincidence"]
+
+loggerSet = False
+
 global logging, logger
 
 timeZones =[]
 for ii in range(-12,13):
 	if ii<0:
-		timeZones.append("/Etc/GMT+" +str(abs(ii)))
+		timeZones.append("/Etc/GMT+{}".format(abs(ii)))
 	else:
-		timeZones.append("/Etc/GMT-"+str(ii))
+		timeZones.append("/Etc/GMT-{}".format(ii))
 
 timeZone		 = "99 none"
 timeZones[12+12] = "Pacific/Auckland"

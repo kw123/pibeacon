@@ -8,7 +8,7 @@ import json
 	sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "ccs811"
 
 ############# oled import ####################################
@@ -44,7 +44,7 @@ try:
 	out = im.convert("1")
 	out.save("/home/pi/pibeacon/displayfiles/"+xxx, "PNG")
 except	Exception as e:
-	U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+	U.logger.log(30,"", exc_info=True)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

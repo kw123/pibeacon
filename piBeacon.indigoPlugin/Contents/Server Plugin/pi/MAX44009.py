@@ -14,7 +14,7 @@ import	sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 
 
 ### simple fully automatic lux sensor 0.045 .. 188,000 lux
@@ -60,7 +60,7 @@ def startSensor(devId,i2cADR):
 	 		SENSOR[devId].setParams(cont=0, 		   		manual=0, 			cdr=0, 					timer=0)
 			return 
 	except	Exception as e:
-		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 #===========================================================================
@@ -85,7 +85,7 @@ def getValues():
 		return values
 	except	Exception as e:
 		badSensor += 1
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return values
 
 # ===========================================================================
@@ -157,7 +157,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 #################################
 #################################
@@ -269,7 +269,7 @@ def execMAX44009():
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
 		except Exception as e:
-			U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 execMAX44009()
 try: 	G.sendThread["run"] = False; time.sleep(1)

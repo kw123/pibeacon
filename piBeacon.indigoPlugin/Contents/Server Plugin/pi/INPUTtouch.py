@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 #
-
+## py3 prept
 
 import RPi.GPIO as GPIO
 import time
@@ -12,7 +12,7 @@ import struct
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "INPUTtouch"
 import smbus 
 
@@ -343,7 +343,7 @@ def getTouched16Serial(np):
 		return keys
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 def getTouched16i2c(np):
@@ -362,7 +362,7 @@ def getTouched16i2c(np):
 			# pins[i] = 0/1 for i ..0..16 if pressed 
 		return keys
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 def startTouch12i2c():
@@ -390,7 +390,7 @@ def getTouched12i2c(np):
 
 	except	Exception as e:
 		restartCount+=1
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -474,8 +474,7 @@ def getINPUTcapacitor(sensors,data,devType, NPads):
 		elif devType =="16i2c":		channelData = getTouched16i2c(NPads)
 		elif devType =="12i2c":		channelData = getTouched12i2c(NPads)
 		else: channelData  = {}
-		#print devType, INPUTsensors, data
-		#if sum( channelData ) > 0: print channelData
+
 		new		= False
 		for sensName in INPUTsensors:
 			if devType not in INPUTsensors[sensName]: continue
@@ -520,7 +519,7 @@ def getINPUTcapacitor(sensors,data,devType, NPads):
 		if new: U.writeINPUTcount(INPUTcount)
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 	return data,new
 
@@ -619,7 +618,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format (traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

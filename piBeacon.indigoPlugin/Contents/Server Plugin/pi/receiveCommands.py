@@ -4,7 +4,8 @@
 # feb 5 2016
 # version 0.7 
 ##
-import SocketServer
+try: 	import SocketServer as socketserver
+except: import socketserver
 import re
 import json, sys,subprocess, os, time, datetime
 import copy
@@ -23,7 +24,7 @@ GPIO.setwarnings(False)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "receiveCommands"
 
 allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice",
@@ -31,6 +32,13 @@ allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWri
 
 externalGPIO = False
 
+####-------------------------------------------------------------------------####
+def readPopen(cmd):
+		try:
+			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			return ret.decode('utf_8'), err.decode('utf_8')
+		except Exception as e:
+			U.logger.log(20,"", exc_info=True)
 
 ### ----------------------------------------- ###
 ### ---------exec commands start------------- ###
@@ -48,13 +56,13 @@ def OUTPUTi2cRelay(command):
 			if "cmd" in command:
 				cmd= command["cmd"]
 				if cmd not in allowedCommands:
-					U.logger.log(30, "OUTPUTi2cRelay pid=%d, bad command %s  allowed only: %s" %(myPID,unicode(command) ,unicode(allowedCommands))  )
+					U.logger.log(20, "OUTPUTi2cRelay pid={}d, bad command {}  allowed only: {}".format(myPID, command , allowedCommands )  )
 					exit(1)
 
 			if "pin" in command:
 				pin= int(command["pin"])
 			else:
-				U.logger.log(30, "setGPIO pid=%d, pin not included,  bad command %s"%(myPID,unicode(command)) )
+				U.logger.log(20, "setGPIO pid={}, pin not included,  bad command {}".format(myPID,command) )
 				exit(1)
 
 			DEVICE_BUS = 1
@@ -81,7 +89,7 @@ def OUTPUTi2cRelay(command):
 				if "nPulses" in values:		nPulses = int(values["nPulses"])
 				else:						nPulses = 0
 			except	Exception as e:
-				U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 				exit(0)
 
 			inverseGPIO = False
@@ -139,9 +147,9 @@ def OUTPUTi2cRelay(command):
 			
 
 			except Exception as e:
-					U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-  	except Exception as e:
-			U.logger.log(50, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+					U.logger.log(40,"", exc_info=True)
+	except Exception as e:
+			U.logger.log(40,"", exc_info=True)
 
 
 ### ----------------------------------------- ###
@@ -171,18 +179,18 @@ def setGPIO(command):
 		if "cmd" in command:
 			cmd= command["cmd"]
 			if cmd not in allowedCommands:
-				U.logger.log(30, "setGPIO pid={}, bad command %s  allowed only: {}".format(myPID,unicode(command) ,unicode(allowedCommands))  )
+				U.logger.log(20, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
 				exit(1)
 
 		if "pin" in command:
 			pin= int(command["pin"])
 		else:
-			U.logger.log(30, "setGPIO pid={}, pin not included,  bad command {}".format(myPID,unicode(command)) )
+			U.logger.log(20, "setGPIO pid={}, pin not included,  bad command {}".format(myPID, command) )
 			exit(1)
 
 
 
-		delayStart = max(0,U.calcStartTime(command,"startAtDateTime")-time.time())
+		delayStart = min(1000000, max(0,U.calcStartTime(command,"startAtDateTime")-time.time()))
 		if delayStart > 0: 
 			time.sleep(delayStart)
 
@@ -202,7 +210,7 @@ def setGPIO(command):
 			if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 			else:						bits = 0
 		except	Exception as e:
-			U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			exit(0)
 
 		inverseGPIO = False
@@ -213,8 +221,7 @@ def setGPIO(command):
 			devId = str(command["devId"])
 		else: devId = "0"
 
-
-		#U.logger.log(G.debug*20, "{:.2f} bf  GPIO.setup ".format(time.time()) )
+		U.logger.log(G.debug*20, "{:.2f} bf  GPIO.setup ".format(time.time()) )
 		try:
 			if cmd == "up":
 				GPIO.setup(pin, GPIO.OUT)
@@ -322,7 +329,7 @@ def setGPIO(command):
 						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
 					if sleepForxSecs(pulseDown): break
 		except	Exception as e:
-			U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 	U.removeOutPutFromFutureCommands(pin, devType)
 			
@@ -349,7 +356,7 @@ def sleepForxSecs(sleepTime):
 			if sleepTime <= tDone: return False
 		return False
 	except	Exception as e:
-		U.logger.log(20, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20, u"threadsActive{}".format(threadsActive))
 	return False
 
@@ -357,14 +364,13 @@ def sleepForxSecs(sleepTime):
 def execCMDS(next):
 	global threadsActive
 	global execcommands, PWM
+	global py3Cmd, readOutput, readInput
 
 	threadName = threading.currentThread().getName()
 	#U.logger.log(G.debug*20, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
 
 	for ijji in range(1):
 
-			#print next
-			#print "next command: "+unicode(next)
 			#U.logger.log(20,"{:.2f} next command: {}".format(time.time(), next))
 			cmd = next["command"]
 
@@ -401,7 +407,7 @@ def execCMDS(next):
 							subprocess.call("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" , shell=True)
 						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
 					except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 
 
@@ -412,7 +418,7 @@ def execCMDS(next):
 						f.write(next[u"device"]) 
 						f.close()
 				except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 
 
@@ -423,7 +429,7 @@ def execCMDS(next):
 						f.write(next["device"]+"\n") 
 						f.close()
 				except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 
 
@@ -434,7 +440,7 @@ def execCMDS(next):
 						f.write(next["device"]+"\n") 
 						f.close()
 				except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 
 			if	cmd == "BLEAnalysis":
@@ -447,12 +453,12 @@ def execCMDS(next):
 					if "mac" in next: 
 						subprocess.call("echo '"+next["mac"]+"' > "+G.homeDir+"temp/beaconloop.trackmac", shell=True)
 					else:
-						U.logger.log(30, u"trackMac, no mac number supplied")
+						U.logger.log(20, u"trackMac, no mac number supplied")
 					continue
 
 
 			if "device" not in next:
-				U.logger.log(30," bad cmd no device given "+unicode(next))
+				U.logger.log(20," bad cmd no device given {}".format(next))
 				continue
 				
 
@@ -467,7 +473,7 @@ def execCMDS(next):
 						f.write(cmdOut+"\n")
 						f.close()
 					except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 			
 			if device.lower()=="output-display":
@@ -476,7 +482,7 @@ def execCMDS(next):
 					try:
 						#print "execcmd", cmdOut
 						if not U.pgmStillRunning("display.py"):
-							subprocess.call("/usr/bin/python "+G.homeDir+"display.py &" , shell=True)
+							subprocess.call("{} {}display.py &".format(py3Cmd, G.homeDir), shell=True)
 						f=open(G.homeDir+"temp/display.inp","a")
 						f.write(cmdOut+"\n")
 						f.close()
@@ -484,17 +490,29 @@ def execCMDS(next):
 						f.write(cmdOut+"\n")
 						f.close()
 					except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 
 
-			if device.lower() == "output-neopixel":### OUTPUT-neopixel
+			if device.lower().find("neopixel") > -1:### OUTPUT-neopixel
 				cmdOut = json.dumps(next)
+				if "neopixel" not in output: continue
+				py2orpy3 = "py2"
+				for devId in readOutput["neopixel"]:
+					py2orpy3 = output["neopixel"][devId][0].get("py2orpy3","py2")
+					break
+
 				if cmdOut != "":
 					try:
-						#print "execcmd", cmdOut
-						if	not U.pgmStillRunning("neopixel.py"):
-							subprocess.call("/usr/bin/python "+G.homeDir+"neopixel.py	 &" , shell=True)
+						if py2orpy3 == "py2":
+							py = "/usr/bin/python "
+							pgm ="neopixel2.py"
+						else:							
+							py = "/usr/bin/python3 "
+							pgm ="neopixel3.py"
+						if	not U.pgmStillRunning(pgm[:-3]+".py"):
+							subprocess.call("{}{}{} &".format(py, G.homeDir, pgm), shell=True)
+							U.logger.log(20,">>>>>> starting pgm: {}{}{} &".format(py, G.homeDir, pgm))
 						else:
 							f=open(G.homeDir+"temp/neopixel.inp","a")
 							f.write(cmdOut+"\n")
@@ -503,14 +521,12 @@ def execCMDS(next):
 							f.write(cmdOut+"\n")
 							f.close()
 					except	Exception as e:
-						U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+						U.logger.log(30,"", exc_info=True)
 				continue
 
 
-
-
 			if cmd not in allowedCommands:
-				U.logger.log(30," bad cmd not in allowed commands {} \n{}".format(cmd, allowedCommands))
+				U.logger.log(20,"bad cmd (9) dev:{} not in allowed commands {} \n{}".format(device, cmd,  allowedCommands))
 				continue
 
 
@@ -519,7 +535,7 @@ def execCMDS(next):
 			else:
 				values =""
 
-			startAtDateTime =unicode(time.time())
+			startAtDateTime = "{}".format(time.time())
 			if "startAtDateTime" in next:
 				startAtDateTime = next["startAtDateTime"]
 
@@ -538,41 +554,41 @@ def execCMDS(next):
 
 
 			if	cmd == "newMessage":
-					if next["device"].find(",")> 1:
-						list = next["device"].split(",")
-					elif next["device"]== "all":
-						list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
-					else:
-						list = [next["device"]]
-					for pgm in list:
-						subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".now", shell=True)
-					continue
+						if next["device"].find(",")> 1:
+							list = next["device"].split(",")
+						elif next["device"]== "all":
+							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
+						else:
+							list = [next["device"]]
+						for pgm in list:
+							subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".now", shell=True)
+						continue
 
 
 			if	cmd == "resetDevice":
-					if next["device"].find(",")> 1:
-						list = next["device"].split(",")
-					elif next["device"]== "all":
-						list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
-					else:
-						list = [next["device"]]
-					for pgm in list:
-						subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".reset", shell=True)
-					continue
+						if next["device"].find(",")> 1:
+							list = next["device"].split(",")
+						elif next["device"]== "all":
+							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
+						else:
+							list = [next["device"]]
+						for pgm in list:
+							subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".reset", shell=True)
+						continue
 
 
 
 
 			if	cmd == "startCalibration":
-					if next["device"].find(",")> 1:
-						list = next["device"].split(",")
-					elif next["device"]== "all":
-						list = G.specialSensorList
-					else:
-						list = [next["device"]]
-					for pgm in list:
-						subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".startCalibration", shell=True)
-					continue
+						if next["device"].find(",")> 1:
+							list = next["device"].split(",")
+						elif next["device"]== "all":
+							list = G.specialSensorList
+						else:
+							list = [next["device"]]
+						for pgm in list:
+							subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".startCalibration", shell=True)
+						continue
 
 
 
@@ -596,7 +612,7 @@ def execCMDS(next):
 								except:pass
 
 						except	Exception as e:
-							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+							U.logger.log(30,"", exc_info=True)
 						continue
 
 			if device=="setPCF8591dac":
@@ -617,7 +633,7 @@ def execCMDS(next):
 								except:pass
 
 						except	Exception as e:
-							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+							U.logger.log(30,"", exc_info=True)
 						continue
 
 
@@ -627,8 +643,8 @@ def execCMDS(next):
 							pinI = int(next["pin"])
 							pin = str(pinI)
 						except	Exception as e:
-							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-							U.logger.log(30,"bad pin "+unicode(next))
+							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"bad pin {}".format(next))
 							continue
 						#print "pin ok"
 						if "values" in next: values= next["values"]
@@ -651,8 +667,8 @@ def execCMDS(next):
 							pinI = int(next["pin"])
 							pin = str(pinI)
 						except	Exception as e:
-							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-							U.logger.log(30,"bad pin "+unicode(next))
+							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"bad pin {}".format(next))
 							continue
 						#print "pin ok"
 						if "values" in next: values= next["values"]
@@ -679,7 +695,7 @@ def execCMDS(next):
 							U.logger.log(10,"cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
 						except	Exception as e:
-							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+							U.logger.log(30,"", exc_info=True)
 						continue
 
 			if device=="playSound":
@@ -690,15 +706,15 @@ def execCMDS(next):
 							elif cmd  == "aplay":
 								cmdOut = json.dumps({"player":"aplay","file":G.homeDir+"soundfiles/"+next["soundFile"]})
 							else:
-								U.logger.log(30, u"bad command : player not right =" + cmd)
+								U.logger.log(20, u"bad command : player not right =" + cmd)
 							if cmdOut != "":
 								U.logger.log(10,"cmd= %s"%cmdOut)
 								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
 						except	Exception as e:
-							U.logger.log(30, u"Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+							U.logger.log(30,"", exc_info=True)
 						continue
 
-			U.logger.log(30,"bad device number/number: "+device)
+			U.logger.log(20,"bad device number/number: "+device)
 	if len(execcommandsList) >0:
 		f = open(G.homeDir+"execcommandsList.current","w")
 		f.write(json.dumps(execcommandsList))
@@ -722,7 +738,7 @@ def stopThreadsIfEnded(all=False):
 		for threadName in stopThreads:
 			stopExecCmd(threadName)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 				 
 ### ----------------------------------------- ###
@@ -762,7 +778,7 @@ def execSimple(next):
 			return True
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return False
 
 	### ----------------------------------------- ###
@@ -772,26 +788,26 @@ def execSimple(next):
 
 
 
-class MyTCPHandler(SocketServer.BaseRequestHandler):
+class MyTCPHandler(socketserver.BaseRequestHandler):
 
 	### ----------------------------------------- ###
 	def handle(self):
 		global threadsActive
 		# self.request is the TCP socket connected to the client
-		data =""
+		data = ""
 		while True:
-			buffer = self.request.recv(2048).strip()
+			buffer = self.request.recv(2048).decode('utf_8')
 			#U.logger.log(10, "len of buffer:"+str(len(buffer)))
 			if not buffer:
 				break
-			data+=buffer 
+			data += buffer.strip()
 		
 		#U.logger.log(20, u"===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
 		try:
 			commands = json.loads(data.strip("\n"))
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-				U.logger.log(30,"bad command: json failed  "+unicode(buffer))
+				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"bad command: json failed {}".format(data))
 				return
 
 		#U.logger.log(20, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
@@ -828,7 +844,7 @@ def setupexecThreads(next):
 		return True
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return False
 
 
@@ -844,7 +860,7 @@ def stopExecCmd(threadName):
 			time.sleep(0.07)
 			#U.logger.log(20, u"stop finished after wait thread={}".format(threadName))
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	try: 	del threadsActive[threadName]
 	except: pass
 	return 
@@ -874,7 +890,7 @@ def getcurentCMDS():
 				try:
 					next = execcommandsList[threadName]
 				except	Exception as e:
-					U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+					U.logger.log(30,"", exc_info=True)
 					continue
 				setupexecThreads(next)
 
@@ -883,14 +899,14 @@ def getcurentCMDS():
 			f.close()
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return 
 
 
 				 
 ### ----------------------------------------- ###
 def readParams():
-	global	output, useLocalTime, myPiNumber, inp
+	global	output, useLocalTime, myPiNumber, inp, readOutput, readInput
 	inp,inpRaw = U.doRead()
 	if inp == "": return
 	U.getGlobalParams(inp)
@@ -898,6 +914,9 @@ def readParams():
 	if u"GPIOpwm"		in inp:	 PWM=			int(inp["GPIOpwm"])
 	if u"typeForPWM"	in inp:	 typeForPWM=	inp["typeForPWM"]
 
+
+	readOutput = inp.get("output",{})
+	readInput  = inp.get("input",{})
 	try:
 		if os.path.isfile(G.homeDir+"temp/networkOFF"):
 			f=open(G.homeDir+"\temp\networkOFF","r")
@@ -914,6 +933,7 @@ if __name__ == "__main__":
 	global	currentGPIOValue
 	global execcommandsList, PWM, typeForPWM
 	global threadsActive
+	global py3Cmd
 	PWM 				= 100
 	typeForPWM			= "GPIO"
 	myPID				= str(os.getpid())
@@ -930,38 +950,41 @@ if __name__ == "__main__":
 	
 	readParams()
 
-	if U.getNetwork < 1:
-		U.logger.log(30, u"network not active, sleeping ")
+	if U.getNetwork() == "off":
+		U.logger.log(20, u"network not active, sleeping ")
 		time.sleep(500)# == 500 secs
 		exit(0)
 	# if not connected to network pass
 		
 		
 	if G.wifiType !="normal": 
-		U.logger.log(30, u"no need to receiving commands in adhoc mode pausing receive GPIO commands")
+		U.logger.log(20, u"no need to receiving commands in adhoc mode pausing receive GPIO commands")
 		time.sleep(500)
 		exit(0)
-	U.logger.log(30, u"proceding with normal on no ad-hoc network")
+	U.logger.log(20, u"proceding with normal on no ad-hoc network")
 
 	U.getIPNumber()
 	
 	getcurentCMDS()
-	   
+	py3Cmd = "/usr/bin/python"
+	if sys.version[0] == "3":
+		py3Cmd = "/usr/bin/python3"
+
 
 	U.logger.log(30,"started, listening to port: "+ str(PORT))
 	restartMaster = False
 	try:	
 		# Create the server, binding on port 9999
-		server = SocketServer.TCPServer((G.ipAddress, PORT), MyTCPHandler)
+		server = socketserver.TCPServer((G.ipAddress, PORT), MyTCPHandler)
 
 	except	Exception as e:
 		####  trying to kill the process thats blocking the port# 
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30, "getting  socket does not work, trying to reset {}".format(str(PORT)) )
-		ret = subprocess.Popen("sudo ss -apn | grep :"+str(PORT),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
+		U.logger.log(30,"", exc_info=True)
+		U.logger.log(30, "getting  socket does not work, trying to reset {}".format(PORT) )
+		ret = readPopen("sudo ss -apn | grep :{}".format(PORT))[0]
 		lines= ret.split("\n")
 		for line in lines:
-			U.logger.log(30, line) 
+			U.logger.log(20, line) 
 			pidString = line.split(",pid=")
 			for ppp in pidString:
 				pid = ppp.split(",")[0]
@@ -974,21 +997,21 @@ if __name__ == "__main__":
 				if len (subprocess.Popen("ps -ef | grep "+str(pid)+"| grep -v grep | grep master.py",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]) >5:
 					restartMaster=True
 					# will need to restart the whole things
-				U.logger.log(30, "killing task with : pid= %d"% pid )
+				U.logger.log(20, "killing task with : pid= %d"% pid )
 				ret = subprocess.Popen("sudo kill -9 "+str(pid),shell=True)
 				time.sleep(0.2)
 
 
 		if restartMaster:
-			U.logger.log(30, "killing taks with port = "+str(PORT)+"	 did not work, restarting everything")
+			U.logger.log(20, "killing taks with port = "+str(PORT)+"	 did not work, restarting everything")
 			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 			exit()
 			
 		try:	
 			# Create the server, binding on port eg 9999
-			server = SocketServer.TCPServer((G.ipAddress, PORT), MyTCPHandler)
+			server = socketserver.TCPServer((G.ipAddress, PORT), MyTCPHandler)
 		except	Exception as e:
-			U.logger.log(30, "getting  socket does not work, try restarting master  "+ str(PORT) )
+			U.logger.log(20, "getting  socket does not work, try restarting master  "+ str(PORT) )
 			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True)
 			exit()
 

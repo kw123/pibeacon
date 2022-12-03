@@ -13,7 +13,9 @@ sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import socket
 import urllib
-import RPi.GPIO as GPIO
+try:
+	import RPi.GPIO as GPIO
+except: pass
 import threading
 try: import Queue
 except: import queue as Queue
@@ -21,6 +23,8 @@ import zlib
 try: 	unicode
 except: unicode = str
 
+global OSVersion
+OSVersion = -1
 
 ##
 #  do
@@ -30,7 +34,7 @@ except: unicode = str
 #
 #################################
 def test():
-	print ("U.test G.ipOfServer {}".format(G.ipOfServer ))
+	return 
 
 #################################
 def setLogging():
@@ -64,11 +68,11 @@ def setLogging():
 #################################
 def setLogLevel():
 	global streamhandler, permLogHandler, logger
-	logger.log(20, "cBY:{:<20} setting debuglevel to {}".format(G.program, "on" if  G.debug == 1 else "off"))
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
 	else:
 		logger.setLevel(logging.INFO)
+	logger.log(10, "cBY:{:<20} setting debuglevel to {}".format(G.program, "on" if  G.debug == 1 else "off"))
 
 	permLogHandler.setLevel(logging.CRITICAL)
 	streamhandler.setLevel(logging.WARNING)
@@ -86,7 +90,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			ret = subprocess.Popen(cmd)
 			return 1
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30,"", exc_info=True)
 		
 	count = 0
 	try:
@@ -127,58 +131,48 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			if not wait: cmd += " &"
 			subprocess.call(cmd, shell=True)
 	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return count
 
 #################################
-def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False):
+def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doRestartCount=True):
+	py3 = python3 or checkIfmustUsePy3()
 	try:
-		if doPrint:
-			logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
-		else:
-			logger.log(20, u"cBY:{:<20} --- restarting --- {}  {}".format(G.program, param, reason) )
-	except: pass
+		if doPrint: logger.log(20, u"cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}".format(G.program, param, reason, py3) )
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
 	time.sleep(delay)
 
-	lastRestartCount	= 0
-	lastRestart 		= 0
-	if os.path.isfile("{}temp/restartLast.{}".format(G.homeDir, G.program)):
-		lastRestart = os.path.getmtime("{}temp/restartLast.{}".format(G.homeDir, G.program))
-		f = open("{}temp/restartLast.{}".format(G.homeDir, G.program ))
-		lastRestartCount = int(f.read())
-		f.close()
-	if time.time() - lastRestart  < 300 and lastRestartCount > 200:
-		if G.enableRebootCheck.find("reboot") >-1:
-			doReboot(tt=10, text="restarted {} too often".format(G.program), force=True)
-	elif time.time() - lastRestart > 600:
-		 lastCount  = 0
+	if doRestartCount:
+		lastRestartCount	= 0
+		lastRestart 		= 0
+		if os.path.isfile("{}temp/restartLast.{}".format(G.homeDir, G.program)):
+			lastRestart = os.path.getmtime("{}temp/restartLast.{}".format(G.homeDir, G.program))
+			f = open("{}temp/restartLast.{}".format(G.homeDir, G.program ))
+			lastRestartCount = int(f.read())
+			f.close()
+		if time.time() - lastRestart  < 300 and lastRestartCount > 30:
+			if G.enableRebootCheck.find("reboot") >-1:
+				doReboot(tt=10, text="restarted {} too often".format(G.program), force=True)
+		elif time.time() - lastRestart > 600:
+			 lastCount  = 0
 
-	cmd= "echo  {} > {}temp/restartLast.{}".format(lastRestartCount+1,G.homeDir, G.program )
-	logger.log(30, cmd )
-	subprocess.call(cmd, shell=True)
-	if python3:
+		cmd= "echo  {} > {}temp/restartLast.{}".format(lastRestartCount+1,G.homeDir, G.program )
+		if doPrint: logger.log(30, cmd )
+		subprocess.call(cmd, shell=True)
+
+	if sys.version_info[0] == 3 or py3:
 		cmd = "/usr/bin/sudo /usr/bin/python3 {}{}.py {} &".format(G.homeDir,G.program, param)
 	else:
 		cmd = "/usr/bin/sudo /usr/bin/python {}{}.py {} &".format(G.homeDir,G.program, param)
-	logger.log(30, cmd )
+
+	if doPrint: logger.log(30, cmd )
 	subprocess.call(cmd, shell=True)
 	exit()
 	time.sleep(5)
 
-#################################
-def restartMaster( reason="", doPrint= True):
-	try:
-		if doPrint:
-			logger.log(50, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
-		else:
-			logger.log(30, u"cBY:{:<20} --- restarting --- {}".format(G.program, reason) )
-	except: pass
-
-	subprocess.call("/usr/bin/sudo /usr/bin/python {}master.py  &".format(G.homeDir), shell=True)
-	exit()
-	time.sleep(5)
 
 #################################
 def setStopCondition(on=True):
@@ -193,7 +187,22 @@ def setStopCondition(on=True):
 
 
 #################################################################
+def doReadSimpleFile(fname):
 
+		if os.path.isfile(fname):
+			f = open(fname,"r")
+			ddd =  f.read()
+			f.close()
+			return ddd
+		return ""
+
+#################################################################
+def doWriteSimpleFile(fname, data):
+
+		f = open(fname,"w")
+		ddd =  f.write("{}".format(data))
+		f.close()
+		return
 
 
 #################################
@@ -219,8 +228,6 @@ def checkrclocalFile():
 
 #################################
 def fixoutofdiskspace():
-	print (" trying to fix out of disk space" )
-
 	try:	subprocess.call("rm {} *".format(G.logDir), shell=True)
 	except: pass
 	try:	subprocess.call("logrotate -f /etc/logrotate.d/rsyslog; sleep 1; logrotate -f /etc/logrotate.d/rsyslog", shell=True)
@@ -262,9 +269,6 @@ def checkParametersFile(force=False):
 			# restore old parameters"
 			subprocess.call("cp {}parameters {}temp\parameters".format(G.homeDir,G.homeDir), shell=True)
 			subprocess.call("touch {}temp\touchFile".format(G.homeDir), shell=True)
-			print ("lastRead2 >>{} <<".format(lastRead2) )
-			print ("inpRaw >>{}<<" .format(inpRaw) )
-			print ("inp >>{}<<".format( inp) )
 			restartMyself(reason="bad parameter... file.. restored" , doPrint= True)
 
 #################################
@@ -292,25 +296,30 @@ def readInt(filename, default=0):
 	return v
 
 
+def getOsVersion():
+	global OSVersion
+	if OSVersion !=-1: return  OSVersion
+
+	OSVersion = 8
+	ret = (subprocess.Popen("/bin/cat /etc/os-release", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").split("\n")
+	for line in ret:
+		try:
+			if line.find("VERSION_ID=") == 0:
+				items = line.split("=")
+				OSVersion = int( items[1].strip('"') )
+				#logger.log(10, u"cBY:{:<20} os version:{}".format(G.program,osVersion) )
+				break
+		except	Exception as e :
+			logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return OSVersion
 
 
 #################################
-def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testTimeOnly=False, deleteAfterRead = False):
+def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testTimeOnly=False, deleteAfterRead=False):
+
 	try:
 		if not G.loggerSet:
 			setLogging()
-
-		if G.osVersion < 4:
-			ret = (subprocess.Popen("/bin/cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").split("\n")
-			for line in ret:
-				try:
-					if line.find("VERSION_ID=") == 0:
-						items = line.split("=")
-						G.osVersion = int( items[1].strip('"') )
-						logger.log(10, u"cBY:{:<20} os version:{}".format(G.program,G.osVersion) )
-						break
-				except	Exception as e :
-					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 		t = 0
 		if not os.path.isfile(inFile):
@@ -356,9 +365,7 @@ def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testT
 
 #################################
 def setNetwork(mode):
-	f=open("{}temp/networkMODE".format(G.homeDir),"w")
-	f.write(mode)
-	f.close()
+	writeFile("temp/networkMODE", mode)
 #################################
 def clearNetwork():
 	if os.path.isfile("{}temp/networkMODE".format(G.homeDir)):
@@ -412,7 +419,7 @@ def getGlobalParams(inp):
 		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
 
 		if u"enableRebootCheck"		in inp:	 G.enableRebootCheck=			(inp["enableRebootCheck"])
-		if u"ipNumberRpiStatic"		in inp:	 G.ipNumberRpiStatic=				(inp["ipNumberRpiStatic"]) =="1"
+		if u"ipNumberRpiStatic"		in inp:	 G.ipNumberRpiStatic=			(inp["ipNumberRpiStatic"]) =="1"
 		if u"rpiIPNumber"			in inp:	 G.rpiIPNumber=					(inp["rpiIPNumber"]) 
 
 
@@ -428,20 +435,20 @@ def getGlobalParams(inp):
 					G.wifiEth = xxx
 					G.wifiEthOld = G.wifiEth
 
-		if u"networkType"			in inp:	 G.networkType=					(inp["networkType"])
+		if u"networkType"			in inp:	 G.networkType=				(inp["networkType"])
 
 		try:
-			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=	   float(inp["deltaChangedSensor"])
+			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=		float(inp["deltaChangedSensor"])
 		except: pass
 		if u"shutDownPinOutput"		 in inp:
-			try:							  G.shutDownPinOutput=		 int(inp["shutDownPinOutput"])
+			try:							  G.shutDownPinOutput=		int(inp["shutDownPinOutput"])
 			except:							  G.shutDownPinOutput=		-1
 
 		if u"enableMuxI2C"			in inp:
-			try:							  G.enableMuxI2C=			   int(inp["enableMuxI2C"])
-			except:							  G.enableMuxI2C=			   -1
+			try:							  G.enableMuxI2C=			int(inp["enableMuxI2C"])
+			except:							  G.enableMuxI2C=			-1
 		else:
-											  G.enableMuxI2C=			   -1
+											  G.enableMuxI2C=			-1
 		if oldDebug != G.debug: setLogLevel()
 
 		if "timeZone"	 in inp:
@@ -474,14 +481,15 @@ def cleanUpSensorlist(sens, theSENSORlist):
 #################################
 def doReboot(tt=10., text="", cmd="", force=False):
 	try:
-		subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
+		setRebootedToday()
+		setRebootingNow()
 
 		### looks like w shell =True: /bin/sh -c /usr/bin/sudo , need to add ' ' around cmd 
 		try: logger.log(30, "cBY:{:<20}  rebooting / shutdown  delay:{}, force:{}; with cmd={}; remarks= {}".format(G.program, tt, force, cmd, text))
 		except: pass
 		if force:
 			try: 
-				doCmd = "'/usr/bin/sudo /usr/bin/killall -9 python;/usr/bin/sudo /bin/sleep 4; /usr/bin/sudo /sbin/reboot -f'"
+				doCmd = "sudo sleep 2;/usr/bin/sudo /usr/bin/killall -9 python;/usr/bin/sudo /usr/bin/killall -9 python3;/usr/bin/sudo /bin/sleep 4; /usr/bin/sudo /sbin/reboot -f"
 				ret = subprocess.Popen(doCmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 				logger.log(50, "cBY:{:<20}  rebooting / shutdown force did not work: {}, ret :{}".format(G.program, doCmd, ret))
 			except	Exception as e:
@@ -496,19 +504,25 @@ def doReboot(tt=10., text="", cmd="", force=False):
 			try: logger.log(50, "cBY:{:<20}  rebooting did not work; ret:{}".format(G.program, ret))
 			except: pass
 
+		cmd = cmd.replace("/bin/sh -c sudo  ","sudo ")
+		cmd = cmd.replace("; ",";")
 		if cmd == "":
 			doCmd= G.rebootCommand
 		else:
 			doCmd = cmd
 		try:     G.sendThread["run"] = False
 		except: pass
+
+		cmd   = cmd.replace("/bin/sh -c sudo  ","sudo ").replace("; ",";")
+		doCmd = doCmd.replace("/bin/sh -c sudo  ","sudo ").replace("; ",";")
+
+
+		if doCmd.find("python3") ==-1: doCmd = ""
 		try: logger.log(50, "cBY:{:<20}  rebooting / shutdown with cmd={} .. remarks= {}".format(G.program, doCmd, text))
 		except: pass
-		subprocess.Popen("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
 
 
-		time.sleep(0.1)
-		time.sleep(tt)
+		time.sleep(tt+0.1)
 
 
 		if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
@@ -519,7 +533,7 @@ def doReboot(tt=10., text="", cmd="", force=False):
 			time.sleep(0.1)
 
 		if cmd == "":
-			cmds = [doCmd+"; sudo sleep 2; sudo  reboot -f", "sudo  killall -9 python; sleep 4; sudo  reboot -f", "sudo sync; sudo  halt"]
+			cmds = [doCmd+";sudo sleep 2;sudo  reboot -f","sudo  killall -9 python;sudo  killall -9 python3;sleep 4;sudo  reboot -f", "sudo sync;sudo  halt"]
 			for cc in cmds:
 				ret = subprocess.Popen(cc, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 				try: logger.log(50, "cBY:{:<20} rebooting / shutdown with cmd={} did not work, ret:{}".format(G.program, cc, ret))
@@ -530,7 +544,7 @@ def doReboot(tt=10., text="", cmd="", force=False):
 			try: logger.log(50, "cBY:{:<20} rebooting / shutdown with cmd={} did not work:{}".format(G.program, doCmd, ret))
 			except: pass
 			time.sleep(20)
-			subprocess.Popen("sudo sync; sudo halt",shell=True)
+			subprocess.Popen("sudo sync;sudo sleep 2;sudo halt",shell=True)
 
 		doRebootThroughRUNpinReset()
 	except	Exception as e:
@@ -543,25 +557,48 @@ def checkifRebooting():
 	return False
 
 #################################
+def checkifRebootedToday():
+	if not os.path.isfile("{}rebootedToday".format(G.homeDir)): return False
+	if time.localtime(os.path.getmtime("rebootedToday")).tm_mday == datetime.datetime.now().day: return True
+	return False
+
+#################################
+def resetRebootedToday():
+	if os.path.isfile("{}rebootedToday".format(G.homeDir)):
+		subprocess.call( "/usr/bin/sudo rm {}rebootedToday".format(G.homeDir), shell=True)
+	return 
+
+#################################
+def setRebootedToday():
+	subprocess.call("echo 'rebooted' > {}rebootedToday".format(G.homeDir), shell=True)
+	return 
+
+#################################
 def resetRebootingNow():
 	if os.path.isfile("{}temp/rebooting.now".format(G.homeDir)):
 		subprocess.call( "/usr/bin/sudo rm {}temp/rebooting.now".format(G.homeDir), shell=True)
+	return 
+
+#################################
+def setRebootingNow():
+	subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
+	return 
 
 
 #################################
-def doRebootThroughRUNpinReset():
+def doRebootThroughRUNpinReset(tt =20):
 	if G.shutDownPinOutput >1:
-		subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
-		time.sleep(10)
+		setRebootingNow()
+		time.sleep(tt)
 		GPIO.setup(G.shutDownPinOutput, GPIO.OUT)
 		GPIO.output(G.shutDownPinOutput, True)
 		GPIO.output(G.shutDownPinOutput, False)
-
+	return 
 
 #################################
 def sendRebootHTML(reason,reboot=True, force=False, wait=10.):
 	sendURL(sendAlive="reboot", text=reason)
-	subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
+	setRebootingNow()
 	if reboot:
 	   doReboot(tt=wait, text=reason,force=force)
 	else:
@@ -668,7 +705,7 @@ def setUpRTC(useRTCnew):
 	return
 
 #################################
-def getIPNumber():
+def getIPNumber(doPrint=True):
 	G.ipAddress   = ""
 	ipAddressRead = ""
 	###  if G.networkType  not in G.useNetwork or G.wifiType !="normal": return 0
@@ -678,7 +715,7 @@ def getIPNumber():
 		f.close()
 		if isValidIP(ipAddressRead):
 			if G.ipAddress != ipAddressRead:
-				logger.log(20, "cBY:{:<20} found new IP number:{}".format(G.program, ipAddressRead))
+				if doPrint: logger.log(20, "cBY:{:<20} found new IP number:{}, old:{}".format(G.program, ipAddressRead, G.ipAddress))
 			G.ipAddress = ipAddressRead
 			return 0
 	except	Exception as e :
@@ -721,9 +758,9 @@ def getIPCONFIG():
 	G.wifiActive		= False
 
 	try:
-		#logger.log(20, u"cBY:{:<20} network info: G.osVersion: network info:{}".format(G.program, G.osVersion))
 
-		if G.osVersion > 7:
+		osVersion = getOsVersion()
+		if osVersion > 7:
 			retIp = (subprocess.Popen("/sbin/ip addr show " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip().split("\n")
 
 			#	1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
@@ -1064,7 +1101,7 @@ def startWiFi():
 		logger.log(20, u"cBY:{:<20} starting WiFi".format(G.program) )
 		subprocess.call("/usr/bin/sudo rfkill unblock all", shell=True)
 
-
+		osVersion = getOsVersion()
 		# new tool to be converted..  --> use ip instead if ifconfig
 		# ip link set dev wlan1 up
 		# /usr/bin/sudo ip addr flush dev eth0
@@ -1073,7 +1110,7 @@ def startWiFi():
 		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 
 		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reconfigure " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		if G.osVersion < 8:
+		if osVersion < 8:
 			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig wlan0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set wlan0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
@@ -1094,8 +1131,9 @@ def startEth():
 	try:
 		ret = []
 		if G.wifiEth["eth0"]["on"] == "dontChange": return
+		osVersion = getOsVersion()
 		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all" 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		if G.osVersion < 8:
+		if osVersion < 8:
 			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig eth0 up " 			,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set  eth0 up " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
@@ -1112,10 +1150,11 @@ def startEth():
 def stopWiFi(calledFrom=""):
 	try:
 		ret = []
+		osVersion = getOsVersion()
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
 		logger.log(30, u"cBY:{:<20} stopping WiFi: called from:{}".format(G.program, calledFrom))
 		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all"    	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		if G.osVersion < 8:
+		if osVersion < 8:
 			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
@@ -1129,9 +1168,10 @@ def stopWiFi(calledFrom=""):
 def stopEth():
 	try:
 		if G.wifiEth["eth0"]["on"] == "dontChange": return
+		osVersion = getOsVersion()
 		ret = []
 		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all"   ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
-		if G.osVersion < 8:
+		if osVersion < 8:
 			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set  eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
@@ -1293,18 +1333,14 @@ def checkIfwebserverINPUTrunning():
 #################################
 def updateWebStatus(data):
 	logger.log(10, "cBY:{:<20} updating web status {}".format(G.program, data))
-	f = open("{}temp/webserverSTATUS.show".format(G.homeDir),"w")
-	f.write(data)
-	f.close()
+	writeFile("temp/webserverSTATUS.show", data)
 	return
 
 
 #################################
 def updateWebINPUT(data):
 	logger.log(10, "cBY:{:<20} updating web INPUT {}".format(G.program, data))
-	f = open("{}temp/webserverINPUT.show".format(G.homeDir),"w")
-	f.write(data)
-	f.close()
+	writeFile("temp/webserverINPUT.show", data)
 	return
 
 #################################
@@ -1563,16 +1599,12 @@ def makeNewSupplicantFile(data):
 			n1  = part2.find("\n")  # replace next line w new passcode
 			part2 = '  psk="'+data["passCode"]+ '"'+part2[n1:]
 			addToS = part1+part2
-			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"w")
-			f.write(addToS)
-			f.close()
+			writeFile("wpa_supplicant.conf-temp", addToS)
 			logger.log(20, "cBY:{:<20} added to network = SSID..,  changed passcode in wpa_supplicant.conf file: {}".format(G.homeDir, addToS))
 
 		else: # add network={ssid="xxx" psk="yyy"}
 			newF = old +'\nnetwork={\n  ssid="'+data["SSID"]+'"\n  psk="'+data["passCode"]+'"\n  priority='+str(maxprio)+'\n}\n'
-			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"w")
-			f.write(newF)
-			f.close()
+			writeFile("wpa_supplicant.conf-temp", newF)
 			logger.log(20, "cBY:{:<20} added network = ... SSID and passcode to supplicant file {}".format(G.homeDir,newF))
 
 		subprocess.call("/usr/bin/sudo cp {}wpa_supplicant.conf-temp /etc/wpa_supplicant/wpa_supplicant.conf".format(G.homeDir), shell=True)
@@ -1681,7 +1713,7 @@ def getIPNumberMaster(quiet=True, noRestart=False):
 			if not quiet: logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(connected, indigoServer))
 
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30,"", exc_info=True)
 
 	if changed !="":
 		logger.log(20, "cBY:{:<20} bad IP number ...  old from file ipAddressRead>>{}<< not in sync with ip output: wlan0IP>>{}<<;	eth0IP>>{}<<".format( G.program, ipAddressRead, wlan0IP,eth0IP)  )
@@ -1776,9 +1808,7 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 def writeIPtoFile(ip,reason=""):
 	try:
 		G.ipAddress = ip
-		f = open("{}ipAddress".format(G.homeDir),"w")
-		f.write(G.ipAddress.strip(" ").strip("\n").strip(" "))
-		f.close()
+		writeFile("ipAddress", G.ipAddress.strip(" ").strip("\n").strip(" "))
 		logger.log(30,u"cBY:{:<20} writing ip number to file >>{}<<  reason:{}".format( G.program, G.ipAddress, reason))
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -1988,7 +2018,7 @@ def whichHCI():
 			#	UP RUNNING
 			#	RX bytes:11143 acl:0 sco:0 events:379 errors:0
 			#	TX bytes:4570 acl:0 sco:0 commands:125 errors:0
-		if hci["hci"] == {}: logger.log(30, " empty return from which HCI :{}".format(unicode(lines)))
+		if hci["hci"] == {}: logger.log(30, " empty return from which HCI :{}".format(lines))
 		hci["ret"] = ret
 		return hci
 	except	Exception as e :
@@ -2016,7 +2046,7 @@ hci1:	Type: Primary  Bus: UART
 		if verbose: logger.log(20, u"cBY:{:<20} {}".format(G.program, ret[0]))
 		hciFound = False
 		for line in ret[0].split("\n"):
-			if line.find(useHCI) == 0: 
+			if line.find(str(useHCI)) == 0: 
 				hciFound = True
 				continue
 			if hciFound:
@@ -2044,7 +2074,6 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name=u'execSend', target=execSend, args=())}
 				G.sendThread["thread"].start()
 
-			#if verbose:	logger.log(20, u"cBY:{:<20} adding nbytes {} to queue".format(G.program, len(unicode(data))) )
 			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait,  "verbose":verbose, "squeeze":squeeze, "escape":escape})
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -2063,7 +2092,7 @@ def execSend():
 					if "verbose" in all and all["verbose"]: verbose = True
 					else:									verbose = False
 					verbose = False
-					if verbose:	logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, unicode(all)[0:100]) )
+					if verbose:	logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, "{}".format(all)[0:100]) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
 					text 		= all["text"]
@@ -2154,13 +2183,20 @@ def execSend():
 									lld = len(data0)
 									if verbose: logger.log(20, "cBY:{:<20}  socket send data lengths  in:{} --> :sq:{} --> cmp:{} ".format(G.program, lenStart, len(dataC), lld))
 									sendData= "{}x-6-a{}x-6-a{}".format(lld, name,compressedTag)
-									sendData= "{:<30}".format(sendData)+data0
+									sendData= "{:<30}".format(sendData)
+									if sys.version_info[0] == 3 and type(data0) == type(bytes("xx","utf-8")): 
+										if verbose: logger.log(20, "cBY:{:<20}  sendData type{}, data0 type:{} ".format(G.program, type(sendData), type(data0) ))
+										sendData = bytes(sendData,"utf8")
+										sendData = sendData+data0
+									else:
+										sendData = sendData+data0
+										if sys.version_info[0] == 3:
+											sendData = bytes(sendData,"utf8")
+
 									try:
 										soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 										soc.settimeout(6.)
 										soc.connect((G.ipOfServer, G.indigoInputPORT))
-										if sys.version_info[0] == 3: 
-											sendData = bytes(sendData,'utf-8')
 										len_sent = soc.send(sendData)
 										time.sleep(0.2+ min(10,lld/20000))
 										soc.settimeout(3.+ min(10,lld/10000))
@@ -2224,9 +2260,7 @@ def echoToMessageSend(data, wasSend):
 	try:
 		if len(data) > 6000: data = data[0:6000]+" ... "+data[-100:]
 		logger.log(10, "cBY:{:<20}  {} {}\n".format(G.program, wasSend, data) )
-		f = open("{}temp/messageSend".format(G.homeDir),"w")
-		f.write("{} {} {}: {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"), wasSend, G.program , data) )
-		f.close()
+		writeFile("temp/messageSend", "{} {} {}: {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"), wasSend, G.program , data) )
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
@@ -2375,12 +2409,27 @@ def checkForNewCommand(fname):
 	return ""
 
 #################################
+def writeFile(outFile, text, writeOrAppend="w"):
+	try:
+		f = open("{}{}".format(G.homeDir, outFile), writeOrAppend)
+		f.write(text)
+		f.close()
+		#U.logger.log(20, u"===== writing to {}{} text:{}".format(G.homeDir, outFile, text))
+	except	Exception as e:
+		U.logger.log(30,"", exc_info=True)
+		if "{}".format(e).find("Read-only file system:") >-1:
+			doReboot(tt=0)
+	return
+
+
+#################################
 def makeDATfile(sensor, data):
 	if "sensors" in data:
 		for sens in data["sensors"]:
 			#print sensor, "makeDATfile", sens, data["sensors"][sens]
 			writeJson("{}temp/{}.dat".format(G.homeDir,sens),   data["sensors"][sens], indent=2)
 	else:
+		if data != {}:
 			writeJson("{}temp/{}.dat".format(G.homeDir,sensor), data, indent=2)
 
 
@@ -2404,22 +2453,94 @@ def writeJson(fName, data, sort_keys=False, indent=0):
 
 
 #################################
-def readJson(fName):
-	data ={}
-	raw = ""
+def readPopen(cmd):
 	try:
-		if not os.path.isfile(fName):
-			logger.log(10,u"cBY:{:<20}  no fname:{}".format(G.program, fName))
-			return {},""
-		f=open(fName,"r")
-		raw = f.read()
-		f.close()
-		data = json.loads(raw)
-		#logger.log(10, u" readJson-data:{}\nddd: {}".format(data, raw) )
-	except	Exception as e:
-		logger.log(30,u"cBY:{:<20} Line {} has error={}, fname:{}, data:{}".format(G.program, sys.exc_info()[-1].tb_lineno, e, fName, raw ))
+		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		return ret.decode('utf_8'), err.decode('utf_8')
+	except Exception as e:
+		U.logger.log(20,"", exc_info=True)
+
+#################################
+def checkIfmustUsePy3():
+	if getOsVersion() >= 11:
+		return True
+	return False
+
+#################################
+def getOsVersion():
+	osInfo	 = readPopen("cat /etc/os-release")[0].strip("\n").split("\n")
+	for line in osInfo:
+		if line .find("VERSION_ID=") == 0:
+			return int( line.strip('"').split('="')[1] )
+	return 0 
+
+#################################
+def readJson(fName):
+	data = {}
+	raw  = ""
+	if not os.path.isfile(fName):
+		logger.log(10,u"cBY:{:<20}  fname does not exist:{}, return empty".format(G.program, fName))
 		return {}, ""
+
+	for ii in range(2):
+		try:
+			f = open(fName,"r")
+			raw = f.read()
+			f.close()
+			data = json.loads(raw)
+			if ii == 1: logger.log(20, u"cBY:{:<20} read error fixed".format(G.program) )
+			return data, raw
+		except	Exception as e:
+			logger.log(20,u"cBY:{:<20} Line {} has error={}, fname:{}, data:>>{}..{}<<".format(G.program, sys.exc_info()[-1].tb_lineno, e, fName, raw[0:50],raw[-50:] ))
+			if ii > 0:
+				return {}, ""
+			time.sleep(1)
+
 	return data, raw
+
+
+#################################
+def compareDict(oldDict, newDict, levels=3, mustHaveKey="", mustHaveSensor=""):
+
+	sens = ""
+	try:
+		for sens in newDict:
+			if mustHaveSensor != "" and mustHaveSensor != sens :	continue  
+			if type(newDict[sens]) != type({}): 					continue
+			if sens not in  oldDict: 														return True
+			if type(newDict[sens]) != type(oldDict[sens]): 									return True
+
+			if levels >= 2:
+				for sensId in newDict[sens]:
+					if type(newDict[sens][sensId]) != type({}): 	continue
+					if mustHaveKey != "" and mustHaveKey not in newDict[sens][sensId]: break 
+					if sensId not in  oldDict[sens]: 										return True
+
+					if levels >=3:
+						for xx in newDict[sens][sensId]:
+							if xx not in  oldDict[sens][sensId]: 							return True
+							if oldDict[sens][sensId][xx] !=  newDict[sens][sensId][xx]: 	return True
+
+
+		for sens in oldDict:
+			if mustHaveSensor != "" and mustHaveSensor != sens :	continue  
+			if sens not in  newDict: 														return True
+			if type(oldDict[sens]) != type({}): 					continue
+			if type(newDict[sens]) != type(oldDict[sens]): 									return True
+
+			if levels >= 2:
+				for sensId in oldDict[sens]:
+					if type(oldDict[sens][sensId]) != type({}): 	continue
+					if mustHaveKey != "" and mustHaveKey not in oldDict[sens][sensId]: break 
+					if sensId not in  newDict[sens]: 										return True
+
+		return False
+
+	except	Exception as e:
+		logger.log(30,"sensor:{}, newDict:{}, oldDict:{}".format(sens, newDict.get(sens,"---"), oldDict.get(sens,"---")), exc_info=True)
+
+	return True
+
 
 
 #################################
@@ -2461,13 +2582,13 @@ def readINPUTcount():
 				int(IPC[str(p)])
 			except:
 				try: IPC[str(p)] =0
-				except: fix =True
+				except: fix = True
 		if fix: IPC ={}
 		if len(IPC) < 10:
-			IPC={}
+			IPC = {}
 			for ii in range(1,30):
 				IPC[str(ii)] = 0
-		out={}
+		out = {}
 		for p in IPC:
 			out[str(p)] = IPC[p]
 		writeINPUTcount(out)
@@ -2746,7 +2867,8 @@ def checkIfThrottled():
 		try:	temp = bin(int(code,0))
 		except: return "err_in_proc_check_power"
 		msg = ""
-		for position, message in MESSAGES.iteritems():
+		for position in MESSAGES:
+			message = MESSAGES[position]
 			#Check for the binary digits to be "on" for each warning message
 			if len(temp) > position and temp[0 - position - 1] == '1':
 				msg += message+";"
@@ -3096,6 +3218,7 @@ def getEULER(v,theClass=""):
 
 #################################
 def getMAGReadParameters( sens,devId):
+		#global magOffsetX, magOffsetY, magOffsetZ, magDivider, magResolution, declination, deltaX, sensorRefreshSecs, enableCalibration, displayEnable, sensorLoopWait, minSendDelta, offsetTemp, magFregRate, accelerationGain, 
 		changed = ""
 
 		G.i2cAddress = getI2cAddress(sens,default="")
@@ -3190,29 +3313,40 @@ def getMAGReadParameters( sens,devId):
 			G.offsetTemp[devId] = 0
 
 		try:
-			if "accelerationGain" in sens:
-				if G.accelerationGain !="" and	float(G.accelerationGain) != float(sens["accelerationGain"]):
-					changed ="{}accelerationGain".format(changed)
-				G.accelerationGain= float(sens["accelerationGain"])
+			if "magFregRate" in sens:
+				if G.magFregRate !="" and	G.magFregRate != sens["magFregRate"]:
+					changed ="{}magFregRate".format(changed)
+				G.magFregRate= sens["magFregRate"]
 		except:
+			G.magFregRate = "3.0"
 			pass
+
+		try:
+			if "accelerationGain" in sens:
+				if G.accelerationGain !="" and	G.accelerationGain != sens["accelerationGain"]:
+					changed ="{}accelerationGain".format(changed)
+				G.accelerationGain= sens["accelerationGain"]
+		except:
+			G.accelerationGain = "1"
+			pass
+
 		try:
 			if "magGain" in sens:
-				if G.magGain != "" and  float(G.magGain) != float(sens["magGain"]):
+				if G.magGain != "" and  G.magGain != sens["magGain"]:
 					changed ="{}magGain".format(changed)
-				G.magGain= float(sens["magGain"])
+				G.magGain= sens["magGain"]
 		except:
+			G.magGain = "4.7"
 			pass
 
 		return changed
 
 #################################
-def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
-		sumTest={"dim":"","limits":[1000000,-100000]},singleTest={"dim":"","coord":"","limits":[1000000,-100000]}):
-		old=copy.copy(oldIN)
+def checkMGACCGYRdata(new, oldIN, dims, coords, testForBad, devId, sensor, quick, sumTest = {"dim":"","limits":[1000000,-100000]}, singleTest={"dim":"","coord":"","limits":[1000000,-100000]}):
+		old = copy.copy(oldIN)
 		try:
-			data={"sensors":{sensor:{devId:{}}}}
-			retCode="ok"
+			data = {"sensors":{sensor:{devId:{}}}}
+			retCode = "ok"
 			if new =="": return old
 			if str(new).find("bad") >-1:
 				G.badCount1+=1
@@ -3227,9 +3361,10 @@ def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
 				if G.badCount1 > 10:
 						restartMyself(reason=" empty sensor reading, need to restart to get sensors reset",doPrint= False)
 				return old
+
 			G.badCount1 =0
 			if testForBad not in new:
-				#print "reject 2"
+				#print( "reject 2")
 				return old
 			if new[testForBad] =="":
 				G.badCount5 +=1
@@ -3240,6 +3375,7 @@ def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
 					sendURL(data)
 					restartMyself(reason=" empty sensor reading, need to restart to get sensors reset",doPrint= False)
 				return old
+
 			G.badCount5 =0
 			if singleTest["dim"]!="":
 					if ( abs(new[singleTest["dim"]][singleTest["coord"]]) >	 singleTest["limits"][1] or
@@ -3248,8 +3384,9 @@ def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
 						G.badCount4+=1
 						if G.badCount4 > 10:
 							restartMyself(reason="{}- wrong, need to restart to get sensors reset".format(singleTest),doPrint= False)
-						#print "reject 3"
+						#print( "reject 3")
 						return old
+
 			G.badCount4 =0
 			if sumTest["dim"]!="":
 				dd= sumTest["dim"]
@@ -3259,10 +3396,10 @@ def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
 					G.badCount3 +=1
 					if G.badCount3 > 10:
 						restartMyself(reason="{}- wrong, need to restart to get sensors reset".format(sumTest),doPrint= False)
-					#print "reject 4"
+					#print( "reject 4")
 					return old
-			G.badCount3 =0
 
+			G.badCount3 =0
 			totalABS	 =0
 			totalDelta	 =0
 			nTotal		 =0
@@ -3277,25 +3414,29 @@ def checkMGACCGYRdata(new,oldIN,dims,coords,testForBad,devId,sensor,quick,
 					nTotal +=1
 
 			if nTotal > 1 and totalDelta/nTotal > max(0.01,G.deltaX[devId]):
-				#print " sendNow", total/nTotal , deltaX[devId]
+				#logger.log(20," sendNow: delta={}  > {}".format(totalDelta/nTotal , G.deltaX[devId]))
 				retCode = "sendNow"
+
 			if nTotal > 1 and totalABS ==0:
 				G.badCount2+=1
 				if G.badCount2 > 5:
 					restartMyself(reason="{} values identival 5 times need to restart to get sensors reset".format(dims),doPrint= False)
-				#print "reject 5"
+				#print( "reject 5")
 				return old
 
 			else:
-				G.badCount2 =0
+				G.badCount2 = 0
+
 			if G.sensorWasBad:
 				restartMyself(reason="{} back from bad sensor, restart".format(dims),doPrint= False)
+
 			data["sensors"][sensor][devId] = new
-			#print	 time.time() - G.lastAliveSend , abs(G.sensorRefreshSecs) , quick , retCode=="sendNow" , time.time() - G.lastAliveSend , G.minSendDelta
-			if (  (time.time() - G.lastAliveSend > abs(G.sensorRefreshSecs) or quick or retCode=="sendNow" )  and (time.time() - G.lastAliveSend > G.minSendDelta) ):
-					#print	"sending", str(data)
+			#print(  time.time() - G.lastAliveSend , abs(G.sensorRefreshSecs) , quick , retCode=="sendNow" , time.time() - G.lastAliveSend , G.minSendDelta )
+			if (  (time.time() - G.lastAliveSend > 60 or quick or retCode=="sendNow" )  and (time.time() - G.lastAliveSend > G.minSendDelta) ):
+					#logger.log(20,"sending {}".format(data))
 					sendURL(data)
 					old[devId]	= copy.copy(new)
+					G.lastAliveSend  = time.time()
 
 		except	Exception as e:
 			logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

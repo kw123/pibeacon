@@ -12,7 +12,7 @@ import copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "setmcp4725"
 
 
@@ -23,7 +23,7 @@ def setVoltage(bytes, persist=False):
 		else:
 			bus.write_i2c_block_data(i2cAddress, 0x40, bytes)
 	except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 
 ###########
 def readParams():
@@ -37,7 +37,7 @@ U.setLogging()
 
 myPID		= str(os.getpid())
 readParams()
-U.logger.log(10, "setmcp4725	command :" + unicode(sys.argv))
+U.logger.log(10, "setmcp4725	command :{}".format(sys.argv))
 
 command = json.loads(sys.argv[1])
 
@@ -58,7 +58,7 @@ if "startAtDateTime" in command:
 
 U.killOldPgm(myPID,"setmcp4725.py", param1='"i2cAddress": "' + str(i2cAddress) + '"')# del old instances of myself if they are still running
 
-U.logger.log(10, "setmcp4725	command " + unicode(command) )
+U.logger.log(10, "setmcp4725	command {}".format(command) )
 
 bus = smbus.SMBus(1)
 
@@ -75,15 +75,15 @@ if "cmd" in command:
 	if cmd =="disable":
 		exit()
 else:
-	U.logger.log(30, "setmcp4725	 no cmd given " + unicode(command) )
+	U.logger.log(30, "setmcp4725	 no cmd given {}".format(command) )
 	exit()
-U.logger.log(10, "setmcp4725	cmd " + unicode(cmd) )
+U.logger.log(10, "setmcp4725	cmd {}".format(cmd) )
 
 if "values" in command:
 	values =  command["values"]
 if values =="":
 	exit()
-U.logger.log(30, "setmcp4725	 values " + unicode(values) )
+U.logger.log(30, "setmcp4725	 values {}".format(values) )
 
 if "analogValue" in values:
 	analogValue = int(float(values["analogValue"])/3300 * 4096)
@@ -105,7 +105,7 @@ if cmd =="analogWrite":
 	try:
 		setVoltage(bytes,persist=False)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	exit()
 
 if cmd =="continuousUpDown":
@@ -118,7 +118,7 @@ if cmd =="continuousUpDown":
 			setVoltage([0,0],persist=False)
 			time.sleep(pulseDown)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	exit()
 	
 if cmd =="pulseUp":
@@ -127,7 +127,7 @@ if cmd =="pulseUp":
 		time.sleep(pulseUp)
 		setVoltage([0,0],persist=False)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	exit()
 	
 if cmd =="pulseDown":
@@ -136,7 +136,7 @@ if cmd =="pulseDown":
 		time.sleep(pulseDown)
 		setVoltage(bytes,persist=False)
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	exit()
 	
 U.logger.log(30, u"cmd not implemented: "+cmd)

@@ -5,6 +5,10 @@
 # version 1.1 
 ##
 ##
+
+## ok for py3
+
+
 from __future__ import division
 
 import math
@@ -14,7 +18,6 @@ import	sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
 
 G.program = "ADS1x15"
 
@@ -180,7 +183,7 @@ class ADS1x15:
 			self.address 	= address
 			self.debug 		= debug
 		except	Exception as e:
-				U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+				U.logger.log(30,"", exc_info=True)
 
 	def readADC(self, channel=0, pga=6144, sps=250, singleOrDiff="single"):
 		try:
@@ -257,7 +260,7 @@ class ADS1x15:
 			return val
 
 		except	Exception as e:
-				U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(32,"", exc_info=True)
 		return ""
 #
 #################################
@@ -270,7 +273,7 @@ def startSensor(devId,i2cADR):
 			SENSOR[devId]=ADS1x15(address=i2cADR) 
 			return 
 	except	Exception as e:
-		U.logger.log(20, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return 
 
 #===========================================================================
@@ -297,6 +300,10 @@ def getValues():
 					v =  (SENSOR[devId].readADC(channel=inputChannel[devId] , pga=gain[devId], sps=sps[devId], singleOrDiff="diff"))
 				else:
 					v =  (SENSOR[devId].readADC(channel=int(inputChannel[devId]), pga=gain[devId], sps=sps[devId], singleOrDiff="single"))
+				if type(v) == type(""): 
+					badSensor += 1
+					return ""
+
 				values[devId] = {"INPUT":round(v,2)}
 				#U.logger.log(30, u"getValues    devId: {:14s},  v:{}, gain[devId]:{}, conversionFactor:{}".format(devId, values[devId], gain[devId], conversionFactor))
 				
@@ -306,8 +313,7 @@ def getValues():
 		return values
 	except	Exception as e:
 		badSensor += 1
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		U.logger.log(30, u"input:{}, len:{};  ".format(inp, len(inp)))
+		U.logger.log(30,"", exc_info=True)
 	return values
 
 # ===========================================================================
@@ -324,13 +330,17 @@ def readParams():
 
 	try:
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+
+		#U.logger.log(20, " comparisons: {}, {},  {}, ".format(inp == "",lastRead2 == lastRead, inpRaw == oldRaw ) )
+
+
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
 		if inpRaw == oldRaw: return
 		oldRaw	   = inpRaw
 		
-		externalSensor=False
+		externalSensor = False
 		sensorList=[]
 		sensorsOld= copy.copy(sensors)
 
@@ -342,7 +352,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program, G.program) )
 			exit()
 			
 		try: sensorRefreshSecs	= float(G.sensorRefreshSecs)
@@ -401,7 +411,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 #################################
 #################################
@@ -518,7 +528,7 @@ def execADS1x15():
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
 		except Exception as e:
-			U.logger.log(50, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 execADS1x15()
 try: 	G.sendThread["run"] = False; time.sleep(1)

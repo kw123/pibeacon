@@ -19,7 +19,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "ccs811"
 #simple bitfield object
 from collections import OrderedDict
@@ -151,7 +151,7 @@ class ccs811_class(object):
 			#default to read every second
 			self.setDriveMode(mode)
 		except	Exception as e:
-			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		
 
 
@@ -199,7 +199,7 @@ class ccs811_class(object):
 				else:
 					return 0
 		except	Exception as e:
-			U.logger.log(30, u" error in starting css sensor in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return	0		
 
 
@@ -281,27 +281,27 @@ class ccs811_class(object):
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
 		except	Exception as e:
-			U.logger.log(10, u"writeList	 in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 
 	def readList(self, command,	 length):
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
 		except	Exception as e:
-			U.logger.log(10, u"readList	in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return []
 
 	def readU8(self, reg):
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
 		except	Exception as e:
-			U.logger.log(10, u"readU8  in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 		return 0
 
 	def write8(self, reg,value):
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
 		except	Exception as e:
-			U.logger.log(10, u"write8  in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(20,"", exc_info=True)
 
 
 
@@ -388,8 +388,8 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if ccs811sensor[devId] =="":
 					return
-			U.logger.log(30," new parameters read: i2cAddress:" +unicode(i2cAddress) +";	 minSendDelta:"+unicode(minSendDelta)+
-					   ";  deltaX:"+unicode(deltaX[devId])+";  sensorRefreshSecs:"+unicode(sensorRefreshSecs) )
+			U.logger.log(30," new parameters read: i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+
+					   ";  deltaX:{}".format(deltaX[devId])+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) )
 				
 		deldevID={}		   
 		for devId in ccs811sensor:
@@ -403,8 +403,7 @@ def readParams():
 
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-		print sensors[sensor]
+		U.logger.log(30,"", exc_info=True)
 		
 
 
@@ -414,7 +413,7 @@ def startSensor(devId,i2cAddress):
 	global sensors,sensor
 	global startTime
 	global ccs811sensor
-	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
 
 
@@ -436,7 +435,7 @@ def startSensor(devId,i2cAddress):
 		except: pass
 				
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		ccs811sensor[devId]	  =""
 	time.sleep(.1)
 
@@ -547,7 +546,7 @@ def getValues(devId):
 			ret	 = {"CO2":		   ( "%d"%( CO2			 ) ).strip(), 
 					"VOC":		   ( "%d"%( VOC			 ) ).strip(),
 					"temp":		   ( "%4.1f"%( TEMP		 ) ).strip()}
-			U.logger.log(10, unicode(ret)) 
+			U.logger.log(10, "{}".format(ret)) 
 			badSensor = 0
 			goodData  = True
 			countCO2  = 0
@@ -556,7 +555,7 @@ def getValues(devId):
 			lastVOC	  = VOC
 			lastTemp  = TEMP
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		ccs811sensor[devId].start()
@@ -707,7 +706,7 @@ while True:
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

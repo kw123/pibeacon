@@ -18,7 +18,7 @@ allowedCommands = ["up", "down", "pulseUp", "pulseDown", "continuousUpDown", "an
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "setGPIO"
 
 devType = "OUTPUTgpio"
@@ -35,7 +35,7 @@ myPID = str(os.getpid())
 
 try:	command = json.loads(sys.argv[1])
 except: 
-	U.logger.log(30, "setGPIO  bad json:" + unicode(sys.argv))
+	U.logger.log(30, "setGPIO  bad json:{}".format(sys.argv))
 	exit()
 
 
@@ -45,12 +45,12 @@ U.getIPNumber()
 
 U.setLogLevel()
 
-U.logger.log(10, "setGPIO  command :" + unicode(sys.argv))
+U.logger.log(10, "setGPIO  command :{}".format(sys.argv))
 
 if "cmd" in command:
 	cmd= command["cmd"]
 	if cmd not in allowedCommands:
-		U.logger.log(30," bad command " + command + "  allowed:" + unicode(allowedCommands))
+		U.logger.log(30," bad command " + command + "  allowed:{}".format(allowedCommands))
 		exit(1)
 
 if "pin" in command:
@@ -83,7 +83,7 @@ try:
 	if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 	else:						bits = 0
 except	Exception as e:
-	U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+	U.logger.log(30,"", exc_info=True)
 	exit(0)
 
 inverseGPIO = False
@@ -188,6 +188,6 @@ try:
 
 
 except	Exception as e:
-	U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+	U.logger.log(30,"", exc_info=True)
 
 exit(0)

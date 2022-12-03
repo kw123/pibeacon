@@ -1,4 +1,44 @@
-Added features / changes in v2022.151.13@ 2022-09-20
+Added features / changes in v2022.160.14@ 2022-12-03
+===================================================
+   
+1. made all major py programs on rpi run under python2 or python3
+   py2 vs py3 can be selected in config for all rpi or left to each individual rpi
+   in rpi dev edit the py version can be selected if in config it is set to individual rpi
+   py3 requires pi-os >=10 (stretch ssd) to work properly 
+
+   All required libs are installed by the plugin system (ie neopixel, sensor libs etc, see checkForInclude-py2/py3.py on the rpi
+       eg   libs: io, hcidump, smbus2 pexpect, expect, ... , syntax changes:  / vs // (int//float), print /;print() etc 
+       the devil is in the details:  
+        calling py3 modules can be different from py2 eg to make them "unlinked" /E option has to be used and many more "little" changes
+        binary socket data transfer is different 
+
+   ==> this was a major pice of work <==  
+
+   for ssd updates:  I suggest that you do 
+     1. updates apps and sys:
+      sudo apt update
+      sudo apt upgrade -y   ( or a more thorough, but mostly not needed:  sudo apt dist-upgrade  -y )
+     2. cleanup:
+      sudo apt autoremove
+      sudo apt clean
+     3. then reboot 
+     every 2 months to keep the security patches up to date
+
+2. added option to detect new beacons looking at the manufacturer name in the BLE message. Some beacons send that info in their BLE msg
+   some beacons like from NUT or april have several tag definitions, with this option you can catch them all
+   the plugin will then find the proper individual tag that works for the soecific beacon type ie beep, battery, ..
+   to use this: select in "accept new beacons" menu item 
+
+3. added TOF sensor vl503l1xDistance. It has range up to 4 m
+   you now can use several of vl503l1x or vl503l0x tof sensors on one RPI
+
+3. several smaller fixes and improvements
+
+4. some menu fixes 
+
+
+
+Added features / changes in v2022.151.14@ 2022-10-10
 ===================================================
    
 1. made switchbot operation work more smoothly, timing, error recovery ..
@@ -10,16 +50,16 @@ Added features / changes in v2022.151.13@ 2022-09-20
 3. added option in the switchbot action to have a sensor(BLE only) on one RPi that triggers 
    a switchbot action on another (or same) rpi w/o indigo being up. 
    the sensor RPI will send a command to the switchbot rpi through sftp
-   eg a BLE sensor with button press signal (ge ibs04-button) can be received on rpi-1, 
+   eg a BLE sensor with button press signal (eg ibs04-button) can be received on rpi-1, 
      rpi-1 sends a press/on command to rpi-2 for a switchbot to move the arm.
      Indigo is not involved.
-     This is useful if the button is out of reach of the rpi where the switchbot is managed and indiogo is down
+     This is useful if the button is out of reach of the rpi where the switchbot is managed and indigo is down
    To setup create an action in indigo "Set switchbot relay to on/off or pulses.."
 
 4. added option to have ON/OFF sensors stay longer ON for xx secs. Some of these sensors go from on-off within 0.2 secs. 
    This gives the indigo dev state more time to show the ON state
 
-5. added option for on/off sensor to show arbitray text in display like moving / stopped etc.
+5. added option for on/off sensor to show arbitrary text in display like moving / stopped etc.
 
 6. added support for musegear finder beacons (regular, mini, wallet). They can be purchased from amazon in Europe
    They can be beeped (to find its location) and the plugin gets the battery level.
@@ -36,9 +76,9 @@ Added features / changes in v2022.151.13@ 2022-09-20
 	- One on door, moving between open sensor and closed sensor to indicate open/closed
 	- Several magnets on the rail where the sensor on the door moves by and gets triggers by the magnets
 	  the magnets should be placed >1 "second" apart, something like 20-30 cm
-	  But the speed of the door changes, eg at close it slows down. There the magents should be closer together
+	  But the speed of the door changes, eg at close it slows down. There the magnets should be closer together
 	  But not too close as the sensor might not be ready for the next trigger
-	  With these magnets the plugin counts the magnets passed aand calculates the current position (0-100%)
+	  With these magnets the plugin counts the magnets passed and calculates the current position (0-100%)
 
 	The dev states used for the sensors are onoffState and one that indicates the moving changes
 	eg lastMotion of the sensor that is mounted on the door. 

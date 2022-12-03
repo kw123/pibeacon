@@ -9,7 +9,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 import math
 G.program = "mlx90614"
 
@@ -243,7 +243,6 @@ def doDisplay():
 					fwidth1 = int(fwidth1 *ymax / 500) 
 					posy1	= int(ymax/2.) 
 				except: pass	
-##		  print xmax,ymax,posy1,fwidth1
 		
 		nPages=0
 		posText0=[]
@@ -472,17 +471,14 @@ def doDisplay():
 			f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
 		except:
 			try:
-				print "retry to write to display.inp"
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
 			except	Exception as e:
-				print u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
-				if unicode(e).find("No space left on device") >-1:
+				if "{}".format(e).find("No space left on device") >-1:
 					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
 	except	Exception as e:
-		print u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e)
-		print sValues
+		U.logger.log(30,"", exc_info=True)
 
 
 # ===========================================================================
@@ -529,7 +525,7 @@ def incrementBadSensor(devId,sensor,data):
 			data[sensor][devId]["badSensor"]=True
 			badSensors[devId] =0
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	return data 
 
 
@@ -587,7 +583,7 @@ def readParams():
 			
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -653,11 +649,6 @@ class MLX90614:
 		self.bus = smbus.SMBus(bus=bus_num)
 
 	def test(self):
-		print  "MLX90614_CONFIG", self.bus.read_word_data(self.address, self.MLX90614_CONFIG)
-		print  "MLX90614_PWMCTRL",self.bus.read_word_data(self.address, self.MLX90614_PWMCTRL)
-		print  "MLX90614_EMISS",  self.bus.read_word_data(self.address, self.MLX90614_EMISS)
-		print  "MLX90614_TOMAX",  self.bus.read_word_data(self.address, self.MLX90614_TOMAX)
-		print  "MLX90614_TOMIN",  self.bus.read_word_data(self.address, self.MLX90614_TOMIN)
 		""" example read
 		MLX90614_CONFIG 40884
 		MLX90614_PWMCTRL 513
@@ -723,7 +714,7 @@ def getMLX90614(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 		if sensor in data["sensors"] and data["sensors"][sensor]=={}: del data["sensors"][sensor]
 		U.muxTCA9548Areset()
 		return data
@@ -812,7 +803,7 @@ while True:
 						 retCode = "sendNow" 
 					#print retCode, G.deltaX[devId],data["sensors"][sensor][devId],	 lastValue[devId], abs(data["sensors"][sensor][devId]["temp"] - lastValue[devId]["temp"])/max(0.1,data["sensors"][sensor][devId]["temp"] + lastValue[devId]["temp"])*2.
 					if (  (time.time() - G.lastAliveSend > abs(G.sensorRefreshSecs) or quick or retCode=="sendNow" )  and (time.time() - G.lastAliveSend > G.minSendDelta) ):
-							#print	"sending", unicode(data)
+
 							U.sendURL(data)
 							lastValue  = copy.copy(data["sensors"][sensor])
 
@@ -835,7 +826,7 @@ while True:
 		time.sleep(0.3)
 		#print "end of loop", loopCount
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

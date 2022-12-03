@@ -248,7 +248,6 @@ def testIfMove(hour, minute, second, secSinMidnit, secSinMidnit2, waitBetweenSte
 		if nextStep <0:	dir = -1
 		else:			dir =  1
 
-		print "secSinMidnit", "%.2f"%secSinMidnit, "H",hour, "M",minute, "S",second, "dt %.5f"%(time.time()-t0), "nstep",nextStep, "totSteps",totalSteps
 
 		if nextStep != 0: 
 			move(0.001, int( abs(nextStep) ), dir)
@@ -266,7 +265,6 @@ def testIfRewind(hour, minute, second, secSinMidnit, hour12,  totalSteps, nextSt
 
 	if hour12 > 6: rewindDone = False
 	if (hour12 < 3 and  not rewindDone) or nextStep ==0:
-		print "rewind ", "%.2f"%secSinMidnit, "H",hour, "M",minute, "S",second, "dt %.5f"%(time.time()-t0), "nstep",nextStep, "totSteps",totalSteps
 		move (0.001,maxStepsUsed,-1)
 		rewindDone = True
 		totalSteps = 0
@@ -285,8 +283,6 @@ def findLeftRight():
 	time.sleep(0.2)
 	leftLimit = move(0.001, 5000 , -1)
 	
-	print "rightLimit",rightLimit, "leftLimit",leftLimit
-
 	time.sleep(0.1)
 	#leftLimit = move(0.001, rightLimit/2 , -1)
 
@@ -318,7 +314,6 @@ def clock(speed, HHAmPM):
 	nextStep 														= 1
 
 
-	print "clock starting;   waitBetweenSteps", waitBetweenSteps, "speed", speed, "totalSteps",totalSteps,"sleepDefault", sleepDefault,"HHAmPM",HHAmPM,"secSinMidnit2",secSinMidnit2
 
 	while True:
 				

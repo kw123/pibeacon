@@ -9,7 +9,7 @@ import smbus
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "sgp40"
 
 
@@ -743,7 +743,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 
@@ -763,7 +763,7 @@ def startSensor(devId):
 			SENSOR[devId]  = DFRobot_SGP40(bus = 1,relative_humidity = 50,temperature_c = 25)
 			SENSOR[devId].begin(10)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
 
@@ -790,7 +790,7 @@ def getValues(devId):
 				}
 		return data
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -904,7 +904,6 @@ while True:
 							lastValues2[devId] = copy.copy(lastValues[devId])
 		if sendData:
 			U.sendURL(data)
-		#print " BMP388 to makeDATfile ", data
 		U.makeDATfile(G.program, data)
 
 		loopCount +=1
@@ -921,7 +920,7 @@ while True:
 		lastMeasurement = time.time()
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

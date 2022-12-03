@@ -6,7 +6,7 @@
 ##
 ##	 read GPIO INPUT and send http to indigo with data if pulses detected
 #
-
+## py3 prept, needs testing 
 ##
 
 import	sys, os, subprocess, copy
@@ -17,7 +17,7 @@ import	RPi.GPIO as GPIO
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "INPUTpulse"
 GPIO.setmode(GPIO.BCM)
 
@@ -55,7 +55,7 @@ def readParams():
 		if "sensors"			in inp : sensors =				(inp["sensors"])
 
 		if sensor not in sensors:
-			U.logger.log(20,	"no "+ G.program+" sensor defined, exiting")
+			U.logger.log(20, "no {} sensor defined, exiting".format(G.program))
 			exit()
 
 		sens = sensors[sensor]
@@ -68,7 +68,7 @@ def readParams():
 				for item in sens[devId]:
 					if item not in oldSensor:
 						new = True
-					elif unicode(sens[devId][item]) != unicode(oldSensor[devId][item]):
+					elif "{}".format(sens[devId][item]) != "{}".format(oldSensor[devId][item]):
 						new = True
 					if new: break
 			if new: break		 
@@ -79,38 +79,34 @@ def readParams():
 			for devId in sens:
 				sss= sens[devId]
 				if "gpio"									not in sss: continue
-				if "deadTime"								not in sss: continue # in msec
 				if "risingOrFalling"						not in sss: continue
 				if "minSendDelta"							not in sss: continue # in sec
-				if "bounceTime"								not in sss: continue # in msec
-				if "deadTimeBurst"							not in sss: continue # in sec
 				if "inpType"								not in sss: continue
-				if "timeWindowForBursts"					not in sss: continue # in sec
-				if "timeWindowForContinuousEvents"			not in sss: continue # in sec
-				if "minEventsinTimeWindowToTriggerBursts" 	not in sss: continue
+
+
 				gpio						= sss["gpio"]
 				risingOrFalling				= sss["risingOrFalling"]
 				inpType						= sss["inpType"]
 
-				try:	bounceTime			= int(sss["bounceTime"])
+				try:	bounceTime			= int(sss.get("bounceTime",10))
 				except: bounceTime			= 10
 
-				try:	minSendDelta		= int(sss["minSendDelta"])
+				try:	minSendDelta		= int(sss.get("minSendDelta",5))
 				except: minSendDelta		= 5
 
-				try:	deadTime			= float(sss["deadTime"])
+				try:	deadTime			= float(sss.get("deadTime",1))
 				except: deadTime			= 1
 
-				try:	deadTimeBurst		= float(sss["deadTimeBurst"])
+				try:	deadTimeBurst		= float(sss.get("deadTimeBurst",1.))
 				except: deadTimeBurst		= 1
 
-				try:	timeWindowForBursts = int(sss["timeWindowForBursts"])
+				try:	timeWindowForBursts = int(sss.get("timeWindowForBursts",-1))
 				except: timeWindowForBursts = -1
 
-				try:	minEventsinTimeWindowToTriggerBursts = int(sss["minEventsinTimeWindowToTriggerBursts"])
+				try:	minEventsinTimeWindowToTriggerBursts = int(sss.get("minEventsinTimeWindowToTriggerBursts",-1))
 				except: minEventsinTimeWindowToTriggerBursts = -1
 
-				try:	timeWindowForContinuousEvents = float(sss["timeWindowForContinuousEvents"])
+				try:	timeWindowForContinuousEvents = float(sss.get("timeWindowForContinuousEvents",-1))
 				except: timeWindowForContinuousEvents = -1
 
 
@@ -230,7 +226,7 @@ def readParams():
 		oneFound = False
 		restart =False
 		delGPIO ={}
-		U.logger.log(20, "GPIOdict: " +unicode(GPIOdict))
+		U.logger.log(10, "GPIOdict: {}".format(GPIOdict))
 		for gpio in GPIOdict:
 			if gpio not in INPUTcount: INPUTcount[gpio] = 0
 			GPIOdict[gpio]["count"] = INPUTcount[gpio]
@@ -291,7 +287,7 @@ def readParams():
 		#print coincidence
 
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 				
 
  
@@ -347,7 +343,6 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 						U.logger.log(20, " burst  gpio:{}; bbb:{}; ll:{};  ii:{} ".format(gpio, bbb, ll, ii )  )
 						break
 					if bbb[ii][1] >= ggg["minEventsinTimeWindowToTriggerBursts"]:
-						#U.logger.log(10, "BURST triggered "+ risingOrFalling+" edge .. on %d2"%gpioINT+" gpio,  burst# "+unicode(ii)+";	#signals="+ unicode(bbb[ii][1])+ "--  in "+ unicode(ggg["timeWindowForBursts"]) +"secs time window")
 						burst	= tt
 						delupto = ii-1
 						bbb[ii][1]	= tt+ggg["timeWindowForBursts"]
@@ -372,7 +367,6 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 				ggg["lastsendContinuousEvent"] = 0
 		#  or just conti nue old c event = just update contEVENT not need to send data 
 		contEVENT[gpioINT] =  tt
-		#U.logger.log(10, "cEVENT(1): "+str(tt)+"; cEVENTtt="+ unicode(cEVENTtt)  )
 
 	
 
@@ -422,11 +416,12 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 								out+= "{}: {:.5f}; ".format(gp, tt- coincidence[devIdC]["gpios"][gp] )
 							U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
 	if sensor in data["sensors"] or "INPUTcoincidence" in data["sensors"]:
-			data["sensors"][sensor][ggg["devId"]]["time"] = tt
-			data["sensors"][sensor][ggg["devId"]]["eventOrPeriod"] = "event"
+			if sensor in data["sensors"]:
+				data["sensors"][sensor][ggg["devId"]]["time"] = tt
+				data["sensors"][sensor][ggg["devId"]]["eventOrPeriod"] = "event"
 			U.sendURL(data, wait=False)
-
 			U.writeINPUTcount(INPUTcount)
+
 	#print 	INPUTcount			
 
 def resetContinuousEvents():
@@ -547,14 +542,14 @@ def execMain():
 							#U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
 							if "devId" not in GPIOdict[gpio]: continue
 							#U.logger.log(20, u" DT:{}, minsend:{} ".format(time.time() - GPIOdict[gpio]["lastsendCount"], minSendDelta) )
-							if (time.time() - GPIOdict[gpio]["lastsendCount"]) >  minSendDelta*1.2:
+							if (time.time() - GPIOdict[gpio]["lastsendCount"]) >  G.sendToIndigoSecs:
 								devId = GPIOdict[gpio]["devId"] 
 								data["sensors"][sensor][devId] = {"count": GPIOdict[gpio]["count"],"time":time.time(), "eventOrPeriod":"period"}
 								#U.logger.log(10, u" gpio:{} passed; data:{} ".format(gpio, data) )
 								newData = True
 								GPIOdict[gpio]["lastsendCount"] = time.time()
 				for devIdC in coincidence:
-					if ((time.time() - coincidence[devIdC]["lastSend"] >  minSendDelta*1.2) and loopCount > 3 ) or countReset:
+					if ((time.time() - coincidence[devIdC]["lastSend"] >  G.sendToIndigoSecs) and loopCount > 3 ) or countReset:
 						if "INPUTcoincidence" not in data: data["sensors"]["INPUTcoincidence"] = {}
 						data["sensors"]["INPUTcoincidence"][devIdC] = {"count": INPUTcount[(devIdC)],"time":time.time()}
 						coincidence[devIdC]["lastSend"] = time.time()
@@ -571,7 +566,7 @@ def execMain():
 			loopCount+=1
 			time.sleep(shortWait)
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 
 execMain()

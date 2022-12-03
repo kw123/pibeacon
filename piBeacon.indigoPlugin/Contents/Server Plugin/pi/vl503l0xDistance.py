@@ -12,465 +12,1118 @@ import  sys, os, time, json, datetime,subprocess,copy
 import math
 
 
-from ctypes import *
-import smbus
-
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U
 import  piBeaconGlobals as G
-import traceback
+
 G.program = "vl503l0xDistance"
 import  displayDistance as DISP
-i2cbus = smbus.SMBus(1)
+
+import RPi.GPIO as GPIO
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+
+import board
+import busio
 
 
-VL53L0X_GOOD_ACCURACY_MODE      = 0   # Good Accuracy mode
-VL53L0X_BETTER_ACCURACY_MODE    = 1   # Better Accuracy mode
-VL53L0X_BEST_ACCURACY_MODE      = 2   # Best Accuracy mode
-VL53L0X_LONG_RANGE_MODE         = 3   # Longe Range mode
-VL53L0X_HIGH_SPEED_MODE         = 4   # High Speed mode
+# SPDX-FileCopyrightText: 2017 Tony DiCola for Adafruit Industries
+#
+# SPDX-License-Identifier: MIT
 
-accuracyDistanceModes= ["VL53L0X_GOOD_ACCURACY_MODE","VL53L0X_BETTER_ACCURACY_MODE","VL53L0X_BEST_ACCURACY_MODE","VL53L0X_LONG_RANGE_MODE","VL53L0X_HIGH_SPEED_MODE"]
+"""
+`adafruit_vl53l0x`
+====================================================
+
+CircuitPython driver for the VL53L0X distance sensor.  This code is adapted
+from the pololu driver here:
+https://github.com/pololu/vl53l0x-arduino
+
+See usage in the examples/vl53l0x_simpletest.py file.
+
+* Author(s): Tony DiCola
+
+Implementation Notes
+--------------------
+
+**Hardware:**
+
+* Adafruit `VL53L0X Time of Flight Distance Sensor - ~30 to 1000mm
+  <https://www.adafruit.com/product/3317>`_ (Product ID: 3317)
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the ESP8622 and M0-based boards:
+  https://github.com/adafruit/circuitpython/releases
+* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
+"""
+
+from adafruit_bus_device import i2c_device
+from micropython import const
+
+try:
+	from typing import Optional, Tuple, Type
+	from types import TracebackType
+	from busio import I2C
+except ImportError:
+	pass
+
+__version__ = "0.0.0+auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_VL53L0X.git"
+
+# Configuration constants:
+_SYSRANGE_START = const(0x00)
+_SYSTEM_THRESH_HIGH = const(0x0C)
+_SYSTEM_THRESH_LOW = const(0x0E)
+_SYSTEM_SEQUENCE_CONFIG = const(0x01)
+_SYSTEM_RANGE_CONFIG = const(0x09)
+_SYSTEM_INTERMEASUREMENT_PERIOD = const(0x04)
+_SYSTEM_INTERRUPT_CONFIG_GPIO = const(0x0A)
+_GPIO_HV_MUX_ACTIVE_HIGH = const(0x84)
+_SYSTEM_INTERRUPT_CLEAR = const(0x0B)
+_RESULT_INTERRUPT_STATUS = const(0x13)
+_RESULT_RANGE_STATUS = const(0x14)
+_RESULT_CORE_AMBIENT_WINDOW_EVENTS_RTN = const(0xBC)
+_RESULT_CORE_RANGING_TOTAL_EVENTS_RTN = const(0xC0)
+_RESULT_CORE_AMBIENT_WINDOW_EVENTS_REF = const(0xD0)
+_RESULT_CORE_RANGING_TOTAL_EVENTS_REF = const(0xD4)
+_RESULT_PEAK_SIGNAL_RATE_REF = const(0xB6)
+_ALGO_PART_TO_PART_RANGE_OFFSET_MM = const(0x28)
+_I2C_SLAVE_DEVICE_ADDRESS = const(0x8A)
+_MSRC_CONFIG_CONTROL = const(0x60)
+_PRE_RANGE_CONFIG_MIN_SNR = const(0x27)
+_PRE_RANGE_CONFIG_VALID_PHASE_LOW = const(0x56)
+_PRE_RANGE_CONFIG_VALID_PHASE_HIGH = const(0x57)
+_PRE_RANGE_MIN_COUNT_RATE_RTN_LIMIT = const(0x64)
+_FINAL_RANGE_CONFIG_MIN_SNR = const(0x67)
+_FINAL_RANGE_CONFIG_VALID_PHASE_LOW = const(0x47)
+_FINAL_RANGE_CONFIG_VALID_PHASE_HIGH = const(0x48)
+_FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT = const(0x44)
+_PRE_RANGE_CONFIG_SIGMA_THRESH_HI = const(0x61)
+_PRE_RANGE_CONFIG_SIGMA_THRESH_LO = const(0x62)
+_PRE_RANGE_CONFIG_VCSEL_PERIOD = const(0x50)
+_PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI = const(0x51)
+_PRE_RANGE_CONFIG_TIMEOUT_MACROP_LO = const(0x52)
+_SYSTEM_HISTOGRAM_BIN = const(0x81)
+_HISTOGRAM_CONFIG_INITIAL_PHASE_SELECT = const(0x33)
+_HISTOGRAM_CONFIG_READOUT_CTRL = const(0x55)
+_FINAL_RANGE_CONFIG_VCSEL_PERIOD = const(0x70)
+_FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI = const(0x71)
+_FINAL_RANGE_CONFIG_TIMEOUT_MACROP_LO = const(0x72)
+_CROSSTALK_COMPENSATION_PEAK_RATE_MCPS = const(0x20)
+_MSRC_CONFIG_TIMEOUT_MACROP = const(0x46)
+_SOFT_RESET_GO2_SOFT_RESET_N = const(0xBF)
+_IDENTIFICATION_MODEL_ID = const(0xC0)
+_IDENTIFICATION_REVISION_ID = const(0xC2)
+_OSC_CALIBRATE_VAL = const(0xF8)
+_GLOBAL_CONFIG_VCSEL_WIDTH = const(0x32)
+_GLOBAL_CONFIG_SPAD_ENABLES_REF_0 = const(0xB0)
+_GLOBAL_CONFIG_SPAD_ENABLES_REF_1 = const(0xB1)
+_GLOBAL_CONFIG_SPAD_ENABLES_REF_2 = const(0xB2)
+_GLOBAL_CONFIG_SPAD_ENABLES_REF_3 = const(0xB3)
+_GLOBAL_CONFIG_SPAD_ENABLES_REF_4 = const(0xB4)
+_GLOBAL_CONFIG_SPAD_ENABLES_REF_5 = const(0xB5)
+_GLOBAL_CONFIG_REF_EN_START_SELECT = const(0xB6)
+_DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD = const(0x4E)
+_DYNAMIC_SPAD_REF_EN_START_OFFSET = const(0x4F)
+_POWER_MANAGEMENT_GO1_POWER_FORCE = const(0x80)
+_VHV_CONFIG_PAD_SCL_SDA__EXTSUP_HV = const(0x89)
+_ALGO_PHASECAL_LIM = const(0x30)
+_ALGO_PHASECAL_CONFIG_TIMEOUT = const(0x30)
+_VCSEL_PERIOD_PRE_RANGE = const(0)
+_VCSEL_PERIOD_FINAL_RANGE = const(1)
+
+
+def _decode_timeout(val: int) -> float:
+	# format: "(LSByte * 2^MSByte) + 1"
+	return float(val & 0xFF) * math.pow(2.0, ((val & 0xFF00) >> 8)) + 1
+
+
+def _encode_timeout(timeout_mclks: float) -> int:
+	# format: "(LSByte * 2^MSByte) + 1"
+	timeout_mclks = int(timeout_mclks) & 0xFFFF
+	ls_byte = 0
+	ms_byte = 0
+	if timeout_mclks > 0:
+		ls_byte = timeout_mclks - 1
+		while ls_byte > 255:
+			ls_byte >>= 1
+			ms_byte += 1
+		return ((ms_byte << 8) | (ls_byte & 0xFF)) & 0xFFFF
+	return 0
+
+
+def _timeout_mclks_to_microseconds(
+	timeout_period_mclks: int, vcsel_period_pclks: int ) -> int:
+	macro_period_ns = ((2304 * (vcsel_period_pclks) * 1655) + 500) // 1000
+	return ((timeout_period_mclks * macro_period_ns) + (macro_period_ns // 2)) // 1000
+
+
+def _timeout_microseconds_to_mclks(
+	timeout_period_us: int, vcsel_period_pclks: int ) -> int:
+	macro_period_ns = ((2304 * (vcsel_period_pclks) * 1655) + 500) // 1000
+	return ((timeout_period_us * 1000) + (macro_period_ns // 2)) // macro_period_ns
+
+
+class VL53L0X:
+	"""Driver for the VL53L0X distance sensor."""
+
+	# Class-level buffer for reading and writing data with the sensor.
+	# This reduces memory allocations but means the code is not re-entrant or
+	# thread safe!
+	_BUFFER = bytearray(3)
+
+	# Is VL53L0X is currently continuous mode? (Needed by `range` property)
+	_continuous_mode = False
+
+	def __init__(self, i2c: I2C, address: int = 41, io_timeout_s: float = 0) -> None:
+		# pylint: disable=too-many-statements
+		self._i2c = i2c
+		self._device = i2c_device.I2CDevice(i2c, address)
+		self.io_timeout_s = io_timeout_s
+		self._data_ready = False
+		# Check identification registers for expected values.
+		# From section 3.2 of the datasheet.
+		if (
+			self._read_u8(0xC0) != 0xEE
+			or self._read_u8(0xC1) != 0xAA
+			or self._read_u8(0xC2) != 0x10
+		):
+			raise RuntimeError(
+				"Failed to find expected ID register values. Check wiring!"
+			)
+		# Initialize access to the sensor.  This is based on the logic from:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		# Set I2C standard mode.
+		for pair in ((0x88, 0x00), (0x80, 0x01), (0xFF, 0x01), (0x00, 0x00)):
+			self._write_u8(pair[0], pair[1])
+		self._stop_variable = self._read_u8(0x91)
+		for pair in ((0x00, 0x01), (0xFF, 0x00), (0x80, 0x00)):
+			self._write_u8(pair[0], pair[1])
+		# disable SIGNAL_RATE_MSRC (bit 1) and SIGNAL_RATE_PRE_RANGE (bit 4)
+		# limit checks
+		config_control = self._read_u8(_MSRC_CONFIG_CONTROL) | 0x12
+		self._write_u8(_MSRC_CONFIG_CONTROL, config_control)
+		# set final range signal rate limit to 0.25 MCPS (million counts per
+		# second)
+		self.signal_rate_limit = 0.25
+		self._write_u8(_SYSTEM_SEQUENCE_CONFIG, 0xFF)
+		spad_count, spad_is_aperture = self._get_spad_info()
+		# The SPAD map (RefGoodSpadMap) is read by
+		# VL53L0X_get_info_from_device() in the API, but the same data seems to
+		# be more easily readable from GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through
+		# _6, so read it from there.
+		ref_spad_map = bytearray(7)
+		ref_spad_map[0] = _GLOBAL_CONFIG_SPAD_ENABLES_REF_0
+		with self._device:
+			self._device.write(ref_spad_map, end=1)
+			self._device.readinto(ref_spad_map, start=1)
+
+		for pair in (
+			(0xFF, 0x01),
+			(_DYNAMIC_SPAD_REF_EN_START_OFFSET, 0x00),
+			(_DYNAMIC_SPAD_NUM_REQUESTED_REF_SPAD, 0x2C),
+			(0xFF, 0x00),
+			(_GLOBAL_CONFIG_REF_EN_START_SELECT, 0xB4),
+		):
+			self._write_u8(pair[0], pair[1])
+
+		first_spad_to_enable = 12 if spad_is_aperture else 0
+		spads_enabled = 0
+		for i in range(48):
+			if i < first_spad_to_enable or spads_enabled == spad_count:
+				# This bit is lower than the first one that should be enabled,
+				# or (reference_spad_count) bits have already been enabled, so
+				# zero this bit.
+				ref_spad_map[1 + (i // 8)] &= ~(1 << (i % 8))
+			elif (ref_spad_map[1 + (i // 8)] >> (i % 8)) & 0x1 > 0:
+				spads_enabled += 1
+		with self._device:
+			self._device.write(ref_spad_map)
+		for pair in (
+			(0xFF, 0x01),
+			(0x00, 0x00),
+			(0xFF, 0x00),
+			(0x09, 0x00),
+			(0x10, 0x00),
+			(0x11, 0x00),
+			(0x24, 0x01),
+			(0x25, 0xFF),
+			(0x75, 0x00),
+			(0xFF, 0x01),
+			(0x4E, 0x2C),
+			(0x48, 0x00),
+			(0x30, 0x20),
+			(0xFF, 0x00),
+			(0x30, 0x09),
+			(0x54, 0x00),
+			(0x31, 0x04),
+			(0x32, 0x03),
+			(0x40, 0x83),
+			(0x46, 0x25),
+			(0x60, 0x00),
+			(0x27, 0x00),
+			(0x50, 0x06),
+			(0x51, 0x00),
+			(0x52, 0x96),
+			(0x56, 0x08),
+			(0x57, 0x30),
+			(0x61, 0x00),
+			(0x62, 0x00),
+			(0x64, 0x00),
+			(0x65, 0x00),
+			(0x66, 0xA0),
+			(0xFF, 0x01),
+			(0x22, 0x32),
+			(0x47, 0x14),
+			(0x49, 0xFF),
+			(0x4A, 0x00),
+			(0xFF, 0x00),
+			(0x7A, 0x0A),
+			(0x7B, 0x00),
+			(0x78, 0x21),
+			(0xFF, 0x01),
+			(0x23, 0x34),
+			(0x42, 0x00),
+			(0x44, 0xFF),
+			(0x45, 0x26),
+			(0x46, 0x05),
+			(0x40, 0x40),
+			(0x0E, 0x06),
+			(0x20, 0x1A),
+			(0x43, 0x40),
+			(0xFF, 0x00),
+			(0x34, 0x03),
+			(0x35, 0x44),
+			(0xFF, 0x01),
+			(0x31, 0x04),
+			(0x4B, 0x09),
+			(0x4C, 0x05),
+			(0x4D, 0x04),
+			(0xFF, 0x00),
+			(0x44, 0x00),
+			(0x45, 0x20),
+			(0x47, 0x08),
+			(0x48, 0x28),
+			(0x67, 0x00),
+			(0x70, 0x04),
+			(0x71, 0x01),
+			(0x72, 0xFE),
+			(0x76, 0x00),
+			(0x77, 0x00),
+			(0xFF, 0x01),
+			(0x0D, 0x01),
+			(0xFF, 0x00),
+			(0x80, 0x01),
+			(0x01, 0xF8),
+			(0xFF, 0x01),
+			(0x8E, 0x01),
+			(0x00, 0x01),
+			(0xFF, 0x00),
+			(0x80, 0x00),
+		):
+			self._write_u8(pair[0], pair[1])
+
+		self._write_u8(_SYSTEM_INTERRUPT_CONFIG_GPIO, 0x04)
+		gpio_hv_mux_active_high = self._read_u8(_GPIO_HV_MUX_ACTIVE_HIGH)
+		self._write_u8(
+			_GPIO_HV_MUX_ACTIVE_HIGH, gpio_hv_mux_active_high & ~0x10
+		)  # active low
+		self._write_u8(_SYSTEM_INTERRUPT_CLEAR, 0x01)
+		self._measurement_timing_budget_us = self.measurement_timing_budget
+		self._write_u8(_SYSTEM_SEQUENCE_CONFIG, 0xE8)
+		self.measurement_timing_budget = self._measurement_timing_budget_us
+		self._write_u8(_SYSTEM_SEQUENCE_CONFIG, 0x01)
+		self._perform_single_ref_calibration(0x40)
+		self._write_u8(_SYSTEM_SEQUENCE_CONFIG, 0x02)
+		self._perform_single_ref_calibration(0x00)
+		# "restore the previous Sequence Config"
+		self._write_u8(_SYSTEM_SEQUENCE_CONFIG, 0xE8)
+
+	def _read_u8(self, address: int) -> int:
+		# Read an 8-bit unsigned value from the specified 8-bit address.
+		with self._device:
+			self._BUFFER[0] = address & 0xFF
+			self._device.write(self._BUFFER, end=1)
+			self._device.readinto(self._BUFFER, end=1)
+		return self._BUFFER[0]
+
+	def _read_u16(self, address: int) -> int:
+		# Read a 16-bit BE unsigned value from the specified 8-bit address.
+		with self._device:
+			self._BUFFER[0] = address & 0xFF
+			self._device.write(self._BUFFER, end=1)
+			self._device.readinto(self._BUFFER)
+		return (self._BUFFER[0] << 8) | self._BUFFER[1]
+
+	def _write_u8(self, address: int, val: int) -> None:
+		# Write an 8-bit unsigned value to the specified 8-bit address.
+		with self._device:
+			self._BUFFER[0] = address & 0xFF
+			self._BUFFER[1] = val & 0xFF
+			self._device.write(self._BUFFER, end=2)
+
+	def _write_u16(self, address: int, val: int) -> None:
+		# Write a 16-bit BE unsigned value to the specified 8-bit address.
+		with self._device:
+			self._BUFFER[0] = address & 0xFF
+			self._BUFFER[1] = (val >> 8) & 0xFF
+			self._BUFFER[2] = val & 0xFF
+			self._device.write(self._BUFFER)
+
+	def _get_spad_info(self) -> Tuple[int, bool]:
+		# Get reference SPAD count and type, returned as a 2-tuple of
+		# count and boolean is_aperture.  Based on code from:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		for pair in ((0x80, 0x01), (0xFF, 0x01), (0x00, 0x00), (0xFF, 0x06)):
+			self._write_u8(pair[0], pair[1])
+		self._write_u8(0x83, self._read_u8(0x83) | 0x04)
+		for pair in (
+			(0xFF, 0x07),
+			(0x81, 0x01),
+			(0x80, 0x01),
+			(0x94, 0x6B),
+			(0x83, 0x00),
+		):
+			self._write_u8(pair[0], pair[1])
+		start = time.monotonic()
+		while self._read_u8(0x83) == 0x00:
+			if (
+				self.io_timeout_s > 0
+				and (time.monotonic() - start) >= self.io_timeout_s
+			):
+				raise RuntimeError("Timeout waiting for VL53L0X!")
+
+		self._write_u8(0x83, 0x01)
+		tmp = self._read_u8(0x92)
+		count = tmp & 0x7F
+		is_aperture = ((tmp >> 7) & 0x01) == 1
+		for pair in ((0x81, 0x00), (0xFF, 0x06)):
+			self._write_u8(pair[0], pair[1])
+		self._write_u8(0x83, self._read_u8(0x83) & ~0x04)
+		for pair in ((0xFF, 0x01), (0x00, 0x01), (0xFF, 0x00), (0x80, 0x00)):
+			self._write_u8(pair[0], pair[1])
+		return (count, is_aperture)
+
+	def _perform_single_ref_calibration(self, vhv_init_byte: int) -> None:
+		# based on VL53L0X_perform_single_ref_calibration() from ST API.
+		self._write_u8(_SYSRANGE_START, 0x01 | vhv_init_byte & 0xFF)
+		start = time.monotonic()
+		while (self._read_u8(_RESULT_INTERRUPT_STATUS) & 0x07) == 0:
+			if (
+				self.io_timeout_s > 0
+				and (time.monotonic() - start) >= self.io_timeout_s
+			):
+				raise RuntimeError("Timeout waiting for VL53L0X!")
+		self._write_u8(_SYSTEM_INTERRUPT_CLEAR, 0x01)
+		self._write_u8(_SYSRANGE_START, 0x00)
+
+	def _get_vcsel_pulse_period(self, vcsel_period_type: int) -> int:
+		# pylint: disable=no-else-return
+		# Disable should be removed when refactor can be tested
+		if vcsel_period_type == _VCSEL_PERIOD_PRE_RANGE:
+			val = self._read_u8(_PRE_RANGE_CONFIG_VCSEL_PERIOD)
+			return (((val) + 1) & 0xFF) << 1
+		elif vcsel_period_type == _VCSEL_PERIOD_FINAL_RANGE:
+			val = self._read_u8(_FINAL_RANGE_CONFIG_VCSEL_PERIOD)
+			return (((val) + 1) & 0xFF) << 1
+		return 255
+
+	def _get_sequence_step_enables(self) -> Tuple[bool, bool, bool, bool, bool]:
+		# based on VL53L0X_GetSequenceStepEnables() from ST API
+		sequence_config = self._read_u8(_SYSTEM_SEQUENCE_CONFIG)
+		tcc = (sequence_config >> 4) & 0x1 > 0
+		dss = (sequence_config >> 3) & 0x1 > 0
+		msrc = (sequence_config >> 2) & 0x1 > 0
+		pre_range = (sequence_config >> 6) & 0x1 > 0
+		final_range = (sequence_config >> 7) & 0x1 > 0
+		return (tcc, dss, msrc, pre_range, final_range)
+
+	def _get_sequence_step_timeouts(
+		self, pre_range: int
+	) -> Tuple[int, int, int, int, float]:
+		# based on get_sequence_step_timeout() from ST API but modified by
+		# pololu here:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		pre_range_vcsel_period_pclks = self._get_vcsel_pulse_period(
+			_VCSEL_PERIOD_PRE_RANGE
+		)
+		msrc_dss_tcc_mclks = (self._read_u8(_MSRC_CONFIG_TIMEOUT_MACROP) + 1) & 0xFF
+		msrc_dss_tcc_us = _timeout_mclks_to_microseconds(
+			msrc_dss_tcc_mclks, pre_range_vcsel_period_pclks
+		)
+		pre_range_mclks = _decode_timeout(
+			self._read_u16(_PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI)
+		)
+		pre_range_us = _timeout_mclks_to_microseconds(
+			pre_range_mclks, pre_range_vcsel_period_pclks
+		)
+		final_range_vcsel_period_pclks = self._get_vcsel_pulse_period(
+			_VCSEL_PERIOD_FINAL_RANGE
+		)
+		final_range_mclks = _decode_timeout(
+			self._read_u16(_FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI)
+		)
+		if pre_range:
+			final_range_mclks -= pre_range_mclks
+		final_range_us = _timeout_mclks_to_microseconds(
+			final_range_mclks, final_range_vcsel_period_pclks
+		)
+		return (
+			msrc_dss_tcc_us,
+			pre_range_us,
+			final_range_us,
+			final_range_vcsel_period_pclks,
+			pre_range_mclks,
+		)
+
+	@property
+	def signal_rate_limit(self) -> float:
+		"""The signal rate limit in mega counts per second."""
+		val = self._read_u16(_FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT)
+		# Return value converted from 16-bit 9.7 fixed point to float.
+		return val / (1 << 7)
+
+	@signal_rate_limit.setter
+	def signal_rate_limit(self, val: float) -> None:
+		assert 0.0 <= val <= 511.99
+		# Convert to 16-bit 9.7 fixed point value from a float.
+		val = int(val * (1 << 7))
+		self._write_u16(_FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, val)
+
+	@property
+	def measurement_timing_budget(self) -> int:
+		"""The measurement timing budget in microseconds."""
+		budget_us = 1910 + 960  # Start overhead + end overhead.
+		tcc, dss, msrc, pre_range, final_range = self._get_sequence_step_enables()
+		step_timeouts = self._get_sequence_step_timeouts(pre_range)
+		msrc_dss_tcc_us, pre_range_us, final_range_us, _, _ = step_timeouts
+		if tcc:
+			budget_us += msrc_dss_tcc_us + 590
+		if dss:
+			budget_us += 2 * (msrc_dss_tcc_us + 690)
+		elif msrc:
+			budget_us += msrc_dss_tcc_us + 660
+		if pre_range:
+			budget_us += pre_range_us + 660
+		if final_range:
+			budget_us += final_range_us + 550
+		self._measurement_timing_budget_us = budget_us
+		return budget_us
+
+	@measurement_timing_budget.setter
+	def measurement_timing_budget(self, budget_us: int) -> None:
+		# pylint: disable=too-many-locals
+		assert budget_us >= 20000
+		used_budget_us = 1320 + 960  # Start (diff from get) + end overhead
+		tcc, dss, msrc, pre_range, final_range = self._get_sequence_step_enables()
+		step_timeouts = self._get_sequence_step_timeouts(pre_range)
+		msrc_dss_tcc_us, pre_range_us, _ = step_timeouts[:3]
+		final_range_vcsel_period_pclks, pre_range_mclks = step_timeouts[3:]
+		if tcc:
+			used_budget_us += msrc_dss_tcc_us + 590
+		if dss:
+			used_budget_us += 2 * (msrc_dss_tcc_us + 690)
+		elif msrc:
+			used_budget_us += msrc_dss_tcc_us + 660
+		if pre_range:
+			used_budget_us += pre_range_us + 660
+		if final_range:
+			used_budget_us += 550
+			# "Note that the final range timeout is determined by the timing
+			# budget and the sum of all other timeouts within the sequence.
+			# If there is no room for the final range timeout, then an error
+			# will be set. Otherwise, the remaining time will be applied to
+			# the final range."
+			if used_budget_us > budget_us:
+				raise ValueError("Requested timeout too big.")
+			final_range_timeout_us = budget_us - used_budget_us
+			final_range_timeout_mclks = _timeout_microseconds_to_mclks(
+				final_range_timeout_us, final_range_vcsel_period_pclks
+			)
+			if pre_range:
+				final_range_timeout_mclks += pre_range_mclks
+			self._write_u16(
+				_FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI,
+				_encode_timeout(final_range_timeout_mclks),
+			)
+			self._measurement_timing_budget_us = budget_us
+
+	def getdistanceCM(self) -> float:
+		"""Perform a single reading of the range for an object in front of
+		the sensor and return the distance in centimeters.
+		"""
+		return self.range / 10. # in cm
+
+	@property
+	def range(self) -> int:
+		"""Perform a single (or continuous if `start_continuous` called)
+		reading of the range for an object in front of the sensor and
+		return the distance in millimeters.
+		"""
+		# Adapted from readRangeSingleMillimeters in pololu code at:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		if not self._continuous_mode:
+			self.do_range_measurement()
+		return self.read_range()  # in mm 
+
+	@property
+	def data_ready(self) -> bool:
+		"""Check if data is available from the sensor. If true a call to .range
+		will return quickly. If false, calls to .range will wait for the sensor's
+		next reading to be available."""
+		if not self._data_ready:
+			self._data_ready = self._read_u8(_RESULT_INTERRUPT_STATUS) & 0x07 != 0
+		return self._data_ready
+
+	def do_range_measurement(self) -> None:
+		"""Perform a single reading of the range for an object in front of the
+		sensor, but without return the distance.
+		"""
+		# Adapted from readRangeSingleMillimeters in pololu code at:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		for pair in (
+			(0x80, 0x01),
+			(0xFF, 0x01),
+			(0x00, 0x00),
+			(0x91, self._stop_variable),
+			(0x00, 0x01),
+			(0xFF, 0x00),
+			(0x80, 0x00),
+			(_SYSRANGE_START, 0x01),
+		):
+			self._write_u8(pair[0], pair[1])
+		start = time.monotonic()
+		while (self._read_u8(_SYSRANGE_START) & 0x01) > 0:
+			if (
+				self.io_timeout_s > 0
+				and (time.monotonic() - start) >= self.io_timeout_s
+			):
+				raise RuntimeError("Timeout waiting for VL53L0X!")
+
+	def read_range(self) -> int:
+		"""Return a range reading in millimeters.
+		Note: Avoid calling this directly. If you do single mode, you need
+		to call `do_range_measurement` first. Or your program will stuck or
+		timeout occurred.
+		"""
+		# Adapted from readRangeContinuousMillimeters in pololu code at:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		start = time.monotonic()
+		while not self.data_ready:
+			if (
+				self.io_timeout_s > 0
+				and (time.monotonic() - start) >= self.io_timeout_s
+			):
+				raise RuntimeError("Timeout waiting for VL53L0X!")
+		# assumptions: Linearity Corrective Gain is 1000 (default)
+		# fractional ranging is not enabled
+		range_mm = self._read_u16(_RESULT_RANGE_STATUS + 10)
+		self._write_u8(_SYSTEM_INTERRUPT_CLEAR, 0x01)
+		self._data_ready = False
+		return range_mm
+
+	@property
+	def is_continuous_mode(self) -> bool:
+		"""Is the sensor currently in continuous mode?"""
+		return self._continuous_mode
+
+	def continuous_mode(self) -> "VL53L0X":
+		"""Activate the continuous mode manager"""
+		return self
+
+	def __enter__(self) -> "VL53L0X":
+		"""For continuous mode manager, called when used on `with` keyword"""
+		self.start_continuous()
+		return self
+
+	def __exit__(
+		self,
+		exc_type: Optional[Type[BaseException]],
+		exc_value: Optional[BaseException],
+		traceback: Optional[TracebackType],
+	) -> None:
+		"""For continuous mode manager, called at the end of `with` scope"""
+		self.stop_continuous()
+
+	def start_continuous(self) -> None:
+		"""Perform a continuous reading of the range for an object in front of
+		the sensor.
+		"""
+		# Adapted from startContinuous in pololu code at:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		for pair in (
+			(0x80, 0x01),
+			(0xFF, 0x01),
+			(0x00, 0x00),
+			(0x91, self._stop_variable),
+			(0x00, 0x01),
+			(0xFF, 0x00),
+			(0x80, 0x00),
+			(_SYSRANGE_START, 0x02),
+		):
+			self._write_u8(pair[0], pair[1])
+		start = time.monotonic()
+		while (self._read_u8(_SYSRANGE_START) & 0x01) > 0:
+			if (
+				self.io_timeout_s > 0
+				and (time.monotonic() - start) >= self.io_timeout_s
+			):
+				raise RuntimeError("Timeout waiting for VL53L0X!")
+		self._continuous_mode = True
+
+	def stop_continuous(self) -> None:
+		"""Stop continuous readings."""
+		# Adapted from stopContinuous in pololu code at:
+		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		for pair in (
+			(_SYSRANGE_START, 0x01),
+			(0xFF, 0x01),
+			(0x00, 0x00),
+			(0x91, 0x00),
+			(0x00, 0x01),
+			(0xFF, 0x00),
+		):
+			self._write_u8(pair[0], pair[1])
+		self._continuous_mode = False
+
+		# restore the sensor to single ranging mode
+		self.do_range_measurement()
+
+	def set_address(self, new_address: int) -> None:
+		"""Set a new I2C address to the instantaited object. This is only called when using
+		multiple VL53L0X sensors on the same I2C bus (SDA & SCL pins). See also the
+		`example <examples.html#multiple-vl53l0x-on-same-i2c-bus>`_ for proper usage.
+
+		:param int new_address: The 7-bit `int` that is to be assigned to the VL53L0X sensor.
+			The address that is assigned should NOT be already in use by another device on the
+			I2C bus.
+
+		.. important:: To properly set the address to an individual VL53L0X sensor, you must
+			first ensure that all other VL53L0X sensors (using the default address of ``0x29``)
+			on the same I2C bus are in their off state by pulling the "SHDN" pins LOW. When the
+			"SHDN" pin is pulled HIGH again the default I2C address is ``0x29``.
+		"""
+		self._write_u8(_I2C_SLAVE_DEVICE_ADDRESS, new_address & 0x7F)
+		self._device = i2c_device.I2CDevice(self._i2c, new_address)
 
 
 # ===========================================================================
 # read params
 # ===========================================================================
 
-#################################        
+#################################		
 def readParams():
-    global  sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist,displayEnable
-    global output, sensorActive, timing, tof, distanceUnits
-    global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-    global oldRaw, lastRead
-    try:
+	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, deltaDist, deltaDistAbs,displayEnable
+	global output, sensorActive, distanceUnits
+	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+	global oldRaw, lastRead
+	global acuracyDistanceMode, acuracyDistanceModeOld, xShutPin, i2cNumber, i2CseqNumber
+	try:
 
-        inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
-        if inp == "": return
-        if lastRead2 == lastRead: return
-        lastRead   = lastRead2
-        if inpRaw == oldRaw: return
-        oldRaw     = inpRaw
+		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		if inp == "": return True
+		if lastRead2 == lastRead: return True
+		lastRead   = lastRead2
+		if inpRaw == oldRaw: return True
+		oldRaw	 = inpRaw
 
 
-        externalSensor=False
-        sensorList=[]
-        sensorsOld= copy.copy(sensors)
-        
-        U.getGlobalParams(inp)
-          
-        if "sensorList"         in inp:  sensorList=         (inp["sensorList"])
-        if "sensors"            in inp:  sensors =           (inp["sensors"])
-        if "distanceUnits"      in inp:  distanceUnits=      (inp["distanceUnits"])
-        
-        if "output"             in inp:  output=             (inp["output"])
+		externalSensor = False
+		sensorList=[]
+		sensorsOld= copy.copy(sensors)
+		
+		U.getGlobalParams(inp)
+		  
+		if "sensorList"		in inp:  sensorList =		inp["sensorList"]
+		if "sensors"		in inp:  sensors =			inp["sensors"]
+		if "distanceUnits"	in inp:  distanceUnits =	inp["distanceUnits"]
+		
+		if "output"			in inp:  output =			inp["output"]
    
  
-        if sensor not in sensors:
-            U.logger.log(30, "vlx503l0xDistance is not in parameters = not enabled, stopping vlx503l0xDistance.py" )
-            exit()
-            
+		if sensor not in sensors:
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping".format(G.program) )
+			sys.exit(0)
+			return False
+			
  
-        sensorUp = doWeNeedToStartSensor(sensors,sensorsOld,sensor)
+		sensorUp = doWeNeedToStartSensor(sensors,sensorsOld,sensor)
 
 
-        if sensorUp != 0: # something has changed
-            if os.path.isfile(G.homeDir+"temp/"+sensor+".dat"):
-                os.remove(G.homeDir+"temp/"+sensor+".dat")
-                
-        dynamic = False
-        deltaDist={}
-        for devId in sensors[sensor]:
-            deltaDist[devId]  = 0.1
-            try:
-                xx = sensors[sensor][devId]["sensorRefreshSecs"].split("#")
-                sensorRefreshSecs = int(xx[0]) 
-                if sensorRefreshSecs  < 0: dynamic=True
-                if len(xx)==2: 
-                    try: mode = int(xx[1])
-                    except: mode =0
-            except:
-                sensorRefreshSecs = 100    
-                mode =0
+		if sensorUp != 0: # something has changed
+			if os.path.isfile(G.homeDir+"temp/"+sensor+".dat"):
+				os.remove(G.homeDir+"temp/"+sensor+".dat")
+		deltaDist = {}
+		deltaDistAbs = {}
+		acuracyDistanceMode = {}
+		mode = {}
+		xShutPin = {}
+		i2cNumber = {}
+		i2CseqNumber = 0
+		for devId in sensors[sensor]:
 
-            try:
-                if "displayEnable" in sensors[sensor][devId]: 
-                    displayEnable = sensors[sensor][devId]["displayEnable"]
-            except:
-                display = False    
-
-            try:
-                if "deltaDist" in sensors[sensor][devId]: 
-                    deltaDist[devId]= float(sensors[sensor][devId]["deltaDist"])/100.
-            except:
-                pass
-            try:
-                if "dUnits" in sensors[sensor][devId] and sensors[sensor][devId]["dUnits"] !="":
-                    distanceUnits = sensors[sensor][devId]["dUnits"]
-            except  Exception as e:
-                pass
-            try:
-                if "acuracyDistanceMode" in sensors[sensor][devId]:
-                    acuracyDistanceMode= int(sensors[sensor][devId]["acuracyDistanceMode"])
-            except: 
-                acuracyDistanceMode = VL53L0X_LONG_RANGE_MODE
-                pass
-
-            try:
-                if "actionShortDistance" in sensors[sensor][devId]:         actionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
-            except:                                                         actionShortDistance = ""
-
-            try:
-                if "actionMediumDistance" in sensors[sensor][devId]:        actionMediumDistance = (sensors[sensor][devId]["actionMediumDistance"])
-            except:                                                         actionMediumDistance = ""
-
-            try:
-                if "actionLongDistance" in sensors[sensor][devId]:          actionLongDistance = (sensors[sensor][devId]["actionLongDistance"])
-            except:                                                         actionLongDistance = ""
+			try:
+				if "displayEnable" in sensors[sensor][devId]: 
+					displayEnable = sensors[sensor][devId]["displayEnable"]
+			except:
+				display = False	
 
 
-            try:
-                if "actionShortDistanceLimit" in sensors[sensor][devId]:    actionShortDistanceLimit = float(sensors[sensor][devId]["actionShortDistanceLimit"])
-            except:                                                         actionShortDistanceLimit = -1
+			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100.
+			except: deltaDist[devId] = 0.1
 
-            try:
-                if "actionLongDistanceLimit" in sensors[sensor][devId]:     actionLongDistanceLimit = float(sensors[sensor][devId]["actionLongDistanceLimit"])
-            except:                                                         actionLongDistanceLimit = -1
+			try:	deltaDistAbs[devId] = float(sensors[sensor][devId].get("deltaDistAbs",10))
+			except: deltaDistAbs[devId] = 10.
 
+			try:	distanceUnits = sensors[sensor][devId].get("dUnits","cm")
+			except:	distanceUnits = "cm"
 
-        if sensorUp == 1:
-            if not sensorActive:
-                U.logger.log(30,"==== Start ranging =====; mode= "+unicode(accuracyDistanceModes[acuracyDistanceMode]))
-                startSensor(acuracyDistanceMode)
+			try:	acuracyDistanceMode[devId] = int(sensors[sensor][devId].get("acuracyDistanceMode",50000)) # timing budget
+			except:	acuracyDistanceMode[devId] = 50000
 
-            elif acuracyDistanceMode != acuracyDistanceModeOld:
-                U.logger.log(30, "==== re-Start ranging =====; mode= "+unicode(accuracyDistanceModes[acuracyDistanceMode]))
-                tof.stop_ranging()
-                startSensor(acuracyDistanceMode)
-                
-        if sensorUp == -1:
-            tof.stop_ranging()
-            U.logger.log(30, "==== stop  ranging =====")
-            exit()
+			if "xShutPin" in sensors[sensor][devId] and sensors[sensor][devId]["xShutPin"] not in ["-1",""]:
+				xx = int(sensors[sensor][devId].get("xShutPin",26))
+				if xx > 0 and xx < 27:
+					xShutPin[devId] = xx
+					i2CseqNumber += 1
+
+			try:	sensorRefreshSecs = float(sensors[sensor][devId].get("sensorRefreshSecs",1))
+			except:	sensorRefreshSecs = 1.
 
 
-    except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			try:
+				if "actionShortDistance" in sensors[sensor][devId]:		 actionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
+			except:														 actionShortDistance = ""
+
+			try:
+				if "actionMediumDistance" in sensors[sensor][devId]:		actionMediumDistance = (sensors[sensor][devId]["actionMediumDistance"])
+			except:														 actionMediumDistance = ""
+
+			try:
+				if "actionLongDistance" in sensors[sensor][devId]:		  actionLongDistance = (sensors[sensor][devId]["actionLongDistance"])
+			except:														 actionLongDistance = ""
 
 
-def startSensor(mode):
-    global timing, acuracyDistanceModeOld
-    try:
-        ok=True
-        for ii in range(10):
-            retCode = tof.start_ranging(mode= mode)
-            if retCode != 25: 
-                time.sleep(5)
-                U.logger.log(30, " retcode wrong: "+ unicode(retCode)+"  trying again #"+unicode(ii) )
-            else:
-                ok=True
-                timing = tof.get_timing()/1000000.00 # uS --> in seconds
-                break
-                acuracyDistanceModeOld = mode
-        if not ok:
-                print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, " retcode "+unicode(retCode)+" wrong, giving up after tries:"+unicode(ii) 
-                U.logger.log(30, "==== ranging retcode wrong: "+unicode(retCode)+"  giving up after tries:"+unicode(ii) )
-                exit()
-        U.logger.log(30, "==== ranging started ok ====")
-    except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+			try:
+				if "actionShortDistanceLimit" in sensors[sensor][devId]:	actionShortDistanceLimit = float(sensors[sensor][devId]["actionShortDistanceLimit"])
+			except:														 actionShortDistanceLimit = -1
+
+			try:
+				if "actionLongDistanceLimit" in sensors[sensor][devId]:	 actionLongDistanceLimit = float(sensors[sensor][devId]["actionLongDistanceLimit"])
+			except:														 actionLongDistanceLimit = -1
+
+
+		if sensorUp == 1:
+				startSensor()
+				
+
+	except  Exception as e:
+		U.logger.log(30,"", exc_info=True)
+		return True
+
+#################################
+def startSensor():
+	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, xShutPin, i2cNumber, i2c, i2CseqNumber, deltaDist
+	try:
+		if i2c == "":
+			i2c = busio.I2C(board.SCL, board.SDA)
+
+		U.logger.log(20,"starting  i2CseqNumber:{}, xShutPin:{}".format(i2CseqNumber, xShutPin))
+		runningI2C = i2CseqNumber
+		for devId in deltaDist:
+			if devId in xShutPin:
+				GPIO.setup(xShutPin[devId], GPIO.OUT)
+				U.logger.log(20,"switching off devId:{}, xShutPin:{}".format(devId, xShutPin[devId]))
+				GPIO.output(xShutPin[devId], False)
+				time.sleep(0.1)
+		
+		for devId in deltaDist:
+			if i2CseqNumber > 0:
+				if devId in xShutPin:
+					runningI2C -= 1  # STARTING FROM HIGH NUMBER DOWN TO 0X29
+					i2cNumber[devId] = runningI2C+0x29
+					U.logger.log(20, "==== setting up xshut for devid:{}, xShutPin:{} i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
+					GPIO.output(xShutPin[devId], True)
+					time.sleep(0.2)
+				else:
+					runningI2C -= 1
+					i2cNumber[devId] = 0x29
+			else:
+					i2cNumber[devId] = 0x29
+
+			sensCl[devId] = VL53L0X(i2c)
+
+			sensCl[devId].timing_budget = acuracyDistanceMode[devId]
+			acuracyDistanceModeOld[devId] = acuracyDistanceMode[devId]
+
+			U.logger.log(20, "==== setting up xshut for devid:{}, xShutPin:{} --> i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
+			if runningI2C > 0:
+				sensCl[devId].set_address(runningI2C + 0x29) 
+			U.logger.log(20, "==== setting up xshut for devid:{} done".format( devId) )
+
+		return 
+
+	except  Exception as e:
+		U.logger.log(30,"", exc_info=True)
+	U.restartMyself(reason="connection to sensor is hanging at startSensor 3 ", delay = 10,doPrint=True, doRestartCount=False)
+
 
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
-    if selectedSensor not in sensors:    return -1
-    if selectedSensor not in sensorsOld: return 1
+	if selectedSensor not in sensors:	return -1
+	if selectedSensor not in sensorsOld: return 1
 
-    for devId in sensors[selectedSensor] :
-            if devId not in sensorsOld[selectedSensor] :            return 1
-            for prop in sensors[sensor][devId] :
-                if prop not in sensorsOld[selectedSensor][devId] :  return 1
-                if sensors[selectedSensor][devId][prop] != sensorsOld[selectedSensor][devId][prop]:
-                    return 1
+	for devId in sensors[selectedSensor] :
+			if devId not in sensorsOld[selectedSensor] :			return 1
+			for prop in sensors[sensor][devId] :
+				if prop not in sensorsOld[selectedSensor][devId] :  return 1
+				if sensors[selectedSensor][devId][prop] != sensorsOld[selectedSensor][devId][prop]:
+					return 1
    
-    for devId in sensorsOld[selectedSensor]:
-            if devId not in sensors[selectedSensor] :               return 1
-            for prop in sensorsOld[selectedSensor][devId] :
-                if prop not in sensors[selectedSensor][devId] :     return 1
+	for devId in sensorsOld[selectedSensor]:
+			if devId not in sensors[selectedSensor] :				return 1
+			for prop in sensorsOld[selectedSensor][devId] :
+				if prop not in sensors[selectedSensor][devId] :		return 1
 
-    return 0
-
-
+	return 0
 
 
 
-
-class VL53L0X(object):
-    """VL53L0X ToF."""
-
-    object_number = 0
-
-    def __init__(self, address=0x29, TCA9548A_Num=255, TCA9548A_Addr=0, **kwargs):
-        """Initialize the VL53L0X ToF Sensor from ST"""
-        self.device_address   = address
-        self.TCA9548A_Device  = TCA9548A_Num
-        self.TCA9548A_Address = TCA9548A_Addr
-        self.my_object_number  = VL53L0X.object_number
-        VL53L0X.object_number += 1
-
-    def start_ranging(self, mode = VL53L0X_LONG_RANGE_MODE):
-        """Start VL53L0X ToF Sensor Ranging"""
-        retCode = tof_lib.startRanging(self.my_object_number, mode, self.device_address, self.TCA9548A_Device, self.TCA9548A_Address)
-        #print "startRanging ", retCode
-        return retCode
-
-    def stop_ranging(self):
-        """Stop VL53L0X ToF Sensor Ranging"""
-        retCode = tof_lib.stopRanging(self.my_object_number)
-        #print "stopRanging ",retCode
-        return retCode
-
-    def get_distance(self):
-        """Get distance from VL53L0X ToF Sensor"""
-        return tof_lib.getDistance(self.my_object_number)
-
-    # This function included to show how to access the ST library directly
-    # from python instead of through the simplified interface
-    def get_timing(self):
-        Dev = POINTER(c_void_p)
-        Dev = tof_lib.getDev(self.my_object_number)
-        budget = c_uint(0)
-        budget_p = pointer(budget)
-        Status =  tof_lib.VL53L0X_GetMeasurementTimingBudgetMicroSeconds(Dev, budget_p)
-        if (Status == 0):
-            return (budget.value + 1000)
-        else:
-            return -1
-
-
- 
-
-
- 
-#################################
-
-# i2c bus read callback
-def i2c_read(address, reg, data_p, length):
-    ret_val = 0
-    result = []
-
-    try:
-        result = i2cbus.read_i2c_block_data(address, reg, length)
-    except IOError:
-        ret_val = -1
-
-    if (ret_val == 0):
-        for index in range(length):
-            data_p[index] = result[index]
-
-    return ret_val
-
-# i2c bus write callback
-def i2c_write(address, reg, data_p, length):
-    ret_val = 0
-    data = []
-
-    for index in range(length):
-        data.append(data_p[index])
-    try:
-        i2cbus.write_i2c_block_data(address, reg, data)
-    except IOError:
-        ret_val = -1
-
-    return ret_val
 #################################
 #################################
-def getDistance():
-    global sensor, sensors, first, tof, badSensor
-    global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+def getDist(devId):
+	global sensor, sensors, badSensor, sensCl
+	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+	global acuracyDistanceMode, acuracyDistanceModeOld
 
-    try:
-        if first: time.sleep(3) ; first = False
-        for ii in range(10):
-            distance = tof.get_distance()
-            if (distance > 0):
-                    distance  = min(distance,10000.)/10. # = 10 meters = 10,000 mm
-                    badSensor = 0
-                    #print " bf action test ", actionShortDistance, actionMediumDistance, actionLongDistance
-                    if actionShortDistance !="":
-                        if actionDistanceOld !="short"  and distance <= actionShortDistanceLimit:
-                            if actionDistanceOld != "short":
-                                subprocess.call(actionShortDistance, shell=True)
-                                actionDistanceOld ="short"
-                            
-                    if actionMediumDistance !="":
-                        if actionDistanceOld !="medium"  and distance >  actionShortDistanceLimit and distance < actionLongDistanceLimit:
-                            if actionDistanceOld != "medium":
-                                subprocess.call(actionMediumDistance, shell=True)
-                                actionDistanceOld ="medium"
-                            
-                    if actionLongDistance !="":
-                        if actionDistanceOld !="long"    and distance >=  actionLongDistanceLimit:
-                            if actionDistanceOld != "long":
-                                subprocess.call(actionLongDistance, shell=True)
-                                actionDistanceOld ="long"
-                    return  ("%7.1f"%(distance)).strip() #  return in cm
+	try:
+		if acuracyDistanceModeOld != acuracyDistanceMode:
+			sensCl[devId].measurement_timing_budget = acuracyDistanceMode
+			time.sleep(0.1)
 
-        if badSensor >3: return "badSensor"
-    except  Exception as e:
-            U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-            U.logger.log(30, u"distance>>" + unicode(distance)+"<<")
-    return ""        
+		acuracyDistanceModeOld = acuracyDistanceMode
+		dist = sensCl[devId].getdistanceCM()
 
+		if dist > 0:
+			return dist
+
+		badSensor +=1
+		if badSensor >30: 
+			badSensor = 0
+			return "badSensor"
+	except  Exception as e:
+			U.logger.log(30,"", exc_info=True)
+	return ""		
 
 
 #################################
 
 #################################
+def doAction(distance):
+	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+
+	try:
+		if actionShortDistance == "" and actionMediumDistance == "" and actionMediumDistance == "": return 
+
+		if distance != "" and distance !=0:
+
+			if	 distance > actionLongDistanceLimit:	region = "long"
+			elif distance < actionShortDistanceLimit:	region = "short"
+			else:										region = "medium"
+
+			# check reset of last action, if last was short distamce must have been not short at least once ...  
+			if actionDistanceOld != "":
+				if   actionDistanceOld == "short"   	and region == "short":	actionDistanceOld = ""
+				elif actionDistanceOld == "long"    	and region == "long":	actionDistanceOld = ""
+				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
+
+			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
+				subprocess.call(actionShortDistance, shell=True)
+				actionDistanceOld = "short"
+					
+			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
+				subprocess.call(actionMediumDistance, shell=True)
+				actionDistanceOld = "medium"
+					
+			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
+				subprocess.call(actionLongDistance, shell=True)
+				actionDistanceOld = " long"
+
+	except  Exception as e:
+			U.logger.log(30,"", exc_info=True)
 
 
+#################################
 
-             
-global sensorList, externalSensor,senors,sensorRefreshSecs,sensor, NSleep, ipAddress, dynamic, mode, deltaDist, first, displayEnable
+
+global sensorList, externalSensor,senors,sensorRefreshSecs,sensor, NSleep, ipAddress, dynamic, mode, deltaDist, deltaDistAbs, displayEnable
 global output, authentication, badSensor
-global distanceUnits, sensorActive, timing
-global distanceMode , acuracyDistanceMode, acuracyDistanceModeOld
+global distanceUnits, sensorActive
 global actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit, actionDistanceOld
-global oldRaw,  lastRead
-oldRaw                  = ""
-lastRead                = 0
+global oldRaw, lastRead
+global badSensor, lastDist
+global aliveTimeStamp, loopSleep
+global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, lastCycle, i2c, xShutPin
 
-distanceUnits               = "1.0"
-actionShortDistance         = ""
-actionShortDistanceLimit    = 5.
-actionMediumDistance        = ""
-actionMediumDistanceLimit   = 10
-actionLongDistance          = ""
-actionLongDistanceLimit     = 20.
-actionDistanceOld           = 0
+i2c							= ""
+sensCl						= {}
+maxRange					= 125.
 
-acuracyDistanceMode         = VL53L0X_LONG_RANGE_MODE
-acuracyDistanceModeOld      = -1
-first                       = False
-loopCount                   = 0
-sensorRefreshSecs           = 60
-NSleep                      = 100
-sensorList                  = []
-sensors                     = {}
-sensor                      = G.program
-quick                       = False
-dynamic                     = False
-mode                        = 0
-display                     = "0"
-output                      = {}
-badSensor                   = 0
-sensorActive                = False
-timing =1
+aliveTimeStamp				= time.time() + 20
+badSensor					= 0
+oldRaw						= ""
+lastRead					= 0
+
+distanceUnits				= "1.0"
+actionShortDistance			= ""
+actionShortDistanceLimit	= 5.
+actionMediumDistance		= ""
+actionMediumDistanceLimit	= 10
+actionLongDistance			= ""
+actionLongDistanceLimit	 	= 20.
+actionDistanceOld			= 0
+
+acuracyDistanceMode			= {}
+acuracyDistanceModeOld		= {}
+mode						= {}
+modeOld						= {}
+loopCount					= 0
+sensorRefreshSecs			= 1
+NSleep						= 100
+sensorList					= []
+sensors						= {}
+sensor						= G.program
+quick						= False
+display						= "0"
+output						= {}
+badSensor					= 0
+sensorActive				= False
+
+sendEvery					= 30.
+
 U.setLogging()
 
-myPID       = str(os.getpid())
+myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
-if U.getIPNumber() > 0:
-    time.sleep(10)
-    exit()
+if U.getIPNumber(doPrint=False) > 0:
+	time.sleep(10)
+	exit()
 
-
-# Load VL53L0X shared lib 
-tof_lib = CDLL(G.homeDir+"vl53l0x_python.so")
-
-# Create read function pointer
-READFUNC = CFUNCTYPE(c_int, c_ubyte, c_ubyte, POINTER(c_ubyte), c_ubyte)
-read_func = READFUNC(i2c_read)
-
-# Create write function pointer
-WRITEFUNC = CFUNCTYPE(c_int, c_ubyte, c_ubyte, POINTER(c_ubyte), c_ubyte)
-write_func = WRITEFUNC(i2c_write)
-
-# pass i2c read and write function pointers to VL53L0X library
-tof_lib.VL53L0X_set_i2c(read_func, write_func)
-
-
-# cerate instance
-tof = VL53L0X()
 
 readParams()
 
+
 U.echoLastAlive(G.program)
 
-lastDist            = {}
-lastData            = {}
-lastTime            = {}
-maxDeltaSpeed       = 40. # = mm/sec
-lastDisplay         = 0
-lastRead            = time.time()
-G.lastAliveSend     = time.time() -1000
-loopSleep           = 0.1
+lastDist			= {}
+lastData			= {}
+lastTime			= {}
+lastDisplay			= 0
+lastRead			= time.time()
+G.lastAliveSend		= time.time() -1
+startPGM 			= time.time()
+
+restartBadData 			= False
+
 while True:
-    try:
-        tt = time.time()
-        data={}
-        data["sensors"]     = {}
-        quick2 = False
-        if sensor in sensors:
-            for devId in sensors[sensor]:
-                if devId not in lastDist: 
-                    lastDist[devId] =-500.
-                    lastTime[devId] =0.
-                dist =getDistance()
-                if dist =="badSensor":
-                    first=True
-                    U.logger.log(30," bad sensor, sleeping for 10 secs")
-                    data0={}
-                    data0[sensor]={}
-                    data0[sensor][devId]={}
-                    data0[sensor][devId]["distance"]="badSensor"
-                    data["sensors"]     = data0
-                    U.sendURL(data)
-                    lastDist[devId] =-100.
-                    continue
-                    
-                data["sensors"]     = {sensor:{devId:{}}}
-                dist = float(dist)
-                delta=  dist - lastDist[devId]
-                deltaT =  max(tt   - lastTime[devId],0.01)
-                speed  =  delta / deltaT
-                deltaN= abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
-                if ( ( deltaN > deltaDist[devId] ) or 
-                     (  (tt - abs(sensorRefreshSecs)) > G.lastAliveSend)   or 
-                     (  quick )  or 
-                     ( speed > maxDeltaSpeed)  ):
-                        data["sensors"][sensor][devId]["distance"] = dist
-                        data["sensors"][sensor][devId]["speed"]    = speed
-                        U.sendURL(data)
-                lastDist[devId]  = dist
-                lastTime[devId]  = tt
+	try:
+		if sensCl == {}:
+			time.sleep(20)
+			break
+		tt = time.time()
+		data = {}
+		data["sensors"] = {}
+		restartM = False
+		sendToIndigo = False
+		if sensor in sensors:
+			data["sensors"][sensor] = {}
+			for devId in sensors[sensor]:
+				data["sensors"][sensor][devId] = {}
+				if devId not in lastDist: 
+					lastDist[devId] =-1
+					lastTime[devId] = -1
+				aliveTimeStamp = time.time() 
+				dist = getDist(devId)
+				#U.logger.log(20, "devId:{}, dist:{}".format(devId, dist))
 
-                if displayEnable =="1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - lastDisplay >10. or quick):
-                    lastDisplay = tt
-                    DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-                    U.logger.log(10, unicode(dist)+"  "+unicode(deltaDist) )   
-                    #print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
+				if dist == "":
+					restartBadData = True
+					break
 
-        loopCount +=1
-        
-        U.makeDATfile(G.program, data)
+				if dist == "badSensor":
+					U.logger.log(30," bad sensor, redoing")
+					data["sensors"][sensor][devId]["distance"] = "badSensor"
+					U.sendURL(data)
+					lastDist[devId] = -100.
+					U.restartMyself(reason="bad sensor ", delay =15,doPrint=True, doRestartCount=False)
+					continue
 
-        quick = U.checkNowFile(G.program)                
-        U.echoLastAlive(G.program)
-                    
+				dist = round(float(dist),1)
+				doAction(dist)
+				if dist > maxRange: dist = 999
+				delta  = dist - lastDist[devId]
+				deltaA = abs(dist - lastDist[devId])
+				deltaT = max(tt - lastTime[devId],0.01)
+				speed  = round(delta / deltaT, 2) 
+				deltaN = abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
 
-        if loopCount %11 ==0:
-            tt= time.time()
-            if tt - lastRead > 5.:  
-                readParams()
-                lastRead = tt
-        if not quick: 
-            time.sleep(loopSleep)
-        #print "end of loop", loopCount
-    except  Exception as e:
-        U.logger.log(30, u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-        time.sleep(5.)
+				#U.logger.log(20, "{}  dtTrue?:{}; dt{:.1f} lastDataSend:{:.1f}".format(dist, tt - abs(sensorRefreshSecs) > lastCycle["lastTime"] , tt - abs(sensorRefreshSecs), lastCycle["lastTime"]) )	
+				trigDD 	= deltaN > deltaDist[devId]
+				trigDDa	= deltaA > deltaDistAbs[devId]
+				trigDT	= tt - sendEvery > lastTime[devId]	
+				trigQi	= quick
+				if devId in i2cNumber: 	i2cText= "0x{:x}".format(i2cNumber[devId])
+				else:					i2cText = "off"
+				if trigDD or trigDDa or trigDT or trigQi: 
+							data["sensors"][sensor][devId]["i2c"]	= "{}-pin:{}".format(i2cText, xShutPin.get(devId,"off") )
+							#data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},LC:{},i2c:{}".format(trigDD, trigDDa, trigDT, trigQi, loopCount, xShutPin)
+							data["sensors"][sensor][devId]["distance"]	= dist
+							data["sensors"][sensor][devId]["speed"]		= speed
+							sendToIndigo 			= True
+							lastDist[devId]			= dist
+							lastTime[devId]			= tt
+							G.lastAliveSend 		= tt
+				else:
+					del data["sensors"][sensor][devId]
+
+				if displayEnable == "1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)	or  tt - lastDisplay >10. or quick):
+					lastDisplay = tt
+					DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
+					#U.logger.log(10, "{}  {}".format(dist, deltaDist) )	
+					#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist	
+
+		if sendToIndigo:
+			#U.logger.log(20, " data {}".format( data))
+			U.sendURL(data)
+
+		loopCount +=1
+
+		U.makeDATfile(G.program, data)
+
+		quick = U.checkNowFile(G.program)				
+		U.echoLastAlive(G.program)
+					
+		aliveTimeStamp = time.time() 
+
+		if loopCount %11 ==0:
+			tt= time.time()
+			if tt - lastRead > 5.:  
+				readParams()
+				lastRead = tt
+		if not quick: 
+			time.sleep(sensorRefreshSecs)
+		#print "end of loop", loopCount
+	except  Exception as e:
+		U.logger.log(30,"", exc_info=True)
+		aliveTimeStamp = time.time() +10
+		time.sleep(5.)
+
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
+U.logger.log(30," exiting at end")
 sys.exit(0)
+

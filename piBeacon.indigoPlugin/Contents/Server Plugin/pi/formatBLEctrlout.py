@@ -9,7 +9,7 @@ import time
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "execcommands"
 
 
@@ -78,7 +78,6 @@ if True:
 	f = open(G.homeDir+"temp/hcidump.data","r")
 	xxx = f.read()
 	f.close()
-	print xxx [0:100]
 	for line in xxx.split("\n"):
 		if line.find(">") >-1:
 			items = line.strip().split()

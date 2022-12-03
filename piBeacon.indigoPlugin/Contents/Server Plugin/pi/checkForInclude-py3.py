@@ -1,88 +1,136 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import	os, time, subprocess
+import os, time, subprocess, logging
+
+logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+logger = logging.getLogger(__name__)
+
+####-------------------------------------------------------------------------####
+def readPopen(cmd,doPrint= True):
+	try:
+		logger.log(30,"doing:  {}".format(cmd) )
+		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		if doPrint: logger.log(30,"ret: {} {}".format(ret, err ) )
+		return ret.decode('utf_8'), err.decode('utf_8')
+	except Exception as e:
+		logger.log(20,"", exc_info=True)
+
+def checkIfOSlt9():
+	osInfo	 = readPopen("cat /etc/os-release",doPrint=False)[0].strip("\n").split("\n")
+	for line in osInfo:
+		if line .find("VERSION_ID=") == 0:
+			return int( line.strip('"').split('="')[1] )
+	return 0
+
+def checkOsVersionis3():
+	return int(sys.version[0]) >= 3
 
 
-if os.path.isfile("/home/pi/pibeacon/includep3.done"):
-	exit()
+
+def execInstall():
+
+
+	logger.log(20,"------ starting" )
+
+	if checkIfOSlt9() < 9: 
+		logger.log(20,"finished, due to OS < 9, py 3 not completely installed" )
+		readPopen('echo "done" > "/home/pi/pibeacon/includep3.done"')
+		exit()
+
+
+	if True:
+		ret = readPopen("gpio -v",doPrint=False)
+		if ret[0].find("version:") ==-1:
+			readPopen("rm -R /tmp/wiringPi")
+			installGPIO = "cd /tmp; wget https://project-downloads.drogon.net/wiringpi-latest.deb; sudo dpkg -i wiringpi-latest.deb ; rm -R /tmp/wiringPi"
+			ret = readPopen(installGPIO)
+
+	if True:
+		logger.log(20,"check RPi.GPIO "  )
+		try:
+			import RPi.GPIO as GPIO
+		except:
+			ret = readPopen("sudo apt-get install python3-dev python3-rpi.gpio")
+
+
+	if True:
+		logger.log(20,"check hcidump"  )
+		ret = readPopen("which hcidump")
+		if ret[0].find("/usr/bin/hcidump") == -1:
+			readPopen("sudo apt-get install -y bluez-hcidump")
+	if True:
+		logger.log(20,"check adafruit-circuitpython-seesaw"  )
+		try:
+			from adafruit_seesaw.seesaw import Seesaw
+		except:
+			readPopen("sudo pip3 install adafruit-circuitpython-seesaw")
 
 
 
+	if True:
+		logger.log(20,"check adafruit-circuitpython-lidarlite"  )
+		try:
+			import adafruit_lidarlite
+		except:
+			readPopen("sudo pip3 install adafruit-circuitpython-lidarlite")
 
-osInfo	 = (subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").split("\n")
-for line in osInfo:
-	if line .find("VERSION_ID=") == 0:
-		os = int( line.strip('"').split('="')[1] )
-if os < 9: 
-	print (" os is to old for adafruit p3 stuff, exit")
-	subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	exit()
+	if True:
+		logger.log(20,"check adafruit-circuitpython-dht"  )
+		try:
+			import adafruit_dht
+		except:
+			readPopen("sudo pip3 install adafruit-circuitpython-dht")
 
-pipList	 = (subprocess.Popen("/usr/bin/pip3 list" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+	if True:
+		logger.log(20,"check board neopixel"  )
+		try:
+			import board
+			import neopixel
+		except Exception as e:
+			readPopen("sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install adafruit-blinka") # it is now ...../pibeacon no .log
 
-
-
-foundOne = False
-for xx in ["adafruit-circuitpython-seesaw","adafruit-circuitpython-lidarlite","adafruit-circuitpython-dht"]:
-	if xx not in pipList:
-		foundOne = True
-		break
-print (foundOne)
-
-libgpiod2 = False
-aptList	 = (subprocess.Popen("dpkg -s libgpiod2 | grep 'install ok installed'" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
-
-if  aptList.find("install ok installed") == -1:
-	libgpiod2 = True
-
-
-if not foundOne and not aptList: 
-	print ("check for pip3 includees, nothing found to install")
-	subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	exit()
+	if True:
+		logger.log(20,"check board neopixel"  )
+		try:
+			import board
+			import neopixel
+		except Exception as e:
+			readPopen("sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install adafruit-blinka") # it is now ...../pibeacon no .log
 
 
-print ("waiting for thinsg to calm down before instaling")
-sleepTime = 20
+	if True:
+		logger.log(20,"check Adafruit_DHT"  )
+		try:
+			import Adafruit_DHT
+		except Exception as e:
+			readPopen("sudo pip3 install Adafruit_DHT") # it is now ...../pibeacon no .log
+
+	if True:
+		logger.log(20,"check pexpect"  )
+		try:
+			import pexpect
+		except:
+			readPopen("sudo pip3 install pexpect")
+
+	if True:
+		logger.log(20,"check expect"  )
+		ret = readPopen("which expect")
+		if ret[0].find("/usr/bin/expect") == -1:
+			readPopen("sudo apt-get install -y expect")
 
 
-try:
-	from adafruit_seesaw.seesaw import Seesaw
-except:
-	time.sleep(sleepTime)
-	sleepTime -= 20
-	if "adafruit-circuitpython-seesaw" not in pipList:
-		print (" install adafruit-circuitpython-seesaw")
-		subprocess.Popen("sudo pip3 install adafruit-circuitpython-seesaw",shell=True, stdout=subprocess.PIPE).communicate()
-	if "adafruit-blinka" not in pipList:
-		print (" install adafruit-blinka")
-		subprocess.Popen("sudo pip3 install adafruit-blinka",shell=True, stdout=subprocess.PIPE).communicate()
 
-try:
-	import adafruit_lidarlite
-except:
-	time.sleep(max(0,sleepTime))
-	sleepTime -= 20
-	if "adafruit-circuitpython-lidarlite" not in pipList:
-		print(" installing adafruit-circuitpython-lidarlite\n")
-		subprocess.Popen("sudo pip3 install adafruit-circuitpython-lidarlite &",shell=True)
+	if True:
+		logger.log(20,"check libgpiod2"  )
+		aptList	 = readPopen("dpkg -s libgpiod2 | grep 'install ok installed'")[0]
 
-try:
-	import adafruit_dht
-except:
-	time.sleep(max(0,sleepTime))
-	sleepTime -= 20
-	if "adafruit-circuitpython-dht" not in pipList:
-		print(" installing adafruit-circuitpython-dht\n")
-		subprocess.Popen("sudo pip3 install adafruit-circuitpython-dht &",shell=True)
-
-if libgpiod2:
-		print(" installing libgpiod2\n")
-		subprocess.Popen("sudo apt-get install libgpiod2 &",shell=True)
+		if aptList.find("install ok installed") == -1:
+			readPopen("sudo apt-get install libgpiod2 &")
 
 
-subprocess.Popen('echo "done" > "/home/pi/pibeacon/includep3.done"',shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	readPopen('echo "done" > "/home/pi/pibeacon/includep3.done"')
+	logger.log(20,"finished")
 
-exit()
+execInstall()
 
 

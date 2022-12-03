@@ -74,7 +74,6 @@ if PIG:
 		PIGPIO.set_PWM_range( coil[ii], pwmRange )
 		PIGPIO.set_PWM_frequency( coil[ii], pwmRange )
 		PIGPIO.set_PWM_dutycycle( coil[ii], 0 )
-		print "N:", ii," freq:",  PIGPIO.get_PWM_frequency( coil[ii] )
 
 else:
 	for ii in range(len(coil)):
@@ -89,7 +88,6 @@ def setOFF():
 def exeStep(ii,ampl):
 	global PIGPIO, colPWM, coil
 	if PIG:
-		print "exeStep", ii, ampl
 		PIGPIO.set_PWM_dutycycle(coil[ii],int(ampl))
 	else:
 		colPWM[ii].ChangeDutyCycle(int(ampl))	
@@ -99,7 +97,6 @@ def setStep(values,tune=1.0):
 	global PIG, PIGPIO, pwmRange
 
 	count = sum(values)
-	print count, tune
 	if count ==2:
 		for ii in range(4):
 			if values[ii] == 0:
@@ -116,12 +113,10 @@ def setStep(values,tune=1.0):
 def move(reduce, reduceS, delay, delayS, steps, direction):
 	global lastStep
 	ii = lastStep
-	print reduce, reduceS, delay, delayS, steps
 	for i in range(steps):
 		ii += direction
 		if ii > nsteps: ii = 1
 		if ii < 1:      ii = nsteps
-		print ii, Seq[ii]
 		if sum(Seq[ii]) ==1:
 			time.sleep(0.0002)
 			#setStep(Seq[0])# Seq[ii],tune =0.9)

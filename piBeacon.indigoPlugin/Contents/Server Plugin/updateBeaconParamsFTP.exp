@@ -30,9 +30,9 @@ send "\r"
 sleep .001
 expect "sftp" {  send  "cd /home/pi/pibeacon \r" }
 sleep .1 
-expect "sftp" {  send  "lcd '$piPath//interfaceFiles' \r" }
+expect "sftp" {  send  "lcd '$piPath//all' \r" }
 sleep .1 
-expect "sftp" {  send  "put 'beacon_params'  /home/pi/pibeacon/beacon_params\r" }
+expect "sftp" {  send  "put 'beacon_parameters'  /home/pi/pibeacon/beacon_parameters\r" }
 sleep .2
 expect "sftp" {  send  "rm /home/pi/pibeacon/temp/touchFile \r" }
 sleep 3

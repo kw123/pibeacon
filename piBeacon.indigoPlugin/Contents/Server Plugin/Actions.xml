@@ -245,25 +245,6 @@ Make sure the switch bot is properly configured,  ie as press or normal
 				</List>
 			</Field>
 
-			<Field id="repeatDelay" type="menu" defaultValue="0" visibleBindingId="repeatDelayVisible" visibleBindingValue="true"  tooltip="">
-				<Label>Secs delay between sets</Label>
-				<List>
-					<Option value="0"  >no delay</Option>
-					<Option value="1.0">1   secs</Option>
-					<Option value="1.5">1.5 secs</Option>
-					<Option value="2.0">2   secs</Option>
-					<Option value="2.5">2.5 secs</Option>
-					<Option value="3.0">3   secs</Option>
-					<Option value="3.5">3.5 secs</Option>
-					<Option value="4.0">4   secs</Option>
-					<Option value="4.5">4.5 secs</Option>
-					<Option value="5.0">5 secs</Option>
-					<Option value="6.0">6 secs</Option>
-					<Option value="7.0">7 secs</Option>
-					<Option value="8.0">8 secs</Option>
-				</List>
-			</Field>
-
 			<Field id="pulses" type="menu" defaultValue="2" visibleBindingId="pulsesVisible" visibleBindingValue="true"  tooltip="">
 				<Label>Number of pulses / simple on or Off</Label>
 				<List>
@@ -323,7 +304,7 @@ Make sure the switch bot is properly configured,  ie as press or normal
 			</Field>
 
 			<Field id="pulseDelay" type="menu" defaultValue="0.0" visibleBindingId="pulseDelayVisible" visibleBindingValue="true" >
-				<Label>Secs between sets, eg for short on/off</Label>
+				<Label>Secs between pulses, eg for short on/off</Label>
 				<List>
 					<Option value="0.0">0.0 secs </Option>
 					<Option value="0.5">0.5 secs</Option>
@@ -344,6 +325,28 @@ Make sure the switch bot is properly configured,  ie as press or normal
 					<Option value="10">10 secs</Option>
 				</List>
 			</Field>
+
+
+
+			<Field id="repeatDelay" type="menu" defaultValue="0" visibleBindingId="repeatDelayVisible" visibleBindingValue="true"  tooltip="">
+				<Label>Secs delay between sets of pulses or on/off</Label>
+				<List>
+					<Option value="0"  >no delay</Option>
+					<Option value="1.0">1   secs</Option>
+					<Option value="1.5">1.5 secs</Option>
+					<Option value="2.0">2   secs</Option>
+					<Option value="2.5">2.5 secs</Option>
+					<Option value="3.0">3   secs</Option>
+					<Option value="3.5">3.5 secs</Option>
+					<Option value="4.0">4   secs</Option>
+					<Option value="4.5">4.5 secs</Option>
+					<Option value="5.0">5 secs</Option>
+					<Option value="6.0">6 secs</Option>
+					<Option value="7.0">7 secs</Option>
+					<Option value="8.0">8 secs</Option>
+				</List>
+			</Field>
+
 
 			<Field  id="execRPItoRPI" type="button" visibleBindingId="execRPItoRPIVisible" visibleBindingValue="true"  >
 			    <Label> ....after selection click to setup/delete action on the RPIs</Label><Title>SETUP/DELETE</Title> <CallbackMethod>setupRPItoRPIactionCALLBACKaction</CallbackMethod>
@@ -621,8 +624,8 @@ After delete you can save or cancel the action and later delete it</Label>
 		<CallbackMethod>setneopixelCALLBACKaction</CallbackMethod>
 		<Name>Send pixels ..  to  RPI NEOpixel devices</Name>
 		<ConfigUI>
-			<Field id="outputDev"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-						<List class="indigo.devices" filter="self.neopixel" />
+			<Field id="outputDev"   type="menu" defaultValue="0" tooltip="select neopixel device " >
+						<List class="self" filter="" method="filterNeopixeldevices"  dynamicReload="false" />
 			    <Label>select Neopixel device:</Label> 
 			</Field>
 

@@ -11,7 +11,7 @@ import math
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
-import traceback
+
 G.program = "tmp007"
 # Copyright (c) 2014 Adafruit Industries
 # Author: Tony DiCola
@@ -126,8 +126,6 @@ class TMP007:
 		"Writes an 8-bit value to the specified register/address"
 		try:
 			self.bus.write_byte_data(self.address, reg, value)
-			if self.debug:
-				print "I2C: Wrote 0x%02X to register 0x%02X" % (value, reg)
 		except IOError, err:
 			return self.errMsg()
 
@@ -141,17 +139,12 @@ class TMP007:
 		"Writes an 8-bit value on the bus"
 		try:
 			self.bus.write_byte(self.address, value)
-			if self.debug:
-				print "I2C: Wrote 0x%02X" % value
 		except IOError, err:
 			return self.errMsg()
 
 	def writeList(self, reg, list):
 		"Writes an array of bytes using I2C format"
 		try:
-			if self.debug:
-				print "I2C: Writing list to register 0x%02X:" % reg
-				print list
 			self.bus.write_i2c_block_data(self.address, reg, list)
 		except IOError, err:
 			return self.errMsg()
@@ -160,10 +153,6 @@ class TMP007:
 		"Read a list of bytes from the I2C device"
 		try:
 			results = self.bus.read_i2c_block_data(self.address, reg, length)
-			if self.debug:
-				print ("I2C: Device 0x%02X returned the following from reg 0x%02X" %
-				 (self.address, reg))
-				print results
 			return results
 		except IOError, err:
 			return self.errMsg()
@@ -172,9 +161,6 @@ class TMP007:
 		"Read an unsigned byte from the I2C device"
 		try:
 			result = self.bus.read_byte_data(self.address, reg)
-			if self.debug:
-				print ("I2C: Device 0x%02X returned 0x%02X from reg 0x%02X" %
-				 (self.address, result & 0xFF, reg))
 			return result
 		except IOError, err:
 			return self.errMsg()
@@ -184,9 +170,6 @@ class TMP007:
 		try:
 			result = self.bus.read_byte_data(self.address, reg)
 			if result > 127: result -= 256
-			if self.debug:
-				print ("I2C: Device 0x%02X returned 0x%02X from reg 0x%02X" %
-				 (self.address, result & 0xFF, reg))
 			return result
 		except IOError, err:
 			return self.errMsg()
@@ -199,8 +182,6 @@ class TMP007:
 			# endian on ARM (little endian) systems.
 			if not little_endian:
 				result = ((result << 8) & 0xFF00) + (result >> 8)
-			if (self.debug):
-				print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
 			return result
 		except IOError, err:
 			return self.errMsg()
@@ -217,8 +198,6 @@ class TMP007:
 			lobyte = self.readU8(reg)
 			hibyte = self.readU8(reg+1)
 			result = (hibyte << 8) + lobyte
-			if (self.debug):
-				print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
 			return result
 		except IOError, err:
 			return self.errMsg()
@@ -250,8 +229,6 @@ class TMP007:
 			lobyte = self.readS8(reg)
 			hibyte = self.readU8(reg+1)
 			result = (hibyte << 8) + lobyte
-			if (self.debug):
-				print "I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, result & 0xFFFF, reg)
 			return result
 		except IOError, err:
 			return self.errMsg()
@@ -333,7 +310,7 @@ def readParams():
 
 				
 			if devId not in tmp007sensor:
-				U.logger.log(30"==== Start "+G.program+" ===== @ i2c= " +unicode(i2cAddress))
+				U.logger.log(30"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				tmp007sensor[devId] = TMP007(i2cAddress=i2cAdd)
 				tmp007sensor[devId].begin()
@@ -351,7 +328,7 @@ def readParams():
 			pass
 
 	except	Exception as e:
-		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 
 
 
@@ -374,8 +351,8 @@ def getValues(devId):
 		return data
 	except	Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
-			U.logger.log(30,u"temp>>" + unicode(temp)+"<<")
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30,u"temp>>{}".format(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -493,7 +470,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except	Exception as e:
-		U.logger.log(30,u"in Line {} has error={}".format(traceback.extract_tb(sys.exc_info()[2])[-1][1], e))
+		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

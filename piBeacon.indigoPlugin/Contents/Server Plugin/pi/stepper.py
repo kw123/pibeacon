@@ -85,7 +85,6 @@ class RRB3:
 
 	def set_driver_pins(self, p, scale =1.):
 		left_pwm = p[0]; left_dir = p[1]; right_pwm = p[2]; right_dir = p[3]
-		print scale
 		self.left_pwm.ChangeDutyCycle(left_pwm * 100 * self.pwm_scale*scale)
 		GPIO.output(self.LEFT_1_PIN, left_dir)
 		GPIO.output(self.LEFT_2_PIN, not left_dir)
@@ -122,13 +121,11 @@ class RRB3:
 
 	def step_forward(self, delay, num_steps):
 		i =  self.lastStep
-		print self.stepsBits[i]
 		for n in range(num_steps):
 			#self.set_driver_pins(self.stepsBits[i][0],self.stepsBits[i][1],self.stepsBits[i][2],self.stepsBits[i][3])
 			#time.sleep(0.1)
 			i -= 1
 			if i<0: i=3
-			print self.stepsBits[i]
 			for ii in range(8,10):
 				self.set_driver_pins(self.stepsBits[i],scale = 1)
 				time.sleep(0.005)
@@ -142,13 +139,11 @@ class RRB3:
 
 	def step_reverse(self, delay, num_steps):
 		i =  self.lastStep
-		print self.stepsBits[i]
 		for n in range( num_steps):
 			#self.set_driver_pins(self.stepsBits[i][0],self.stepsBits[i][1],self.stepsBits[i][2],self.stepsBits[i][3])
 			#time.sleep(0.1)
 			i+=1
 			if i>3: i=0
-			print self.stepsBits[i]
 			for ii in range(9,10):
 				self.set_driver_pins(self.stepsBits[i],scale = 1 )
 				time.sleep(0.005)
