@@ -981,7 +981,7 @@ def fillHistory(mac):
 		beacon_ExistingHistory[mac]["rssi"].append(beaconsThisReadCycle[mac]["rssi"])
 		beacon_ExistingHistory[mac]["timeSt"].append(beaconsThisReadCycle[mac]["timeSt"])
 		beacon_ExistingHistory[mac]["reason"].append(beaconsThisReadCycle[mac]["reason"])
-		if beaconsThisReadCycle[mac]["txPower"] != "": beacon_ExistingHistory[mac]["txPower"] = beaconsThisReadCycle[mac]["txPower"]
+		if beaconsThisReadCycle[mac]["txPower"] != "": 			beacon_ExistingHistory[mac]["txPower"] = beaconsThisReadCycle[mac]["txPower"]
 		beacon_ExistingHistory[mac]["count"] += 1
 		if beaconsThisReadCycle[mac]["batteryLevel"] !="": 		beacon_ExistingHistory[mac]["batteryLevel"]		= beaconsThisReadCycle[mac]["batteryLevel"]
 		if beaconsThisReadCycle[mac]["calibrated"] !="": 		beacon_ExistingHistory[mac]["calibrated"]		= beaconsThisReadCycle[mac]["calibrated"]
@@ -994,7 +994,8 @@ def fillHistory(mac):
 		if beaconsThisReadCycle[mac]["mfg_info"] !="":			beacon_ExistingHistory[mac]["mfg_info"]			= beaconsThisReadCycle[mac]["mfg_info"]
 		if beaconsThisReadCycle[mac]["subtypeOfBeacon"] !="":	beacon_ExistingHistory[mac]["subtypeOfBeacon"]	= beaconsThisReadCycle[mac]["subtypeOfBeacon"]
 		if beaconsThisReadCycle[mac]["inMotion"] != "":			beacon_ExistingHistory[mac]["inMotion"]			= beaconsThisReadCycle[mac]["inMotion"]
-		if beaconsThisReadCycle[mac]["allowsConnection"] != "":	beacon_ExistingHistory[mac]["allowsConnection"]	= beaconsThisReadCycle[mac]["allowsConnection"]
+		if beaconsThisReadCycle[mac].get("allowsConnection","") != "":	beacon_ExistingHistory[mac]["allowsConnection"]	= beaconsThisReadCycle[mac]["allowsConnection"]
+		if beaconsThisReadCycle[mac].get("analyzed","")  != "":	beacon_ExistingHistory[mac]["analyzed"]			= beaconsThisReadCycle[mac]["analyzed"]
 
 		if "typeOfBeacon" not in beacon_ExistingHistory:
 			if beaconsThisReadCycle[mac]["typeOfBeacon"] != "":	beacon_ExistingHistory[mac]["typeOfBeacon"]		= beaconsThisReadCycle[mac]["typeOfBeacon"]
@@ -1077,7 +1078,7 @@ def composeMSG(timeAtLoopStart):
 						"count": beacon_ExistingHistory[beacon]["count"]-1,
 						"typeOfBeacon": beacon_ExistingHistory[beacon]["typeOfBeacon"]
 						}
-					for xx in ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection"]:
+					for xx in ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection","analyzed"]:
 						if xx in beacon_ExistingHistory[beacon] and beacon_ExistingHistory[beacon][xx] !="": newData[xx]	= beacon_ExistingHistory[beacon][xx]
 	
 					downCount = 0
@@ -1133,7 +1134,7 @@ def composeMSGForThisMacOnly(mac):
 			"count": max(1,beacon_ExistingHistory[mac]["count"]-1),
 			"typeOfBeacon": beacon_ExistingHistory[mac]["typeOfBeacon"]
 			}
-		for xx in ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection"]:
+		for xx in ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection","analyzed"]:
 			if beacon_ExistingHistory[mac].get(xx,"") != "": data[xx]	= beacon_ExistingHistory[mac][xx]
 
 		beacon_ExistingHistory[mac]["lastMessageSend"] = time.time()
@@ -3702,9 +3703,12 @@ offset	Allowed Values		description
 		if len(hexData) < 44: 	
 			#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,u"mac:{};  < 44..{} ".format(mac, len(hexData))) 
 			return tx, "", UUID, Maj, Min, False
-
-		ruuviTagPos 	= hexData.find("FF990405") 
-		tagFound	= ruuviTagPos > 20 and ruuviTagPos < 24 
+		#        mac---------  ll flag   ll tag 
+		#        012345678911 23 456789 21 23456789 
+		#		 012345678901 1F 020106 1B FF990405
+		ruuviTag 		= "0201061BFF9904"
+		ruuviTagPos 	= hexData.find(ruuviTag) 
+		tagFound		= ruuviTagPos == 14 
 		if not tagFound: 		
 			#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,u"mac:{};  tagnotfound..{}".format(mac, tag )) 
 			return tx, "", UUID, Maj, Min, False
@@ -3714,12 +3718,10 @@ offset	Allowed Values		description
 		Min  						= "sensor"
 		sensor 						= "BLERuuviTag"
 		# make data into right format (bytes)
-		byte_data 					= bytearray.fromhex(hexData[ruuviTagPos + 6:])
-		# umpack the first set of data
-
+		byte_data 					= bytearray.fromhex(hexData[ruuviTagPos + len(ruuviTag):])
+		dataFormat					= byte_data[0]
 
 		# sensor is active, get all data and send if conditions ok
-
 		# unpack  rest of sensor data 
 		accelerationTotal, accelerationX, accelerationY, accelerationZ 	= doRuuviTag_magValues(byte_data)
 		temp 					= (doRuuviTag_temperature(byte_data)+ BLEsensorMACs[mac][sensor]["offsetTemp"]) * BLEsensorMACs[mac][sensor]["multTemp"]
@@ -3751,7 +3753,7 @@ offset	Allowed Values		description
 
 		if trigMinTime and ( trigTime or trigTemp or trigAccel or trigDeltaXZY ):
 			dd={   # the data dict to be send 
-				'data_format': 5,
+				'data_format': 			dataFormat,
 				'hum': 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac][sensor]["offsetHum"] + 0.5),
 				'temp': 				round(temp							 + BLEsensorMACs[mac][sensor]["offsetTemp"],1),
 				'press': 				round(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac][sensor]["offsetPress"],1),
@@ -4072,7 +4074,7 @@ def BLEAnalysisStart(hci):
 
 #################################
 def BLEAnalysis():
-	global onlyTheseMAC, knownBeaconTags
+	global onlyTheseMAC, knownBeaconTags, parsedData
 	global bleServiceSections, BLEanalysisdataCollectionTime, BLEanalysisrssiCutoff, BLEcollectStartTime
 	try:
 		if time.time() - BLEcollectStartTime <= BLEanalysisdataCollectionTime: return 
@@ -4101,7 +4103,7 @@ def BLEAnalysis():
 			#U.logger.log(20, " line:{}".format(line))
 			hexString = (line.replace(" ",""))[14+12:]
 			##U.logger.log(20, "mac:{};   hexstr:{} ".format(mac, hexString ))
-			parsedData = parsePackage(mac, hexString, logData=False)
+			parsePackage(mac, hexString, logData=False)
 			if mac not in MACs: 
 				MACs[mac] = {"max_rssi":-99, "max_TX": -99,"MSG_in_10Secs": 0,
 				"n_of_MSG_Types":0,"typeOfBeacon":[],"typeOfBeacon-msg#":[],"nMessages":[],
@@ -4129,16 +4131,16 @@ def BLEAnalysis():
 				linesDevices +=1
 				for mmm in bleServiceSections:
 					mm  = bleServiceSections[mmm]
-					if mm in parsedData: 			MACs[mac][mm].append(parsedData[mm])
-					else:							MACs[mac][mm].append("")
+					if mm in parsedData["analyzed"]: 			MACs[mac][mm].append(parsedData["analyzed"][mm])
+					else:										MACs[mac][mm].append("")
 				for ee in extraLists:
-					if ee in parsedData:			MACs[mac][ee].append(parsedData[ee])
-					else:							MACs[mac][ee].append("")
+					if ee in parsedData["analyzed"]:			MACs[mac][ee].append(parsedData["analyzed"][ee])
+					else:										MACs[mac][ee].append("")
 
 			MACs[mac]["nMessages"][nMsgNumber]+=1
-			if "TxPowerLevel" in parsedData:
+			if "TxPowerLevel" in parsedData["analyzed"]:
 				try:
-					tx = signedIntfrom8(parsedData["TxPowerLevel"])
+					tx = signedIntfrom8(parsedData["analyzed"]["TxPowerLevel"])
 					MACs[mac]["max_TX"] = max(MACs[mac]["max_TX"],tx )
 				except: pass
 			#print mac, "present:>{}<".format(line[2:-3])
@@ -4869,131 +4871,148 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="
 
 #################################
 def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
-	global bleServiceSections
+	global bleServiceSections, parsedData
 
 	try:
 		totalLength = int(hexstring[0:2],16)
 		if totalLength < 6: return {}
-		retData = {}
-		retData["len"] = totalLength
-		result =[]
-		p = 0
-		lenP = 0
+		parsedData = {"len": totalLength, "sections":[], "analyzed":{}}
+		sectionsData = []
+		analyzed = {}
+		startOfSection = 0
+		lenSection = 0
 		if ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 				writeTrackMac("pars0   ","totalLength:{}; hexstring: {}; ".format(totalLength,  hexstring ), mac)
 		for ii in range(8):
-			p = p+2 + lenP*2
-			if p > totalLength*2: break
-			try: lenP  = int(hexstring[p:p+2],16)
+			startOfSection = startOfSection+2 + lenSection*2
+			if startOfSection > totalLength*2: break
+			try: lenSection  = int(hexstring[startOfSection:startOfSection+2],16)
 			except: continue
 
-			if lenP > 0: 
-				typeP = hexstring[p+2:p+4]
-				result.append({})
-				result[-1]["len"] = lenP
-				if typeP in bleServiceSections:
-					result[-1]["type"] = bleServiceSections[typeP]
+			if lenSection > 0: 
+				typeOfSection = hexstring[startOfSection+2:startOfSection+4]
+				sectionsData.append({})
+				sectionsData[-1]["len"] = lenSection
+				if typeOfSection in bleServiceSections:
+					sectionsData[-1]["type"] = bleServiceSections[typeOfSection]
 
 				else: 
-					result[-1]["type"] = "unknown:"+typeP
+					sectionsData[-1]["type"] = "unknown:"+typeOfSection
 
-				res = hexstring[p+4: p+4 + lenP*2 -2]
+				section = hexstring[startOfSection+4: startOfSection+4 + lenSection*2 -2]
 
-				if result[-1]["type"] in  ["Name"]:
+
+				if sectionsData[-1]["type"] in ["Flags"]:
+					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
+						writeTrackMac("parsM   ","Flag: section:{}".format( section), mac)
+					sectionsData[-1]["data"] = section
+					analyzed["Flags"] = section
+
+				elif sectionsData[-1]["type"] in ["Name"]:
 					dd = ""
-					ll = int(len(res)/2)
+					ll = int(len(section)/2)
 					for ii in range(ll):
-						x = res[ii*2:ii*2+2]
+						x = section[ii*2:ii*2+2]
 						if x == "00":  dd+= "~"
 						dd += hex2str(x)
 					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
-						writeTrackMac("parsM   ","res:{}, dd:{}, ll:{}".format( res, dd, ll ), mac)
+						writeTrackMac("parsM   ","Name: section:{}, dd:{}, ll:{}".format( section, dd, ll ), mac)
 
-					result[-1]["data"] = dd
-					retData["mfg_info"] = result[-1]["data"]
-					retData["Name"] = result[-1]["data"]
+					sectionsData[-1]["data"] = dd
+					analyzed["mfg_info"] = sectionsData[-1]["data"]
+					analyzed["Name"] = sectionsData[-1]["data"]
 
-				elif result[-1]["type"] in  ["ShortName"]:
+				elif sectionsData[-1]["type"] in  ["ShortName"]:
 					dd = ""
-					ll = int(len(res)/2)
+					ll = int(len(section)/2)
 					for ii in range(ll):
-						x = res[ii*2:ii*2+2]
+						x = section[ii*2:ii*2+2]
 						if x == "00":  dd+= "~"
 						dd += hex2str(x)
 					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
-						writeTrackMac("parsM   ","res:{}, dd:{}, ll:{}".format( res, dd, ll ), mac)
+						writeTrackMac("parsM   ","ShortName: section:{}, dd:{}, ll:{}".format( section, dd, ll ), mac)
 
-					result[-1]["data"] = dd
-					retData["mfg_info"] = result[-1]["data"]
-					retData["ShortName"] = result[-1]["data"]
+					sectionsData[-1]["data"] = dd
+					analyzed["mfg_info"] = sectionsData[-1]["data"]
+					analyzed["ShortName"] = sectionsData[-1]["data"]
 
 
 
-				elif result[-1]["type"] in  ["UUID"]:
-					if res[0:8] =="4C000215":
+				elif sectionsData[-1]["type"] in  ["UUID"]:
+					if section[0:8] =="4C000215":
 						try:
 							uuidEnd = 8+2*16
-							iBeacon = res[8:uuidEnd] +"-"+str(int(res[uuidEnd:uuidEnd+4],16)) +"-"+str(int(res[uuidEnd+4:uuidEnd+4+4],16))
-							result[-1]["data"] = "iBeacon:"+iBeacon
-							retData["iBeacon"] = iBeacon
+							iBeacon = section[8:uuidEnd] +"-"+str(int(section[uuidEnd:uuidEnd+4],16)) +"-"+str(int(section[uuidEnd+4:uuidEnd+4+4],16))
+							sectionsData[-1]["data"] = "iBeacon:"+iBeacon
+							analyzed["iBeacon"] = iBeacon
 						except:
 							continue
 					else:
-						result[-1]["data"] = "UUID:"+res[8:]
-						retData["UUID"] = res[:8]+u"-"+res[8:]
+						sectionsData[-1]["data"] = "Other:"+section[8:]
+						analyzed["Other"] = section
 
-				elif result[-1]["type"] in  ["ServiceData"]:
-					result[-1]["ServiceData"] = res
-					retData["ServiceData"] = res
-					xxx = getTLMdata(mac, res, verbose=False)
+				elif sectionsData[-1]["type"] in ["ServiceData"]:
+					sectionsData[-1]["ServiceData"] = section
+					analyzed["ServiceData"] = section
+					xxx = getTLMdata(mac, section, verbose=False)
 					if xxx != {}:
-						retData["TLM"] = xxx
+						analyzed["TLM"] = xxx
 				else:					
-					result[-1]["data"] = res
-					retData[result[-1]["type"]] = res
-				rest = hexstring[p+2 + lenP*2:]
+					sectionsData[-1]["data"] = section
+					analyzed[sectionsData[-1]["type"]] = section
+				rest = hexstring[startOfSection+2 + lenSection*2:]
 				if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
-						writeTrackMac("parsT   "," p:{:2d}, typeP:{},  result:{}, rest:{}".format( p, typeP, result[-1], rest), mac)
+						writeTrackMac("parsT   "," startOfSection:{:2d}, typeOfSection:{},  sectionsData:{}, rest:{}".format( startOfSection, typeOfSection, sectionsData[-1], rest), mac)
 		if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
-			writeTrackMac("parsE   "," lenTotal:{}, data:{}, hexstr:{}".format( totalLength, retData, hexstring), mac)
-		return 	retData	
+			writeTrackMac("parsE   "," lenTotal:{}, data:{}, hexstr:{}".format( totalLength, analyzed, hexstring), mac)
+		parsedData["sections"] = sectionsData
+		parsedData["analyzed"] = analyzed
+
+		return 	
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,u" hexstr:{}".format(hexstring))
-	return retData
+	return 
 
 
 
 #################################
-def getTLMdata(mac, res, verbose = False):
+def getTLMdata(mac, section, verbose = False):
 	try:
 		retData = {}
-		l = res.find("AAFE2000")
-		if l >-1:
-			#U.logger.log(20,u" mac:{:},  len(res):{}, l:{} ; res: {}".format(mac, len(res),l , res ))
-			if  len(res) - l == 32:
-				k = l+8
-				VbatH 		= res[k:k+4]
-				Vbat 		= int(VbatH,16)
-				k += 4
+		tagPos = section.find("AAFE2000") # tag for TLM data 
 
-				tempH 		= res[k:k+4]
-				temp1 		= intFrom8(tempH,0)
-				if temp1 > 127: temp1 -= 256
-				temp2		= intFrom8(tempH,2)/256.
-				temp 		= round(float(temp1) + temp2, 1)
+		if tagPos == -1: 					return retData
 
-				k += 4
-				#advCountH 	= res[k+6:k+8]+res[k+4:k+6]+res[k+2:k+4]+res[k+0:k+2]
-				advCountH 	= res[k:k+8]
-				advCount 	= int(advCountH,16)
+		if  len(section) - tagPos != 32:	return retData
 
-				k += 8
-				timeSinceH 	= res[k:k+8]
-				timeSince 	= int(timeSinceH,16)/10.
-				retData = {"batteryVoltage":Vbat, "temp":temp, "advCount":advCount, "timeSince":timeSince}
-				if verbose: 
-					U.logger.log(20,u" mac:{:}, Vbat:{:}={:4d}; temp:{:}={:.2f}, advCount:{:}={:10d}, timeSince:{:}={:12.1f}, hex:{:}".format(mac, VbatH, Vbat, tempH, temp, advCountH, advCount, timeSinceH, timeSince, res))
+		startNext	= tagPos + 8
+
+		lSec 		= 4
+		VbatH 		= section[startNext:startNext+lSec]
+		Vbat 		= int(VbatH,16)
+		startNext  += lSec
+
+		lSec 		= 4
+		tempH 		= section[startNext:startNext+lSec]
+		temp1 		= intFrom8(tempH,0)
+		if temp1 > 127: temp1 -= 256
+		temp2		= intFrom8(tempH,2)/256.
+		temp 		= round(float(temp1) + temp2, 1)
+		startNext  += lSec
+
+		lSec 		= 8
+		advCountH 	= section[startNext:startNext+lSec]
+		advCount 	= int(advCountH,16)
+		startNext  += lSec
+
+		lSec 		= 8
+		timeSinceH 	= section[startNext:startNext+lSec]
+		timeSince 	= int(timeSinceH,16)/10.
+
+		retData = {"batteryVoltage":Vbat, "temp":temp, "advCount":advCount, "timeSince":timeSince}
+		if verbose: 
+			U.logger.log(20,u" mac:{:}, Vbat:{:}={:4d}; temp:{:}={:.2f}, advCount:{:}={:10d}, timeSince:{:}={:12.1f}, hex:{:}".format(mac, VbatH, Vbat, tempH, temp, advCountH, advCount, timeSinceH, timeSince, section))
 
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -5123,6 +5142,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 	global beaconNew, beacon_ExistingHistory, ignoreMAC
 	global acceptNewMFGNameBeacons
 	global batteryLevelUUID
+	global parsedData
 	try:
 		prio  				= -1
 		dPos  				= -100
@@ -5138,16 +5158,16 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 		existing 			= mac in onlyTheseMAC
 		mfgTagged 			= False
 
-		try: parsedData = parsePackage(mac, hexstr[12:], logData=False)
+		try:  parsePackage(mac, hexstr[12:], logData=False)
 		except:
 			return rejectThisMessage
-		if "iBeacon" in parsedData: iBeacon = parsedData["iBeacon"]
-		else:						iBeacon = ""
-		if "mfg_info" in parsedData:mfg_info = parsedData["mfg_info"]
-		else:						mfg_info = ""
-		if "TLM" in parsedData and "batteryVoltage" in  parsedData["TLM"]:
-			batteryVoltage = parsedData["TLM"]["batteryVoltage"]
-			temp = parsedData["TLM"]["temp"]
+		if "iBeacon" in parsedData["analyzed"]: iBeacon = parsedData["analyzed"]["iBeacon"]
+		else:									iBeacon = ""
+		if "mfg_info" in parsedData["analyzed"]:mfg_info = parsedData["analyzed"]["mfg_info"]
+		else:									mfg_info = ""
+		if "TLM" in parsedData["analyzed"] and "batteryVoltage" in  parsedData["analyzed"]["TLM"]:
+			batteryVoltage = parsedData["analyzed"]["TLM"]["batteryVoltage"]
+			temp = parsedData["analyzed"]["TLM"]["temp"]
 			TLMenabled = True
 		else:
 			TLMenabled = ""
@@ -5269,7 +5289,6 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 					rejectThisMessage = "new"
 
 		results = checkForValueInfo( typeOfBeacon, tagFound, mac, hexstr )
-
 		if batteryLevel != "" or "batteryLevel" not in results: results["batteryLevel"] = batteryLevel
 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
@@ -5287,14 +5306,14 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 			results["batteryLevel"] = batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=batteryVoltAt100, batteryVoltAt0=batteryVoltAt0)
 
 		#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,u"mac {}; results[]:{};  batteryLevel:{}".format(mac, results["batteryLevel"] , batteryLevel))
-		fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, results)
+		fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, results, parsedData["analyzed"])
 
 		if not checkMinMaxSignalAcceptMessage(mac, rssi): rejectThisMessage = "reject"
 
 		if rejectThisMessage != "reject" and mac in beaconsThisReadCycle: fillHistory(mac)
 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac("tag-E   ", "beaconsThisReadCycle ..mfg_info: {},rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel) ,mac)
+			writeTrackMac("tag-E   ", "beaconsThisReadCycle ..mfg_info: {}, rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel) ,mac)
 
 
 	except	Exception as e:
@@ -5330,7 +5349,7 @@ def getBasicData(hexstr):
 
 
 #################################
-def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, result):
+def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, result, analyzed):
 	global beaconsThisReadCycle
 	try:
 		if mac not in beaconsThisReadCycle: setEmptybeaconsThisReadCycle(mac)
@@ -5340,6 +5359,7 @@ def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon
 										beaconsThisReadCycle[mac]["txPower"]		= float(txPower) # transmit power
 										beaconsThisReadCycle[mac]["timeSt"]			= time.time() 
 										beaconsThisReadCycle[mac]["subtypeOfBeacon"]= "" # 
+										beaconsThisReadCycle[mac]["analyzed"]		= analyzed
 		if typeOfBeacon !="" and beaconsThisReadCycle[mac].get("typeOfBeacon","other") == "other":
 										beaconsThisReadCycle[mac]["typeOfBeacon"]	= typeOfBeacon 
 		if iBeacon != "": 				beaconsThisReadCycle[mac]["iBeacon"]		= iBeacon # 
@@ -5350,6 +5370,7 @@ def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon
 
 		for  ii in result:
 			if result[ii] != "":		beaconsThisReadCycle[mac][ii]				= result[ii]
+		beaconsThisReadCycle[mac]["analyzed"]				= analyzed
 	
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)

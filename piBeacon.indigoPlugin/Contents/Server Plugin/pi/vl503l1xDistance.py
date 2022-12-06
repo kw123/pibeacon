@@ -752,7 +752,7 @@ while True:
 							data["sensors"][sensor][devId]["i2c"]	= "{}-pin:{}".format(i2cText, xShutPin.get(devId,"off"))
 							#data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},LC:{},i2c:{}".format(trigDD, trigDDa, trigDT, trigQi, loopCount, xShutPin)
 							data["sensors"][sensor][devId]["distance"]	= dist
-							data["sensors"][sensor][devId]["speed"]		= speed
+							data["sensors"][sensor][devId]["speed"]		= round(speed,2)
 							sendToIndigo 			= True
 							lastDist[devId]			= dist
 							lastTime[devId]			= tt

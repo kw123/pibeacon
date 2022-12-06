@@ -1406,6 +1406,7 @@ class Plugin(indigo.PluginBase):
 			self.updateStatesDict			= {}
 			self.executeUpdateStatesDictActive = ""
 
+			self.trackSensorId				= []
 			self.rpiQueues					= {}
 			self.RPIBusy					= {}
 			self.delayedActions				= {}
@@ -7140,6 +7141,24 @@ class Plugin(indigo.PluginBase):
 		return []
 
 
+####-------------------------------------------------------------------------####
+	def filterActiveSensors(self, valuesDict=None, typeId="", devId=0, action=""):
+
+		try:
+			xList = []
+			for dev in indigo.devices.iter("props.isSensorDevice"):
+				if dev.deviceTypeId == "BLEconnect": continue
+				try:
+					name = dev.name
+					xList.append(["{}".format(dev.id), "{}".format(name) ])
+
+				except:
+					pass
+			return sorted(xList, key=lambda tup: tup[1])
+
+		except Exception as e:
+			self.exceptionHandler(40, e)
+		return []
 
 
 ####-------------------------------------------------------------------------####
@@ -7208,10 +7227,27 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmStopSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		self.selectBeaconsLogTimer ={}
-		self.indiLOG.log(10,"log messages stopped")
-		valuesDict["MSG"] = "tracking of beacon stopped"
+	def buttonConfirmSelectSensorCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		try:
+			self.trackSensorId.append(valuesDict["selectSensor"])
+			devName = indigo.devices[int(valuesDict["selectSensor"])].name
+			self.indiLOG.log(20,"logging all messages for sensor >>{}<<".format(devName) )
+			valuesDict["MSG"]  = "{} logging started".format(devName)
+			return valuesDict
+
+		except Exception as e:
+			self.exceptionHandler(40, e)
+			return valuesDict
+		return valuesDict
+
+####-------------------------------------------------------------------------####
+	def buttonConfirmStopSelectSensorCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		try:
+			for devIds in self.trackSensorId:
+				self.indiLOG.log(20,"logging messages stopped for sensor >>{}<< ".format(indigo.devices[int(devIds)].name))
+			valuesDict["MSG"] = "logging sensors stopped"
+		except: pass
+		self.trackSensorId = []
 		return valuesDict
 
 
@@ -14226,6 +14262,9 @@ class Plugin(indigo.PluginBase):
 
 						self.indiLOG.log(10,"bad devId send from pi:"+ piU+ "devId: "+devIds+" deleted?")
 						continue
+					if devIds in self.trackSensorId:
+						self.indiLOG.log(20,"trackSensor: pi:{:2s}, dev:{}  data:{} ".format(piU, dev.name, sensors[sensor][devIds]) )
+						
 
 					if not dev.enabled:
 						if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"dev not enabled send from pi:{} dev: {}".format(piU, dev.name) )

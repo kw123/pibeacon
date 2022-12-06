@@ -783,7 +783,7 @@ while True:
 				if trigDD or trigDDa or trigDT or trigQi or trigL: 
 							#data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},L:{:1}".format(trigDD, trigDDa, trigDT, trigQi, trigL)
 							data["sensors"][sensor][devId]["distance"]	= dist
-							data["sensors"][sensor][devId]["speed"]		= speed
+							data["sensors"][sensor][devId]["speed"]		= round(speed,2)
 							U.sendURL(data)
 							lastDist[devId]		= dist
 							lastTime[devId]		= tt

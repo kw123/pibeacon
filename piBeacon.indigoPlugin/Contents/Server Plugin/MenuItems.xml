@@ -871,6 +871,29 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<Title>execute</Title>
 				<CallbackMethod>buttonConfirmselectRPImessagesCALLBACK</CallbackMethod>
 			</Field>
+
+			<Field id="labelenableSensorLogging" type="label">
+				<Label>Enable specific Sensor logging.. 
+        will print extra info for selected sensor to logfile
+        as new messages arrive</Label>
+			</Field>
+			<Field id="selectSensor" type="menu" defaultValue="0">
+				<Label>select existing sensor:</Label>
+				<List class="self" filter="" method="filterActiveSensors" dynamicReload="false" />
+			</Field>
+			<Field id="idselectSensor" type="button" tooltip="">
+				<Label>click to </Label>
+				<Title>START tracking</Title>
+				<CallbackMethod>buttonConfirmSelectSensorCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="idstopselectSensor" type="button" tooltip="">
+				<Label>click to </Label>
+				<Title>STOP all tracking</Title>
+				<CallbackMethod>buttonConfirmStopSelectSensorCALLBACK</CallbackMethod>
+			</Field>
+
+
+
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="printStuff">
