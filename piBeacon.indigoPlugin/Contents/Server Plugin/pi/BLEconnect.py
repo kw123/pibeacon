@@ -232,7 +232,7 @@ def checkSwitchBotPrio(thisMAC):
 
 #################################
 def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, random=False, verbose = False, nTries = 1, waitbetween=0.5):
-	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot, switchbotActive
+	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot, switchbotActive, lastSwitchbotCMD
 	global nonSwitchBotActive
 	global expCommands
 	global counterFunctionNotImplemented
@@ -247,7 +247,7 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5,
 			if checkSwitchBotPrio(thisMAC):
 				return ""
 
-			nonSwitchBotActive = "connectGATT0"
+			if thisMAC not in lastSwitchbotCMD: nonSwitchBotActive = "connectGATT0-"+thisMAC
 			cmd = "sudo /usr/bin/gatttool -i {} -b {} {} -I".format(useHCI,  thisMAC, "-t random " if random else ""  ) 
 			if verbose: U.logger.log(20,"{}  {} ;  expecting: '>'".format(thisMAC, cmd))
 			expCommands[thisMAC] = pexpect.spawn(cmd)
@@ -276,7 +276,7 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5,
 					if checkSwitchBotPrio(thisMAC):
 						return ""
 					if verbose or counterFunctionNotImplemented > 2: U.logger.log(20,"{} send connect try#:{}  expecting: Connection successful".format(thisMAC, ii))
-					nonSwitchBotActive = "connectGATT1"
+					if thisMAC not in lastSwitchbotCMD: nonSwitchBotActive = "connectGATT1-"+thisMAC
 					expCommands[thisMAC].sendline("connect")
 					ret = expCommands[thisMAC].expect(["Connection successful","Error","error","Failed","failed", pexpect.TIMEOUT], timeout=timeoutConnect)
 					BF = toStringAndstripRNetc(expCommands[thisMAC].before)
@@ -589,7 +589,7 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 	global switchBotPresent, switchbotActive, nonSwitchBotActive
 
 	try:
-		nonSwitchBotActive = "tryToConnectCommandLine"
+		nonSwitchBotActive = "tryToConnectCommandLine-"+thisMAC
 		retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
 		if checkSwitchBotPrio(thisMAC):  return retdata
 		if time.time() - lastConnect < 3: 
@@ -638,7 +638,7 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
-	nonSwitchBotActive = "BLEXiaomiMiTempHumSquare"
+	nonSwitchBotActive = "BLEXiaomiMiTempHumSquare-"+thisMAC
 	data = copy.deepcopy(data0)
 	data["mac"] = thisMAC
 	if thisMAC not in expCommands:
@@ -744,7 +744,7 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
-	nonSwitchBotActive = "BLEXiaomiMiVegTrug0"
+	nonSwitchBotActive = "BLEXiaomiMiVegTrug0-"+thisMAC
 	data = copy.deepcopy(data0)
 	if thisMAC not in expCommands:
 		expCommands[thisMAC] = ""
@@ -785,7 +785,7 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 		if checkSwitchBotPrio(thisMAC): 
 			disconnectGattcmd(thisMAC, 2)
 			return None
-		nonSwitchBotActive = "BLEXiaomiMiVegTrug1"
+		nonSwitchBotActive = "BLEXiaomiMiVegTrug1-"+thisMAC
 		if expCommands[thisMAC] == "":
 			macList[thisMAC]["triesWOdata"] +=1
 			data["triesWOdata"] = macList[thisMAC]["triesWOdata"]
@@ -824,7 +824,7 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 
 			break
 
-		nonSwitchBotActive = "BLEXiaomiMiVegTrug2"
+		nonSwitchBotActive = "BLEXiaomiMiVegTrug2-"+thisMAC
 		disconnectGattcmd(thisMAC, 2)
 		nonSwitchBotActive = ""
 
@@ -885,7 +885,7 @@ def BLEinkBirdPool01B(thisMAC, data0):
 
 	data = copy.deepcopy(data0)
 	verbose = False
-	nonSwitchBotActive = "BLEinkBirdPool01B"
+	nonSwitchBotActive = "BLEinkBirdPool01B-"+thisMAC
 	try:
 		if (time.time() - macList[thisMAC]["nextRead"] < 0 or time.time() - macList[thisMAC]["lastTesttt"] < macList[thisMAC]["readSensorEvery"]): return data
 
