@@ -1,4 +1,10 @@
-Added features / changes in v2022.160.15@ 2022-12-14
+Added features / changes in v2022.160.16@ 2022-12-14
+===================================================
+   
+1. improved switchbot response time  by ~ 0.5 secs
+
+
+Added features / changes in v2022.160.15@ 2022-12-08
 ===================================================
    
 1. fixed issues with py3 ie for BLE connect devices like xiaomi soil meter, Temp&Humidity sensors...  
