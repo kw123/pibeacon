@@ -1,3 +1,16 @@
+Added features / changes in v2022.160.19@ 2023-01-14
+===================================================
+   
+1. added option for each pi to ignore known_hosts for ssh and sftp to rpi
+   this is to avoid needing to modify knownhostsfile incase of changes in ip number etc.
+
+2. fixed pmairquality py2 -> py3 bug ( concatenate strings / bytes)
+   sensor now only works with py3 !!
+
+3. bug for sensor INPUTpulse, device statename was wrong (typo), fixed (bug was added in py2->py3 conversion (u"xxx" changed to  "uxxx" instead of "xxx"))
+
+
+
 Added features / changes in v2022.160.16@ 2022-12-14
 ===================================================
    

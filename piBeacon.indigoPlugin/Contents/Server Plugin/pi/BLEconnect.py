@@ -231,7 +231,7 @@ def checkSwitchBotPrio(thisMAC):
 	return False
 
 #################################
-def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, random=False, verbose = False, nTries = 1, waitbetween=0.5):
+def launchGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, random=False, verbose=False, nTries=1, waitbetween=0.5):
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot, switchbotActive, lastSwitchbotCMD
 	global nonSwitchBotActive
 	global expCommands
@@ -267,43 +267,12 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5,
 				expCommands[thisMAC] = ""
 				continue
 
+			# send connect command 
 			time.sleep(0.1)
-			for ii in range(retryConnect):
-				if expCommands[thisMAC] == "":
-						U.logger.log(20, u"{} connect error: expCommands is empty".format(thisMAC))
-						break
-				try:
-					if checkSwitchBotPrio(thisMAC):
-						return ""
-					if verbose or counterFunctionNotImplemented > 2: U.logger.log(20,"{} send connect try#:{}  expecting: Connection successful".format(thisMAC, ii))
-					if thisMAC not in lastSwitchbotCMD: nonSwitchBotActive = "connectGATT1-"+thisMAC
-					expCommands[thisMAC].sendline("connect")
-					ret = expCommands[thisMAC].expect(["Connection successful","Error","error","Failed","failed", pexpect.TIMEOUT], timeout=timeoutConnect)
-					BF = toStringAndstripRNetc(expCommands[thisMAC].before)
-					AF = toStringAndstripRNetc(expCommands[thisMAC].after) 
-					if ret == 0:
-						if verbose or counterFunctionNotImplemented >3: U.logger.log(20,"{} connect SUCCESS !!  errorCount:{}".format(thisMAC, counterFunctionNotImplemented))
-						#ret = expCommands[thisMAC].expect(".*", timeout=0.5)
-						#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands[thisMAC].before,expCommands[thisMAC].after))
-						counterFunctionNotImplemented = 0
-						return "ok"
-					else:
-						if str(expCommands[thisMAC].before).find("Function not implemented") > -1:
-							counterFunctionNotImplemented +=1
-						if verbose or counterFunctionNotImplemented > 5: U.logger.log(20, "{} connect ERROR: waiting {:.1f} sec; errorCount:{} retCode:{} .. \nBF:{}--\nAF:{}--".format(thisMAC, waitbetween, counterFunctionNotImplemented, ret, BF, AF))
-						time.sleep(waitbetween)
-				except Exception as e:
-					#U.logger.log(20,"{} error:{}".format(thisMAC, str(e) ) )
-					if str(e).find("Bad file descriptor") > -1: 
-						U.logger.log(20,"{} bad file descriptor, retry connect".format(thisMAC) )
-						time.sleep(1)
+			ret = connectGATT(thisMAC, retryConnect, timeoutConnect=timeoutConnect,  waitbetween=waitbetween, verbose=verbose)
+			if ret == "":   return ""
+			if ret == "ok": return "ok"
 
-					else:
-						U.logger.log(20,"", exc_info=True)
-						U.logger.log(20,"{} expCommands after error:\n{}".format(thisMAC,  toStringAndstripRNetc(expCommands[thisMAC]) ) )
-					break
-
-			#U.logger.log(20, u"connect error giving up")
 
 		nonSwitchBotActive = ""
 		return ""
@@ -312,6 +281,55 @@ def connectGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5,
 	nonSwitchBotActive = ""
 	return ""
 
+
+def connectGATT(thisMAC, retryConnect, timeoutConnect=0.5, waitbetween=0.5, verbose=False):
+	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot, switchbotActive, lastSwitchbotCMD
+	global nonSwitchBotActive
+	global expCommands
+	global counterFunctionNotImplemented
+
+	BF = ""
+	AF = ""
+	try:
+		for ii in range(retryConnect):
+			if expCommands[thisMAC] == "":
+					U.logger.log(20, u"{} connect error: expCommands is empty".format(thisMAC))
+					break
+			try:
+				if checkSwitchBotPrio(thisMAC):
+					return ""
+				if verbose or counterFunctionNotImplemented > 2: U.logger.log(20,"{} send connect try#:{}  expecting: Connection successful".format(thisMAC, ii))
+				if thisMAC not in lastSwitchbotCMD: nonSwitchBotActive = "connectGATT1-"+thisMAC
+				expCommands[thisMAC].sendline("connect")
+				ret = expCommands[thisMAC].expect(["Connection successful","Error","error","Failed","failed", pexpect.TIMEOUT], timeout=timeoutConnect)
+				BF = toStringAndstripRNetc(expCommands[thisMAC].before)
+				AF = toStringAndstripRNetc(expCommands[thisMAC].after) 
+				if ret == 0:
+					if verbose or counterFunctionNotImplemented >3: U.logger.log(20,"{} ... SUCCESS  errorCount:{}".format(thisMAC, counterFunctionNotImplemented))
+					#ret = expCommands[thisMAC].expect(".*", timeout=0.5)
+					#U.logger.log(20,"... .*: {}-==-:{}".format(expCommands[thisMAC].before,expCommands[thisMAC].after))
+					counterFunctionNotImplemented = 0
+					return "ok"
+				else:
+					if str(expCommands[thisMAC].before).find("Function not implemented") > -1:
+						counterFunctionNotImplemented +=1
+					if verbose or counterFunctionNotImplemented > 5: U.logger.log(20, "{} connect ERROR: waiting {:.1f} sec; errorCount:{} retCode:{} .. \nBF:{}--\nAF:{}--".format(thisMAC, waitbetween, counterFunctionNotImplemented, ret, BF, AF))
+					time.sleep(waitbetween)
+			except Exception as e:
+				#U.logger.log(20,"{} error:{}".format(thisMAC, str(e) ) )
+				if str(e).find("Bad file descriptor") > -1: 
+					U.logger.log(20,"{} bad file descriptor, retry connect".format(thisMAC) )
+					time.sleep(1)
+
+				else:
+					U.logger.log(20,"", exc_info=True)
+					U.logger.log(20,"{} expCommands after error:\n{}".format(thisMAC,  toStringAndstripRNetc(expCommands[thisMAC]) ) )
+				break
+
+
+	except  Exception as e:
+		U.logger.log(30,"", exc_info=True)
+	return ""
 
 #################################
 def disconnectGattcmd(thisMAC, timeout, verbose=False):	
@@ -350,19 +368,20 @@ def disconnectGattcmd(thisMAC, timeout, verbose=False):
 
 
 #################################
-def writeGattcmd(thisMAC, cc,  expectedTag, timeout, verbose=False,retryCMD=3):	
+def writeGattcmd(thisMAC, cc,  expectedTag, timeout, verbose=False, retryCMD=3):	
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	global expCommands
 	global counterFunctionNotImplemented
+	retryConnect = 5
 	BF = ""
 	AF = ""
 	try:
 		retryCMD = int(retryCMD)
 		for ii in range(retryCMD):
 			if checkSwitchBotPrio(thisMAC):  return False
-			if thisMAC in switchbotStop and (switchbotStop[thisMAC][0] >0. and time.time() > switchbotStop[thisMAC][0]): return False
+			if checkIfSwitchbotStopAND(thisMAC): return False
 
-			if verbose: U.logger.log(20,"{}  sending cmd:{}, expecting:'{}'".format(thisMAC, cc, expectedTag))
+			if verbose: U.logger.log(20,"{} sending cmd:{}, expecting:'{}'".format(thisMAC, cc, expectedTag))
 			expCommands[thisMAC].sendline( cc )
 			ret = expCommands[thisMAC].expect([expectedTag,"Error","failed","Failed",pexpect.TIMEOUT], timeout=5)
 			if ret == 0:
@@ -375,21 +394,20 @@ def writeGattcmd(thisMAC, cc,  expectedTag, timeout, verbose=False,retryCMD=3):
 				if  str(expCommands[thisMAC].before).find("Function not implemented") > -1:
 					counterFunctionNotImplemented +=1
 				if counterFunctionNotImplemented > 5: U.logger.log(20, "{} ... ERROR, errorCount:{}, try reconnect\nBF:{}--\nAF:{}".format(thisMAC, counterFunctionNotImplemented, BF, AF))
+
 				if ii < (retryCMD-1):
 					try:
-						if BF.find("Disconnected") >-1:
+						if BF.find("Disconnected") >-1 or BF.find("WARNING") >-1 or BF.find("Invalid") >-1 :
 							U.logger.log(20,"{} sending connect after connection lost ".format(thisMAC))
-							expCommands[thisMAC].sendline("connect")
-							ret = expCommands[thisMAC].expect(["Connection successful","Error","error","Failed","failed",pexpect.TIMEOUT], timeout=5)
-							BF = toStringAndstripRNetc(expCommands[thisMAC].before)
-							AF = toStringAndstripRNetc(expCommands[thisMAC].after) 
-							if ret != 0: 
-								U.logger.log(20,"{} failed, cmd:{}, expectedTag:{}, \nBF:{}--\nAF:{}--".format(thisMAC, cc, expectedTag, BF, AF))
+							ret = connectGATT(thisMAC, retryConnect, verbose=verbose)
+							if ret != "ok": 
 								return False
 							U.logger.log(20,"{}  re-connected !!, now retry cmd".format(thisMAC))
+						else:
+							U.logger.log(20,"{} failed, cmd:{}, expectedTag:{}, \nBF:{}--\nAF:{}--".format(thisMAC, cc, expectedTag, BF, AF))
+
 					except  Exception as e:
 						U.logger.log(30,"", exc_info=True)
-						U.logger.log(30,"{} cmd:{}, expectedTag:{}, ii:{}, retryCMD:{}, \nBF:{}--".format(thisMAC, cc, expectedTag, ii, retryCMD, BF, AF))
 
 				continue
 			ret = expCommands[thisMAC].expect("\n")
@@ -409,7 +427,7 @@ def writeAndListenGattcmd(cc, expectedTag, nBytes, timeout, verbose=False):
 	AF = ""
 	try:
 		for kk in range(2):
-			if thisMAC in switchbotStop and (switchbotStop[thisMAC][0] >0. and time.time() > switchbotStop[thisMAC][0]): return []
+			if checkIfSwitchbotStopAND(thisMAC): return []
 			if checkSwitchBotPrio(thisMAC):  return []
 			if verbose:  U.logger.log(20,"{} sendline  cmd:{}, expecting:'{}'".format(thisMAC, cc, expectedTag))
 			expCommands[thisMAC].sendline( cc )
@@ -445,7 +463,7 @@ def readGattcmd(thisMAC, cc, expectedTag, nBytes, timeout, verbose=False):
 	AF = ""
 	try:
 		for kk in range(2):
-			if thisMAC in switchbotStop and (switchbotStop[thisMAC][0] >0. and time.time() > switchbotStop[thisMAC][0]): return []
+			if checkIfSwitchbotStopAND(thisMAC): return []
 			if checkSwitchBotPrio(thisMAC):  return []
 			if verbose: U.logger.log(20,"{} sendline  cmd:{}, expecting:'{}'".format(thisMAC, cc, expectedTag))
 			expCommands[thisMAC].sendline( cc )
@@ -487,7 +505,7 @@ def batchGattcmd(useHCI, thisMAC, cc, expectedTag, nBytes=0, retryCMD=3, verbose
 		cmd = "/usr/bin/timeout -s SIGKILL {} /usr/bin/gatttool -i {} -b {} {}".format(timeout, useHCI,  thisMAC, cc) 
 		if verbose: U.logger.log(20,"{} cmd:{} ;  expecting: '{}'; nbytes:{}, retryCMD:{}, switchBotPresent:{}; switchbotActive:{}; timeout:{}".format(thisMAC, cmd, expectedTag, nBytes, retryCMD, switchBotPresent, switchbotActive, timeout))
 		for kk in range(retryCMD):
-			if thisMAC in switchbotStop and (switchbotStop[thisMAC][0] >0. and time.time() > switchbotStop[thisMAC][0]): return 
+			if checkIfSwitchbotStopAND(thisMAC): return 
 			#if verbose: U.logger.log(20,"try#:{}, switchBotPresent:{}; switchbotActive:{} ".format(kk, switchBotPresent, switchbotActive))
 			ret = readPopen(cmd)
 			if ret[0].find(expectedTag) > -1:
@@ -668,7 +686,7 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 
 			startCMD = time.time()
 
-			if connectGATT(useHCI, thisMAC, 4, 25, retryConnect=2, verbose=verbose) != "ok": continue
+			if launchGATT(useHCI, thisMAC, 4, 25, retryConnect=2, verbose=verbose) != "ok": continue
 			if expCommands[thisMAC] == "":
 				macList[thisMAC]["nextRead"] = time.time() + minWaitAfterBadRead
 				macList[thisMAC]["triesWOdata"] +=1
@@ -769,16 +787,16 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 
 		get second set: char-read-hnd 35
 		# 16b in l endian
-		#   0-1: temp *10 [�C]
+		#   0-1: temp *10 [C]
 		#     2: ??
 		#   3-6: bright [lux]
 		#     7: moist [%]
-		#   8-9: conduct [�S/cm]
+		#   8-9: conduct [S/cm]
 		# 10-15: ?? 
 		# eg: 'f4 00 69 00 00 00 00 1d 11 01 02 3c 00 fb 34 9b'
 		"""
 			
-		if connectGATT(useHCI, thisMAC, 4,5, verbose=verbose, waitbetween=0.5) != "ok": 
+		if launchGATT(useHCI, thisMAC, 4,5, verbose=verbose, waitbetween=0.5) != "ok": 
 			return None
 
 		time.sleep(.2)
@@ -992,6 +1010,7 @@ def checkSwitchbotForCmd():
 				stopActionsForSeconds = jData.get("stopActionsForSeconds",0)
 				U.logger.log(20, u"{} received stop cmd switchbot action for now and {} seconds".format(thisMAC, stopActionsForSeconds))
 
+				#						 now			stop for 
 				switchbotStop[thisMAC] = [time.time(), stopActionsForSeconds]
 
 				tempList = []
@@ -1040,13 +1059,14 @@ def doSwitchBotThread():
 			if switchbotActive in ["","delayed"] and not switchbotQueue.empty(): 
 				if time.time() - lastCommand < 3.5: continue  # give the last command time to finish
 				doSwitchBot()
-				currentActiveSwitchbotMAC = "";  switchbotActive = ""
+				currentActiveSwitchbotMAC = ""; switchbotActive = ""
 				lastCommand = time.time()
-				for thisMAC in  switchbotStop:
-					if switchbotStop[thisMAC] != [0.,0.]:
-						if switchbotStop[thisMAC][1] == 0:
+				for thisMAC in switchbotStop:# reset?
+					if switchbotStop[thisMAC] != [0.,0.]: # reset?
+						if switchbotStop[thisMAC][1] == 0: # yes
 							switchbotStop[thisMAC] = [0.,0.]
-						elif switchbotStop[thisMAC] != [0.,0.] and ( time.time() - switchbotStop[thisMAC][0] > switchbotStop[thisMAC][1]):
+
+						elif switchbotStop[thisMAC] != [0.,0.] and ( time.time() - switchbotStop[thisMAC][0] > switchbotStop[thisMAC][1]): # yes
 							switchbotStop[thisMAC] = [0.,0.]
 				# just in case other process is changing expCommands at the same time, this will take precedence, and will not change dict structure
 				cc =  list(expCommands.keys())
@@ -1076,7 +1096,7 @@ def setSwitchbotParameters(thisMAC, retryCount, jData, verbose):
 		cmdmodeOfDevice	= switchBotConfig[thisMAC][switchBotConfig[thisMAC]["modeOfDevice"]]
 		if verbose: U.logger.log(20, "{} trying to connect".format(thisMAC))
 		if expCommands[thisMAC] == "":
-			if connectGATT(useHCI2, thisMAC, 4, 15, retryConnect=1, random=True, verbose=verbose, nTries=3) != "ok": expCommands[thisMAC] = ""
+			if launchGATT(useHCI2, thisMAC, 4, 15, retryConnect=1, random=True, verbose=verbose, nTries=3) != "ok": expCommands[thisMAC] = ""
 		if expCommands[thisMAC] == "":
 			switchbotQueue.put([retryCount, jData])
 			return 
@@ -1109,7 +1129,16 @@ def setSwitchbotParameters(thisMAC, retryCount, jData, verbose):
 def checkIfSwitchbotStop(thisMAC):
 	global switchbotStop
 	if thisMAC not in switchbotStop: return False
-	if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): return True
+	if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
+		U.logger.log(20, "{} switchbot stop True".format(thisMAC))
+		return True
+	return False
+
+#################################
+def checkIfSwitchbotStopAND(thisMAC):
+	global switchbotStop
+	if thisMAC not in switchbotStop: return False
+	if thisMAC in switchbotStop and (switchbotStop[thisMAC][0] >0. and time.time() > switchbotStop[thisMAC][0]): return True
 	return False
 
 #################################
@@ -1166,7 +1195,7 @@ def doSwitchBot():
 
 	expCommands[thisMAC] = ""
 
-	if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])):
+	if checkIfSwitchbotStop(thisMAC):
 		switchbotActive	= ""
 		return 
 
@@ -1272,7 +1301,7 @@ def doSwitchBot():
 								result = batchGattcmd(useHCI2, thisMAC, blecmd, "successfully", nBytes=0, retryCMD=4, verbose=verbose, timeout=4, thisIsASwitchbotCommand = True)
 								if verbose2: U.logger.log(20, "{} result>{}<".format(thisMAC, result))
 							if result != "successfully":
-								if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
+								if checkIfSwitchbotStop(thisMAC): 
 									if verbose: U.logger.log(20, u"pulse cmd stopped du to request")
 									return
 								switchbotQueue.put([retryCount, jData])
@@ -1285,7 +1314,7 @@ def doSwitchBot():
 			# interactive ####################################################  start
 			else:
 						if verbose2: U.logger.log(20, "{} trying to connect".format(thisMAC))
-						if connectGATT(useHCI2, thisMAC, 4,15, retryConnect=10, random=True, verbose=verbose, nTries = 2) != "ok": 
+						if launchGATT(useHCI2, thisMAC, 4,15, retryConnect=10, random=True, verbose=verbose, nTries = 2) != "ok": 
 							U.logger.log(20, "{} failed to connect ".format(thisMAC))
 							switchbotQueue.put([retryCount, jData])
 							return 
@@ -1316,10 +1345,10 @@ def doSwitchBot():
 									checkParams = True
 									if verbose2: U.logger.log(20, "{} on/off: return ok retData:{}; checkParams:{} ".format(thisMAC, retData, checkParams))
 								else:
-									if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
+									if checkIfSwitchbotStop(thisMAC): 
 										if verbose: U.logger.log(20, u"pulse cmd stopped du to request")
-						
 										return
+
 									switchbotQueue.put([retryCount, newData])
 									if verbose2: U.logger.log(20, "{} on/off: ret data not ok, putting command back into queue: ".format(thisMAC))
 							if verbose: U.logger.log(20, u"return")
@@ -1332,38 +1361,36 @@ def doSwitchBot():
 							##### simple clock  ##########
 							if pulseLengthOn == 0: # switchbot should be in press mode 
 								for kk in range(repeat):
-									if kk >0: time.sleep(repeatDelay)
-									pulseOK = False
+									if kk > 0: time.sleep(repeatDelay)
 									for ii in range(pulses):
-										for jj in range(2):
-											if ii > 0: 
-												if checkIfSwitchbotStop(thisMAC): 
-									
-													return 
+										if checkIfSwitchbotStop(thisMAC): return 
+										pulseOK = False
+										if ii >0: # wait after 1.,2... pulse
+											effSleep = max(2.7, pulseDelay+pulseLengthOff)
+											if verbose: U.logger.log(20, u"{} sleep pulse off:{}".format(thisMAC, effSleep))
+											time.sleep(effSleep)# need to wait on and off time before sending new pulse 
+											if checkIfSwitchbotStop(thisMAC): return 
 
-												effSleep = max(2.7, pulseDelay+pulseLengthOff+2.7)
-												if verbose: U.logger.log(20, u"{} sleep pulse off:{}".format(thisMAC, effSleep))
-												time.sleep(effSleep)# need to wait on and off time before sending new pulse 
-
+										if verbose: U.logger.log(20, u"{} pulse on:{}, #:{}, cmd:char-write-req {} {}".format(thisMAC, pulseLengthOn, kk+1, writeHandle, onCmd ))
+										if writeGattcmd(thisMAC, "char-write-req {} {}".format(writeHandle, onCmd), "Characteristic value was written successfully", 5, verbose=verbose):
+											if verbose: U.logger.log(20, u"{} pulse cmd ok, try#:{}".format(thisMAC, kk+1))
+											pulseOK = True
+											continue
+										else:
 											if checkIfSwitchbotStop(thisMAC): 
-								
-												return 
-											if verbose: U.logger.log(20, u"{} pulse on:{}, #:{}, cmd:char-write-req {} {}".format(thisMAC, pulseLengthOn, ii+1, writeHandle, onCmd ))
-											if writeGattcmd(thisMAC, "char-write-req {} {}".format(writeHandle, onCmd), "Characteristic value was written successfully", 5, verbose=verbose):
-												if verbose: U.logger.log(20, u"{} pulse cmd ok".format(thisMAC))
-												pulseOK = True
-												break
-											else:
-												if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
-													if verbose: U.logger.log(20, u"{} pulse cmd stopped du to request".format(thisMAC))
-									
-													return
-												if verbose: U.logger.log(20, u"{} pulse cmd not ok".format(thisMAC))
+												if verbose: U.logger.log(20, u"{} pulse cmd stopped du to request, try#:{}".format(thisMAC, kk+1))
+												return
+											if verbose: U.logger.log(20, u"{} pulse cmd not ok, try#:{}".format(thisMAC, kk+1))
+											pulseOK = False
+											break
+
+									if pulseOK:
+										break 
 
 								if not pulseOK:
 									switchbotQueue.put([retryCount, jData])
-					
 									return 
+
 								if verbose: U.logger.log(20, u"{} return".format(thisMAC))
 								lastSwitchbotCMD[thisMAC] = time.time()
 				
@@ -1378,7 +1405,7 @@ def doSwitchBot():
 									# set pulse length
 								if verbose2: U.logger.log(20, "{} set pulse length to {}".format(thisMAC, pulseLengthOn))
 								if not writeGattcmd(thisMAC, "char-write-req {} {}{:02x}".format(writeHandle, cmdHoldtime, int(pulseLengthOn)), "Characteristic value was written successfully", 5, verbose=verbose):
-									if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
+									if checkIfSwitchbotStop(thisMAC): 
 										if verbose: U.logger.log(20, u"{} pulse cmd stopped du to request".format(thisMAC))
 										return
 									switchbotQueue.put([retryCount, jData])
@@ -1398,18 +1425,18 @@ def doSwitchBot():
 													#time.sleep(1)
 											for ii in range(pulses):
 												if ii > 0: # sleep after first pulse
-													if checkIfSwitchbotStop(thisMAC): 
-														return 
+													if checkIfSwitchbotStop(thisMAC): return 
+
 													effSleep = max(2.7, pulseDelay+pulseLengthOff+pulseLengthOn+2.7)
 													if verbose2: U.logger.log(20, u"{} sleep pulse off:{}".format(thisMAC, effSleep))
 													time.sleep(effSleep)# need to wait on and off time before sending new pulse 
 
 												if verbose2: U.logger.log(20, "{} pulse on:{}, #:{}".format(thisMAC, pulseLengthOn, ii+1))
-												if checkIfSwitchbotStop(thisMAC): 
-													return 
+												if checkIfSwitchbotStop(thisMAC): return 
+
 												if not writeGattcmd(thisMAC, "char-write-req {} {}".format(writeHandle, onCmd), "Characteristic value was written successfully", 5, verbose=verbose):
-													if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
-														if verbose: U.logger.log(20, "{} pulse cmd stopped du to request".format(thisMAC))
+													if checkIfSwitchbotStop(thisMAC): 
+														if verbose: U.logger.log(20, "{} pulse cmd stopped due to request".format(thisMAC))
 														return
 													switchbotQueue.put([retryCount, jData])
 													if verbose2: U.logger.log(20, u"{} pulse cmd not ok".format(thisMAC))
@@ -1540,7 +1567,7 @@ def doSwitchBot():
 
 
 				if verbose2: U.logger.log(20, "{} trying to connect".format(thisMAC))
-				if connectGATT(useHCI2, thisMAC, 4,15, retryConnect=15, random=True, verbose=verbose, nTries = 2) !="ok":
+				if launchGATT(useHCI2, thisMAC, 4,15, retryConnect=15, random=True, verbose=verbose, nTries = 2) !="ok":
 					U.logger.log(20, "{} failed to connect ".format(thisMAC))
 					switchbotQueue.put([retryCount, jData])
 					return 

@@ -232,11 +232,14 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 	U.writeFile("temp/beaconloop.hci", json.dumps({}))
 	try:
 		HCIs = U.whichHCI()
+		U.logger.log(20,"thisHCI:{}; HCIs available:{}".format(thisHCI, HCIs)  )
 		for hci in HCIs["hci"]:
-			if thisHCI != "" and hci !=thisHCI: continue
+			if hci == "": continue
+			if thisHCI != "" and hci!=thisHCI: continue
+			U.logger.log(20,"checking hci:{}".format(hci)  )
 
 			if hardreset:
-				cmd = "sudo hciconfig {} down".format(thisHCI)
+				cmd = "sudo hciconfig {} down".format(hci)
 				ret = readPopen(cmd) # enable bluetooth
 				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
 				#cmd = "sudo rmmod btusb"
@@ -248,17 +251,17 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				cmd = "sudo invoke-rc.d bluetooth restart"
 				ret = readPopen(cmd) # enable bluetooth
 				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
-				cmd = "sudo hciconfig {} up".format(thisHCI)
+				cmd = "sudo hciconfig {} up".format(hci)
 				ret = readPopen(cmd) # enable bluetooth
 				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
 
 			elif reUse:
-				cmd = "sudo hciconfig "+thisHCI+" reset"
+				cmd = "sudo hciconfig "+hci+" reset"
 				ret = readPopen(cmd) # 
 				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
 
 			else:
-				cmd = "sudo hciconfig "+thisHCI+" reset"
+				cmd = "sudo hciconfig "+hci+" reset"
 				ret =readPopen(cmd)
 				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
 				if ret[1] != "":
@@ -270,7 +273,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				ret = readPopen(cmd) # test bluetooth
 				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime) )
 
-				cmd = "sudo hciconfig "+thisHCI+" up"
+				cmd = "sudo hciconfig "+hci+" up"
 				ret = readPopen(cmd) # enable bluetooth
 				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, time.time()- startTime)  )
 				if ret[1] != "":
@@ -1078,7 +1081,7 @@ def composeMSG(timeAtLoopStart):
 						"count": beacon_ExistingHistory[beacon]["count"]-1,
 						"typeOfBeacon": beacon_ExistingHistory[beacon]["typeOfBeacon"]
 						}
-					for xx in ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection","analyzed"]:
+					for xx in extraStates:
 						if xx in beacon_ExistingHistory[beacon] and beacon_ExistingHistory[beacon][xx] !="": newData[xx]	= beacon_ExistingHistory[beacon][xx]
 	
 					downCount = 0
@@ -1117,6 +1120,7 @@ def composeMSGForThisMacOnly(mac):
 	global beaconsThisReadCycle, beacon_ExistingHistory, mapReasonToText
 	global myBLEmac, secsCollected
 	global trackMac, logCountTrackMac
+	global extraStates
 	try:
 		try: 	avePower = int(beacon_ExistingHistory[mac]["txPower"]) #  /max(1,beacon_ExistingHistory[mac]["count"]-1)
 		except: avePower = -60
@@ -1134,7 +1138,7 @@ def composeMSGForThisMacOnly(mac):
 			"count": max(1,beacon_ExistingHistory[mac]["count"]-1),
 			"typeOfBeacon": beacon_ExistingHistory[mac]["typeOfBeacon"]
 			}
-		for xx in ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection","analyzed"]:
+		for xx in extraStates: 
 			if beacon_ExistingHistory[mac].get(xx,"") != "": data[xx]	= beacon_ExistingHistory[mac][xx]
 
 		beacon_ExistingHistory[mac]["lastMessageSend"] = time.time()
@@ -1776,16 +1780,10 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 		1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 63 D0 CE 00 11 04 curtain 
 	NO !!  11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   08-							  curtain ??
 																   09 16 00 0D 63 90 E4 00 11 00  
-																			   curtain = 62 = c
-																				  calibrated  90 = 
-																					 in motion
-																						light level / device chain
-
-		19 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   06 16 00 0D 48 10 5D   switchbot 
-																			    H
-																				   switch mode &10000000 / is on:  not(& 0b01000000) if _switch_mode else False,
-																					bb & 01111111
-
+																			   ^^ curtain = 63 = c
+																				  ^^ calibrated  90 = 
+																					 ^^ in motion
+																						^^ light level / device chain
 
 		   11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   06-
         1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD   DA
@@ -1801,6 +1799,16 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 																		 00 0D 48 90 00 low battery
 																		 00 0D 48 D0 64
 																		 00 0D 48 D0 DF 95%
+
+
+	switchbot 
+	pos:01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67   89 41 23 45 67 89 51 23 45 67   89 
+		19 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   06 16 00 0D 48 10 5D   switchbot 
+																			    H
+																				   switch mode &10000000 / is on:  not(& 0b01000000) if _switch_mode else False,
+																					bb & 01111111
+
+
 		"""
 		doPrint 		= False
 		#if mac == "A4:C1:38:98:15:CB": doPrint 		= True
@@ -1844,7 +1852,6 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 						'mac': 			mac,
 						"rssi":			int(rx)
 				}
-
 
 		if doPrint: U.logger.log(20, u"mac:{}, temp:{}, hum:{}, trig{}".format(mac, temp, hum, trig))
 
@@ -4865,7 +4872,7 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="
 		return posFound, dPos, Maj, Min, subtypeOfBeacon
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,u"Mac#:{}".format(mac))
+		U.logger.log(30,u"Mac#:{}, tag:{}".format(mac, tag, ))
 	return -1,100, Maj, Min, ""
 
 
@@ -5161,6 +5168,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 		try:  parsePackage(mac, hexstr[12:], logData=False)
 		except:
 			return rejectThisMessage
+
 		if "iBeacon" in parsedData["analyzed"]: iBeacon = parsedData["analyzed"]["iBeacon"]
 		else:									iBeacon = ""
 		if "mfg_info" in parsedData["analyzed"]:mfg_info = parsedData["analyzed"]["mfg_info"]
@@ -5245,7 +5253,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 				if posFound == -1: 									continue
 				if abs(dPos) > knownBeaconTags[testTag]["posDelta"]:continue
 				#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} 2 tagOld:{}, testing  testTag:{}, posFound:{}, check:{}".format(mac, tagOld, testTag, posFound, acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or tagOld in ["", "other"]) )
-				if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or tagOld in ["", "other"]:
+				if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or (existing and tagOld in ["", "other"]):
 					typeOfBeacon 		= testTag
 					UUID 				= testTag
 					UUID1 				= testTag
@@ -5441,7 +5449,9 @@ def execbeaconloop(test):
 	global fastBLEReaction, output, fastBLEReactionLastAction
 	global trackRawOnly 
 	global acceptNewMFGNameBeacons
+	global extraStates
 
+	extraStates = ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection","analyzed"]
 	acceptNewMFGNameBeacons = ""
 
 	trackRawOnly 			= False
@@ -5763,12 +5773,16 @@ def execbeaconloop(test):
 										trackMacStopIf(hexstr, mac)
 										dtinner[2] = max(dtinner[2], time.time() - startofInnerLoop )
 
+
+
 										msgStart, majEnd, uuidLen, UUID, Maj, Min, rssi, txPower, mfgID, pType, typeOfBeacon = getBasicData(hexstr)
 										dtinner[3] = max(dtinner[3], time.time() - startofInnerLoop )
+
 
 										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 											writeTrackMac("basic   ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}".format(UUID, Maj, Min, rssi, txPower) ,mac)
 
+										# check if this is a sensor, will send its own msg to mac, and will return battery level if present 
 										try:
 											txPower, batteryLevel, UUID, Maj, Min, isOnlySensor  = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr, UUID, Maj, Min)
 										except	Exception as e:
@@ -5777,19 +5791,23 @@ def execbeaconloop(test):
 											continue
 										dtinner[4] = max(dtinner[4], time.time() - startofInnerLoop )
 
-							
+										# cehc if only sensor, not beacon
 										if isOnlySensor:
 											lastMSGwithDataPassed = int(time.time())
 											continue
 
+										# check if known rejected mac
 										if mac in ignoreMAC: 
 											if readFrom !="":
 												U.logger.log(20, u"TestMode: ignored mac:{}".format(mac))
 											continue # set to ignore in plugin
 
+
+
 										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 											writeTrackMac("A-Sens  ", "UUID: {}, Maj: {}, Min: {}, RX :{}, TX: {}, batteryLevel:{}".format(UUID, Maj, Min, rssi, txPower, batteryLevel) ,mac)
 
+										
 										## doing this directly does not work, first have to save then test reject
 										rejectMac = checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, hexstr, batteryLevel, rssi, txPower)
 										if rejectMac == "reject": continue

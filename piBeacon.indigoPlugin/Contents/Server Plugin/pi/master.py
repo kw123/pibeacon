@@ -3,10 +3,10 @@
 # by Karl Wachs
 # feb 5 2016
 
-masterVersion			= 16.10
+masterVersion			= 16.11
 ## changelog: 
 # 2020-04-05 added check for NTP
-# 2020-xx-xx 
+# 2023-01-04 v=16.11:  improved  creation of rc.local file 
 #
 #
 #
@@ -923,10 +923,10 @@ def checkIfRebootRequest():
 			U.sendRebootHTML(reason)
 		else:
 			U.logger.log(30, " rebooting due to request:{}".format(reason))
+			U.sendRebootHTML(reason)
 			if reason.find("FORCE") >-1:
 				U.doReboot(tt=15,force=True)
 			time.sleep(50)
-			U.sendRebootHTML(reason)
 			U.doRebootThroughRUNpinReset()
 
 
@@ -1618,36 +1618,35 @@ def fixRcLocal():
 
 		out      = ""
 		writeOut = False
-		found = False
+		foundCallbeacon = False
 		foundExit = False
 		for line in rclocal:
 			if line == "": continue 
 
 			if line.find("exit") > -1:
-				if not found: 
+				if not foundCallbeacon: 
 					writeOut = True
 					continue
 
 				if foundExit:
-					writeOut = True
 					continue
 
-				out+=line+"\n"
+				out += line+"\n"
 				foundExit = True
 
-			if line.find("/home/pi/callbeacon.py") > -1:
+			elif line.find("/home/pi/callbeacon.py") > -1:
 				if line == callPibeaconLine:
-					out+=line+"\n"
-					found = True
+					out += line+"\n"
+					foundCallbeacon = True
 					continue
 				else:
-					out+=callPibeaconLine+"\n"
+					out += callPibeaconLine+"\n"
 					writeOut = True
-					found = True
+					foundCallbeacon = True
 			else:
-				out+=line+"\n"
+				out += line+"\n"
 
-		if not found:
+		if not foundCallbeacon:
 			out += callPibeaconLine+"\n"
 			writeOut = True
 
@@ -1657,20 +1656,21 @@ def fixRcLocal():
 
 
 		if writeOut:
-			U.logger.log(20, ".. found 'exit':{}, 'callbeacon':{}; writing new rc.local file:\n {}".format(foundExit, found, out))
+			U.logger.log(20, ".. found 'exit':{}, 'callbeacon':{}; writing new rc.local file:\n {}".format(foundExit, foundCallbeacon, out))
 			f=open(G.homeDir+"temp/rc.local","w")
 			f.write(out)
 			f.close()
 			subprocess.call("sudo cp "+G.homeDir+"temp/rc.local /etc/rc.local ", shell=True)
 			subprocess.call("sudo chmod a+x /etc/rc.local", shell=True)
 		else:
-			U.logger.log(20, ".. file ok, found 'exit':{}, 'callbeacon':{}".format(foundExit, found))
+			U.logger.log(20, ".. file ok, found 'exit':{}, 'callbeacon':{}".format(foundExit, foundCallbeacon))
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return
 
 
+####################      #########################
 def fixCallbeacon(sleepTime):
 	global usePython3, mustUsePy3
 	try:
@@ -1681,7 +1681,7 @@ def fixCallbeacon(sleepTime):
 		out      = ""
 		writeOut = ""
 		test     = ""
-		py3 = "yes" if usePython3 else ""
+		py3 = "usePy3" if usePython3 else ""
 		for line in callbeacon:
 			if line.find("master.sh ")>-1 and writeOut =="":
 				if sleepTime == "0":

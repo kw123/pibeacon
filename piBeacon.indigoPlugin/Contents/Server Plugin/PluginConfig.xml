@@ -557,12 +557,21 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field    id="lightningNumerOfSensors"   type="menu"  tooltip=" set variable lightningEventDate / lightningEventDevices  if maore than 1 device fires in time window">
 		<Label>How many Lightning sensor have to fire to set variable:</Label>
 		<List>
-			<Option value="1"  > 1 sensor in time window</Option>
+			<Option value="1"  > 1 sensor  in time window</Option>
 			<Option value="2"  > 2 sensors in time window</Option>
 			<Option value="3"  > 3 sensors in time window</Option>
 			<Option value="4"  > 4 sensors in time window</Option>
 		</List>
 	</Field>
+
+	<Field    id="execcommandsListAction"   type="menu" defaultValue="delete" >
+		<Label>reload last OUTPUT states at boot time on rpi:</Label>
+		<List>
+			<Option value="delete"	>ignore at boot  </Option>
+			<Option value="keep"	>keep and set values</Option>
+		</List>
+	</Field>
+
 
 
 	<Field id="simpleSeparatorplotbeacons" type="separator"/>
@@ -849,8 +858,6 @@ EXPERT parameters for rPi server configurations, will be send to all rPi server<
 	<Field id="debugpy3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>starting with rpi op-sys 11   ONLY PY3 will be used, as py2 is not fully supported anymore </Label>
 	</Field>
-
-
 
 	<Field id="simpleSeparator57" type="separator"/>
 

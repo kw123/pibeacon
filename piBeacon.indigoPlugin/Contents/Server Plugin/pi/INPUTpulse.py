@@ -226,7 +226,7 @@ def readParams():
 		oneFound = False
 		restart =False
 		delGPIO ={}
-		U.logger.log(10, "GPIOdict: {}".format(GPIOdict))
+		U.logger.log(20, "GPIOdict: {}".format(GPIOdict))
 		for gpio in GPIOdict:
 			if gpio not in INPUTcount: INPUTcount[gpio] = 0
 			GPIOdict[gpio]["count"] = INPUTcount[gpio]
@@ -309,7 +309,7 @@ def fillGPIOdict(gpioINT,risingOrFalling):
 	ggg		= GPIOdict[gpio]
 	tt		= time.time()
 	countChanged = False
-	#U.logger.log(10,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
+	#U.logger.log(20,"{} edge on gpio: {};  tt-lastSignal:{};  deadTime:{}".format(risingOrFalling, gpio, tt- ggg["lastSignal"], ggg["deadTime"]) )
 	if tt- ggg["lastSignal"] > ggg["deadTime"]:	 
 		if gpio not in INPUTcount: INPUTcount[gpio] = 0
 		INPUTcount[gpio]+=1
@@ -481,7 +481,7 @@ def execMain():
 	U.logger.log(30, "starting "+G.program+" program")
 
 	INPUTcount = U.readINPUTcount()
-	U.logger.log(10, u" INPUTcount:{}".format(INPUTcount) )
+	U.logger.log(20, u" INPUTcount:{}".format(INPUTcount) )
 
 	readParams()
 

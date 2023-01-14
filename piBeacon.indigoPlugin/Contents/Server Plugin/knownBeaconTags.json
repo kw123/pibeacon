@@ -1,1636 +1,1636 @@
 {
-  "BLERuuviTag": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "",
-    "correspondingSensorType": "BLERuuviTag",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-65",
-    "hexCode": "0201061BFF990405",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Ruuvi-beacon w temp, hum, press, accell",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "BLEgoveeTempHum": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "  G V H  .. sensor # ",
-    "correspondingSensorType": "BLEgoveeTempHum",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "09475648",
-    "hexCode2": "",
-    "pos": 4,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Govee Temp Hum .. sensors",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "BLEsensorbug": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "  S e n s o r B u g + # ",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "0953656E736F72427567-",
-    "hexCode2": "",
-    "pos": 10,
-    "posDelta": 12,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Blueradio sensor bug ",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "BlackCard": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1X020104030225FAXXFF0E05A00033E2-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "BlackCard",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "BlueCharm_BC011": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "BlueCharm BC011",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "BlueCharm_BC0631": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "BlueCharm BC0631",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Cube": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "beep": {
-        "cmdON": [
-          "char-write-cmd  0x0022 55AA01100202ED"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x0022 55AA01100200ED"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "0F020106030300F007094355424500-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Cube",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Feasy_BP103_Triangle": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "norm": 1,
-          "pos": 15
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Feasy BP103 Triangle",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Feasy_BP104_AAA": {
-    "Maj": "",
-    "Min": "",
-    "beep": "off",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "norm": 1,
-          "pos": 15
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-40",
-    "hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": "",
-    "text": "Feasy BP104 AAA",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Feasy_BP109_USB": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "nType": "float",
-          "norm": 1.009,
-          "pos": 19
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-40",
-    "hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": "",
-    "text": "Feasy BP109 USB",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "ITrack": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "randomON",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-req 0x001B 0100",
-          "char-write-req 0x0024 A1A2A3A4",
-          "char-write-req 0x001E 02",
-          "char-write-req 0x0010 02"
-        ],
-        "cmdOff": [
-          "char-write-req 0x0010 00"
-        ],
-        "random": "randomON",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-55",
-    "hexCode": "1X02010X030202180XFF4B4DXXRMAC########-",
-    "hexCode2": "070969547261636B",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "ITrack: Rinex & Njoii & Musegear",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "InkBirdTempPool01B": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "name Tag: tps= 74 70 73",
-    "correspondingSensorType": "BLEinkBirdPool01B",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "1004097470730AFF-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Ink Bird Temp Pool 01B",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Innway": {
-    "Maj": "",
-    "Min": "",
-    "batteryLevel": "off",
-    "commands": {
-      "beep": {
-        "cmdON": [
-          "char-write-cmd 0x0012 EE030000"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x0012 EE030000"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": " mfg - 49 6E 6E 77 61 79 20   54 61 67    = Innway Tag // 49 6E 6E 77 61 79 20   43 61 72 64 = Innway Card //49 6E 6E 77 61 79 20   43 68 69 70 = Innway Chip",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1X020106030301E00X09496E6E776179-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Innway",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Jaalee": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "norm": 2.55,
-          "pos": -3
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Jaalee",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Minew_Acc": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Minew (eg E8, S1) xyz-Accel, disab all but accel. in beaconSET+ app",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Minew_F4S": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "not really a minew beacon, can be beeped need to find comamnd for battery and beep",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1B0201060303E1FF0E16E1FFA1XXXXRMAC########XXXXXXXX463453-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Minew FS4 with beep and battery",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Minew_Light": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Minew Light info",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Minew_LightOnOff": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": " simple light on/off sensor, no config possible",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "150201060303E1FF0D16E1FFA102XXXXRMAC########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Minew Light on-off",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Minew_TH": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Minew (eg S1) Humidity or Ext Temp Probe",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Minibeacon": {
-    "Maj": "UUID:26-29:int",
-    "Min": "UUID:29-31:int",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "norm": 1,
-          "pos": 8
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 10,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Minibeacon",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Nonda_Aiko": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 36,
-        "offset": -64,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-cmd  0x0011  02"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x0011 00"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-55",
-    "hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A-",
-    "hexCode2": "",
-    "pos": 4,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nonda Aiko ",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Nonda_iHere": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-cmd 0x0011  02"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x0011 00"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "check detect new beacons for 'UUID-FF : xx0000??'",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-50",
-    "hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A-",
-    "hexCode2": "",
-    "pos": 4,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nonda iHere",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Nuki_": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": " Nuki_ ... 15A434A5",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "0F0E094E756B695F",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nuki_xxx door locks",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "NutFinder3x": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-              "batteryLevel": {
-                        "bits": 127,
-                        "norm": 100,
-                        "offset": 0,
-                        "random": "public",
-                        "shift": 0,
-                        "type": "BLEconnect",
-                        "uuid": "2A19"
-              },
-              "beep": {
-                        "cmdON": [
-                          "char-write-req 0x0025 04"
-                        ],
-                        "cmdOff": [
-                          "char-write-req 0x0025 03"
-                        ],
-                        "random": "public",
-                        "type": "BLEconnect"
-              }
-    },
-    "comment": "check detect new beacons for FFD200003X",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1C0201060303031805FFD200003X09160A18MAC#########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nut3, nutale FFD200003X",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "NutFinder46": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-                "bits": 127,
-                "norm": 100,
-                "offset": 0,
-                "random": "randomON",
-                "shift": 0,
-                "type": "BLEconnect",
-                "uuid": "2A19"
-      },
-      "beep": {
-                "cmdON": [
-                  "char-write-req 0x0010 04"
-                ],
-                "cmdOff": [
-                  "char-write-req 0x0010 03"
-                ],
-                "random": "randomON",
-                "type": "BLEconnect"
-      }
-    },
-    "comment": "check detect new beacons for 'UUID-FF : xx0000??'",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1C0201060303031805FF5900004609160A18MAC#########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nut4, pro w FF59000046 ",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "NutFinder4x": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": { "bits": 127, "norm": 100, "offset": 0, "random": "randomON", "shift": 0, "type": "BLEconnect", "uuid": "2A19"      },
-      "beep": { "cmdON": [   "char-write-req 0x001B 04" ], "cmdOff": [   "char-write-req 0x001B 03" ], "random": "randomON", "type": "BLEconnect"      }
-    },
-    "comment": "check detect new beacons for 'UUID-FF : FD259000045'",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1C0201060303031805FFD25900004509160A18MAC#########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nut4, nutale w FD259000045",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "NutFinder45": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "randomON",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-req 0x001B 04"
-        ],
-        "cmdOff": [
-          "char-write-req 0x001B 03"
-        ],
-        "random": "randomON",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "check detect new beacons for 'UUID-FF : FF59000045'",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1C0201060303031805FF5900004509160A18MAC#########-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Nut w FD900045",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "OralB": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "120201050EFFDC000201-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "OralB toothbrush",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Orbit": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "0F020106030300F007094F52-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Orbit",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "RBE": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "norm": 1,
-          "pos": 20
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1D17FF18010154RMAC########000000000000XXXXXXXXXXXX0409524245-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Radius RBE Card/Chip",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Radius": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6-",
-    "hexCode2": "",
-    "pos": 20,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Radius",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Safedome": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      }
-    },
-    "comment": " mfg - 0A 09 09 73 61 66 65 64 6F 6D 65  safedome  73 61 66 65 64 6F 6D 65, other: 08 02 01 05 04 FF 4D 46 01",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0A090973616665646F6D65-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Safedome",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Satech": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0E0201060A09426561636F6E666967-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Satech STiExx sensors",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Smart_tracker": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-cmd  0x0023  01"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x0023 00"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-50",
-    "hexCode": "14020106070304180F18C0FF020A0005-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Smart tracker",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SocialRetail": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "E2C56DB5DFFB48D2B060D0F5A71096E0-",
-    "hexCode2": "",
-    "pos": 20,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SocialRetail",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SpotyPal": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-req 0x0021 363636363636",
-          "char-write-req 0x000B 00",
-          "char-write-req 0x000E 00",
-          "char-write-req 0x002B D007",
-          "char-write-req 0x0031 0100",
-          "char-write-cmd 0x000E 02"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x000E 00"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-55",
-    "hexCode": "0A090953706F747950616C",
-    "hexCode2": "",
-    "match": true,
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SpotyPal",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SwiftFinder": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "0F02010603030A18070953-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwiftFinder",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Switchbot": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "and": 127,
-          "norm": 1,
-          "pos": 25
-        },
-        "type": "msgGet"
-      },
-      "mode": {
-        "params": {
-          "and": 128,
-          "nType": "string",
-          "norm": 1,
-          "pos": 24,
-          "resultOFF": "pressMode",
-          "resultON": "onOffMode"
-        },
-        "type": "msgGet"
-      },
-      "onOffState": {
-        "params": {
-          "and": 64,
-          "nType": "string",
-          "norm": 1,
-          "pos": 24,
-          "resultOFF": "on",
-          "resultON": "off"
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "OUTPUTswitchbotRelay",
-    "dBm": "-61",
-    "hexCode": "11071BC5D5A50200B89FE6114D22000DA2CB0616000D48-",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwitchBot switch",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SwitchbotContact": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
-    "correspondingSensorType": "BLEswitchbotContact",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "02010610FF6909MAC#########",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwitchBot contact sensor",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SwitchbotCurtain": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "allowsConnection": {
-        "params": {
-          "and": 128,
-          "nType": "bool",
-          "norm": 128,
-          "pos": 6
-        },
-        "type": "msgGet"
-      },
-      "calibrated": {
-        "params": {
-          "and": 64,
-          "nType": "bool",
-          "norm": 64,
-          "pos": 6
-        },
-        "type": "msgGet"
-      },
-      "batteryLevel": {
-        "params": {
-          "and": 127,
-          "nType": "int",
-          "norm": 1,
-          "pos": 7
-        },
-        "type": "msgGet"
-      },
-      "inMotion": {
-        "params": {
-          "and": 128,
-          "nType": "bool",
-          "norm": 1,
-          "pos": 8
-        },
-        "type": "msgGet"
-      },
-      "position": {
-        "params": {
-          "and": 127,
-          "nType": "int",
-          "norm": 1,
-          "pos": 8
-        },
-        "type": "msgGet"
-      },
-      "light": {
-        "params": {
-          "and": 240,
-          "nType": "int",
-          "norm": 16,
-          "pos": 9
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
-    "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain",
-    "dBm": "-61",
-    "hexCode": "0A09163DFD63-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwitchBot curtain",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 1
-  },
-  "SwitchbotMotion": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
-    "correspondingSensorType": "BLEswitchbotMotion",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0201060DFF6909MAC#########",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwitchBot motion sensor",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SwitchbotRemote": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "and": 127,
-          "norm": 1,
-          "pos": 25
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "11071BC5D5A50200B89FE6114D22000DA2CB07-",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwitchBot remote",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "SwitchbotTempHum": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "and": 127,
-          "norm": 1,
-          "pos": 25
-        },
-        "type": "msgGet"
-      }
-    },
-    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
-    "correspondingSensorType": "BLEswitchbotTempHum",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "11071BC5D5A50200B89FE6114D22000DA2CB0916000D54-",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "SwitchBot Temp Hum",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Tovala": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "546F76616C61",
-    "hexCode2": "",
-    "pos": 42,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Tovala oven",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "UDM_PRO": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "19XXXXXXXXXXXXXXXX080855444D2D50524F-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "UDM-PRO",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "Vozni_iTrack": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "public",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      },
-      "beep": {
-        "cmdON": [
-          "char-write-req 0x0034 0100",
-          "char-write-req 0x0039 0100",
-          "char-write-req 0x0043 A1A2A3A4",
-          "char-write-req 0x003D 02",
-          "char-write-cmd 0x0011 02"
-        ],
-        "cmdOff": [
-          "char-write-cmd 0x0011 00"
-        ],
-        "random": "public",
-        "type": "BLEconnect"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-55",
-    "hexCode": "1X02010X030202180AFF4B4D02RMAC########",
-    "hexCode2": "",
-    "match": true,
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Vozni - iTrack app",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XY_1": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "07775DD0111B11E491910800200C9A66-",
-    "hexCode2": "",
-    "pos": 20,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "XY_1",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XY_2": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "08885DD0111B11E491910800200C9A66-",
-    "hexCode2": "",
-    "pos": 20,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "XY_2",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XY_3": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "04000000005F78000900580509585934-",
-    "hexCode2": "",
-    "pos": 20,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "XY_3",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XY_4": {
-    "Maj": "",
-    "Min": "",
-    "batteryLevel": "off",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "XY_4",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XiaomiMiFormaldehyde": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "    M J H F D 1 _   formaldehyde + T + H honeywell",
-    "correspondingSensorType": "BLEXiaomiMiformaldehyde",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "190E094D4A484644315F-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": "",
-    "text": "Xiaomi MiJia formaldehyde + Temp + Hum",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XiaomiMiBLETempHumClock": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "...             L Y W S D 0 2",
-    "correspondingSensorType": "BLEXiaomiMiTempHumClock",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0D0303F5FE08094C595753443032-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": "",
-    "text": "Xiaomi MiJia MI clock w temp humidity",
-    "textForMenu": "",
-    "timeAndDateCmd": "handle:3e",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XiaomiMiBLETempHumRound": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "       M J _ H T _ V 1",
-    "correspondingSensorType": "BLEXiaomiMiTempHumRound",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "1A09094D4A5F48545F5631-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": "",
-    "text": "Xiaomi MiJia MI temp humidity round(LYWSDCGQ) ",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XiaomiMiBLETempHumSquare": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "       L Y W S D 0 3 M M C  TH sensor w display, small square w lipo cr2032 battery requires gattool connection",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0C0B094C5957534430334D4D43-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": "",
-    "text": "Xiaomi MiJia MI temp humidity square, req gatttool connection, only w 2. BLE dongle",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "XiaomiMiFlower_Care": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "       F l o w e r  c a r e",
-    "correspondingBLEConnectSensorType": "BLEXiaomiMiVegTrug",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "0D0C09466C6F7765722063617265-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Xiaomi Mi - Flower care / VegTrug temp, Cond, Illum, Moist",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "aprilBeacon": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "bits": 127,
-        "norm": 100,
-        "offset": 0,
-        "random": "randomON",
-        "shift": 0,
-        "type": "BLEconnect",
-        "uuid": "2A19"
-      }
-    },
-    "comment": "abeacon_ == 61 62 65 61 63 6f 6e 5f",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0E0D0961626561636F6E5F-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 1,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "April Beacon",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "iBSxx": {
-    "Maj": "",
-    "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "0201061XFFXX008XBC-",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "INGISCS iBS01 .. 04 ",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "iBeacon": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "1AFF4C000",
-    "hexCode2": "",
-    "pos": 8,
-    "posDelta": 2,
-    "sensorFunctions": "",
-    "sequence": 2,
-    "subType": {},
-    "text": "All std iBeacons accepted",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": -1
-  },
-  "iSensor": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSensorType": "BLEiSensor-*",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "02010609086953656E736F7220XXFF",
-    "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "subtypeOfBeacon": {
-      "devTypeID": {
-        "01": "BLEiSensor-onOff",
-        "02": "BLEiSensor-onOff",
-        "03": "BLEiSensor-onOff",
-        "04": "BLEiSensor-onOff",
-        "05": "BLEiSensor-onOff",
-        "06": "BLEiSensor-onOff",
-        "07": "BLEiSensor-onOff",
-        "08": "BLEiSensor-onOff",
-        "09": "BLEiSensor-onOff",
-        "0A": "BLEiSensor-onOff",
-        "0C": "BLEiSensor-TempHum",
-        "16": "BLEiSensor-on",
-        "19": "BLEiSensor-RemoteKeyFob",
-        "1A": "WirelessKeypad"
-      },
-      "intHex": "int",
-      "length": 2,
-      "mask": 31,
-      "pos": 40
-    },
-    "text": "ISensor Gas,Co, water... Alarm, press button to ID",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "myblueT": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "MYBLUET",
-    "hexCode2": "",
-    "pos": 1,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "MyblueT",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "other": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "X",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 3,
-    "subType": {},
-    "text": "Other",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": -1
-  },
-  "pebbleBee": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": " id = 43415244=CARD and - = data ends here",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-61",
-    "hexCode": "06050943415244-",
-    "hexCode2": "",
-    "pos": 0,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "Pebble bee card",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  },
-  "rPI": {
-    "Maj": "",
-    "Min": "",
-    "commands": {},
-    "comment": "",
-    "correspondingSwitchbotDevice": "",
-    "dBm": "-59",
-    "hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5-",
-    "hexCode2": "",
-    "pos": 20,
-    "posDelta": 0,
-    "sensorFunctions": "",
-    "sequence": 0,
-    "subType": {},
-    "text": "RPI",
-    "textForMenu": "",
-    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
-  }
+	"BLERuuviTag": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "",
+		"correspondingSensorType": "BLERuuviTag",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-65",
+		"hexCode": "0201061BFF990405",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Ruuvi-beacon w temp, hum, press, accell",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"BLEgoveeTempHum": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "  G V H  .. sensor # ",
+		"correspondingSensorType": "BLEgoveeTempHum",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "09475648",
+		"hexCode2": "",
+		"pos": 4,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Govee Temp Hum .. sensors",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"BLEsensorbug": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "  S e n s o r B u g + # ",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "0953656E736F72427567-",
+		"hexCode2": "",
+		"pos": 10,
+		"posDelta": 12,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Blueradio sensor bug ",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"BlackCard": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1X020104030225FAXXFF0E05A00033E2-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "BlackCard",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"BlueCharm_BC011": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1E0201061AFF4C000215426C7565436861726D426561636F6E73-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "BlueCharm BC011",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"BlueCharm_BC0631": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1E0201061AFF4C000215CC6ED3C0477E417B81E10A62D6504061-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "BlueCharm BC0631",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Cube": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"beep": {
+				"cmdON": [
+					"char-write-cmd  0x0022 55AA01100202ED"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0022 55AA01100200ED"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "0F020106030300F007094355424500-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Cube",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Feasy_BP103_Triangle": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"norm": 1,
+					"pos": 15
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "1A0E16F0FF1AXXXXXXMAC#########XXXXXX4653435F4250313033-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Feasy BP103 Triangle",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Feasy_BP104_AAA": {
+		"Maj": "",
+		"Min": "",
+		"beep": "off",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"norm": 1,
+					"pos": 15
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-40",
+		"hexCode": "1A0E16F0FF1BXXXXXXMAC#########XXXXXX4653435F4250313034-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": "",
+		"text": "Feasy BP104 AAA",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Feasy_BP109_USB": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"nType": "float",
+					"norm": 1.009,
+					"pos": 19
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-40",
+		"hexCode": "1AXXXXXXXXXX16F0FF19XXXXXXMAC#########XXXXXX4250313039-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": "",
+		"text": "Feasy BP109 USB",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"ITrack": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "randomON",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-req 0x001B 0100",
+					"char-write-req 0x0024 A1A2A3A4",
+					"char-write-req 0x001E 02",
+					"char-write-req 0x0010 02"
+				],
+				"cmdOff": [
+					"char-write-req 0x0010 00"
+				],
+				"random": "randomON",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-55",
+		"hexCode": "1X02010X030202180XFF4B4DXXRMAC########-",
+		"hexCode2": "070969547261636B",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "ITrack: Rinex & Njoii & Musegear",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"InkBirdTempPool01B": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "name Tag: tps= 74 70 73",
+		"correspondingSensorType": "BLEinkBirdPool01B",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "1004097470730AFF-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Ink Bird Temp Pool 01B",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Innway": {
+		"Maj": "",
+		"Min": "",
+		"batteryLevel": "off",
+		"commands": {
+			"beep": {
+				"cmdON": [
+					"char-write-cmd 0x0012 EE030000"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0012 EE030000"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": " mfg - 49 6E 6E 77 61 79 20   54 61 67    = Innway Tag // 49 6E 6E 77 61 79 20   43 61 72 64 = Innway Card //49 6E 6E 77 61 79 20   43 68 69 70 = Innway Chip",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1X020106030301E00X09496E6E776179-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Innway",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Jaalee": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"norm": 2.55,
+					"pos": -3
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1E0201061AFF4C000215EBEFD08370A247C89837E7B5634DF524-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Jaalee",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Minew_Acc": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1A0201060303E1FF1216E1FFA103XXXXXXXXXXXXXXRMAC########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Minew (eg E8, S1) xyz-Accel, disab all but accel. in beaconSET+ app",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Minew_F4S": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "not really a minew beacon, can be beeped need to find comamnd for battery and beep",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1B0201060303E1FF0E16E1FFA1XXXXRMAC########XXXXXXXX463453-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Minew FS4 with beep and battery",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Minew_Light": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "180201060303E1FFXX16E1FFA105XXXXXXRMAC########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Minew Light info",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Minew_LightOnOff": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": " simple light on/off sensor, no config possible",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "150201060303E1FF0D16E1FFA102XXXXRMAC########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Minew Light on-off",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Minew_TH": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "180201060303E1FFXX16E1FFA101XXXXXXXXXXRMAC########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Minew (eg S1) Humidity or Ext Temp Probe",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Minibeacon": {
+		"Maj": "UUID:26-29:int",
+		"Min": "UUID:29-31:int",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"norm": 1,
+					"pos": 8
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1E020A0X0816F0FFXXXXXXXXXX11094D696E69426561636F6E5F-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 10,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Minibeacon",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Nonda_Aiko": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 36,
+				"offset": -64,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-cmd  0x0011  02"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0011 00"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-55",
+		"hexCode": "01061107C8A5005B0200239BE11102D1001C000003190002020A-",
+		"hexCode2": "",
+		"pos": 4,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nonda Aiko ",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Nonda_iHere": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-cmd 0x0011  02"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0011 00"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "check detect new beacons for 'UUID-FF : xx0000??'",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-50",
+		"hexCode": "01061107C7A5005B0200239BE11102D1001C000003190002020A-",
+		"hexCode2": "",
+		"pos": 4,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nonda iHere",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Nuki_": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": " Nuki_ ... 15A434A5",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "0F0E094E756B695F",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nuki_xxx door locks",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"NutFinder3x": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+					    "batteryLevel": {
+					              "bits": 127,
+					              "norm": 100,
+					              "offset": 0,
+					              "random": "public",
+					              "shift": 0,
+					              "type": "BLEconnect",
+					              "uuid": "2A19"
+					    },
+					    "beep": {
+					              "cmdON": [
+					                "char-write-req 0x0025 04"
+					              ],
+					              "cmdOff": [
+					                "char-write-req 0x0025 03"
+					              ],
+					              "random": "public",
+					              "type": "BLEconnect"
+					    }
+		},
+		"comment": "check detect new beacons for FFD200003X",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1C0201060303031805FFD200003X09160A18MAC#########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nut3, nutale FFD200003X",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"NutFinder46": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+					      "bits": 127,
+					      "norm": 100,
+					      "offset": 0,
+					      "random": "randomON",
+					      "shift": 0,
+					      "type": "BLEconnect",
+					      "uuid": "2A19"
+			},
+			"beep": {
+					      "cmdON": [
+					        "char-write-req 0x0010 04"
+					      ],
+					      "cmdOff": [
+					        "char-write-req 0x0010 03"
+					      ],
+					      "random": "randomON",
+					      "type": "BLEconnect"
+			}
+		},
+		"comment": "check detect new beacons for 'UUID-FF : xx0000??'",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1C0201060303031805FF5900004609160A18MAC#########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nut4, pro w FF59000046 ",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"NutFinder4x": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": { "bits": 127, "norm": 100, "offset": 0, "random": "randomON", "shift": 0, "type": "BLEconnect", "uuid": "2A19"      },
+			"beep": { "cmdON": [   "char-write-req 0x001B 04" ], "cmdOff": [   "char-write-req 0x001B 03" ], "random": "randomON", "type": "BLEconnect"      }
+		},
+		"comment": "check detect new beacons for 'UUID-FF : FD259000045'",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1C0201060303031805FFD25900004509160A18MAC#########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nut4, nutale w FD259000045",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"NutFinder45": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "randomON",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-req 0x001B 04"
+				],
+				"cmdOff": [
+					"char-write-req 0x001B 03"
+				],
+				"random": "randomON",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "check detect new beacons for 'UUID-FF : FF59000045'",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1C0201060303031805FF5900004509160A18MAC#########-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Nut w FD900045",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"OralB": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "120201050EFFDC000201-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "OralB toothbrush",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Orbit": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "0F020106030300F007094F52-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Orbit",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"RBE": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"norm": 1,
+					"pos": 20
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1D17FF18010154RMAC########000000000000XXXXXXXXXXXX0409524245-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Radius RBE Card/Chip",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Radius": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "2F234454CF6D4A0FADF2F4911BA9FFA6-",
+		"hexCode2": "",
+		"pos": 20,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Radius",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Safedome": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			}
+		},
+		"comment": " mfg - 0A 09 09 73 61 66 65 64 6F 6D 65  safedome  73 61 66 65 64 6F 6D 65, other: 08 02 01 05 04 FF 4D 46 01",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0A090973616665646F6D65-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Safedome",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Satech": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0E0201060A09426561636F6E666967-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Satech STiExx sensors",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Smart_tracker": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-cmd  0x0023  01"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0023 00"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-50",
+		"hexCode": "14020106070304180F18C0FF020A0005-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Smart tracker",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SocialRetail": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "E2C56DB5DFFB48D2B060D0F5A71096E0-",
+		"hexCode2": "",
+		"pos": 20,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SocialRetail",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SpotyPal": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-req 0x0021 363636363636",
+					"char-write-req 0x000B 00",
+					"char-write-req 0x000E 00",
+					"char-write-req 0x002B D007",
+					"char-write-req 0x0031 0100",
+					"char-write-cmd 0x000E 02"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x000E 00"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-55",
+		"hexCode": "0A090953706F747950616C",
+		"hexCode2": "",
+		"match": true,
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SpotyPal",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SwiftFinder": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "0F02010603030A18070953-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwiftFinder",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Switchbot": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"and": 127,
+					"norm": 1,
+					"pos": 25
+				},
+				"type": "msgGet"
+			},
+			"mode": {
+				"params": {
+					"and": 128,
+					"nType": "string",
+					"norm": 1,
+					"pos": 24,
+					"resultOFF": "pressMode",
+					"resultON": "onOffMode"
+				},
+				"type": "msgGet"
+			},
+			"onOffState": {
+				"params": {
+					"and": 64,
+					"nType": "string",
+					"norm": 1,
+					"pos": 24,
+					"resultOFF": "on",
+					"resultON": "off"
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "OUTPUTswitchbotRelay",
+		"dBm": "-61",
+		"hexCode": "11071BC5D5A50200B89FE6114D22000DA2CB0616000D48-",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwitchBot switch",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SwitchbotContact": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+		"correspondingSensorType": "BLEswitchbotContact",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "02010610FF6909MAC#########",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwitchBot contact sensor",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SwitchbotCurtain": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			  "allowsConnection": {
+				"params": {
+				  "and": 128,
+				  "nType": "bool",
+				  "norm": 128,
+				  "pos": 6
+				},
+				"type": "msgGet"
+			  },
+			  "calibrated": {
+				"params": {
+				  "and": 64,
+				  "nType": "bool",
+				  "norm": 64,
+				  "pos": 6
+				},
+				"type": "msgGet"
+			  },
+			  "batteryLevel": {
+				"params": {
+				  "and": 127,
+				  "nType": "int",
+				  "norm": 1,
+				  "pos": 7
+				},
+				"type": "msgGet"
+			  },
+			  "inMotion": {
+				"params": {
+				  "and": 128,
+				  "nType": "bool",
+				  "norm": 1,
+				  "pos": 8
+				},
+				"type": "msgGet"
+			  },
+			  "position": {
+				"params": {
+				  "and": 127,
+				  "nType": "int",
+				  "norm": 1,
+				  "pos": 8
+				},
+				"type": "msgGet"
+			  },
+			  "light": {
+				"params": {
+				  "and": 240,
+				  "nType": "int",
+				  "norm": 16,
+				  "pos": 9
+				},
+				"type": "msgGet"
+			  }
+		},
+		"comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+		"correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain",
+		"dBm": "-61",
+		"hexCode": "0A09163DFD63-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwitchBot curtain",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 1
+	},
+	"SwitchbotMotion": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+		"correspondingSensorType": "BLEswitchbotMotion",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0201060DFF6909MAC#########",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwitchBot motion sensor",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SwitchbotRemote": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"and": 127,
+					"norm": 1,
+					"pos": 25
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "11071BC5D5A50200B89FE6114D22000DA2CB07-",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwitchBot remote",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"SwitchbotTempHum": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"params": {
+					"and": 127,
+					"norm": 1,
+					"pos": 25
+				},
+				"type": "msgGet"
+			}
+		},
+		"comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+		"correspondingSensorType": "BLEswitchbotTempHum",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "11071BC5D5A50200B89FE6114D22000DA2CB0916000D54-",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "SwitchBot Temp Hum",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Tovala": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "546F76616C61",
+		"hexCode2": "",
+		"pos": 42,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Tovala oven",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"UDM_PRO": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "19XXXXXXXXXXXXXXXX080855444D2D50524F-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "UDM-PRO",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Vozni_iTrack": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-req 0x0034 0100",
+					"char-write-req 0x0039 0100",
+					"char-write-req 0x0043 A1A2A3A4",
+					"char-write-req 0x003D 02",
+					"char-write-cmd 0x0011 02"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0011 00"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-55",
+		"hexCode": "1X02010X030202180AFF4B4D02RMAC########",
+		"hexCode2": "",
+		"match": true,
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Vozni - iTrack app",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XY_1": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "07775DD0111B11E491910800200C9A66-",
+		"hexCode2": "",
+		"pos": 20,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "XY_1",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XY_2": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "08885DD0111B11E491910800200C9A66-",
+		"hexCode2": "",
+		"pos": 20,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "XY_2",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XY_3": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "04000000005F78000900580509585934-",
+		"hexCode2": "",
+		"pos": 20,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "XY_3",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XY_4": {
+		"Maj": "",
+		"Min": "",
+		"batteryLevel": "off",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "1F0201061106A44EACF40104000000005F78002599A405095859-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "XY_4",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XiaomiMiFormaldehyde": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "    M J H F D 1 _   formaldehyde + T + H honeywell",
+		"correspondingSensorType": "BLEXiaomiMiformaldehyde",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "190E094D4A484644315F-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": "",
+		"text": "Xiaomi MiJia formaldehyde + Temp + Hum",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XiaomiMiBLETempHumClock": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "...             L Y W S D 0 2",
+		"correspondingSensorType": "BLEXiaomiMiTempHumClock",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0D0303F5FE08094C595753443032-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": "",
+		"text": "Xiaomi MiJia MI clock w temp humidity",
+		"textForMenu": "",
+		"timeAndDateCmd": "handle:3e",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XiaomiMiBLETempHumRound": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "       M J _ H T _ V 1",
+		"correspondingSensorType": "BLEXiaomiMiTempHumRound",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "1A09094D4A5F48545F5631-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": "",
+		"text": "Xiaomi MiJia MI temp humidity round(LYWSDCGQ) ",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XiaomiMiBLETempHumSquare": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "       L Y W S D 0 3 M M C  TH sensor w display, small square w lipo cr2032 battery requires gattool connection",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0C0B094C5957534430334D4D43-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": "",
+		"text": "Xiaomi MiJia MI temp humidity square, req gatttool connection, only w 2. BLE dongle",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"XiaomiMiFlower_Care": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "       F l o w e r  c a r e",
+		"correspondingBLEConnectSensorType": "BLEXiaomiMiVegTrug",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "0D0C09466C6F7765722063617265-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Xiaomi Mi - Flower care / VegTrug temp, Cond, Illum, Moist",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"aprilBeacon": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "randomON",
+				"shift": 0,
+				"type": "BLEconnect",
+				"uuid": "2A19"
+			}
+		},
+		"comment": "abeacon_ == 61 62 65 61 63 6f 6e 5f",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0E0D0961626561636F6E5F-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 1,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "April Beacon",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"iBSxx": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "0201061XFFXX008XBC-",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "INGISCS iBS01 .. 04 ",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"iBeacon": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "1AFF4C000",
+		"hexCode2": "",
+		"pos": 8,
+		"posDelta": 2,
+		"sensorFunctions": "",
+		"sequence": 2,
+		"subType": {},
+		"text": "All std iBeacons accepted",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": -1
+	},
+	"iSensor": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSensorType": "BLEiSensor-*",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "02010609086953656E736F7220XXFF",
+		"hexCode2": "",
+		"pos": 2,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"subtypeOfBeacon": {
+			"devTypeID": {
+				"01": "BLEiSensor-onOff",
+				"02": "BLEiSensor-onOff",
+				"03": "BLEiSensor-onOff",
+				"04": "BLEiSensor-onOff",
+				"05": "BLEiSensor-onOff",
+				"06": "BLEiSensor-onOff",
+				"07": "BLEiSensor-onOff",
+				"08": "BLEiSensor-onOff",
+				"09": "BLEiSensor-onOff",
+				"0A": "BLEiSensor-onOff",
+				"0C": "BLEiSensor-TempHum",
+				"16": "BLEiSensor-on",
+				"19": "BLEiSensor-RemoteKeyFob",
+				"1A": "WirelessKeypad"
+			},
+			"intHex": "int",
+			"length": 2,
+			"mask": 31,
+			"pos": 40
+		},
+		"text": "ISensor Gas,Co, water... Alarm, press button to ID",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"myblueT": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "MYBLUET",
+		"hexCode2": "",
+		"pos": 1,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "MyblueT",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"other": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "X",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 3,
+		"subType": {},
+		"text": "Other",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": -1
+	},
+	"pebbleBee": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": " id = 43415244=CARD and - = data ends here",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-61",
+		"hexCode": "06050943415244-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Pebble bee card",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"rPI": {
+		"Maj": "",
+		"Min": "",
+		"commands": {},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "1E02011A1AFF4C0002152F234454CF6D4A0FADF2F4911BA9FFA6567890XXC5-",
+		"hexCode2": "",
+		"pos": 20,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "RPI",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	}
 }

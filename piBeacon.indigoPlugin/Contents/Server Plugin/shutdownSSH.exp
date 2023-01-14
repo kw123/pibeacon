@@ -1,3 +1,4 @@
+set argsCount [llength $argv]
 set userID [lindex $argv 0 ] 
 set password [lindex $argv 1 ] 
 set authKeyOrPassword [lindex $argv 2 ] 
@@ -6,7 +7,7 @@ set timeout [lindex $argv 4 ]
 
 
 set timeout $timeout
-spawn ssh $userID@$ipNumber
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
 
 
 if {$authKeyOrPassword == "assword"} { 

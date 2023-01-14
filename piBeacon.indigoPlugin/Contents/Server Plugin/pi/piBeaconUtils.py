@@ -485,8 +485,8 @@ def doReboot(tt=10., text="", cmd="", force=False):
 		setRebootingNow()
 
 		### looks like w shell =True: /bin/sh -c /usr/bin/sudo , need to add ' ' around cmd 
-		try: logger.log(30, "cBY:{:<20}  rebooting / shutdown  delay:{}, force:{}; with cmd={}; remarks= {}".format(G.program, tt, force, cmd, text))
-		except: pass
+		logger.log(30, "cBY:{:<20}  rebooting / shutdown  delay:{}, force:{}; with cmd={}; remarks= {}".format(G.program, tt, force, cmd, text))
+		
 		if force:
 			try: 
 				doCmd = "sudo sleep 2;/usr/bin/sudo /usr/bin/killall -9 python;/usr/bin/sudo /usr/bin/killall -9 python3;/usr/bin/sudo /bin/sleep 4; /usr/bin/sudo /sbin/reboot -f"
@@ -2361,8 +2361,8 @@ def calcStartTime(data,timeStamp):
 	if timeStamp in data:
 		try:
 			startAtDateTime =  float(data[timeStamp])
-			if startAtDateTime < 100000000.:
-				return time.time()+ startAtDateTime
+			if startAtDateTime < 1000000.:
+				return time.time() + startAtDateTime
 			return startAtDateTime
 		except:
 			pass

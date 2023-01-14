@@ -84,6 +84,15 @@ Change here or in initial setup:</Label>
 				<Label>normal login, or authkey - no password entry:</Label>
 			</Field>
 
+
+			<Field    id="hostFileCheck"   type="menu" defaultValue="">
+				 <List>
+					<Option value=""         >use known_hosts </Option>
+					<Option value="ignore"   >ignore known_hosts </Option>
+				  </List>
+				<Label>use or ignore known_hosts file for ssh and sfp</Label>
+			</Field>
+
 			<Field    id="newenableRebootCheck"   type="menu" defaultValue="restartLoop">
 				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
 				 <List>
@@ -1104,6 +1113,15 @@ Change here or in initial setup:</Label>
 				  </List>
 				<Label>normal login, or authkey - no password entry:</Label>
 			</Field>
+
+			<Field    id="hostFileCheck"   type="menu" defaultValue="">
+				 <List>
+					<Option value=""         >use known_hosts </Option>
+					<Option value="ignore"   >ignore known_hosts </Option>
+				  </List>
+				<Label>use or ignore known_hosts file for ssh and sfp</Label>
+			</Field>
+
 
 			<Field    id="newenableRebootCheck"   type="menu" defaultValue="restartLoop">
 				<Label>If rPi encounters an internal problem  /  ping to indigo does not work:</Label>
@@ -8006,6 +8024,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<States>
 
+			<State id="ServiceData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>ServiceData</TriggerLabel>
+				<ControlPageLabel>ServiceData</ControlPageLabel>
+			</State>
 
 
 			<State id="model">
@@ -8171,6 +8194,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
+			<State id="ServiceData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>ServiceData</TriggerLabel>
+				<ControlPageLabel>ServiceData</ControlPageLabel>
+			</State>
 			<State id="lastOn">
 				<ValueType>string</ValueType>
 				<TriggerLabel>lastOn</TriggerLabel>
@@ -8341,6 +8369,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
+			<State id="ServiceData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>ServiceData</TriggerLabel>
+				<ControlPageLabel>ServiceData</ControlPageLabel>
+			</State>
 			<State id="lastOn">
 				<ValueType>string</ValueType>
 				<TriggerLabel>lastOn</TriggerLabel>
@@ -10795,8 +10828,8 @@ xx_Count_groupname_ .. Home, Away</Label>
     Air Quality is derived from pm25_standard using USA definitions
     On RPI do sudo raspi-config / interface options / Serial
        disable login shell / enable serial port hardware and reboot
-    TX is currently not used,
-    Reset pin -if used- will reset the unit if bad comm.</Label>
+    connect 5V(rpi) -&gt; V+(sensor), GND-&gt;GND, RX-&gt;TX, TX not used, GPIO-reset -&gt;
+       Reset is only used if specified at start of pmquality.py program</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -10804,26 +10837,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select rPi-server to which the sensor is connect to:</Label>
 			</Field>
 
-			<Field id="pmSensorType" type="menu"     defaultValue="PMS5003" hidden="no">
-				<Label>PM sensor Type:</Label>
-				<List>
-					<Option value="PMS5003"   >PMS 7/5003 connect 5V(pin2)-V+, Gnd(pin6)-GND, RX(pin 10)-TX, and TX(pin8)-RX, Reset(23)-RST</Option>
-				</List>
-			</Field>
-
 			<Field id="resetPin"   type="menu" defaultValue="23" tooltip="set this pin to low will cause the sensor to reset to shutdown">
 				<Label>Which pin to use as reset pin only if Reset pin is connected:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
+
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no">
 				<Label>read sensor every xx secs :</Label>
 				<List>
-					<Option value="8"   > 8   secs</Option>
-					<Option value="10"  > 10  secs</Option>
-					<Option value="12"  > 12  secs</Option>
-					<Option value="15"  > 15  secs</Option>
-					<Option value="20"  > 20  secs</Option>
 					<Option value="30"  > 30  secs</Option>
 					<Option value="40"  > 40  secs</Option>
 					<Option value="60"  > 60  secs</Option>
@@ -10837,11 +10859,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="minSendDelta" type="menu"     defaultValue="10" hidden="no" >
 				<Label>Min secs between indigo updates - not more often :</Label>
 				<List>
-					<Option value="2"   > 2   secs</Option>
-					<Option value="3"   > 3   secs</Option>
-					<Option value="4"   > 4   secs</Option>
-					<Option value="6"   > 6   secs</Option>
-					<Option value="8"   > 8   secs</Option>
 					<Option value="10"  > 10  secs</Option>
 					<Option value="20"  > 20  secs</Option>
 					<Option value="30"  > 30  secs</Option>
@@ -10852,11 +10869,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise">
 				<Label>delta X(%) to trigger update:</Label>
 				<List>
-					<Option value="1"    > 1  </Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
 					<Option value="5"    > 5</Option>
-					<Option value="7"    > 7</Option>
 					<Option value="10"   > 10</Option>
 					<Option value="15"   > 15</Option>
 					<Option value="20"   > 20</Option>
@@ -23360,6 +23373,11 @@ For the read settings from the device to work you need to set up the device on t
 				<ValueType>String</ValueType>
 				<TriggerLabel>inverseDirection</TriggerLabel>
 				<ControlPageLabel>inverseDirection</ControlPageLabel>
+			<State id="ServiceData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>ServiceData</TriggerLabel>
+				<ControlPageLabel>ServiceData</ControlPageLabel>
+			</State>
 
 			</State>
 			<State id="batteryLevelLastUpdate">
@@ -23446,6 +23464,12 @@ This device will get its battery level from its brother device,
 				<TriggerLabel>batteryLevelLastUpdate</TriggerLabel>
 				<ControlPageLabel>batteryLevelLastUpdate</ControlPageLabel>
 			</State>
+			<State id="ServiceData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>ServiceData</TriggerLabel>
+				<ControlPageLabel>ServiceData</ControlPageLabel>
+			</State>
+
 		</States>
 	</Device>
 
