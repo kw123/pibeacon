@@ -272,9 +272,9 @@ That should not pose a problem. It should be used as default
 			<Field id="BeaconUseHCINo" type="menu"     defaultValue="-1" tooltip=" ">
 				<Label> .... iBeacon:</Label>
 				<List>
-					<Option value="-1"   >let the RPi decide</Option>
+					<Option value="-1"    >let the RPi decide</Option>
 					<Option value="UART"  >use UART = internal</Option>
-					<Option value="USB"   >use USB = external  when using WiFi on board</Option>
+					<Option value="USB"   >use USB = external when using WiFi on board</Option>
 				</List>
 			</Field>
 
@@ -285,6 +285,10 @@ That should not pose a problem. It should be used as default
 					<Option value="UART"  >use UART = internal</Option>
 					<Option value="USB"   >use USB = external when using WiFi on board</Option>
 				</List>
+			</Field>
+
+			<Field id="BeaconUseLabel" type="label"  alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Make sure that you do NOT select UART if there is none ie RPi V1 or V2.</Label>	
 			</Field>
 
 			<Field id="BLEconnectMode" type="menu"     defaultValue="commandLine" tooltip=" ">

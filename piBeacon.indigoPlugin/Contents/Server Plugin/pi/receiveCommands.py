@@ -74,7 +74,8 @@ def OUTPUTi2cRelay(command):
 
 			delayStart = max(0, U.calcStartTime(command,"startAtDateTime")-time.time())
 			if delayStart > 0 and delayStart < 10000000: 
-				time.sleep(delayStart)
+				if sleepForxSecs(delayStart):
+					return 
 
 			if "values" in command:
 				values =  command["values"]
@@ -194,13 +195,13 @@ def setGPIO(command):
 
 
 		delayStart = min(1000000, max(0,U.calcStartTime(command,"startAtDateTime")-time.time()))
-		if delayStart > 0: 
-			time.sleep(delayStart)
+		if delayStart > 0 and delayStart < 10000000: 
+			if sleepForxSecs(delayStart):
+				return 
 
 		if "values" in command:
 			values =  command["values"]
-	
-	
+
 		#	 "values:{analogValue:"analogValue+",pulseUp:"+ pulseUp + ",pulseDown:" + pulseDown + ",nPulses:" + nPulses+"}
 
 		try:

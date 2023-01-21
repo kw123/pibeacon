@@ -4674,11 +4674,15 @@ def getBeaconParameters(useHCI):
 		U.killOldPgm(-1,"hcidump")
 		U.killOldPgm(-1,"hcitool")
 		U.killOldPgm(-1,"lescan")
+		time.sleep(0.2)
 
 		cmd = "sudo /bin/hciconfig {} down;sudo /bin/hciconfig {} up".format(useHCI, useHCI)
 		ret = readPopen(cmd)
 
 		timeoutSecs = 15
+		nTries = 3
+		if "sensors" not in data: data["sensors"] = {}
+		if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
 		for mac in devices:
 			if len(mac) < 10: continue
 			if False and mac not in beaconsOnline:
@@ -4701,31 +4705,34 @@ def getBeaconParameters(useHCI):
 				cmd = "/usr/bin/timeout -s SIGKILL {}   /usr/bin/gatttool -i {} -b {} {} --char-read --uuid={}".format(timeoutSecs, useHCI, mac, random, uuid)
 				##					                   /usr/bin/gatttool -b 24:da:11:27:E4:23 --char-read --uuid=2A19 -t public / random   
 				U.logger.log(20,"cmd: {}".format(cmd))
-				ret = readPopen(cmd)
-				check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
-				valueF = 0; valueI = 0; valueB = ""; valueC = 0; valueD = 0
-				if check.find("connect error") >-1:	valueF = check
-				elif check.find("killed") >-1:		valueF = "timeout"
-				elif check.find("error") >-1: 		valueF = check
-				else: 
-					valueF = -2
-					ret2 = ret[0].split("value: ")
-					if len(ret2) == 2:  
-						try:
-							valueI = int(ret2[1].strip(),16) 
-							valueB = valueI & bits 
-							valueC = valueB
-							if   shift > 0: valueC *= shift 
-							elif shift < 0:	valueC /= -shift
-							valueD = max(0,valueC + offset)
-							valueF = min(100, int( ( valueD *100. )/norm ))
-						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
-				U.logger.log(20,u"... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
-				if "sensors" not in data: data["sensors"] = {}
-				if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] ={}
-				if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] ={}
-				data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
+				if mac not in data["sensors"]["getBeaconParameters"]: data["sensors"]["getBeaconParameters"][mac] = {}
+				for ii in range(nTries):
+					ret = readPopen(cmd)
+					check = (ret[0]+" -- "+ret[1]).lower().strip("\n").replace("\n"," -- ").strip()
+					valueF = 0; valueI = 0; valueB = ""; valueC = 0; valueD = 0
+					if check.find("connect error") >-1:	valueF = check
+					elif check.find("killed") >-1:		valueF = "timeout"
+					elif check.find("error") >-1: 		valueF = check
+					else: 
+						valueF = -2
+						ret2 = ret[0].split("value: ")
+						if len(ret2) == 2:  
+							try:
+								valueI = int(ret2[1].strip(),16) 
+								valueB = valueI & bits 
+								valueC = valueB
+								if   shift > 0: valueC *= shift 
+								elif shift < 0:	valueC /= -shift
+								valueD = max(0,valueC + offset)
+								valueF = min(100, int( ( valueD *100. )/norm ))
+							except Exception as e:
+								U.logger.log(30,"", exc_info=True)
+					U.logger.log(20,u"try#:{}/{} ... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(ii+1, nTries, check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
+					data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
+					if valueF != -2: break
+					if ii < nTries-1: time.sleep(0.2)
+
+
 			except Exception as e:
 				if "{}".format(e).find("Timeout") == -1:
 					U.logger.log(30,"", exc_info=True)

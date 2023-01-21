@@ -1920,7 +1920,7 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 	# default is UART or USB, used if no other choice selected
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
-	#logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, default:{}, doNotUseHCI:{}".format(G.program,HCIs, useDev, default, doNotUseHCI ))
+	#logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI ))
 	try:
 		if len(HCIs) == 1:
 			useHCI = list(HCIs)[0]
@@ -1974,6 +1974,8 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+
+	sendURL( data={"ERROR":"can_not_setup_BLE,_HCIs:{},useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac )} )
 
 	logger.log(20, "cBY:{:<20} BLEconnect: NO BLE STACK UP ".format(G.program))
 	logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac ))

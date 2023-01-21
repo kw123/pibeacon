@@ -538,6 +538,7 @@ _devtypesToStates["rpi"]["closestiBeacon"] = "String"
 _devtypesToStates["rpi"]["closestiBeaconLast"] = "String"	
 _devtypesToStates["rpi"]["iBeacon"] = "String"	
 _devtypesToStates["rpi"]["hciInfo_beacons"] = "String"	
+_devtypesToStates["rpi"]["hciInfo"] = "String"	
 _devtypesToStates["rpi"]["hciInfo_BLEconnect"] = "String"	
 
 
@@ -6049,7 +6050,7 @@ class Plugin(indigo.PluginBase):
 		xList = []
 		for dev in indigo.devices:
 			if dev.deviceTypeId in ["neopixel"]:
-				xList.append((dev.id,"{}-{}".format(dev.name)))
+				xList.append((dev.id,"{}".format(dev.name)))
 		return xList
 
 
@@ -6058,10 +6059,8 @@ class Plugin(indigo.PluginBase):
 		xList = []
 		for dev in indigo.devices.iter("props.isSensorDevice"):
 			if dev.deviceTypeId in _GlobalConst_lightSensors:
-				xList.append(("{}".format(dev.id)+"-"+dev.deviceTypeId, dev.name))
-
+				xList.append(("{}-{}".format(dev.id, dev.deviceTypeId), dev.name))
 		return xList
-
 
 
 ####-------------------------------------------------------------------------####
@@ -9382,7 +9381,14 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def makeBatteryLevelReportCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
 		try:
-			out ="battery level report:\nDev---------------------------------------     MAC#               Beacon-Type             Status     ClosestRPI   BeepCommand BatteryLevel LastSuccfulBatUpd   GetBatMethod"
+			out  = "battery level report:\nDev---------------------------------------     MAC#               Beacon-Type             Status     ClosestRPI   BeepCommand BatteryLevel LastSuccfulBatUpd   daysAgo GetBatMethod"
+			out1 = ""
+			out2 = ""
+			out3 = ""
+			out4 = ""
+			out5 = ""
+			out6 = ""
+
 			for dev in indigo.devices.iter("props.isBeaconDevice"):
 				piU = str(dev.states["closestRPI"])
 				mac  = dev.address
@@ -9401,17 +9407,39 @@ class Plugin(indigo.PluginBase):
 				except:	pass
 
 				lastU = "xxx"
+				lastTimeStamp = time.time() - 999*(24*3600)
 				try:
 					if dev.enabled:
 						lastU = dev.states["batteryLevelLastUpdate"]
+						try:	
+								lastTimeStamp = self.getTimetimeFromDateString(lastU)
+						except: lastTimeStamp = time.time() - 999*(24*3600)
 					else:
 						lastU = "disabled"
 				except: pass
 
 				batteryLevelUUID = dev.pluginProps.get("batteryLevelUUID","")
-				out += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, batteryLevelUUID)
-			self.indiLOG.log(20,out)
-			valuesDict["MSG"]   = "bat report in std indigo log"
+
+
+				#self.indiLOG.log(5,"  ibeacon: {:30s}  level: {:3d}%,  last update was: {} ".format(dev.name, batteryLevel, batteryLevelLastUpdate) )
+				lastUpDateDaysAgo = int((time.time() - lastTimeStamp)/(24*3600))
+				lastUpDateDaysAgo = min(9999, lastUpDateDaysAgo)
+				if lastUpDateDaysAgo < 999:
+					if lastUpDateDaysAgo   > 21:
+						out4 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!!! {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+					elif lastUpDateDaysAgo > 7:
+						out3 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!!  {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+					elif lastUpDateDaysAgo > 1:
+						out2 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!   {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+					else:
+						out1 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}    {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+				elif lastUpDateDaysAgo < 9999:
+						out5 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}off {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+				else:
+						out6 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}    {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+
+			self.indiLOG.log(20,out+out1+out2+out3+out4+out5+out6)
+			valuesDict["MSG"]   = "bat report in indigo log"
 		except Exception as e:
 			self.exceptionHandler(40, e)
 
@@ -13515,14 +13543,26 @@ class Plugin(indigo.PluginBase):
 	def upDateHCIinfo(self, piU, varJson, varUnicode):
 		# {"pi":"11","program":"beaconloop","data":{"hciInfo":"hci0-USB-5C:F3:70:6D:DA:75"},"ipAddress":"192.168.1.204"}
 		try:
+
+			if "ERROR" in varJson:
+				devId = int(self.RPI[piU]["piDevId"])
+				dev = indigo.devices[devId]
+				if "hciInfo" in dev.states:
+					if dev.states["hciInfo"] != "error":
+						dev.updateStateOnServer("hciInfo", "error")
+						self.indiLOG.log(40," pi#{} bluetooth did not startup, wrong parameters? error msg:\n{}".format(piU, varJson["ERROR"]))
+				return 
+
 			if "hciInfo" not in varUnicode: return 
 			if "program" not in varUnicode: return 
 			if "pi" 	 not in varUnicode: return 
+
 			#self.indiLOG.log(20,"pi:{}; hciinfo: {}".format(piU, varJson))
 			program =varJson["program"]
 
 			devId = int(self.RPI[piU]["piDevId"])
 			dev = indigo.devices[devId]
+
 
 			if program == "beaconloop": program = "beacons"
 			data = varJson["data"]["hciInfo"]
@@ -13533,8 +13573,16 @@ class Plugin(indigo.PluginBase):
 					if dev.states["hciInfo_beacons"] != data:
 						dev.updateStateOnServer("hciInfo_beacons", data)
 				else:
-					if dev.states["hciInfo_"+program] != data:
-						dev.updateStateOnServer("hciInfo_"+program, data)
+					if "hciInfo_"+program  in dev.states:
+						if dev.states["hciInfo_"+program] != data:
+							dev.updateStateOnServer("hciInfo_"+program, data)
+
+			if "hciInfo" in dev.states: # reset error info?
+				if data.find("--") == -1:
+					if dev.states["hciInfo"] != "ok":
+						dev.updateStateOnServer("hciInfo", "ok")
+
+
 
 		except Exception as e:
 			self.exceptionHandler(40, e)
