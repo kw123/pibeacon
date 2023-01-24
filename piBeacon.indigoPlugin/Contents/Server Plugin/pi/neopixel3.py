@@ -773,6 +773,9 @@ tclockLast 		= time.time() -1
 myPID			= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")
 
+
+iknightriderInd = 0
+iknightriderDir = 1
 time.sleep(0.1)
 while True:
 	#U.logger.log(20,"after while")
@@ -872,13 +875,12 @@ while True:
 					for cmd in data["command"]:
 						try:
 								tt= time.time()
-								#U.logger.log(10, "cmd:{}".format(cmd) )
+								U.logger.log(10, "cmd:{}".format(cmd) )
 								if "type" not in cmd: continue
 								cType = cmd["type"]
 								if cType == "" or cType == "0":	 continue
 			
 
-						 
 								reset =""
 								if "reset" in cmd:
 									reset = cmd["reset"]
@@ -902,7 +904,7 @@ while True:
 										except: pass
 								
 								if cType == "NOP" :
-										U.logger.log(10,u"skipping display ..	 NOP")
+										U.logger.log(10,u"skipping display .. NOP")
 										continue
 
 								rotate=0
@@ -923,7 +925,7 @@ while True:
 										speedOfChange = int(cmd["speedOfChange"])
 									except: speedOfChange = 0
 				
-								pos=[0,0,0,0]
+								pos = [0,0,0,0]
 								if "position" in cmd:
 									pos = cmd["position"]
 
@@ -950,6 +952,23 @@ while True:
 								elif cType == "points":
 									image.points(pos)
 
+
+								elif cType == "knightrider":
+										xlen   = pos[1]
+										xstart = pos[2]
+										xend   = pos[3]
+										sleepTime = pos[0]
+										nsteps  = pos[1]
+
+										resetLEDS = [0, xstart, 0, xend+nsteps, 0, 0, 0]
+										xx = [0, xstart + iknightriderInd, 0, xend+ iknightriderInd, pos[4], pos[5], pos[6]]
+										if xx[1] <= xstart: 			iknightriderDir = 1
+										if iknightriderInd >= xlen: 	iknightriderDir = -1
+										iknightriderInd += iknightriderDir
+										#U.logger.log(20,u" sleep:{},  iRaiderInd{}, iRaiderDir:{}, pos:{} xx:{} ".format(pos[0], iRaiderInd, iRaiderDir, pos, xx))
+										image.line(resetLEDS)
+										image.line(xx)
+										time.sleep(sleepTime) 
 
 								elif cType == "clock":
 									tt1 = time.time()
@@ -1093,7 +1112,7 @@ while True:
 					if cType == "clock": 
 						time.sleep(min(0.1, max(0,time.time()- lastClock)))
 					#print "neopixel sleep end repeat ", time.time() -tt0
-		time.sleep(0.1) 
+		time.sleep(0.05) 
 		if items != []:
 			lastItems = copy.copy(items)
 		items = []

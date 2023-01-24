@@ -8445,7 +8445,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="infoLabelWire18B201" type="label">
-				<Label>Setup 18DB20 Onewire Temp sensor on individual rPis .. connect 3.3, GND,signal and 4.7K resistor</Label>
+				<Label>Setup 18DB20 Onewire Temp sensor on individual rPis .. connect 3.3V, GND,signal and 4.7K resistor</Label>
 			</Field>
 
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
@@ -8550,7 +8550,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup DHT xx temp  humidity sensor on individual rPis.. connect 3.3, GND,signal and 4.7K resistor</Label>
+				<Label>Setup DHT xx temp  humidity sensor on individual rPis.. connect 3.3V, GND,signal and 4.7K resistor</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -8661,7 +8661,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cTMP102" type="label">
-				<Label>Setup i2cTMP102 temp  sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cTMP102 temp  sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -8779,7 +8779,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cMCP9808" type="label">
-				<Label>Setup i2cMCP9808  temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cMCP9808  temp sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -8898,7 +8898,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cLM35A" type="label">
-				<Label>Setup i2cLM75A temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cLM75A temp sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9024,7 +9024,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cT5403" type="label">
-				<Label>Setup i2cT5403 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cT5403 temp pressure sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9140,7 +9140,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup i2cMS5803 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cMS5803 temp pressure sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9258,7 +9258,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cBMPxx" type="label">
-				<Label>Setup i2cBMPxx temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cBMPxx temp pressure sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9375,7 +9375,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup i2cBMP280 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cBMP280 temp pressure sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9492,7 +9492,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup i2cBMP388 temp pressure sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cBMP388 temp pressure sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9598,7 +9598,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cSHT21" type="label">
-				<Label>Setup i2cSHT21 temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cSHT21 temp sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9717,7 +9717,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cAM2320" type="label">
-				<Label>Setup i2cAM2320 temp humidity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cAM2320 temp humidity sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9838,7 +9838,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup i2cBME280 temp pressure humidity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cBME280 temp pressure humidity sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -9964,7 +9964,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2cBME680 temp pressure humidity sensor on individual rPis..
-    connect 3.3, GND, SDA,SCL.
+    connect 3.3V, GND, SDA,SCL.
 It measures Temp, humidity and pressure like eg bme280 and in addition
      a gas value that is a resistance that changes with air quality.
 In clean air the resistance is the highest, if it senses eg VOC gases the
@@ -10272,7 +10272,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup si7021 temp  humidity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup si7021 temp  humidity sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -10389,7 +10389,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup tmp006 temp  sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup tmp006 temp  sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -10526,7 +10526,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup tmp007 temp  sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup tmp007 temp  sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -10664,7 +10664,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup max31865 -PT  temp  sensor on individual rPis.. connect 3.3, GND, SPS pins</Label>
+				<Label>Setup max31865 -PT  temp  sensor on individual rPis.. connect 3.3V, GND, SPS pins</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -11047,7 +11047,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup sgp30 CO2 VOC sensor on individual rPis..
-    connect 3.3, GND, SDA, SCL. The sensor does not show on i2detect -y 1 sometimes
+    connect 3.3V, GND, SDA, SCL. The sensor does not show on i2detect -y 1 sometimes
 ====use menu/action calibrate command to reset baseline to 0====
   </Label>
 			</Field>
@@ -11163,7 +11163,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup scd30 CO2 temp hum sensor on individual rPis..
-    connect 3.3, GND, SDA, SCL. ====
+    connect 3.3V, GND, SDA, SCL. ====
   </Label>
 			</Field>
 
@@ -11339,7 +11339,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup sgp40  VOC sensor on individual rPis..
-    connect 3.3, GND, SDA, SCL. The sensor does not show on i2detect -y 1 sometimes
+    connect 3.3V, GND, SDA, SCL. The sensor does not show on i2detect -y 1 sometimes
     the VOC index value goes from 0 to 500
     calibration is set fixed to 20C and 50% Humidity
     0-100:   good
@@ -11670,7 +11670,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c-ccs811 CO2 VOC sensor on individual rPis..
-    connect 3.3, GND, SDA,SCL. AND connect wake to GND
+    connect 3.3V, GND, SDA,SCL. AND connect wake to GND
 It measures CO2 VOC
 ====set baseline to fixed value of clean air====
   </Label>
@@ -11820,7 +11820,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-				<Label>Setup i2cTCS34725  RGB-white light sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup i2cTCS34725  RGB-white light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
     illuminance is shown in lux</Label>
 			</Field>
 
@@ -11976,7 +11976,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabelMAX44009" type="label">
-				<Label>Setup MAX44009   light sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup MAX44009   light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
     illuminance is shown in Lux, auto ranging is enabled, range: 0.045..188,000 Lux </Label>
 			</Field>
 
@@ -12076,7 +12076,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-				<Label>Setup i2c as726x  RGB-Orange-Yellow-Violet light sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup i2c as726x  RGB-Orange-Yellow-Violet light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
     numbers shown are in μW/cm2
     illuminance is shown in lux, is calculated using green* 6.83</Label>
 			</Field>
@@ -12322,7 +12322,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup i2c1145 white - IR-Visible-UV sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2c1145 white - IR-Visible-UV sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -12426,7 +12426,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup i2cOPT3001 light -eye response sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup i2cOPT3001 light -eye response sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
   range is from 0.01Lux to 85k Lux </Label>
 			</Field>
 
@@ -12553,7 +12553,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabel" type="label">
-				<Label>Setup veml7700 light -eye response sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup veml7700 light -eye response sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
   range is from 0.01Lux to 85k Lux </Label>
 			</Field>
 
@@ -12729,7 +12729,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-				<Label>Setup i2cVEML6030 white - ambient light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cVEML6030 white - ambient light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -12905,7 +12905,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cTCS" type="label">
-				<Label>Setup i2cVEML6040 RGB-White light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cVEML6040 RGB-White light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13072,7 +13072,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cVEML6070" type="label">
-				<Label>Setup i2cVEML6070 UV light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cVEML6070 UV light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13218,7 +13218,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli" type="label">
-				<Label>Setup i2cVEML6075 UV light sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cVEML6075 UV light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13361,7 +13361,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cTSL2561" type="label">
-				<Label>Setup i2cTSL2561 IR ambient light sensor on individual rPis .. connect 3.3, GND, SDA,SCL
+				<Label>Setup i2cTSL2561 IR ambient light sensor on individual rPis .. connect 3.3V, GND, SDA,SCL
     illuminance is shown in lux</Label>
 			</Field>
 
@@ -13540,7 +13540,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabeli2cMLX90614" type="label">
-				<Label>Setup i2cMLX90614 IR remote temp sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2cMLX90614 IR remote temp sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -13712,7 +13712,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c amg88xx infrared camera sensor on individual rPis..
-    connect 3.3, GND, SDA,SCL.
+    connect 3.3V, GND, SDA,SCL.
 It measures - all temp values are converted to std temp (set in config)
         -Ambient Temperature,
         -Average Temperature of pixels,
@@ -14823,7 +14823,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c l3g4200/l3gd20h  XYZ gyroscope sensor on individual rPis
     the XYZ accelerations  .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -14984,7 +14984,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c mag3110  3 degree  mag sensor on individual rPis
     .. values are measured every xx seconds units are uT, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -15194,7 +15194,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c hmc5883L  3 degree  mag sensor on individual rPis
     .. values are measured every xx seconds units are uT, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -15405,7 +15405,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c BNO055  9 degree sensor mag, lin acc circ-accl gryroscope quatril angles, euler angles  sensor on individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -15655,7 +15655,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c mpu9255  9 degree sensor mag, lin acc circ-accl gryroscope, euler angles  sensor on individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -15864,7 +15864,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c mpu6050  6 degree sensor mag, lin acc circ-accl gyrroscope  on  individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -16040,7 +16040,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c lsm303  6 degree sensor mag, circ-accl gyrroscope  on  individual rPis
     .. values are measured every xx seconds, update is send to indigo depending on setting below
-    .. connect 3.3, GND, SDA,SCL</Label>
+    .. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -16421,7 +16421,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c INA-219  current (+-3.2A) and voltage sensor on individual rPis
 the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-.. connect 3.3, GND, SDA,SCL</Label>
+.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -16615,7 +16615,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabel" type="label">
 				<Label>Setup i2c ina-3221  current (+-3.2A) and voltage sensor on individual rPis
 the current .. values are measured every 0.5 seconds, update is send to indigo depending on setting below
-.. connect 3.3, GND, SDA,SCL and set i2c
+.. connect 3.3V, GND, SDA,SCL(i2c) and set i2c number below
 .. if you replace the shunt restsor please change the shunt value for that channel</Label>
 			</Field>
 
@@ -16845,12 +16845,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabelspiMCP3008" type="label">
-				<Label>Setup spiMCP3008 ADC  on individual rPis .. connect 3.3, GND, and SPI </Label>
+				<Label>Setup spiMCP3008 ADC  on individual rPis .. connect 3.3V, GND, and SPI </Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-				<Label>select rPi-server to which the INPUT is connect to:</Label>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
 			<Field id="spiAddress" type="menu"     defaultValue="1"> <Label>spi device#:</Label>
@@ -17035,12 +17035,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabelspiMCP3008" type="label">
-				<Label>Setup spiMCP3008 ADC  on individual rPis for one INPUT channel/state .. connect 3.3, GND, and SPI </Label>
+				<Label>Setup spiMCP3008 ADC  on individual rPis for one INPUT channel/state .. connect 3.3V, GND, and SPI </Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-				<Label>select rPi-server to which the INPUT is connect to:</Label>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
 			<Field id="spiAddress" type="menu"     defaultValue="1"> <Label>spi device#:</Label>
@@ -17190,13 +17190,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabelADS1x15" type="label">
-				<Label>Setup i2c - ADS1115 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL
+				<Label>Setup i2c - ADS1115 ADC  on individual rPis for one INPUT channel/state.. connect 3.3V, GND, SDA,SCL
 returns numbers 0... 12 - 16 bits</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-				<Label>select rPi-server to which the INPUT is connect to:</Label>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c Address:</Label>
@@ -17496,13 +17496,13 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 
 			<Field id="infoLabeli2cPCF8591" type="label">
-				<Label>Setup i2c PCF8591 ADC  on individual rPis for one INPUT channel/state.. connect 3.3, GND, SDA,SCL
+				<Label>Setup i2c PCF8591 ADC  on individual rPis for one INPUT channel/state.. connect 3.3V, GND, SDA,SCL
 returns numbers 0...255</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-				<Label>select rPi-server to which the INPUT is connect to:</Label>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
 			<Field id="i2cAddress" type="menu"     defaultValue="72"> <Label>i2c Address:</Label>
@@ -19093,7 +19093,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 			<Field id="infoLabelINPUT" type="label">
-				<Label>Setup TTP229 INPUT  touch points  on individual rPis.. connect 3.3, GND+... </Label>
+				<Label>Setup TTP229 INPUT  touch points  on individual rPis.. connect 3.3V, GND+... </Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -21396,26 +21396,28 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="infoLabelmysensor" type="label">
-				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3V, GND, SDA,SCL(i2c)
 range up to 1.2m</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-				<Label>select rPi-server to which the INPUT is connect to:</Label>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
 
 
 			<Field id="multiDvices" type="label">
-				<Label>If you use more than 1 device on the same RPi each xShut pin needs to be connected to a different gpio
+				<Label>ONLY if you use MORE than 1 of these Sensors on the same RPi: 
+Each xShut pin on the sensors needs to be connected to a different gpio on the RPI
 The py program on the RPI will use that pin to set each device to a different i2c number- starting at 0x29
 If successful it is shown in dev state i2c </Label>
 			</Field>
 			<Field id="xShutPin" type="menu"     defaultValue="4" hidden="no">
-				<Label>select gpio for THIS device:</Label>
+				<Label>select gpio to xshut pin(on sensor) for THIS device:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
+
 
 
 			<Field id="sensorRefreshSecs" type="menu"     defaultValue="4" hidden="no">
@@ -21645,24 +21647,26 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 
+
 			<Field id="infoLabelmysensor" type="label">
-				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL
-range up to 4 m</Label>
+				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3V, GND, SDA,SCL (i2c)
+range is up to 1.2 m</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
-				<Label>select rPi-server to which the INPUT is connect to:</Label>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
 
 			<Field id="multiDvices" type="label">
-				<Label>If you use more than 1 device on the same RPi each xShut pin needs to be connected to a different gpio
+				<Label>ONLY if you use MORE than 1 of these Sensors on the same RPi: 
+Each xShut pin on the sensors needs to be connected to a different gpio on the RPI
 The py program on the RPI will use that pin to set each device to a different i2c number- starting at 0x29
 If successful it is shown in dev state i2c </Label>
 			</Field>
 			<Field id="xShutPin" type="menu"     defaultValue="4" hidden="no">
-				<Label>select gpio for THIS device:</Label>
+				<Label>select gpio to xshut pin(on sensor) for THIS device:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
@@ -21904,7 +21908,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="infoLabelmysensor" type="label">
-				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
 this sensor is not recommened, use the vl6080 instead
 distance up to 20 cm</Label>
 			</Field>
@@ -22164,7 +22168,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="infoLabelmysensor" type="label">
-				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3, GND, SDA,SCL
+				<Label>Setup TOF distance sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
 distance up to 10 cm</Label>
 			</Field>
 
@@ -22385,7 +22389,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="infoLabelAPDS9960r" type="label">
-				<Label>Setup proximity sensor on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup proximity sensor on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -22646,7 +22650,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabelAPDS9960r" type="label">
 				<Label>Setup lightning sensor  as3935on individual rPis..
-        connect 3.3, GND, SDA,SCL and int pin to gpio
+        connect 3.3V, GND, SDA,SCL(i2c) and int pin to gpio
         and board-Si to V+; EN_V to GND
         if no other i2c device a 10Kohm SCL to V+ is required
         it might not show with "i2cdetect -y 1"</Label>
@@ -23754,7 +23758,7 @@ This device will get its battery level from its brother device,
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabelINPUT" type="label">
-				<Label>Setup i2c TEA5767-FM-radio device  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2c TEA5767-FM-radio device  on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -24075,7 +24079,7 @@ This device will get its battery level from its brother device,
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabelINPUT" type="label">
-				<Label>Setup i2c MCP4725 DAC OUTPUT device  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2c MCP4725 DAC OUTPUT device  on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -24113,7 +24117,7 @@ This device will get its battery level from its brother device,
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="infoLabelINPUT" type="label">
-				<Label>Setup i2c PCF8591 DAC OUTPUT device  on individual rPis.. connect 3.3, GND, SDA,SCL</Label>
+				<Label>Setup i2c PCF8591 DAC OUTPUT device  on individual rPis.. connect 3.3V, GND, SDA,SCL</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >

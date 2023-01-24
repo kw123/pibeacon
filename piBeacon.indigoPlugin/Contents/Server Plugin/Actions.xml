@@ -664,7 +664,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type0"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 0:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 0:  ............ select object to draw:</Label> 
 			</Field>
 			<Field id="startPixelx0"      type="textfield" defaultValue="0"           visibleBindingId="type0"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
 			<Field id="startPixelRGB0"    type="textfield" defaultValue="255,255,255" visibleBindingId="type0"  visibleBindingValue="thermometer">  <Label>start pixel R,G,B:</Label>  </Field>
@@ -691,22 +691,24 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset0"  type="textfield" default="" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset0"  type="textfield" default="" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 
-			<Field id="position0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos00" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
-			<Field  id="pos01" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="sPoint">
+			<Field  id="pos0a" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="line,rectangle,triangle">
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos0b" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
-			<Field  id="pos02" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
-			<Field  id="pos03" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0],[xy1]]:  [[[r,g,b],[r,g,b]],...][[r,g,b],[r,g,b],...]]  .</Label> </Field>
+			<Field  id="pos0c" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="points">
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
+			<Field  id="pos0d" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="matrix">
+			<Label>..Matrix values: [[xy0],[xy1]]:  [[[r,g,b],[r,g,b]],...][[r,g,b],[r,g,b],...]]</Label> </Field>
+			<Field  id="pos0e" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 			<Field id="rotate0"  default="0" type="textfield" visibleBindingId="type0"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
 			    <Label> number of rotations, neg=left:</Label>
@@ -731,7 +733,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display0"  type="menu" default="immediate" visibleBindingId="type0"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display0"  type="menu" default="immediate" visibleBindingId="type0"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -744,7 +746,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type1"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 1:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 1:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text1"  type="textfield" default="" visibleBindingId="type1"  visibleBindingValue="image"  >
@@ -755,7 +757,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset1"  type="textfield" default="" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset1"  type="textfield" default="" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx1"      type="textfield" defaultValue="0"           visibleBindingId="type1"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -775,18 +777,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>delta color steps:</Label>   
 			</Field>
 
-			<Field id="position1"  type="textfield" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position1"  type="textfield" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos10" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
-			<Field  id="pos11" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="sPoint">
+			<Field  id="pos1a" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="line,rectangle,triangle">
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos1b" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
-			<Field  id="pos12" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
-			<Field  id="pos13" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0],[xy1]]:  [[[r,g,b],[r,g,b]],...][[r,g,b],[r,g,b],...]]</Label> </Field>
+			<Field  id="pos1c" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="points">
+			<Label>..Points values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Field  id="pos1d" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="matrix">
+			<Label>..Matrix values: [[xy0],[xy1]]:  [[[r,g,b],[r,g,b]],...][[r,g,b],[r,g,b],...]]</Label> </Field>
+			<Field  id="pos1e" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate1"  default="0" type="textfield" visibleBindingId="type1"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -813,7 +817,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display1"  type="menu" default="immediate" visibleBindingId="type1"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display1"  type="menu" default="immediate" visibleBindingId="type1"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -827,7 +831,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type2"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 2:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 2:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text2"  type="textfield" default="" visibleBindingId="type2"  visibleBindingValue="image"  >
@@ -838,7 +842,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset2"  type="textfield" default="" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset2"  type="textfield" default="" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx2"      type="textfield" defaultValue="0"           visibleBindingId="type2"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -859,18 +863,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position2"  type="textfield" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position2"  type="textfield" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos20" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
-			<Field  id="pos21" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="sPoint">
+			<Field  id="pos2a" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="line,rectangle,triangle">
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos2b" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
-			<Field  id="pos22" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
-			<Field  id="pos23" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Field  id="pos2c" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="points">
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
+			<Field  id="pos2d" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="matrix">
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos2e" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate2"  default="0" type="textfield" visibleBindingId="type2"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -896,7 +902,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display2"  type="menu" default="immediate" visibleBindingId="type2"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display2"  type="menu" default="immediate" visibleBindingId="type2"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -910,7 +916,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type3"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 3:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 3:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text3"  type="textfield" default="" visibleBindingId="type3"  visibleBindingValue="image"  >
@@ -921,7 +927,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset3"  type="textfield" default="" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset3"  type="textfield" default="" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx3"      type="textfield" defaultValue="0"           visibleBindingId="type3"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -942,18 +948,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position3"  type="textfield" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position3"  type="textfield" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos3a" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos3b" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos3c" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos3d" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos3e" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate3"  default="0" type="textfield" visibleBindingId="type3"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -979,7 +987,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display3"  type="menu" default="immediate" visibleBindingId="type3"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display3"  type="menu" default="immediate" visibleBindingId="type3"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -995,7 +1003,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type4"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 4:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 4:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text4"  type="textfield" default="" visibleBindingId="type4"  visibleBindingValue="image"  >
@@ -1006,7 +1014,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset4"  type="textfield" default="" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset4"  type="textfield" default="" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx4"      type="textfield" defaultValue="0"           visibleBindingId="type4"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1027,18 +1035,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position4"  type="textfield" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position4"  type="textfield" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos4a" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos4b" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos4c" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos4d" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos4e" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate4"  default="0" type="textfield" visibleBindingId="type4"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -1064,7 +1074,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display4"  type="menu" default="immediate" visibleBindingId="type4"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display4"  type="menu" default="immediate" visibleBindingId="type4"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1078,7 +1088,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type5"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 5:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 5:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text5"  type="textfield" default="" visibleBindingId="type5"  visibleBindingValue="image"  >
@@ -1089,7 +1099,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset5"  type="textfield" default="" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset5"  type="textfield" default="" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx5"      type="textfield" defaultValue="0"           visibleBindingId="type5"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1110,18 +1120,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position5"  type="textfield" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position5"  type="textfield" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos5a" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos5b" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos5c" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos5d" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos5e" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate5"  default="0" type="textfield" visibleBindingId="type5"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -1147,7 +1159,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display5"  type="menu" default="immediate" visibleBindingId="type5"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display5"  type="menu" default="immediate" visibleBindingId="type5"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1161,7 +1173,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type6"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 6:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 6:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text6"  type="textfield" default="" visibleBindingId="type6"  visibleBindingValue="image"  >
@@ -1172,7 +1184,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset6"  type="textfield" default="" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset6"  type="textfield" default="" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx6"      type="textfield" defaultValue="0"           visibleBindingId="type6"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1193,18 +1205,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position6"  type="textfield" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position6"  type="textfield" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos6a" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos6b" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos6c" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos6d" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos6e" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate6"  default="0" type="textfield" visibleBindingId="type6"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -1230,7 +1244,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display6"  type="menu" default="immediate" visibleBindingId="type6"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display6"  type="menu" default="immediate" visibleBindingId="type6"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1245,7 +1259,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type7"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 7:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 7:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text7"  type="textfield" default="" visibleBindingId="type7"  visibleBindingValue="image"  >
@@ -1256,7 +1270,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset7"  type="textfield" default="" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset7"  type="textfield" default="" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx7"      type="textfield" defaultValue="0"           visibleBindingId="type7"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1277,18 +1291,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position7"  type="textfield" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position7"  type="textfield" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos7a" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos7b" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos7c" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos7d" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos7e" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate7"  default="0" type="textfield" visibleBindingId="type7"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -1314,7 +1330,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display7"  type="menu" default="immediate" visibleBindingId="type7"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display7"  type="menu" default="immediate" visibleBindingId="type7"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1329,7 +1345,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type8"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 8:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 8:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text8"  type="textfield" default="" visibleBindingId="type8"  visibleBindingValue="image"  >
@@ -1340,7 +1356,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
  
-			<Field id="reset8"  type="textfield" default="" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset8"  type="textfield" default="" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx8"      type="textfield" defaultValue="0"           visibleBindingId="type8"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1361,18 +1377,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position8"  type="textfield" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position8"  type="textfield" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos8a" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos8b" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos8c" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos8d" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos8e" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate8"  default="0" type="textfield" visibleBindingId="type8"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -1398,7 +1416,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display8"  type="menu" default="immediate" visibleBindingId="type8"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display8"  type="menu" default="immediate" visibleBindingId="type8"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1412,7 +1430,7 @@ After delete you can save or cancel the action and later delete it</Label>
 
 			<Field id ="type9"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterNeopixelType"  dynamicReload="false"/>
-			    <Label>ITEM   WindowStart + 9:  ............ select output type:</Label> 
+			    <Label>ITEM   WindowStart + 9:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="text9"  type="textfield" default="" visibleBindingId="type9"  visibleBindingValue="image"  >
@@ -1423,7 +1441,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset9"  type="textfield" default="" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix">
+			<Field id="reset9"  type="textfield" default="" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx9"      type="textfield" defaultValue="0"           visibleBindingId="type9"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1444,18 +1462,20 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position9"  type="textfield" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix">
+			<Field id="position9"  type="textfield" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
 			<Field  id="pos9a" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b			           . </Label> </Field>
+			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
 			<Field  id="pos9b" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="sPoint">
 			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
 			<Field  id="pos9c" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
 			<Field  id="pos9d" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]			          .</Label> </Field>
+			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Field  id="pos9e" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="knightrider">
+			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
 
 
 			<Field id="rotate9"  default="0" type="textfield" visibleBindingId="type9"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
@@ -1481,7 +1501,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display9"  type="menu" default="immediate" visibleBindingId="type9"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer">
+			<Field id="display9"  type="menu" default="immediate" visibleBindingId="type9"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1818,7 +1838,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id ="seplelem00"  type="separator"/>
 			<Field id ="typexYAYx0"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET  WindowStart + 0:  ............ select output type:</Label> 
+			    <Label>SET  WindowStart + 0:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx0"  type="textfield" default="" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1893,7 +1913,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			 <Field id ="typexYAYx1"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 1:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 1:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx1"  type="textfield" default="" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,image">
@@ -1970,7 +1990,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx2"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 2:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 2:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx2"  type="textfield" default="" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2045,7 +2065,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx3"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 3:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 3:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx3"  type="textfield" default="" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2120,7 +2140,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx4"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 4:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 4:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx4"  type="textfield" default="" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2194,7 +2214,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx5"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 5:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 5:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx5"  type="textfield" default="" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2270,7 +2290,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx6"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 6:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 6:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx6"  type="textfield" default="" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2346,7 +2366,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx7"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 7:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 7:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx7"  type="textfield" default="" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2422,7 +2442,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx8"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 8:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 8:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx8"  type="textfield" default="" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,image">
@@ -2498,7 +2518,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 			<Field id ="typexYAYx9"  type="menu" defaultValue="">
 			    <List class="self" filter="" method="filterDisplayType"  dynamicReload="false"/>
-			    <Label>SET WindowStart + 9:  ............ select output type:</Label> 
+			    <Label>SET WindowStart + 9:  ............ select object to draw:</Label> 
 			</Field>
 			
 			<Field id="textxYAYx9"  type="textfield" default="" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,image">

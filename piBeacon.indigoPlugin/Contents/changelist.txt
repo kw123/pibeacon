@@ -1,4 +1,10 @@
-Added features / changes in v2022.160.20@ 2023-01-14
+Added features / changes in v2022.160.22@ 2023-01-14
+===================================================
+   
+1. added feature kight rider for neopixel (swinging band of leds left right )
+
+
+Added features / changes in v2022.160.21@ 2023-01-14
 ===================================================
    
 1. delay start time for gpio and i2c-relay: now checks ALSO during delay before any action if it should be cancelled
@@ -10,7 +16,9 @@ Added features / changes in v2022.160.20@ 2023-01-14
 2. bug fix: File "plugin.py", line 6052, in filterNeopixeldevices
    it is a format error 
 
-3. some menu changes
+3. bug fix in config edit 
+
+4. some menu changes
 
 
 

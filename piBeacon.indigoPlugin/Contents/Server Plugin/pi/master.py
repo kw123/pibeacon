@@ -184,7 +184,7 @@ def readNewParams(force=0, init=False):
 		if "clearHostsFile" 						in inp:	clearHostsFile = 					inp["clearHostsFile"] == "1"
 		if "macIfWOLsendToIndigoServer" 			in inp:	macIfWOLsendToIndigoServer = 		inp["macIfWOLsendToIndigoServer"] 
 		if "IpnumberIfWOLsendToIndigoServer" 		in inp:	IpnumberIfWOLsendToIndigoServer = 	inp["IpnumberIfWOLsendToIndigoServer"] 
-		if "usePython3" 							in inp:	usePython3 = 						inp["usePython3"] =="1" 
+		if "usePython3" 							in inp:	usePython3 = 						inp["usePython3"] == "1" 
 
 
 		if sys.version[0] == "2" and usePython3: 

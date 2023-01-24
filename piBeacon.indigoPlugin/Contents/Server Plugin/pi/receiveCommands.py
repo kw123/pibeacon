@@ -378,6 +378,7 @@ def execCMDS(next):
 	global threadsActive
 	global execcommands, PWM
 	global py3Cmd, readOutput, readInput
+	global usePython3
 
 	threadName = threading.currentThread().getName()
 	#U.logger.log(G.debug*20, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
@@ -510,10 +511,9 @@ def execCMDS(next):
 			if device.lower().find("neopixel") > -1:### OUTPUT-neopixel
 				cmdOut = json.dumps(next)
 				if "neopixel" not in output: continue
-				py2orpy3 = "py2"
-				for devId in readOutput["neopixel"]:
-					py2orpy3 = output["neopixel"][devId][0].get("py2orpy3","py2")
-					break
+				if usePython3:	py2orpy3 = "py3"
+				else:			py2orpy3 = "py2"
+				#U.logger.log(30,"usePython3:{}, py2orpy3:{}".format(usePython3,py2orpy3 ))
 
 				if cmdOut != "":
 					try:
@@ -928,6 +928,7 @@ def getcurentCMDS():
 ### ----------------------------------------- ###
 def readParams():
 	global	output, useLocalTime, myPiNumber, inp, readOutput, readInput, execcommandsListAction, PWM, typeForPWM
+	global usePython3
 	inp,inpRaw = U.doRead()
 	if inp == "": return
 
@@ -939,6 +940,7 @@ def readParams():
 		typeForPWM =			inp.get("typeForPWM",typeForPWM)
 		execcommandsListAction=	inp.get("execcommandsListAction","delete")
 		readInput  = 			inp.get("input",{})
+		usePython3 =			inp.get("usePython3","") == "1"
 
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
