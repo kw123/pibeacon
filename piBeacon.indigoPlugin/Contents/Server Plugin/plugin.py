@@ -11818,7 +11818,7 @@ class Plugin(indigo.PluginBase):
 				self.getDebugLevels()
 			if self.rePopulateStates != "" or force:
 				self.debugNewDevStates = True
-				self.indiLOG.log(30,"updating dev states, trying to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for more info , trigger:{}".format(self.rePopulateStates))
+				self.indiLOG.log(20,"updating dev states, trying to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for more info , trigger:{}".format(self.rePopulateStates))
 				for dev in indigo.devices.iter(self.pluginId):
 					dev.stateListOrDisplayStateIdChanged()	# update  states, add keys if missing
 		except Exception as e:
@@ -17426,7 +17426,7 @@ class Plugin(indigo.PluginBase):
 				self.RPI[fromPiU]["piDevId"]					= dev.id  # used to quickly look up the rPI devices in indigo
 				self.RPI[fromPiU]["piMAC"]						= piMACSend
 				self.setGroupStatusNextCheck = -1
-				self.setONErPiV(frompiU, "piUpToDate", ["updateParamsFTP", "rebootSSH"])
+				self.setONErPiV(fromPiU, "piUpToDate", ["updateParamsFTP", "rebootSSH"])
 				self.fixConfig(checkOnly = ["all", "rpi", "force"],fromPGM="updateBeaconStates1") # updateBeaconStates # ok only if new MAC for rpi ...
 				self.statusChanged = 14
 
