@@ -10865,7 +10865,7 @@ class Plugin(indigo.PluginBase):
 
 			#### check authkey vs std password ..
 			self.RPI[piU]["authKeyOrPassword"] = valuesDict["authKeyOrPassword"]
-			self.RPI[piU]["hostFileCheck"] = valuesDict["hostFileCheck"]
+			self.RPI[piU]["hostFileCheck"] = valuesDict.get("hostFileCheck","")
 
 
 			#### check userid password ..
@@ -13724,7 +13724,7 @@ class Plugin(indigo.PluginBase):
 				self.sleep(1)
 				try: dev = indigo.devices[self.RPI[piU]["piDevId"]]
 				except:
-					self.indiLOG.log(10,"setRPIonline looks like device has been deleted..  setting pi:{}  indigo.devices[{}] returns error   marking for delete".format(devID,pi) )
+					self.indiLOG.log(10,"setRPIonline looks like device has been deleted..  setting pi:{}  indigo.devices[{}] returns error   marking for delete".format(devID,piU) )
 					self.delRPI(pi=pi, calledFrom="setRPIonline")
 					return
 
@@ -19445,7 +19445,7 @@ class Plugin(indigo.PluginBase):
 			while self.rpiQueues["state"][piU] == "running":
 				self.rpiQueues["lastCheck"][piU]  = time.time()
 				time.sleep(0.7)
-				addBack =[]
+				addBack = []
 				while not self.rpiQueues["data"][piU].empty():
 					self.rpiQueues["lastActive"][piU]  = time.time()
 					next = self.rpiQueues["data"][piU].get()
@@ -19471,7 +19471,7 @@ class Plugin(indigo.PluginBase):
 						continue
 					try:
 						id = int(self.RPI[piU]["piDevId"])
-						if id != 0 and not indigo.devices[id].enabled:
+						if id != 0 and id in indigo.devices  and not indigo.devices[id].enabled:
 							self.rpiQueues["reset"][piU] = 4
 							if self.decideMyLog("OfflineRPI"): self.indiLOG.log(10,"device {} not enabled, no sending to RPI".format(indigo.devices[id].name) )
 							continue
