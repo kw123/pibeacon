@@ -3033,7 +3033,7 @@ class Plugin(indigo.PluginBase):
 						delDev = {}
 						for devId in self.RPI[piU][IO][typeID]:
 							try:
-								indigo.devices[int(devId)]
+								xx=indigo.devices[int(devId)]
 								if self.RPI[piU][IO][typeID][devId] in [""]:
 									delDev[devId] = 2
 							except:	 
@@ -3603,6 +3603,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def fixConfig(self, checkOnly = ["all"],fromPGM=""):
 		try:
+			dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			try:
 				# dont do it too often
 				if time.time() - self.lastFixConfig < 25: return
@@ -3714,6 +3715,9 @@ class Plugin(indigo.PluginBase):
 					delDEV = []
 					for dev in indigo.devices.iter("props.isCARDevice,props.isBeaconDevice,props.isRPIDevice,props.isRPISensorDevice,props.isSensorDevice,props.isOutputDevice"):
 						props = dev.pluginProps
+						if "created" in dev.states:
+							if len(dev.states["created"]) < 10:
+								dev.updateStateOnServer("created", dateString)
 
 						if dev.deviceTypeId == "car":
 							newP = self.setupCARS(dev.id,props,mode="init")
@@ -5194,6 +5198,7 @@ class Plugin(indigo.PluginBase):
 				valuesDict["MSG"] = errorText
 
 			if errorText == "":
+				self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				return (True, valuesDict, errorDict )
 			else:
 				self.indiLOG.log(40,"validating device error:{}     fields:{}".format(errorText, valuesDict))
@@ -5375,7 +5380,7 @@ class Plugin(indigo.PluginBase):
 				update = 1
 
 			newDefs = json.loads(valuesDict["deviceDefs"])
-			self.indiLOG.log(10,"deviceDefs:{}".format(valuesDict["deviceDefs"]))
+			#self.indiLOG.log(20,"validateDeviceConfigUi_OUTPUTG.. deviceDefs:{}".format(valuesDict["deviceDefs"]))
 
 			try:
 				if len(newDefs) != len(self.RPI[piU]["output"][typeId]["{}".format(dev.id)]):
@@ -5391,7 +5396,7 @@ class Plugin(indigo.PluginBase):
 
 			self.RPI[piU]["output"][typeId]["{}".format(dev.id)] = newDefs
 
-			if typeId.find("OUTPUTi2cRelay") ==-1: pinMappings = "(#,gpio,type,init)"
+			if typeId.find("OUTPUTi2cRelay") ==-1:  pinMappings = "(#,gpio,type,init)"
 			else:									pinMappings = "(ch#,type,init)"
 			for n in range(len(newDefs)):
 				if "gpio" in newDefs[n]:
@@ -6033,16 +6038,16 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def filterNeopixelType(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList=[("0", 	"not active")
-			 ,("line",		"LINE  enter left and right end")
-			 ,("sPoint",	"ONE	  POINT ")
+			 ,("sLine",		"1D-LINE  enter left and right end")
+			 ,("line",		"2D-LINE  enter left and right end")
+			 ,("sPoint",	"ONE      POINT ")
 			 ,("points",	"MULTIPLE POINTS ")
 			 ,("rectangle", "RECTANGLE ")
 			 ,("knightrider", "KNIGHTRIDER moving line left right")
-			 ,("image",		"IMAGE  not implemnted yet")
-			 ,("matrix",	"MATRIX enter only RGB values for EACH point ")
 			 ,("thermometer", "THERMOMETER enter start, end pixels and color delta")
 			 ,("NOP",		"No operation, use to wait before next action")
-			 ,("exec",		"execute , not implemened yet")]
+			 ,("image",		"IMAGE  not implemnted yet")
+			 ,("exec",		"execute, not implemened yet")]
 		return xList
 
 
@@ -6056,11 +6061,24 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterLightSensorOnRpi(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterSensorswPause(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList = []
-		for dev in indigo.devices.iter("props.isSensorDevice"):
-			if dev.deviceTypeId in _GlobalConst_lightSensors:
-				xList.append(("{}-{}".format(dev.id, dev.deviceTypeId), dev.name))
+		for dev in indigo.devices.iter("props.isPauseSensor"):
+			piServerNumber = dev.pluginProps.get("piServerNumber","-1")
+			if piServerNumber != "-1":
+				devType = dev.deviceTypeId
+				xList.append((dev.id,"{} on:{}, sensor:{}".format(dev.name, piServerNumber, devType)))
+		#indigo.server.log("{}".format(xList))
+		return xList
+
+
+
+####-------------------------------------------------------------------------####
+	def filterNeopixeldevices(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList = []
+		for dev in indigo.devices:
+			if dev.deviceTypeId in ["neopixel"]:
+				xList.append((dev.id,"{}".format(dev.name)))
 		return xList
 
 
@@ -6440,7 +6458,7 @@ class Plugin(indigo.PluginBase):
 				if "gpio" in xxx[inSi] and xxx[inSi]["gpio"] != "":
 					valuesDict["gpio"]			= xxx[inSi]["gpio"]
 					valuesDict["outType"]		= xxx[inSi]["outType"]
-					valuesDict["initialValue"] = xxx[inSi]["initialValue"]
+					valuesDict["initialValue"]	= xxx[inSi]["initialValue"]
 
 			valuesDict["stateDone"] = True
 
@@ -6580,9 +6598,9 @@ class Plugin(indigo.PluginBase):
 						self.sendInitialValue = dev.id
 					pinMappings += "{}".format(n) + ":" + xxx[n]["gpio"]+ "," + xxx[n]["outType"]+ "," + xxx[n]["initialValue"]+"|"
 					if "inverse" in dev.states:
-						dev.updateStateOnServer("inverse", xxx[n]["outType"]=="1" )
+						dev.updateStateOnServer("inverse", "yes" if xxx[n]["outType"]=="1"  else "no")
 					elif "inverse_{:2d}".format(n) in dev.states:
-						dev.updateStateOnServer("inverse_{:2d}".format(n), xxx[n]["outType"]=="1" )
+						dev.updateStateOnServer("inverse_{:2d}".format(n), "yes" if xxx[n]["outType"]=="1"  else "no")
 
 					if "initial" in dev.states:
 						dev.updateStateOnServer("initial", xxx[n]["initialValue"])
@@ -6602,7 +6620,7 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict["pinMappings"] = pinMappings
 			valuesDict["deviceDefs"] = json.dumps(xxx)
-			self.indiLOG.log(5,"len:{};  deviceDefs:{}".format(nChannels, valuesDict["deviceDefs"]))
+			self.indiLOG.log(20,"len:{};  deviceDefs:{}".format(nChannels, valuesDict["deviceDefs"]))
 			return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -8658,7 +8676,7 @@ class Plugin(indigo.PluginBase):
 					if cType  == "none":				continue
 					if cType  == "":					continue
 					#self.indiLOG.log(20,"ctype: {}".format(cType))
-					if cType in ["text", "NOP", "line", "points","sPoint", "rectangle", "matrix", "knightrider", "exec", "image"]:
+					if cType in ["text", "NOP", "sLine", "line", "points","sPoint", "rectangle", "knightrider", "exec", "image"]:
 						cmds.append({})
 						nn+=1
 						cmds[nn]["type"]					= cType
@@ -8770,6 +8788,8 @@ class Plugin(indigo.PluginBase):
 			scrollDelayBetweenPages = 0
 			intensity = "100"
 			showDateTime = "0"
+			status = vd.get("status","notSet")
+
 			if "repeat" in vd:
 				repeat = self.convertVariableOrDeviceStateToText(vd["repeat"])
 			else:
@@ -8797,27 +8817,31 @@ class Plugin(indigo.PluginBase):
 				line +="\n    ,\"device\":\"{}".format(typeId)+"\""
 				line +="\n    ,\"restoreAfterBoot\":\"{}".format(restoreAfterBoot)+"\""
 				line +="\n    ,\"intensity\":\"{}".format(intensity)+"\""
+				line +="\n    ,\"status\":\"{}".format(status)+"\""
 				line +="\n    ,\"repeat\":\"{}".format(repeat)+"\""
 				line +="\n    ,\"resetInitial\":\"{}".format(resetInitial)+"\""
 				line +="\n    ,\"command\":'['+\n     '"
 				for cc in cmds:
-					line+=json.dumps(cc)+"'+\n    ',"
-					pts = "{}".format(cc).split("]")
-					for pts2 in pts:
-						items = pts2.split(",")
-						if len(items) < 3: continue
-						for xx	in range(3):
-							try:
-								rgbV=  int(items[-xx])
-								if rgbV > maxRGB:
-									maxRGB	= rgbV
-									if	rgbV > 55:	#0..255, ~ 50+ light comes on
-										lightON = True
-							except: pass
+					line += json.dumps(cc)+"'+\n    ',"
+					if "position" not in cc: continue
+					if "type" not in cc: continue
+					ctype = cc["type"]
+					if ctype.lower() not in ["line", "sline", "points","sPoint", "rectangle", "knightrider"]: continue
+					position = cc["position"]
+
+					#self.indiLOG.log(20,"type:{}, position: {}".format(ctype, position))
+					pos = cc["position"]
+					if ctype == "points": 
+						for xx in pos: 
+							maxRGB = max( maxRGB, self.findMaxRGB(xx))
+					else:
+							maxRGB = max( maxRGB, self.findMaxRGB(pos))
+					if maxRGB > 0:
+						lightON = True
 
 
 				line = line.strip("'+\n     ',")
-				line+="]'\n	 })\n"
+				line+="]'\n })\n"
 				line+= "##=======   end   =====\n"
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"\n"+line+"\n")
 			except Exception as e:
@@ -8830,14 +8854,14 @@ class Plugin(indigo.PluginBase):
 			chList= []
 			if "writeOutputToState" not in props or ("writeOutputToState" in props and props["writeOutputToState"] == "1"):
 				chList.append({"key":"OUTPUT", "value": "{}".format(cmds).replace(" ","")})
-			chList.append({"key":"status", "value": round(maxRGB/2.55)})
+			chList.append({"key":"status", "value": round(maxRGB/2.55,0)})
 			self.execUpdateStatesList(dev,chList)
 			if lightON:
 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOn)
 			else:
 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
 
-			toSend = [{"device": typeId,  "restoreAfterBoot": restoreAfterBoot, "intensity":intensity,"repeat":repeat,"resetInitial":resetInitial,"startAtDateTime":startAtDateTime,"command": cmds}]
+			toSend = [{"device": typeId,  "restoreAfterBoot": restoreAfterBoot, "intensity":intensity,"repeat":repeat,"resetInitial":resetInitial,"status":status,"startAtDateTime":startAtDateTime,"command": cmds}]
 			self.sendtoRPI(ip, piServerNumber, toSend, calledFrom="setneopixelCALLBACKmenu")
 			vd["MSG"] = " ok"
 
@@ -8846,6 +8870,21 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"error display check {}".format(vd))
 			valuesDict["MSG"] = "error in parameters"
 		return vd
+
+	def findMaxRGB(self, findRGB):
+		try:
+			maxRGB = 0
+			if len(findRGB) < 3: return 0
+			for RGB  in findRGB[-3:]:
+				try:
+					#self.indiLOG.log(20,"RGB:{}".format(RGB))
+					rgbV =  int(RGB)
+					if rgbV > maxRGB:
+						maxRGB	= rgbV
+				except: pass
+		except Exception as e:
+			self.exceptionHandler(40, e)
+		return maxRGB
 
 
 ####-------------------------------------------------------------------------####
@@ -10455,10 +10494,12 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(10," setPIN bad parameter: no GPIOpin defined:{}".format(valuesDict))
 					return
 
+				#self.indiLOG.log(20,"{}:  valuesDict:{}".format(dev.name, valuesDict))
 				if "inverseGPIO" in valuesDict:  # overwrite individual defs  if explicitely inverse defined
 					try: 											inverseGPIO = (valuesDict["inverseGPIO"])
 					except:											inverseGPIO = False
 				else:
+					#self.indiLOG.log(20," deviceDefs[int(output)]:{}".format(deviceDefs[int(output)]))
 					if deviceDefs[int(output)]["outType"] == "0":	inverseGPIO = False
 					else:										  	inverseGPIO = True
 
@@ -10673,6 +10714,7 @@ class Plugin(indigo.PluginBase):
 		valuesDict["typeId"]	  = dev.deviceTypeId
 		valuesDict["devId"] = devId
 		#self.indiLOG.log(10,	"valuesDict {}".format(valuesDict))
+		#self.indiLOG.log(20,"setPinCALLBACKaction outputdev:{}, valuesDict:{} ".format(dev.name, valuesDict))
 		self.setPin(valuesDict)
 
 		return
@@ -10757,6 +10799,22 @@ class Plugin(indigo.PluginBase):
 		valuesDict["typeId"]			 = "playSound"
 		valuesDict["cmd"]				 = "playSound"
 		self.setPin(valuesDict)
+		return
+
+####-------------------------------------------------------------------------####
+	def pauseSensorCALLBACKaction(self, action1):
+		valuesDict = action1.props
+		devId = valuesDict.get("selectSensor","")
+		if devId == "": return 
+		dev = indigo.devices[int(devId)]
+		devType = dev.deviceTypeId 
+		piU	 = dev.pluginProps.get("piServerNumber","")
+		sleepFor = valuesDict.get("sleepFor","5")
+
+		cmd1 = {"command": "file","fileName":"temp/pauseSensor","fileContents":{devType:sleepFor}}
+		#self.indiLOG.log(20,"piu:{}, ip:{}, cmd1:{}".format(piU, self.RPI[piU]["ipNumberPi"], cmd1))
+		self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, [cmd1], calledFrom="pauseSensorCALLBACKaction")
+
 		return
 	###########################		ACTION	 END #################################
 
@@ -12911,7 +12969,7 @@ class Plugin(indigo.PluginBase):
 					#					 devId= int(self.RPI[piU]["input"][sensor].keys()[0])# we only need the first one
 					for devIds in self.RPI[piU]["input"][sensor]:
 						devId = int(devIds)
-						if devId < 1: 1 / 0
+						if devId < 1: xxx=1 / 0
 						dev = indigo.devices[devId]
 						props = dev.pluginProps
 						if dev.enabled:
@@ -14126,7 +14184,7 @@ class Plugin(indigo.PluginBase):
 							#  updateOutput from pi:11; outputs:{u'OUTPUTswitchbotRelay': {u'1631600841': {u'actualStatus': u'on'}}}
 
 			for output in outputs:
-				if output.find("OUTPUTgpio") == -1 and output.find("OUTPUTi2cRelay") == -1 and output.find("OUTPUTswitchbotRelay") == -1 and output.find("OUTPUTswitchbotCurtain") == -1: continue
+				if output.find("neopixel") == -1 and output.find("OUTPUTgpio") == -1 and output.find("OUTPUTi2cRelay") == -1 and output.find("OUTPUTswitchbotRelay") == -1 and output.find("OUTPUTswitchbotCurtain") == -1: continue
 
 				devUpdate = {}
 				for devIds in outputs[output]:
@@ -14164,7 +14222,11 @@ class Plugin(indigo.PluginBase):
 						continue
 
 					if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"{} received {}".format(output, uData) )
-					self.setActualRelayStatus(piU, dev, props, data)
+					if output == "neopixel":
+						if "status" in data:
+							dev.updateStateOnServer("status", data["status"])
+					else:
+						self.setActualRelayStatus(piU, dev, props, data)
 
 				for devIds in devUpdate:
 					if devIds in self.updateStatesDict:
@@ -14365,7 +14427,7 @@ class Plugin(indigo.PluginBase):
 						try: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 						except: pass
 
-					if "badSensor" in uData:
+					if "badsensor" in uData.lower():
 						self.addToStatesUpdateDict(dev.id, "status", "bad Sensor data, disconnected?")
 						try: dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
 						except: pass
@@ -15115,8 +15177,19 @@ class Plugin(indigo.PluginBase):
 								self.addToStatesUpdateDict(dev.id, "tampered", 					data["tampered"])
 
 
+				if "distanceEvent" 		in data and data["distanceEvent"] !="" 		and "distanceEvent" in dev.states and "{}".format(data["distanceEvent"]) != "{}".format(dev.states["distanceEvent"]):
+									self.setStatusCol(dev, "distanceEvent",					data["distanceEvent"],						"{}".format(data["distanceEvent"]),							whichKeysToDisplay,"","",decimalPlaces=0)
+
+
+				if "stopped" 		in data 										and "stopped" in dev.states and "{}".format(data["stopped"]) != "{}".format(dev.states["stopped"]):
+									self.setStatusCol(dev, "stopped",						data["stopped"],							"{}".format(data["stopped"]),							whichKeysToDisplay,"","",decimalPlaces=0)
+
+
 				if "trigger" 		in data and data["trigger"] !="" 				and "trigger" in dev.states and "{}".format(data["trigger"]) != "{}".format(dev.states["trigger"]):
 									self.setStatusCol(dev, "trigger",						data["trigger"],							"{}".format(data["trigger"]),								whichKeysToDisplay,"","",decimalPlaces=0)
+
+				if "triggers" 		in data and data["triggers"] !="" 				and "triggers" in dev.states and "{}".format(data["triggers"]) != "{}".format(dev.states["triggers"]):
+									self.setStatusCol(dev, "triggers",						data["triggers"],							"{}".format(data["triggers"]),								whichKeysToDisplay,"","",decimalPlaces=0)
 
 				if  "accelerationX" in data and  data["accelerationX"] != "" and "accelerationX" in dev.states and "{}".format(data["accelerationX"]) != "{}".format(dev.states["accelerationX"]):
 									self.setStatusCol(dev, "accelerationX",					data["accelerationX"],			 			"{} [cm/s^2]".format(data["accelerationX"]),				whichKeysToDisplay,"","",decimalPlaces=0)
@@ -15899,7 +15972,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####
-	def updateChangedValuesMakeDevList():
+	def updateChangedValuesMakeDevList(self):
 		self.devListWithÇhangedVales = {}
 		self.devListWithÇhangedValesLastUpdate  = time.time() - 20
 		for dev in indigo.devices:
@@ -15912,7 +15985,7 @@ class Plugin(indigo.PluginBase):
 		return 
 
 ####-------------------------------------------------------------------------####
-	def updateChangedValuesForAllDevices():
+	def updateChangedValuesForAllDevices(self):
 		if time.time() - self.devListWithÇhangedValesLastUpdate < 20: return 
 		self.devListWithÇhangedVales = {}
 		for devId in devListWithÇhangedVales:
@@ -16178,7 +16251,7 @@ class Plugin(indigo.PluginBase):
 					if len(commands[cmd]) > 0: ok = True
 				if commands["green"] == commands["grey"] and commands["grey"] == commands["red"]: return False
 			except: return False
-			if not ok: return
+			if not ok: return False
 
 			x = self.getNumber(ss)
 			#if self.decideMyLog("Special"):self.indiLOG.log(10,"setStateColor for dev {}, x={};  eval syntax: {}".format(dev.name, x, commands) )
@@ -16206,7 +16279,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def setIcon(self, dev, iconProps, default, UPdown):
 		try:
-			if "iconPair" in iconProps and	 iconProps ["iconPair"] !="":
+			if "iconPair" in iconProps and	iconProps ["iconPair"] !="":
 				icon = iconProps ["iconPair"].split("-")[UPdown]
 			else:
 				icon = default.split("-")[UPdown]
@@ -16598,15 +16671,15 @@ class Plugin(indigo.PluginBase):
 					except Exception as e:
 						self.exceptionHandler(40, e)
 
-
-				if "actionShortDistanceLimit" in props:
-					try: cutoff= float(props["actionShortDistanceLimit"])
-					except: cutoff= 50
-				else:		cutoff= 50
-				if dist < cutoff:
-						self.setIcon(dev,props, "SensorOff-SensorOn",1)
-				else:
-						self.setIcon(dev,props, "SensorOff-SensorOn",0)
+				if not self.setStateColor( dev, props, dist):
+					if "actionShortDistanceLimit" in props:
+						try: cutoff= float(props["actionShortDistanceLimit"])
+						except: cutoff= 50
+					else:		cutoff= 50
+					if dist < cutoff:
+							self.setIcon(dev,props, "SensorOff-SensorOn",1)
+					else:
+							self.setIcon(dev,props, "SensorOff-SensorOn",0)
 
 		except Exception as e:
 			self.exceptionHandler(40, e)
@@ -18053,7 +18126,7 @@ class Plugin(indigo.PluginBase):
 							props["typeOfBeacon"] = typeOfBeacon
 							props["version"] = typeOfBeacon
 							dev.replacePluginPropsOnServer(props)
-							setALLrPiVUpdate == "updateParamsFTP"
+							setALLrPiVUpdate = "updateParamsFTP"
 				elif props.get("version","") != oldTag:
 					props["version"] = typeOfBeacon
 					dev.replacePluginPropsOnServer(props)
@@ -18509,9 +18582,9 @@ class Plugin(indigo.PluginBase):
 			#self.indiLOG.log(20,"fastBLEReaction: {}".format(self.fastBLEReaction))
 			for mac in copy.copy(self.fastBLEReaction):
 				if not self.isValidMAC(mac): 
-					 del self.fastBLEReaction[mac]
+					del self.fastBLEReaction[mac]
 				if type(self.fastBLEReaction[mac]) != type({}):
-					 del self.fastBLEReaction[mac]
+					del self.fastBLEReaction[mac]
 			#self.indiLOG.log(20,"fastBLEReaction: {}".format(self.fastBLEReaction))
 
 			out["fastBLEReaction"] = self.fastBLEReaction
@@ -18934,9 +19007,11 @@ class Plugin(indigo.PluginBase):
 										"gpioEcho","gpioTrigger","xShutPin","gpio",
 										"calibrateSetting","recalibrateIfGT","setCalibrationFixedValue","deltaDist","deltaDistAbs","units","dUnits","multiply","offset",
 										"format","sensorTemperatureOffset","autoCalibration","multTemp","offsetTemp","offsetCO2","offsetAlt","enableCalibration","multiplyPress","offsetPress","offsetGas","multiplyHum","offsetHum",
-										"input","spiAddress","gpioPin","sps","gain","integrationTime","doAverage","LEDBlink","LEDmA","font","width","width1","width2","width3","pos1","pos2","pos3","pos3LinLog","logScale","displayText",
+										"input","spiAddress","gpioPin","sps","gain","integrationTime","doAverage","LEDBlink","LEDmA","font","width","width1","width2","width3","pos1","pos2","pos3","pos3LinLog","logScale","displayText","normalizeDistance","colorOfDistanceBar","inverseDistance",
 										"intensity","freeParameter","refreshColor","deltaColor","refreshProximity","deltaProximity","enableGesture","interruptGPIO",
-										"actionPulseBurst","actionPulseContinuous","actionLEFT","actionRIGHT","actionUP","actionDOWN","actionDoubleClick","actionLongClick","actionNEAR","actionFAR","actionPROXup","actionPROXdown","acuracyDistanceMode","mode","actionShortDistance","actionShortDistanceLimit","actionMediumDistance","actionLongDistance","actionLongDistanceLimit",
+										"actionPulseBurst","actionPulseContinuous","actionLEFT","actionRIGHT","actionUP","actionDOWN","actionDoubleClick","actionLongClick","actionNEAR","actionFAR","actionPROXup","actionPROXdown","acuracyDistanceMode","mode",
+										"actionShortDistance","actionShortDistanceLimit","actionMediumDistance","actionLongDistance","actionLongDistanceLimit","actionStopDistance","actionStopMinSpeed","actionStopWait",
+										"actionVeryShortDistanceLimit","actionVeryLongDistanceLimit","actionVeryLongDistance","actionVeryShortDistance","actionEnable",
 										"maxCurrent","integrationTime","rSet","SCLPin","SDOPin","deltaCurrent","deltaX","threshold","sensorLoopWait","resetPin","minSendDelta",
 										"magResolution","declinationOffset","magOffsetX","magOffsetY","magOffsetZ","magDivider","accelerationGain","accelRes","magGain","magFregRate","devType","lowHighAs",
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","bounceTime","timeWindowForContinuousEvents",
@@ -19836,6 +19911,57 @@ class Plugin(indigo.PluginBase):
 		for status in ["ignored", ""]:
 			for beaconDeviceType in self.knownBeaconTags:
 				self.printBeaconInfoLine(status, beaconDeviceType)
+
+	def printHelpActionsCALLBACKmenu(self, x="",y="",z=""):
+		try:
+			helpText  = '  \n'
+			helpText += '=============== help for ACTIONS triggered by distance sensors  eg at stop, dist > xx dist < yy etc          ======  \n'
+			helpText += '  \n'
+			helpText += '  \n'
+			helpText += '====  They are executed w/o indigo directly on the RPI sensor -> GPIO or neopixel or display   \n'
+			helpText += 'first setup distance limits eg VerShort= 5, Short =20, Long=100, VeryLong=200 cm  \n'
+			helpText += '            and time and speed limit for STOP state; (minimum time speed has to be below speed limit for stop action to trigger  \n'
+			helpText += '====  EXAMPLES for actions, esstially any valid unix command is ok  \n'
+			helpText += '==== \n'
+			helpText += 'Simple unix command \n'
+			helpText += ' will print the directory to a file temp/thisIsTheDirectory  \n'
+			helpText += ' ls -l  > temp/thisIsTheDirectory  \n'
+			helpText += '  \n'
+			helpText += '==== \n'
+			helpText += 'SET GPIO output \n'
+			helpText += ' set gpio 18 on, wait 1 sec, set gpio 18 off, and print timestamp to pibeacon logfile:  \n'
+			helpText += ' gpio -g mode 18 out;gpio -g write 18 1;sleep 1;gpio -g write 18 0; date >> /var/log/pibeacon  \n'
+			helpText += '  \n'
+			helpText += '=====  \n'
+			helpText += 'NEOPIXEL, set LEDs on neopixel device on/off, blink,..  \n'
+			helpText += ' The "status" value (any text you like, but no spaces) will be shown in the neopixel indigo device status \n'
+			helpText += ' The neopixel syntax is the the same as for neopixel actions in indigo. You can set one up there and switch on debug output \n'
+			helpText += '       then in the logfile you can see the commands like the ones below send to the neopixel device on the RPI\n'
+			helpText += ' The following is assumimg an LED chain of 8 LED (LED#s: 0-7)  is setup as a neopixel output indigo device on the same RPI \n'
+			helpText += '  \n'
+			helpText += ' -Blinking red  every 0.2 secs, LED 0-7, RGB= 255,0,0 and 0,0,0:  sl or sLine = simpleline  p=[start LED,end LED,R,G,B]   send "VeryShort" to indigo status  \n'
+			helpText += ' echo \'{"status":"VeryShort","repeat":1000,"command":[{"delayStart":0.2,"type":"sl","p":[0,7,255,0,0]},{"delayStart":0.4,"type":"sl","p":[0,7,0,0,0]}]}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
+			helpText += ' -simple red line LED 0-7, RGB= 255,0,0: p=[start LED,end LED,R,G,B]  \n'
+			helpText += ' echo \'{"status":"Short","command":[{"type":"sl","p":[0,7,255,0,0]}]}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
+			helpText += ' -simple yellow line LED 2-3, RGB= 20,20,0 p=[start LED,end LED,R,G,B]; send "ThisIsEnaExample-Medium" to indigo status and reset all LED before start:  \n'
+			helpText += ' echo \'{"status":"ThisIsEnaExample-Medium","res":"[0,0,0]","command":[{"type":"sl","p":[2,3,20,20,0]}]}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
+			helpText += ' -simple blueLine LED 5-7, RGB= 0,0,30;  send "Long" to indigo status and reset all LED before start:\n'
+			helpText += ' echo \'{"status":"Long","res":"[0,0,0]","command":[{"type":"sl","p":[5,7,0,0,30]}]}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
+			helpText += ' -knightRider swinging green LED 3-4 making 8 steps right - left every 0.2s  p=[wait between steps, # of steps left and right, led-start, led-end, R,G,B]:  \n'
+			helpText += ' echo \'{"status":"VeryLong","res":"[0,0,0]","command":[{"type":"kr","p":[0.2,8,3,4,0,30,0]}]}\' > temp/neopixel.inp  \n'
+			helpText += ' -clear  send "Stop" to indigo status and clear LEDs \n'
+			helpText += ' echo \'{"status":"Stop","res":"[0,0,0]"}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
+			helpText += '  \n'
+			helpText += '=============== help for GPIO or neopixel actions triggered by distance sensors                       END    ======  \n'
+			self.myLog( theText = helpText, destination="standard")
+		except Exception as e:
+			self.exceptionHandler(40, e)
+
 
 
 	def printHelp(self):

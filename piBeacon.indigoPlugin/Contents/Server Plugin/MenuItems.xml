@@ -897,7 +897,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="printStuff">
-		<Name>Print various info to logfile </Name>
+		<Name>Print various info to logfile.. </Name>
 		<ConfigUI>
 			<Field id="printConfigMenu" type="button" tooltip="">
 				<Label>Print Config parameters to logfile</Label>
@@ -909,10 +909,15 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<Title>execute</Title>
 				<CallbackMethod>buttonPrintGroupsCALLBACK</CallbackMethod>
 			</Field>
-             <Field id="execBatReport" type="button">
+			<Field id="execBatReport" type="button">
 				<Label>Print report of current beacon battery levels</Label>
 				<Title>execute</Title>
 				<CallbackMethod>makeBatteryLevelReportCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="printDistanceActionHelp" type="button" tooltip="">
+				<Label>Print Distance action help to logfile</Label>
+				<Title>execute</Title>
+				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
 			</Field>
 			<Field id="printstats" type="button" tooltip="">
 				<Label>Print Stats  to logfile</Label>

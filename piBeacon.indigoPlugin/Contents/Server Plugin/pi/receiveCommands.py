@@ -113,14 +113,15 @@ def OUTPUTi2cRelay(command):
 					down = 0x00
 					on   = "high"
 					off  = "low" 
+
 				if cmd == "up":
 					bus.write_byte_data(i2cAddress, pin, up)
-					U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
+					U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, up))
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
 				elif cmd == "down":
 					U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
-					bus.write_byte_data(i2cAddress, pin, 0x00)
+					bus.write_byte_data(i2cAddress, pin,down)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
 				elif cmd == "pulseUp":
@@ -139,9 +140,13 @@ def OUTPUTi2cRelay(command):
 
 				elif cmd == "continuousUpDown":
 					for ii in range(nPulses):
+
 						bus.write_byte_data(i2cAddress, pin, up)
+
 						if sleepForxSecs(pulseUp): break
+
 						bus.write_byte_data(i2cAddress, pin, down)
+
 						if sleepForxSecs(pulseDown): break
 
 				U.removeOutPutFromFutureCommands(pin, devType)
@@ -227,32 +232,29 @@ def setGPIO(command):
 
 		U.logger.log(myDebug, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, command:{} ".format(time.time(), cmd, pin, command) )
 		try:
+			if inverseGPIO: 
+				up   = 0
+				down = 1
+				on   = "low"
+				off  = "high" 
+			else:
+				up   = 1
+				down = 0
+				on   = "high"
+				off  = "low" 
+
 			if cmd == "up":
 				GPIO.setup(pin, GPIO.OUT)
-				if inverseGPIO: 
-					tf = 0
-					GPIO.output(pin, tf)
-					U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
-				else:
-					tf = 1
-					GPIO.output(pin, tf)
-					U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				GPIO.output(pin, up)
+				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, on) )
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 		
 
 			elif cmd == "down":
 				GPIO.setup(pin, GPIO.OUT)
-				if inverseGPIO: 
-					tf = 1
-					GPIO.output(pin, tf)
-					U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-				else: 
-					tf = 0
-					GPIO.output(pin, tf )
-					U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, tf) )
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+				GPIO.output(pin, down)
+				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, off) )
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd == "analogWrite":
 				if inverseGPIO:
@@ -281,61 +283,29 @@ def setGPIO(command):
 
 			elif cmd == "pulseUp":
 				GPIO.setup(pin, GPIO.OUT)
-				if inverseGPIO: 
-					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
-				else:		
-					GPIO.output(pin, True)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-
+				GPIO.output(pin, up)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 				if sleepForxSecs(pulseUp): break
- 
-				if not inverseGPIO: 
-					GPIO.output(pin, True)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
-				else:		
-					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-
-
+				GPIO.output(pin, down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd == "pulseDown":
 				GPIO.setup(pin, GPIO.OUT)
-				if not inverseGPIO: 
-					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
-				else:		
-					GPIO.output(pin, True)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-
+				GPIO.output(pin, down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
-
-				if  inverseGPIO: 
-					GPIO.output(pin, True)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-				else:		
-					GPIO.output(pin, False)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
+				GPIO.output(pin, up)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 
 			elif cmd == "continuousUpDown":
 				GPIO.setup(pin, GPIO.OUT)
 				U.logger.log(myDebug, "continuousUpDown pin = {} start, pulseUp:{}, pulseDown:{}, nPulses:{}".format(pin,  pulseUp, pulseDown, nPulses, inverseGPIO) )
 				for ii in range(nPulses):
-					if inverseGPIO: 
-						GPIO.output(pin, False)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
-					else:		
-						GPIO.output(pin, True)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-
+					GPIO.output(pin, up)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 					if sleepForxSecs(pulseUp): break
-
-					if inverseGPIO: 
-						GPIO.output(pin, True)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"high"}}}})
-					else:		
-						GPIO.output(pin, False)
-						if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":"low"}}}})
+					GPIO.output(pin, down)
+					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 					if sleepForxSecs(pulseDown): break
 				U.logger.log(myDebug, "continuousUpDown finished" )
 
@@ -345,9 +315,6 @@ def setGPIO(command):
 
 	U.logger.log(myDebug, "exit {}".format(command) )
 	U.removeOutPutFromFutureCommands(pin, devType)
-			
-
-
 
 	return 
 
@@ -413,7 +380,7 @@ def execCMDS(next):
 						m = "w"
 						if "fileMode" in next and next["fileMode"].lower() == "a": m = "a"
 						fc = json.dumps(next["fileContents"])
-						#U.logger.log(20,"write to next {}  {}".format(next["fileName"], fc ))
+						U.logger.log(20,"write to next {}  {}".format(next["fileName"], fc ))
 						f = open(next["fileName"], m)
 						f.write("{}".format(fc)) 
 						f.close()
@@ -855,7 +822,9 @@ def setupexecThreads(next):
 		threadsActive[threadName]["thread"].daemon = True
 		threadsActive[threadName]["thread"].start()
 
-		U.logger.log(20,"thread started: {}, command:{} ... ".format(threadName, "{}".format(next)[:150] ))
+		out = "{}".format(next)
+		ll = min(len(out),100)
+		U.logger.log(20,"thread started: {}, command:{} ... {}".format(threadName, out[:ll], out[-ll:] ))
 
 		return True
 
@@ -953,6 +922,7 @@ if __name__ == "__main__":
 	global threadsActive
 	global py3Cmd
 	global output
+	global usePython3
 	PWM 				= 100
 	typeForPWM			= "GPIO"
 	myPID				= str(os.getpid())
@@ -987,7 +957,7 @@ if __name__ == "__main__":
 	
 	getcurentCMDS()
 	py3Cmd = "/usr/bin/python"
-	if sys.version[0] == "3":
+	if sys.version[0] == "3" or usePython3:
 		py3Cmd = "/usr/bin/python3"
 
 

@@ -55,7 +55,7 @@ class pix():
 
 	def _cleanup(self):
 		# Clean up memory used by the library when not needed anymore.
-		if self._leds is not None:
+		if self.pixels is not None:
 			print("Exiting cleanly")
 			del self.pixels 
 		return 
@@ -195,7 +195,7 @@ class draw():
 				self.PIXELS[y][x] = applyIntensity(pos[4:7])
 		return
 		
-	def line(self,pos):
+	def line(self, pos):
 		try:
 			sx = 1
 			sy = 1
@@ -203,27 +203,44 @@ class draw():
 			xEnd   = pos[3]
 			yStart = pos[0]
 			yEnd   = pos[2]
+
 			if pos[3]-pos[1]< 0: 
-				sx =-1
+				sx = -1
 				xStart = pos[3]
 				xEnd   = pos[1]
+
 			if pos[2]-pos[0]< 0: 
-				sy =-1
+				sy = -1
 				
 			if xStart == xEnd:	  
 				for y in range(yStart,yEnd+sy,sy):
-					self.PIXELS[y][pos[1]]=applyIntensity(pos[4:7])
+					self.PIXELS[y][pos[1]] = applyIntensity(pos[4:7])
 				return
 					
-			m = float(pos[2]-pos[0])/(pos[3]-pos[1])
-			b =	 -m*pos[1] + pos[0]
+			m = float(yEnd-yStart)/(xEnd-xStart)
+			b =	 -m * xStart + yStart
 			for x in range(max(0,min(self.maxX,xStart)),max(0,min(self.maxX,xEnd+1))):
 					y = int(x * m + b)
-					self.PIXELS[max(0,min(self.maxY1,y))][x]=applyIntensity(pos[4:7])
+					self.PIXELS[max(0,min(self.maxY1,y))][x] = applyIntensity(pos[4:7])
 			return
 		except	Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"pos {}".format(pos))
+
+		
+	def sLine(self, pos):
+		try:
+			xStart = pos[0]
+			xEnd   = pos[1]
+			for x in range(max(0,min(self.maxX,xStart)),max(0,min(self.maxX,xEnd+1))):
+				self.PIXELS[0][x] = applyIntensity(pos[-3:])
+			#U.logger.log(30, u"draw line from {} to {}, w color:{}".format(xStart,xEnd, pos[-3:]))
+			return
+		except	Exception as e:
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"pos {}".format(pos))
+
+
 
 	def point(self,pos):
 		try:
@@ -233,7 +250,7 @@ class draw():
 			U.logger.log(30, u"pos {}".format(pos))
 		return 
 
-	def pixelImage(self,pos,pixs):
+	def pixelImage(self, pos, pixs):
 		
 		xstart = pos[1]
 		ystart = pos[2]
@@ -249,7 +266,7 @@ class draw():
 		return
 
 
-	def matrix(self,pos):
+	def matrix(self, pos):
 		if isinstance(pos[0], list):
 			for y in range(len(pos)):
 				for x in range(len(pos[0])):
@@ -258,7 +275,7 @@ class draw():
 			U.logger.log(30,u" error type:{} pos:{}".format(cType, pos) )
 		return
 		
-	def points(self,pos):
+	def points(self, pos):
 		try:
 			ppp = "{}".format(pos)
 			if ppp.find("*") >-1:  # get rgb values = last three numbers in eg [["*","*",3,4,5]] or ["*","*",3,4,5]
@@ -280,7 +297,7 @@ class draw():
 			U.logger.log(30,"", exc_info=True)
 
 
-	def rotateCenter(self,phi=math.pi/2.):
+	def rotateCenter(self, phi=math.pi/2.):
 		
 		temp = copy.copy(self.PIXELS)
 		x0 = int(self.maxX/2.)
@@ -405,8 +422,10 @@ class draw():
 		doPix.show() 
 
 
+
+
 #============================= std pgms 
-def readParams(pgmType):
+def readParams():
 	global devType,	 intensityDevice,flipDisplay, signalPin,OrderOfMatrix, PWMchannel, DMAchannel, frequency
 	global astOrderOfMatrix, lastdevType, lastsignalPin, lastintensityDevice, lastPWMchannel, lastDMAchannel,lastfrequency
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
@@ -414,6 +433,7 @@ def readParams(pgmType):
 	global multIntensity, intensity, intensityDevice, lightSensorValue
 	global inpRaw
 	global oldRaw, lastRead
+	global pgmType, myDevId
 	try:
 		retCode = 0
 
@@ -429,6 +449,8 @@ def readParams(pgmType):
 
 		oldRaw	   = inpRaw
 
+		U.getGlobalParams(inp)
+
 		lastintensityDevice		= intensityDevice
 		lastsignalPin			= signalPin
 		lastdevType				= devType
@@ -441,6 +463,7 @@ def readParams(pgmType):
 			output =				inp["output"]
 			if pgmType in output:
 				for devid in output[pgmType]:
+					if devid != "": myDevId = devid
 					ddd			= output[pgmType][devid][0]
 					if "devType"  in ddd: 
 						devType		= ddd["devType"]
@@ -525,32 +548,34 @@ def readParams(pgmType):
 		U.logger.log(30,"", exc_info=True)
 	return	retCode
 					   
+# ------------------    ------------------ 
 def readNewInput():
-	try:
-		f = open(G.homeDir+"temp/neopixel.inp","r")
-		xxx = f.read().strip("\n") 
-		items = xxx.split("\n")
-		f.close()
-		os.remove(G.homeDir+"temp/neopixel.inp")
-		U.logger.log(10," new input: {}".format(xxx))
-		return items
-	except:	 
-		items=[]
+	if os.path.isfile(G.homeDir+"temp/neopixel.inp"):
 		try:
+			f = open(G.homeDir+"temp/neopixel.inp","r")
+			xxx = f.read().strip("\n") 
+			items = xxx.split("\n")
+			f.close()
 			os.remove(G.homeDir+"temp/neopixel.inp")
-		except:
-			pass
+			U.logger.log(20," new input: {}".format(xxx))
+			return items
+		except	Exception as e:
+			U.logger.log(30,"", exc_info=True)
+			try: 	os.remove(G.homeDir+"temp/neopixel.inp")
+			except:	pass
 	return []
 
 		
+# ------------------    ------------------ 
 def checkIfnewInput():
 		return os.path.isfile(G.homeDir+"temp/neopixel.inp")
 
+# ------------------    ------------------ 
 def checkIfnewReboot():
 		return os.path.isfile(G.homeDir+"temp/rebooting.now")
 
 
-
+# ------------------    ------------------ 
 def saveLastCommands(items):
 	try:
 		f = open(G.homeDir+"neopixel.last","w")
@@ -559,6 +584,7 @@ def saveLastCommands(items):
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
+# ------------------    ------------------ 
 def readLastCommands():
 	try:
 		if os.path.isfile(G.homeDir+"neopixel.last"):
@@ -570,6 +596,7 @@ def readLastCommands():
 		U.logger.log(30,"", exc_info=True)
 	return []
 
+# ------------------    ------------------ 
 def deleteLastCommands():
 	try:
 		if os.path.isfile(G.homeDir+"neopixel.last"):
@@ -577,9 +604,10 @@ def deleteLastCommands():
 	except: pass
 	
 # ------------------    ------------------ 
-def restartNEOpixel(param=""):
+def restartNEOpixel():
 	global devType,lastdevType
-	U.restartMyself(reason="restarting due to new device type, old="+devTypeLast+" new="+devType, param=param, doPrint=True)
+	global pgmType
+	U.restartMyself(reason="restarting due to new device type, old={} new={}".format(devTypeLast, devType), param=pgmType, doPrint=True)
 
 
 # ------------------    ------------------ 
@@ -593,7 +621,7 @@ def getLightSensorValue(force=False):
 		if not lightSensorOnForDisplay:								return False
 		if (tt0 - lastTimeLightSensorValue < 2) and not force:		return False
 		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"):	return False
-###{  "sensors": {    "i2cOPT3001": {      "393522233": {        "light": 40.96      }    }  },   "time": 1568991254.784975}
+		###{  "sensors": {    "i2cOPT3001": {      "393522233": {        "light": 40.96      }    }  },   "time": 1568991254.784975}
 		rr , raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
 		if rr == {}:
 			time.sleep(0.1)
@@ -667,6 +695,18 @@ def checkLightSensor():
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	
+
+# ------------------    ------------------ 
+def sendToIndigo(items, devId):
+	if items == []: return 
+	try: 	status = json.loads(items[0]).get("status","none")
+	except: 
+		#U.logger.log(30, "send items[0]:{}".format(items[0]))
+		status = "none"
+	#U.logger.log(20, "send items[0]:{}".format(items[0]))
+	data = {"outputs":{"neopixel":{devId:{"status":status}}}}
+	U.sendURL(data)
+
 #=============================
 #=============================
 
@@ -681,24 +721,26 @@ global multIntensity, intensity, intensityDevice, lightSensorValue
 global height,width
 global linearDATA
 global oldRaw,	lastRead
-oldRaw					= ""
-lastRead				= 0
+global pgmType, myDevId
+oldRaw						= ""
+lastRead					= 0
+myDevId						= "notSet"
 
 # LED strip configuration:
-signalPin		= 18	  # GPIO pin connected to the pixels (must support PWM!).
-#LED_FREQ_HZ	 =	400000	# LED signal frequency in hertz (usually 800khz)
-LED_FREQ_HZ		= 800000  # LED signal frequency in hertz (usually 800khz)
-LED_DMA			= 5		  # DMA channel to use for generating signal (try 5)
-LED_BRIGHTNESS	= 255	  # Set to 0 for darkest and 255 for brightest
-LED_CHANNEL		= 0		  # PWM channel
-LED_INVERT		= False	  # True to invert the signal (when using NPN transistor level shift)
-devType			= ""
-flipDisplay		= 0
-PWMchannel		= 0
-DMAchannel		= 5
-frequency		= 800000
-intensity		= 1
-intensityDevice = 1
+signalPin					= 18	  # GPIO pin connected to the pixels (must support PWM!).
+#LED_FREQ_HZ				= 400000	# LED signal frequency in hertz (usually 800khz)
+LED_FREQ_HZ					= 800000  # LED signal frequency in hertz (usually 800khz)
+LED_DMA						= 5		  # DMA channel to use for generating signal (try 5)
+LED_BRIGHTNESS				= 255	  # Set to 0 for darkest and 255 for brightest
+LED_CHANNEL					= 0		  # PWM channel
+LED_INVERT					= False	  # True to invert the signal (when using NPN transistor level shift)
+devType						= ""
+flipDisplay					= 0
+PWMchannel					= 0
+DMAchannel					= 5
+frequency					= 800000
+intensity					= 1
+intensityDevice				= 1
 
 useLightSensorType 			= ""
 useLightSensorDevId 		= 0
@@ -728,7 +770,7 @@ OrderOfMatrix	= "lrrl"
 inpRaw			= ""
 U.setLogging()
 
-readParams(pgmType)
+readParams()
 U.logger.log(20, u"=========== (re) started neopixel3  ============{}".format(sys.argv))
 
 
@@ -783,6 +825,7 @@ while True:
 	try:
 		if loop == 1 and  (items == [] or items ==""):
 			items = readLastCommands()
+			sendToIndigo(items, myDevId)
 
 		if redoItems and lastItems != []: 
 			items = copy.copy(lastItems)
@@ -795,7 +838,7 @@ while True:
 				try:	
 					data = json.loads(item)
 				except	Exception as e:
-					if loop >0:
+					if loop > -1:
 						U.logger.log(30,"", exc_info=True)
 						U.logger.log(30,"{}".format(item)[0:100])
 					data = item
@@ -816,9 +859,10 @@ while True:
 						deleteLastCommands()
 				except: pass
 
-			if "resetInitial" in data:
+			if "resetInitial" in data or "res" in data:
 				try: 
-					resetInitial= data["resetInitial"]
+					if   "res" in data:				resetInitial= data["res"]
+					elif "resetInitial" in data:	resetInitial= data["resetInitial"]
 					if resetInitial !=[] and resetInitial !="":
 						try:resetInitial= json.loads(resetInitial)
 						except: pass
@@ -854,7 +898,6 @@ while True:
 				pass
 
 
-			
 			intensity=1.
 			try:
 				if "intensity" in data: intensity	   = float(data["intensity"])/100.
@@ -869,11 +912,15 @@ while True:
 					if "command" not in data: break 
 					loopCount+=1
 					#print "comand", data["command"]
-					ncmds = len(data["command"])
+					try: ncmds = len(data["command"])
+					except:
+						U.logger.log(20, " read error type:{} and data:{}".format(type(item), type(data), data))
+						continue
 					npage=-1
 					waited =False
 					for cmd in data["command"]:
 						try:
+								 
 								tt= time.time()
 								U.logger.log(10, "cmd:{}".format(cmd) )
 								if "type" not in cmd: continue
@@ -908,7 +955,7 @@ while True:
 										continue
 
 								rotate=0
-								if "rotate" in cmd:
+								if "rotate" in cmd :
 									try:
 										rotate = int(cmd["rotate"])
 									except: rotate = 0
@@ -925,21 +972,25 @@ while True:
 										speedOfChange = int(cmd["speedOfChange"])
 									except: speedOfChange = 0
 				
-								pos = [0,0,0,0]
-								if "position" in cmd:
-									pos = cmd["position"]
+								pos = [0,0,0,0,0]
+								if "p" in cmd or "position" in cmd:
+									if "p" in 	   		cmd: pos = cmd["p"]
+									if "position" in 	cmd: pos = cmd["position"]
 
-
-							
+						
 								#U.logger.log(10,u"type:"+cType+" pos:{}".format(pos)[0:20] )
-								if cType == "line":
+								if cType == "line"  or cType.lower() == "l": # 2 d line
 									image.line(pos)
 							
-								elif cType == "rectangle":
+								elif cType.lower() == "sline"  or cType.lower() == "sl": # one d line  [xs,xe,R,G,B]
+									image.sLine(pos)
+				
+							
+								elif cType == "rectangle" or cType == "r":
 									image.rectangle(pos)
 				
  
-								elif cType == "sPoint":
+								elif cType.lower() == "spoint" or cType == "sp":
 									image.point(pos)
 					
 								elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:
@@ -953,17 +1004,22 @@ while True:
 									image.points(pos)
 
 
-								elif cType == "knightrider":
-										xlen   = pos[1]
+								elif cType == "knightrider" or cType == "kr":
+										if len(pos) != 7:
+											U.logger.log(20,u"not enough parameters for postion:{}, should be 7".format(pos))
+											time.sleep(3)
+											continue
+
+										sleepTime = max(0.05, pos[0])
+										nsteps  = pos[1]
 										xstart = pos[2]
 										xend   = pos[3]
-										sleepTime = pos[0]
-										nsteps  = pos[1]
+										RGB = pos[4:]
 
 										resetLEDS = [0, xstart, 0, xend+nsteps, 0, 0, 0]
-										xx = [0, xstart + iknightriderInd, 0, xend+ iknightriderInd, pos[4], pos[5], pos[6]]
+										xx = [0, xstart + iknightriderInd, 0, xend+ iknightriderInd] + RGB
 										if xx[1] <= xstart: 			iknightriderDir = 1
-										if iknightriderInd >= xlen: 	iknightriderDir = -1
+										if iknightriderInd >= nsteps: 	iknightriderDir = -1
 										iknightriderInd += iknightriderDir
 										#U.logger.log(20,u" sleep:{},  iRaiderInd{}, iRaiderDir:{}, pos:{} xx:{} ".format(pos[0], iRaiderInd, iRaiderDir, pos, xx))
 										image.line(resetLEDS)
@@ -1100,8 +1156,8 @@ while True:
 									lastAlive =tt
 									#print "echo alive"
 									U.echoLastAlive(G.program)
-									if readParams(pgmType=pgmType) ==1:
-										restartNEOpixel(param =pgmType )
+									if readParams() ==1:
+										restartNEOpixel()
 
 								if checkIfnewInput(): break
 								
@@ -1120,13 +1176,16 @@ while True:
 		try:
 			if checkIfnewInput():
 				items = readNewInput()
+				sendToIndigo(items, myDevId)
+
+
 			redoItems = checkLightSensor()
 		except	Exception as e:
 			U.logger.log(30,"", exc_info=True)
 				
 		if loop %20 ==0:
-			if readParams(pgmType=pgmType) ==1:
-				restartNEOpixel(param =pgmType )
+			if readParams() ==1:
+				restartNEOpixel()
 			U.echoLastAlive(G.program)
 		loop +=1 
 		#print "neopixel sleep end item ", time.time() -ttx
@@ -1138,6 +1197,6 @@ while True:
 
 U.logger.log(30, u"exiting at end")
 
-atexit.register(_clean_shutdown)
+atexit.register()
 		
 sys.exit(0)		   

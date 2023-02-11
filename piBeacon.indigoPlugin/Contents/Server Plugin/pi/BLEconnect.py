@@ -258,7 +258,7 @@ def launchGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, 
 				pass
 				#U.logger.log(20,"gatttool started successful: {}-==-:{}".format(expCommands[thisMAC].before,expCommands[thisMAC].after))
 			else:
-				disconnectGattcmd(thisMAC)
+				disconnectGattcmd(thisMAC, 2)
 				if kk == nTries -1: 
 					U.logger.log(20, u"{} gatttool ERROR, giving up: \nBF:{}--\nAF:{}-".format(thisMAC, BF, AF))
 					time.sleep(1)

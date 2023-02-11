@@ -483,6 +483,21 @@ class draw():
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"pos {}".format(pos))
 
+		
+	def sLine(self, pos):
+		try:
+			xStart = pos[0]
+			xEnd   = pos[1]
+			for x in range(max(0,min(self.maxX,xStart)),max(0,min(self.maxX,xEnd+1))):
+				self.PIXELS[0][x] = applyIntensity(pos[-3:])
+			#U.logger.log(30, u"draw line from {} to {}, w color:{}".format(xStart,xEnd, pos[-3:]))
+			return
+		except	Exception as e:
+			U.logger.log(30,"", exc_info=True)
+			U.logger.log(30, u"pos {}".format(pos))
+
+
+
 	def point(self,pos):
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] =applyIntensity(pos[2:5])
@@ -1074,9 +1089,10 @@ while True:
 						deleteLastCommands()
 				except: pass
 
-			if "resetInitial" in data:
+			if "resetInitial" in data or "res" in data:
 				try: 
-					resetInitial= data["resetInitial"]
+					if   "res" in data:				resetInitial= data["res"]
+					elif "resetInitial" in data:	resetInitial= data["resetInitial"]
 					if resetInitial !=[] and resetInitial !="":
 						try:resetInitial= json.loads(resetInitial)
 						except: pass
@@ -1084,6 +1100,7 @@ while True:
 						image.resetImage(resetInitial)
 						image.show()
 				except: pass
+
 
 			if "startAtDateTime" in data:
 				try:
@@ -1096,7 +1113,7 @@ while True:
 			
 			repeat=1
 			try:
-				if "repeat" in data: repeat		 = int(data["repeat"])
+				if "repeat" in data: repeat = int(data["repeat"])
 			except:
 				pass
 
@@ -1129,17 +1146,16 @@ while True:
 					#print "comand", data["command"]
 					ncmds = len(data["command"])
 					npage=-1
-					waited =False
+					waited = False
 					for cmd in data["command"]:
 						try:
 								tt= time.time()
-								#U.logger.log(10, "cmd:{}".format(cmd) )
+								U.logger.log(10, "cmd:{}".format(cmd) )
 								if "type" not in cmd: continue
 								cType = cmd["type"]
 								if cType == "" or cType == "0":	 continue
 			
 
-						 
 								reset =""
 								if "reset" in cmd:
 									reset = cmd["reset"]
@@ -1163,11 +1179,11 @@ while True:
 										except: pass
 								
 								if cType == "NOP" :
-										U.logger.log(10,u"skipping display ..	 NOP")
+										U.logger.log(10,u"skipping display .. NOP")
 										continue
 
 								rotate=0
-								if "rotate" in cmd:
+								if "rotate" in cmd :
 									try:
 										rotate = int(cmd["rotate"])
 									except: rotate = 0
@@ -1184,21 +1200,25 @@ while True:
 										speedOfChange = int(cmd["speedOfChange"])
 									except: speedOfChange = 0
 				
-								pos=[0,0,0,0]
-								if "position" in cmd:
-									pos = cmd["position"]
+								pos = [0,0,0,0,0]
+								if "p" in cmd or "position" in cmd:
+									if "p" in 	   		cmd: pos = cmd["p"]
+									if "position" in 	cmd: pos = cmd["position"]
 
-
-							
+						
 								#U.logger.log(10,u"type:"+cType+" pos:{}".format(pos)[0:20] )
-								if cType == "line":
+								if cType == "line"  or cType.lower() == "l": # 2 d line
 									image.line(pos)
 							
-								elif cType == "rectangle":
+								elif cType.lower() == "sline"  or cType.lower() == "sl": # one d line  [xs,xe,R,G,B]
+									image.sLine(pos)
+				
+							
+								elif cType == "rectangle" or cType == "r":
 									image.rectangle(pos)
 				
  
-								elif cType == "sPoint":
+								elif cType.lower() == "spoint" or cType == "sp":
 									image.point(pos)
 					
 								elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:
@@ -1210,6 +1230,29 @@ while True:
 
 								elif cType == "points":
 									image.points(pos)
+
+
+								elif cType == "knightrider" or cType == "kr":
+										if len(pos) != 7:
+											U.logger.log(20,u"not enough parameters for postion:{}, should be 7".format(pos))
+											time.sleep(3)
+											continue
+
+										sleepTime = max(0.05, pos[0])
+										nsteps  = pos[1]
+										xstart = pos[2]
+										xend   = pos[3]
+										RGB = pos[4:]
+
+										resetLEDS = [0, xstart, 0, xend+nsteps, 0, 0, 0]
+										xx = [0, xstart + iknightriderInd, 0, xend+ iknightriderInd] + RGB
+										if xx[1] <= xstart: 			iknightriderDir = 1
+										if iknightriderInd >= nsteps: 	iknightriderDir = -1
+										iknightriderInd += iknightriderDir
+										#U.logger.log(20,u" sleep:{},  iRaiderInd{}, iRaiderDir:{}, pos:{} xx:{} ".format(pos[0], iRaiderInd, iRaiderDir, pos, xx))
+										image.line(resetLEDS)
+										image.line(xx)
+										time.sleep(sleepTime) 
 
 
 								elif cType == "clock":
@@ -1380,6 +1423,6 @@ while True:
 
 U.logger.log(30, u"exiting at end")
 
-atexit.register(_clean_shutdown)
+atexit.register()
 		
 sys.exit(0)		   

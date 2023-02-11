@@ -717,9 +717,9 @@ class VL53L0X:
 def readParams():
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, distanceUnits
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
 	global oldRaw, lastRead
 	global acuracyDistanceMode, acuracyDistanceModeOld, xShutPin, i2cNumber, i2CseqNumber
+	global firstRead
 	try:
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -783,41 +783,28 @@ def readParams():
 			try:	acuracyDistanceMode[devId] = int(sensors[sensor][devId].get("acuracyDistanceMode",50000)) # timing budget
 			except:	acuracyDistanceMode[devId] = 50000
 
+			xx = -1
 			if "xShutPin" in sensors[sensor][devId] and sensors[sensor][devId]["xShutPin"] not in ["-1",""]:
 				xx = int(sensors[sensor][devId].get("xShutPin",26))
 				if xx > 0 and xx < 27:
 					xShutPin[devId] = xx
 					i2CseqNumber += 1
+			if not firstRead and xx != xShutPin.get(devId,""):
+				U.restartMyself(reason="new config, need to restart sensor", delay = 0,doPrint=True, doRestartCount=False)
+			xShutPin[devId] = xx
+			fistRead = False 
 
 			try:	sensorRefreshSecs = float(sensors[sensor][devId].get("sensorRefreshSecs",1))
-			except:	sensorRefreshSecs = 1.
+			except:	sensorRefreshSecs = 2.
 
-
-			try:
-				if "actionShortDistance" in sensors[sensor][devId]:		 actionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
-			except:														 actionShortDistance = ""
-
-			try:
-				if "actionMediumDistance" in sensors[sensor][devId]:		actionMediumDistance = (sensors[sensor][devId]["actionMediumDistance"])
-			except:														 actionMediumDistance = ""
-
-			try:
-				if "actionLongDistance" in sensors[sensor][devId]:		  actionLongDistance = (sensors[sensor][devId]["actionLongDistance"])
-			except:														 actionLongDistance = ""
-
-
-			try:
-				if "actionShortDistanceLimit" in sensors[sensor][devId]:	actionShortDistanceLimit = float(sensors[sensor][devId]["actionShortDistanceLimit"])
-			except:														 actionShortDistanceLimit = -1
-
-			try:
-				if "actionLongDistanceLimit" in sensors[sensor][devId]:	 actionLongDistanceLimit = float(sensors[sensor][devId]["actionLongDistanceLimit"])
-			except:														 actionLongDistanceLimit = -1
-
+			U.readDistanceSensor(devId, sensors, sensor)
 
 		if sensorUp == 1:
 				startSensor()
-				
+		if sensorUp == -1:
+				U.logger.log(30, "==== stop  ranging =====")
+				sys.exit()
+				return False
 
 	except  Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -833,7 +820,7 @@ def startSensor():
 		U.logger.log(20,"starting  i2CseqNumber:{}, xShutPin:{}".format(i2CseqNumber, xShutPin))
 		runningI2C = i2CseqNumber
 		for devId in deltaDist:
-			if devId in xShutPin:
+			if devId in xShutPin and xShutPin[devId] > -1:
 				GPIO.setup(xShutPin[devId], GPIO.OUT)
 				U.logger.log(20,"switching off devId:{}, xShutPin:{}".format(devId, xShutPin[devId]))
 				GPIO.output(xShutPin[devId], False)
@@ -841,10 +828,9 @@ def startSensor():
 		
 		for devId in deltaDist:
 			if i2CseqNumber > 0:
-				if devId in xShutPin:
+				if devId in xShutPin and xShutPin[devId] > -1:
 					runningI2C -= 1  # STARTING FROM HIGH NUMBER DOWN TO 0X29
 					i2cNumber[devId] = runningI2C+0x29
-					U.logger.log(20, "==== setting up xshut for devid:{}, xShutPin:{} i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
 					GPIO.output(xShutPin[devId], True)
 					time.sleep(0.2)
 				else:
@@ -853,12 +839,11 @@ def startSensor():
 			else:
 					i2cNumber[devId] = 0x29
 
+			U.logger.log(20, "==== setting up xshut for devid:{}, xShutPin:{} i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
 			sensCl[devId] = VL53L0X(i2c)
-
 			sensCl[devId].timing_budget = acuracyDistanceMode[devId]
 			acuracyDistanceModeOld[devId] = acuracyDistanceMode[devId]
 
-			U.logger.log(20, "==== setting up xshut for devid:{}, xShutPin:{} --> i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
 			if runningI2C > 0:
 				sensCl[devId].set_address(runningI2C + 0x29) 
 			U.logger.log(20, "==== setting up xshut for devid:{} done".format( devId) )
@@ -921,52 +906,17 @@ def getDist(devId):
 
 #################################
 
-#################################
-def doAction(distance):
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-
-	try:
-		if actionShortDistance == "" and actionMediumDistance == "" and actionMediumDistance == "": return 
-
-		if distance != "" and distance !=0:
-
-			if	 distance > actionLongDistanceLimit:	region = "long"
-			elif distance < actionShortDistanceLimit:	region = "short"
-			else:										region = "medium"
-
-			# check reset of last action, if last was short distamce must have been not short at least once ...  
-			if actionDistanceOld != "":
-				if   actionDistanceOld == "short"   	and region == "short":	actionDistanceOld = ""
-				elif actionDistanceOld == "long"    	and region == "long":	actionDistanceOld = ""
-				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
-
-			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
-				subprocess.call(actionShortDistance, shell=True)
-				actionDistanceOld = "short"
-					
-			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
-				subprocess.call(actionMediumDistance, shell=True)
-				actionDistanceOld = "medium"
-					
-			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
-				subprocess.call(actionLongDistance, shell=True)
-				actionDistanceOld = " long"
-
-	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
-
-
-#################################
-
-
 global sensorList, externalSensor,senors,sensorRefreshSecs,sensor, NSleep, ipAddress, dynamic, mode, deltaDist, deltaDistAbs, displayEnable
 global output, authentication, badSensor
 global distanceUnits, sensorActive
-global actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit, actionDistanceOld
 global oldRaw, lastRead
 global badSensor, lastDist
 global aliveTimeStamp, loopSleep
 global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, lastCycle, i2c, xShutPin
+global firstRead
+
+firstRead					= True
+
 
 i2c							= ""
 sensCl						= {}
@@ -978,20 +928,12 @@ oldRaw						= ""
 lastRead					= 0
 
 distanceUnits				= "1.0"
-actionShortDistance			= ""
-actionShortDistanceLimit	= 5.
-actionMediumDistance		= ""
-actionMediumDistanceLimit	= 10
-actionLongDistance			= ""
-actionLongDistanceLimit	 	= 20.
-actionDistanceOld			= 0
-
 acuracyDistanceMode			= {}
 acuracyDistanceModeOld		= {}
 mode						= {}
 modeOld						= {}
 loopCount					= 0
-sensorRefreshSecs			= 1
+sensorRefreshSecs			= 2
 NSleep						= 100
 sensorList					= []
 sensors						= {}
@@ -1063,13 +1005,13 @@ while True:
 					continue
 
 				dist = round(float(dist),1)
-				doAction(dist)
 				if dist > maxRange: dist = 999
 				delta  = dist - lastDist[devId]
 				deltaA = abs(dist - lastDist[devId])
 				deltaT = max(tt - lastTime[devId],0.01)
 				speed  = round(delta / deltaT, 2) 
-				deltaN = abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
+				deltaN = deltaA / max (0.5,(dist+lastDist[devId])/2.)
+				regionEvents = U.doActionDistance(dist, speed, devId)
 
 				#U.logger.log(20, "{}  dtTrue?:{}; dt{:.1f} lastDataSend:{:.1f}".format(dist, tt - abs(sensorRefreshSecs) > lastCycle["lastTime"] , tt - abs(sensorRefreshSecs), lastCycle["lastTime"]) )	
 				trigDD 	= deltaN > deltaDist[devId]
@@ -1078,9 +1020,17 @@ while True:
 				trigQi	= quick
 				if devId in i2cNumber: 	i2cText= "0x{:x}".format(i2cNumber[devId])
 				else:					i2cText = "off"
-				if trigDD or trigDDa or trigDT or trigQi: 
+				if ( trigDD and trigDDa ) or trigDT or trigQi or regionEvents[2]: 
+							trig = ""
+							if trigDD or trigDDa:		trig +="Dist;"
+							if trigDT: 					trig +="Time;"
+							if regionEvents[0] != "": 		
+								trig += "distanceEvent"
+								data["sensors"][sensor][devId]["distanceEvent"]	= regionEvents[0]
+							data["sensors"][sensor][devId]["stopped"]	= regionEvents[1]
+							trig = trig.strip(";")
+							data["sensors"][sensor][devId]["trigger"]	= trig
 							data["sensors"][sensor][devId]["i2c"]	= "{}-pin:{}".format(i2cText, xShutPin.get(devId,"off") )
-							#data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},LC:{},i2c:{}".format(trigDD, trigDDa, trigDT, trigQi, loopCount, xShutPin)
 							data["sensors"][sensor][devId]["distance"]	= dist
 							data["sensors"][sensor][devId]["speed"]		= round(speed,2)
 							sendToIndigo 			= True
@@ -1090,7 +1040,7 @@ while True:
 				else:
 					del data["sensors"][sensor][devId]
 
-				if displayEnable == "1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)	or  tt - lastDisplay >10. or quick):
+				if displayEnable not in ["","0"]:
 					lastDisplay = tt
 					DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
 					#U.logger.log(10, "{}  {}".format(dist, deltaDist) )	

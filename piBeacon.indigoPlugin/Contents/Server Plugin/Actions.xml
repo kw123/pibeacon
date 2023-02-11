@@ -620,6 +620,9 @@ After delete you can save or cancel the action and later delete it</Label>
 		</ConfigUI>
     </Action>
 
+
+
+
     <Action id="Neopixel">
 		<CallbackMethod>setneopixelCALLBACKaction</CallbackMethod>
 		<Name>Send pixels ..  to  RPI NEOpixel devices</Name>
@@ -658,6 +661,13 @@ After delete you can save or cancel the action and later delete it</Label>
 			<Field id="repeat"  type="textfield" default="1" >
 			    <Label>do sequence below x times:</Label>
 			</Field>
+
+
+			<Field id="status"  type="textfield" default="yourText" >
+			    <Label>set status of indigo dev to .. when this command gets executed:</Label>
+			</Field>
+ 
+
  
 			<Field   id="start" type="label"><Label> enter line items ----------------------------------- </Label> </Field>
  
@@ -691,29 +701,38 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset0"  type="textfield" default="" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset0"  type="textfield" default="" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 
-			<Field id="position0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos0a" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos0a" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos0b" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos0c" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos0d" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="matrix">
-			<Label>..Matrix values: [[xy0],[xy1]]:  [[[r,g,b],[r,g,b]],...][[r,g,b],[r,g,b],...]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos0e" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos0f" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
-			<Field id="rotate0"  default="0" type="textfield" visibleBindingId="type0"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate0"  default="0" type="textfield" visibleBindingId="type0"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label> number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds0"  default="0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds0"  default="0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -733,7 +752,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display0"  type="menu" default="immediate" visibleBindingId="type0"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display0"  type="menu" default="immediate" visibleBindingId="type0"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -757,7 +776,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset1"  type="textfield" default="" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset1"  type="textfield" default="" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx1"      type="textfield" defaultValue="0"           visibleBindingId="type1"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -777,26 +796,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>delta color steps:</Label>   
 			</Field>
 
-			<Field id="position1"  type="textfield" visibleBindingId="type1"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position1"  type="textfield" visibleBindingId="type1"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos1a" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos1a" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos1b" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos1c" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="points">
-			<Label>..Points values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]   .</Label> </Field>
-			<Field  id="pos1d" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="matrix">
-			<Label>..Matrix values: [[xy0],[xy1]]:  [[[r,g,b],[r,g,b]],...][[r,g,b],[r,g,b],...]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos1e" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos1f" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate1"  default="0" type="textfield" visibleBindingId="type1"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate1"  default="0" type="textfield" visibleBindingId="type1"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label> number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds1"  default="0"  type="textfield" visibleBindingId="type1"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds1"  default="0"  type="textfield" visibleBindingId="type1"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -817,7 +845,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display1"  type="menu" default="immediate" visibleBindingId="type1"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display1"  type="menu" default="immediate" visibleBindingId="type1"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -842,7 +870,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset2"  type="textfield" default="" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset2"  type="textfield" default="" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx2"      type="textfield" defaultValue="0"           visibleBindingId="type2"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -863,26 +891,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position2"  type="textfield" visibleBindingId="type2"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position2"  type="textfield" visibleBindingId="type2"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos2a" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos2a" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos2b" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos2c" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos2d" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos2e" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos2f" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate2"  default="0" type="textfield" visibleBindingId="type2"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate2"  default="0" type="textfield" visibleBindingId="type2"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds2"  default="0"  type="textfield" visibleBindingId="type2"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds2"  default="0"  type="textfield" visibleBindingId="type2"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -902,7 +939,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display2"  type="menu" default="immediate" visibleBindingId="type2"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display2"  type="menu" default="immediate" visibleBindingId="type2"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -927,7 +964,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset3"  type="textfield" default="" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset3"  type="textfield" default="" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx3"      type="textfield" defaultValue="0"           visibleBindingId="type3"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -948,26 +985,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position3"  type="textfield" visibleBindingId="type3"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position3"  type="textfield" visibleBindingId="type3"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos3a" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos3a" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle at ystart,xstart ..yend,xend 
+if its just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos3b" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos3c" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos3d" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos3e" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos3f" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate3"  default="0" type="textfield" visibleBindingId="type3"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate3"  default="0" type="textfield" visibleBindingId="type3"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds3"  default="0"  type="textfield" visibleBindingId="type3"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds3"  default="0"  type="textfield" visibleBindingId="type3"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -987,7 +1033,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display3"  type="menu" default="immediate" visibleBindingId="type3"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display3"  type="menu" default="immediate" visibleBindingId="type3"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1014,7 +1060,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset4"  type="textfield" default="" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset4"  type="textfield" default="" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx4"      type="textfield" defaultValue="0"           visibleBindingId="type4"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1035,26 +1081,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position4"  type="textfield" visibleBindingId="type4"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position4"  type="textfield" visibleBindingId="type4"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos4a" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos4a" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos4b" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos4c" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos4d" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos4e" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos4f" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate4"  default="0" type="textfield" visibleBindingId="type4"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate4"  default="0" type="textfield" visibleBindingId="type4"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds4"  default="0"  type="textfield" visibleBindingId="type4"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds4"  default="0"  type="textfield" visibleBindingId="type4"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -1074,7 +1129,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display4"  type="menu" default="immediate" visibleBindingId="type4"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display4"  type="menu" default="immediate" visibleBindingId="type4"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1099,7 +1154,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset5"  type="textfield" default="" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset5"  type="textfield" default="" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx5"      type="textfield" defaultValue="0"           visibleBindingId="type5"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1120,26 +1175,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position5"  type="textfield" visibleBindingId="type5"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position5"  type="textfield" visibleBindingId="type5"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos5a" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos5a" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos5b" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos5c" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos5d" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos5e" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos5f" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate5"  default="0" type="textfield" visibleBindingId="type5"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate5"  default="0" type="textfield" visibleBindingId="type5"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds5"  default="0"  type="textfield" visibleBindingId="type5"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds5"  default="0"  type="textfield" visibleBindingId="type5"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -1159,7 +1223,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display5"  type="menu" default="immediate" visibleBindingId="type5"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display5"  type="menu" default="immediate" visibleBindingId="type5"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1184,7 +1248,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset6"  type="textfield" default="" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset6"  type="textfield" default="" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx6"      type="textfield" defaultValue="0"           visibleBindingId="type6"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1205,26 +1269,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position6"  type="textfield" visibleBindingId="type6"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position6"  type="textfield" visibleBindingId="type6"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos6a" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos6a" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos6b" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos6c" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos6d" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos6e" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos6f" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate6"  default="0" type="textfield" visibleBindingId="type6"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate6"  default="0" type="textfield" visibleBindingId="type6"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds6"  default="0"  type="textfield" visibleBindingId="type6"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds6"  default="0"  type="textfield" visibleBindingId="type6"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -1244,7 +1317,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display6"  type="menu" default="immediate" visibleBindingId="type6"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display6"  type="menu" default="immediate" visibleBindingId="type6"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1270,7 +1343,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset7"  type="textfield" default="" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset7"  type="textfield" default="" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx7"      type="textfield" defaultValue="0"           visibleBindingId="type7"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1291,26 +1364,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position7"  type="textfield" visibleBindingId="type7"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position7"  type="textfield" visibleBindingId="type7"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos7a" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos7a" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos7b" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos7c" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos7d" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos7e" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos7f" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate7"  default="0" type="textfield" visibleBindingId="type7"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate7"  default="0" type="textfield" visibleBindingId="type7"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds7"  default="0"  type="textfield" visibleBindingId="type7"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds7"  default="0"  type="textfield" visibleBindingId="type7"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -1330,7 +1412,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display7"  type="menu" default="immediate" visibleBindingId="type7"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display7"  type="menu" default="immediate" visibleBindingId="type7"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1356,7 +1438,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
  
-			<Field id="reset8"  type="textfield" default="" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset8"  type="textfield" default="" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx8"      type="textfield" defaultValue="0"           visibleBindingId="type8"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1377,26 +1459,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position8"  type="textfield" visibleBindingId="type8"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position8"  type="textfield" visibleBindingId="type8"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos8a" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos8a" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos8b" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos8c" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos8d" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos8e" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos8f" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate8"  default="0" type="textfield" visibleBindingId="type8"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate8"  default="0" type="textfield" visibleBindingId="type8"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds8"  default="0"  type="textfield" visibleBindingId="type8"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds8"  default="0"  type="textfield" visibleBindingId="type8"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -1416,7 +1507,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display8"  type="menu" default="immediate" visibleBindingId="type8"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display8"  type="menu" default="immediate" visibleBindingId="type8"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1441,7 +1532,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset9"  type="textfield" default="" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,triangle,image,matrix,knightrider">
+			<Field id="reset9"  type="textfield" default="" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 			<Field id="startPixelx9"      type="textfield" defaultValue="0"           visibleBindingId="type9"  visibleBindingValue="thermometer" > <Label>start pixel x: </Label>   </Field>
@@ -1462,26 +1553,35 @@ After delete you can save or cancel the action and later delete it</Label>
 			</Field>
 
 
-			<Field id="position9"  type="textfield" visibleBindingId="type9"  visibleBindingValue="line,sPoint,points,rectangle,triangle,matrix,knightrider">
+			<Field id="position9"  type="textfield" visibleBindingId="type9"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
-			<Field  id="pos9a" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="line,rectangle,triangle">
-			<Label>..Line, rectangle: Ys,Xs,Xe,Ye,r,g,b; eg: 0,10,0,10,255,0,0 </Label> </Field>
+			<Field  id="pos9a" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="line,rectangle">
+			<Label>..2D Line, rectangle: Ys,Xs,Xe,Ye,r,g,b
+eg: 0,10,0,10,255,0,0 
+creates a line or rectangle  at ystart,xstart ..yend,xend 
+if you have just a string of LEDs, Ys,Ye are 0</Label> </Field>
 			<Field  id="pos9b" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="sPoint">
-			<Label>..Point:[y,x,r,g,b]			          .</Label> </Field>
+			<Label>..Point:[y,x,r,g,b]
+if you have just a string of LEDs, y is 0</Label> </Field>
 			<Field  id="pos9c" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="points">
-			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]</Label> </Field>
-			<Field  id="pos9d" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="matrix">
-			<Label>..Matrix rgb values: [[xy0][xy1]]:  [[[r,g,b],[r,g,b]][[r,g,b],[r,g,b]]]</Label> </Field>
+			<Label>..Points rgb values: [[y,x,r,g,b],[y,x,r,g,b],[y,x,r,g,b]]
+is a list of points in []</Label> </Field>
 			<Field  id="pos9e" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="knightrider">
-			<Label>..knightrider values: sleep,steps,XS,Xe,r,g,b; eg:0.5,7,10,30,255,0,0</Label> </Field>
+			<Label>..knightrider values: sleep,steps,xstart,xend,r,g,b; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+			<Field  id="pos9f" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="sLine">
+			<Label>..simple Line: start,end,r,g,b
+eg: 0,10,255,0,0 
+draws a red line from 0-9</Label> </Field>
 
 
-			<Field id="rotate9"  default="0" type="textfield" visibleBindingId="type9"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotate9"  default="0" type="textfield" visibleBindingId="type9"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>number of rotations, neg=left:</Label>
 			</Field>
-			<Field id="rotateSeconds9"  default="0"  type="textfield" visibleBindingId="type9"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image">
+			<Field id="rotateSeconds9"  default="0"  type="textfield" visibleBindingId="type9"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label>rotate second/step:</Label>
 			</Field>
 
@@ -1501,7 +1601,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display9"  type="menu" default="immediate" visibleBindingId="type9"  visibleBindingValue="exec,line,sPoint,points,matrix,rectangle,triangle,image,thermometer,knightrider">
+			<Field id="display9"  type="menu" default="immediate" visibleBindingId="type9"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1845,14 +1945,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
+			<Field id="delayStartxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx0"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx0"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx0"  type="textfield" default="" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dotv">
+			<Field id="resetxYAYx0"  type="textfield" default="" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dotv">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -1861,7 +1961,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx0"  type="textfield" default="0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext0"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -1871,14 +1971,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx0"  type="textfield" default="255" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx0"  type="textfield" default="255" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel0"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx0"  type="textfield" default="0,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx0"  type="textfield" default="0,0" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -1900,7 +2000,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
-			<Field id="displayxYAYx0"  type="menu" default="immediate" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx0"  type="menu" default="immediate" visibleBindingId="typexYAYx0"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1920,14 +2020,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx1"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx1"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx1"  type="textfield" default="" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx1"  type="textfield" default="" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -1936,7 +2036,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx1"  type="textfield" default="0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext1"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -1946,14 +2046,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx1"  type="textfield" default="255" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx1"  type="textfield" default="255" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel1"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx1"  type="textfield" default="0,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx1"  type="textfield" default="0,0" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -1976,7 +2076,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx1"  type="menu" default="immediate" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx1"  type="menu" default="immediate" visibleBindingId="typexYAYx1"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1997,14 +2097,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx2"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx2"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx2"  type="textfield" default="" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx2"  type="textfield" default="" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2013,7 +2113,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx2"  type="textfield" default="0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext2"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2023,14 +2123,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx2"  type="textfield" default="255" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx2"  type="textfield" default="255" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel2"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx2"  type="textfield" default="0,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx2"  type="textfield" default="0,0" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2052,7 +2152,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
-			<Field id="displayxYAYx2"  type="menu" default="immediate" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx2"  type="menu" default="immediate" visibleBindingId="typexYAYx2"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2072,14 +2172,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx3"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx3"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx3"  type="textfield" default="" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx3"  type="textfield" default="" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2088,7 +2188,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx3"  type="textfield" default="0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext3"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2098,14 +2198,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx3"  type="textfield" default="255" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx3"  type="textfield" default="255" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel3"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx3"  type="textfield" default="0,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx3"  type="textfield" default="0,0" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2128,7 +2228,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx3"  type="menu" default="immediate" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx3"  type="menu" default="immediate" visibleBindingId="typexYAYx3"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2147,14 +2247,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx4"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx4"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx4"  type="textfield" default="" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx4"  type="textfield" default="" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2163,7 +2263,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx4"  type="textfield" default="0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext4"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2173,14 +2273,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx4"  type="textfield" default="255" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx4"  type="textfield" default="255" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel4"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx4"  type="textfield" default="0,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx4"  type="textfield" default="0,0" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2202,7 +2302,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Label>..labels/ticks for v-hboxes: "L/R/T/B",tickW,[[n1,"abc"],[n2,20],..]</Label> </Field>
 
 
-			<Field id="displayxYAYx4"  type="menu" default="immediate" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx4"  type="menu" default="immediate" visibleBindingId="typexYAYx4"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2221,14 +2321,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx5"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx5"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx5"  type="textfield" default="" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx5"  type="textfield" default="" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2237,7 +2337,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx5"  type="textfield" default="0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext5"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2247,14 +2347,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx5"  type="textfield" default="255" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx5"  type="textfield" default="255" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel5"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx5"  type="textfield" default="0,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx5"  type="textfield" default="0,0" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2277,7 +2377,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx5"  type="menu" default="immediate" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx5"  type="menu" default="immediate" visibleBindingId="typexYAYx5"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2297,14 +2397,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx6"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx6"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx6"  type="textfield" default="" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx6"  type="textfield" default="" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2313,7 +2413,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx6"  type="textfield" default="0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext6"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2323,14 +2423,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx6"  type="textfield" default="255" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx6"  type="textfield" default="255" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel6"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx6"  type="textfield" default="0,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx6"  type="textfield" default="0,0" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2353,7 +2453,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx6"  type="menu" default="immediate" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx6"  type="menu" default="immediate" visibleBindingId="typexYAYx6"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2373,14 +2473,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx7"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx7"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx7"  type="textfield" default="" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx7"  type="textfield" default="" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2389,7 +2489,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx7"  type="textfield" default="0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext7"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2399,14 +2499,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx7"  type="textfield" default="255" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx7"  type="textfield" default="255" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel7"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx7"  type="textfield" default="0,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx7"  type="textfield" default="0,0" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2429,7 +2529,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx7"  type="menu" default="immediate" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx7"  type="menu" default="immediate" visibleBindingId="typexYAYx7"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2449,14 +2549,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx8"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx8"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx8"  type="textfield" default="" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx8"  type="textfield" default="" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2465,7 +2565,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx8"  type="textfield" default="0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext8"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2475,14 +2575,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx8"  type="textfield" default="255" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx8"  type="textfield" default="255" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel8"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx8"  type="textfield" default="0,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx8"  type="textfield" default="0,0" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2505,7 +2605,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx8"  type="menu" default="immediate" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx8"  type="menu" default="immediate" visibleBindingId="typexYAYx8"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -2525,14 +2625,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>text/image/format to show/use</Label>
 			</Field>
 
-			<Field id="delayStartxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="delayStartxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
-			<Field id="offONTimexYAYx9"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="offONTimexYAYx9"  type="textfield" default="0,9999999,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,NOP,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>seconds off,on,off eg 5,3,2:</Label>
 			</Field>
 
-			<Field id="resetxYAYx9"  type="textfield" default="" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="resetxYAYx9"  type="textfield" default="" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>bf display do nothing:"", blank:0, on:255:</Label>
 			</Field>
 
@@ -2541,7 +2641,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 			    <Label>select TTF font:</Label>
 			</Field>
 
-			<Field id="widthxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
+			<Field id="widthxYAYx9"  type="textfield" default="0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,hist,dot,labelsForPreviousObject">
 			<Label>enter size:</Label>
 			</Field>
 			<Field id="wtext9"    type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,labelsForPreviousObject"> 
@@ -2551,14 +2651,14 @@ The action menu offers 70 elements, you can use python script for more elements-
 			<Field id="widthDot9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="dot"  tooltip="one value r=x=y or  2 values x,y"> 
 					<Label>..width r or x,y of dot			     .</Label></Field>
 
-			<Field id="fillxYAYx9"  type="textfield" default="255" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillxYAYx9"  type="textfield" default="255" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>enter light/dark or color:</Label>
 			</Field>			
-			<Field id="fillLabel9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="fillLabel9"  type="label" alignText="right" fontSize="small"  visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label>..monochrome: 0/255; RGB:(0-255,0-255,0-255)</Label>
 			</Field>			
 
-			<Field id="positionxYAYx9"  type="textfield" default="0,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,line,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
+			<Field id="positionxYAYx9"  type="textfield" default="0,0" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,line,sLine,point,ellipse,image,vBar,hBar,vBarwBox,hBarwBox,hist,rectangle,triangle,dot,labelsForPreviousObject">
 			    <Label> position/params:</Label>
 			</Field>
 
@@ -2582,7 +2682,7 @@ The action menu offers 70 elements, you can use python script for more elements-
 
 
 
-			<Field id="displayxYAYx9"  type="menu" default="immediate" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
+			<Field id="displayxYAYx9"  type="menu" default="immediate" visibleBindingId="typexYAYx9"  visibleBindingValue="text,textWformat,dateString,date,clock,exec,line,sLine,vBar,hBar,vBarwBox,hBarwBox,point,ellipse,image,hist,dot,labelsForPreviousObject">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -3389,7 +3489,7 @@ Then there are actions in each set (steps/sleep)
 
 
      <Action id="sendConfig">
-		<Name>send Config to rPi via FTP</Name>
+		<Name>Send Config to rPi via FTP</Name>
 			<CallbackMethod>sendConfigCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send config </Label>
@@ -3402,7 +3502,7 @@ Then there are actions in each set (steps/sleep)
 
 
      <Action id="sendConfigSocket">
-		<Name>send Config to rPi via socket</Name>
+		<Name>Send Config to rPi via socket</Name>
 			<CallbackMethod>sendConfigviaSocketCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send config </Label>
@@ -3414,7 +3514,7 @@ Then there are actions in each set (steps/sleep)
        </Action>
 
      <Action id="sendrebootCommandssh">
-		<Name>send reboot command  to rPi via ssh</Name>
+		<Name>Send reboot command  to rPi via ssh</Name>
 			<CallbackMethod>buttonRebootsshCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send SHUTDOWN unix command to rpi </Label>
@@ -3427,7 +3527,7 @@ Then there are actions in each set (steps/sleep)
     </Action>
 
      <Action id="sendshutdownCommandssh">
-		<Name>send SHUTDOWN  to rPi via ssh</Name>
+		<Name>Send SHUTDOWN  to rPi via ssh</Name>
 			<CallbackMethod>buttonShutdownsshCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send SHUTDOWN unix command to rpi </Label>
@@ -3441,7 +3541,7 @@ Then there are actions in each set (steps/sleep)
 
 
      <Action id="sendHARDRESHUTDOWNCommandsocket">
-		<Name>send HARD-SHUTDOWN  to rPi via socket</Name>
+		<Name>Send HARD-SHUTDOWN  to rPi via socket</Name>
 			<CallbackMethod>buttonShutdownHardSocketCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send SHUTDOWN unix command to rpi </Label>
@@ -3454,7 +3554,7 @@ Then there are actions in each set (steps/sleep)
     </Action>
 
      <Action id="sendHARDREBOOTCommandsocket">
-		<Name>send HARD-REBOOT  to rPi via socket</Name>
+		<Name>Send HARD-REBOOT  to rPi via socket</Name>
 			<CallbackMethod>buttonRebootHardSocketCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send REGBOOT unix command to rpi </Label>
@@ -3467,7 +3567,7 @@ Then there are actions in each set (steps/sleep)
     </Action>
 
      <Action id="stopNTP">
-		<Name>send stop NTP command to rPi via socket</Name>
+		<Name>Send stop NTP command to rPi via socket</Name>
 			<CallbackMethod>stopNTPCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send stop NTP command to RPI </Label>
@@ -3480,7 +3580,7 @@ Then there are actions in each set (steps/sleep)
 
 
      <Action id="refreshNTP">
-		<Name>send restart NTP command to rPi via socket</Name>
+		<Name>Send restart NTP command to rPi via socket</Name>
 			<CallbackMethod>refreshNTPCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>restart NTP RPI </Label>
@@ -3493,7 +3593,7 @@ Then there are actions in each set (steps/sleep)
 
 
      <Action id="sendUnixCommand">
-		<Name>send unix command to rPi via socket</Name>
+		<Name>Send unix command to rPi via socket</Name>
 			<CallbackMethod>sendAnycommandCALLBACKaction</CallbackMethod>
  		<ConfigUI>
    		<Label>send YOUR unix command to rpi </Label>
@@ -3518,6 +3618,62 @@ Then there are actions in each set (steps/sleep)
 			</Field>
 		</ConfigUI>
        </Action>
+
+
+     <Action id="pauseSensor">
+		<Name>Pause Sensor</Name>
+			<CallbackMethod>pauseSensorCALLBACKaction</CallbackMethod>
+ 		<ConfigUI>
+   		<Label>Send a pause signal to the rpi on which the sensor is attached
+this will pause the sensor, will just sleep, but any other action already initated will continue</Label>
+   		<Field id="selectSensor"   type="menu" defaultValue="0" >
+			    <List class="self" filter="" method="filterSensorswPause" dynamicReload="false"/>
+			    <Label>select Sensor</Label>
+			</Field>
+   		<Field id="sleepFor"   type="menu" defaultValue="-1" >
+			    <List>
+					<Option value= "-1"          >off</Option>
+					<Option value= "1"           >1 sec</Option>
+					<Option value= "2"           >2 secs</Option>
+					<Option value= "3"           >3 secs</Option>
+					<Option value= "4"           >4 secs</Option>
+					<Option value= "5"           >5 secs</Option>
+					<Option value= "6"           >6 secs</Option>
+					<Option value= "7"           >7 secs</Option>
+					<Option value= "8"           >8 secs</Option>
+					<Option value= "9"           >9 secs</Option>
+					<Option value= "10"          >10 secs</Option>
+					<Option value= "15"          >15 secs</Option>
+					<Option value= "20"          >20 secs</Option>
+					<Option value= "25"          >25 secs</Option>
+					<Option value= "30"          >30 secs</Option>
+					<Option value= "40"          >40 secs</Option>
+					<Option value= "60"          >60 secs</Option>
+					<Option value= "90"          >90 secs</Option>
+					<Option value= "120"         >2 minutes</Option>
+					<Option value= "180"         >3 minutes</Option>
+					<Option value= "240"         >4 minutes</Option>
+					<Option value= "300"         >5 minutes</Option>
+					<Option value= "360"         >6 minutes</Option>
+					<Option value= "420"         >7 minutes</Option>
+					<Option value= "480"         >8 minutes</Option>
+					<Option value= "540"         >9 minutes</Option>
+					<Option value= "600"         >10 minutes</Option>
+					<Option value= "900"         >15 minutes</Option>
+					<Option value= "1200"        >20 minutes</Option>
+					<Option value= "1800"        >30 minutes</Option>
+					<Option value= "2400"        >40 minutes</Option>
+					<Option value= "3600"        >1 hour</Option>
+					<Option value= "7200"        >2 hours</Option>
+					<Option value= "10800"       >3 hours</Option>
+					<Option value= "18000"       >6 hours</Option>
+					<Option value= "36000"       >10 hours</Option>
+			    </List>
+			    <Label>pause sensor for</Label>
+			</Field>
+		</ConfigUI>
+       </Action>
+
 
 
 
@@ -3684,7 +3840,7 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
     </Action>
 
     <Action id="setAnyProperty">
-		<Name>set AnyProperty of any piBeacon device </Name>
+		<Name>Set AnyProperty of any piBeacon device </Name>
 		<CallbackMethod>setAnyPropertyCALLBACKaction</CallbackMethod>
 		<ConfigUI>
 			 <Label>set indigo device property of piBeacon devices</Label>
@@ -3705,7 +3861,7 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 		</ConfigUI>
     </Action>
     <Action id="getAnyProperty">
-		<Name>get Any Indigo device Property of any piBeacon device </Name>
+		<Name>Get Any Indigo device Property of any piBeacon device </Name>
 		<CallbackMethod>getAnyPropertyCALLBACKaction</CallbackMethod>
 		<ConfigUI>
 			 <Label>get indigo device property of piBeacon devices; output in variable= piBeacon_property</Label>

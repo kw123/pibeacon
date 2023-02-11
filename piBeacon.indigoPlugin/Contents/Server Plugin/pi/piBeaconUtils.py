@@ -23,6 +23,8 @@ import zlib
 try: 	unicode
 except: unicode = str
 
+import re
+
 global OSVersion
 OSVersion = -1
 
@@ -44,12 +46,12 @@ def setLogging():
 	global streamhandler, permLogHandler
 
 	# regular logfile
-	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format='%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
 	logger = logging.getLogger(__name__)
 
 	 # permanent logfile in pibeacon directory only for serious restarts, in case log dir is ramdisk
 	permLogHandler = logging.handlers.WatchedFileHandler("{}permanent.log".format(G.homeDir))
-	permFormat = logging.Formatter('%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%Y-%m-%d-%H:%M:%S')
+	permFormat = logging.Formatter('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%Y-%m-%d-%H:%M:%S')
 	permLogHandler.setFormatter(permFormat)
 	permLogHandler.setLevel(logging.CRITICAL)
 	logger.addHandler(permLogHandler)
@@ -57,7 +59,7 @@ def setLogging():
 	# console output
 	streamhandler = logging.StreamHandler()
 	streamhandler.setLevel(logging.WARNING)
-	streamformatter = logging.Formatter('%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%d-%H:%M:%S')
+	streamformatter = logging.Formatter('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%d-%H:%M:%S')
 	streamhandler.setFormatter(streamformatter)
 	logger.addHandler(streamhandler)
 
@@ -140,9 +142,10 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doRestartCount=True):
 	py3 = python3 or checkIfmustUsePy3()
 	try:
-		if doPrint: logger.log(20, u"cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}".format(G.program, param, reason, py3) )
+		if doPrint: logger.log(20, u"cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}, delay:{}".format(G.program, param, reason, py3, delay) )
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
+
 	time.sleep(delay)
 
 	if doRestartCount:
@@ -172,6 +175,7 @@ def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doR
 	subprocess.call(cmd, shell=True)
 	exit()
 	time.sleep(5)
+
 
 
 #################################
@@ -271,6 +275,185 @@ def checkParametersFile(force=False):
 			subprocess.call("touch {}temp\touchFile".format(G.homeDir), shell=True)
 			restartMyself(reason="bad parameter... file.. restored" , doPrint= True)
 
+
+
+#################################
+#################################
+#################################
+######### distance actions ###### START -----------------------------------------------------------------
+def readDistanceSensor(devId, sensors, sensor):
+	global actionDistance, actionShortDistanceLimit,actionVeryShortDistanceLimit, actionLongDistanceLimit, actionVeryLongDistanceLimit, actionStopMinSpeed, actionStopWait, debugDistance
+	global actionSpeedLast, actionShortDistanceLimit, distanceActiveCommand, distanceActiveLimit, oldStop, oldRegion, actionEnable, oldSpeed, lastCommandExecuted
+
+	debugDistance 						= False
+
+	try: 	actionSpeedLast
+	except:  # init first time called
+		actionSpeedLast 				= {}
+		oldStop 						= {} 
+		oldRegion 						= {} 
+		oldSpeed						= {} 
+		lastCommandExecuted				= {} 
+		oldRegion						= {} 
+		actionDistance 					= {} 
+		actionEnable					= {}
+		distanceActiveLimit 			= {}
+		distanceActiveCommand 			= {}
+		actionVeryShortDistanceLimit 	= {}
+		actionShortDistanceLimit 		= {}
+		actionLongDistanceLimit 		= {}
+		actionVeryLongDistanceLimit		= {}
+		actionStopWait 					= {}
+		actionStopMinSpeed 				= {}
+
+	actionDistance[devId]				= {"VeryShort":"","Short":"","Medium":"","Long":"","VeryLong":"","Stop":""}
+	actionEnable[devId]					= False
+	distanceActiveLimit[devId]			= False
+	distanceActiveCommand[devId]		= False
+	actionVeryShortDistanceLimit[devId]	= -1
+	actionShortDistanceLimit[devId]		= -1
+	actionLongDistanceLimit[devId] 		= 99999
+	actionVeryLongDistanceLimit[devId] 	= 99999
+	actionStopWait[devId] 				= -1
+	actionStopMinSpeed [devId]			= -1
+	actionSpeedLast[devId] 				= time.time()
+	oldStop[devId] 						= "Stop"
+	oldRegion[devId] 					= "VeryLong"
+	oldSpeed[devId]						= 0
+	lastCommandExecuted[devId]			= ""
+	oldRegion[devId]					= ""
+	if sensor not in sensors: 			return 
+	if devId  not in sensors[sensor]: 	return 
+
+
+
+	ssd = sensors[sensor][devId]
+	actionEnable[devId]				 				= ssd.get("actionEnable","0") == "1"
+	if not actionEnable[devId]	: return 
+	try:
+		for region in actionDistance[devId]:
+			actionDistance[devId][region]			= ssd.get("action{}Distance".format(region),"")
+			if len(actionDistance[devId][region]) < 3: actionDistance[devId][region] = ""
+
+		try: 	actionVeryShortDistanceLimit[devId] = float(ssd.get("actionVeryShortDistanceLimit",-1))
+		except:	actionVeryShortDistanceLimit[devId] = -1.
+
+		try: 	actionVeryLongDistanceLimit[devId] 	= float(ssd.get("actionVeryLongDistanceLimit",99999))
+		except:	actionVeryLongDistanceLimit[devId] 	= 99999
+
+		try: 	actionShortDistanceLimit[devId] 	= float(ssd.get("actionShortDistanceLimit",-1))
+		except:	actionShortDistanceLimit[devId] 	= -1.
+
+		try: 	actionLongDistanceLimit[devId] 		= float(ssd.get("actionLongDistanceLimit",99999))
+		except:	actionLongDistanceLimit[devId] 		= 99999
+
+		try: 	actionStopWait[devId] 				= float(ssd.get("actionStopWait",-1))
+		except:	actionStopWait[devId] 				= -1.
+
+		try: 	actionStopMinSpeed[devId] 			= float(ssd.get("actionStopMinSpeed",-1))
+		except:	actionStopMinSpeed[devId] 			= -1.
+
+		for region in actionDistance[devId]:
+			if actionDistance[devId][region] != "":
+				distanceActiveCommand[devId] = True
+				break
+
+		if actionVeryShortDistanceLimit[devId] > 0: 	distanceActiveLimit[devId] = True
+		if actionShortDistanceLimit[devId] > 0: 		distanceActiveLimit[devId] = True
+		if actionLongDistanceLimit[devId] < 9999: 		distanceActiveLimit[devId] = True
+		if actionVeryLongDistanceLimit[devId] < 9999: 	distanceActiveLimit[devId] = True
+		if actionStopWait[devId] >0: 					distanceActiveLimit[devId] = True
+		if actionStopMinSpeed[devId] >0: 				distanceActiveLimit[devId] = True
+
+	except  Exception as e:
+			logger.log(30,"", exc_info=True)
+
+	if debugDistance:logger.log(20," limits: devId:{}\nVeryShort:{}\nShort:{}\n Long:{}\nVeryLong:{}\n actionStopWait:{}\n actionStopMinSpeed:{}\nactionDistance:{}".format( 
+					devId, actionVeryShortDistanceLimit[devId], actionShortDistanceLimit[devId], actionLongDistanceLimit[devId], actionVeryLongDistanceLimit[devId], actionStopWait[devId], actionStopMinSpeed[devId], actionDistance[devId]))
+	return  
+
+#################################
+def doActionDistance(distance, speed, devId):
+	global actionDistance, actionShortDistanceLimit,actionVeryShortDistanceLimit, actionLongDistanceLimit, actionVeryLongDistanceLimit, actionStopMinSpeed, actionStopWait, debugDistance
+	global actionSpeedLast, distanceActiveCommand, distanceActiveLimit, oldStop, oldRegion, actionEnable, oldSpeed
+
+	try:
+		if devId not in actionEnable:		return "","",False
+		if not actionEnable[devId]:			return "","",False
+		if not distanceActiveLimit[devId]:	return "","",False
+		if distance == "":					return "","",False
+		if speed == "": 					return "","",False
+
+		previousRegion	= oldRegion[devId] 
+		previousStop	= oldStop[devId] 
+
+		if distanceActiveLimit[devId]:
+			if	 	distance > actionVeryLongDistanceLimit[devId]:	region = "VeryLong"
+			elif	distance > actionLongDistanceLimit[devId]:		region = "Long"
+			elif 	distance < actionVeryShortDistanceLimit[devId]:	region = "VeryShort"
+			elif 	distance < actionShortDistanceLimit[devId]:		region = "Short"
+			else:													region = "Medium"
+
+
+		if actionStopMinSpeed[devId] >0 and actionStopWait[devId] >0:
+			if  (abs(speed) <= actionStopMinSpeed[devId] and time.time() - actionSpeedLast[devId] > actionStopWait[devId]):
+				oldStop[devId], actionSpeedLast[devId] = execDistanceCommand("Stop", distance, speed, oldStop[devId], devId)
+				#logger.log(20, "in stop active dist:{:6.1f}, speed:{:8.1f}, oldR:{:10s},newR:{:6s}, oldSTOP:{:1}, newSTOP:{:1}, tt-actionSpeedLast:{:.1f}, Wait:{}, MinSpeed:{}".format(distance, speed, oldRegion, region, previousStop, oldStop, time.time() - actionSpeedLast, actionStopWait, actionStopMinSpeed) )	
+				oldStop[devId] = "Stop"
+			elif abs(speed) > actionStopMinSpeed[devId]:
+				oldStop[devId] = "dSpeed:{:.1f}".format(speed-oldSpeed[devId])
+				#logger.log(20, "in stop reset  dist:{:6.1f}, speed:{:8.1f}, oldR:{:10s},newR:{:6s}, oldSTOP:{:1}, newSTOP:{:1}, tt-actionSpeedLast:{:.1f}, Wait:{}, MinSpeed:{}".format(distance, speed, oldRegion, region, previousStop, oldStop, time.time() - actionSpeedLast, actionStopWait, actionStopMinSpeed) )	
+
+		if abs(speed) > actionStopMinSpeed[devId] and actionStopMinSpeed[devId] >0:
+				oldRegion[devId], actionSpeedLast[devId] = execDistanceCommand(region, distance, speed, oldRegion[devId], devId)
+		else:
+				oldRegion[devId] = region
+
+		if previousRegion != region:
+			oldStop[devId] = "" 
+
+		oldSpeed[devId] = speed
+		returns = [previousRegion, previousStop=="Stop", False]
+		if oldStop[devId]	!= previousStop: 	returns[1] = oldStop == "Stop"; 	returns[2] = True
+		if oldRegion[devId] != previousRegion: 	returns[0] = oldRegion;				returns[2] = True
+		if debugDistance: logger.log(20, "in  dist:{:6.1f}, speed:{:8.1f}, oldR:{:10s},newR:{:6s}, oldSTOP:{:1}, newSTOP:{:1}, returns:{:}; tt-actionSpeedLast:{:.1f}, Wait:{}, MinSpeed:{}".format(
+				distance, speed, oldRegion[devId], region, previousStop, oldStop[devId], returns, time.time() - actionSpeedLast[devId], actionStopWait[devId], actionStopMinSpeed[devId]) )	
+		return returns
+
+	except  Exception as e:
+			logger.log(30,"", exc_info=True)
+	return "","",False
+
+#################################
+def execDistanceCommand(region, distance, speed, oldAction, devId):
+	global debugDistance, actionDistance, lastCommandExecuted,  actionSpeedLast
+	try:
+		if region == oldAction: return oldAction, actionSpeedLast[devId]
+
+		if actionDistance[devId][region] != "":
+			if len(actionDistance[devId][region]) > 3:
+				# check if last command was the same if neopixel command, if yes do not execute again, otherwise yes.
+				if debugDistance: logger.log(20, "neopix:{}  newcmd:{}".format("{}".format(actionDistance[devId][region]).find("neopixel") > -1, actionDistance[devId][region] == lastCommandExecuted[devId]))
+				if not( "{}".format(actionDistance[devId][region]).find("neopixel") > -1 and actionDistance[devId][region] == lastCommandExecuted[devId]):
+					if debugDistance: logger.log(20, "dist:{:6.1f}, speed:{:8.1f}, Action: old:{:10}, new:{:6}, lastAction:{}; action:{}".format(
+												distance, speed, oldAction, region, lastCommandExecuted[devId], actionDistance[devId][region]) )	
+					sendToNeopixel = actionDistance[devId][region]
+					if "{}".format(sendToNeopixel).find("neopixel") > -1 and '"status":"' in sendToNeopixel:
+						sendToNeopixel = sendToNeopixel.replace('"status":"','"fromDev":"{}","status":"'.format(devId))
+					subprocess.call(sendToNeopixel, shell=True)
+					lastCommandExecuted[devId] = actionDistance[devId][region]
+		return region, time.time()   
+
+	except  Exception as e:
+			logger.log(30,"", exc_info=True)
+	return oldAction, actionSpeedLast[devId]
+######### distance actions ###### END ------------------------------------------------------------------
+#################################
+#################################
+#################################
+
+
+
 #################################
 def readFloat(filename, default=0.):
 	try:
@@ -296,6 +479,7 @@ def readInt(filename, default=0):
 	return v
 
 
+#################################
 def getOsVersion():
 	global OSVersion
 	if OSVersion !=-1: return  OSVersion
@@ -613,7 +797,7 @@ def manualStartOfRTC():
 	try:
 		global checkIfmanualStartOfRTC
 		try:
-			checkIfmanualStartOfRTC
+			y=checkIfmanualStartOfRTC
 			logger.log(20, u"cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
 			return 
 		except:
@@ -1371,7 +1555,7 @@ def checkwebserverINPUT():
 					iTZ = int(data["timezone"])
 					if iTZ != 99:
 						try:
-							G.timeZones[iTZ+12]
+							xxx=G.timeZones[iTZ+12]
 							subprocess.call("rm {}timezone.set".format(G.homeDir), shell=True)
 							writeTZ(iTZ=iTZ, force=True )
 							newFile = True
@@ -1785,7 +1969,7 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 		if G.wifiEth["eth0"]["on"] == "off" and eth0IP != "" and G.eth0Active:
 				logger.log(30, "cBY:{:<20} switching eth0 off".format(G.program))
 				logger.log(30, "cBY:{:<20} setWlanEthONoff  ip changed: G.wifiEth[eth0][on] ==off and  eth0IP:{}, eth0Packets:{}, wlan0Packets:{}".format(G.program,eth0IP, G.eth0Packets, G.wlan0Packets) )
-				if not noRestart: ()
+				if not noRestart: pass
 				changed = "ETHoff"
 
 		if  G.wifiEth["eth0"]["useIP"] == "off" and eth0IP !="":
@@ -1828,7 +2012,7 @@ def findActiveUSB():
 				if line.find("dialout") == -1: continue
 				line = line.split()[-1]
 				if line.find("tty") == -1: continue
-				line.split("tty")[-1]
+				line = line.split("tty")[-1]
 				#logger.log(10,u"cBY:{:<20} return  {}".format( G.program,line) )
 				activUsbList.append(line)
 	except	Exception as e :
@@ -2157,8 +2341,8 @@ def execSend():
 									ret    = retx[0].decode('utf-8')
 									reterr = retx[1].decode('utf-8')
 									if ret.find("This resource can be found at") == -1:
-										logger.log(30, "cBY:{:<20} curl err:{}".format(G.program,ret))
-										logger.log(30, "cBY:{:<20} curl err:{}".format(G.program,reterr))
+										logger.log(30, "cBY:{:<20} curl err:{}-{}".format(G.program,ret,reterr))
+										logger.log(30, "cBY:{:<20} curl cmd:{}".format(G.program,cmd))
 										echoToMessageSend(data, "++msg NOT send ++")
 									else:
 										echoToMessageSend(data, "msg send --")
@@ -2928,11 +3112,23 @@ def geti2c():
 			for channel in temp:
 				i2cChannelsINTHex.append("{}={}".format(channel,hex(channel)))
 				i2cChannelsHEX.append("{}".format(hex(channel)))
-		return i2cChannelsINTHex,i2cChannelsHEX
+		return i2cChannelsINTHex, i2cChannelsHEX
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ["i2c detect error"]
 
+
+#################################
+def geti2cIntChannels():
+	retInt = []
+	try:
+		i2cChannelsINTHex,i2cChannelsHEX = geti2c()
+		for ret in i2cChannelsINTHex:
+			retInt.append(int(ret.split("=")[0]))
+	except	Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		return  []
+	return retInt
 
 
 #################################
@@ -2997,6 +3193,35 @@ def checkIfAliveNeedsToBeSend():
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
+
+
+#################################
+def checkIfPauseSensor(sensor):
+	try:
+		tt = time.time()
+		lastSend = 0
+		if os.path.isfile("{}temp/pauseSensor".format(G.homeDir)):
+			f = open("{}temp/pauseSensor".format(G.homeDir),"r")
+			rr = f.read()
+			f.close()
+			if rr.find(sensor) >-1:
+				try:	
+					xx = json.loads(rr)
+					sleepFor = xx[sensor]
+					sleepFor = float(sleepFor)
+					logger.log(20, u"cBY:{:<20} sleep for {}".format(G.program,sleepFor))
+					startSleep = time.time()
+					for ii in range(1000):
+						U.echoLastAlive(sensor)
+						time.sleep(5)
+						if time.time() - startSleep >= sleepFor: break
+					logger.log(20, u"cBY:{:<20} sleep ended {}".format(G.program))
+				except:	pass
+				subprocess.call("/usr/bin/sudo rm {}temp/pauseSensor".format(G.homeDir), shell=True)
+				return 
+	except	Exception as e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return 
 
 
 
@@ -3135,7 +3360,7 @@ def magCalibrate(theClass, force = False, calibTime=10):
 #################################
 def saveCalibration(theClass, calibrationFile, calib):
 	logger.log(20,'saveCalibration:  enableCalibration = {}'.format(calib))
-	writeJson(theClass.calibrationFile,calib, sort_keys=True)
+	writeJson(theClass.calibrationFile, calib, sort_keys=True)
 
 #################################
 def setOffsetFromCalibration(calib):

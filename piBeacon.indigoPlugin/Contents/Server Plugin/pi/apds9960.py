@@ -1154,7 +1154,7 @@ class APDS9960():
 		def getGestureGain(self):
 			#/* Read value from GCONF2 register */
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
-			if not retCode: self.ERROR
+			if not retCode: return ""
 	
 			#/* Shift and mask out GGAIN bits */
 			val = (val >> 5) & 0b00000011

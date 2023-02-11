@@ -449,7 +449,6 @@ class vl6180x:
 def readParams():
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, timing, sensCl, distanceUnits, rawOld
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionLongDistance, actionLongDistanceLimit
 	global oldRaw, lastRead
 	try:
 
@@ -525,25 +524,8 @@ def readParams():
 			except  Exception as e:
 				pass
 
-			try:
-				if "actionShortDistance" in sensors[sensor][devId]:			actionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
-			except:															actionShortDistance = ""
+			U.readDistanceSensor(devId, sensors, sensor)
 
-			try:
-				if "actionMediumDistance" in sensors[sensor][devId]:		actionMediumDistance = (sensors[sensor][devId]["actionMediumDistance"])
-			except:															actionMediumDistance = ""
-
-			try:
-				if "actionLongDistance" in sensors[sensor][devId]:			actionLongDistance = (sensors[sensor][devId]["actionLongDistance"])
-			except:															actionLongDistance = ""
-
-			try:
-				if "actionShortDistanceLimit" in sensors[sensor][devId]:	actionShortDistanceLimit = float(sensors[sensor][devId]["actionShortDistanceLimit"])
-			except:															actionShortDistanceLimit = -1
-
-			try:
-				if "actionLongDistanceLimit" in sensors[sensor][devId]:		actionLongDistanceLimit = float(sensors[sensor][devId]["actionLongDistanceLimit"])
-			except:															actionLongDistanceLimit = -1
 
 		U.logger.log(20,"==== Start ranging ?:{}; {}".format(sensorUp, sensorActive))
 		if sensorUp == 1:
@@ -588,8 +570,6 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 #################################
 def getDistance():
 	global sensor, sensors,  sensCl, badSensor
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-
 	try:
 		for ii in range(2):
 			distance = sensCl.get_distance()
@@ -624,58 +604,16 @@ def getLight():
 
 
 
-
-#################################
-def doAction(distance):
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-
-	try:
-		if actionShortDistance == "" and actionMediumDistance == "" and actionMediumDistance == "": return 
-
-		if distance != "" and distance !=0:
-
-			if	 distance > actionLongDistanceLimit:	region = "long"
-			elif distance < actionShortDistanceLimit:	region = "short"
-			else:										region = "medium"
-
-			# check reset of last action, if last was short distamce must have been not short at least once ...  
-			if actionDistanceOld != "":
-				if   actionDistanceOld == "short"   	and region == "short":	actionDistanceOld = ""
-				elif actionDistanceOld == "long"    	and region == "long":	actionDistanceOld = ""
-				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
-
-			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
-				subprocess.call(actionShortDistance, shell=True)
-				actionDistanceOld = "short"
-					
-			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
-				subprocess.call(actionMediumDistance, shell=True)
-				actionDistanceOld = "medium"
-					
-			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
-				subprocess.call(actionLongDistance, shell=True)
-				actionDistanceOld = " long"
-
-	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
-
 ############################################
 global gain
 global sensor, sensors, first, sensCl, badSensor
-global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
 global oldRaw,  lastRead, deltaDist, deltaDistAbs
+
 
 oldRaw						= ""
 lastRead					= 0
 maxRange					= 10.
 sensCl						= ""
-actionShortDistance			= ""
-actionShortDistanceLimit	= 5.
-actionMediumDistance		= ""
-actionMediumDistanceLimit	= 10
-actionLongDistance			= ""
-actionLongDistanceLimit	 	= 20.
-actionDistanceOld			= 0
 distanceUnits				= "1.0"
 gain						= 20
 first						= False
@@ -730,7 +668,8 @@ while True:
 			break
 		tt = time.time()
 		data = {}
-		data["sensors"]	 = {}
+		data["sensors"]	= {}
+		sendToIndigo	= False
 		if sensor in sensors:
 			data["sensors"][sensor] = {}
 			for devId in sensors[sensor]:
@@ -759,14 +698,14 @@ while True:
 							data["sensors"][sensor][devId]["lux"] = lastLux
 
 				dist = round(float(dist),1)
-				doAction(dist)
 				if dist > maxRange: dist = 999
 				data["sensors"][sensor][devId]["distance"] = dist
 				delta  = dist-lastDist[devId]
 				deltaA = abs(dist - lastDist[devId])
-				deltaN = abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
+				deltaN = deltaA / max (0.5,(dist+lastDist[devId])/2.)
 				deltaT = max(tt - lastTime[devId],0.01)
 				speed  = delta / deltaT
+				regionEvents = U.doActionDistance(dist, speed, devId)
 
 				lux = getLight()
 				if lux !="": 
@@ -780,21 +719,32 @@ while True:
 				trigDT	= tt - sendEvery > lastTime[devId] 
 				trigQi	= quick
 				trigL	= abs(lastLux2 - lastLux) / max(1.,lastLux2 + lastLux) > deltaDist[devId]
-				if trigDD or trigDDa or trigDT or trigQi or trigL: 
-							#data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},L:{:1}".format(trigDD, trigDDa, trigDT, trigQi, trigL)
+				if ( trigDD and trigDDa ) or trigDT or trigQi or trigL or regionEvents[2]: 
+							trig = ""
+							if trigL: 					trig +="Light;"
+							if trigDD or trigDDa:		trig +="Dist;"
+							if trigDT: 					trig +="Time;"
+							if regionEvents[0] != "": 		
+								trig += "distanceEvent"
+								data["sensors"][sensor][devId]["distanceEvent"]	= regionEvents[0]
+							data["sensors"][sensor][devId]["stopped"]	= regionEvents[1]
+							trig = 						trig.strip(";")
+							data["sensors"][sensor][devId]["trigger"]	= trig
 							data["sensors"][sensor][devId]["distance"]	= dist
 							data["sensors"][sensor][devId]["speed"]		= round(speed,2)
-							U.sendURL(data)
+							sendToIndigo		= True
 							lastDist[devId]		= dist
 							lastTime[devId]		= tt
 							lastLux2			= lastLux
 							G.lastAliveSend 	= tt
 
-				if displayEnable =="1" and  ( (deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - lastDisplay >10. or  quick):
-					lastDisplay = tt
+				if displayEnable not in ["","0"]:
 					DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-					U.logger.log(10, "{}".format(dist)+"  {}".format(deltaDist) )   
 					#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
+
+		if sendToIndigo:
+			U.sendURL(data)
+
 		loopCount +=1
 
 		U.makeDATfile(G.program, data)

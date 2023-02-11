@@ -15,7 +15,6 @@ import	time,datetime
 import	json
 
 sys.path.append(os.getcwd())
-print sys.path
 import	piBeaconUtils as U
 import	piBeaconGlobals as G
 

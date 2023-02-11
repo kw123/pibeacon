@@ -1340,9 +1340,6 @@ if you want to keep it running add an "&amp;" to the end </Label>
 			</Field>
 
 
-
-
-
 			<Field id="shutDownPinEnable"   type="menu" defaultValue="0" visibleBindingId="typeOfUPS" visibleBindingValue="OnlyA,AB,AC,AD"  >
 				<Label>--(A)... enable shutdown pin IN/output:</Label>
 				<List>
@@ -19119,11 +19116,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="simpleSeparator22" type="separator"/>
 			<Field id="SCLPin"  type="menu"      defaultValue="27" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SCLPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field id="SDOPin"  type="menu"      defaultValue="22" visibleBindingId="devType"    visibleBindingValue="16Serial">		<Label>Which gpio pin for SDOPin:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 			<Field  id="buttonPiNumber" type="button"    >
@@ -19148,7 +19145,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select touch pad for this INPUT channel/state:</Label>
-			<List class="self" filter="" method="filterList16" dynamicReload="false"/>
+				<List class="self" filter="" method="filterList16" dynamicReload="false"/>
 			</Field>
 
 			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
@@ -19207,6 +19204,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="up-down"     >show 1 as up; 0 as down</Option>
 					<Option value="down-up"     >show 1 as down; 0 as up</Option>
 				</List>
+			</Field>
 			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
@@ -19217,7 +19215,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
 					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false"/>
 				<Label>select the icon pair you like to use for down/up:</Label>
-			</Field>
 			</Field>
 
 			<Field id="unit"   type="textfield" defaultValue="[mV]"      visibleBindingId="onOff"    visibleBindingValue="x">	<Label>unit:</Label></Field>
@@ -21140,6 +21137,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isPauseSensor"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -21191,8 +21189,23 @@ Indigo gets updated at least every 90 secs or when a measuremrnt has a change la
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="textfield"     defaultValue="10" hidden="no" >
+
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10" hidden="no" >
 				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 5</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
 			</Field>
 
 			<Field id="deltaDist" type="menu"     defaultValue="3" hidden="no"  >
@@ -21252,23 +21265,86 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-
-			<Field id="infoactions" type="label" alignText="left"  fontColor="green">
-				<Label>==You can setup a GPIO action (up/low a GPIO output) if distance is high, medium, or low 
-this will create a very fast local action &lt; 0.01 seconds after measurement
-leve limits/ actions empty to ignore
-First set the limits for short/long distance events (medium is between these two)
-Second set the action ie a specific GPIO up/down </Label>
+			<Field id="infoactions0" type="label" fontColor="green">       	<Label>== Set up local actions:...</Label>				</Field>
+			<Field id="actionEnable"  type="menu" defaultValue="0" >
+				<Label>Enable local actions:</Label>
+				<List>
+					<Option value= "1" >YES </Option>
+					<Option value= "0" >no</Option>
+				</List>
 			</Field>
 
-			<Field id="actionLongDistanceLimit"  type="textfield"    defaultValue="20" hidden="no"> <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
-			<Field id="actionShortDistanceLimit" type="textfield"    defaultValue="4" hidden="no">  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="infoactions2" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="green">
+<Label>If Enabled, this will create a very fast local action &lt; 0.01 seconds after measurement
+First set the limits for short/long distance events (medium is between these two)
+this will create a very fast local action &lt; 0.01 seconds after measurement
+set level limits/actions, leave empty to ignore/disable
+eg VS=10, Short=20, Long=100 VL=200</Label>
+			</Field>
 
-			<Field id="texf22"                   type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;sleep 1;gpio -g write 18 0" hidden="no" readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up, wait 1 sec/down:</Label></Field>
-			<Field id="actionShortDistance"      type="textfield"    defaultValue="" hidden="no">	<Label>action for SHORT  distance event:</Label></Field>
-			<Field id="actionMediumDistance"     type="textfield"    defaultValue="" hidden="no">	<Label>action for MEDIUM distance event:</Label></Field>
-			<Field id="actionLongDistance"       type="textfield"    defaultValue="" hidden="no">	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistanceLimit"  type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="">  <Label>limit for VeryLONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actionLongDistanceLimit"      type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actiondummyMedium"            type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="is calculated" readonly="yes">  <Label>limit for MEDIUM:</Label></Field>
+			<Field id="actionShortDistanceLimit"     type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="actionVeryShortDistanceLimit" type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for VerySHORT distance event(cm) &lt;:</Label></Field>
 
+		<Field id="infoactions3" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="darkgrey">
+			<Label>Second set the action ie a specific GPIO up/down or neopixel display:</Label>
+			</Field>
+			<Field id="execHelp" type="button" visibleBindingId="actionEnable" visibleBindingValue="1">
+				<Label>Click to print examples for actions to logfile</Label>
+				<Title>PRINT</Title>
+				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
+			</Field>
+
+			<Field id="actionVeryShortDistance"  type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VerySHORT  distance event:</Label></Field>
+			<Field id="actionShortDistance"      type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for SHORT  distance event:</Label></Field>
+			<Field id="actionMediumDistance"     type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for MEDIUM distance event:</Label></Field>
+			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
+			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="1.5"  > 1.5</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="2.5"  > 2.5</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 4</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
+			</Field>
+			<Field id="actionStopWait"           type="menu"        visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="2" >		
+				<Label>STOP:  min time speed is &lt; "min speed" to trigger stop Action:</Label>
+				<List>
+					<Option value="0.5"  > 0.5 secs</Option>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="1.5"  > 1.5 secs</Option>
+					<Option value="2"    > 2 secs</Option>
+					<Option value="2.5"  > 2.5 secs</Option>
+					<Option value="3"    > 3 secs</Option>
+					<Option value="4"    > 4 secs</Option>
+					<Option value="5"    > 5 secs</Option>
+					<Option value="6"    > 6 secs</Option>
+					<Option value="7"    > 7 secs</Option>
+					<Option value="8"    > 8 secs</Option>
+					<Option value="9"    > 9 secs</Option>
+					<Option value="10"   > 10 secs</Option>
+					<Option value="12"   > 12 secs</Option>
+					<Option value="15"   > 15 secs</Option>
+					<Option value="20"   > 20 secs</Option>
+					<Option value="25"   > 25 secs</Option>
+					<Option value="30"   > 30 secs</Option>
+				</List>
+			</Field>
 
 
 			<Field id="infodisplay" type="label" alignText="left"  fontColor="green">
@@ -21320,7 +21396,7 @@ Second set the action ie a specific GPIO up/down </Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
-			<Field id="displayS"     type="menu"         defaultValue="distance" hidden="no">
+			<Field id="displayS"     type="menu"         defaultValue="distance" >
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="distance"  >distance</Option>
@@ -21335,7 +21411,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="statusColorLabel" type="label" alignText="left"  fontColor="green">
-				<Label>== set color of status column dot to </Label>
+				<Label>== set color of status column dot to (overwrites above)</Label>
 			</Field>
 
 			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
@@ -21359,6 +21435,21 @@ Second set the action ie a specific GPIO up/down </Label>
 
 		</ConfigUI>
 		<States>
+			<State id="stopped">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>stopped</TriggerLabel>
+				<ControlPageLabel>stopped</ControlPageLabel>
+			</State>
+			<State id="distanceEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>distanceEvent</TriggerLabel>
+				<ControlPageLabel>distanceEvent</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>string</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -21385,6 +21476,7 @@ Second set the action ie a specific GPIO up/down </Label>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isPauseSensor"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
@@ -21413,18 +21505,21 @@ Each xShut pin on the sensors needs to be connected to a different gpio on the R
 The py program on the RPI will use that pin to set each device to a different i2c number- starting at 0x29
 If successful it is shown in dev state i2c </Label>
 			</Field>
-			<Field id="xShutPin" type="menu"     defaultValue="4" hidden="no">
+			<Field id="xShutPin" type="menu"     defaultValue="4" >
 				<Label>select gpio to xshut pin(on sensor) for THIS device:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
 
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="4" hidden="no">
-				<Label>read Distance every xx secs:</Label>
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="2" >
+				<Label>read Distance every :</Label>
 				<List>
-					<Option value="0.5" > 0.5 secs</Option>
-					<Option value="1"   > 1   secs</Option>
+					<Option value="0.3" > 0.3 secs </Option>
+					<Option value="0.4" > 0.4 secs </Option>
+					<Option value="0.5" > 0.5 secs </Option>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="1.5" > 1.5 secs </Option>
 					<Option value="2"   > 2   secs</Option>
 					<Option value="3"   > 3   secs</Option>
 					<Option value="4"   > 4   secs</Option>
@@ -21434,11 +21529,25 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="textfield"     defaultValue="10" hidden="no" >
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
 				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 5</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="deltaDist" type="menu"     defaultValue="10"  >
 				<Label>send if delta Dist(%) :</Label>
 				<List>
 					<Option value="1"    > 1</Option>
@@ -21453,7 +21562,7 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="acuracyDistanceMode" type="menu"     defaultValue="100000" hidden="no" >
+			<Field id="acuracyDistanceMode" type="menu"     defaultValue="100000"  >
 				<Label>operation mode:</Label>
 				<List>
 			<Option value="200000">high accuracy, 200ms integration time </Option>
@@ -21463,7 +21572,7 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="dUnits" type="menu"     defaultValue="cm" hidden="no">
+			<Field id="dUnits" type="menu"     defaultValue="cm" >
 				<Label>units used in local display:</Label>
 				<List>
 					<Option value=""       >use default</Option>
@@ -21474,11 +21583,11 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="offset" type="textfield"     defaultValue="0" hidden="no">
+			<Field id="offset" type="textfield"     defaultValue="0" >
 				<Label>add offset to measured value:</Label>
 			</Field>
 
-			<Field id="multiply" type="textfield"     defaultValue="1" hidden="no">
+			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
 			</Field>
 
@@ -21505,22 +21614,87 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="infoactions" type="label" alignText="left"  fontColor="green">
-				<Label>==You can setup a GPIO action (up/low a GPIO output) if distance is high, medium, or low 
-this will create a very fast local action &lt; 0.01 seconds after measurement
-leve limits/ actions empty to ignore
-First set the limits for short/long distance events (medium is between these two)
-Second set the action ie a specific GPIO up/down </Label>
+			<Field id="infoactions0" type="label" fontColor="green">       	<Label>== Set up local actions:...</Label>				</Field>
+			<Field id="actionEnable"  type="menu" defaultValue="0" >
+				<Label>Enable local actions:</Label>
+				<List>
+					<Option value= "1" >YES </Option>
+					<Option value= "0" >no</Option>
+				</List>
 			</Field>
 
-			<Field id="actionLongDistanceLimit"  type="textfield"    defaultValue="20" hidden="no"> <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
-			<Field id="actionShortDistanceLimit" type="textfield"    defaultValue="4" hidden="no">  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="infoactions2" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="green">
+<Label>If Enabled, this will create a very fast local action &lt; 0.01 seconds after measurement
+First set the limits for short/long distance events (medium is between these two)
+this will create a very fast local action &lt; 0.01 seconds after measurement
+set level limits/actions, leave empty to ignore/disable
+eg VS=10, Short=20, Long=100 VL=200</Label>
+			</Field>
 
-			<Field id="texf22"                   type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;sleep 1;gpio -g write 18 0" hidden="no" readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up, wait 1 sec/down:</Label></Field>
-			<Field id="actionShortDistance"      type="textfield"    defaultValue="" hidden="no">	<Label>action for SHORT  distance event:</Label></Field>
-			<Field id="actionMediumDistance"     type="textfield"    defaultValue="" hidden="no">	<Label>action for MEDIUM distance event:</Label></Field>
-			<Field id="actionLongDistance"       type="textfield"    defaultValue="" hidden="no">	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistanceLimit"  type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="">  <Label>limit for VeryLONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actionLongDistanceLimit"      type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actiondummyMedium"            type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="is calculated" readonly="yes">  <Label>limit for MEDIUM:</Label></Field>
+			<Field id="actionShortDistanceLimit"     type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="actionVeryShortDistanceLimit" type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for VerySHORT distance event(cm) &lt;:</Label></Field>
 
+
+		<Field id="infoactions3" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="darkgrey">
+			<Label>Second set the action ie a specific GPIO up/down or neopixel display:</Label>
+			</Field>
+			<Field id="execHelp" type="button">
+				<Label>click to print examples for actions to logfile</Label>
+				<Title>PRINT</Title>
+				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
+			</Field>
+
+			<Field id="actionVeryShortDistance"  type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VerySHORT  distance event:</Label></Field>
+			<Field id="actionShortDistance"      type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for SHORT  distance event:</Label></Field>
+			<Field id="actionMediumDistance"     type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for MEDIUM distance event:</Label></Field>
+			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
+			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="1.5"  > 1.5</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="2.5"  > 2.5</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 4</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
+			</Field>
+			<Field id="actionStopWait"           type="menu"        visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="2" >		
+				<Label>STOP:  min time speed is &lt; "min speed" to trigger stop Action:</Label>
+				<List>
+					<Option value="0.5"  > 0.5 secs</Option>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="1.5"  > 1.5 secs</Option>
+					<Option value="2"    > 2 secs</Option>
+					<Option value="2.5"  > 2.5 secs</Option>
+					<Option value="3"    > 3 secs</Option>
+					<Option value="4"    > 4 secs</Option>
+					<Option value="5"    > 5 secs</Option>
+					<Option value="6"    > 6 secs</Option>
+					<Option value="7"    > 7 secs</Option>
+					<Option value="8"    > 8 secs</Option>
+					<Option value="9"    > 9 secs</Option>
+					<Option value="10"   > 10 secs</Option>
+					<Option value="12"   > 12 secs</Option>
+					<Option value="15"   > 15 secs</Option>
+					<Option value="20"   > 20 secs</Option>
+					<Option value="25"   > 25 secs</Option>
+					<Option value="30"   > 30 secs</Option>
+				</List>
+			</Field>
 
 
 			<Field id="infodisplay" type="label" alignText="left"  fontColor="green">
@@ -21572,7 +21746,7 @@ Second set the action ie a specific GPIO up/down </Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
-			<Field id="displayS"     type="menu"         defaultValue="distance" hidden="no">
+			<Field id="displayS"     type="menu"         defaultValue="distance" >
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="distance"  >distance</Option>
@@ -21587,7 +21761,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="statusColorLabel" type="label" alignText="left"  fontColor="green">
-				<Label>== set color of status column dot to </Label>
+				<Label>== set color of status column dot to (overwrites above)</Label>
 			</Field>
 
 			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
@@ -21612,6 +21786,21 @@ Second set the action ie a specific GPIO up/down </Label>
 		</ConfigUI>
 
 		<States>
+			<State id="distanceEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>distanceEvent</TriggerLabel>
+				<ControlPageLabel>distanceEvent</ControlPageLabel>
+			</State>
+			<State id="stopped">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>stopped</TriggerLabel>
+				<ControlPageLabel>stopped</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>string</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -21637,6 +21826,7 @@ Second set the action ie a specific GPIO up/down </Label>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isPauseSensor"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
@@ -21663,19 +21853,23 @@ range is up to 1.2 m</Label>
 				<Label>ONLY if you use MORE than 1 of these Sensors on the same RPi: 
 Each xShut pin on the sensors needs to be connected to a different gpio on the RPI
 The py program on the RPI will use that pin to set each device to a different i2c number- starting at 0x29
-If successful it is shown in dev state i2c </Label>
+If successful it is shown in dev state i2c
+The sensr is more stable with the xShut pin enabled</Label>
 			</Field>
-			<Field id="xShutPin" type="menu"     defaultValue="4" hidden="no">
+			<Field id="xShutPin" type="menu"     defaultValue="4" >
 				<Label>select gpio to xshut pin(on sensor) for THIS device:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
 
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="4" hidden="no">
-				<Label>read Distance every xx secs:</Label>
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="2" >
+				<Label>read Distance every :</Label>
 				<List>
-					<Option value="0.5" > 0.5 secs</Option>
-					<Option value="1"   > 1   secs</Option>
+					<Option value="0.3" > 0.3 secs </Option>
+					<Option value="0.4" > 0.4 secs </Option>
+					<Option value="0.5" > 0.5 secs </Option>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="1.5" > 1.5 secs </Option>
 					<Option value="2"   > 2   secs</Option>
 					<Option value="3"   > 3   secs</Option>
 					<Option value="4"   > 4   secs</Option>
@@ -21685,11 +21879,26 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="textfield"     defaultValue="10" hidden="no" >
+
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
 				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 5</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="deltaDist" type="menu"     defaultValue="10"  >
 				<Label>send if delta Dist(%) :</Label>
 				<List>
 					<Option value="1"    > 1</Option>
@@ -21704,7 +21913,7 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="acuracyDistanceMode" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="acuracyDistanceMode" type="menu"     defaultValue="200"  >
 				<Label>operation mode:</Label>
 				<List>
 			<Option value="500">high accuracy, 500ms integration time </Option>
@@ -21716,7 +21925,7 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="mode" type="menu"     defaultValue="2" hidden="no" >
+			<Field id="mode" type="menu"     defaultValue="2"  >
 				<Label>short/long distance mode:</Label>
 				<List>
 			<Option value="1">short distance up to 2.5m </Option>
@@ -21724,7 +21933,7 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="dUnits" type="menu"     defaultValue="cm" hidden="no">
+			<Field id="dUnits" type="menu"     defaultValue="cm" >
 				<Label>units used in local display:</Label>
 				<List>
 					<Option value=""       >use default</Option>
@@ -21735,11 +21944,11 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="offset" type="textfield"     defaultValue="0" hidden="no">
+			<Field id="offset" type="textfield"     defaultValue="0" >
 				<Label>add offset to measured value:</Label>
 			</Field>
 
-			<Field id="multiply" type="textfield"     defaultValue="1" hidden="no">
+			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
 			</Field>
 
@@ -21766,22 +21975,87 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="infoactions" type="label" alignText="left"  fontColor="green">
-				<Label>==You can setup a GPIO action (up/low a GPIO output) if distance is high, medium, or low 
-this will create a very fast local action &lt; 0.01 seconds after measurement
-leve limits/ actions empty to ignore
-First set the limits for short/long distance events (medium is between these two)
-Second set the action ie a specific GPIO up/down </Label>
+			<Field id="infoactions0" type="label" fontColor="green">       	<Label>== Set up local actions:...</Label>				</Field>
+			<Field id="actionEnable"  type="menu" defaultValue="0" >
+				<Label>Enable local actions:</Label>
+				<List>
+					<Option value= "1" >YES </Option>
+					<Option value= "0" >no</Option>
+				</List>
 			</Field>
 
-			<Field id="actionLongDistanceLimit"  type="textfield"    defaultValue="20" hidden="no"> <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
-			<Field id="actionShortDistanceLimit" type="textfield"    defaultValue="4" hidden="no">  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="infoactions2" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="green">
+<Label>If Enabled, this will create a very fast local action &lt; 0.01 seconds after measurement
+First set the limits for short/long distance events (medium is between these two)
+this will create a very fast local action &lt; 0.01 seconds after measurement
+set level limits/actions, leave empty to ignore/disable
+eg VS=10, Short=20, Long=100 VL=200</Label>
+			</Field>
 
-			<Field id="texf22"                   type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;sleep 1;gpio -g write 18 0" hidden="no" readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up, wait 1 sec/down:</Label></Field>
-			<Field id="actionShortDistance"      type="textfield"    defaultValue="" hidden="no">	<Label>action for SHORT  distance event:</Label></Field>
-			<Field id="actionMediumDistance"     type="textfield"    defaultValue="" hidden="no">	<Label>action for MEDIUM distance event:</Label></Field>
-			<Field id="actionLongDistance"       type="textfield"    defaultValue="" hidden="no">	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistanceLimit"  type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="">  <Label>limit for VeryLONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actionLongDistanceLimit"      type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actiondummyMedium"            type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="is calculated" readonly="yes">  <Label>limit for MEDIUM:</Label></Field>
+			<Field id="actionShortDistanceLimit"     type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="actionVeryShortDistanceLimit" type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for VerySHORT distance event(cm) &lt;:</Label></Field>
 
+
+		<Field id="infoactions3" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="darkgrey">
+			<Label>Second set the action ie a specific GPIO up/down or neopixel display:</Label>
+			</Field>
+			<Field id="execHelp" type="button">
+				<Label>click to print examples for actions to logfile</Label>
+				<Title>PRINT</Title>
+				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
+			</Field>
+
+			<Field id="actionVeryShortDistance"  type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VerySHORT  distance event:</Label></Field>
+			<Field id="actionShortDistance"      type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for SHORT  distance event:</Label></Field>
+			<Field id="actionMediumDistance"     type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for MEDIUM distance event:</Label></Field>
+			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
+			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="1.5"  > 1.5</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="2.5"  > 2.5</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 4</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
+			</Field>
+			<Field id="actionStopWait"           type="menu"        visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="2" >		
+				<Label>STOP:  min time speed is &lt; "min speed" to trigger stop Action:</Label>
+				<List>
+					<Option value="0.5"  > 0.5 secs</Option>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="1.5"  > 1.5 secs</Option>
+					<Option value="2"    > 2 secs</Option>
+					<Option value="2.5"  > 2.5 secs</Option>
+					<Option value="3"    > 3 secs</Option>
+					<Option value="4"    > 4 secs</Option>
+					<Option value="5"    > 5 secs</Option>
+					<Option value="6"    > 6 secs</Option>
+					<Option value="7"    > 7 secs</Option>
+					<Option value="8"    > 8 secs</Option>
+					<Option value="9"    > 9 secs</Option>
+					<Option value="10"   > 10 secs</Option>
+					<Option value="12"   > 12 secs</Option>
+					<Option value="15"   > 15 secs</Option>
+					<Option value="20"   > 20 secs</Option>
+					<Option value="25"   > 25 secs</Option>
+					<Option value="30"   > 30 secs</Option>
+				</List>
+			</Field>
 
 
 			<Field id="infodisplay" type="label" alignText="left"  fontColor="green">
@@ -21789,9 +22063,10 @@ Second set the action ie a specific GPIO up/down </Label>
 			</Field>
 
 			<Field id="displayEnable"  type="menu" defaultValue="0" >
-				<Label>Show text to local display:</Label>
+				<Label>Show text/thermometer to local display:</Label>
 				<List>
-					<Option value= "1"  >YES </Option>
+					<Option value= "2"  >Neopixel</Option>
+					<Option value= "1"  >Display</Option>
 					<Option value= "0" >no</Option>
 				</List>
 			</Field>
@@ -21820,11 +22095,28 @@ Second set the action ie a specific GPIO up/down </Label>
 				<Label>position Parameter 3[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
-				<Label>position Parameter 3 lin/log:</Label>
+			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1,2"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
+				<Label>lin/log:</Label>
 				<List>
 					<Option value= "lin"  >linear scale  </Option>
 					<Option value= "log"  >log scale</Option>
+				</List>
+			</Field>
+
+			<Field id="colorOfDistanceBar"  type="textfield" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="2"  visibleBindingId="displayEnable"    visibleBindingValue="2">
+				<Label>color of bar eg 0,100,100:</Label>
+			</Field>
+
+			<Field id="normalizeDistance"  type="textfield" defaultValue="500" enableBindingId="displayEnable" enableBindingValue="1,1"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
+				<Label>max distance:</Label>
+			</Field>
+
+
+			<Field id="inverseDistance"  type="menu" defaultValue="normal" enableBindingId="displayEnable" enableBindingValue="2"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
+				<Label>show # of LEDs inverse to distance:</Label>
+				<List>
+					<Option value= "normal"  >normal</Option>
+					<Option value= "inverse"  >inverse</Option>
 				</List>
 			</Field>
 
@@ -21833,7 +22125,7 @@ Second set the action ie a specific GPIO up/down </Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
-			<Field id="displayS"     type="menu"         defaultValue="distance" hidden="no">
+			<Field id="displayS"     type="menu"         defaultValue="distance" >
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="distance"  >distance</Option>
@@ -21848,7 +22140,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="statusColorLabel" type="label" alignText="left"  fontColor="green">
-				<Label>== set color of status column dot to </Label>
+				<Label>== set color of status column dot to (overwrites above)</Label>
 			</Field>
 
 			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
@@ -21873,6 +22165,21 @@ Second set the action ie a specific GPIO up/down </Label>
 		</ConfigUI>
 
 		<States>
+			<State id="distanceEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>distanceEvent</TriggerLabel>
+				<ControlPageLabel>distanceEvent</ControlPageLabel>
+			</State>
+			<State id="stopped">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>stopped</TriggerLabel>
+				<ControlPageLabel>stopped</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>string</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -21899,6 +22206,7 @@ Second set the action ie a specific GPIO up/down </Label>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isPauseSensor"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
@@ -21924,36 +22232,43 @@ distance up to 20 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="2" hidden="no">
-				<Label>send Distance every :</Label>
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="2" >
+				<Label>read Distance every :</Label>
 				<List>
-					<Option value="0.1" > 0.1 secs will send a lot of data to indigo</Option>
-					<Option value="0.5" > 0.5 secs will send a lot of data to indigo</Option>
+					<Option value="0.3" > 0.3 secs </Option>
+					<Option value="0.4" > 0.4 secs </Option>
+					<Option value="0.5" > 0.5 secs </Option>
 					<Option value="1"   > 1   secs </Option>
+					<Option value="1.5" > 1.5 secs </Option>
 					<Option value="2"   > 2   secs</Option>
 					<Option value="3"   > 3   secs</Option>
 					<Option value="4"   > 4   secs</Option>
 					<Option value="6"   > 6   secs</Option>
 					<Option value="8"   > 8   secs</Option>
 					<Option value="10"  > 10  secs</Option>
-					<Option value="12"  > 12  secs</Option>
-					<Option value="15"  > 15  secs</Option>
-					<Option value="20"  > 20  secs</Option>
-					<Option value="30"  > 30  secs</Option>
-					<Option value="40"  > 40  secs</Option>
-					<Option value="60"  > 60  secs</Option>
-					<Option value="80"  > 80  secs</Option>
-					<Option value="100" > 100 secs</Option>
-					<Option value="120" > 2   minutes</Option>
-					<Option value="180" > 3   minutes</Option>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="textfield"     defaultValue="1" hidden="no" >
-				<Label>send if delta Dist absolute[cm] eg 1 :</Label>
+
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
+				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 5</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="deltaDist" type="menu"     defaultValue="10"  >
 				<Label>send if delta Dist(%) :</Label>
 				<List>
 					<Option value="1"    > 1</Option>
@@ -21968,7 +22283,7 @@ distance up to 20 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="maxCurrent" type="menu"     defaultValue="4" hidden="no" >
+			<Field id="maxCurrent" type="menu"     defaultValue="4"  >
 				<Label>current into IR- output diode[mA]:</Label>
 				<List>
 					<Option value="1"    > 10</Option>
@@ -21985,7 +22300,7 @@ distance up to 20 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="dUnits" type="menu"     defaultValue="cm" hidden="no">
+			<Field id="dUnits" type="menu"     defaultValue="cm" >
 				<Label>units used in local display:</Label>
 				<List>
 					<Option value=""       >use default</Option>
@@ -21996,11 +22311,11 @@ distance up to 20 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="offset" type="textfield"     defaultValue="0" hidden="no">
+			<Field id="offset" type="textfield"     defaultValue="0" >
 				<Label>add offset to measured value:</Label>
 			</Field>
 
-			<Field id="multiply" type="textfield"     defaultValue="1" hidden="no">
+			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
 			</Field>
 
@@ -22028,22 +22343,87 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="infoactions" type="label" alignText="left"  fontColor="green">
-				<Label>==You can setup a GPIO action (up/low a GPIO output) if distance is high, medium, or low 
-this will create a very fast local action &lt; 0.01 seconds after measurement
-leve limits/ actions empty to ignore
-First set the limits for short/long distance events (medium is between these two)
-Second set the action ie a specific GPIO up/down </Label>
+			<Field id="infoactions0" type="label" fontColor="green">       	<Label>== Set up local actions:...</Label>				</Field>
+			<Field id="actionEnable"  type="menu" defaultValue="0" >
+				<Label>Enable local actions:</Label>
+				<List>
+					<Option value= "1" >YES </Option>
+					<Option value= "0" >no</Option>
+				</List>
 			</Field>
 
-			<Field id="actionLongDistanceLimit"  type="textfield"    defaultValue="20" hidden="no"> <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
-			<Field id="actionShortDistanceLimit" type="textfield"    defaultValue="4" hidden="no">  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="infoactions2" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="green">
+<Label>If Enabled, this will create a very fast local action &lt; 0.01 seconds after measurement
+First set the limits for short/long distance events (medium is between these two)
+this will create a very fast local action &lt; 0.01 seconds after measurement
+set level limits/actions, leave empty to ignore/disable
+eg VS=10, Short=20, Long=100 VL=200</Label>
+			</Field>
 
-			<Field id="texf22"                   type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;sleep 1;gpio -g write 18 0" hidden="no" readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up, wait 1 sec/down:</Label></Field>
-			<Field id="actionShortDistance"      type="textfield"    defaultValue="" hidden="no">	<Label>action for SHORT  distance event:</Label></Field>
-			<Field id="actionMediumDistance"     type="textfield"    defaultValue="" hidden="no">	<Label>action for MEDIUM distance event:</Label></Field>
-			<Field id="actionLongDistance"       type="textfield"    defaultValue="" hidden="no">	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistanceLimit"  type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="">  <Label>limit for VeryLONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actionLongDistanceLimit"      type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actiondummyMedium"            type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="is calculated" readonly="yes">  <Label>limit for MEDIUM:</Label></Field>
+			<Field id="actionShortDistanceLimit"     type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="actionVeryShortDistanceLimit" type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for VerySHORT distance event(cm) &lt;:</Label></Field>
 
+
+		<Field id="infoactions3" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="darkgrey">
+			<Label>Second set the action ie a specific GPIO up/down or neopixel display:</Label>
+			</Field>
+			<Field id="execHelp" type="button">
+				<Label>click to print examples for actions to logfile</Label>
+				<Title>PRINT</Title>
+				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
+			</Field>
+
+			<Field id="actionVeryShortDistance"  type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VerySHORT  distance event:</Label></Field>
+			<Field id="actionShortDistance"      type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for SHORT  distance event:</Label></Field>
+			<Field id="actionMediumDistance"     type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for MEDIUM distance event:</Label></Field>
+			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
+			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="1.5"  > 1.5</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="2.5"  > 2.5</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 4</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
+			</Field>
+			<Field id="actionStopWait"           type="menu"        visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="2" >		
+				<Label>STOP:  min time speed is &lt; "min speed" to trigger stop Action:</Label>
+				<List>
+					<Option value="0.5"  > 0.5 secs</Option>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="1.5"  > 1.5 secs</Option>
+					<Option value="2"    > 2 secs</Option>
+					<Option value="2.5"  > 2.5 secs</Option>
+					<Option value="3"    > 3 secs</Option>
+					<Option value="4"    > 4 secs</Option>
+					<Option value="5"    > 5 secs</Option>
+					<Option value="6"    > 6 secs</Option>
+					<Option value="7"    > 7 secs</Option>
+					<Option value="8"    > 8 secs</Option>
+					<Option value="9"    > 9 secs</Option>
+					<Option value="10"   > 10 secs</Option>
+					<Option value="12"   > 12 secs</Option>
+					<Option value="15"   > 15 secs</Option>
+					<Option value="20"   > 20 secs</Option>
+					<Option value="25"   > 25 secs</Option>
+					<Option value="30"   > 30 secs</Option>
+				</List>
+			</Field>
 
 
 			<Field id="infodisplay" type="label" alignText="left"  fontColor="green">
@@ -22095,7 +22475,7 @@ Second set the action ie a specific GPIO up/down </Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
-			<Field id="displayS"     type="menu"         defaultValue="distance" hidden="no">
+			<Field id="displayS"     type="menu"         defaultValue="distance" >
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="distance"  >distance</Option>
@@ -22110,7 +22490,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="statusColorLabel" type="label" alignText="left"  fontColor="green">
-				<Label>== set color of status column dot to </Label>
+				<Label>== set color of status column dot to (overwrites above)</Label>
 			</Field>
 
 			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
@@ -22134,6 +22514,21 @@ Second set the action ie a specific GPIO up/down </Label>
 
 		</ConfigUI>
 		<States>
+			<State id="distanceEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>distanceEvent</TriggerLabel>
+				<ControlPageLabel>distanceEvent</ControlPageLabel>
+			</State>
+			<State id="stopped">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>stopped</TriggerLabel>
+				<ControlPageLabel>stopped</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>string</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -22159,6 +22554,7 @@ Second set the action ie a specific GPIO up/down </Label>
 		<ConfigUI>
 			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="isPauseSensor"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
@@ -22183,11 +22579,14 @@ distance up to 10 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20" hidden="no">
-				<Label>send Distance every :</Label>
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="20" >
+				<Label>read Distance every :</Label>
 				<List>
-					<Option value="0.5" > 0.5 secs will send a lot of data to indigo</Option>
+					<Option value="0.3" > 0.3 secs </Option>
+					<Option value="0.4" > 0.4 secs </Option>
+					<Option value="0.5" > 0.5 secs </Option>
 					<Option value="1"   > 1   secs </Option>
+					<Option value="1.5" > 1.5 secs </Option>
 					<Option value="2"   > 2   secs</Option>
 					<Option value="3"   > 3   secs</Option>
 					<Option value="4"   > 4   secs</Option>
@@ -22207,11 +22606,26 @@ distance up to 10 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="textfield"     defaultValue="1" hidden="no" >
-				<Label>send if delta Dist absolute[cm] eg 1 :</Label>
+
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
+				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 5</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="deltaDist" type="menu"     defaultValue="10"  >
 				<Label>send if delta Dist(%) :</Label>
 				<List>
 					<Option value="1"    > 1</Option>
@@ -22226,7 +22640,7 @@ distance up to 10 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="dUnits" type="menu"     defaultValue="cm" hidden="no">
+			<Field id="dUnits" type="menu"     defaultValue="cm" >
 				<Label>units used in local display:</Label>
 				<List>
 					<Option value=""       >use default</Option>
@@ -22237,31 +22651,96 @@ distance up to 10 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="offset" type="textfield"     defaultValue="0" hidden="no">
+			<Field id="offset" type="textfield"     defaultValue="0" >
 				<Label>add offset to measured value:</Label>
 			</Field>
 
-			<Field id="multiply" type="textfield"     defaultValue="1" hidden="no">
+			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
 			</Field>
 
 
-			<Field id="infoactions" type="label" alignText="left"  fontColor="green">
-				<Label>==You can setup a GPIO action (up/low a GPIO output) if distance is high, medium, or low 
-this will create a very fast local action &lt; 0.01 seconds after measurement
-leve limits/ actions empty to ignore
-First set the limits for short/long distance events (medium is between these two)
-Second set the action ie a specific GPIO up/down </Label>
+			<Field id="infoactions0" type="label" fontColor="green">       	<Label>== Set up local actions:...</Label>				</Field>
+			<Field id="actionEnable"  type="menu" defaultValue="0" >
+				<Label>Enable local actions:</Label>
+				<List>
+					<Option value= "1" >YES </Option>
+					<Option value= "0" >no</Option>
+				</List>
 			</Field>
 
-			<Field id="actionLongDistanceLimit"  type="textfield"    defaultValue="20" hidden="no"> <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
-			<Field id="actionShortDistanceLimit" type="textfield"    defaultValue="4" hidden="no">  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="infoactions2" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="green">
+<Label>If Enabled, this will create a very fast local action &lt; 0.01 seconds after measurement
+First set the limits for short/long distance events (medium is between these two)
+this will create a very fast local action &lt; 0.01 seconds after measurement
+set level limits/actions, leave empty to ignore/disable
+eg VS=10, Short=20, Long=100 VL=200</Label>
+			</Field>
 
-			<Field id="texf22"                   type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;sleep 1;gpio -g write 18 0" hidden="no" readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up, wait 1 sec/down:</Label></Field>
-			<Field id="actionShortDistance"      type="textfield"    defaultValue="" hidden="no">	<Label>action for SHORT  distance event:</Label></Field>
-			<Field id="actionMediumDistance"     type="textfield"    defaultValue="" hidden="no">	<Label>action for MEDIUM distance event:</Label></Field>
-			<Field id="actionLongDistance"       type="textfield"    defaultValue="" hidden="no">	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistanceLimit"  type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="">  <Label>limit for VeryLONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actionLongDistanceLimit"      type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for LONG  distance event(cm) &gt;:</Label></Field>
+			<Field id="actiondummyMedium"            type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="is calculated" readonly="yes">  <Label>limit for MEDIUM:</Label></Field>
+			<Field id="actionShortDistanceLimit"     type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for SHORT distance event(cm) &lt;:</Label></Field>
+			<Field id="actionVeryShortDistanceLimit" type="textfield" visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >  <Label>limit for VerySHORT distance event(cm) &lt;:</Label></Field>
 
+
+		<Field id="infoactions3" type="label" visibleBindingId="actionEnable" visibleBindingValue="1" alignText="right"  fontSize="small"  fontColor="darkgrey">
+			<Label>Second set the action ie a specific GPIO up/down or neopixel display:</Label>
+			</Field>
+			<Field id="execHelp" type="button">
+				<Label>click to print examples for actions to logfile</Label>
+				<Title>PRINT</Title>
+				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
+			</Field>
+
+			<Field id="actionVeryShortDistance"  type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VerySHORT  distance event:</Label></Field>
+			<Field id="actionShortDistance"      type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for SHORT  distance event:</Label></Field>
+			<Field id="actionMediumDistance"     type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for MEDIUM distance event:</Label></Field>
+			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
+			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
+			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
+				<List>
+					<Option value="0.5"  > 0.5</Option>
+					<Option value="1"    > 1</Option>
+					<Option value="1.5"  > 1.5</Option>
+					<Option value="2"    > 2</Option>
+					<Option value="2.5"  > 2.5</Option>
+					<Option value="3"    > 3</Option>
+					<Option value="4"    > 4</Option>
+					<Option value="5"    > 5</Option>
+					<Option value="7"    > 7</Option>
+					<Option value="10"   > 10</Option>
+					<Option value="15"   > 15</Option>
+					<Option value="20"   > 20</Option>
+					<Option value="25"   > 25</Option>
+					<Option value="30"   > 30</Option>
+				</List>
+			</Field>
+			<Field id="actionStopWait"           type="menu"        visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="2" >		
+				<Label>STOP:  min time speed is &lt; "min speed" to trigger stop Action:</Label>
+				<List>
+					<Option value="0.5"  > 0.5 secs</Option>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="1.5"  > 1.5 secs</Option>
+					<Option value="2"    > 2 secs</Option>
+					<Option value="2.5"  > 2.5 secs</Option>
+					<Option value="3"    > 3 secs</Option>
+					<Option value="4"    > 4 secs</Option>
+					<Option value="5"    > 5 secs</Option>
+					<Option value="6"    > 6 secs</Option>
+					<Option value="7"    > 7 secs</Option>
+					<Option value="8"    > 8 secs</Option>
+					<Option value="9"    > 9 secs</Option>
+					<Option value="10"   > 10 secs</Option>
+					<Option value="12"   > 12 secs</Option>
+					<Option value="15"   > 15 secs</Option>
+					<Option value="20"   > 20 secs</Option>
+					<Option value="25"   > 25 secs</Option>
+					<Option value="30"   > 30 secs</Option>
+				</List>
+			</Field>
 
 
 			<Field id="infodisplay" type="label" alignText="left"  fontColor="green">
@@ -22313,7 +22792,7 @@ Second set the action ie a specific GPIO up/down </Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status"   hidden="YES"> </Field>
-			<Field id="displayS"     type="menu"         defaultValue="distance" hidden="no">
+			<Field id="displayS"     type="menu"         defaultValue="distance" >
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="distance"      >distance</Option>
@@ -22329,7 +22808,7 @@ Second set the action ie a specific GPIO up/down </Label>
 
 
 			<Field id="statusColorLabel" type="label" alignText="left"  fontColor="green">
-				<Label>== set color of status column dot to </Label>
+				<Label>== set color of status column dot to (overwrites above)</Label>
 			</Field>
 
 			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
@@ -22354,6 +22833,21 @@ Second set the action ie a specific GPIO up/down </Label>
 		</ConfigUI>
 
 		<States>
+			<State id="distanceEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>distanceEvent</TriggerLabel>
+				<ControlPageLabel>distanceEvent</ControlPageLabel>
+			</State>
+			<State id="stopped">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>stopped</TriggerLabel>
+				<ControlPageLabel>stopped</ControlPageLabel>
+			</State>
+			<State id="trigger">
+				<ValueType>string</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
 			<State id="distance">
 				<ValueType>String</ValueType>
 				<TriggerLabel>distance</TriggerLabel>
@@ -22408,7 +22902,7 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="refreshColor" type="menu"     defaultValue="20" hidden="no">
+			<Field id="refreshColor" type="menu"     defaultValue="20" >
 				<Label>check COLOR values every :</Label>
 				<List>
 					<Option value="-1"  > do not use</Option>
@@ -22433,7 +22927,7 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="deltaColor" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="deltaColor" type="menu"     defaultValue="10"  >
 				<Label>delta Color values to trigger update:</Label>
 				<List>
 					<Option value="1"    > 1</Option>
@@ -22448,7 +22942,7 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="refreshProximity" type="menu"     defaultValue="2" hidden="no">
+			<Field id="refreshProximity" type="menu"     defaultValue="2" >
 				<Label>check distance values every :</Label>
 				<List>
 					<Option value="-1"  > do not use</Option>
@@ -22466,7 +22960,7 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="deltaProximity" type="menu"     defaultValue="10" hidden="no" >
+			<Field id="deltaProximity" type="menu"     defaultValue="10"  >
 				<Label>delta distance value to trigger update(values 0..255):</Label>
 				<List>
 					<Option value="1"    > 1</Option>
@@ -22477,7 +22971,7 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="enableGesture" type="menu"     defaultValue="1" hidden="no">
+			<Field id="enableGesture" type="menu"     defaultValue="1" >
 				<Label>use Gesture:</Label>
 				<List>
 					<Option value="0" >do not use</Option>
@@ -22485,7 +22979,7 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="enableNearFar" type="menu"     defaultValue="0" hidden="no">
+			<Field id="enableNearFar" type="menu"     defaultValue="0" >
 				<Label>use NEAR far info:</Label>
 				<List>
 					<Option value="0"  > do not use</Option>
@@ -22493,18 +22987,18 @@ Second set the action ie a specific GPIO up/down </Label>
 				</List>
 			</Field>
 
-			<Field id="texf22"       type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0" hidden="no" readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up/down:</Label></Field>
-			<Field id="actionLEFT"       type="textfield"     defaultValue="" hidden="no"> <Label>action for LEFT        gesture :</Label></Field>
-			<Field id="actionRIGHT"      type="textfield"     defaultValue="" hidden="no"> <Label>action for RIGHT       gesture :</Label></Field>
-			<Field id="actionUP"         type="textfield"     defaultValue="" hidden="no"> <Label>action for UP          gesture :</Label></Field>
-			<Field id="actionDOWN"       type="textfield"     defaultValue="" hidden="no"> <Label>action for DOWN        gesture :</Label></Field>
-			<Field id="actionVERTICAL"   type="textfield"     defaultValue="" hidden="no"> <Label>action for VERTICAL    gesture :</Label></Field>
-			<Field id="actionHORIZONTAL" type="textfield"     defaultValue="" hidden="no"> <Label>action for HORIZONTAL  gesture :</Label></Field>
-			<Field id="actionMOVEMENT"  type="textfield"      defaultValue="" hidden="no"> <Label>action for MOVEMENT    gesture :</Label></Field>
-			<Field id="actionFAR"        type="textfield"     defaultValue="" hidden="no"> <Label>action for FAR         gesture :</Label></Field>
-			<Field id="actionNEAR"       type="textfield"     defaultValue="" hidden="no"> <Label>action for NEAR        gesture :</Label></Field>
-			<Field id="actionPROXup"     type="textfield"     defaultValue="" hidden="no"> <Label>action for UP change   PROXIMITY:</Label></Field>
-			<Field id="actionPROXdown"   type="textfield"     defaultValue="" hidden="no"> <Label>action for DOWN change PROXIMITY:</Label></Field>
+			<Field id="texf22"       type="textfield"    defaultValue="eg: gpio -g mode 18 out;gpio -g write 18 1;gpio -g write 18 0"  readonly="Yes"> <Label>For actions on RPI eg for set GPIO 18 up/down:</Label></Field>
+			<Field id="actionLEFT"       type="textfield"     defaultValue="" > <Label>action for LEFT        gesture :</Label></Field>
+			<Field id="actionRIGHT"      type="textfield"     defaultValue="" > <Label>action for RIGHT       gesture :</Label></Field>
+			<Field id="actionUP"         type="textfield"     defaultValue="" > <Label>action for UP          gesture :</Label></Field>
+			<Field id="actionDOWN"       type="textfield"     defaultValue="" > <Label>action for DOWN        gesture :</Label></Field>
+			<Field id="actionVERTICAL"   type="textfield"     defaultValue="" > <Label>action for VERTICAL    gesture :</Label></Field>
+			<Field id="actionHORIZONTAL" type="textfield"     defaultValue="" > <Label>action for HORIZONTAL  gesture :</Label></Field>
+			<Field id="actionMOVEMENT"  type="textfield"      defaultValue="" > <Label>action for MOVEMENT    gesture :</Label></Field>
+			<Field id="actionFAR"        type="textfield"     defaultValue="" > <Label>action for FAR         gesture :</Label></Field>
+			<Field id="actionNEAR"       type="textfield"     defaultValue="" > <Label>action for NEAR        gesture :</Label></Field>
+			<Field id="actionPROXup"     type="textfield"     defaultValue="" > <Label>action for UP change   PROXIMITY:</Label></Field>
+			<Field id="actionPROXdown"   type="textfield"     defaultValue="" > <Label>action for DOWN change PROXIMITY:</Label></Field>
 
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -22861,7 +23355,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
      defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT_0"  >INPUT 0</Option>
@@ -23002,7 +23496,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
      defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT_0"  >INPUT 0</Option>
@@ -23140,7 +23634,7 @@ full screen apps probably do not work eg "top" does not work:</Label>
 			<Field id="launchCheck" type="textfield"     defaultValue=""> <Label> CHECK:</Label>
 			</Field>
 
-			<Field id="sensorRefreshSecs" type="menu"     defaultValue="80" hidden="no">
+			<Field id="sensorRefreshSecs" type="menu"     defaultValue="80" >
 				<Label>read status of launch pgm every xx secs :</Label>
 				<List>
 					<Option value="1"   > 1   secs</Option>
@@ -23164,7 +23658,7 @@ full screen apps probably do not work eg "top" does not work:</Label>
 				</List>
 			</Field>
 
-			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" >
+			<Field id="minSendDelta" type="menu"     defaultValue="4"  >
 				<Label>Min secs between indigo updates - not more often :</Label>
 				<List>
 					<Option value="0.2" > 0.2 secs </Option>
@@ -23204,7 +23698,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
      defaultValue="status"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="status"  >status</Option>
@@ -23256,7 +23750,7 @@ For the read settings from the device to work you need to set up the device on t
 			</Field>
 
 
-			<Field id="gatMode" type="menu"     defaultValue="batch" hidden="no" tooltipe="for simple on off cammands (besides repeated pulses) the gatt comamnd can be issues as a onlineer (batch or as a sequence of commands connect, send command disconect)">
+			<Field id="gatMode" type="menu"     defaultValue="batch"  tooltipe="for simple on off cammands (besides repeated pulses) the gatt comamnd can be issues as a onlineer (batch or as a sequence of commands connect, send command disconect)">
 				<Label>for gatttool command ONoff use batch or interactive:</Label>
 				<List>
 						<Option value="batch" >batch = one line gatttool command</Option>
@@ -23264,7 +23758,7 @@ For the read settings from the device to work you need to set up the device on t
 				</List>
 			</Field>
 
-			<Field id="modeOfDevice" type="menu"     defaultValue="donotset" hidden="no" >
+			<Field id="modeOfDevice" type="menu"     defaultValue="donotset"  >
 				<Label>mode of device:</Label>
 				<List>
 						<Option value="cmdPressNormal" >press normal direction </Option>
@@ -23275,7 +23769,7 @@ For the read settings from the device to work you need to set up the device on t
 				</List>
 			</Field>
 
-			<Field id="suppressQuickSecond" type="menu"     defaultValue="-10" hidden="no" >
+			<Field id="suppressQuickSecond" type="menu"     defaultValue="-10"  >
 				<Label>suppress quick second same command if within :</Label>
 				<List>
 						<Option value="-10" >off</Option>
@@ -23291,7 +23785,7 @@ For the read settings from the device to work you need to set up the device on t
 
 
 
-			<Field id="holdSeconds" type="menu"     defaultValue="-1" hidden="no" >
+			<Field id="holdSeconds" type="menu"     defaultValue="-1"  >
 				<Label>length of time to hold switch(only for press mode):</Label>
 				<List>
 					<Option value="0" >0 sec </Option>
@@ -23401,7 +23895,7 @@ For the read settings from the device to work you need to set up the device on t
 	<Device type="dimmer" id="OUTPUTswitchbotCurtain">     	<Name>OUTPUT-switch bot Curtain</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
-			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" hidden="no"> </Field>
+			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" > </Field>
 			<Field id="isSwitchbotDevice"       type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="SupportsStatusRequest"   type="checkbox"  defaultValue="False" hidden="yes"><Label>Supports StatusRequest:</Label></Field>
@@ -23433,7 +23927,7 @@ This device will get its battery level from its brother device,
 			<Field id="mac" type="textfield"     defaultValue=""> <Label>mac number of  switch bot:</Label>
 			</Field>
 
-			<Field id="modeOfDevice" type="menu"     defaultValue="donotset" hidden="no" >
+			<Field id="modeOfDevice" type="menu"     defaultValue="donotset"  >
 				<Label>mode of device(speed):</Label>
 				<List>
 						<Option value="00" >slow </Option>
@@ -23554,7 +24048,7 @@ This device will get its battery level from its brother device,
 
 
 			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
-			<Field id="pinMappings" type="textfield"       defaultValue="" hidden="no" readonly="yes"> </Field>
+			<Field id="pinMappings" type="textfield"       defaultValue=""  readonly="yes"> </Field>
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
@@ -23634,7 +24128,7 @@ This device will get its battery level from its brother device,
 
 
 			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
-			<Field id="pinMappings" type="textfield"       defaultValue="" hidden="no" readonly="yes"> </Field>
+			<Field id="pinMappings" type="textfield"       defaultValue=""  readonly="yes"> </Field>
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
@@ -23718,7 +24212,7 @@ This device will get its battery level from its brother device,
 
 
 			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
-			<Field id="pinMappings" type="textfield"       defaultValue="" hidden="no" readonly="yes"> </Field>
+			<Field id="pinMappings" type="textfield"       defaultValue=""  readonly="yes"> </Field>
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
@@ -24095,7 +24589,7 @@ This device will get its battery level from its brother device,
 			</Field>
 
 
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="no"> </Field>
+			<Field id="displayState" type="textfield"     defaultValue="status" > </Field>
 
 		</ConfigUI>
 		<States>
@@ -24146,7 +24640,7 @@ This device will get its battery level from its brother device,
 			</Field>
 
 
-			<Field id="displayState" type="textfield"     defaultValue="status" hidden="no"> </Field>
+			<Field id="displayState" type="textfield"     defaultValue="status" > </Field>
 
 		</ConfigUI>
 		<States>
@@ -25521,7 +26015,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="status" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="status" > <Label>Property to display in the State Column:</Label>
  				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="status"   >status</Option>
@@ -25665,7 +26159,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
      defaultValue="state"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="location"   >location</Option>

@@ -245,7 +245,7 @@ class bigScreen :
 		try: pass#  no good !!!   self.pygame.quit()
 		except: pass
 	
-	def delPy():
+	def delPy(self):
 		try:  self.pygame.quit()
 		except: pass
 

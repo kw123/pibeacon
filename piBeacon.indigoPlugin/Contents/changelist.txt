@@ -1,4 +1,67 @@
-Added features / changes in v2022.160.25@ 2023-01-25
+Added features / changes in v2022.161.52@ 2023-02-11
+===================================================
+   
+This version now offers to directly show distance sensor information on attached neopixel devices on the rpi
+It does not have to go through indigo.
+you configure 
+a) the neopixel output device in indigo, set the pyhical parameters - # of LED etc, connect teh device to the RPI
+b) configure the distance sensor in indigo (any of the supported models3 work) and connect the distance sensor to the same RPI
+   configure the neopixel commands (see menu/indigo/pibeacon/print various info.. for examples) in the distance sensor device
+   like: distance limits for versyshort, short, medium, long verylong and stopped
+   then the distance sensor will send these commands directly to the neopixel.py program on the same RPI
+   when it reaches the limits set, eg stop, verylong distance ...
+   you can have the neopixel device show simple colored LEDS R/B/B or blinking or "knightrider" type
+   the neopixel indigo device status will also show the commands send to it on the rpi
+
+
+1. improved trigger for distance sensors (how often new values get send to indigo)
+   now it is trigger:  if  (delta absolut > DA and  delta% > D% ) or delta time > 30 secs : send to indigo
+    DA, D% = set in sensor edit 
+    added dev state trigger to distance sensor
+    with these setting you can now fine tune trigger sensitivity 
+    there is also the option for local execution of any script on the rpi
+        eg set LED lights  r/g/b if distance is gt or lt xx... must have neopixel device attached on that RPI
+        do menu /Print various info to logfile../Print Distance action help to logfile/    or click on help button in distance sensors
+
+2. fixed status column method. only ON/off was used. now if detailed colors are set then they are used, on/off only if details not defined.
+   added data field "trigger" send to indigo if there is an action trigger event (Short, Med, Long, Stop, Dist, Time )
+   you can trigger on that device state["trigger"] == "your choice here"
+   added option to have neopixel return command type received. you must supply "ststus":"yourtext" to the command send to neopixel, eg:
+   echo '{"repeat":"1","status":"Long","command":[{"type":"sLine","display":"wait","position":[0,12,0,0,0]},{"type":"sLine","display":"immediate","position":[0,12,0,100,0]}]}' > temp/neopixel.inp
+   would set neopixle device status to "Long"
+   added states:
+      trigger		--> Dist,Time, distanceEvent
+      distanceEvent --> VeryLong,Long,Medium,Short,VeryShort,Stop
+  
+
+3. added line type sLine for neopixel, same as "line" (2D) but just 1D, reduces the number or parameters to be specified
+4. reduced key length for specifc commands (long form still works)
+   sLine —> sl
+   line —> l
+   resetinitial -> res
+   knightrider -> kr
+   position -> p
+   spoint -> sp
+   rectangle —> r 
+   and
+   repeat:1 is default, no need to add to command
+   display:"immediate" is default, no need to add to command
+
+5. added option to show distance as thermometer type on neopixel, executed locally on RPI
+6. added action to pause any distance sensor. it simply "sleeps"  in the execution loop for the specified time 
+   this is useful if you have local display/neopixel commands and want to pause them due to eg garage dooor open... 
+
+
+
+
+Added features / changes in v2022.160.27@ 2023-01-27
+===================================================
+   
+1. smooth out kinght rider neopixel option
+2. fill  create date in all devices 
+
+
+Added features / changes in v2022.160.26@ 2023-01-26
 ===================================================
    
 1. fixed bug introduced in v ..19, error setting up new RPI

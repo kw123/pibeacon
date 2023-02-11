@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os, time, subprocess, logging, sys
 
-logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-15s %(funcName)-20s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 

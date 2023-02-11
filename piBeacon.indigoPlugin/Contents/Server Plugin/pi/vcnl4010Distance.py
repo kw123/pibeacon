@@ -27,7 +27,6 @@ import  displayDistance as DISP
 def readParams():
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, timing, sensCl, distanceUnits
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionLongDistance, actionLongDistanceLimit
 	global distanceOffset, distanceMax
 	global oldRaw, lastRead
 	try:
@@ -74,13 +73,13 @@ def readParams():
 			deltaDist[devId]  = 0.1
 			try:
 				xx = sensors[sensor][devId]["sensorRefreshSecs"].split("#")
-				sensorRefreshSecs = int(xx[0]) 
+				sensorRefreshSecs = float(xx[0]) 
 				if sensorRefreshSecs  < 0: dynamic=True
 				if len(xx)==2: 
 					try: mode = int(xx[1])
 					except: mode =0
 			except:
-				sensorRefreshSecs = 100	
+				sensorRefreshSecs = 2	
 				mode =0
 
 			try:
@@ -100,26 +99,6 @@ def readParams():
 					distanceUnits = sensors[sensor][devId]["dUnits"]
 			except  Exception as e:
 				pass
-			try:
-				if "actionShortDistance" in sensors[sensor][devId]:			ctionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
-			except:															ctionShortDistance = ""
-
-			try:
-				if "actionMediumDistance" in sensors[sensor][devId]:		actionMediumDistance = (sensors[sensor][devId]["actionMediumDistance"])
-			except:															actionMediumDistance = ""
-
-			try:
-				if "actionLongDistance" in sensors[sensor][devId]:			actionLongDistance = (sensors[sensor][devId]["actionLongDistance"])
-			except:															actionLongDistance = ""
-
-			try:
-				if "actionShortDistanceLimit" in sensors[sensor][devId]:	actionShortDistanceLimit = float(sensors[sensor][devId]["actionShortDistanceLimit"])
-			except:															actionShortDistanceLimit = -1
-
-			try:
-				if "actionLongDistanceLimit" in sensors[sensor][devId]:		actionLongDistanceLimit = float(sensors[sensor][devId]["actionLongDistanceLimit"])
-			except:															actionLongDistanceLimit = -1
-
 
 			try:
 				if True:												maxCurrent = 8
@@ -134,6 +113,7 @@ def readParams():
 					U.logger.log(30,"==== Start ranging =====")
 					sensCl = VCNL40xx(address=0x13,maxCurrent=maxCurrent)
 			sensorActive = True
+			U.readDistanceSensor(devId, sensors, sensor)
 			
 			
 		if sensorChanged == -1:
@@ -265,7 +245,7 @@ class VCNL40xx():
 #################################
 def readSensor():
 	global sensor, sensors,  sensCl, badSensor, distanceMax
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
+	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionLongDistance, actionLongDistanceLimit
 	global distance0Offset, distance0Max
 	distance   = "badSensor"
 	luminance  = ""
@@ -293,46 +273,12 @@ def readSensor():
 
 
 
-#################################
-def doAction(distance):
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-
-	try:
-		if actionShortDistance == "" and actionMediumDistance == "" and actionMediumDistance == "": return 
-
-		if distance != "" and distance !=0:
-
-			if	 distance > actionLongDistanceLimit:	region = "long"
-			elif distance < actionShortDistanceLimit:	region = "short"
-			else:										region = "medium"
-
-			# check reset of last action, if last was short distamce must have been not short at least once ...  
-			if actionDistanceOld != "":
-				if   actionDistanceOld == "short"   	and region == "short":	actionDistanceOld = ""
-				elif actionDistanceOld == "long"    	and region == "long":	actionDistanceOld = ""
-				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
-
-			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
-				subprocess.call(actionShortDistance, shell=True)
-				actionDistanceOld = "short"
-					
-			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
-				subprocess.call(actionMediumDistance, shell=True)
-				actionDistanceOld = "medium"
-					
-			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
-				subprocess.call(actionLongDistance, shell=True)
-				actionDistanceOld = " long"
-
-	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
-
 
 ############################################
 global distanceOffset, distanceMax, inpRaw, deltaDist, deltaDistAbs, deltaDistAbs
 global sensor, sensors, first, badSensor, sensorActive
-global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
 global oldRaw,  lastRead, sensCl, distance0Offset, distance0Max
+
 
 distance0Offset				= 140
 distance0Max				= 63397
@@ -342,19 +288,12 @@ oldRaw						= ""
 lastRead					= 0
 maxRange					= 20.
 
-actionShortDistance			= ""
-actionShortDistanceLimit	= 5.
-actionMediumDistance		= ""
-actionMediumDistanceLimit	= 10
-actionLongDistance			= ""
-actionLongDistanceLimit		= 20.
-actionDistanceOld			= 0
 distanceOffset				= {}
 distanceMax					= {}
 first						= False
 loopCount					= 0
-sensorRefreshSecs			= 60
-NSleep							= 100
+sensorRefreshSecs			= 2
+NSleep						= 100
 sensorList					= []
 sensors						= {}
 sensor						= G.program
@@ -435,21 +374,30 @@ while True:
 
 				#U.logger.log(20, "{}  {}".format(dist, lux) ) 
 				dist = round(float(dist),1)
-				doAction(dist)
 				if dist > maxRange: dist = 999
 				delta  = dist - lastDist[devId]
 				deltaA = abs(dist - lastDist[devId])
 				deltaT = max(tt   - lastTime[devId],0.01)
 				speed  = delta / deltaT
-				deltaN = abs(delta) / max (0.5,(dist+lastDist[devId])/2.)
+				deltaN = deltaA / max (0.5,(dist+lastDist[devId])/2.)
+				regionEvents = U.doActionDistance(dist, speed, devId)
 
 				trigDD 	= deltaN > deltaDist[devId]
 				trigDDa	= deltaA > deltaDistAbs[devId]
-				trigDT	= tt - sendEvery > lastTime[devId] 
+				trigDT	= tt - sendEvery > lastTime[devId]	
 				trigQi	= quick
 				trigL	= abs(lastLux2 - lastLux) / max(1.,lastLux2 + lastLux) > deltaDist[devId]
-				if trigDD or trigDDa or trigDT or trigQi or trigL: 
-							data["sensors"][sensor][devId]["triggers"]	= "d%:{:1},dA:{:1},dT:{:1},Q:{:1},L:{:1}".format(trigDD, trigDDa, trigDT, trigQi, trigL)
+				if ( trigDD and trigDDa ) or trigDT or trigQi or trigL or regionEvents[2]: 
+							trig = ""
+							if trigL: 					trig +="Light;"
+							if trigDD or trigDDa:		trig +="Dist;"
+							if trigDT: 					trig +="Time;"
+							if regionEvents[0] != "": 		
+								trig += "distanceEvent"
+								data["sensors"][sensor][devId]["distanceEvent"]	= regionEvents[0]
+							data["sensors"][sensor][devId]["stopped"]	= regionEvents[1]
+							trig = trig.strip(";")
+							data["sensors"][sensor][devId]["trigger"]	= trig
 							data["sensors"][sensor][devId]["distance"]	= dist
 							data["sensors"][sensor][devId]["speed"] 	= round(speed,2)
 							U.sendURL(data)
@@ -457,10 +405,8 @@ while True:
 							lastTime[devId]  = tt
 							G.lastAliveSend = tt
 
-				if displayEnable == "1" and  ((deltaN > 0.05  and  tt - lastDisplay >1.)   or  tt - G.lastAliveSend >10. or quick):
-					lastDisplay = tt
+				if displayEnable not in ["","0"]:
 					DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
-					U.logger.log(10, "{}  {}".format(dist, deltaDist) )   
 					#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S"),sensor, dist , deltaDist   
 
 		loopCount +=1
@@ -477,7 +423,7 @@ while True:
 			if tt - lastRead > 5.:  
 				if readParams(): break 
 				lastRead = tt
-		time.sleep(1)
+		time.sleep(sensorRefreshSecs)
 		#print "end of loop", loopCount
 	except  Exception as e:
 		U.logger.log(30,"", exc_info=True)

@@ -98,7 +98,7 @@ def getMCP3008(sensor, data):
                 if devId in badSensors: del badSensors[devId]
     except  Exception as e:
         U.logger.log(30,"", exc_info=True)
-        data= incrementBadSensor(sensor,data)
+        data= incrementBadSensor(devId, sensor, data)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
 

@@ -36,7 +36,6 @@ def readParams():
 	global output
 	global distanceUnits
 	global oldRaw, lastRead
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit, distanceMax
 	try:
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -88,7 +87,7 @@ def readParams():
 				sensorRefreshSecs = float(xx[0])
 			except Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				sensorRefreshSecs = 100	
+				sensorRefreshSecs = 5	
 
 			try:
 				if "displayEnable" in sensors[sensor][devId]: 
@@ -110,26 +109,7 @@ def readParams():
 			except  Exception as e:
 				pass
 
-
-			try:
-				if "actionShortDistance" in sensors[sensor][devId]:		 actionShortDistance = (sensors[sensor][devId]["actionShortDistance"])
-			except:														 actionShortDistance = ""
-
-			try:
-				if "actionMediumDistance" in sensors[sensor][devId]:		actionMediumDistance = (sensors[sensor][devId]["actionMediumDistance"])
-			except:														 actionMediumDistance = ""
-
-			try:
-				if "actionLongDistance" in sensors[sensor][devId]:		  actionLongDistance = (sensors[sensor][devId]["actionLongDistance"])
-			except:														 actionLongDistance = ""
-
-			try:
-				if "actionShortDistanceLimit" in sensors[sensor][devId]:	actionShortDistanceLimit = float(sensors[sensor][devId]["actionShortDistanceLimit"])
-			except:														 actionShortDistanceLimit = -1
-
-			try:
-				if "actionLongDistanceLimit" in sensors[sensor][devId]:	 actionLongDistanceLimit = float(sensors[sensor][devId]["actionLongDistanceLimit"])
-			except:														 actionLongDistanceLimit = -1
+			U.readDistanceSensor(devId, sensors, sensor)
 
   
 	except  Exception as e:
@@ -150,7 +130,9 @@ def getultrasoundDistance(devId):
 		echoStartOK = False
 		#read up to 6 times until 3 good measurements, then take average  
 		timeAtStart = time.time()
-		for kk in range(5):
+		MAX = -1
+		MIN = 9999
+		for kk in range(8):
 			time.sleep(0.03)
 			GPIO.output(triggerPin, True)
 			time.sleep(0.0002)
@@ -195,16 +177,18 @@ def getultrasoundDistance(devId):
 
 			# delta is the round trip time
 			elapsed[good] = round((stopTime - startTime)* 17000.,2)  #17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
+			if   MAX < elapsed[good]: MAX = elapsed[good]
+			elif MIN > elapsed[good]: MIN = elapsed[good]
 			good += 1
 			if good == 3: break
 
 		if badSensor > 30:	
 			badSensor = 0
-			return "badSensor", kk+1, time.time() - timeAtStart
-		if not echoStartOK: return "", kk+1, time.time() - timeAtStart
+			return "badSensor"
+		if not echoStartOK: return ""
 
 		badSensor = 0
-	
+		result = maxDistOff	
 		# take average 
 		elapsed = sorted(elapsed)
 		ll = len(elapsed)
@@ -213,8 +197,16 @@ def getultrasoundDistance(devId):
 			if elapsed[-1] == maxDistOff:
 				elapsed.pop()
 		# how many meaurements left, if 3 
-		if len(elapsed) == 3:	
-			result = round((elapsed[0]+elapsed[1]+elapsed[2])/3.,2)
+		if good == 3:
+			for ii in range(good):
+				if   MAX == elapsed[ii]:
+					MAX = -1
+					continue
+				elif MIN == elapsed[ii]:
+					MIN = -1
+					continue
+				result = round(elapsed[ii],2)
+				break
 
 		elif len(elapsed) == 2:
 			result = round((elapsed[0]+elapsed[1])/2.,2)
@@ -228,49 +220,15 @@ def getultrasoundDistance(devId):
 		#.logger.log(20, u"result		 {}, dist:{}[cm]".format( result, elapsed))
 		if result >  maxRange: 
 			#print "overflow"
-			return maxRange , kk+1, time.time() - timeAtStart# set to max = 5 m
+			return maxRange 
 		#print "res= ",result 
-		return  round(result , 2), kk+1, time.time() - timeAtStart
+		return  round(result , 2)
 
 	except  Exception as e:
 			U.logger.log(30,"", exc_info=True)
-	return "", kk+1		
+	return ""
  
  
-
-#################################
-def doAction(distance):
-	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-
-	try:
-		if actionShortDistance == "" and actionMediumDistance == "" and actionMediumDistance == "": return 
-
-		if distance != "" and distance !=0:
-
-			if	 distance > actionLongDistanceLimit:	region = "long"
-			elif distance < actionShortDistanceLimit:	region = "short"
-			else:										region = "medium"
-
-			# check reset of last action, if last was short distamce must have been not short at least once ...  
-			if actionDistanceOld != "":
-				if   actionDistanceOld == "short"   	and region == "short":	actionDistanceOld = ""
-				elif actionDistanceOld == "long"    	and region == "long":	actionDistanceOld = ""
-				elif actionDistanceOld == "medium"  	and region == "medium":	actionDistanceOld = ""
-
-			if actionShortDistance != ""	and actionDistanceOld != "short"	and  region == "short":
-				subprocess.call(actionShortDistance, shell=True)
-				actionDistanceOld = "short"
-					
-			if actionMediumDistance != ""	and  actionDistanceOld != "medium"	and region == "medium":
-				subprocess.call(actionMediumDistance, shell=True)
-				actionDistanceOld = "medium"
-					
-			if actionLongDistance != ""		and actionDistanceOld != "long"		and region == "long":
-				subprocess.call(actionLongDistance, shell=True)
-				actionDistanceOld = " long"
-
-	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
 
 #################################
 
@@ -279,35 +237,18 @@ global senors,sensorRefreshSecs,sensor, NSleep, ipAddress, dynamic, mode, deltaD
 global output, authentication
 global distanceUnits
 global oldRaw,  lastRead, maxRange,badSensor
-global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit, distanceMax
 
-
-
-actionShortDistance			= ""
-actionShortDistanceLimit	= 5.
-actionMediumDistance		= ""
-actionMediumDistanceLimit	= 10
-actionLongDistance			= ""
-actionLongDistanceLimit		= 20.
-actionDistanceOld			= 0
 distanceOffset				= {}
 distanceMax					= {}
 maxRange					= 555.
 oldRaw						= ""
 lastRead					= 0
 distanceUnits				= "1.0"
-actionShortDistance			= ""
-actionShortDistanceLimit	= 5.
-actionMediumDistance		= ""
-actionMediumDistanceLimit	= 10
-actionLongDistance			= ""
-actionLongDistanceLimit		= 20.
-actionDistanceOld			= 0
 
 debug						= 5
 first						= False
 loopCount					= 0
-sensorRefreshSecs			= 60
+sensorRefreshSecs			= 5
 NSleep						= 100
 sensors						= {}
 sensor						= G.program
@@ -357,7 +298,7 @@ while True:
 				if devId not in lastDist: 
 					lastDist[devId] = -500.
 					lastTime[devId] = 0.
-				dist, nTries, timeUsed = getultrasoundDistance(devId)
+				dist = getultrasoundDistance(devId)
 				#U.logger.log(20,"dist:{}".format(dist))
 
 				if dist == "badSensor":
@@ -373,28 +314,36 @@ while True:
 				if dist == "": continue
 
 				dist = round(float(dist),1)
-				doAction(dist)
 				delta  = (dist - lastDist[devId])
 				deltaA = abs(delta)
 				deltaT = max((tt  - lastTime[devId]),0.01)
 				speed  = round(delta / deltaT,3)
 				deltaN = (deltaA*2) / max (0.5,(dist+lastDist[devId]))
+				regionEvents = U.doActionDistance(dist, speed, devId)
 
 				trigDD 	= deltaN > deltaDist[devId]
 				trigDDa	= deltaA > deltaDistAbs[devId]
 				trigDT	= tt - sendEvery > lastTime[devId] 
 				trigQi	= quick
-				if trigDD or trigDDa or trigDT or trigQi: 
-							data["sensors"][sensor][devId]["triggers"] = "d%:{:1},dA:{:1},dT:{:1},Q:{:1},n:{},tU:{:.2f}".format(trigDD, trigDDa, trigDT, trigQi, nTries, timeUsed)
+				if ( trigDD and trigDDa ) or trigDT or trigQi or regionEvents[2]: 
+							trig = ""
+							if trigDD or trigDDa:		trig +="Dist;"
+							if trigDT: 					trig +="Time;"
+							if regionEvents[0] != "": 		
+								trig += "distanceEvent"
+								data["sensors"][sensor][devId]["distanceEvent"]	= regionEvents[0]
+							data["sensors"][sensor][devId]["stopped"]	= regionEvents[1]
+							trig = trig.strip(";")
+							data["sensors"][sensor][devId]["trigger"]	= trig
 							data["sensors"][sensor][devId]["distance"] = dist
 							data["sensors"][sensor][devId]["speed"]	= speed
 							oneSend = True
 							G.lastAliveSend = tt
 							lastDist[devId] = dist
 							lastTime[devId] = tt
+							#U.logger.log(20, "dist:{:} ;deltaN:{:.3f};  trig:{}, regionEvents:{:}, data:{}".format(dist, deltaN, trig, regionEvents, data) )	
 
-				if displayEnable == "1" and ( ( deltaN > 0.02 ) or (tt - lastDisplay > 2.   or quick)) :
-					lastDisplay = tt
+				if displayEnable not in ["","0"]:
 					DISP.displayDistance(dist, sensor, sensors, output, distanceUnits)
 	
 		if oneSend:	

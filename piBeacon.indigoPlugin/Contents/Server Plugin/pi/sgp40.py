@@ -528,7 +528,7 @@ class DFRobot_SGP40:
 		self.__temc__crc = 0
 		self.__rh__crc = 0
 		
-	def set_envparams(relative_humidity,temperature_c):
+	def set_envparams(self, relative_humidity,temperature_c):
 		""" Set temperature and humidity
 		
 		:param relative_humidity:float Set to relative_humidity

@@ -75,7 +75,6 @@ def checkIfUARThciChannelIsOnRPI4():
 ####################      #########################
 def checkIfGpioIsInstalled():
 	return
-	# now done in check checkforinclude-py3 
 
 
 
@@ -1771,10 +1770,10 @@ def checkIfclearHostsFile():
 ####################      #########################
 def checkPythonLibs():
 	try:
-		if not U.pgmStillRunning("checkForInclude-py3"):
-			subprocess.call("sudo /usr/bin/python3 {}checkForInclude-py3.py & ".format(G.homeDir), shell=True)
-		if not U.pgmStillRunning("checkForInclude-py2"):
-			subprocess.call("sudo /usr/bin/python {}checkForInclude-py2.py & ".format(G.homeDir), shell=True)
+		if not U.pgmStillRunning("checkForIncl-py3"):
+			subprocess.call("sudo /usr/bin/python3 {}checkForIncl-py3.py & ".format(G.homeDir), shell=True)
+		if not U.pgmStillRunning("checkForIncl-py2"):
+			subprocess.call("sudo /usr/bin/python {}checkForIncl-py2.py & ".format(G.homeDir), shell=True)
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
@@ -1993,12 +1992,12 @@ def killOldPrograms():
 	try:
 		U.stopDisplay()
 		pgmsToBeKilled = []
-		for xx in G.programFiles+G.specialOutputList+G.specialSensorList+G.specialOutputList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program]+G.specialOutputList:
+		for xx in G.programFiles+G.python3SensorsMustDo+G.python2SensorsMustDo+G.python3SensorsCanDo+G.specialOutputList+G.specialSensorList+G.specialOutputList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program]+G.specialOutputList:
 			if xx not in pgmsToBeKilled: pgmsToBeKilled.append(xx)
 		for xx in programsThatShouldBeRunning:
 			if xx not in pgmsToBeKilled: pgmsToBeKilled.append(xx)
 
-		programsThatShouldBeRunning
+		U.logger.log(20,"pgmsToBeKilled:{}".format(pgmsToBeKilled))
 		U.killOldPgm(myPID,"python", delList=pgmsToBeKilled, verbose=False)
 		#U.killOldPgm(myPID,"python3 ", delList=G.programFiles+G.specialSensorList+["getBeaconParameters"]+["webserverINPUT","webserverSTATUS"]+[G.program]+["DHT3"], verbose=False)
 
