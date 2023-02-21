@@ -1254,6 +1254,32 @@ while True:
 										image.line(xx)
 										time.sleep(sleepTime) 
 
+								elif cType == "colorknightrider" or cType == "ckr":
+										if len(pos) < 6:
+											U.logger.log(20,u"not enough parameters for postion:{}, should be > +3/6/9/...".format(pos))
+											time.sleep(3)
+											continue
+
+										sleepTime = max(0.05, pos[0])
+										nsteps  = pos[1]
+										xstart = pos[2]
+										nLEDs  = int((len(pos) - 3 )/3)
+										LEDs   = pos[3:]
+										xend = xstart + nLEDs
+										resetLEDS = [0, xstart-nLEDs, 0, xend+nsteps, 0, 0, 0]
+										image.line(resetLEDS)
+
+										#U.logger.log(20,u" pos:{},, xstart:{},, xend:{},, nLEDs:{},, resetLEDS:{}, ".format(pos, xstart, xend, nLEDs, resetLEDS ))
+										for nn in range(nLEDs):
+											x = xstart + iknightriderInd+nn
+											nl = nn*3
+											#U.logger.log(20,u"  iRaiderInd{}, iRaiderDir:{},x:{}, nl:{} ".format(iknightriderInd, iknightriderDir, x, nl))
+											xx = [0, x] + LEDs[nl:nl+3]
+											image.point(xx)
+										time.sleep(sleepTime) 
+										if xx[1] <= xstart: 			iknightriderDir = 1
+										if iknightriderInd >= nsteps: 	iknightriderDir = -1
+										iknightriderInd += iknightriderDir
 
 								elif cType == "clock":
 									tt1 = time.time()

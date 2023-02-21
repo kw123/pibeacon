@@ -5406,7 +5406,7 @@ class Plugin(indigo.PluginBase):
 
 				if "inverse" in dev.states:
 					#self.addToStatesUpdateDict(dev.id, "inverse", new[n]["outType"]=="1" )
-					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "updateItems":[{"stateName":"inverse", "value":newDefs[n]["outType"]=="1" }]})
+					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "updateItems":[{"stateName":"inverse", "value":newDefs[n]["outType"] == "1" }]})
 				elif "inverse_{:2d}".format(n) in dev.states:
 					#self.addToStatesUpdateDict(dev.id, "inverse_{:2d}".format(n), new[n]["outType"]=="1")
 					self.delayedActions["data"].put( {"actionTime":time.time()+1.1  , "devId":dev.id, "updateItems":[{"stateName":"inverse_{:2d}".format(n), "value":newDefs[n]["outType"]}]})
@@ -5687,9 +5687,9 @@ class Plugin(indigo.PluginBase):
 					if "textForssd1351-1"	in valuesDict: del valuesDict["textForssd1351-1"]
 					if "textForssd1351-2"	in valuesDict: del valuesDict["textForssd1351-2"]
 					if "PIN_RST"			in valuesDict: del valuesDict["PIN_RST"]
-					if "PIN_CS"			in valuesDict: del valuesDict["PIN_CS"]
-					if "PIN_DC"			in valuesDict: del valuesDict["PIN_DC"]
-					if "PIN_CE"			in valuesDict: del valuesDict["PIN_CE"]
+					if "PIN_CS"				in valuesDict: del valuesDict["PIN_CS"]
+					if "PIN_DC"				in valuesDict: del valuesDict["PIN_DC"]
+					if "PIN_CE"				in valuesDict: del valuesDict["PIN_CE"]
 					if "intensity"			in valuesDict: del valuesDict["intensity"]
 					if "flipDisplay"		in valuesDict: del valuesDict["flipDisplay"]
 					if "scrollSpeed"		in valuesDict: del valuesDict["scrollSpeed"]
@@ -6044,6 +6044,7 @@ class Plugin(indigo.PluginBase):
 			 ,("points",	"MULTIPLE POINTS ")
 			 ,("rectangle", "RECTANGLE ")
 			 ,("knightrider", "KNIGHTRIDER moving line left right")
+			 ,("colorknightrider", "KNIGHTRIDER moving line left right, each LED differnt RGB value")
 			 ,("thermometer", "THERMOMETER enter start, end pixels and color delta")
 			 ,("NOP",		"No operation, use to wait before next action")
 			 ,("image",		"IMAGE  not implemnted yet")
@@ -6596,11 +6597,11 @@ class Plugin(indigo.PluginBase):
 						del xxx[n]
 					if	len(oldxxx) < (n+1) or "initialValue" not in oldxxx[n] or (xxx[n]["initialValue"] != oldxxx[n]["initialValue"]):
 						self.sendInitialValue = dev.id
-					pinMappings += "{}".format(n) + ":" + xxx[n]["gpio"]+ "," + xxx[n]["outType"]+ "," + xxx[n]["initialValue"]+"|"
+					pinMappings += "{}".format(n) + ":" + xxx[n]["gpio"]+ "," + xxx[n]["outType"]+ "," + xxx[n]["initialValue"] + "|"
 					if "inverse" in dev.states:
-						dev.updateStateOnServer("inverse", "yes" if xxx[n]["outType"]=="1"  else "no")
+						dev.updateStateOnServer("inverse", "yes" if xxx[n]["outType"] == "1"  else "no")
 					elif "inverse_{:2d}".format(n) in dev.states:
-						dev.updateStateOnServer("inverse_{:2d}".format(n), "yes" if xxx[n]["outType"]=="1"  else "no")
+						dev.updateStateOnServer("inverse_{:2d}".format(n), "yes" if xxx[n]["outType"] == "1"  else "no")
 
 					if "initial" in dev.states:
 						dev.updateStateOnServer("initial", xxx[n]["initialValue"])
@@ -6612,7 +6613,7 @@ class Plugin(indigo.PluginBase):
 						if "gpio" not in xxx[l]:	continue
 						if xxx[l]["gpio"] == "0":	continue
 						if xxx[n]["gpio"] == xxx[l]["gpio"]:
-							pinMappings = "error # {}".format(n) + " same pin as #{}".format(l)
+							pinMappings = "error # {} same pin as #{}".format(n, l)
 							xxx[l]["gpio"] = "0"
 							valuesDict["gpio"] = "0"
 							break
@@ -6620,7 +6621,7 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict["pinMappings"] = pinMappings
 			valuesDict["deviceDefs"] = json.dumps(xxx)
-			self.indiLOG.log(20,"len:{};  deviceDefs:{}".format(nChannels, valuesDict["deviceDefs"]))
+			self.indiLOG.log(10,"confirmSelectionBUTTONO len:{};  deviceDefs:{}".format(nChannels, valuesDict["deviceDefs"]))
 			return valuesDict
 
 ####-------------------------------------------------------------------------####
@@ -6713,7 +6714,7 @@ class Plugin(indigo.PluginBase):
 				self.rPiRestartCommand = [level for ii in range(_GlobalConst_numberOfRPI)]	## which part need to restart on rpi
 				return valuesDict
 			if pi < 99:
-				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,Text + piU+"  action string:{}".format(action)	 )
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"{} {}  action string:{}".format(Text,piU, action)	 )
 				self.rPiRestartCommand[pi] = level	## which part need to restart on rpi
 				self.setONErPiV(piU, "piUpToDate", action, resetQueue=True)
 		except Exception as e:
@@ -6730,7 +6731,7 @@ class Plugin(indigo.PluginBase):
 		piU = "{}".format(pi)
 		for piU in self.RPI:
 				if self.wifiSSID != "" and self.wifiPassword != "":
-					if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"configuring WiFi on pi#" + piU)
+					if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"configuring WiFi on pi#".format(piU))
 					self.rPiRestartCommand = ["restart" for ii in range(_GlobalConst_numberOfRPI)]	 ## which part need to restart on rpi
 					self.configureWifi(piU)
 				else:
@@ -6738,7 +6739,7 @@ class Plugin(indigo.PluginBase):
 
 		if pi < 99:
 			if self.wifiSSID != "" and self.wifiPassword != "":
-				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"configuring WiFi on pi#" + piU)
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"configuring WiFi on pi#{}".format(piU))
 				self.rPiRestartCommand[pi] = "reboot"  ## which part need to restart on rpi
 				self.configureWifi(piU)
 			else:
@@ -6758,7 +6759,7 @@ class Plugin(indigo.PluginBase):
 		except:
 			return valuesDict
 		piU = "{}".format(pi)
-		out= [{"command":"general", "cmdLine":"sudo killall -9 python;sync;sleep 5;sudo halt &"}]
+		out= [{"command":"general", "cmdLine":"sudo killall -9 python;sudo killall -9 python3;sync;sleep 5;sudo halt &"}]
 		if pi == 999:
 			for piU in self.RPI:
 				self.indiLOG.log(10,"hard shutdown of rpi {};   {}".format(self.RPI[piU]["ipNumberPi"], out) )
@@ -6782,7 +6783,7 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 		piU = "{}".format(pi)
 
-		out= [{"command":"general", "cmdLine":"sudo killall -9 python;sync;sleep 5;sudo reboot -f &"}]
+		out= [{"command":"general", "cmdLine":"sudo killall -9 python;sudo killall -9 python3;sync;sleep 5;sudo reboot -f &"}]
 		if pi == 999:
 			for piU in self.RPI:
 				self.presendtoRPI(piU,out)
@@ -6804,7 +6805,7 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 		piU = "{}".format(pi)
 
-		out= [{"command":"general", "cmdLine":"sudo killall -9 python;sleep 4; sudo reboot &"}]
+		out= [{"command":"general", "cmdLine":"sudo killall -9 python;sudo killall -9 python3;sleep 4; sudo reboot &"}]
 		if pi == 999:
 			for piU in self.RPI:
 				self.indiLOG.log(10,"regular reboot of rpi {};  {}".format(self.RPI[piU]["ipNumberPi"], out) )
@@ -8676,7 +8677,7 @@ class Plugin(indigo.PluginBase):
 					if cType  == "none":				continue
 					if cType  == "":					continue
 					#self.indiLOG.log(20,"ctype: {}".format(cType))
-					if cType in ["text", "NOP", "sLine", "line", "points","sPoint", "rectangle", "knightrider", "exec", "image"]:
+					if cType in ["text", "NOP", "sLine", "line", "points","sPoint", "rectangle", "knightrider", "colorknightrider", "exec", "image", "sl","l","r","p","sp","kn","ckn"]:
 						cmds.append({})
 						nn+=1
 						cmds[nn]["type"]					= cType
@@ -8826,7 +8827,7 @@ class Plugin(indigo.PluginBase):
 					if "position" not in cc: continue
 					if "type" not in cc: continue
 					ctype = cc["type"]
-					if ctype.lower() not in ["line", "sline", "points","sPoint", "rectangle", "knightrider"]: continue
+					if cType.lower() not  in ["text", "NOP", "sLine", "line", "points","sPoint", "rectangle", "knightrider", "colorknightrider", "exec", "image", "sl","l","r","p","sp","kn","ckn"]: continue
 					position = cc["position"]
 
 					#self.indiLOG.log(20,"type:{}, position: {}".format(ctype, position))
@@ -19951,8 +19952,12 @@ class Plugin(indigo.PluginBase):
 			helpText += ' -simple blueLine LED 5-7, RGB= 0,0,30;  send "Long" to indigo status and reset all LED before start:\n'
 			helpText += ' echo \'{"status":"Long","res":"[0,0,0]","command":[{"type":"sl","p":[5,7,0,0,30]}]}\' > temp/neopixel.inp  \n'
 			helpText += '  \n'
-			helpText += ' -knightRider swinging green LED 3-4 making 8 steps right - left every 0.2s  p=[wait between steps, # of steps left and right, led-start, led-end, R,G,B]:  \n'
-			helpText += ' echo \'{"status":"VeryLong","res":"[0,0,0]","command":[{"type":"kr","p":[0.2,8,3,4,0,30,0]}]}\' > temp/neopixel.inp  \n'
+			helpText += ' -knightRider: send "knightrider" to indigo status, swinging green LED 3-4 making 8 steps right - left every 0.2s  p=[wait between steps, # of steps left and right, led-start, led-end, R,G,B]:  \n'
+			helpText += ' echo \'{"status":"knightrider","res":"[0,0,0]","command":[{"type":"kr","p":[0.2,8,3,4,0,30,0]}]}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
+			helpText += ' -colorknightRider:  send "color" to indigo status,  swinging 3 LEDs (red,green,blue) #3,4,5 making 10 steps right - left every 0.1s  p=[wait between steps, # of steps left and right, led-start R1,G1,B1, R2,G2,B2,..., Rn,Gn,Bn]:  \n'
+			helpText += ' echo \'{"status":"color","res":"[0,0,0]","command":[{"type":"ckr","p":[0.1, 10, 3,   30,0,0,   0,30,0,   0,0,30]}]}\' > temp/neopixel.inp  \n'
+			helpText += '  \n'
 			helpText += ' -clear  send "Stop" to indigo status and clear LEDs \n'
 			helpText += ' echo \'{"status":"Stop","res":"[0,0,0]"}\' > temp/neopixel.inp  \n'
 			helpText += '  \n'

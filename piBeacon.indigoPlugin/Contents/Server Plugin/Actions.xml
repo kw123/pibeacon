@@ -701,11 +701,11 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>Delay above command by xx seconds:</Label>
 			</Field>
 
-			<Field id="reset0"  type="textfield" default="" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider">
+			<Field id="reset0"  type="textfield" default="" visibleBindingId="type0"  visibleBindingValue="line,sPoint,points,rectangle,image,knightrider,colorknightrider">
 			    <Label>bf display do nothing:"", off:[0,0,0]; on:[255,255,255]:</Label>
 			</Field>
 
-			<Field id="position0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position0"  type="textfield" visibleBindingId="type0"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -728,6 +728,10 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos0g" type="label" alignText="right" fontSize="small" visibleBindingId="type0"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
 
 			<Field id="rotate0"  default="0" type="textfield" visibleBindingId="type0"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
 			    <Label> number of rotations, neg=left:</Label>
@@ -752,7 +756,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display0"  type="menu" default="immediate" visibleBindingId="type0"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display0"  type="menu" default="immediate" visibleBindingId="type0"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -796,7 +800,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>delta color steps:</Label>   
 			</Field>
 
-			<Field id="position1"  type="textfield" visibleBindingId="type1"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position1"  type="textfield" visibleBindingId="type1"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -819,6 +823,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos1g" type="label" alignText="right" fontSize="small" visibleBindingId="type1"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate1"  default="0" type="textfield" visibleBindingId="type1"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -845,7 +854,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display1"  type="menu" default="immediate" visibleBindingId="type1"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display1"  type="menu" default="immediate" visibleBindingId="type1"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -891,7 +900,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position2"  type="textfield" visibleBindingId="type2"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position2"  type="textfield" visibleBindingId="type2"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -914,6 +923,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos2g" type="label" alignText="right" fontSize="small" visibleBindingId="type2"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate2"  default="0" type="textfield" visibleBindingId="type2"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -939,7 +953,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display2"  type="menu" default="immediate" visibleBindingId="type2"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display2"  type="menu" default="immediate" visibleBindingId="type2"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -985,7 +999,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position3"  type="textfield" visibleBindingId="type3"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position3"  type="textfield" visibleBindingId="type3"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1008,6 +1022,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos3g" type="label" alignText="right" fontSize="small" visibleBindingId="type3"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate3"  default="0" type="textfield" visibleBindingId="type3"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1033,7 +1052,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display3"  type="menu" default="immediate" visibleBindingId="type3"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display3"  type="menu" default="immediate" visibleBindingId="type3"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1081,7 +1100,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position4"  type="textfield" visibleBindingId="type4"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position4"  type="textfield" visibleBindingId="type4"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1104,6 +1123,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos4g" type="label" alignText="right" fontSize="small" visibleBindingId="type4"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate4"  default="0" type="textfield" visibleBindingId="type4"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1129,7 +1153,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display4"  type="menu" default="immediate" visibleBindingId="type4"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display4"  type="menu" default="immediate" visibleBindingId="type4"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1175,7 +1199,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position5"  type="textfield" visibleBindingId="type5"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position5"  type="textfield" visibleBindingId="type5"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1198,6 +1222,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos5g" type="label" alignText="right" fontSize="small" visibleBindingId="type5"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate5"  default="0" type="textfield" visibleBindingId="type5"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1223,7 +1252,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display5"  type="menu" default="immediate" visibleBindingId="type5"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display5"  type="menu" default="immediate" visibleBindingId="type5"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1269,7 +1298,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position6"  type="textfield" visibleBindingId="type6"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position6"  type="textfield" visibleBindingId="type6"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1292,6 +1321,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos6g" type="label" alignText="right" fontSize="small" visibleBindingId="type6"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate6"  default="0" type="textfield" visibleBindingId="type6"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1317,7 +1351,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display6"  type="menu" default="immediate" visibleBindingId="type6"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display6"  type="menu" default="immediate" visibleBindingId="type6"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1364,7 +1398,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position7"  type="textfield" visibleBindingId="type7"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position7"  type="textfield" visibleBindingId="type7"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1387,6 +1421,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos7g" type="label" alignText="right" fontSize="small" visibleBindingId="type7"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate7"  default="0" type="textfield" visibleBindingId="type7"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1412,7 +1451,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display7"  type="menu" default="immediate" visibleBindingId="type7"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display7"  type="menu" default="immediate" visibleBindingId="type7"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1459,7 +1498,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position8"  type="textfield" visibleBindingId="type8"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position8"  type="textfield" visibleBindingId="type8"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1482,6 +1521,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos8g" type="label" alignText="right" fontSize="small" visibleBindingId="type8"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate8"  default="0" type="textfield" visibleBindingId="type8"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1507,7 +1551,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display8"  type="menu" default="immediate" visibleBindingId="type8"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display8"  type="menu" default="immediate" visibleBindingId="type8"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>
@@ -1553,7 +1597,7 @@ draws a red line from 0-9</Label> </Field>
 			</Field>
 
 
-			<Field id="position9"  type="textfield" visibleBindingId="type9"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider">
+			<Field id="position9"  type="textfield" visibleBindingId="type9"  visibleBindingValue="line,sLine,sPoint,points,rectangle,knightrider,colorknightrider">
 			    <Label> parameters:</Label>
 			</Field>
 
@@ -1576,6 +1620,11 @@ creates a swinging line of LEDs, sleep is time between steps, steps is number of
 			<Label>..simple Line: start,end,r,g,b
 eg: 0,10,255,0,0 
 draws a red line from 0-9</Label> </Field>
+			<Field  id="pos9g" type="label" alignText="right" fontSize="small" visibleBindingId="type9"  visibleBindingValue="colorknightrider">
+			<Label>..knightrider Color values: sleep,steps,xstart, r1,g1,b1, r2,g3,b2, rn,gn,bn; 
+eg:0.5,7,10,30,255,0,0
+creates a swinging line of different colored LEDs, sleep is time between steps, steps is number of moves left and right</Label> </Field>
+
 
 
 			<Field id="rotate9"  default="0" type="textfield" visibleBindingId="type9"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image">
@@ -1601,7 +1650,7 @@ draws a red line from 0-9</Label> </Field>
 			    <Label>How fast switch to new brightness / color:</Label>
 			</Field>
 
-			<Field id="display9"  type="menu" default="immediate" visibleBindingId="type9"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider">
+			<Field id="display9"  type="menu" default="immediate" visibleBindingId="type9"  visibleBindingValue="exec,line,sLine,sLine,sPoint,points,rectangle,image,thermometer,knightrider,colorknightrider">
 			 		<List>
 			 		<Option value= "immediate" >immediate</Option>
 			 		<Option value= "wait" >wait  until all data created</Option>

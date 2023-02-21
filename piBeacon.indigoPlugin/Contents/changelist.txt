@@ -1,3 +1,13 @@
+Added features / changes in v2022.162.53@ 2023-02-21
+===================================================
+   
+1. added color knight rider option for neopixel: you can show swinging LEDS w different colors on a neopixel string
+   for detail see  menu/print various info to logfile /print distance actions ..
+
+2. fixed :  undervoltage reporting,   vcgencmd cmd has moved in new raspian image to /usr/bin/vcgencmd 
+   it will check the old and new postion of executable.
+
+
 Added features / changes in v2022.161.52@ 2023-02-11
 ===================================================
    

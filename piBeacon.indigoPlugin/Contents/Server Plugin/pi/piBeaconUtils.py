@@ -3047,7 +3047,13 @@ def checkIfThrottled():
 		#||_ arm frequency capped has occurred since last reboot
 		#|_ soft temperature reached since last reboot		
 
+
 		tempInfo = (subprocess.Popen("/opt/vc/bin/vcgencmd get_throttled" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+		#logger.log(20, u"cBY:{:<20} tempInfo old: {}".format(G.program, tempInfo))
+		if tempInfo.find("No such file") > -1 or tempInfo =="":
+			tempInfo = (subprocess.Popen("/usr/bin/vcgencmd get_throttled" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+		#logger.log(20, u"cBY:{:<20} tempInfo new: {}".format(G.program, tempInfo))
+
 		try:	code = tempInfo.split("=")[1][:-1]
 		except: return "err_in_proc_check_power"
 		try:	temp = bin(int(code,0))
