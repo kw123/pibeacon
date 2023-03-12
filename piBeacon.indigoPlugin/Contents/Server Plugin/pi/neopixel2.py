@@ -1049,6 +1049,10 @@ tclockLast 		= time.time() -1
 myPID			= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")
 
+
+iknightriderInd = 0
+iknightriderDir = 1
+
 time.sleep(0.1)
 while True:
 	#U.logger.log(20,"after while")

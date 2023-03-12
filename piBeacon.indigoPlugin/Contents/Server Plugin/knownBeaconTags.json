@@ -286,7 +286,7 @@
 		"sensorFunctions": "",
 		"sequence": 0,
 		"subType": {},
-		"text": "ITrack: Rinex & Njoii & Musegear",
+		"text": "ITrack: Rinex,Vozni,Njoii,Musegear",
 		"textForMenu": "",
 		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
 	},

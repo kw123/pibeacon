@@ -133,6 +133,7 @@ Make sure the switch bot is properly configured,  ie as press or normal
 
 			<Field  id="refreshCallbackMethod" type="textfield" defaultValue="dynamicCallbackSetSwitchbotactionsFields" hidden="true"></Field>
 
+			<Field  id="piVisible" 						type="checkbox" hidden="true" defaultValue="true" ></Field>
 			<Field  id="sensorVisible" 					type="checkbox" hidden="true" defaultValue="true" ></Field>
 			<Field  id="stopVisible" 					type="checkbox" hidden="true" defaultValue="false" ></Field>
 			<Field  id="switchBotModeVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
@@ -176,7 +177,7 @@ Make sure the switch bot is properly configured,  ie as press or normal
 				<List class="self"  method="filterSensorForRpiAction"  dynamicReload="true" />
 			</Field>
 
-			<Field id="sensorPi" type="menu" defaultValue="0" visibleBindingId="sensorVisible" visibleBindingValue="true"  tooltip="">
+			<Field id="sensorPi" type="menu" defaultValue="0" visibleBindingId="piVisible" visibleBindingValue="true"  tooltip="">
 				<Label>Select rpi on which sensor is tracked</Label>
 				<List class="self"  method="filterRPIForSensorForRpiAction" dynamicReload="true"/>
 			</Field>

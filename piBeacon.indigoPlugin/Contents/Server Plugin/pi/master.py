@@ -39,12 +39,16 @@ def checkIfUARThciChannelIsOnRPI4():
 		HCIs = U.whichHCI()
 		U.logger.log(20, "checking if BLE startup ok on RPI4, HCIs:{}".format(HCIs))
 		# returns :  hci["hci"][hciNo] = {"bus":bus, "numb":int(hciNo[3:]),"upDown":"DOWN","BLEmac":"0"}
+		nn = 0
 		if HCIs["hci"] != {}:
 			for xx in HCIs["hci"]:
 				if "bus" in HCIs["hci"][xx]:
 					if HCIs["hci"][xx]["bus"] == "UART":
 						U.logger.log(20, "BLE startup check ok, UART channel found")
 						return # all ok
+				nn += 1
+
+		if nn >=2: return 
 
 		text = "BLE ON RPI4 :  UART BLE NOT ENABLED will restart BLE stack (hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -) and try again,, HCI inf:\n{}".format(HCIs)
 		U.logger.log(20, text)

@@ -1,3 +1,59 @@
+Added features / changes in v2022.163.54@ 2023-03-12
+===================================================
+   
+1. added new dev type iTrack (Rinex,Vozni,Njoii,Musegear) BUTTON.
+   iTrack types are regular beacon that can deliver battery info, can be beeped and can trigger any indigo action with the button press
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!! FINALLY an all in one device - after 8 years with this plugin. !!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   1. get a iTrack beacon, (amazon germany euro 25 for Musegear), 
+   2. click on the button for 5 secs to enable it
+   3. add the eg musegear beacon to indigo:  menu/ accept/reject new beacons, select iTrack .. Rinex, .. , Musegear as beacon type;  then a new beacon will be created within 30 secs. Copy the mac number
+   4. add a new device type BLE-iTrack-Button, paste the mac number. Select which rpi should track the button sensor button On/off ( this is not the beacon data!!, that will continue as is)
+   5. then you can press the button (5 secs) on the beacon and the status will go to "true/On" for 30 secs, then to false/off again
+
+   ==== now you can with this beacon:
+   1. know in which room the beaocn is (requires one rpi per room state= closest RPI ), or if it is away
+      or if it moves - change in distances states, or dev state position of beacon
+   2. you can see the battery level in the dev state
+   3. you can in indigo menu/action beep the beacon to find it
+   4. press the button on the beacon and you can trigger any action in indigo
+
+   The smallest version is 4mm x 35mm x 25mm
+   There are regular, wallet, mini, rechargeable versions 
+
+
+2. added support for the new indigo 2022.2 http api w bearer id.
+   the old http restfull api does not work under indigo 2022.2
+   the new version will only work if your RPI is running bullseye or later and everything with py3
+   BUT it will create a lot of logfile entries each time the rpi send data to indigo. with the old version the was a patch you could use to disable the logging.
+
+   I strongly recommend to use the default socket communication rpi to indigo -  you select it in config.
+   that works with all versions and combinations
+
+3. worked on "fastDown" option for beacons. It is now stable down to 10 secs. 
+   Normal mode beacons take about 90 secs to go "down"/ off. They expire due to no signal receives from rpis in indigo
+   In fastdown mode the rpi sends a signal (down rssi=-999) when it has not received a signal from the beacon for xx secs.
+   After receiving a down signal the plugin sets the state to down - after all rpis have send the down signal.
+   this works for fastDown times down to 15 secs and if you have several RPi that "see" the beacon down to 10 secs.
+   this will create a lot more traffic from teh RPIs to the plugin:    
+     for fastDown time = 10 secs one message every 5 secs from each RPI for each of these fastDown beacons, so for 5 beacons and 5 rpi up to 5 message per second from rpis to indigo
+     Indigo is able to handle this if you have a good sized mac -  my mac mini M1 2020 has 14% total load (and 10% pibeacon plugin load on one proc.) with that config with many other plugins running
+
+
+
+Added features / changes in v2022.162.54@ 2023-02-21
+===================================================
+   
+1. decreased the fast down option to 3 secs from 5 seconds. This is only for very special applications.
+   this is to detect very fast if a beacon is not present. It might create false down states. you need to test what works for your beacon.
+   I have tried it with a ruuvitag beacon/sensor. 3 seconds does not seem to give false donw states at least for 30 minutes, 2 secs does.
+   to clarify: beacons with fast down enabled, will not simply expire when there is no message after xx secs (normally 90 secs)
+               Normal beacon behavior: there is no active not seen message, just no message about that beacon. That is the default behavior of beacons. 
+                                       then tey will go down / expire after 90 secs / 180 secs.
+               With fast down they will only go to down if an RPI send a message that the beacon has not been seen for yy secs (3,4,5,... select in device edit)
+             
+
 Added features / changes in v2022.162.53@ 2023-02-21
 ===================================================
    

@@ -12,7 +12,6 @@ import	time, datetime, json
 sys.path.append(os.getcwd())
 import piBeaconGlobals as G
 import socket
-import urllib
 try:
 	import RPi.GPIO as GPIO
 except: pass
@@ -22,6 +21,29 @@ except: import queue as Queue
 import zlib
 try: 	unicode
 except: unicode = str
+
+import traceback
+
+
+
+import urllib
+
+
+global failedURLimport
+
+try:
+	from urllib.request import Request, urlopen
+	failedURLimport = False
+except:
+	failedURLimport = True
+		
+
+#except: 
+#	from urllib.request import request 
+#	Request = request
+#	from urllib.request import urlopen
+
+
 
 import re
 
@@ -44,6 +66,7 @@ def setLogging():
 	import logging
 	import logging.handlers
 	global streamhandler, permLogHandler
+	global failedURLimport
 
 	# regular logfile
 	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
@@ -82,6 +105,11 @@ def setLogLevel():
 
 #################################
 def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,wait=False):
+	global failedURLimport
+
+	#print ("cBY:{:<20} sys info:{}".format(G.program, sys.version_info))
+	#print ("cBY:{:<20} urllib:{}".format(G.program, urllib))
+	#print ("cBY:{:<20} failedURLimport:{}".format(G.program, failedURLimport))
 
 	##if True or verbose: logger.log(20, u"cBY:{:<20} ======== kill pgm myPID:s{}, pgmToKill:{}".format(G.program,myPID,pgmToKill ) )
 	count = 0
@@ -92,7 +120,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			ret = subprocess.Popen(cmd)
 			return 1
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		logger.log(30,"", exc_info=True)
 		
 	count = 0
 	try:
@@ -133,7 +161,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			if not wait: cmd += " &"
 			subprocess.call(cmd, shell=True)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		logger.log(30,"", exc_info=True)
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
 	return count
@@ -144,7 +172,7 @@ def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doR
 	try:
 		if doPrint: logger.log(20, u"cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}, delay:{}".format(G.program, param, reason, py3, delay) )
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		logger.log(30,"", exc_info=True)
 
 	time.sleep(delay)
 
@@ -576,35 +604,40 @@ def getNetwork():
 #################################
 def getGlobalParams(inp):
 	try:
-		sensors ={}
+		sensors = {}
 		oldDebug = G.debug
+
+		G.ipOfServer =				inp.get("ipOfServer",G.ipOfServer)
+		G.myPiNumber =				inp.get("myPiNumber",G.myPiNumber)
+		G.authentication =			inp.get("authentication",G.authentication)
+		G.passwordOfServer =		inp.get("passwordOfServer",G.passwordOfServer)
+		G.userIdOfServer =			inp.get("userIdOfServer",G.userIdOfServer)
+		G.portOfServer =			inp.get("portOfServer",G.portOfServer )
+		G.apiKey =					inp.get("apiKey",G.apiKey)
+		G.IndigoOrSocket =			inp.get("IndigoOrSocket",G.IndigoOrSocket)
+		G.BeaconUseHCINo =			inp.get("BeaconUseHCINo",G.BeaconUseHCINo)
+		G.BLEconnectUseHCINo =		inp.get("BLEconnectUseHCINo",G.BLEconnectUseHCINo)
+		G.enableRebootCheck =		inp.get("enableRebootCheck",G.enableRebootCheck)
+		G.rpiIPNumber =				inp.get("rpiIPNumber",G.rpiIPNumber)
+		G.rebootCommand =			inp.get("rebootCommand",G.rebootCommand)
+		G.networkType =				inp.get("networkType",G.networkType)
+		G.rebootCommand =			inp.get("rebootCommand",G.rebootCommand)
+
 		try:
 			if "debugRPI"			in inp:	 G.debug=				 		int(inp["debugRPI"])
 		except: pass
-		if "ipOfServer"				in inp:	 G.ipOfServer=					(inp["ipOfServer"])
-		if "myPiNumber"				in inp:	 G.myPiNumber=					(inp["myPiNumber"])
-		if "authentication"			in inp:	 G.authentication=				(inp["authentication"])
 		try:
 			if "sendToIndigoSecs"	in inp:	 G.sendToIndigoSecs=	float(inp["sendToIndigoSecs"])
 		except: pass
-		if "passwordOfServer"		in inp:	 G.passwordOfServer=			(inp["passwordOfServer"])
-		if "userIdOfServer"			in inp:	 G.userIdOfServer=				(inp["userIdOfServer"])
-		if "portOfServer"			in inp:	 G.portOfServer=				(inp["portOfServer"])
+
 		try:
 			if "indigoInputPORT"	in inp:	 G.indigoInputPORT=		 int(inp["indigoInputPORT"])
 		except: pass
-		if "IndigoOrSocket"			in inp:	 G.IndigoOrSocket=				(inp["IndigoOrSocket"])
-		if "BeaconUseHCINo"			in inp:	 G.BeaconUseHCINo=				(inp["BeaconUseHCINo"])
-		if "BLEconnectUseHCINo"		in inp:	 G.BLEconnectUseHCINo=			(inp["BLEconnectUseHCINo"])
 		try:
 			if "rebootIfNoMessages"	in inp:	 G.rebootIfNoMessages=	 int(inp["rebootIfNoMessages"])
 		except: pass
 
-		if u"rebootCommand"			in inp:	 G.rebootCommand=				(inp["rebootCommand"])
-
-		if u"enableRebootCheck"		in inp:	 G.enableRebootCheck=			(inp["enableRebootCheck"])
 		if u"ipNumberRpiStatic"		in inp:	 G.ipNumberRpiStatic=			(inp["ipNumberRpiStatic"]) =="1"
-		if u"rpiIPNumber"			in inp:	 G.rpiIPNumber=					(inp["rpiIPNumber"]) 
 
 
 
@@ -618,9 +651,6 @@ def getGlobalParams(inp):
 				if xxx != G.wifiEthOld:
 					G.wifiEth = xxx
 					G.wifiEthOld = G.wifiEth
-
-		if u"networkType"			in inp:	 G.networkType=				(inp["networkType"])
-
 		try:
 			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=		float(inp["deltaChangedSensor"])
 		except: pass
@@ -1897,7 +1927,7 @@ def getIPNumberMaster(quiet=True, noRestart=False):
 			if not quiet: logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(connected, indigoServer))
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		logger.log(30,"", exc_info=True)
 
 	if changed !="":
 		logger.log(20, "cBY:{:<20} bad IP number ...  old from file ipAddressRead>>{}<< not in sync with ip output: wlan0IP>>{}<<;	eth0IP>>{}<<".format( G.program, ipAddressRead, wlan0IP,eth0IP)  )
@@ -2027,7 +2057,7 @@ def checkIfusbSerialActive(usb):
 		ret = (subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		if  ret.find(usb) > -1 and ret.find("dialout")> -1: return True
 		else:
-			#U.logger.log(30, u"{} is not active, returned:{}  cmd:{} ".format( usb, ret, cmd) )
+			#logger.log(30, u"{} is not active, returned:{}  cmd:{} ".format( usb, ret, cmd) )
 			return False
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -2136,7 +2166,6 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 					if HCIs[hh]["bus"] == "UART":
 						#logger.log(20, u"cBY:{:<20} ret UART".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
-						return useHCI,  myBLEmac, devId, bus
 
 			elif defaultBus != "":
 				for hh in hciChannels:
@@ -2268,6 +2297,9 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 
 #################################
 def execSend():
+	global varNanme
+
+
 	try:
 		while G.sendThread["run"]:
 			time.sleep(1)
@@ -2311,7 +2343,7 @@ def execSend():
 					else:
 						name = "pi_IN_{}".format(G.myPiNumber)
 
-					if G.IndigoOrSocket == "indigo":  # use indigo http restful
+					if G.IndigoOrSocket == "indigo" and  G.authentication != "bearer":  # use indigo http restful
 								var = "/variables/{}".format(name)
 								data0 = json.dumps(data, separators=(',',':'))
 								if squeeze: data0 = data0.replace(" ","")
@@ -2335,7 +2367,7 @@ def execSend():
 								cmd.append("value={}".format(data0))
 								cmd.append("http://{}:{}{}".format(G.ipOfServer, G.portOfServer, var) ) ## " > /dev/null 2>&1 &"
 								#print cmd
-								logger.log(10, "cBY:{:<20} msg: {}\n".format(G.program , cmd) )
+								logger.log(20, "cBY:{:<20} msg: {}\n".format(G.program , cmd) )
 								if wait:
 									retx   = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 									ret    = retx[0].decode('utf-8')
@@ -2351,11 +2383,60 @@ def execSend():
 									subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 									echoToMessageSend(data, "msg send --")
 
+					elif G.IndigoOrSocket == "indigo" and G.authentication == "bearer":  ## do socket comm
+								try: 	varId
+								except:
+											varNanme  = "pi_IN_{}".format(G.myPiNumber)
+											varAlive  = "pi_IN_Alive"
+
+											cmd = "http://{}:{}/v2/api/indigo.variables?api-key={}".format(G.ipOfServer, G.portOfServer, G.apiKey)
+											logger.log(20, "cBY:{:<20} cmd:{}\n".format(G.program , cmd) )
+
+											req = Request(cmd)
+											with urlopen(req) as request:
+												variables = json.load(request)
+												ff = 0
+												for vv in variables:
+													if ff > 1: break
+													if vv["name"] == varNanme:
+														varId= vv["id"]
+														ff += 1
+													if vv["name"] == varAlive:
+														aliveId =  vv["id"]
+														ff += 1
+											logger.log(20, "cBY:{:<20}  {}:{}, {}:{} \n".format(G.program , varNanme, varId, varAlive, aliveId) )
+
+								if name == "pi_IN_Alive":	useId = aliveId
+								else:						useId = varId
+
+								data0 = json.dumps(data, separators=(',',':'))
+								if squeeze: data0 = data0.replace(" ","")
+								if escape:  data0 = urllib.parse.quote(data0)
+
+								message = json.dumps({
+									"message": "indigo.variable.updateValue",
+									"id": "pibeacon msg from rpi:{}".format(G.myPiNumber),
+									"objectId": useId,
+									"parameters": {"value": data0}
+								}).encode("utf8")
+								cmd = "http://{}:{}/v2/api/command".format(G.ipOfServer, G.portOfServer)
+								cmdA = "Bearer {}".format(G.apiKey)
+
+								logger.log(20, "cBY:{:<20} cmd:{}, auth:{}, msg:{}\n".format(G.program , cmd, cmdA, message) )
+
+								try: req = Request(cmd, data=message)
+								except: req = request(cmd, data=message)
+								req.add_header('Authorization', cmdA)
+								with urlopen(req) as request:
+									reply = json.load(request)
+									logger.log(20, "reply:{}".format(reply))
+
+
 					else:  ## do socket comm
 								MSGwasSend = False
 								ii = 5
 								while ii > 0: 
-									ii -=1
+									ii -= 1
 									dataC = json.dumps(data, separators=(',',':'))
 									lenStart = len(dataC)
 									if squeeze: dataC = dataC.replace(" ","")
@@ -2600,9 +2681,9 @@ def writeFile(outFile, text, writeOrAppend="w"):
 		f = open("{}{}".format(G.homeDir, outFile), writeOrAppend)
 		f.write(text)
 		f.close()
-		#U.logger.log(20, u"===== writing to {}{} text:{}".format(G.homeDir, outFile, text))
+		#logger.log(20, u"===== writing to {}{} text:{}".format(G.homeDir, outFile, text))
 	except	Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		logger.log(30,"", exc_info=True)
 		if "{}".format(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return
@@ -2644,7 +2725,7 @@ def readPopen(cmd):
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 		return ret.decode('utf_8'), err.decode('utf_8')
 	except Exception as e:
-		U.logger.log(20,"", exc_info=True)
+		logger.log(20,"", exc_info=True)
 
 #################################
 def checkIfmustUsePy3():

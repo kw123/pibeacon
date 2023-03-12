@@ -68,7 +68,6 @@ except:	long = int
 # indigo ignores the defaults of new properties after first load of the plugin 
 kDefaultPluginPrefs = {
 				"iBeaconFolderName":							"Pi_Beacons_new",
-				"iBeaconFolderVariableDataTransferVarsName":	"piBeacons_dataTransferVars",
 				"iBeaconFolderVariablesName":					"piBeacons",
 				"awayWhenNochangeInSeconds":					"600",
 				"groupCountNameDefault":						"iBeacon_Count_",
@@ -94,6 +93,7 @@ kDefaultPluginPrefs = {
 				"compressRPItoPlugin":							"20000",
 				"userIdOfServer":								"",
 				"passwordOfServer":								"",
+				"apiKey":										"",
 				"authentication":								"digest",
 				"wifiSSID":										"",
 				"wifiPassword":									"",
@@ -189,9 +189,9 @@ _sqlLoggerDevTypesNotSensor		 = _sqlLoggerDevTypes[:-1]
 
 ## this is to reduce writing to sql database 
 _sqlLoggerIgnoreStates = {"isBeaconDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,batteryLevelLastUpdate,sensorvalue_ui,updateReason,lastStatusChange,iBeacon,mfg_info"
-						, "isRPIDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,online,i2cactive,sensorvalue_ui,updateReason,lastStatusChange,last_MessageFromRpi"
+						, "isRPIDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,online,i2cactive,sensorvalue_ui,updateReason,lastStatusChange,lastMessageFromRpi"
 						, "isBLEconnectDevice":		"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"
-						, "isRPISensorDevice":		"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange,last_MessageFromRpi"
+						, "isRPISensorDevice":		"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange,lastMessageFromRpi"
 						, "isBLESensorDevice":		"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"
 						, "isBLElongConnectDevice":	"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"
 						, "isSensorDevice":			"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"}
@@ -216,7 +216,7 @@ _GlobalConst_emptyBeaconProps = {
 	"created":						0,
 	"updateSignalValuesSeconds":	0,
 	"signalDelta":					"999",
-	"fastDown":				    	"0",
+	"fastDown":				    	"-1",
 	"minSignalOn":				    "-999",
 	"minSignalOff":					"-999",
 	"typeOfBeacon":					"other",
@@ -398,7 +398,7 @@ _GlobalConst_allowedCommands = [
 	"getBeaconParameters", "startCalibration", "BLEAnalysis", "trackMac", "rampUp", "rampDown", "rampUpDown", "beepBeacon", "updateTimeAndZone"]	 # commands support for GPIO pins
 
 _BLEsensorTypes =["BLERuuviTag",
-				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03G", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG",
+				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03G", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton",
 				"BLEaprilAccel", "BLEaprilTHL",
 				"BLEminewE8", "BLEminewS1TH", "BLEminewS1TT", "BLEminewS1Plus", "BLEminewAcc",
 				"BLEiSensor-on", "BLEiSensor-onOff", "BLEiSensor-RemoteKeyFob", "BLEiSensor-TempHum",
@@ -499,6 +499,7 @@ for ii in range(_GlobalConst_numberOfiBeaconRPI):
 _devtypesToStates["rpiAndBeaconAndBLEconnect"]["PosX"] = "Real"	
 _devtypesToStates["rpiAndBeaconAndBLEconnect"]["PosY"] = "Real"	
 _devtypesToStates["rpiAndBeaconAndBLEconnect"]["PosZ"] = "Real"	
+_devtypesToStates["rpiAndBeaconAndBLEconnect"]["lastUpdateFromRPI"] = "Integer"	
 _devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPI"] = "Integer"	
 _devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPIText"] = "String"	
 _devtypesToStates["rpiAndBeaconAndBLEconnect"]["closestRPILast"] = "Integer"	
@@ -525,9 +526,8 @@ _devtypesToStates["rpiAndSensor"]["last_masterStart"] = "String"
 _devtypesToStates["rpiAndSensor"]["rpi_type"] = "String"	
 _devtypesToStates["rpiAndSensor"]["fan_OnTime_Percent"] = "String"	
 _devtypesToStates["rpiAndSensor"]["i2c_active"] = "String"	
-_devtypesToStates["rpiAndSensor"]["last_MessageFromRpi"] = "String"	
+_devtypesToStates["rpiAndSensor"]["lastMessageFromRpi"] = "String"	
 _devtypesToStates["rpiAndSensor"]["online"] = "String"	
-_devtypesToStates["rpiAndSensor"]["lastStatusChange"] = "String"	
 _devtypesToStates["rpiAndSensor"]["lastStatusChange"] = "String"	
 
 
@@ -763,7 +763,6 @@ class Plugin(indigo.PluginBase):
 			if os.path.isfile(self.indigoPreferencesPluginDir+"dataVersion"):
 				subprocess.call("rm '"+self.indigoPreferencesPluginDir+"dataVersion' &", shell=True)
 
-
 			self.startTime = time.time()
 
 			self.getDebugLevels()
@@ -779,13 +778,11 @@ class Plugin(indigo.PluginBase):
 
 			self.startupFIXES0()
 
-			self.getFolderIdOfBeacons()
-
-			self.deleteAndCeateVariables(False)
-
 			self.readConfig()
 
 			self.initGarageDoors()
+
+			self.deleteAndCeateVariablesAndDeviceFolder(False)
 
 			self.startupFIXES1()
 
@@ -1483,12 +1480,8 @@ class Plugin(indigo.PluginBase):
 			self.pluginPrefs["iBeaconFolderVariablesName"] = self.iBeaconFolderVariablesName
 
 
-			try:				self.iBeaconFolderVariableDataTransferVarsName	 = self.pluginPrefs.get("iBeaconFolderVariableDataTransferVarsName", "piBeacons_dataTransferVars")
-			except:				self.iBeaconFolderVariableDataTransferVarsName	 = "piBeacons_dataTransferVars"
-			self.pluginPrefs["iBeaconFolderVariableDataTransferVarsName"] = self.iBeaconFolderVariableDataTransferVarsName
-			#indigo.server.log(" self.iBeaconFolderVariablesName:{};   self.iBeaconFolderVariableDataTransferVarsName:{}".format( self.iBeaconFolderVariablesName, self.iBeaconFolderVariableDataTransferVarsName))
+			self.iBeaconFolderVariableDataTransferVarsName	 =  "piBeacons_dataTransferVars"
 
-			self.getFolderIdOfBeacons()
 
 			try:				self.automaticRPIReplacement= "{}".format(self.pluginPrefs.get("automaticRPIReplacement", "False")).lower() == "true"
 			except:				self.automaticRPIReplacement= False
@@ -1572,7 +1565,7 @@ class Plugin(indigo.PluginBase):
 
 
 			self.indigoInputPORT			= int(self.pluginPrefs.get("indigoInputPORT", 0))
-			self.IndigoOrSocket				= (self.pluginPrefs.get("IndigoOrSocket", "indigo"))
+			self.IndigoOrSocket				= self.pluginPrefs.get("IndigoOrSocket", "indigo")
 			self.dataStats					= {"startTime": time.time()}
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get("maxSocksErrorTime", "600."))
 			except: self.maxSocksErrorTime	= 600.
@@ -1583,10 +1576,14 @@ class Plugin(indigo.PluginBase):
 			self.userIdOfServer				= self.pluginPrefs.get("userIdOfServer", "")
 			self.passwordOfServer			= self.pluginPrefs.get("passwordOfServer", "")
 			self.authentication				= self.pluginPrefs.get("authentication", "digest")
+			self.apiKey						= self.pluginPrefs.get("apiKey", "")
 			self.myIpNumber					= self.pluginPrefs.get("myIpNumber", "192.168.1.130")
 			self.blockNonLocalIp			= self.pluginPrefs.get("blockNonLocalIp", False)
 			self.checkRPIipForReject		= self.pluginPrefs.get("checkRPIipForReject", True)
 			self.GPIOpwm					= self.pluginPrefs.get("GPIOpwm", 1)
+
+
+			self.delayFastDownBy 			= 3.5  # delay of fast down, give an Up signbal a change to cancel down.
 
 			self.updateRejectListsCount		= 0
 
@@ -1734,6 +1731,9 @@ class Plugin(indigo.PluginBase):
 						okList.append("{}".format(dev.id))
 
 				elif dev.pluginProps.get("isSensorDevice",False):
+								if "groupMember" in dev.states and len(dev.states["groupMember"]) < 3: 
+									self.addToStatesUpdateDict(dev.id, "groupMember","SENSOR")
+
 								dt = (datetime.datetime.now() - dev.lastChanged).seconds
 								up = dt < self.awayWhenNochangeInSeconds
 								#self.indiLOG.log(10,"setGroupStatus1 {}, dt:{} , up:{}, self.awayWhenNochangeInSeconds:{}".format(dev.name, dt, up, self.awayWhenNochangeInSeconds))
@@ -1885,121 +1885,76 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def deleteAndCeateVariables(self, delete):
-		try:
-			piFolder = indigo.variables.folder.create(self.iBeaconFolderVariablesName)
-		except :
-			piFolder = indigo.variables.folders[self.iBeaconFolderVariablesName]
-		if self.iBeaconFolderVariableDataTransferVarsName == self.iBeaconFolderVariablesName:
-			piFolder_pi_in = piFolder
-		else:
-			try:
-				piFolder_pi_in = indigo.variables.folder.create(self.iBeaconFolderVariableDataTransferVarsName)
-			except :
-				piFolder_pi_in = indigo.variables.folders[self.iBeaconFolderVariableDataTransferVarsName]
+	def deleteAndCeateVariablesAndDeviceFolder(self, recreate):
 
-		#indigo.server.log("deleteAndCeateVariables  iBeaconFolderVariablesName:{} iBeaconFolderVariableDataTransferVarsName: {} piFolder:{}\n piFolder_pi_in:{}".format(self.iBeaconFolderVariablesName, self.iBeaconFolderVariableDataTransferVarsName, piFolder, piFolder_pi_in))
+		try:		indigo.devices.folder.create(self.iBeaconDevicesFolderName)
+		except:		pass
+		self.piFolderId = indigo.devices.folders[self.iBeaconDevicesFolderName].id
 
-		### delete at midnight and (re) create	to save sql logger space , we dont need the history
-		if delete:
-			try:		indigo.variable.delete("pi_IN_Alive")
-			except:		pass
-			try:		indigo.variable.delete("pi_IN_format")
-			except:		pass
-			try:		indigo.variable.delete(self.ibeaconNameDefault+"With_Status_Change")
-			except:		pass
-			try:		indigo.variable.delete(self.ibeaconNameDefault+"With_ClosestRPI_Change")
-			except:		pass
-			try:		indigo.variable.delete(self.ibeaconNameDefault+"Rebooting")
-			except:		pass
-			try:		indigo.variable.delete(self.ibeaconNameDefault+"Rebooting")
-			except:		pass
+
+		try:		indigo.variables.folder.create(self.iBeaconFolderVariablesName)
+		except:		pass
+
+
+		if self.IndigoOrSocket	!= "socket":
+				try:	indigo.variables.folder.create(self.iBeaconFolderVariableDataTransferVarsName)
+				except:	pass
+
+		### if configured:  delete at midnight and (re) create	to save sql logger space , we dont need the history
+		if recreate:
+			try:	indigo.variable.delete("pi_IN_Alive")
+			except:	pass
+			try:	indigo.variable.delete(self.ibeaconNameDefault+"With_Status_Change")
+			except:	pass
+			try:	indigo.variable.delete(self.ibeaconNameDefault+"With_ClosestRPI_Change")
+			except:	pass
+			try:	indigo.variable.delete(self.ibeaconNameDefault+"Rebooting")
+			except:	pass
+			try:	indigo.variable.delete(self.ibeaconNameDefault+"Rebooting")
+			except:	pass
+
 			for dev in indigo.devices.iter("props.isSensorDevice"):
 				if dev.deviceTypeId ==  "lidar360":
 					try:	indigo.variable.delete((dev.name+"_data").replace(" ", "_"))
 					except:	pass
 
-		try:			indigo.variable.create("pi_IN_Alive", "", piFolder_pi_in)
-		except:			pass
-		try:			indigo.variable.create(self.ibeaconNameDefault+"With_Status_Change", "", piFolder)
-		except:			pass
-		try:			indigo.variable.create(self.ibeaconNameDefault+"With_ClosestRPI_Change", "", piFolder)
-		except:			pass
-		try:			indigo.variable.create(self.ibeaconNameDefault+"Rebooting", "", piFolder)
-		except:			pass
+
+		try:	indigo.variable.create(self.ibeaconNameDefault+"With_Status_Change", "", self.iBeaconFolderVariablesName)
+		except:	pass
+		try:	indigo.variable.create(self.ibeaconNameDefault+"With_ClosestRPI_Change", "", self.iBeaconFolderVariablesName)
+		except:	pass
+		try:	indigo.variable.create(self.ibeaconNameDefault+"Rebooting", "", self.iBeaconFolderVariablesName)
+		except:	pass
+
 		for dev in indigo.devices.iter("props.isSensorDevice"):
 			if dev.deviceTypeId ==  "lidar360":
-				try:
-						indigo.variable.create((dev.name+"_data").replace(" ", "_"), "", piFolder)
+				try:	indigo.variable.create((dev.name+"_data").replace(" ", "_"), "", self.iBeaconFolderVariablesName)
 				except: pass
-				try:
-						indigo.variable.create((dev.name+"_calibrated").replace(" ", "_"), "", piFolder)
+				try:	indigo.variable.create((dev.name+"_calibrated").replace(" ", "_"), "", self.iBeaconFolderVariablesName)
 				except: pass
 
 
-		for piU in self.RPI:
-			if delete:
-				try:
-					indigo.variable.delete("pi_IN_{}".format(piU) )
-				except:
-					pass
-			try:
-				indigo.variable.create("pi_IN_{}".format(piU), "", piFolder_pi_in)
-			except:
-				pass
+		if self.IndigoOrSocket	!= "socket":
+			try:	indigo.variable.create("pi_IN_Alive", "", self.iBeaconFolderVariableDataTransferVarsName)
+			except:	pass
 
-		try:			indigo.variable.create("lightningEventDate", "", piFolder)
-		except:			pass
-		try:			indigo.variable.create("lightningEventDevices", "0", piFolder)
-		except:			pass
+			for piU in self.RPI:
+				if recreate:
+					try:	indigo.variable.delete("pi_IN_{}".format(piU) )
+					except:	pass
 
-####-------------------------------------------------------------------------####
-	def getFolderIdOfBeacons(self):
-		self.piFolderId = 0
-		try:
-			self.piFolderId = indigo.devices.folders.getId(self.iBeaconDevicesFolderName)
-		except: pass
+				try:	indigo.variable.create("pi_IN_{}".format(piU), "", self.iBeaconFolderVariableDataTransferVarsName)
+				except: pass
 
-		if self.piFolderId ==0:
-			try:
-				ff = indigo.devices.folder.create(self.iBeaconDevicesFolderName)
-				self.piFolderId = ff.id
-			except:
-				self.piFolderId = 0
-				self.iBeaconDevicesFolderName = "Pi_Beacons_new"
-
-		try:
-			self.iBeaconFolderVariablesId = indigo.devices.folders.getId(self.iBeaconFolderVariablesName)
-		except: pass
-
-		if self.iBeaconFolderVariablesId ==0:
-			try:
-				ff = indigo.variables.folder.create(self.iBeaconFolderVariablesName)
-				self.iBeaconFolderVariablesId = ff.id
-			except:
-				self.iBeaconFolderVariablesId = 0
-
-		if self.iBeaconFolderVariableDataTransferVarsName != self.iBeaconFolderVariablesName:
-
-			try:
-				self.iBeaconFolderVariableDataTransferVarsId = indigo.devices.folders.getId(self.iBeaconFolderVariableDataTransferVarsName)
-			except:	self.iBeaconFolderVariableDataTransferVarsId = 0
-
-			if self.iBeaconFolderVariableDataTransferVarsId ==0:
-				try:
-					ff = indigo.variables.folder.create(self.iBeaconFolderVariableDataTransferVarsName)
-					self.iBeaconFolderVariableDataTransferVarsId = ff.id
-				except:
-					pass
-
-		self.deleteAndCeateVariables(False)
-
-		return
+		try:	indigo.variable.create("lightningEventDate", "", self.iBeaconFolderVariablesName)
+		except:	pass
+		try:	indigo.variable.create("lightningEventDevices", "0", self.iBeaconFolderVariablesName)
+		except:	pass
 
 
 ####-------------------------------------------------------------------------####
 	def readTcpipSocketStats(self):
-		self.dataStats ={}
+		self.dataStats = {}
 		try:
 			if os.path.isfile(self.indigoPreferencesPluginDir + "dataStats"):
 				f = open(self.indigoPreferencesPluginDir + "dataStats", "r")
@@ -4583,8 +4538,6 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40," bad device type:   {}   not in registed types:\n,_GlobalConst_allowedSensors:{}\n _BLEsensorTypes:{}\n _GlobalConst_allowedOUTPUT:{}\n... ".format(typeId, _GlobalConst_allowedSensors, _BLEsensorTypes, _GlobalConst_allowedOUTPUT))
 
 			self.saveConfig(only = "RPIconf", calledFrom="validateDeviceConfigUi")
-
-
 
 			if retCode:
 				self.setGroupStatusNextCheck = -1
@@ -7241,6 +7194,13 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 
+
+
+####-------------------------------------------------------------------------####
+	def buttonConfirmStopSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		self.selectBeaconsLogTimer = {}
+		return valuesDict
+
 ####-------------------------------------------------------------------------####
 	def buttonConfirmSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		try:
@@ -7945,6 +7905,7 @@ class Plugin(indigo.PluginBase):
 		errorsDict = indigo.Dict()
 
 		try:
+			valuesDict['piVisible']						= False
 			valuesDict['sensorVisible']					= False
 			valuesDict['sensorTriggerValueVisible']		= False
 			valuesDict['stopVisible']					= False
@@ -7970,6 +7931,7 @@ class Plugin(indigo.PluginBase):
 				valuesDict['infoLabelDIRECTVisible']	= True
 
 			elif valuesDict['selectActionType']		== "addRPIAction":
+				valuesDict['piVisible']					= True
 				valuesDict['sensorVisible']				= True
 				valuesDict['sensorTriggerValueVisible']	= True
 				valuesDict['outputDevVisible']			= True
@@ -7987,14 +7949,15 @@ class Plugin(indigo.PluginBase):
 					valuesDict['pulseDelayVisible']		= True
 
 			else:
+				valuesDict['piVisible']					= True
 				valuesDict['infoLabelActionVisible']	= True
 				valuesDict['outputDevVisible']			= True
 				valuesDict['stopVisible']				= True
 				if  valuesDict['stop'] == "0": # = do not stop previous action
-					valuesDict['switchBotModeVisible']		= True
-					valuesDict['repeatVisible']				= True
-					valuesDict['repeatDelayVisible']		= True
-					valuesDict['pulsesVisible']				= True
+					valuesDict['switchBotModeVisible']	= True
+					valuesDict['repeatVisible']			= True
+					valuesDict['repeatDelayVisible']	= True
+					valuesDict['pulsesVisible']			= True
 
 					if valuesDict['switchBotMode'] == "interactive":
 						valuesDict['pulseLengthOnVisible']	= True
@@ -8038,7 +8001,7 @@ class Plugin(indigo.PluginBase):
 					del self.fastBLEReaction[macSens] 
 					self.savefastBLEReaction()
 					self.makeBeacons_parameterFile()
-					self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send Config Files to pi# ")
+					self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send Config Files to pi s ")
 				return valuesDict
  
 
@@ -11073,7 +11036,7 @@ class Plugin(indigo.PluginBase):
 											"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps["SupportsStatusRequest"],
 											"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps["AllowOnStateChange"],
 											"AllowSensorValueChange":    _GlobalConst_emptyrPiProps["AllowSensorValueChange"],
-											"fastDown" : "0",
+											"fastDown" : "-1",
 											"RPINumber" : piU,
 											"ipNumberPi":ipn}
 									)
@@ -11110,7 +11073,7 @@ class Plugin(indigo.PluginBase):
 											"SupportsStatusRequest": 	  _GlobalConst_emptyrPiProps["SupportsStatusRequest"],
 											"AllowOnStateChange": 		  _GlobalConst_emptyrPiProps["AllowOnStateChange"],
 											"AllowSensorValueChange":    _GlobalConst_emptyrPiProps["AllowSensorValueChange"],
-											"fastDown" : "0",
+											"fastDown" : "-1",
 											"RPINumber" : piU,
 											"ipNumberPi":ipn}
 										)
@@ -11378,30 +11341,27 @@ class Plugin(indigo.PluginBase):
 				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			self.indigoInputPORT = xx
 
-			try:
-				xx = (valuesDict["IndigoOrSocket"])
-			except:
-				xx = 9999
-			if xx != self.IndigoOrSocket:
-				self.quitNow = "restart, commnunication was switched "
-				self.indiLOG.log(10,"switching communication, will send new config to all RPI and restart plugin")
-				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
-			self.IndigoOrSocket = xx
+
+			if True: # set to fixed socket only switch off http / restful
+				try:
+					xx = (valuesDict["IndigoOrSocket"])
+				except:
+					xx = 9999
+				if xx != self.IndigoOrSocket:
+					self.quitNow = "restart, commnunication was switched "
+					self.indiLOG.log(10,"switching communication, will send new config to all RPI and restart plugin")
+					self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
+				self.IndigoOrSocket = xx
 
 			try: 	xx = valuesDict["iBeaconFolderName"]
 			except:	xx = "PI_Beacons_new"
 			if xx != self.iBeaconDevicesFolderName:
 				self.iBeaconDevicesFolderName = xx
-				self.getFolderIdOfBeacons()
 
 			try:	xx = valuesDict["iBeaconFolderVariablesName"]
 			except:	xx = "piBeacons"
-			try:	yy = valuesDict["iBeaconFolderVariableDataTransferVarsName"]
-			except:	yy = "piBeacons_dataTransferVars"
-			if xx != self.iBeaconFolderVariablesName or yy != self.iBeaconFolderVariableDataTransferVarsName:
+			if xx != self.iBeaconFolderVariablesName:
 				self.iBeaconFolderVariablesName = xx
-				self.iBeaconFolderVariableDataTransferVarsName = yy
-				self.getFolderIdOfBeacons()
 
 			upNames = False
 			if self.groupCountNameDefault != valuesDict["groupCountNameDefault"]:	   upNames = True
@@ -11409,7 +11369,6 @@ class Plugin(indigo.PluginBase):
 			self.groupCountNameDefault = valuesDict["groupCountNameDefault"]
 			self.ibeaconNameDefault	   = valuesDict["ibeaconNameDefault"]
 			if upNames:
-				self.deleteAndCeateVariables(False)
 				self.varExcludeSQLList = ["pi_IN_"+str(ii) for ii in _rpiList]
 				self.varExcludeSQLList.append(self.ibeaconNameDefault+"With_ClosestRPI_Change")
 				self.varExcludeSQLList.append(self.ibeaconNameDefault+"Rebooting")
@@ -11420,6 +11379,7 @@ class Plugin(indigo.PluginBase):
 				self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
 
 
+			self.deleteAndCeateVariablesAndDeviceFolder(False)
 			self.checkBeaconParametersDisabled	= valuesDict["checkBeaconParametersDisabled"]
 
 
@@ -11456,6 +11416,12 @@ class Plugin(indigo.PluginBase):
 			if pp != self.authentication:
 				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			self.authentication = pp
+
+
+			pp = valuesDict["apiKey"]
+			if pp != self.apiKey:
+				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
+			self.apiKey = pp
 
 			pp = valuesDict["GPIOpwm"]
 			if pp != self.GPIOpwm:
@@ -11876,7 +11842,7 @@ class Plugin(indigo.PluginBase):
 				self.pluginPrefs["debugSpecial"] = True
 				self.getDebugLevels()
 			if self.rePopulateStates != "" or force:
-				self.debugNewDevStates = True
+				if force: self.debugNewDevStates = True
 				self.indiLOG.log(20,"updating dev states, trying to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for more info , trigger:{}".format(self.rePopulateStates))
 				for dev in indigo.devices.iter(self.pluginId):
 					dev.stateListOrDisplayStateIdChanged()	# update  states, add keys if missing
@@ -12565,7 +12531,7 @@ class Plugin(indigo.PluginBase):
 			try:
 				if now.hour == 0:
 					if self.cycleVariables:
-						self.deleteAndCeateVariables(True)	# delete and recreate the variables at midnight to remove their sql database entries
+						self.deleteAndCeateVariablesAndDeviceFolder(True)	# delete and recreate the variables at midnight to remove their sql database entries
 					self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 					##self.rPiRestartCommand = ["" for ii in range(_GlobalConst_numberOfRPI)] # dont do this use the default for each pibeacon
 					self.setupFilesForPi()
@@ -13784,11 +13750,11 @@ class Plugin(indigo.PluginBase):
 				try: dev = indigo.devices[self.RPI[piU]["piDevId"]]
 				except:
 					self.indiLOG.log(10,"setRPIonline looks like device has been deleted..  setting pi:{}  indigo.devices[{}] returns error   marking for delete".format(devID,piU) )
-					self.delRPI(pi=pi, calledFrom="setRPIonline")
+					self.delRPI(pi=piU, calledFrom="setRPIonline")
 					return
 
 			if setLastMessage:
-				self.addToStatesUpdateDict(dev.id, "last_MessageFromRpi", datetime.datetime.now().strftime(_defaultDateStampFormat))
+				self.addToStatesUpdateDict(dev.id, "lastMessageFromRpi", datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 
 			if new=="up":
@@ -14680,6 +14646,10 @@ class Plugin(indigo.PluginBase):
 						self.updateChangedValuesInLastXXMinutes(dev, x, props, "Pressure", useFormat, whichKeysToDisplay, decimalPlaces)
 						
 
+					if dev.deviceTypeId == "BLEiTrackButton":
+						self.updateBLEiTrack(dev,data,whichKeysToDisplay, pi)
+						
+
 					if dev.deviceTypeId == "BLEblueradio":
 						self.updateBLEblueradio(dev,data,whichKeysToDisplay, pi)
 
@@ -14819,7 +14789,7 @@ class Plugin(indigo.PluginBase):
 								try:
 									var = indigo.variables[varName]
 								except:
-									var = indigo.variable.create(varName,"")
+									var = indigo.variable.create(varName,"", self.iBeaconFolderVariablesName_ID)
 									self.varExcludeSQLList.append(var)
 
 								if "calibrated" in data and len(data["calibrated"]) > 10:
@@ -14833,7 +14803,7 @@ class Plugin(indigo.PluginBase):
 									try:
 										var = indigo.variables[varName]
 									except:
-										indigo.variable.create(varName, varName)
+										indigo.variable.create(varName, varName, self.iBeaconFolderVariablesName_ID)
 										self.varExcludeSQLList.append(varName)
 									indigo.variable.updateValue(varName, json.dumps(data))
 
@@ -15356,19 +15326,27 @@ class Plugin(indigo.PluginBase):
 
 
 ###-------------------------------------------------------------------------####
+	def getpropForonOffTrueFalse(self, props):
+		if "onOffSetting" in props and props["onOffSetting"] == "on=green,off=grey":
+			return False
+		else:
+			return  True
+
+###-------------------------------------------------------------------------####
+	def getpropForonOffText(self, props, data):
+		if "onOff" not in data: return ""
+		return props.get("onOffui"+str(data["onOff"]), "on" if data["onOff"] else "off")
+
+###-------------------------------------------------------------------------####
 	def updateBLEiSensor(self, dev, data, whichKeysToDisplay,pi):
 		try:
 
 
 			props = dev.pluginProps
-			if "onOffSetting" in props and props["onOffSetting"] == "on=green,off=grey":
-				inverse = False
-			else:
-				inverse = True #on=red,off=green
-
+			inverse = self.getpropForonOffTrueFalse(props)
+			uiValue = self.getpropForonOffText(props, data)
 			if dev.deviceTypeId == "BLEiSensor-on":
 				if "onOff" in data and data["onOff"]:
-					uiValue = props.get("onOffui"+str(data["onOff"]), "on" if data["onOff"] else "off")
 					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
 					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
 					self.addToStatesUpdateDict(dev.id, "onOffState",  		True, uiValue=uiValue, image="SensorOn")
@@ -15378,7 +15356,6 @@ class Plugin(indigo.PluginBase):
 
 			else:
 				if "onOff" in data and "onOffState" in dev.states:
-					uiValue = props.get("onOffui"+str(data["onOff"]), "on" if data["onOff"] else "off")
 					if data["onOff"]:
 						if not dev.states["onOffState"]:
 							self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
@@ -15419,18 +15396,48 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40, "{}".format(data))
 		return
 
+
+###-------------------------------------------------------------------------####
+	def updateBLEiTrack(self, dev, data, whichKeysToDisplay, pi):
+		try:
+			props = dev.pluginProps
+			inverse = self.getpropForonOffTrueFalse(props)
+			uiValue = self.getpropForonOffText(props, data)
+
+			if data["onOff"]:
+				if not dev.states["onOffState"]:
+					#self.indiLOG.log(20, "updateBLEMusegear; dev:{}, uiValue:{}".format(dev.name, uiValue))
+					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
+					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
+					self.addToStatesUpdateDict(dev.id, "onOffState",  		True, uiValue=uiValue)
+					self.addToStatesUpdateDict(dev.id, "status",  			uiValue, uiValue=uiValue)
+					if not inverse:	dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+
+			else:
+				if dev.states["onOffState"]:
+					#self.indiLOG.log(20, "updateBLEMusegear; dev:{}, uiValue:{}".format(dev.name, uiValue))
+					self.addToStatesUpdateDict(dev.id, "status",  		   uiValue, uiValue=uiValue)
+					self.addToStatesUpdateDict(dev.id, "onOffState",  		False, uiValue=uiValue)
+					if inverse:		dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+					else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+
+		except Exception as e:
+			self.exceptionHandler(40, e)
+			self.indiLOG.log(40, "{}".format(data))
+		return
+
+
+
 ###-------------------------------------------------------------------------####
 	def updateBLEiBSxxOneOnOff(self, dev, data, whichKeysToDisplay,pi):
 		try:
 			props = dev.pluginProps
-			if "onOffSetting" in props and props["onOffSetting"] == "on=green,off=grey":
-				inverse = False
-			else:
-				inverse = True
+			inverse = self.getpropForonOffTrueFalse(props)
+			uiValue = self.getpropForonOffText(props, data)
 
 			if data["onOff"]:
 				if not dev.states["onOffState"]:
-					uiValue = props.get("onOffui"+str(data["onOff"]), "on" if data["onOff"] else "off")
 					self.addToStatesUpdateDict(dev.id, "previousOnEvent", 	dev.states["currentOnEvent"])
 					self.addToStatesUpdateDict(dev.id, "currentOnEvent", 	datetime.datetime.now().strftime(_defaultDateStampFormat))
 					self.addToStatesUpdateDict(dev.id, "onOffState",  		True, uiValue=uiValue)
@@ -15439,7 +15446,6 @@ class Plugin(indigo.PluginBase):
 					else:			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
 			else:
-				uiValue = props.get("onOffui"+str(data["onOff"]), "on" if data["onOff"] else "off")
 				if dev.states["onOffState"]:
 					delayOff = float(props.get("delayOff", "0"))
 					# check if we want to keep the state = "ON" for some time instead of immediately going "off" if off received
@@ -17125,42 +17131,38 @@ class Plugin(indigo.PluginBase):
 ###-------------------------------------------------------------------------####
 	def checkForFastDown(self, mac, piMACSend, dev, props, rssi, fromPiU, newStates):
 		try:
-			updateSignal = False
-			piXX = "Pi_{:02d}".format(int(fromPiU))
-			# ???  if piXX+"_Signal" not in dev.states: updateSignal, newStates
+			if mac == piMACSend: return 
+			if rssi > -999: return 
 
-			if newStates["status"] == "up" and rssi == -999. and time.time() > self.currentlyBooting:	## check for fast down signal ==-999
-				if self.decideMyLog("CAR") and self.decideMyLog("BeaconData"): self.indiLOG.log(5,"testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, dev.states[piXX+"_Signal"], dev.states["status"]))
+			if newStates["status"] != "up" or rssi > -999. or time.time() < self.currentlyBooting:	 return ## check for fast down signal ==-999
 
-				newStates= self.addToStatesUpdateDict(dev.id,piXX+"_Signal", -999, newStates=newStates)
-				self.beacons[mac]["receivedSignals"][int(fromPiU)]["lastSignal"] = time.time() - 999
+			piI = int(fromPiU)
 
-				noneUp = []
-				for pixx in range(_GlobalConst_numberOfiBeaconRPI):
-					if ( time.time() - self.beacons[mac]["receivedSignals"][pixx]["lastSignal"] < 60 and
-						 dev.states["Pi_{:02d}_Signal".format(pixx)] > -999 ):
-						noneUp.append(pixx) #.append([pixx,time.time() - self.beacons[mac]["receivedSignals"][pixx]["lastSignal"] ])
+			if self.decideMyLog("CAR") and self.decideMyLog("BeaconData"): self.indiLOG.log(5,"testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, self.beacons[mac]["receivedSignals"][piI]["rssi"] , dev.states["status"]))
 
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG-999-1  - :{} -999 received, rpi still w signal:{}".format(mac, noneUp))
+			try:	fastDownTime = float(props.get("fastDown","-1"))
+			except: fastDownTime = -1.
+			if fastDownTime <=0: return 
 
-				if noneUp == []:
-					updateSignal = True
-					if mac != piMACSend: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)	# only for regluar ibeacons..
-					newStates = self.addToStatesUpdateDict(dev.id, "status", "down",newStates=newStates)
-					self.beacons[mac]["status"] = "down"
-					self.beacons[mac]["lastUp"] = -time.time()
-					newStates = self.addToStatesUpdateDict(dev.id, "closestRPI", -1,newStates=newStates)
-					if self.setClostestRPItextToBlank: newStates = newStates = self.addToStatesUpdateDict(dev.id, "closestRPIText", "",newStates=newStates)
-					if "showBeaconOnMap" in props and props["showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
-					if self.selectBeaconsLogTimer !={}:
-						for sMAC in self.selectBeaconsLogTimer:
-							if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-								self.indiLOG.log(10,"sel.beacon logging: newMSG-999-2  - :{};  set status to down\nnewStates:{}".format(mac, "{}".format(newStates).replace("\n","") ))
-					self.statusChanged = 12
-			return updateSignal, newStates
+			self.beacons[mac]["receivedSignals"][piI]["lastSignal"] = time.time() 
+			self.beacons[mac]["receivedSignals"][piI]["rssi"] = rssi
+
+			atLEastOneUp = []
+			for piyy in range(_GlobalConst_numberOfiBeaconRPI):
+				if piyy  == piI: continue
+				if ( time.time() - self.beacons[mac]["receivedSignals"][piyy]["lastSignal"] < fastDownTime and self.beacons[mac]["receivedSignals"][piyy]["rssi"]  != -999):
+					atLEastOneUp.append(piyy) 
+
+			if self.selectBeaconsLogTimer !={}:
+				for sMAC in self.selectBeaconsLogTimer:
+					if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
+						self.indiLOG.log(10,"sel.beacon logging: Fstdwn-999-1  - :{} -999 receivedfrom:{}, rpi(s) till w signal:{}".format(mac, fromPiU, atLEastOneUp))
+
+			if atLEastOneUp == []:
+				delayF = self.delayFastDownBy
+				piXX = "Pi_{:02d}".format(int(fromPiU))
+				self.delayedActions["data"].put( {"actionTime":time.time() + delayF,  "devId":dev.id, "updateItems":[ {"fastDown":{"mac":mac, "piSignal":piXX+"_Signal", "fastDownTime": fastDownTime, "delayF":delayF, "lastRpiWithSignal":dev.states["lastUpdateFromRPI"]}} ] })  
+			return 
 
 		except Exception as e:
 
@@ -17170,11 +17172,52 @@ class Plugin(indigo.PluginBase):
 				return
 			if e is not None	and "{}".format(e).find("not found in database") ==-1:
 				self.exceptionHandler(40, e)
-		return updateSignal, newStates
-
+		return 
 
 ###-------------------------------------------------------------------------####
-	def handleBeaconRealSignal(self, mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, updateSignal, dateString ):
+	def execDelaytedActionForFastDown(self, dev, actionItems):
+		try:
+			
+			mac = actionItems["mac"]
+			piSignal = actionItems["piSignal"]
+			fastDownTime = actionItems["fastDownTime"]
+			delayF = actionItems["delayF"]
+			lastRpiWithSignal = actionItems["lastRpiWithSignal"]
+			if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  check if execute fastDown, for dev:{}, mac:{}, fastDownTime:{:.1f}, dt-lastUp:{:.1f} > {:.1f}: {:1}, lastRpiWithSignal:{}".format(dev.name, mac, fastDownTime, time.time() - self.beacons[mac]["lastUp"],  delayF, time.time() - self.beacons[mac]["lastUp"] <= delayF, lastRpiWithSignal))
+			if self.beacons[mac]["status"]  == "up" and time.time() - self.beacons[mac]["lastUp"] < delayF: return 
+
+			self.addToStatesUpdateDict(dev.id,piSignal, -999)
+
+			if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  check if execute fastDown  -- yes".format())
+			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)	# only for regluar ibeacons..
+			self.addToStatesUpdateDict(dev.id, "status", "down")
+			self.beacons[mac]["status"] = "down"
+			self.beacons[mac]["lastUp"] = -time.time()
+
+			self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
+			self.addToStatesUpdateDict(dev.id, "closestRPI", -1)
+			if self.setClostestRPItextToBlank: 
+				self.addToStatesUpdateDict(dev.id, "closestRPITextLast", dev.states["closestRPI"])
+				self.addToStatesUpdateDict(dev.id, "closestRPIText", "")
+			props = dev.pluginProps
+			if "showBeaconOnMap" in props and props["showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
+			if self.selectBeaconsLogTimer !={}:
+				for sMAC in self.selectBeaconsLogTimer:
+					if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
+						self.indiLOG.log(10,"sel.beacon logging: Fstdwn-999-2  - :{} / {};  set status to down".format(dev.name, mac) )
+
+		except Exception as e:
+
+			if "{}".format(e).find("timeout waiting") > -1:
+				self.exceptionHandler(40, e)
+				self.indiLOG.log(40,"communication to indigo is interrupted")
+				return
+			if e is not None	and "{}".format(e).find("not found in database") ==-1:
+				self.exceptionHandler(40, e)
+		return 
+
+###-------------------------------------------------------------------------####
+	def handleBeaconRealSignal(self, mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, dateString ):
 
 		try:
 			fromPiI = int(fromPiU)
@@ -17258,6 +17301,8 @@ class Plugin(indigo.PluginBase):
 						newStates = self.addToStatesUpdateDict(dev.id, "closestRPI",     closestRPI,newStates=newStates)
 						newStates = self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName((closestRPI)),newStates=newStates)
 
+					newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
+
 				self.beacons[mac]["indigoId"] = dev.id
 				self.beacons[mac]["receivedSignals"][fromPiI]["rssi"]  = rssi
 				self.beacons[mac]["receivedSignals"][fromPiI]["lastSignal"]  = time.time()
@@ -17265,6 +17310,8 @@ class Plugin(indigo.PluginBase):
 
 				if self.beacons[mac]["receivedSignals"][fromPiI]["rssi"] != rssi+rssiOffset:
 					self.beacons[mac]["receivedSignals"][fromPiI] = {"rssi":rssi+rssiOffset, "lastSignal":time.time(), "distance":distCalc}
+
+			newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
 			return updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
 
 
@@ -18161,7 +18208,7 @@ class Plugin(indigo.PluginBase):
 
 				self.autoCreateCorrespondingSensorDev(mac, fromPiU, typeOfBeacon, msg)
 
-				updateSignal, newStates = self.checkForFastDown(mac, piMACSend, dev, props, rssi, fromPiU, newStates)
+				self.checkForFastDown(mac, piMACSend, dev, props, rssi, fromPiU, newStates)
 
 				# thsi enables better / faster location bounding to only specific room/ rpi
 				logTRUEfromSignal = False
@@ -18180,7 +18227,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-				updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds = self.handleBeaconRealSignal(mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, updateSignal, dateString )
+				updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds = self.handleBeaconRealSignal(mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, dateString )
 
 
 				if self.selectBeaconsLogTimer !={}:
@@ -18686,6 +18733,7 @@ class Plugin(indigo.PluginBase):
 				out["IndigoOrSocket"]				= self.IndigoOrSocket
 				out["passwordOfServer"]				= self.passwordOfServer
 				out["authentication"]				= self.authentication
+				out["apiKey"]						= self.apiKey
 				out["wifiEth"]						= self.wifiEth
 				out["myPiNumber"]					= piU
 				out["enableRebootCheck"]			= self.RPI[piU]["enableRebootCheck"]
@@ -19323,6 +19371,9 @@ class Plugin(indigo.PluginBase):
 									if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  OUTPUTswitchbotRelay-setParameters".format())
 									if dev.deviceTypeId in ["OUTPUTswitchbotRelay"]: ##,"OUTPUTswitchbotCurtain"]:
 										self.setSWITCHBOTBOTCALLBACKmenu({"outputDev":dev.id})
+
+								elif  "fastDown" in updateItem:
+									self.execDelaytedActionForFastDown(dev, updateItem["fastDown"])
 
 								elif "stateName" in updateItem:
 									if updateItem["stateName"] in dev.states:
@@ -20051,6 +20102,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.myLog( theText = " ========== Parameters START ================",															mType= "pi configuration")
 			self.myLog( theText = "data path used               {}" .format(self.indigoPreferencesPluginDir),								mType= "pi configuration")
+			self.myLog( theText = "path for Pi_IN_xx            {}" .format(self.iBeaconFolderVariableDataTransferVarsName),				mType= "pi configuration")
+			self.myLog( theText = "path for status variables    {}" .format(self.iBeaconFolderVariablesName),								mType= "pi configuration")
 			self.myLog( theText = "debugLevel Indigo            {}-" .format(self.debugLevel),												mType= "pi configuration")
 			self.myLog( theText = "debug which Pi#              {} " .format(self.debugRPI),												mType= "pi configuration")
 			self.myLog( theText = "maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get("maxSizeOfLogfileOnRPI", 10000000)),		mType= "pi configuration")

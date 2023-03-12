@@ -30,17 +30,8 @@
 		<Label>Suggest to create a folder eg iBecons_Good and move newly created beacons into this folder to separate new and existing beacons easily</Label>
 	</Field>
 
-   	<Field    id="iBeaconFolderVariableDataTransferVarsName"   type="textfield"  >
-		<Label>... VARIABLES folder for "pi_IN_x":</Label>
-	</Field>
-
-	<Field id="iBeaconFolderNameVariables_dataTransferVarsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>These variables are used if restfull communication RPI to plugin, not used if socket communication is used 
-These Variables are not needed by the user, but they need to exist, they go into this folder to not increase the list of real /useful variables in other folders</Label>
-	</Field>
-
    	<Field    id="iBeaconFolderVariablesName"   type="textfield" >
-		<Label>... VARIABLES folder:</Label>
+		<Label>... VARIABLES folder for status etc:</Label>
 	</Field>
 
 	<Field    id="ibeaconNameDefault"   type="textfield" >
@@ -212,24 +203,25 @@ All BEACONS, RPI, BLEconnect, and SENSORS device types have predefined groups an
 	</Field>
 
 	<Field id="myIpNumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>This information will be send to the RPI, then used by the RPI to connect to the indigo server</Label>
+		<Label>This information will be send to the RPI, then used by the RPI to connect to the indigo server
+with indigo 2022 it ist strongly recommened NOT to use std indigo webserver anymore. use the direct socket option</Label>
 	</Field>
 
 	<Field id="IndigoOrSocket"   type="menu"  tooltip="web server wil go through curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
 Socket communication will go directly through socket communication to plugin that updates the device states etc." >
 		<List>
-			<Option value="indigo" >use indigo std web server  </Option>
+			<Option value="indigo" >use indigo std web server - not recommended deprecating</Option>
 			<Option value="socket" >use direct socket communication </Option>
 		</List>    
-		<Label>use RPI to indigo web server or RPI to indigo through sockets:</Label> 
+		<Label>use RPI to indigo comm: web server(deprecating) or through socket(recommended):</Label> 
 	</Field>
 
 	<Field id="portOfServer"   type="textfield"  visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
-		<Label>define IP-PORT of default Indigo web server:</Label> 
+		<Label>define IP-PORT of default Indigo web server (RPI to Indigo 8176):</Label> 
 	</Field>
 
 	<Field id="indigoInputPORT"   type="textfield"   visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
-		<Label>define IP-PORT for socket communication RPI to Indigo:</Label> 
+		<Label>define IP-PORT for socket communication (RPI to Indigo):</Label> 
 	</Field>
 
 	<Field    id="checkRPIipForReject"   type="checkbox"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
@@ -265,39 +257,41 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 			<Option value="20000"   >msg GT 20 KB </Option>
 			<Option value="40000"   >msg GT 40 KB </Option>
 		</List>    
-		<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label> 
+		<Label>Compress large messages from RPI to plugin (only for socket comm):</Label> 
 	</Field>
 
 	<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>use if you have a slow connection ie wifi and large packages don't come through, can be set for each individual RPI in device edit</Label>
 	</Field>
 
-	<Field id="infoLabeluserID" type="label" fontSize="small" >
-		<Label>
-userID and passwords are used for 1. rpi to indigo comm when using curl AND 2. for making executables work under catalina, security type is used by RPI to indigo curl connection </Label>
-	</Field>
-   
-	<Field id="userIdOfServer"   type="textfield"  tooltip="only used for http connection to indigo" >
-		<Label>userid for indigo server (webserver):</Label> 
-	</Field>
-   
-	<Field id="passwordOfServer"   type="textfield"  tooltip="PI server need this to send msg to indigo webbserver, also used to make executable work under catalina" >
-		<Label>password for indigo (webserver):</Label> 
-	</Field>
-
-	<Field id="authentication"   type="menu"  tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
+	<Field id="authentication"   type="menu"  visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo"  tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
 		<List>
 			<Option value="digest" >use DIGEST  </Option>
 			<Option value="basic"  >use BASIC </Option>
+			<Option value="bearer" >use Bearer only with py3 on RPI</Option>
 			<Option value="none"   >use do not use security ie no userid or password </Option>
 		</List>    
-		<Label>DIGEST, BASIC or no  authentication:</Label> 
+		<Label>indigo web access authentication:</Label> 
 	</Field>
 
 
-	<Field id="infoLabel44" type="label">
-		<Label>
-EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
+	<Field id="apiKey"   type="textfield"  visibleBindingId="authentication" visibleBindingValue="bearer">
+		<Label>api key for http access to indigo:</Label> 
+	</Field>
+
+   
+	<Field id="userIdOfServer"   type="textfield"  visibleBindingId="authentication" visibleBindingValue="digest" tooltip="only used for http restful connection RPI to indigo" >
+		<Label>userid for indigo server (webserver):</Label> 
+	</Field>
+   
+	<Field id="passwordOfServer"   type="textfield"  visibleBindingId="authentication" visibleBindingValue="digest" tooltip="only used for http restful connection RPI to indigo"  >
+		<Label>password for indigo (webserver):</Label> 
+	</Field>
+
+
+	<Field id="simpleSeparator44" type="separator"/>
+	<Field id="infoLabel44" type="label" fontColor="green">
+		<Label>== EXPERT parameters for rPi server configurations, will be send to all rPi server</Label>
 	</Field>
 
 	<Field    id="rebootIfNoMessagesSeconds"   type="menu" tooltip="if no ibeacon messages reboot, BUT if you have only one RPI it might not receive an iBeacon signals as it does not see any other RPI tahts end iBeacon signals..">
