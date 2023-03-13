@@ -1,6 +1,6 @@
 Added features / changes in v2022.163.56@ 2023-03-13
-===================================================
-   
+==================================================
+
 1. added new dev type iTrack (Rinex,Vozni,Njoii,Musegear) BUTTON.
    iTrack types are regular beacon that can deliver battery info, can be beeped and can trigger any indigo action with the button press
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
