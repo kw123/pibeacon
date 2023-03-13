@@ -73,9 +73,11 @@ kDefaultPluginPrefs = {
 				"groupCountNameDefault":						"iBeacon_Count_",
 				"groupName0":									"Family",
 				"groupName1":									"Guests",
-				"groupName2":									"Guests",
+				"groupName2":									"Other1",
 				"groupName3":									"Other2",
 				"groupName4":									"Other3",
+				"groupName5":									"Other4",
+				"groupName6":									"Other5",
 				"ibeaconNameDefault":							"iBeacon_",
 				"SQLLoggingEnable":								"on-on",
 				"secToDown":									"80",
@@ -471,7 +473,7 @@ _GlobalConst_allowedpiSends = [
 	"updateParamsFTP", "updateBeaconParamsFTP", "updateAllFilesFTP", "updateAllAllFilesFTP", "rebootSSH", "resetOutputSSH", "shutdownSSH", "getStatsSSH", "initSSH", "upgradeOpSysSSH"]
 
 
-_GlobalConst_groupList = ["Family", "Guests", "Other1", "Other2", "Other3"]
+_GlobalConst_groupList = ["Family", "Guests", "Other1", "Other2", "Other3", "Other4", "Other5"]
 _GlobalConst_groupListDef = ["BEACON","PI","BLEconnect","SENSOR"]
 
 
@@ -1692,7 +1694,7 @@ class Plugin(indigo.PluginBase):
 			## check if we should do the group variable check now 
 			if time.time() - self.setGroupStatusNextCheck < 0 and self.statusChanged == 0: return 
 			if self.setGroupStatusNextCheck < 1: force = True
-			#self.indiLOG.log(10,"setGroupStatus at:{};   dt:{}, statusChanged:{}".format(datetime.datetime.now(), time.time() - self.setGroupStatusNextCheck, self.statusChanged ))
+			#self.indiLOG.log(20,"setGroupStatus at:{};   dt:{}, statusChanged:{}".format(datetime.datetime.now(), time.time() - self.setGroupStatusNextCheck, self.statusChanged ))
 
 
 			for group in  _GlobalConst_groupList+_GlobalConst_groupListDef:
@@ -1731,19 +1733,19 @@ class Plugin(indigo.PluginBase):
 						okList.append("{}".format(dev.id))
 
 				elif dev.pluginProps.get("isSensorDevice",False):
-								if "groupMember" in dev.states and len(dev.states["groupMember"]) < 3: 
-									self.addToStatesUpdateDict(dev.id, "groupMember","SENSOR")
+					if "groupMember" in dev.states and len(dev.states["groupMember"]) < 3: 
+						self.addToStatesUpdateDict(dev.id, "groupMember","SENSOR")
 
-								dt = (datetime.datetime.now() - dev.lastChanged).seconds
-								up = dt < self.awayWhenNochangeInSeconds
-								#self.indiLOG.log(10,"setGroupStatus1 {}, dt:{} , up:{}, self.awayWhenNochangeInSeconds:{}".format(dev.name, dt, up, self.awayWhenNochangeInSeconds))
-								if up:
-									self.groupStatusList["SENSOR"]["nHome"]	  +=1
-									triggerGroup[xx]["oneHome"]					= True
-								else:
-									triggerGroup[xx]["oneHome"]					= False
-									self.groupStatusList["SENSOR"]["nAway"]	  +=1
-								okList.append("{}".format(dev.id))
+					dt = (datetime.datetime.now() - dev.lastChanged).seconds
+					up = dt < self.awayWhenNochangeInSeconds
+					#self.indiLOG.log(10,"setGroupStatus1 {}, dt:{} , up:{}, self.awayWhenNochangeInSeconds:{}".format(dev.name, dt, up, self.awayWhenNochangeInSeconds))
+					if up:
+						self.groupStatusList["SENSOR"]["nHome"]	  +=1
+						triggerGroup["SENSOR"]["oneHome"]					= True
+					else:
+						triggerGroup["SENSOR"]["oneHome"]					= False
+						self.groupStatusList["SENSOR"]["nAway"]	  +=1
+					okList.append("{}".format(dev.id))
 
 				memberOfGroupsInState = dev.states["groupMember"].split("/")
 				usedMemberStates = ""
@@ -1766,10 +1768,12 @@ class Plugin(indigo.PluginBase):
 
 					if groupNameUsedForVar != "" and groupNameUsedForVar in memberOfGroupsInState:
 						self.groupStatusList[group]["members"]["{}".format(dev.id)] = dev.name
-						if dev.deviceTypeId in _GlobalConst_allowedSensors+_BLEsensorTypes:
+						if True:  #   or dev.deviceTypeId in _GlobalConst_allowedSensors+_BLEsensorTypes:
 							dt = (datetime.datetime.now() - dev.lastChanged).seconds
-							up = dt < self.awayWhenNochangeInSeconds
-							#self.indiLOG.log(10,"setGroupStatus2 {}, dt:{} , up:{}, self.awayWhenNochangeInSeconds:{}".format(dev.name, dt, up, self.awayWhenNochangeInSeconds))
+							if  "onOffState" in dev.states:
+								up = dev.states["onOffState"]
+							else:
+								up = dt < self.awayWhenNochangeInSeconds or "onOffState" 
 							if up:
 								if self.groupStatusList[group]["oneHome"] == "0":
 									triggerGroup[group]["oneHome"]			= True
@@ -1780,6 +1784,7 @@ class Plugin(indigo.PluginBase):
 									triggerGroup[group]["oneAway"]			= True
 								self.groupStatusList[group]["oneAway"]		= "1"
 								self.groupStatusList[group]["nAway"]		+=1
+							#if group =="Guests": self.indiLOG.log(20,"setGroupStatus2 {},  up:{}, nAway:{}, nHome:{}".format(dev.name, up, self.groupStatusList[group]["nAway"], self.groupStatusList[group]["nHome"]))
 
 
 			# remove old ones
@@ -1798,8 +1803,8 @@ class Plugin(indigo.PluginBase):
 
 			# now all home/ away 
 			for group in _GlobalConst_groupList+_GlobalConst_groupListDef:
-				#self.indiLOG.log(20,"setGroupStatus  group:{}, len(self.groupStatusList[group][members]:{}".format(group, len(self.groupStatusList[group]["members"])))
-				if self.groupStatusList[group]["nAway"] == len(self.groupStatusList[group]["members"]):
+				#if group =="Guests":self.indiLOG.log(20,"setGroupStatus  group:{}, len(self.groupStatusList[group][members]:{}".format(group, len(self.groupStatusList[group]["members"])))
+				if len(self.groupStatusList[group]["members"]) > 0 and self.groupStatusList[group]["nAway"] == len(self.groupStatusList[group]["members"]):
 					if self.groupStatusList[group]["allAway"] == "0":
 						triggerGroup[group]["allAway"] = True
 					self.groupStatusList[group]["allAway"]	  = "1"
@@ -1807,7 +1812,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					self.groupStatusList[group]["allAway"]	  = "0"
 
-				if self.groupStatusList[group]["nHome"] == len(self.groupStatusList[group]["members"]):
+				if len(self.groupStatusList[group]["members"]) > 0 and self.groupStatusList[group]["nHome"] == len(self.groupStatusList[group]["members"]):
 					if self.groupStatusList[group]["allHome"] == "0":
 						triggerGroup[group]["allHome"] = True
 					self.groupStatusList[group]["allHome"]	  = "1"
@@ -1820,7 +1825,7 @@ class Plugin(indigo.PluginBase):
 			#indigo.server.log("self.groupStatusList:{} ".format(self.groupStatusList))
 			for group in _GlobalConst_groupList+_GlobalConst_groupListDef:
 				groupNameUsedForVar = self.groupListUsedNames[group]
-				#self.indiLOG.log(20,"setGroupStatus  group:{}, groupNameUsedForVar:{}, len(self.groupStatusList[group][members]):{}".format(group, groupNameUsedForVar, len(self.groupStatusList[group]["members"])))
+				#if group =="Guests":self.indiLOG.log(20,"setGroupStatus  group:{}, groupNameUsedForVar:{}, len(self.groupStatusList[group][members]):{}, ".format(group, groupNameUsedForVar, len(self.groupStatusList[group]["members"])))
 				if len(groupNameUsedForVar) < 1: continue
 				if len(self.groupStatusList[group]["members"]) >0:
 					for tType in ["Home", "Away"]:
@@ -1832,7 +1837,7 @@ class Plugin(indigo.PluginBase):
 							indigo.variable.create(varName, "",self.iBeaconFolderVariablesName)
 							var = indigo.variables[varName]
 
-						#indigo.server.log("var:{} group:{}, gName:{} ".format(var.name, group, gName))
+						#if group =="Guests":self.indiLOG.log(20,"var:{} group:{}, gName:{}, value:{}".format(var.name, group, gName, self.groupStatusList[group][gName] ))
 						if var.value !=	 "{}".format(self.groupStatusList[group][gName]):
 							indigo.variable.updateValue(varName, "{}".format(self.groupStatusList[group][gName]))
 

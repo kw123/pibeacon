@@ -118,6 +118,14 @@ Define the group names below: !! No spaces in names!! </Label>
 		<Label>... name for COUNT-Group5(def Other3):</Label>
 	</Field>
 
+	<Field    id="groupName5"   type="textfield" >
+		<Label>... name for COUNT-Group6(def Other4):</Label>
+	</Field>
+
+	<Field    id="groupName6"   type="textfield" >
+		<Label>... name for COUNT-Group7(def Other5):</Label>
+	</Field>
+
 	<Field id="groupNameLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>The groups names will be used for variables and track /count totals of up / down  home / away states for all group members
 When you leave the name empty the variable will not be used / created, 
