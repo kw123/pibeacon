@@ -1,3 +1,10 @@
+Added features / changes in v2022.163.58@ 2023-03-15
+==================================================
+
+1. fixed some issues with new iTrack beacons. 
+
+
+
 Added features / changes in v2022.163.56@ 2023-03-13
 ==================================================
 

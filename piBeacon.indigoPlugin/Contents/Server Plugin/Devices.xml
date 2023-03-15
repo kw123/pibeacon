@@ -7494,6 +7494,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
+			<State id="devType">
+				<ValueType>String</ValueType>
+				<TriggerLabel>devType</TriggerLabel>
+				<ControlPageLabel>devType</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>
@@ -7510,7 +7515,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
-			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+			<Field id="isBLESensorDevic`e" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 

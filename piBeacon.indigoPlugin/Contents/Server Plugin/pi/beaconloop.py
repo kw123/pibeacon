@@ -789,6 +789,7 @@ def readParams(init=False):
 								BLEsensorMACs[mac][sensor]["lastUpdate"]				 	= time.time() - 50
 								BLEsensorMACs[mac][sensor]["lastUpdate1"]				 	= 0
 								BLEsensorMACs[mac][sensor]["lastUpdate2"]				 	= 0
+								BLEsensorMACs[mac][sensor]["lastUpdate3"]				 	= 0
 								BLEsensorMACs[mac][sensor]["SOS"]				 			= False
 								BLEsensorMACs[mac][sensor]["hum"]				 			= -100
 								BLEsensorMACs[mac][sensor]["Formaldehyde"]				 	= -100
@@ -804,6 +805,7 @@ def readParams(init=False):
 								BLEsensorMACs[mac][sensor]["onOff4"] 						= False
 								BLEsensorMACs[mac][sensor]["onOff5"] 						= False
 								BLEsensorMACs[mac][sensor]["onOff6"] 						= False
+								BLEsensorMACs[mac][sensor]["trigx"] 						= ""
 								BLEsensorMACs[mac][sensor]["alive"] 						= False
 								BLEsensorMACs[mac][sensor]["counter"] 						= "-1"
 								BLEsensorMACs[mac][sensor]["batteryVoltage"] 	 	 		= -1
@@ -3056,36 +3058,75 @@ def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
 	global BLEsensorMACs
 	global fastBLEReaction
+	global trackmacfile
 
 	try:
 		HexStr0 				= hexData[12:] # skip mac 
 		if len(HexStr0) < 40: 
 			return tx, "", UUID, Maj, Min, False
 
-		#01 23 45 67 890123456
-		#1B 02 01 05 030202180BFF4B4D30EC365E3FCADB64070969547261636BBC
-		#					  012345678901
+		# IGNORE APP OFF:
+		# 1B 02 01 05   03 02 02 18   0B FF 4B 4D 42 28 89 F9 A7 DD E2 65 
+		# 1B 02 01 06   03 02 02 18   0B FF 4B 4D 42 28 89 F9 A7 DD E2 66 070969547261636BBC
+		# 01 23 45 67   08 90 12 34   56 78 90 12 34 56 78 90 12 34 56 78 90 
+		#           x                             zy
+		# regular on / beep:
+		# 1B 02 01 05   03 02 02 18   0B FF 4B 4D 30 EC 36 5E 3F CA DB 64 070969547261636BBC
+		# regular off 
+		# 1B 02 01 06   03 02 02 18   0B FF 4B 4D 42 28 89 F9 A7 DD E2 65   07 09 69 54 72 61 63 6B C5
+		# 01 23 45 67   89 01 23 45   67 89 01 23 45 67 89 01 23 45 67 89 
+		#           x                             zy
+		#					 beep: x=5, y=0
+		# 					 normal off: x=5,6, y=2
+		#   				 back from app rule (a) 30+sec : x=5, y=2
+		#   				 back from app rule after (a) off : x=6, y=2
+		#   				z= 2,3,4,5,8 varying
+
+
 		infostart 			= 12 #EC365E3FCADB1B02   #  
 		HexStr				= hexData[infostart:]
-		#U.logger.log(20, "mac:{}  hex:{}, {}x{} ".format(mac, HexStr[0:17], HexStr[0:7], HexStr[8:17]))
 		if HexStr[2:7] 		!= "02010": 	return tx, "", UUID, Maj, Min, False 
 		if HexStr[8:17] 	!= "030202180":	return tx, "", UUID, Maj, Min, False 
+
+		if False and mac == "E1:FB:52:D7:CE:6C":
+			trackmacfile.write( "mac:{} {}, {}x{}, hex:{}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], HexStr[6:8], HexStr[24:26],  HexStr[0:30]))
 
 		UUID				= sensor
 		Maj					= "sensor"
 		devId				= BLEsensorMACs[mac][sensor]["devId"]
 		data   = {sensor:{devId:{}}}
-		if HexStr[6:8] == "05":	onOff = True
-		else:					onOff = False
+
+		if HexStr[6:8] == "05" and HexStr[24:25] != "0"and HexStr[25:26] == "0":	onOff = True
+		else:																		onOff = False
+
+		if  HexStr[24:25] != "0" and  HexStr[25:26] == "2":	stateOfBeacon = "command_finished"
+		else:												stateOfBeacon = "command_mode"
+
+		devType = HexStr[24:25] 
 
 		Trig 				= ""
-		if BLEsensorMACs[mac][sensor]["onOff"]  != onOff:	Trig = "onOff"
-		if BLEsensorMACs[mac][sensor]["lastUpdate1"] == 0:	Trig = "onOff"
+		if BLEsensorMACs[mac][sensor]["trigx"]  != stateOfBeacon:		Trig = "stateOfBeacon"
+		if BLEsensorMACs[mac][sensor]["onOff"]  != onOff:				Trig = "onOff"
+		if BLEsensorMACs[mac][sensor]["lastUpdate1"] == 0:				Trig = "onOff"
+
 		# check if we should send data to indigo
 		deltaTime 			= time.time() - BLEsensorMACs[mac][sensor]["lastUpdate"]
 		trigTime 			= deltaTime   > BLEsensorMACs[mac][sensor]["updateIndigoTiming"]  			# send min every xx secs
 		data[sensor][devId]["onOff"] =  onOff
+		data[sensor][devId]["stateOfBeacon"] =  stateOfBeacon
+		data[sensor][devId]["devType"] =  devType
 		#U.logger.log(20, "mac:{}  hex:{},   onOff:{},".format(mac, HexStr[0:16], onOff ))
+
+		if onOff:
+			if BLEsensorMACs[mac][sensor]["lastUpdate2"] == 0:
+				BLEsensorMACs[mac][sensor]["lastUpdate3"] 	= time.time()
+			BLEsensorMACs[mac][sensor]["lastUpdate2"] 	+=1
+			if False: trackmacfile.write("mac:{} {}, onOff:{:1}, count:{:3}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], onOff, BLEsensorMACs[mac][sensor]["lastUpdate2"]))
+		else:
+			if False and BLEsensorMACs[mac][sensor]["lastUpdate2"] !=0:
+				trackmacfile.write("mac:{} {}, onOff:{:1}, count:{:3}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], onOff, BLEsensorMACs[mac][sensor]["lastUpdate2"]))
+			BLEsensorMACs[mac][sensor]["lastUpdate2"] 	= 0
+
 
 		if  trigTime or Trig != "":
 			trig = Trig
@@ -3096,6 +3137,7 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 			BLEsensorMACs[mac][sensor]["lastUpdate"] 					= time.time()
 			BLEsensorMACs[mac][sensor]["lastUpdate1"] 					= time.time()
 			BLEsensorMACs[mac][sensor]["onOff"] 	 					= onOff#  = ALL OR JUST BUTTON 
+			BLEsensorMACs[mac][sensor]["trigx"] 	 					= stateOfBeacon#  = ALL OR JUST BUTTON 
 
 		return tx, "", sensor, mac, "sensor", False
 	except	Exception as e:
@@ -5710,10 +5752,13 @@ def execbeaconloop(test):
 	lastMSGwithGoodData = time.time()
 	startTimeOfBeaconloop = time.time()
 	lastTimeMAC = time.time()
-	trackmacfile = open("{}temp/trackmac".format(G.homeDir),"w",buffering=1)
+	
+
+	ff = "{}temp/trackmac".format(G.homeDir)
+	trackmacfile = open(ff,"a",buffering=1)
 	trackMacNumber	=  "xxxDB:CA:3F:5E:36:EC"
 	U.logger.log(20, "starting loop")
-	U.logger.log(30, "trackMacNumber:{}, to temp/trackmac".format(trackMacNumber))
+	U.logger.log(30, "trackMacNumber:{}  write to {}".format(trackMacNumber, ff))
 
 	try:
 				while True:
