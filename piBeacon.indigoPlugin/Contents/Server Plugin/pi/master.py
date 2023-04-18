@@ -652,11 +652,9 @@ def startProgam(pgm, params="", reason="", force=False):
 			if   pgm1 in G.python2SensorsMustDo: py = 2
 			elif pgm1 in G.python3SensorsMustDo: py = 3
 			elif usePython3 and ( pgm1 in G.python3Apps  or pgm1 in G.python3SensorsCanDo): py = 3
+			else: py = 2
 
-		if py == 3:
-			cmd = "sudo /usr/bin/python3 "+G.homeDir+pgm1+".py "+ params+" &"
-		else:
-			cmd = "sudo /usr/bin/python "+G.homeDir+pgm1+".py "+ params+" &"
+		cmd = "sudo /usr/bin/python{} {}.py {} &".format(py, G.homeDir+pgm1, params)
 
 		U.logger.log(30, ">>>> starting usePython3:{};  {:20s}, reason:{:10s};--  with cmd: {};".format(usePython3, pgm1, reason, cmd)  )
 		#U.logger.log(30, ">>>> : test:{}; {}; {}; {}; {}; ".format(pgm1 not in G.python2SensorsMustDo , G.python3SensorsMustDo , usePython3 , pgm1 in G.python3Apps , pgm1 in G.python3SensorsCanDo )  )

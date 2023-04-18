@@ -95,7 +95,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			}
 		},
 		"comment": "",
@@ -123,7 +123,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			}
 		},
 		"comment": "",
@@ -260,7 +260,7 @@
 				"random": "randomON",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 				"cmdON": [
@@ -270,6 +270,7 @@
 					"char-write-req 0x0010 02"
 				],
 				"cmdOff": [
+					"char-write-req 0x0010 00",
 					"char-write-req 0x0010 00"
 				],
 				"random": "randomON",
@@ -286,7 +287,79 @@
 		"sensorFunctions": "",
 		"sequence": 0,
 		"subType": {},
-		"text": "ITrack: Rinex,Vozni,Njoii,Musegear",
+		"text": "ITrack: Rinex,Njoii,Musegear",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Vozni_iTrack": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"gattcmd": ["char-read-uuid 2A19"]
+			},
+			"beep": {
+				"cmdON": [
+					"char-write-req 0x0034 0100",
+					"char-write-req 0x0039 0100",
+					"char-write-req 0x0043 A1A2A3A4",
+					"char-write-req 0x003D 02",
+					"char-write-cmd 0x0011 02"
+				],
+				"cmdOff": [
+					"char-write-cmd 0x0011 00"
+				],
+				"random": "public",
+				"type": "BLEconnect"
+			}
+		},
+		"comment": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-55",
+		"hexCode": "1X02010X030202180AFF4B4D02RMAC########",
+		"hexCode2": "",
+		"match": true,
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "Vozni - iTrack app",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"Pearl-ty": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"bits": 127,
+				"norm": 100,
+				"offset": 0,
+				"random": "public",
+				"shift": 0,
+				"type": "BLEconnect",
+				"gattcmd": ["char-read-uuid 2A19"]
+			}
+		},
+		"comment": "name Tag: 54 59 = TY",
+		"correspondingSensorType": "",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "1E03095459-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "TY - pearl",
 		"textForMenu": "",
 		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
 	},
@@ -310,6 +383,29 @@
 		"sequence": 0,
 		"subType": {},
 		"text": "Ink Bird Temp Pool 01B",
+		"textForMenu": "",
+		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
+	},
+	"ThermoBeacon": {
+		"Maj": "",
+		"Min": "",
+		"commands": {
+			"batteryLevel": {
+				"type": "msg"
+			}
+		},
+		"comment": "name Tag: tps= 54 68 65 72 6D 6F 42 65 61 63 6F 6E",
+		"correspondingSensorType": "BLEthermoBeacon",
+		"correspondingSwitchbotDevice": "",
+		"dBm": "-59",
+		"hexCode": "170D09546865726D6F426561636F6E-",
+		"hexCode2": "",
+		"pos": 0,
+		"posDelta": 0,
+		"sensorFunctions": "",
+		"sequence": 0,
+		"subType": {},
+		"text": "ThermoBeacon temp hum: ORIA, Brifit, Sensor Blue, ...",
 		"textForMenu": "",
 		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
 	},
@@ -512,7 +608,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 				"cmdON": [
@@ -550,7 +646,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 				"cmdON": [
@@ -606,7 +702,7 @@
 					              "random": "public",
 					              "shift": 0,
 					              "type": "BLEconnect",
-					              "uuid": "2A19"
+					              "gattcmd": ["char-read-uuid 2A19"]
 					    },
 					    "beep": {
 					              "cmdON": [
@@ -644,7 +740,7 @@
 					      "random": "randomON",
 					      "shift": 0,
 					      "type": "BLEconnect",
-					      "uuid": "2A19"
+					      "gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 					      "cmdON": [
@@ -675,7 +771,7 @@
 		"Maj": "",
 		"Min": "",
 		"commands": {
-			"batteryLevel": { "bits": 127, "norm": 100, "offset": 0, "random": "randomON", "shift": 0, "type": "BLEconnect", "uuid": "2A19"      },
+			"batteryLevel": { "bits": 127, "norm": 100, "offset": 0, "random": "randomON", "shift": 0, "type": "BLEconnect", "gattcmd": ["char-read-uuid 2A19"]      },
 			"beep": { "cmdON": [   "char-write-req 0x001B 04" ], "cmdOff": [   "char-write-req 0x001B 03" ], "random": "randomON", "type": "BLEconnect"      }
 		},
 		"comment": "check detect new beacons for 'UUID-FF : FD259000045'",
@@ -703,7 +799,7 @@
 				"random": "randomON",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 				"cmdON": [
@@ -821,7 +917,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			}
 		},
 		"comment": " mfg - 0A 09 09 73 61 66 65 64 6F 6D 65  safedome  73 61 66 65 64 6F 6D 65, other: 08 02 01 05 04 FF 4D 46 01",
@@ -867,7 +963,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 				"cmdON": [
@@ -923,7 +1019,7 @@
 				"random": "public",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			},
 			"beep": {
 				"cmdON": [
@@ -1225,49 +1321,6 @@
 		"textForMenu": "",
 		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
 	},
-	"Vozni_iTrack": {
-		"Maj": "",
-		"Min": "",
-		"commands": {
-			"batteryLevel": {
-				"bits": 127,
-				"norm": 100,
-				"offset": 0,
-				"random": "public",
-				"shift": 0,
-				"type": "BLEconnect",
-				"uuid": "2A19"
-			},
-			"beep": {
-				"cmdON": [
-					"char-write-req 0x0034 0100",
-					"char-write-req 0x0039 0100",
-					"char-write-req 0x0043 A1A2A3A4",
-					"char-write-req 0x003D 02",
-					"char-write-cmd 0x0011 02"
-				],
-				"cmdOff": [
-					"char-write-cmd 0x0011 00"
-				],
-				"random": "public",
-				"type": "BLEconnect"
-			}
-		},
-		"comment": "",
-		"correspondingSwitchbotDevice": "",
-		"dBm": "-55",
-		"hexCode": "1X02010X030202180AFF4B4D02RMAC########",
-		"hexCode2": "",
-		"match": true,
-		"pos": 0,
-		"posDelta": 0,
-		"sensorFunctions": "",
-		"sequence": 0,
-		"subType": {},
-		"text": "Vozni - iTrack app",
-		"textForMenu": "",
-		"useOnlyThisTagToAcceptBeaconMsgDefault": 0
-	},
 	"XY_1": {
 		"Maj": "",
 		"Min": "",
@@ -1463,7 +1516,7 @@
 				"random": "randomON",
 				"shift": 0,
 				"type": "BLEconnect",
-				"uuid": "2A19"
+				"gattcmd": ["char-read-uuid 2A19"]
 			}
 		},
 		"comment": "abeacon_ == 61 62 65 61 63 6f 6e 5f",

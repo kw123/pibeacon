@@ -359,8 +359,8 @@ def readParams():
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, distanceUnits
 	global oldRaw, lastRead
-	global acuracyDistanceMode, acuracyDistanceModeOld, xShutPin, i2cNumber, i2CseqNumber
-	global mode, modeOld
+	global acuracyDistanceMode, acuracyDistanceModeOld, xShutPin, i2cNumbers, i2CseqNumber
+	global mode, modeOld, waitIfNone, restartAfterNones
 	global firstRead
 	global tryReInitSensorCounter
 
@@ -401,13 +401,14 @@ def readParams():
 		if sensorUp != 0: # something has changed
 			if os.path.isfile(G.homeDir+"temp/"+sensor+".dat"):
 				os.remove(G.homeDir+"temp/"+sensor+".dat")
-				
+		
+		restartAfterNones ={}	
+		waitIfNone = {}	
 		deltaDist = {}
 		deltaDistAbs = {}
 		acuracyDistanceMode = {}
 		mode = {}
 		xShutPin = {}
-		i2cNumber = {}
 		i2CseqNumber = 0
 		for devId in sensors[sensor]:
 
@@ -418,6 +419,12 @@ def readParams():
 			except:
 				display = False	
 
+
+			try:	waitIfNone[devId] = float(sensors[sensor][devId].get("waitIfNone",10))
+			except: waitIfNone[devId] = 1
+
+			try:	restartAfterNones[devId] = int(sensors[sensor][devId].get("restartAfterNones",10))
+			except: restartAfterNones[devId] = 10
 
 			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100.
 			except: deltaDist[devId] = 0.1
@@ -450,7 +457,7 @@ def readParams():
 
 			U.readDistanceSensor(devId, sensors, sensor)
 
-		if sensorUp == 1:
+		if sensorUp == 1 or i2cNumbers == {}:
 			startSensor()
 				
 		if sensorUp == -1:
@@ -487,8 +494,8 @@ def reInitSensor(devId, reason):
 #################################
 def startSensor():
 	global mode, modeOld
-	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, xShutPin, i2cNumber, i2c, i2CseqNumber, deltaDist
-	global i2cChannelsActive, lastI2cCheck
+	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, xShutPin, i2cNumbers, i2c, i2CseqNumber, deltaDist
+	global i2cChannelsActive, lastI2cCheck, nonesInArow
 	try:
 		if i2c == "":
 			i2c = busio.I2C(board.SCL, board.SDA)
@@ -497,36 +504,38 @@ def startSensor():
 		runningI2C = i2CseqNumber
 		sleepBetween  = 0
 		for devId in deltaDist:
+			nonesInArow[devId]	= 0
 			sensCl[devId] = ""
 			if devId in xShutPin and xShutPin[devId] > -1:
 				GPIO.setup(xShutPin[devId], GPIO.OUT)
 				U.logger.log(20,"switching off devId:{}, xShutPin:{}".format(devId, xShutPin[devId]))
 				GPIO.output(xShutPin[devId], False)
 				sleepBetween  = 0.5
-		
+	
+		i2cNumbers = {}
 		time.sleep(sleepBetween)
 		for devId in deltaDist:
-			i2cNumber[devId] = 0x29
+			i2cNumbers[devId] = 0x29
 			for kkkk in range(2):
 				if i2CseqNumber > 0:
 					if devId in xShutPin and xShutPin[devId] > -1:
 						runningI2C -= 1  # STARTING FROM HIGH NUMBER DOWN TO 0X29
-						i2cNumber[devId] = runningI2C+0x29
+						i2cNumbers[devId] = runningI2C+0x29
 						GPIO.output(xShutPin[devId], 1)
 						U.logger.log(20,"switching ON devId:{}, xShutPin:{:} done".format(devId, xShutPin[devId]))
 						time.sleep(0.1)
 					else:
 						runningI2C -= 1
-						i2cNumber[devId] = 0x29
+						i2cNumbers[devId] = 0x29
 				else:
-						i2cNumber[devId] = 0x29
+						i2cNumbers[devId] = 0x29
 
 				try:
 					U.logger.log(20, "==== setting up sensor class xshut for devid:{}, xShutPin:{} i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
 					sensCl[devId] = VL53L1X(i2c)
 				except	Exception as e:
 					U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-					if not checkI2cNPresent(i2cNumber[devId]):
+					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
 					U.restartMyself(reason="error starting sensor ", delay = 2,doPrint=True, doRestartCount=False)
 					runningI2C += 1 
@@ -550,12 +559,12 @@ def startSensor():
 				U.logger.log(20, "==== setting  i2c:0x{:x}".format(runningI2C + 0x29))
 				sensCl[devId].set_address(runningI2C + 0x29) 
 
-			if not checkI2cNPresent(i2cNumber[devId]):
-				U.logger.log(20, "i2cNumber[devId]:{} not in active i2cchannels:{}".format(i2cNumber[devId], i2cChannelsActive))
+			if not checkI2cNPresent(i2cNumbers[devId]):
+				U.logger.log(20, "i2cNumbers[devId]:{} not in active i2cchannels:{}".format(i2cNumbers[devId], i2cChannelsActive))
 
 
 			model_id, module_type, mask_rev = sensCl[devId].model_info
-			U.logger.log(20, "==== ranging started ==== devId:{}, i2c#:{}.. model:{}, type:{}, mask:{}, distance_mode:{}, timing_budget:{}".format( devId, runningI2C, model_id, module_type, mask_rev, sensCl[devId].distance_mode, sensCl[devId].timing_budget))
+			U.logger.log(20, "==== ranging started ==== devId:{}, runningI2C#:{}, i2cNumbers:{}, model:{}, type:{}, mask:{}, distance_mode:{}, timing_budget:{}".format( devId, runningI2C, i2cNumbers, model_id, module_type, mask_rev, sensCl[devId].distance_mode, sensCl[devId].timing_budget))
 			if True:
 				for ii in range(2):
 					try: sensCl[devId].start_ranging()
@@ -567,7 +576,7 @@ def startSensor():
 
 	except	Exception as e:
 			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-			if not checkI2cNPresent(i2cNumber[devId]):
+			if not checkI2cNPresent(i2cNumbers[devId]):
 				time.sleep(5)
 	U.restartMyself(reason="connection to sensor is hanging at startSensor ", delay = 10,doPrint=True, doRestartCount=False)
 
@@ -585,11 +594,11 @@ def checkI2cOnline():
 
 
 #################################
-def checkI2cNPresent(i2cNumber):
+def checkI2cNPresent(i2cN):
 	global i2cChannelsActive, lastI2cCheck
 	try:
-		if i2cNumber in i2cChannelsActive: return True
-		U.logger.log(20, "i2cNumber[devId]:{} not in active i2cchannels:{}".format(i2cNumber, i2cChannelsActive))
+		if i2cN in i2cChannelsActive: return True
+		U.logger.log(20, "i2cNumbers[devId]:{} not in active i2cchannels:{}".format(i2cN, i2cChannelsActive))
 		lastI2cCheck = time.time() -100
 	except	Exception as e:
 			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -620,17 +629,23 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 def getDistance(devId):
 	global sensor, sensors, badSensor
 	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl
-	global mode, modeOld, i2cNumber
+	global mode, modeOld, i2cNumbers, waitIfNone, restartAfterNones, nonesInArow
 	global i2cChannelsActive, lastI2cCheck
 
 	try:
 		if devId not in sensCl:
+			U.restartMyself(reason="bad devId:{}, not in sensCl,  setup is screwd up, restarting to fix ".format(devId), delay = 10,doPrint=True, doRestartCount=False)
 			return ""
 
 		if modeOld[devId] != mode[devId]:
 			sensCl[devId].distance_mode = mode[devId] 
 		if acuracyDistanceModeOld[devId] != acuracyDistanceMode[devId]:
 			sensCl[devId].timing_budget = acuracyDistanceMode[devId]
+
+		if devId not in i2cNumbers:
+			U.restartMyself(reason="bad devId:{}, not in i2cNumbers:{},  setup is screwd up, restarting to fix ".format(devId, i2cNumbers), delay = 10,doPrint=True, doRestartCount=False)
+			return ""
+
 
 		modeOld[devId] = mode[devId]
 		acuracyDistanceModeOld[devId] = acuracyDistanceMode[devId]
@@ -643,14 +658,14 @@ def getDistance(devId):
 		result	= ""
 
 		sleepbetweenReads =max(float(acuracyDistanceMode[devId])/1000.,0.05)
-		tries	= 1
+		tries	= 4
 		for nTry in range(tries):
 			if nTry > 0: 	
 				time.sleep(0.1)
-				try:	sensCl[devId].clear_interrupt()
+				try:	pass# sensCl[devId].clear_interrupt()
 				except Exception as e:
 					U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-					if not checkI2cNPresent(i2cNumber[devId]):
+					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
 						return "badi2c"
 			try:		
@@ -663,8 +678,10 @@ def getDistance(devId):
 							break
 					except: 
 						if devId in xShutPin and xShutPin[devId] > -1:
+							GPIO.output(xShutPin[devId], 0)
+							time.sleep(0.2)
 							GPIO.output(xShutPin[devId], 1)
-						#U.logger.log(20, "==== err data ready")
+							time.sleep(0.2)
 						pass
 						#time.sleep(1)
 
@@ -681,15 +698,19 @@ def getDistance(devId):
 					time.sleep(sleepbetweenReads)
 					sensCl[devId].stop_ranging()
 				except Exception as e:
-					U.logger.log(20, "==== err distance")
-					if not checkI2cNPresent(i2cNumber[devId]):
+					U.logger.log(20, "==== err distance for devId:{}".format(devId))
+					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
 						return "badi2c"
 					continue
 				
 				if dist is None:  
+					nonesInArow[devId] +=1
+					if nonesInArow[devId]  >= restartAfterNones[devId]:
+						U.restartMyself(reason="devId:{}, too many continous none reads: {}".format(devId, nonesInArow[devId]), delay = 0,doPrint=True, doRestartCount=False)
 					dist = 999
-					if not checkI2cNPresent(i2cNumber[devId]):
+					time.sleep(waitIfNone[devId]) # give it a little time 
+					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
 						return "badi2c"
 
@@ -698,12 +719,29 @@ def getDistance(devId):
 				if MAX < dist: MAX = dist
 				if MIN > dist: MIN = dist
 				good += 1
+
+				# one good is fine take it 
+				if dist < 999: 
+					if good > 1: 
+						res = [dist]
+						good = 1
+					break
+
+
+
+				#2 good are fine if close
+				if good == 2 and abs(res[0]-res[1])/max(1,res[0]+res[1]) < 0.05: break
+				# 3 good are fine 
 				if good == 3: break
 
 			except  Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				U.logger.log(20, "bad sensor idr:{}, tries:{}; badSensor:{}, res:{}".format(idr, nTry,badSensor,  res))
-				if not checkI2cNPresent(i2cNumber[devId]):
+				U.logger.log(20, "bad sensor devId:{}, idr:{}, tries:{}; badSensor:{}, res:{}, i2cNumbers:{}.".format(devId, idr, nTry,badSensor,  res, i2cNumbers))
+
+				if devId not in i2cNumbers:
+					U.restartMyself(reason="bad devId:{}, setup is screwd up, restarting to fix ".format(devId), delay = 10,doPrint=True, doRestartCount=False)
+
+				if not checkI2cNPresent(i2cNumbers[devId]):
 					time.sleep(5)
 					return "badi2c"
 				sensCl[devId].clear_interrupt()
@@ -751,7 +789,7 @@ def getDistance(devId):
 
 	except  Exception as e:
 			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-			if not checkI2cNPresent(i2cNumber[devId]):
+			if not checkI2cNPresent(i2cNumbers[devId]):
 				time.sleep(5)
 				return "badi2c"
 	return ""		
@@ -776,8 +814,11 @@ def execVL503I1():
 	global firstRead
 	global tryReInitSensorCounter, maxReInitSensorMaxTries
 	global i2cChannelsActive, lastI2cCheck
+	global i2cNumbers, waitIfNone, nonesInArow
 
-
+	i2cNumbers					= {}
+	waitIfNone					= {}
+	nonesInArow					= {}
 	sensorRestarts				= 0
 	i2cChannelsActive			= []
 	tryReInitSensorCounter		= {}
@@ -899,14 +940,14 @@ def execVL503I1():
 					deltaN = deltaA / max (0.5,(dist+lastDist[devId])/2.)
 					regionEvents = U.doActionDistance(dist, speed, devId)
 
-					#U.logger.log(20, "devId{}; dist {}".format(devId, dist ) )	
+					#U.logger.log(20, "devId{}; dist {}, regionEvents:{}".format(devId, dist, regionEvents) )	
 					trigDD 	= deltaN > deltaDist[devId]
 					trigDDa	= deltaA > deltaDistAbs[devId]
 					trigDT	= tt - sendEvery > lastTime[devId]	
 					trigQi	= quick
 					#U.logger.log(20, "dd{}, da:{},dT:{}, reg:{}".format(trigDD, trigDDa, trigDT, changeRegion) )	
-					if devId in i2cNumber: 	i2cText= "0x{:x}".format(i2cNumber[devId])
-					else:					i2cText = "off"
+					if devId in i2cNumbers: 	i2cText= "0x{:x}".format(i2cNumbers[devId])
+					else:						i2cText = "off"
 					if ( trigDD and trigDDa ) or trigDT or trigQi or regionEvents[2]: 
 								trig = ""
 								if trigDD or trigDDa:		trig +="Dist;"

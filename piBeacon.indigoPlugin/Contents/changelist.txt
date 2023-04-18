@@ -1,4 +1,130 @@
-Added features / changes in v2022.163.58@ 2023-03-15
+Added features / changes in v2022.165.69@ 2023-04-01
+==================================================
+
+
+1. added support for thermobeacons. They are bluetooth temperature & humidity sensors w and w/o display
+   they are sold under various brands like sensorBlue etc.
+
+2. added some states to itrack button:
+   state of beacon
+   current and  last off event time stamp
+
+3. for BLE-sensor devcies added pluginProp beaconDevId that is the corresponding beacon device to the sensor device
+    eg for on off BLE sensor device like iTrack it has a corresponding beacon device that has the same MAC number
+    this can be used in triggers etc to find which device triggered
+
+4. added variables:
+    lastButtonOnDevId         this is the device id of an on/off BLE sensor device that was off-> on 
+    lastButtonOnBeaconDevId   this is the corresponding dev id for the beacon device
+    this can be used eg after receiving an On event from an iTrack sensor on/off device to send a message to the beacon to make it beep or get battery level
+    like so in an action script:
+
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+# this action: 
+# calls actiongroup to open door, but not more often than every 10 secs
+# then send get battery command to rpi # 999 (closeset)  for corresponding beacon that triggered the button
+# it has 3 lists of triggering devices, will do something else for group B, C
+#
+
+
+## this is the list of on/off button BLE devices that could have triggerd this action
+# we have 2 lists, different actions for A and B
+# you can use names or variables
+devListA = ["button-musegear-1", "button-musegear-2", ]
+devListB = [ "button-musegear-H",  ]
+devListC = [ "button2"]
+
+# if you want to use Ids
+#devListA = [123,23524,56745,457457 ]
+#devListB = [2453456,6475789,231234124]
+#devListC = [2453456,6475789,231234124]
+
+beep = True
+getBattery = True
+
+import time
+
+# is everything running?:
+try:
+	plug = indigo.server.getPlugin("com.karlwachs.piBeacon")
+except:
+	indigo.server.log("plugin not running")
+	return
+if not plug.isEnabled(): 
+	indigo.server.log("plugin not running")
+	return 
+
+# get device that triggered this action:
+try:
+	triggerDevId = indigo.variables["lastButtonOnDevId"].value
+	triggerDev = indigo.devices[int(triggerDevId)]
+except:
+	indigo.server.log("variable lastButtonOnDevId:{}  not correct".format(triggerDevId))
+	return
+
+if type(devListA[0]) == type(1):
+	useTag = triggerDev.id
+else:
+	useTag = triggerDev.name
+
+
+if useTag not in devListA + devListB + devListC:
+	indigo.server.log("trigger device {} not in defined groups".format(triggerDev.name))
+	return 
+
+
+# action for A list
+if useTag in devListA or useTag in devListB:
+	# get / setup last time stamp variable of last action for this action
+	try:
+		var = indigo.variables["lastDoorOpen"].value
+	except: 	
+		indigo.variable.create("lastDoorOpen","0")
+		var = indigo.variables["lastDoorOpen"].value
+	lastOpen = float(var)
+
+	if time.time() - lastOpen > 10: # too early for this action?
+		indigo.actionGroup.execute("press door unlock button action")  # use your action here 
+		indigo.variable.updateValue("lastDoorOpen", value="{:.0f}".format(time.time())) # remember last action in variable
+	else: # skip
+		indigo.server.log("skipping open door, last open door event was {:.0f} secs ago".format(time.time()-lastOpen))
+		return 
+
+	# now next action, beep and get battery level
+	beacondevID = indigo.variables["lastButtonOnBeaconDevId"].value
+	try:
+		beaconDev = indigo.devices[int(beacondevID)]
+	except:
+		indigo.server.log("beacon {}  not defined in indigo".format(beacondevID))
+		return 
+
+	if beep:	# server =-1: use closest, beepTime =-1: only beep off, >0 = beep 
+		plug.executeAction("beepBeacon", props ={"piServerNumber":"-1","selectbeacon": beacondevID,"beepTime":"1"})
+		indigo.server.log("sending beep to dev:{}".format(beaconDev.name))
+	if getBattery:	# must "set get battery mode" to interactive in config							
+		indigo.server.log("sending get battery to dev:{}".format(beaconDev.name)) 
+		# all = use closest RPI, startAtDateTime set delay of start for command, 0 should work fine 
+		plug.executeAction("getONEiBeaconParameters", props ={"piServerNumber":"all","devIdOfBeacon": beacondevID, "startAtDateTime":0})
+
+# action for C list do beep and then 9 sec ater get battery level
+if useTag in devListC:
+		beacondevID = indigo.variables["lastButtonOnBeaconDevId"].value
+		beaconDev = indigo.devices[int(beacondevID)]
+		plug.executeAction("beepBeacon", props ={"piServerNumber":"-1","selectbeacon": beacondevID,"beepTime":"1"})
+		plug.executeAction("getONEiBeaconParameters", props ={"piServerNumber":"all","devIdOfBeacon": beacondevID, "startAtDateTime":0})
+
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+
+
+
+
+
+
+Added features / changes in v2022.163.59@ 2023-03-15
 ==================================================
 
 1. fixed some issues with new iTrack beacons. 

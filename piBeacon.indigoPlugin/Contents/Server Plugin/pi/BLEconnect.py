@@ -157,18 +157,22 @@ def startHCI():
 			time.sleep(5)
 			exit()
 
-		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, defaultBus, doNotUseHCI, BusUsedByBeaconloop))
 		useHCI,  myBLEmac, BLEid, bus = U.selectHCI(HCIs["hci"], G.BLEconnectUseHCINo, defaultBus, doNotUseHCI=doNotUseHCI)
+		U.logger.log(20, "BLE(long)connect: BLEconnectUseHCINo-bus: {}; useHCI:{}, len(HCIs):{}, BLEid:{}, default:{}, HCIUsedByBeaconloop:{}; BusUsedByBeaconloop:{}".format(G.BLEconnectUseHCINo, useHCI, len(HCIs["hci"]), BLEid, defaultBus, doNotUseHCI, BusUsedByBeaconloop))
 
 		if len(HCIs["hci"]) >= 2:
 			if BLEid >= 0:
 				if len(HCIs["hci"]) > 2:
 					useHCI2,  myBLEmac2, BLEid2, bus2 = U.selectHCI(HCIs["hci"], "", "", doNotUseHCI=doNotUseHCI, doNotUseHCI2=useHCI)
 					if BLEid2 >= 0:
+						U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
 						return useHCI,  myBLEmac, BLEid, bus, useHCI2  
 
+				U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
 				U.logger.log(20, "BLE(long)connect: using mac:{};  useHCI: {}; bus: {}; mode: {} searching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
 				return 	useHCI,  myBLEmac, BLEid, bus, useHCI
+
+
 			else:
 				text = "BLEconnect: BLE STACK is not UP HCI-info: useHCI:{},  myBLEmac:{}, BLEid:{}, \n{}".format(useHCI,  myBLEmac, BLEid, HCIs)
 				U.logger.log(20, text)
@@ -2115,7 +2119,7 @@ def execBLEconnect():
 
 	useHCI, myBLEmac, BLEid, bus, useHCI2 = startHCI()
 	text = "{}-{}-{}".format(useHCI, bus, myBLEmac)
-	U.sendURL( data={"data":{"hciInfo":text}}, squeeze=False, wait=False )
+	U.sendURL( data={"data":{"hciInfo_BLEconnect":text}}, squeeze=False, wait=False )
 
 	tlastQuick = time.time()
 

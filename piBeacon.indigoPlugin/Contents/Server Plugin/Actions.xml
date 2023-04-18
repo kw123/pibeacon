@@ -3809,6 +3809,17 @@ this will pause the sensor, will just sleep, but any other action already initat
 			   <Label>select rPi to use for query, use ALL for optimized distribution</Label>
 			    <List class="self" filter="" method="filterPiBLE" dynamicReload="false"/>
 			 </Field>
+			<Field id="beepTime" type="menu" defaultValue="0">
+				<Label>do a beep before battery cmd</Label>
+				<List>
+					<Option value= "-1">no beep</Option>
+					<Option value="0"> beep off cmd, does a wakeup of beacon</Option>
+					<Option value="1">1 sec beep</Option>
+					<Option value="2">2 sec beep</Option>
+					<Option value="3">3 sec beep</Option>
+					<Option value="5">5 sec beep</Option>
+				</List>
+			</Field>
 			 <Field id="devIdOfBeacon"   type="menu" defaultValue=""  >
 			    <Label>select one/all beacon(s) from list</Label>
 			    <List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false"/>
@@ -3834,14 +3845,17 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 
 			 <Field id="beepTime"   type="menu" defaultValue="-1" tooltip="" >
 			  <List>
-					<Option value= "-1">off</Option>
+					<Option value= "-1">send only beep off command</Option>
 					<Option value= "1" >1 sec</Option>
 					<Option value= "2" >2 sec</Option>
 					<Option value= "3" >3 sec</Option>
 					<Option value= "4" >4 sec</Option>
 					<Option value= "5" >5 sec</Option>
 					<Option value= "7" >7 sec</Option>
+					<Option value= "8" >8 sec</Option>
+					<Option value= "9" >9 sec</Option>
 					<Option value= "10" >10 sec</Option>
+					<Option value= "12" >12 sec</Option>
 					<Option value= "15" >15 sec</Option>
 					<Option value= "20" >20 sec</Option>
 					<Option value= "25" >25 sec</Option>

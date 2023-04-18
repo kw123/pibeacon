@@ -718,7 +718,7 @@ def readParams():
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, distanceUnits
 	global oldRaw, lastRead
-	global acuracyDistanceMode, acuracyDistanceModeOld, xShutPin, i2cNumber, i2CseqNumber
+	global acuracyDistanceMode, acuracyDistanceModeOld, xShutPin, i2cNumber, i2CseqNumber, waitIfNone
 	global firstRead
 	try:
 
@@ -755,6 +755,8 @@ def readParams():
 		if sensorUp != 0: # something has changed
 			if os.path.isfile(G.homeDir+"temp/"+sensor+".dat"):
 				os.remove(G.homeDir+"temp/"+sensor+".dat")
+
+		waitIfNone = {}	
 		deltaDist = {}
 		deltaDistAbs = {}
 		acuracyDistanceMode = {}
@@ -769,6 +771,10 @@ def readParams():
 					displayEnable = sensors[sensor][devId]["displayEnable"]
 			except:
 				display = False	
+
+
+			try:	waitIfNone[devId] = float(sensors[sensor][devId].get("waitIfNone",10))
+			except: waitIfNone[devId] = 1
 
 
 			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100.
@@ -882,7 +888,7 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 def getDist(devId):
 	global sensor, sensors, badSensor, sensCl
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-	global acuracyDistanceMode, acuracyDistanceModeOld
+	global acuracyDistanceMode, acuracyDistanceModeOld, 
 
 	try:
 		if acuracyDistanceModeOld != acuracyDistanceMode:
@@ -893,6 +899,7 @@ def getDist(devId):
 		dist = sensCl[devId].getdistanceCM()
 
 		if dist > 0:
+			time.sleep(waitIfNone[devId])
 			return dist
 
 		badSensor +=1
@@ -911,12 +918,12 @@ global output, authentication, badSensor
 global distanceUnits, sensorActive
 global oldRaw, lastRead
 global badSensor, lastDist
-global aliveTimeStamp, loopSleep
+global aliveTimeStamp, loopSleep, waitIfNone
 global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, lastCycle, i2c, xShutPin
 global firstRead
 
 firstRead					= True
-
+waitIfNone					= {}
 
 i2c							= ""
 sensCl						= {}

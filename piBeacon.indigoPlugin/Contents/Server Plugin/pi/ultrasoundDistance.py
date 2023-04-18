@@ -258,7 +258,7 @@ mode						= 0
 display						= "0"
 output						= {}
 delta						= 0
-sendEvery					= 30.
+sendEvery					= 55. # send at least every xx secs msg to indigo even if no trigger
 U.setLogging()
 
 readParams()

@@ -355,10 +355,8 @@ def execCMDS(next):
 			#U.logger.log(20,"{:.2f} next command: {}".format(time.time(), next))
 			cmd = next["command"]
 
-			for cc in next:
-				if cc == "startAtDateTime":
-					next["startAtDateTime"] = time.time() + next["startAtDateTime"]
-				
+
+			delayStart = min(1000000, max(0,U.calcStartTime(next,"startAtDateTime")-time.time()))
 
 
 			if "restoreAfterBoot" in next:
@@ -393,6 +391,10 @@ def execCMDS(next):
 
 
 			if cmd == "getBeaconParameters":
+				if delayStart > 0 and delayStart < 10000000: 
+					U.logger.log(20,"{:.2f} delay start by: {}".format(time.time(), delayStart))
+					if sleepForxSecs(delayStart):
+						return 
 				try:
 						U.logger.log(20, u"execcmd. getBeaconParameters, write: ={}".format(next["device"]))
 						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
@@ -404,8 +406,12 @@ def execCMDS(next):
 
 
 			if cmd == "beepBeacon":
+				if delayStart > 0 and delayStart < 10000000: 
+					U.logger.log(20,"{:.2f} delay start by: {}".format(time.time(), delayStart))
+					if sleepForxSecs(delayStart):
+						return 
 				try:
-						U.logger.log(20, u"execcmd. beep, write: ={}".format(next["device"]))
+						U.logger.log(20, u"execcmd. beep, write: ={}".format(str(next["device"])[:20]))
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
 						f.write(next["device"]+"\n") 
 						f.close()
@@ -416,7 +422,7 @@ def execCMDS(next):
 
 			if cmd == "updateTimeAndZone":
 				try:
-						U.logger.log(20, u"execcmd. updateTimeAndZone, write: ={}".format(next["device"]))
+						U.logger.log(20, u"execcmd. updateTimeAndZone, write: ={}".format(str(next["device"])[:20]))
 						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
 						f.write(next["device"]+"\n") 
 						f.close()
@@ -824,6 +830,7 @@ def setupexecThreads(next):
 
 		out = "{}".format(next)
 		ll = min(len(out),100)
+		#U.logger.log(20,"thread started: {}, command:{} ".format(threadName, out))
 		U.logger.log(20,"thread started: {}, command:{} ... {}".format(threadName, out[:ll], out[-ll:] ))
 
 		return True

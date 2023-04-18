@@ -19,6 +19,8 @@ class MAP2Vendor:
 	########################################
 	def __init__(self, pathToMACFiles = "", refreshFromIeeAfterDays = 10, myLogger = ""):
 
+
+		self.lastFinishedMessage = 0
 		self.myLogger = myLogger
 		self.myLogger(10, u"MAP2Vendor initializing with python v:{}".format(sys.version_info[0]))
 
@@ -111,7 +113,9 @@ class MAP2Vendor:
 						return False
 
 				self.mac2VendorDict = test
-				self.myLogger(10,u"MAP2Vendor initializing  finished, read from mac2Vendor.json file")
+				if time.time() - self.lastFinishedMessage >1:
+					self.myLogger(10,u"MAP2Vendor initializing  finished, read from mac2Vendor.json file")
+				self.lastFinishedMessage  = time.time()
 				return True
 			
 			if not ( self.isFileCurrent("oui") or

@@ -412,6 +412,8 @@ def doActionDistance(distance, speed, devId):
 		if distance == "":					return "","",False
 		if speed == "": 					return "","",False
 
+		if debugDistance: logger.log(20, "in  dist:{:6.1f}, speed:{:8.1f}, oldRegion:{:}, oldStop:{:}".format(
+				distance, speed, oldRegion[devId], oldStop[devId]) )	
 		previousRegion	= oldRegion[devId] 
 		previousStop	= oldStop[devId] 
 
@@ -441,11 +443,14 @@ def doActionDistance(distance, speed, devId):
 			oldStop[devId] = "" 
 
 		oldSpeed[devId] = speed
+		if debugDistance: logger.log(20, "in  dist:{:6.1f}, speed:{:8.1f}, oldRegion:{:}, oldStop:{:}, previousRegion:{:}".format(
+				distance, speed, oldRegion[devId], oldStop[devId], previousRegion) )	
 		returns = [previousRegion, previousStop=="Stop", False]
+
 		if oldStop[devId]	!= previousStop: 	returns[1] = oldStop == "Stop"; 	returns[2] = True
-		if oldRegion[devId] != previousRegion: 	returns[0] = oldRegion;				returns[2] = True
-		if debugDistance: logger.log(20, "in  dist:{:6.1f}, speed:{:8.1f}, oldR:{:10s},newR:{:6s}, oldSTOP:{:1}, newSTOP:{:1}, returns:{:}; tt-actionSpeedLast:{:.1f}, Wait:{}, MinSpeed:{}".format(
-				distance, speed, oldRegion[devId], region, previousStop, oldStop[devId], returns, time.time() - actionSpeedLast[devId], actionStopWait[devId], actionStopMinSpeed[devId]) )	
+		if oldRegion[devId] != previousRegion: 	returns[0] = oldRegion[devId];		returns[2] = True
+		if debugDistance: logger.log(20, "in  dist:{:6.1f}, speed:{:8.1f}, oldR:{:10s},newR:{:6s}, previousRegion:{:}, previousStop:{:1}, oldStop:{:1}, returns:{:}; tt-actionSpeedLast:{:.1f}, Wait:{}, MinSpeed:{}".format(
+				                              distance,     speed,   oldRegion[devId],    region,  previousRegion,    previousStop, oldStop[devId], returns,    time.time() - actionSpeedLast[devId], actionStopWait[devId], actionStopMinSpeed[devId]) )	
 		return returns
 
 	except  Exception as e:
@@ -622,23 +627,22 @@ def getGlobalParams(inp):
 		G.rebootCommand =			inp.get("rebootCommand",G.rebootCommand)
 		G.networkType =				inp.get("networkType",G.networkType)
 		G.rebootCommand =			inp.get("rebootCommand",G.rebootCommand)
+		G.getBatteryMethod =		inp.get("getBatteryMethod",G.getBatteryMethod)
+		G.debug =					inp.get("debug",G.debug)
+		G.ipNumberRpiStatic =		inp.get("ipNumberRpiStatic", G.ipNumberRpiStatic) == "1"
 
-		try:
-			if "debugRPI"			in inp:	 G.debug=				 		int(inp["debugRPI"])
-		except: pass
-		try:
+		try:	
 			if "sendToIndigoSecs"	in inp:	 G.sendToIndigoSecs=	float(inp["sendToIndigoSecs"])
 		except: pass
-
-		try:
+		try:	
 			if "indigoInputPORT"	in inp:	 G.indigoInputPORT=		 int(inp["indigoInputPORT"])
 		except: pass
-		try:
+		try:	
 			if "rebootIfNoMessages"	in inp:	 G.rebootIfNoMessages=	 int(inp["rebootIfNoMessages"])
 		except: pass
-
-		if u"ipNumberRpiStatic"		in inp:	 G.ipNumberRpiStatic=			(inp["ipNumberRpiStatic"]) =="1"
-
+		try:	
+			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=	float(inp["deltaChangedSensor"])
+		except: pass
 
 
 		if u"compressRPItoPlugin"	in inp:	 
@@ -651,9 +655,7 @@ def getGlobalParams(inp):
 				if xxx != G.wifiEthOld:
 					G.wifiEth = xxx
 					G.wifiEthOld = G.wifiEth
-		try:
-			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=		float(inp["deltaChangedSensor"])
-		except: pass
+
 		if u"shutDownPinOutput"		 in inp:
 			try:							  G.shutDownPinOutput=		int(inp["shutDownPinOutput"])
 			except:							  G.shutDownPinOutput=		-1
@@ -2141,8 +2143,9 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 			return useHCI, HCIs[useHCI]["BLEmac"], 0, HCIs[useHCI]["bus"]
 
 		elif len(HCIs) > 1:
-			hciChannels = ["hci0","hci1","hci2","hci3","hci4"]
-			hciChannels = hciChannels[0:len(HCIs)]
+			hciChannels = []
+			for xx in HCIs:
+				hciChannels.append(xx)
 			if doNotUseHCI in hciChannels:
 				hciChannels.remove(doNotUseHCI)
 			if doNotUseHCI2 in hciChannels:
@@ -2187,6 +2190,7 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, u"cBY:{:<20} HCIs={}".format(G.program, HCIs))
 
 	sendURL( data={"ERROR":"can_not_setup_BLE,_HCIs:{},useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac )} )
 
@@ -3094,6 +3098,9 @@ def getOSinfo():
 def getTemperatureOfRPI():
 	try:
 		tempInfo = (subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+		if tempInfo.find("No such file") >-1 or tempInfo == "":
+			tempInfo = (subprocess.Popen("/usr/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+
 		try:	temp = str(tempInfo.split("=")[1].split("'")[0])
 		except: temp = "0"
 		return  temp

@@ -72,6 +72,7 @@ eth0Active 			= False
 wifiActive 			= False
 wifiEth				= {"eth0":{"on":"dontChange", "useIP":"use"}, "wlan0":{"on":"dontChange", "useIP":"use"}}
 wifiEthOld			= {"eth0":{"on":"dontChange", "useIP":"use"}, "wlan0":{"on":"dontChange", "useIP":"use"}}
+getBatteryMethod	= "batch"
 shutDownPinOutput	= -1
 enableMuxI2C		= -1
 enableMuxBus		= ""

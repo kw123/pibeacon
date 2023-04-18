@@ -536,6 +536,16 @@ Other beacons that send the battery level every second
 				<Label>select beacon from list (or all):</Label>
 				<List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false" />
 			</Field>
+			<Field id="beepTime" type="menu" defaultValue="0">
+				<Label>do a beep before battery cmd</Label>
+				<List>
+					<Option value= "-1">no beep</Option>
+					<Option value="0"> beep off cmd, does a wakeup of beacon</Option>
+					<Option value="1">1 sec beep</Option>
+					<Option value="2">2 sec beep</Option>
+					<Option value="3">3 sec beep</Option>
+				</List>
+			</Field>
 			<Field id="execBeacon" type="button">
 				<Label> ....after selection click</Label>
 				<Title>EXECUTE</Title>
@@ -568,7 +578,7 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 			</Field>
 			<Field id="beepTime" type="menu" defaultValue="-1" tooltip="">
 				<List>
-					<Option value="-1">off</Option>
+					<Option value= "-1">send only beep off command</Option>
 					<Option value="1">1 sec</Option>
 					<Option value="2">2 sec</Option>
 					<Option value="3">3 sec</Option>
