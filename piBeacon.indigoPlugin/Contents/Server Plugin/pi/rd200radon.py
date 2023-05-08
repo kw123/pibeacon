@@ -187,7 +187,7 @@ class RD200M:
 							if cmd == self.cmd_RESULT_RETURN:
 								self._process_measurement_data(data)
 							else:
-								self.logger.warning("Received unknown command '{'}".format(cmd))
+								self.logger.warning("Received unknown command {}".format(cmd))
 						else:
 							self.logger.warning("Checksum error, ignoring received data '{}'".format(binascii.hexlify(response).decode()))
 					else:

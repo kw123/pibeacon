@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <MenuItems>
 	<MenuItem id="d00">
-		<Name>BASIC setup HELP</Name>
+		<Name>BASIC setup HELP..</Name>
 		<ConfigUI>
 			<Field  id="xx" type="button" tooltip="">
 				<Title>PRINT</Title>
@@ -14,7 +14,7 @@
 		<Name>-------------setup RPI  ---------------------------</Name>
 	</MenuItem>
 	<MenuItem id="setupPiServer">
-		<Name>Initial BASIC setup of rPi servers, Do this to create rPi devices</Name>
+		<Name>Initial BASIC setup of rPi servers, Do this to create rPi devices..</Name>
 		<ConfigUI>
 			<Field id="enablePiEntries" type="checkbox" defaultValue="false" hidden="yes"></Field>
 			<Field id="infoLabel11" type="label">
@@ -87,7 +87,7 @@ Then the rPi will start sending data to plugin
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="configurePiServer">
-		<Name>Send/get Config/Restart/PGM/Sound/logs... to/from rPi server</Name>
+		<Name>Send/get Config/Restart/PGM/Sound/logs etc to/from rPi server..</Name>
 		<ConfigUI>
 			<Field id="configurePi" type="menu" defaultValue="999" tooltip="This will send all config files/ reboot .. to the selected rpi server ">
 				<Label>Select rPi server #:</Label>
@@ -219,7 +219,7 @@ Then the rPi will start sending data to plugin
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="changeIP">
-		<Name>Change IP number of rPi</Name>
+		<Name>Change IP number of rPi..</Name>
 		<ConfigUI>
 			<Field id="labelchangePi" type="label">
 				<Label>Change IP number of existing rPI server, it will send configuration files to the new IP number</Label>
@@ -247,7 +247,7 @@ Then the rPi will start sending data to plugin
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="replaceRPI">
-		<Name>Replace a  RPI (move MAC number)</Name>
+		<Name>Replace a  RPI (move MAC number)..</Name>
 		<ConfigUI>
 			<Field id="label0" type="label">
 				<Label>Replace an old BLE RPI with a new one. 
@@ -277,7 +277,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="reloadDeviceStates">
-		<Name>Re-load all dev states, add missing keys</Name>
+		<Name>Re-load all dev states, add missing keys..</Name>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
@@ -291,12 +291,31 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 
 		</ConfigUI>
 	</MenuItem>
+	<MenuItem id="clearHostsFile">
+		<Name>Reset ssh known hosts file..</Name>
+		<ConfigUI>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label1" type="label">
+				<Label>reset .ssh/know_hosts file;  = delete file or remove Only RPI  entries</Label>
+			</Field>
+
+             <Field  id="execDelete" type="button"	>
+				<Label>click to</Label><Title>DELETE file</Title> <CallbackMethod>resetHostsFileCALLBACKmenu</CallbackMethod>
+			</Field>
+
+
+             <Field  id="execremovePRIOnly" type="button"	>
+				<Label>click to</Label><Title>REMOVE all RPi entries</Title> <CallbackMethod>resetHostsFileOnlyRpiCALLBACKmenu</CallbackMethod>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
 	<MenuItem id="d10">
 		<Name>-------------manage iBeacons--------------------</Name>
 	</MenuItem>
 
 	<MenuItem id="AcceptNewBeacons">
-		<Name>Accept/reject new Beacons</Name>
+		<Name>Accept/reject new Beacons..</Name>
 		<ConfigUI>
 			<Field id="printBLEreportLabel" type="label">
 				<Label></Label>
@@ -387,7 +406,7 @@ and enable battery and beep etc functions</Label>
 	</MenuItem>
 
 	<MenuItem id="ignoreBeacons">
-		<Name>(un) Ignore INDIVIDUAL iBeacons</Name>
+		<Name>(un) Ignore INDIVIDUAL iBeacons..</Name>
 		<ConfigUI>
 			<Field id="labelDeleteFAMILY" type="label">
 				<Label>Manage beacons: include / excluded them individually from tracking</Label>
@@ -416,7 +435,7 @@ and enable battery and beep etc functions</Label>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="ignoreBeaconsHistory">
-		<Name>Delete iBeacon history files - (ignored beacons)</Name>
+		<Name>Delete iBeacon history files - (ignored beacons)..</Name>
 		<ConfigUI>
 			<Field id="labelDeleteFAMILY" type="label">
 				<Label>If you run into too large tracking files, use this to remove old tracking info of beacons not active. 
@@ -433,7 +452,7 @@ The history files also contain the beacons that were deleted. They are marked as
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="setALLBeaconsTo">
-		<Name>Set all Beacons to ...</Name>
+		<Name>Set all Beacons to ..</Name>
 		<ConfigUI>
 
 			<Field id="buttonSetAllExistingDevicesToActive" type="button" tooltip="use this if all ibeacons are expired and went to ignore  ">
@@ -467,7 +486,7 @@ The history files also contain the beacons that were deleted. They are marked as
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="reloadKnownBeacons">
-		<Name>Reload KnownBeacon tags from file</Name>
+		<Name>Reload KnownBeacon tags from file..</Name>
 		<ConfigUI>
 			<Field id="label0" type="label">
 				<Label>this is a tool mostly for developement</Label>
@@ -484,7 +503,7 @@ The history files also contain the beacons that were deleted. They are marked as
 	</MenuItem>
 
 	<MenuItem id="replacebeacon">
-		<Name>Replace an iBeacon (move MAC number)</Name>
+		<Name>Replace an iBeacon (move MAC number)..</Name>
 		<ConfigUI>
 			<Field id="label0" type="label">
 				<Label>Replace an old existing iBeacon with a new one. 
@@ -519,7 +538,7 @@ The indigo device, from where the MAC number was taken, is deleted</Label>
  
 
    <MenuItem id="getBatteryLevels">
-		<Name>Get beacon BATTERY level from rPi</Name>
+		<Name>Get beacon BATTERY level from rPi..</Name>
 		<ConfigUI>
 			<Field id="infoLabelINPUT1" type="label">
 				<Label>Send commands to PiServer(s) to get update for beacons
@@ -541,6 +560,7 @@ Other beacons that send the battery level every second
 				<List>
 					<Option value= "-1">no beep</Option>
 					<Option value="0"> beep off cmd, does a wakeup of beacon</Option>
+					<Option value=".1"> short beep</Option>
 					<Option value="1">1 sec beep</Option>
 					<Option value="2">2 sec beep</Option>
 					<Option value="3">3 sec beep</Option>
@@ -564,7 +584,7 @@ Other beacons that send the battery level every second
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="sendBeepToBeacon">
-		<Name>Send a BEEP command to RPI to ibeacons</Name>
+		<Name>Send a BEEP command to RPI to ibeacons..</Name>
 		<ConfigUI>
 			<Field id="infoLabelINPUT0" type="label">
 				<Label>Select the beacon and the length of time for the beacon to receive the beep command
@@ -612,7 +632,7 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 	</MenuItem>
  
 	<MenuItem id="sendSetTimeOnDEvice">
-		<Name>Send a set Time and Zone command to RPI to beacon device</Name>
+		<Name>Send a set Time and Zone command to RPI to beacon device..</Name>
 		<ConfigUI>
 			<Field id="infoLabelINPUT0" type="label">
 				<Label>Select the beacon device  to receive the set time and zone command
@@ -644,7 +664,7 @@ During the time of setting time the regular ibeacon process is suspended (10-30s
 	</MenuItem>
 
 	<MenuItem id="Detectnewbeacontools">
-		<Name>Detect (new) beacon tool on RPI</Name>
+		<Name>Detect (new) beacon tool on RPI..</Name>
 		<ConfigUI>
 			<Field id="printBLEreportLabel" type="label">
 				<Label>Print all beacon-BLE info received at one RPI 
@@ -1166,7 +1186,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="newCalibration">
-		<Name>Calibration of sensors on  rPi sensors</Name>
+		<Name>Calibration of sensors on  rPi sensors..</Name>
 		<ConfigUI>
 			<Label>Calibration of sensors</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">

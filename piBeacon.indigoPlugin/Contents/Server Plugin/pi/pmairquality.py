@@ -388,7 +388,7 @@ U.echoLastAlive(G.program)
 
 resetSensor()
 
-lastValues0			= {"particles_03um":0,"particles_05um":0,"particles_10um":0,"particles_25um":0,"particles_50um":0, "particles_10um":0}
+lastValues0			= {"particles_03um":0,"particles_05um":0,"particles_25um":0,"particles_50um":0, "particles_10um":0}
 lastValues			= {}
 lastValues2			= {}
 lastData			= {}

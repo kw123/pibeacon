@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+`#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # feb 5 2016
@@ -1932,7 +1932,7 @@ def readParams():
 			if "enableNearFar" in sensors[sensor][devid]:
 				enableNearFar	= sensors[sensor][devid]["enableNearFar"] =="1"
 			else:
-			   enableNearFar   = True
+				enableNearFar   = True
 
 			if "interruptGPIO" in sensors[sensor][devid]:
 				interruptGPIO		= int(sensors[sensor][devid]["interruptGPIO"])
@@ -2143,3 +2143,4 @@ while True:
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
 sys.exit(0)
+`

@@ -677,7 +677,7 @@ class draw():
 			ws2812.setPixelColorRGB(x,applyIntensity(RGB))
 
 
-def readParams(pgmType):
+def readParams(pgmType=""):
 	global devType,	 intensityDevice,flipDisplay, signalPin,OrderOfMatrix, PWMchannel, DMAchannel, frequency
 	global astOrderOfMatrix, lastdevType, lastsignalPin, lastintensityDevice, lastPWMchannel, lastDMAchannel,lastfrequency
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
@@ -993,7 +993,7 @@ OrderOfMatrix	= "lrrl"
 inpRaw			= ""
 U.setLogging()
 
-readParams(pgmType)
+readParams(pgmType=pgmType)
 U.logger.log(20, u"=========== (re) started neopixel  ============{}".format(sys.argv))
 
 

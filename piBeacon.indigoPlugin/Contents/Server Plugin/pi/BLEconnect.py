@@ -1417,8 +1417,8 @@ def doSwitchBot():
 								retData["actualStatus"] = "off"
 
 
-								for kk in range(repeat):
-									if kk >0: time.sleep(repeatDelay)
+								for mm in range(repeat):
+									if mm >0: time.sleep(repeatDelay)
 									if pulses > 0: 
 										for kk in range(repeat):
 											if checkIfSwitchbotStop(thisMAC): 
@@ -1592,7 +1592,7 @@ def doSwitchBot():
 				return 
 
 			else:
-				if verbose2: U.logger.log(20, "{} direction not in command:{}".format(thisMAC))
+				if verbose2: U.logger.log(20, "{} direction not in command".format(thisMAC))
 			return 
 
 		else:

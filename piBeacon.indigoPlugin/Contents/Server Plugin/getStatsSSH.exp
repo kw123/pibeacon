@@ -7,7 +7,7 @@ set timeout [lindex $argv 4 ]
 
 
 set timeout $timeout
-if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} {spawn sftp -o ConnectTimeout=20 $userID@$ipNumber}
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn sftp -o ConnectTimeout=20 $userID@$ipNumber}
 
 if {$authKeyOrPassword == "assword"} { 
     expect {

@@ -85,12 +85,12 @@ Change here or in initial setup:</Label>
 			</Field>
 
 
-			<Field    id="hostFileCheck"   type="menu" defaultValue="">
+			<Field    id="hostFileCheck"   type="menu" defaultValue="use">
 				 <List>
-					<Option value=""         >use known_hosts </Option>
-					<Option value="ignore"   >ignore known_hosts </Option>
+					<Option value="use"      >use known_hosts file </Option>
+					<Option value="ignore"   >ignore known_hosts file / disable StrictHostKeyChecking</Option>
 				  </List>
-				<Label>use or ignore known_hosts file for ssh and sfp</Label>
+				<Label>use or ignore known_hosts file for ssh and sftp</Label>
 			</Field>
 
 			<Field    id="newenableRebootCheck"   type="menu" defaultValue="restartLoop">
@@ -1124,12 +1124,12 @@ Change here or in initial setup:</Label>
 				<Label>normal login, or authkey - no password entry:</Label>
 			</Field>
 
-			<Field    id="hostFileCheck"   type="menu" defaultValue="">
+			<Field    id="hostFileCheck"   type="menu" defaultValue="use">
 				 <List>
-					<Option value=""         >use known_hosts </Option>
-					<Option value="ignore"   >ignore known_hosts </Option>
+					<Option value="use"      >use known_hosts file </Option>
+					<Option value="ignore"   >ignore known_hosts file / disable StrictHostKeyChecking</Option>
 				  </List>
-				<Label>use or ignore known_hosts file for ssh and sfp</Label>
+				<Label>use or ignore known_hosts file for ssh and sftp</Label>
 			</Field>
 
 

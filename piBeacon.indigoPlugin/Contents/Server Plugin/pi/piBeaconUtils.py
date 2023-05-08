@@ -1766,7 +1766,7 @@ def checkifWifiJsonFileInBootDir():
 			makeNewSupplicantFile(wifiInfo)
 			return True
 		else:
-			logger.log(40, u'bad newWifi.json:{}; \n should be json format: {"SSID":"xxx", "passCode":"xxx"}'.format(raw) )
+			logger.log(40, 'bad newWifi.json:{}; \n should be json format: {{"SSID":"xxx", "passCode":"xxx"}}'.format(raw) )
 	return False
 
 #################################
@@ -1926,7 +1926,7 @@ def getIPNumberMaster(quiet=True, noRestart=False):
 				return indigoServer, False, connected
 
 		else:
-			if not quiet: logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(connected, indigoServer))
+			if not quiet: logger.log(20,"cBY:{:<20} not connected to either router:{} or indigo server:{}".format(G.program, connected, indigoServer))
 
 	except Exception as e:
 		logger.log(30,"", exc_info=True)
@@ -3309,7 +3309,7 @@ def checkIfPauseSensor(sensor):
 						U.echoLastAlive(sensor)
 						time.sleep(5)
 						if time.time() - startSleep >= sleepFor: break
-					logger.log(20, u"cBY:{:<20} sleep ended {}".format(G.program))
+					logger.log(20, u"cBY:{:<20} sleep ended".format(G.program))
 				except:	pass
 				subprocess.call("/usr/bin/sudo rm {}temp/pauseSensor".format(G.homeDir), shell=True)
 				return 

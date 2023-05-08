@@ -98,7 +98,7 @@ if True:
 		
 		vmid = (mm-ma) /2. +mm
 		norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-		logger.log(20, "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm,ma,vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+		logger.log(20, "min:%3.1f;  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{%3.1f}".format(mm, ma, vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
 	cur_axes = plt.gca()

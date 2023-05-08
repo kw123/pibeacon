@@ -1,3 +1,13 @@
+Added features / changes in v2022.166.70 @ 2023-05-06
+==================================================
+
+1. maintenance release
+   small bugs fixed, (format statements, beeping beacons ...) 
+
+2. added menu item to clean up ~/.ssh/know_hostsfile
+   if you have issues with ssh loging in to your RPIS, you can now reset the entries in .ssh/konwn_hosts file
+
+
 Added features / changes in v2022.165.69@ 2023-04-01
 ==================================================
 

@@ -59,7 +59,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			if len(data) > 0:
 				x(data)
 		except: 
-			U.logger.log(20," web server nn:{}; data {}".format(data) )
+			U.logger.log(20," web server data {}".format(data) )
 		x(	'</body>')
 		x('</html>')
  

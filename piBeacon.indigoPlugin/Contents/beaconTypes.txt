@@ -5,25 +5,31 @@ Name/type     recom v  FormFactor      hole    auto    has     isBeepable  Batte
               mened                    4 key   detect  beeper  byPlugin    reading  Type                               button   .. comments  
 -----------------------------------------------------------------------------------------------------------------------------------  
 ++ rechargeable, beep and battery reading ===  
-Nonda_Aiko          x  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register  
-Nonda_iHere         x  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register          
-Smart_tracker       X  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register  
+Nonda_Aiko          Y  small square    yes     yes     yes     yes         yes      rechargeable ~ 2+ weeks   no       no      beep, register  
+Nonda_iHere         Y  triangle        yes     yes     yes     yes         yes      rechargeable ~ 3+ weeks   no       no      beep, register          
+Smart_tracker       Y  square          yes     yes     yes     Yes         yes      rechargeable ~ x  weeks   no       no      beep, register  
   
 ++ repl battery, beep and Battery reading  
-NutFind 3           x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
- == Nutale          x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
-Nut pro             x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
+NutFind 3           Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+ == Nutale          Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
+Nut pro             Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, looks very nice  
   
-Vozni_iTrack        x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
-SpotyPal            x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
-Rinex_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register,   
-Njoii_iTrack4       x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex  
-Musegear  in EU     x  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex, regular, mini and card  
-  
+Vozni_iTrack        Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+SpotyPal            Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register  
+Rinex_iTrack        Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register,   
+Njoii_iTrack        Y  square          yes     yes     yes     yes         yes      cr2032                    no       no      beep, register, same as rinex  
+
+
+TOP Choice: --------
+Musegear  in EU     Y  square          yes     yes     yes     yes         yes      cr2032                    no       YES     beep, register, same as rinex, regular, mini and card, can detect button press
+   several types: regular, small, recharge, wallet
+TOP Choice: --------
+
+
 ++ communication is proprietory, works for one but not expandable to others   
-XY_1                1  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
-XY_2                2  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
-XY_3                3  pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_1                   pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_2                   pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
+XY_3                   pentagon        yes     yes     yes     x           yes      cr2032 ~ 6+M              no       no      beep, register, creates several MAC numbers, ie one for beeper  
   
   
 beep no battery reading ===  

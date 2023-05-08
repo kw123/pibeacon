@@ -1904,7 +1904,6 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 						'mode': 		mode,
 						'mac': 			mac,
 						'trig': 		trig,
-						'mac': 			mac,
 						"rssi":			int(rx)
 				}
 
@@ -5032,7 +5031,7 @@ def getBeaconParametersBatch(hciUse, resetBLE=True):
 								valueF = min(100, int( ( valueD *100. )/norm ))
 							except Exception as e:
 								U.logger.log(30,"", exc_info=True)
-					U.logger.log(20,u"try#:{}/{} ... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(ii+1, nTries, check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
+					U.logger.log(20,u"try#:{}/{} ... ret: {}--{}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(ii+1, nTries, ret[0], ret[1], bits, norm, valueI, valueB, valueC, valueD, valueF) )
 					data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
 					if valueF != -2: break
 					if ii < nTries-1: time.sleep(0.2)
@@ -5170,7 +5169,7 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 							expCommands.sendline("connect ")
 							ret = expCommands.expect(["Connection successful","Error","Function not implemented", pexpect.TIMEOUT], timeout=4)
 							if ret == 0:
-								U.logger.log(10,u"... successful: {}".format(expCommands.after))
+								U.logger.log(20,u"... successful: {}".format(expCommands.after))
 								connected = True
 								break
 							else:
@@ -5201,24 +5200,30 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 								time.sleep(float(cc)) 
 								continue
 							except:pass
-							expCommands.sendline( cc )
 
-							if cc.find("uuid") == -1: continue
-							ret = expCommands.expect(["value: ","Error","failed",pexpect.TIMEOUT], timeout=5)
-							ret = 0
-							if ret == 0:
+							expCommands.sendline( cc )
+							if cc.find("uuid") == -1: 
+								retVal = expCommands.expect(["successful","Error","failed",pexpect.TIMEOUT], timeout=5)
+								#U.logger.log(20,"{}... b successful:  before:>>{}<<".format(ii,expCommands.before))
+								#U.logger.log(20,"{}... b successful:  after:>>{}<<".format(ii, expCommands.after))
+								time.sleep(0.01)
+								if retVal !=0: break
+								continue
+
+							retVal = expCommands.expect(["value: ","Error","failed",pexpect.TIMEOUT], timeout=5)
+							if retVal == 0:
+								U.logger.log(20,"{}... 1 successful:  before:>>{}<<".format(ii,expCommands.before.decode('utf_8')))
+								U.logger.log(20,"{}... 1 successful:  after:>>{}<<".format(ii, expCommands.after.decode('utf_8')))
+								retVal = expCommands.expect(["\r","Error","failed",pexpect.TIMEOUT], timeout=5)
+								U.logger.log(20,"{}... 2 successful:  before:>>{}<<".format(ii,expCommands.before))
+								U.logger.log(20,"{}... 2 successful:  after:>>{}<<".format(ii, expCommands.after))
+
 								#U.logger.log(20,u"... successful:  after:{}".format(expCommands.after))
-								#U.logger.log(20,u"... successful:  before:{}".format(expCommands.before))
-								#U.logger.log(20,u"... successful:  after:{}".format(expCommands.after))
-								expCommands.sendline( "" )
-								ret = expCommands.expect(["\r","Error","failed",pexpect.TIMEOUT], timeout=5)
-								U.logger.log(10,u"... successful:  before:{}".format(expCommands.before))
-								#U.logger.log(20,u"... successful:  after:{}".format(expCommands.after))
-								check = expCommands.before.decode('utf_8').strip()
+								check = expCommands.before.decode('utf_8').split("\r")[0].strip()
 								try:
 									valueI = int(check,16)
 								except:
-									U.logger.log(20,"back data returned:{}".format(check))
+									U.logger.log(20,"back data returned:>>{}<<".format(check))
 									continue
 								try:
 										valueB = valueI & bits 
@@ -5230,7 +5235,7 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 								except Exception as e:
 									U.logger.log(20,"", exc_info=True)
 									continue
-								U.logger.log(20,u"try#:{}/{} ... ret: {}; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(ii+1, nTries, check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
+								U.logger.log(20,u"try#:{}/{} ... check:'{}'; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(ii+1, nTries, check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
 								data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
 
 								if valueF != -2: 
@@ -5458,8 +5463,8 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 				elif sectionsData[-1]["type"] in ["Name"]:
 					dd = ""
 					ll = int(len(section)/2)
-					for ii in range(ll):
-						x = section[ii*2:ii*2+2]
+					for kk in range(ll):
+						x = section[kk*2:kk*2+2]
 						if x == "00":  dd+= "~"
 						dd += hex2str(x)
 					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
@@ -5472,8 +5477,8 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 				elif sectionsData[-1]["type"] in  ["ShortName"]:
 					dd = ""
 					ll = int(len(section)/2)
-					for ii in range(ll):
-						x = section[ii*2:ii*2+2]
+					for kk in range(ll):
+						x = section[kk*2:kk*2+2]
 						if x == "00":  dd+= "~"
 						dd += hex2str(x)
 					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):

@@ -87,7 +87,7 @@ class RPi_AS3935:
 		#print"get_energy bf read"
 		registers = self.read_data()
 		if registers ==[]: return -1
-	   #print"get_energy",	registers
+		#print"get_energy",	registers
 		return ((registers[6] & 0x1F) << 16) | (registers[5] << 8) | registers[4]
 
 	def get_noise_floor(self):
@@ -97,7 +97,7 @@ class RPi_AS3935:
 		"""
 		registers = self.read_data()
 		if registers ==[]: return -1
-	   #print"get_noise_floor",	 registers
+		#print"get_noise_floor",	 registers
 		return (registers[1] & 0x70) >> 4
 
 	def set_noise_floor(self, noisefloor):

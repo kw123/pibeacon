@@ -3814,6 +3814,7 @@ this will pause the sensor, will just sleep, but any other action already initat
 				<List>
 					<Option value= "-1">no beep</Option>
 					<Option value="0"> beep off cmd, does a wakeup of beacon</Option>
+					<Option value=".1"> short beep</Option>
 					<Option value="1">1 sec beep</Option>
 					<Option value="2">2 sec beep</Option>
 					<Option value="3">3 sec beep</Option>
