@@ -585,10 +585,18 @@ _devtypesToStates["ouput"] = {}
 
 _devtypesToStates["realSensor"] 	= {"":"Real",		"MinToday":"Real",		"MaxYesterday":"Real",		"MinYesterday":"Real",		"MaxToday":"Real",		"AveToday":"Real",		"AveYesterday":"Real",		"MeasurementsToday":"Number",	"MeasurementsYesterday":"Integer",	"Change5Minutes":"Real",	"Change10Minutes":"Real",		"Change20Minutes":"Real",		"Change1Hours":"Real",		"Change6Hours":"Real",		"Change12Hours":"Real"}
 _devtypesToStates["integerSensor"]	= {"":"Integer",	"MinToday":"Integer",	"MaxYesterday":"Integer",	"MinYesterday":"Integer",	"MaxToday":"Integer",	"AveToday":"Integer",	"AveYesterday":"Integer",	"MeasurementsToday":"Integer",	"MeasurementsYesterday":"Integer",	"Change5Minutes":"Integer",	"Change10Minutes":"Integer",	"Change20Minutes":"Integer",	"Change1Hours":"Integer",	"Change6Hours":"Integer",	"Change12Hours":"Integer"}
+_devtypesToStates["String"]		= {"":"String"}
+_devtypesToStates["boolean"]	= {"":"boolean"}
 
 _addingstates = {}
 _addingstates["Conductivity"]					= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["Moisture"]						= {"addTag":True, "States":_devtypesToStates["realSensor"]}
+_addingstates["distance"]						= {"addTag":False, "States":{"distance":"Real"}}
+_addingstates["distanceEvent"]					= {"addTag":False, "States":{"distanceEvent":"String"}}
+_addingstates["distanceRaw"]					= {"addTag":False, "States":{"distanceRaw":"Real"}}
+_addingstates["trigger"]						= {"addTag":False, "States":{"trigger":"String"}}
+_addingstates["stopped"]						= {"addTag":False, "States":{"stopped":"boolean"}}
+_addingstates["speed"]							= {"addTag":False, "States":{"speed":"Real"}}
 _addingstates["illuminance"]					= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["AmbientTemperature"]				= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["Temperature"]					= {"addTag":True, "States":_devtypesToStates["realSensor"]}
@@ -615,6 +623,11 @@ _addingstates["ouput"]							= {"addTag":False, "States":_devtypesToStates["oupu
 _stateListToDevTypes = {}
 _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
+_stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
+_stateListToDevTypes["distanceEvent"]			= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
+_stateListToDevTypes["trigger"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
+_stateListToDevTypes["distance"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
+_stateListToDevTypes["distanceRaw"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1}
 _stateListToDevTypes["Temperature"]				= {"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
@@ -16797,7 +16810,20 @@ class Plugin(indigo.PluginBase):
 						if mm != 0: multiply=mm
 				except: pass
 
-				raw= round(float(data[input]),2)
+				raw = round(float(data[input]),2)
+				if "distanceRaw" in dev.states: self.addToStatesUpdateDict(dev.id, "distanceRaw", raw)
+
+				if	   "cutMax" in props:
+					try:
+					 raw = min( raw, float(props["cutMax"]))
+					except: pass
+
+				if	   "cutMin" in props:
+					try:
+					 raw = max( raw, float(props["cutMin"]))
+					except: pass
+
+
 				distR= (raw+offset)*multiply
 				dist = distR
 				ud   = "[]"

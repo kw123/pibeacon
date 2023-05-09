@@ -22186,6 +22186,15 @@ Indigo gets updated at least every 90 secs or when a measuremrnt has a change la
 				<Label>multiply value with (after offset):</Label>
 			</Field>
 
+			<Field id="cutMax" type="textfield"     defaultValue="999999" hidden="no">
+				<Label>Cut off at raw max value::</Label>
+			</Field>
+
+			<Field id="cutMin" type="textfield"     defaultValue="-999999" hidden="no">
+				<Label>Cut off at raw min value::</Label>
+			</Field>
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -22384,31 +22393,6 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="stopped">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>stopped</TriggerLabel>
-				<ControlPageLabel>stopped</ControlPageLabel>
-			</State>
-			<State id="distanceEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>distanceEvent</TriggerLabel>
-				<ControlPageLabel>distanceEvent</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="distance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>distance</TriggerLabel>
-				<ControlPageLabel>distance</ControlPageLabel>
-			</State>
-			<State id="speed">
-				<ValueType>String</ValueType>
-				<TriggerLabel>speed</TriggerLabel>
-				<ControlPageLabel>speed</ControlPageLabel>
-			</State>
 			<State id="measuredNumber">
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
@@ -22555,6 +22539,15 @@ If successful it is shown in dev state i2c </Label>
 			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
 			</Field>
+
+			<Field id="cutMax" type="textfield"     defaultValue="999999" hidden="no">
+				<Label>Cut off at raw max value::</Label>
+			</Field>
+
+			<Field id="cutMin" type="textfield"     defaultValue="-999999" hidden="no">
+				<Label>Cut off at raw min value::</Label>
+			</Field>
+
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -22757,31 +22750,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="distanceEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>distanceEvent</TriggerLabel>
-				<ControlPageLabel>distanceEvent</ControlPageLabel>
-			</State>
-			<State id="stopped">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>stopped</TriggerLabel>
-				<ControlPageLabel>stopped</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="distance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>distance</TriggerLabel>
-				<ControlPageLabel>distance</ControlPageLabel>
-			</State>
-			<State id="speed">
-				<ValueType>String</ValueType>
-				<TriggerLabel>speed</TriggerLabel>
-				<ControlPageLabel>speed</ControlPageLabel>
-			</State>
+
 			<State id="i2c">
 				<ValueType>String</ValueType>
 				<TriggerLabel>i2c</TriggerLabel>
@@ -22953,6 +22922,14 @@ The sensr is more stable with the xShut pin enabled</Label>
 
 			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
+			</Field>
+
+			<Field id="cutMax" type="textfield"     defaultValue="999999" hidden="no">
+				<Label>Cut off at raw max value::</Label>
+			</Field>
+
+			<Field id="cutMin" type="textfield"     defaultValue="-999999" hidden="no">
+				<Label>Cut off at raw min value::</Label>
 			</Field>
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -23174,31 +23151,6 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="distanceEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>distanceEvent</TriggerLabel>
-				<ControlPageLabel>distanceEvent</ControlPageLabel>
-			</State>
-			<State id="stopped">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>stopped</TriggerLabel>
-				<ControlPageLabel>stopped</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="distance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>distance</TriggerLabel>
-				<ControlPageLabel>distance</ControlPageLabel>
-			</State>
-			<State id="speed">
-				<ValueType>String</ValueType>
-				<TriggerLabel>speed</TriggerLabel>
-				<ControlPageLabel>speed</ControlPageLabel>
-			</State>
 			<State id="i2c">
 				<ValueType>String</ValueType>
 				<TriggerLabel>i2c</TriggerLabel>
@@ -23326,6 +23278,14 @@ distance up to 20 cm</Label>
 
 			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
+			</Field>
+
+			<Field id="cutMax" type="textfield"     defaultValue="999999" hidden="no">
+				<Label>Cut off at raw max value::</Label>
+			</Field>
+
+			<Field id="cutMin" type="textfield"     defaultValue="-999999" hidden="no">
+				<Label>Cut off at raw min value::</Label>
 			</Field>
 
 			
@@ -23529,31 +23489,6 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="distanceEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>distanceEvent</TriggerLabel>
-				<ControlPageLabel>distanceEvent</ControlPageLabel>
-			</State>
-			<State id="stopped">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>stopped</TriggerLabel>
-				<ControlPageLabel>stopped</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="distance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>distance</TriggerLabel>
-				<ControlPageLabel>distance</ControlPageLabel>
-			</State>
-			<State id="speed">
-				<ValueType>String</ValueType>
-				<TriggerLabel>speed</TriggerLabel>
-				<ControlPageLabel>speed</ControlPageLabel>
-			</State>
 			<State id="measuredNumber">
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
@@ -23672,6 +23607,14 @@ distance up to 10 cm</Label>
 
 			<Field id="multiply" type="textfield"     defaultValue="1" >
 				<Label>multiply value with (after offset):</Label>
+			</Field>
+
+			<Field id="cutMax" type="textfield"     defaultValue="999999" hidden="no">
+				<Label>Cut off at raw max value::</Label>
+			</Field>
+
+			<Field id="cutMin" type="textfield"     defaultValue="-999999" hidden="no">
+				<Label>Cut off at raw min value::</Label>
 			</Field>
 
 
@@ -23848,31 +23791,6 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="distanceEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>distanceEvent</TriggerLabel>
-				<ControlPageLabel>distanceEvent</ControlPageLabel>
-			</State>
-			<State id="stopped">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>stopped</TriggerLabel>
-				<ControlPageLabel>stopped</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="distance">
-				<ValueType>String</ValueType>
-				<TriggerLabel>distance</TriggerLabel>
-				<ControlPageLabel>distance</ControlPageLabel>
-			</State>
-			<State id="speed">
-				<ValueType>String</ValueType>
-				<TriggerLabel>speed</TriggerLabel>
-				<ControlPageLabel>speed</ControlPageLabel>
-			</State>
 			<State id="measuredNumber">
 				<ValueType>String</ValueType>
 				<TriggerLabel>measuredNumber</TriggerLabel>
