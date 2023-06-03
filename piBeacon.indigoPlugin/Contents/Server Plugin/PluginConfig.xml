@@ -890,7 +890,9 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 
    
 	<Field id="infoLabel99" type="label"> <Label>Debug area for plugin:</Label>  </Field>
-        
+ 
+       
+	<Field    id="showLoginTest"       type="checkbox"         > <Label> show logging test at startup:</Label>  </Field>
 	<Field    id="debugLogic"          type="checkbox"         > <Label> Debug...                   ... (1)  Logic:</Label>  </Field>
 	<Field    id="debugDevMgmt"        type="checkbox"         > <Label>     ... (2)  beacon device management:</Label>  </Field>
 	<Field    id="debugBeaconData"     type="checkbox"         > <Label>     ... (3)  beacon data:</Label>  </Field>

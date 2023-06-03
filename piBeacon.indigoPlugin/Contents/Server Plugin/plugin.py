@@ -176,6 +176,7 @@ kDefaultPluginPrefs = {
 				"debugSpecial":									False,
 				"debugDelayedActions":							False,
 				"debugall":										False,
+				"showLoginTest":								True,
 				"execcommandsListAction":						"delete",
 				"getBatteryMethod":								"interactive",
 				"do_cProfile":									"on/off/print"
@@ -702,6 +703,7 @@ class Plugin(indigo.PluginBase):
 		self.indigoPreferencesPluginDir = self.getInstallFolderPath+"Preferences/Plugins/"+self.pluginId+"/"
 		self.indigoPluginDirOld			= self.userIndigoDir + self.pluginShortName+"/"
 		self.PluginLogFile				= indigo.server.getLogsFolderPath(pluginId=self.pluginId) +"/plugin.log"
+		self.showLoginTest 				= pluginPrefs.get('showLoginTest',True)
 
 		formats=	{   logging.THREADDEBUG: "%(asctime)s %(msg)s",
 						logging.DEBUG:       "%(asctime)s %(msg)s",
@@ -731,14 +733,15 @@ class Plugin(indigo.PluginBase):
 		self.indiLOG.log(10,"plugin.py               {}".format(self.pathToPlugin))
 		self.indiLOG.log(10,"indigo                  {}".format(self.indigoRootPath))
 		self.indiLOG.log(20,"detailed logging        {}".format(self.PluginLogFile))
-		self.indiLOG.log(20,"testing logging levels, for info only: ")
-		self.indiLOG.log( 0,"logger  enabled for     0 ==> TEST ONLY ")
-		self.indiLOG.log( 5,"logger  enabled for     THREADDEBUG    ==> TEST ONLY ")
-		self.indiLOG.log(10,"logger  enabled for     DEBUG          ==> TEST ONLY ")
-		self.indiLOG.log(20,"logger  enabled for     INFO           ==> TEST ONLY ")
-		self.indiLOG.log(30,"logger  enabled for     WARNING        ==> TEST ONLY ")
-		self.indiLOG.log(40,"logger  enabled for     ERROR          ==> TEST ONLY ")
-		self.indiLOG.log(50,"logger  enabled for     CRITICAL       ==> TEST ONLY ")
+		if self.showLoginTest:
+			self.indiLOG.log(20,"testing logging levels, for info only: ")
+			self.indiLOG.log( 0,"logger  enabled for     0 ==> TEST ONLY ")
+			self.indiLOG.log( 5,"logger  enabled for     THREADDEBUG    ==> TEST ONLY ")
+			self.indiLOG.log(10,"logger  enabled for     DEBUG          ==> TEST ONLY ")
+			self.indiLOG.log(20,"logger  enabled for     INFO           ==> TEST ONLY ")
+			self.indiLOG.log(30,"logger  enabled for     WARNING        ==> TEST ONLY ")
+			self.indiLOG.log(40,"logger  enabled for     ERROR          ==> TEST ONLY ")
+			self.indiLOG.log(50,"logger  enabled for     CRITICAL       ==> TEST ONLY ")
 		self.indiLOG.log(10,"Plugin short Name       {}".format(self.pluginShortName))
 		self.indiLOG.log(10,"my PID                  {}".format(self.myPID))	 
 		self.indiLOG.log(10,"Achitecture             {}".format(platform.platform()))	 
@@ -1390,20 +1393,24 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def getDebugLevels(self):
+####-------------------------------------------------------------------------####
+	def getDebugLevels(self, useMe=dict()):
 		try:
-			self.debugLevel			= []
-			for d in _debugAreas:
-				if self.pluginPrefs.get("debug"+d, False): self.debugLevel.append(d)
+			self.debugLevel	= []
+			if useMe == {}:
+				for d in _debugAreas:
+					if self.pluginPrefs.get("debug"+d, False): self.debugLevel.append(d)
+				self.showLoginTest = self.pluginPrefs.get("showLoginTest", True)
+				self.debugRPI		= int(self.pluginPrefs.get("debugRPI","-1"))
 
+			else:
+				for d in _debugAreas:
+					if useMe.get("debug"+d, False): self.debugLevel.append(d)
+				self.showLoginTest = useMe.get("showLoginTest", True)
 
-			try: self.debugRPI	= int(self.pluginPrefs.get("debugRPI", -1))
-			except: self.debugRPI=-1
-		except Exception as e:
-			self.indiLOG.log(50,"--------------------------------------------------------------------------------------------------------------")
-			self.indiLOG.log(50,"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e) )
-			self.indiLOG.log(50,"Error in startup of plugin, plugin prefs are wrong ")
-			self.indiLOG.log(50,"--------------------------------------------------------------------------------------------------------------")
+			self.indiLOG.log(20,"debug areas:{}".format(self.debugLevel))
+		except Exception:
+			self.indiLOG.log(50,"Error in startup of plugin, plugin prefs are wrong", exc_info=True)
 		return
 
 
@@ -11325,9 +11332,7 @@ class Plugin(indigo.PluginBase):
 	def validatePrefsConfigUi(self, valuesDict):
 
 		try:
-			self.debugLevel 		= []
-			for d in _debugAreas:
-				if valuesDict["debug"+d]: self.debugLevel.append(d)
+			self.getDebugLevels(useMe=valuesDict)
 
 			try:
 				if self.debugRPI	!= int(valuesDict["debugRPI"]): self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
@@ -13926,7 +13931,7 @@ class Plugin(indigo.PluginBase):
 				if dev.states["online"] != "reboot":
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 					self.addToStatesUpdateDict(dev.id, "online", "reboot")
-					self.setCurrentlyBooting(self.bootWaitTime, setBy="setting status of pi# "+piU+"   to reboot  or until new message arrives")
+					self.setCurrentlyBooting(self.bootWaitTime, setBy="setting status of pi# {}   to reboot  or until new message arrives".format(piU))
 					if piU not in _rpiBeaconList:
 						self.addToStatesUpdateDict(dev.id, "status", "reboot")
 					return
@@ -13948,7 +13953,7 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 				return
 			self.exceptionHandler(40, e)
-			self.indiLOG.log(40," pi" + piU+"  RPI{}".format(self.RPI[piU]) )
+			self.indiLOG.log(40," pi{}  RPI{}".format(piU, self.RPI[piU]) )
 		return
 ####-------------------------------------------------------------------------####
 	def checkSensorPiSetup(self, piSend, data, piNReceived):
@@ -13956,11 +13961,11 @@ class Plugin(indigo.PluginBase):
 		try:
 			#self.indiLOG.log(10,	"called checkSensorPiSetup")
 			if piSend != piNReceived:
-				self.indiLOG.log(10,"sensor pi " + piSend + " wrong pi# "+piNReceived+" number please fix in setup rPi")
+				self.indiLOG.log(10,"sensor pi {} wrong pi# {} number please fix in setup rPi".format(piSend, piNReceived))
 				return -1
 			if "ipAddress" in data:
 				if self.RPI[piSend]["ipNumberPi"] != data["ipAddress"]:
-					self.indiLOG.log(10,"sensor pi " + piSend + " wrong IP number please fix in setup rPi, received: -->" +data["ipAddress"]+"<-- if it is empty a rPi reboot might solve it")
+					self.indiLOG.log(10,"sensor pi {} wrong IP number please fix in setup rPi, received: -->{}<-- if it is empty a rPi reboot might solve it".format(piSend, data["ipAddress"]))
 					return -1
 			devId = self.RPI[piSend]["piDevId"]
 			Found= False
@@ -13975,7 +13980,7 @@ class Plugin(indigo.PluginBase):
 					return -1
 
 			if not Found:
-				self.indiLOG.log(10,"sensor pi " + piSend + "- devId: {}".format(devId) +" not found, please configure the rPi:  {}".format(self.RPI[piSend]))
+				self.indiLOG.log(10,"sensor pi {}- devId: {} not found, please configure the rPi:  {}".format(piSend, devId, self.RPI[piSend]))
 			if Found:
 				if dev.states["status"] != "up":
 						self.addToStatesUpdateDict(dev.id, "status", "up")
@@ -20653,7 +20658,7 @@ configuration         - ==========  defined beacons ==============
 	######################
 	def actionControlSensor(self, action, dev):
 		if dev.address in self.beacons:
-			self.beacons[address]["lastUp"] = time.time()
+			self.beacons[dev.address]["lastUp"] = time.time()
 
 		elif  dev.deviceTypeId =="rPI":
 			piU = dev.pluginProps.get("RPINumber","")

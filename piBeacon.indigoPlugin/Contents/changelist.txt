@@ -1,3 +1,11 @@
+Added features / changes in v2022.167.72 @ 2023-06-03
+==================================================
+
+1. bugfix:
+  "plugin.py", line 20656, in actionControlSensor   type: name 'address' is not defined
+
+
+
 Added features / changes in v2022.167.71 @ 2023-05-09
 ==================================================
 
