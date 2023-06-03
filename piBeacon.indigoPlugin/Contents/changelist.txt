@@ -3,6 +3,7 @@ Added features / changes in v2022.167.72 @ 2023-06-03
 
 1. bugfix:
   "plugin.py", line 20656, in actionControlSensor   type: name 'address' is not defined
+2. added option to not print test logging at startup, set in config/ debug section
 
 
 
