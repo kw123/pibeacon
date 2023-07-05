@@ -278,6 +278,7 @@
 			}
 		},
 		"comment": "",
+		"correspondingiTrackButtonDevice": "BLEiTrackButton",
 		"correspondingSwitchbotDevice": "",
 		"dBm": "-55",
 		"hexCode": "1X02010X030202180XFF4B4DXXRMAC########-",

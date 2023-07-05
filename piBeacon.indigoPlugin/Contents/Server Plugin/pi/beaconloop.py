@@ -1315,7 +1315,7 @@ def checkIfBeaconIsBack(mac):
 				len(beacon_ExistingHistory[mac]["timeSt"]) < 2 or 
 				time.time() - beacon_ExistingHistory[mac]["timeSt"][-2] > 30  or 
 				beacon_ExistingHistory[mac]["fastDown"] or
-				(mac in fastDownList and not beacon_ExistingHistory[mac]["fastDown"] and time.time() - beacon_ExistingHistory[mac]["lastMessageSend"] > min(10, max (3., fastDownList[mac]["seconds"]*0.7) )  )
+				(mac in fastDownList and not beacon_ExistingHistory[mac]["fastDown"] and  (time.time() - beacon_ExistingHistory[mac].get("lastMessageSend",0) > min(10, max (3., fastDownList[mac]["seconds"]*0.7))  )  )
 			):
 			if  (mac == trackMac or trackMac == "*") and logCountTrackMac >0:
 				writeTrackMac( "New!    ", "beacon is back, send message" , mac)
@@ -5747,6 +5747,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 				rejectThisMessage = mfg_info
 				mfgTagged = True
 
+		testTag = ""
 		#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} testing  .. acceptNewMFGNameBeacons:{}, mfg_info:{}".format(mac, acceptNewMFGNameBeacons, mfg_info) )
 		if (
 			(existing and tagOld in ["", "other"]) or  # check if we find a better tag than "other"

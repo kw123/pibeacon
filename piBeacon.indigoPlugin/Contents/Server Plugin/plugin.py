@@ -3100,7 +3100,8 @@ class Plugin(indigo.PluginBase):
 					self.execUpdateStatesList(dev,chList)
 
 				for piU in _rpiBeaconList:
-					pi= int(piU)
+					pi = int(piU)
+					piXX = piU
 					try:
 						if piXX+"_Distance" in dev.states:
 							piXX = "Pi_{:02d}".format(pi)
@@ -5025,6 +5026,7 @@ class Plugin(indigo.PluginBase):
 
 			#if dev.id in [1697729290,1707940373]: self.indiLOG.log(20,"====== dev:{}, piUin:{}, typeId:{}, input:{}".format(dev.name, piUin, typeId, self.RPI[piU]["input"]))
 			piU = ""
+			pi = 0
 			for piU2 in self.RPI:
 				pi = int(piU2)
 
@@ -5071,6 +5073,7 @@ class Plugin(indigo.PluginBase):
 			newDescription  = newDescription.strip(",")
 			newAddress  = newAddress.strip(",")
 			if piU != "":
+				pi = int(piU)
 				if valuesDict["address"] != newAddress and newAddress !="":
 					valuesDict["address"] = newAddress
 
@@ -17642,6 +17645,7 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					if dev.deviceTypeId == "rPI":
+						props = dev.pluginProps
 						foundPI = True
 						if dev.states["note"] != "Pi-" + fromPiU:
 							dev.updateStateOnServer("note", "Pi-" + fromPiU)
@@ -17659,9 +17663,9 @@ class Plugin(indigo.PluginBase):
 						self.beacons[piMACSend]["RPINumber"] = fromPiU
 
 					else:
-						indigo.device.delete(dev)
 						self.indiLOG.log(30,"=== deleting beacon: {} replacing simple beacon with rPi model(1)".format(dev.name) )
-						del self.beacons[fromPiU]
+						del self.beacons[dev.pluginProps["address"]]
+						indigo.device.delete(dev)
 
 				except Exception as e:
 					if "{}".format(e) != "None":
@@ -17671,7 +17675,7 @@ class Plugin(indigo.PluginBase):
 							self.exceptionHandler(40, e)
 							self.indiLOG.log(40,"communication to indigo is interrupted")
 							return 3, beaconUpdatedIds
-						self.indiLOG.log(40,"smallErr", text =" error ok if new / replaced RPI")
+						self.indiLOG.log(30,"error ok if new / replaced RPI")
 
 					del self.beacons[piMACSend]
 
@@ -18032,6 +18036,7 @@ class Plugin(indigo.PluginBase):
 			newprops 							= {}
 			sensorInfo 							= self.knownBeaconTags[typeOfBeacon]
 			isSens 								= False
+			correspondingiTrackButtonDevice 	= sensorInfo.get("correspondingiTrackButtonDevice", "")
 			correspondingBLEConnectSensorType 	= sensorInfo.get("correspondingBLEConnectSensorType", "")
 			correspondingSensorType 			= sensorInfo.get("correspondingSensorType", "")
 			correspondingSwitchbotDevice 		= sensorInfo.get("correspondingSwitchbotDevice", "")
@@ -18046,7 +18051,7 @@ class Plugin(indigo.PluginBase):
 							correspondingSensorType = tag
 							break
 
-			if correspondingSensorType == "" and correspondingBLEConnectSensorType == "" and correspondingSwitchbotDevice == "": return   
+			if correspondingSensorType == "" and correspondingBLEConnectSensorType == "" and correspondingSwitchbotDevice == "" and correspondingiTrackButtonDevice == "": return   
 
 			textHint = sensorInfo.get("text","")
 			if subtypeOfBeacon != "":
@@ -18083,6 +18088,14 @@ class Plugin(indigo.PluginBase):
 				devType 									= correspondingSwitchbotDevice
 				newprops["isSwitchbotDevice"]				= True
 				name 										= "o-{}-{}-{}".format(devType, mac, fromPiU)
+
+			elif correspondingiTrackButtonDevice != "":
+				for devTest in indigo.devices.iter("props.isBLESensorDevice"):
+					if mac == devTest.pluginProps.get("mac","xx"):
+						return 
+				devType 									= correspondingiTrackButtonDevice
+				newprops["isBLESensorDevice"]				= True
+				name 										= "b-{}-{}-{}".format(devType, mac, fromPiU)
 
 			else:
 				return 
@@ -18189,7 +18202,7 @@ class Plugin(indigo.PluginBase):
 				newprops["updateIndigoDeltaMaxXYZ"]			= "50"
 
 			self.indiLOG.log(30,"corresponding BLE-sensor device not found, will try to create one:{}.. details in plugin.log".format(name))
-			self.indiLOG.log(30,"=====> please finish setup for new device BLE / BLEconnect in device edit , ie which RPI this device is linked to;  etc<=== ".format(name))
+			self.indiLOG.log(30,"=====> please finish setup for new device {} in device edit, ie which RPI this device is linked to;  etc<=== ".format(name))
 			self.indiLOG.log(10,"... beacontype: {}".format(typeOfBeacon))
 			self.indiLOG.log(10,"... info:       {}".format(self.knownBeaconTags[typeOfBeacon]))
 			self.indiLOG.log(10,"... props:      {}".format(newprops))
@@ -20296,7 +20309,7 @@ class Plugin(indigo.PluginBase):
 					self.myLog( theText = line, mType="pi configuration")
 				except Exception as e:
 					self.exceptionHandler(40, e)
-					self.indiLOG.log(40,"RPI#{} has problem:  disabled?".format(pi))
+					self.indiLOG.log(40,"RPI#{} has problem:  disabled?".format(piU))
 
 
 

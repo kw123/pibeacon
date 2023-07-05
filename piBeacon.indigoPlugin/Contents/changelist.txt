@@ -1,10 +1,21 @@
-Added features / changes in v2022.167.74 @ 2023-06-03
+Added features / changes in v2022.168.75 @ 2023-06-14
+==================================================
+
+1. bugfix:
+File "beaconloop.py", line 5784, in checkIfTagged
+    if testTag == "iBeacon" and iBeacon != ""
+
+
+
+Added features / changes in v2022.168.75 @ 2023-06-14
 ==================================================
 
 1. bugfix:
   "plugin.py", line 20656, in actionControlSensor   type: name 'address' is not defined
 2. added option to not print test logging at startup, set in config/ debug section
-
+3. added "iTRACK" (musegear, rinex,...) type beacons to automatically add a button device, that will be on/off (red/green) when the button is pressed
+   this can be used for any indigo action.
+4. fixed exception "lastMessageSend" for fast_down type beacons in beaconloop.py on rpi
 
 
 Added features / changes in v2022.167.71 @ 2023-05-09
