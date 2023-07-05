@@ -3998,9 +3998,12 @@ offset	Allowed Values		description
 		#        mac---------  ll flag   ll tag 
 		#        012345678911 23 456789 21 23456789 
 		#		 012345678901 1F 020106 1B FF990405
-		ruuviTag 		= "0201061BFF9904"
-		ruuviTagPos 	= hexData.find(ruuviTag) 
-		tagFound		= ruuviTagPos == 14 
+		ruuviTag1 		= "0201061BFF9904"
+		ruuviTag2 		= "0201041BFF9904"
+		ruuviTagPos1 	= hexData.find(ruuviTag1) 
+		ruuviTagPos2 	= hexData.find(ruuviTag2) 
+		tagFound		= ruuviTagPos1 == 14 or  ruuviTagPos2 == 14
+		
 		if not tagFound: 		
 			#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,u"mac:{};  tagnotfound..{}".format(mac, tag )) 
 			return tx, "", UUID, Maj, Min, False
@@ -4010,7 +4013,7 @@ offset	Allowed Values		description
 		Min  						= "sensor"
 		sensor 						= "BLERuuviTag"
 		# make data into right format (bytes)
-		byte_data 					= bytearray.fromhex(hexData[ruuviTagPos + len(ruuviTag):])
+		byte_data 					= bytearray.fromhex(hexData[14 + len(ruuviTag1):])
 		dataFormat					= byte_data[0]
 
 		# sensor is active, get all data and send if conditions ok
