@@ -3523,7 +3523,7 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 		## at 0C:   1-0.07 = 0.93 * 2700 = 2500 mV --> 100*(VB -2500)/(500)   ==>  > 3000 --> 100%  < 2500 == 0%
 		## at -10C: 1-0.3  = 0.70 * 2700 = 1890 mV --> 100*(VB -1890)/(1110)  ==>  > 3000 --> 100%  < 1889 == 0%
 		##   
-		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0  
+		batteryLowVsTemp			= (1. + 0.7*min(0.,(temp-10)/100.)) * batteryVoltAt0  
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
 		return batteryLevel
 	except	Exception as e:
@@ -3995,17 +3995,29 @@ offset	Allowed Values		description
 		if len(hexData) < 44: 	
 			#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,u"mac:{};  < 44..{} ".format(mac, len(hexData))) 
 			return tx, "", UUID, Maj, Min, False
-		#        mac---------  ll flag   ll tag 
-		#        012345678911 23 456789 21 23456789 
-		#		 012345678901 1F 020106 1B FF990405
-		ruuviTag1 		= "0201061BFF9904"
-		ruuviTag2 		= "0201041BFF9904"
+		#        mac---------  ll flag   ll tag    version
+		#        012345678911  23 456789 21 234567 89 
+		#		 012345678901  1F 020106 1B FF9904 05
+		#		 012345678901  1F 020104 1B FF9904 05
+		#                                          04 03 06 not supported
+		#                         020106 1B FF9904 05
+		ruuviTag1 		= "02010"
+		ruuviTag2 		= "1BFF9904"
+		ruuviTagPos1 	= hexData.find(ruuviTag1) 
+		ruuviTagPos2 	= hexData.find(ruuviTag2) 
+		tagFound		= ruuviTagPos1 == 14  and   ruuviTagPos2 == 20
+		"""
+		igbore packets like:
+		#        EB172F2D10FD  1E11079ECADC240EE5A9E093F3A3B50100406E0B0952757576692031374542A6
+
+		ruuviTag1 		= "02010X1BFF9905"
+		ruuviTag2 		= "0201041BFF9905"
 		ruuviTagPos1 	= hexData.find(ruuviTag1) 
 		ruuviTagPos2 	= hexData.find(ruuviTag2) 
 		tagFound		= ruuviTagPos1 == 14 or  ruuviTagPos2 == 14
-		
+		"""
 		if not tagFound: 		
-			#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,u"mac:{};  tagnotfound..{}".format(mac, tag )) 
+			#U.logger.log(20,u"mac:{};  tag1:{}, tag2:{} pos:{}, {}, hex data:{}".format(mac,ruuviTag1, ruuviTag2, ruuviTagPos1, ruuviTagPos2, hexData )) 
 			return tx, "", UUID, Maj, Min, False
 
 		UUID 						= "ruuviTag"
@@ -4013,7 +4025,7 @@ offset	Allowed Values		description
 		Min  						= "sensor"
 		sensor 						= "BLERuuviTag"
 		# make data into right format (bytes)
-		byte_data 					= bytearray.fromhex(hexData[14 + len(ruuviTag1):])
+		byte_data 					= bytearray.fromhex(hexData[14 + len(ruuviTag1)+len(ruuviTag2)+1:])
 		dataFormat					= byte_data[0]
 
 		# sensor is active, get all data and send if conditions ok
@@ -4051,7 +4063,7 @@ offset	Allowed Values		description
 				'data_format': 			dataFormat,
 				'hum': 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac][sensor]["offsetHum"] + 0.5),
 				'temp': 				round(temp							 + BLEsensorMACs[mac][sensor]["offsetTemp"],1),
-				'press': 				round(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac][sensor]["offsetPress"],1),
+				'press': 				int(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac][sensor]["offsetPress"]),
 				'accelerationTotal': 	int(accelerationTotal),
 				'accelerationX': 		int(accelerationX),
 				'accelerationY': 		int(accelerationY),

@@ -1,4 +1,13 @@
-Added features / changes in v2022.168.77 @ 2023-07-05
+
+Added features / changes in v2022.168.79 @ 2023-07-12
+==================================================
+
+1.   added state: "lastBatteryReplaced" to devices that have a batteryLevel state.
+    it shows the date-time when the battery level went back from < 100 to 100 %
+    with this you can see when you replaced the battery.
+    this is also shown in the battery level report in menue / print various ...
+
+Added features / changes in v2022.168.78 @ 2023-07-09
 ==================================================
 
 1.  add different ruuvitag format capture

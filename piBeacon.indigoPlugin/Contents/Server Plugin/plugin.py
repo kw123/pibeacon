@@ -581,7 +581,7 @@ _devtypesToStates["allDevHaveThese"] = {}
 _devtypesToStates["allDevHaveThese"]["status"] = "String"	
 _devtypesToStates["allDevHaveThese"]["created"] = "String"	
 
-_devtypesToStates["ouput"] = {} 
+_devtypesToStates["output"] = {} 
 
 
 _devtypesToStates["realSensor"] 	= {"":"Real",		"MinToday":"Real",		"MaxYesterday":"Real",		"MinYesterday":"Real",		"MaxToday":"Real",		"AveToday":"Real",		"AveYesterday":"Real",		"MeasurementsToday":"Number",	"MeasurementsYesterday":"Integer",	"Change5Minutes":"Real",	"Change10Minutes":"Real",		"Change20Minutes":"Real",		"Change1Hours":"Real",		"Change6Hours":"Real",		"Change12Hours":"Real"}
@@ -618,7 +618,8 @@ _addingstates["rPI"]							= {"addTag":False, "States":_devtypesToStates["rpi"]}
 _addingstates["allDevHaveTheseStates"]			= {"addTag":False, "States":_devtypesToStates["allDevHaveThese"]}
 _addingstates["beaconSensorStates"]				= {"addTag":False, "States":_devtypesToStates["beaconSensor"]}
 _addingstates["sensorStates"]					= {"addTag":False, "States":_devtypesToStates["sensor"]}
-_addingstates["ouput"]							= {"addTag":False, "States":_devtypesToStates["ouput"]}
+_addingstates["output"]							= {"addTag":False, "States":_devtypesToStates["output"]}
+_addingstates["lastBatteryReplaced"]			= {"addTag":False, "States":{"lastBatteryReplaced":"String"}}
 
 
 _stateListToDevTypes = {}
@@ -9543,7 +9544,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def makeBatteryLevelReportCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
 		try:
-			out  = "battery level report:\nDev---------------------------------------     MAC#               Beacon-Type             Status     ClosestRPI   BeepCommand BatteryLevel LastSuccfulBatUpd   daysAgo GetBatMethod"
+			out  = "battery level report:\nDev---------------------------------------     MAC#               Beacon-Type             Status     ClosestRPI   BeepCommand BatteryLevel LastSuccfulBatUpd   daysAgo GetBatMethod lastNewBattery "
 			out1 = ""
 			out2 = ""
 			out3 = ""
@@ -9586,19 +9587,21 @@ class Plugin(indigo.PluginBase):
 				#self.indiLOG.log(5,"  ibeacon: {:30s}  level: {:3d}%,  last update was: {} ".format(dev.name, batteryLevel, batteryLevelLastUpdate) )
 				lastUpDateDaysAgo = int((time.time() - lastTimeStamp)/(24*3600))
 				lastUpDateDaysAgo = min(9999, lastUpDateDaysAgo)
+				lastBatteryReplaced =  dev.states.get("lastBatteryReplaced"," ")
+	
 				if lastUpDateDaysAgo < 999:
 					if lastUpDateDaysAgo   > 21:
-						out4 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!!! {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+						out4 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!!! {:12s} {:19s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID, lastBatteryReplaced)
 					elif lastUpDateDaysAgo > 7:
-						out3 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!!  {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+						out3 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!!  {:12s} {:19s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID, lastBatteryReplaced)
 					elif lastUpDateDaysAgo > 1:
-						out2 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!   {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+						out2 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}!   {:12s} {:19s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID, lastBatteryReplaced)
 					else:
-						out1 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}    {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+						out1 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}    {:12s} {:19s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID, lastBatteryReplaced)
 				elif lastUpDateDaysAgo < 9999:
-						out5 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}off {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+						out5 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}off {:12s} {:19s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID, lastBatteryReplaced)
 				else:
-						out6 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}    {:15s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID )
+						out6 += "\n{:47s}{:19s}{:24s}{:17s}{:4d}   {:12s}{:13s}{:20s}{:4d}    {:12s} {:19s}".format( dev.name, mac, typeOfBeacon, dev.states["status"], int(piU), benabled, batlevel, lastU, lastUpDateDaysAgo, batteryLevelUUID, lastBatteryReplaced)
 
 			self.indiLOG.log(20,out+out1+out2+out3+out4+out5+out6)
 			valuesDict["MSG"]   = "bat report in indigo log"
@@ -15261,12 +15264,35 @@ class Plugin(indigo.PluginBase):
 					if dev.deviceTypeId in _stateListToDevTypes[state]:
 						test += state+","
 
+			if dev.pluginProps.get("SupportsBatteryLevel",False):
+				test += "lastBatteryReplaced"
 			return test.strip(",").split(",")
 			 
 
 		except Exception as e:
 			self.exceptionHandler(40, e)
 		return []
+
+
+
+	def setlastBatteryReplaced(self, dev, batL):
+		try:	
+			# remember the last datetime when batlevel was 100%
+			if "lastBatteryReplaced"  in dev.states and batL == 100:
+
+				if len(str(dev.states["batteryLevel"])) < 1:# empty 
+					if len(dev.states["lastBatteryReplaced"]) < 5:
+						self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
+
+				elif len(dev.states["lastBatteryReplaced"]) < 5: # empty 
+					self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
+
+				elif dev.states["batteryLevel"] < batL: # update if new 100%
+					self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
+
+		except Exception as e:
+			self.exceptionHandler(40, e)
+
 
 ###-------------------------------------------------------------------------####
 	def updateCommonStates(self, dev, props, data, whichKeysToDisplay,pi):
@@ -15286,8 +15312,13 @@ class Plugin(indigo.PluginBase):
 				if "txPower" 		in data 			and "txPower" in dev.states 				and "{}".format(data["txPower"]) != "{}".format(dev.states["txPower"]):
 									self.addToStatesUpdateDict(dev.id, "txPower", 				data["txPower"])
 
-				if "batteryLevel" 	in data 			and data["batteryLevel"] !="" 				and "batteryLevel" in dev.states and "{}".format(data["batteryLevel"]) != "{}".format(dev.states["batteryLevel"]):
-									self.addToStatesUpdateDict(dev.id, "batteryLevel",		 	data["batteryLevel"])
+				if "batteryLevel" 	in data 			and data["batteryLevel"] !="" and "batteryLevel" in dev.states :
+								batL = int(data["batteryLevel"])
+								if												 			"{}".format(data["batteryLevel"]) != "{}".format(dev.states["batteryLevel"]):
+									self.addToStatesUpdateDict(dev.id, "batteryLevel",		 	batL)
+
+								self.setlastBatteryReplaced(dev, batL)
+
 
 				if "batteryVoltage" in data 			and data["batteryVoltage"] !="" 			and "batteryVoltage" in dev.states and "{}".format(data["batteryVoltage"]) != "{}".format(dev.states["batteryVoltage"]):
 									self.addToStatesUpdateDict(dev.id, "batteryVoltage", 		data["batteryVoltage"])
@@ -18430,6 +18461,7 @@ class Plugin(indigo.PluginBase):
 						#if dev.id == 739817084: self.indiLOG.log(20,"739817084  adding  batteryLevel: to states update " )
 						newStates = self.addToStatesUpdateDict(dev.id, "batteryLevel", batteryLevel, newStates=newStates)
 						newStates = self.addToStatesUpdateDict(dev.id, "batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat), newStates=newStates)
+						self.setlastBatteryReplaced(dev, batteryLevel)
 
 				self.autoCreateCorrespondingSensorDev(mac, fromPiU, typeOfBeacon, msg)
 
