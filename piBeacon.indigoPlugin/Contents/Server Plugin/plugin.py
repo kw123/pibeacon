@@ -16376,6 +16376,7 @@ class Plugin(indigo.PluginBase):
 										if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"GetBeaconParameters updating state:{} with:{}".format(state, data[beacon][state]) )
 										self.addToStatesUpdateDict(indigoId, state, data[beacon][state])
 										self.addToStatesUpdateDict(indigoId, "batteryLevelLastUpdate", datetime.datetime.now().strftime(_defaultDateStampFormat))
+										self.setlastBatteryReplaced(dev, data[beacon][state])
 									else:
 										if time.time() - batteryLevelLastUpdate > 24*3600: self.indiLOG.log(10,"GetBeaconParameters update received pi:{} beacon:{} .. {};  bad data read; last good update was {}, current batterylevel status: {}".format(pi,beacon, data[beacon], dev.states["batteryLevelLastUpdate"], dev.states["batteryLevel"]  ) )
 

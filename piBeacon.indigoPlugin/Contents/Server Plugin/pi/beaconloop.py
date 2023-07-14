@@ -5076,7 +5076,7 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 	global beaconsOnline
 	global beepBatteryBusy
 
-	data ={} 
+	data = {} 
 	try:	
 		if not os.path.isfile(G.homeDir+"temp/beaconloop.getBeaconParameters"): return False
 
@@ -5109,6 +5109,8 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 			nTries = 3
 			ntriesConnect = 5
 
+		nsuccess = 0
+		sendIfMoreThanSucess = 1
 		if "sensors" not in data: data["sensors"] = {}
 		if "getBeaconParameters" not in data["sensors"]: data["sensors"]["getBeaconParameters"] = {}
 		success = False
@@ -5252,6 +5254,11 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 									continue
 								U.logger.log(20,u"try#:{}/{} ... check:'{}'; bits: {}; norm:{}; value-I: {}; B: {}; C: {}; d: {};  F: {} ".format(ii+1, nTries, check, bits, norm, valueI, valueB, valueC, valueD, valueF) )
 								data["sensors"]["getBeaconParameters"][mac] = {"batteryLevel":valueF}
+								if nsuccess > sendIfMoreThanSucess:
+									if data != {}:
+										U.sendURL(data, wait=True, squeeze=False)
+										nsuccess = 0
+										data["sensors"]["getBeaconParameters"] = {}
 
 								if valueF != -2: 
 									success = True
@@ -6120,6 +6127,7 @@ def execbeaconloop(test):
 	beepBatteryBusy			= 0
 	useHCIForBeacon			= ""
 	useHCIForBeep			= ""
+	hciAvailableForBeep 	= ""
 	trackRawOnly 			= False
 	fastBLEReactionLastAction = {}
 	output					= {}
@@ -6259,8 +6267,6 @@ def execbeaconloop(test):
 	paramCheckLastTime		= time.time() + 10
 	sensCheckLastTime 		= time.time() + 1
 	hciCheckLastTime		= time.time() + 0
-	useHCIForBeep			= ""
-	hciAvailableForBeep 	= ""
 	checkIPConnection		= time.time()
 
 	U.echoLastAlive(G.program)
@@ -6522,7 +6528,7 @@ def execbeaconloop(test):
 
 								if nMsgs > 0: lastMSGwithGoodData = time.time() 
 
-								#check if beep or battery process is blocky beaconloop hci channel, if so wait , max 100 sec
+								#check if beep or battery process is blocking beaconloop hci channel, if so wait , max 100 sec
 								if beepBatteryBusy > 1:
 									U.logger.log(20, u"beep or battery process is blocking beaconloop, wait. Level={}".format(beepBatteryBusy) )
 									for ii in range(1000):

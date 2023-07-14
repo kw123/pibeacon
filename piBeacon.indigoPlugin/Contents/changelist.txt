@@ -1,3 +1,10 @@
+Added features / changes in v2022.168.80 @ 2023-07-14
+==================================================
+
+1.   added state: "lastBatteryReplaced" ... 
+     .. now also supports beacons that do not broadcast their battery level, but also beacons that 
+     have to be queried to get their battery status eg iTrack, musegear ..
+
 
 Added features / changes in v2022.168.79 @ 2023-07-12
 ==================================================
