@@ -1,4 +1,4 @@
-Added features / changes in v2022.168.80 @ 2023-07-14
+Added features / changes in v2022.168.81 @ 2023-07-14
 ==================================================
 
 1.   added state: "lastBatteryReplaced" ... 
