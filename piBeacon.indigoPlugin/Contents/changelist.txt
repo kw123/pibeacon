@@ -1,3 +1,12 @@
+dded features / changes in v2022.169.84 @ 2023-08-20
+==================================================
+
+1.   general maintenace release
+2.   added battery level to veg trug beacons
+3.   added menu action to reset or calibrate co2 sensors sensirion scd30
+     added device states to reflect calibration status
+
+
 Added features / changes in v2022.168.82 @ 2023-07-14
 ==================================================
 

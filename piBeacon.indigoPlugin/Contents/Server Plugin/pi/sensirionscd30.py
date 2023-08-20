@@ -194,6 +194,8 @@ class SCD30:
 		self._send_command(0x0010, num_response_words=0,
 						   arguments=[ambient_pressure])
 
+
+
 	def stop_periodic_measurement(self):
 		"""Stops periodic measurement of CO2 concentration, humidity and temp.
 
@@ -274,6 +276,52 @@ class SCD30:
 		"""
 		return self._word_or_none(self._send_command(0x5306))
 
+
+
+	def get_Force_self_calibration(self):
+		"""Gets the automatic self-calibration feature status.
+
+		Returns:
+			1 if ASC is active, 0 if inactive, or None upon error.
+		"""
+		return self._word_or_none(self._send_command(0x5204))
+
+
+	def set_Force_self_calibration(self, Co2Target):
+		"""(De-)activates the automatic self-calibration feature.
+
+		Parameters:
+			active: True to enable, False to disable.
+
+		The setting is persisted in non-volatile memory.
+		"""
+		#U.logger.log(20, u"set force calibration to {} ".format(Co2Target))
+		return self._send_command(0x5204, 0, [int(Co2Target)&0xFFFF])
+
+
+
+	def get_AltitudeCompensation(self):
+		"""Gets the automatic self-calibration feature status.
+
+		Returns:
+			1 if ASC is active, 0 if inactive, or None upon error.
+		"""
+		return self._word_or_none(self._send_command(0x5102))
+
+
+	def set_AltitudeCompensation(self, height):
+		"""(De-)activates the automatic self-calibration feature.
+
+		Parameters:
+			active: True to enable, False to disable.
+
+		The setting is persisted in non-volatile memory.
+		"""
+		#U.logger.log(20, u"set force calibration to {} ".format(height))
+		return self._send_command(0x5102, 0, [int(height)&0xFFFF])
+
+
+
 	def get_temperature_offset(self):
 		"""Gets the currently active temperature offset.
 
@@ -327,7 +375,7 @@ class SCD30:
 			offset_ticks = int(offset * 100)
 			if offset_ticks < 0:
 				offset_ticks &= 0xFFFF
-			U.logger.log(30, u"in offset {} offset_ticks={} ".format(offset, offset_ticks))
+			#U.logger.log(20, u"in offset {} offset_ticks={} ".format(offset, offset_ticks))
 			return self._send_command(0x5403, 0, [offset_ticks])
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
@@ -390,12 +438,10 @@ def readParams():
 		if inpRaw == oldRaw: return
 		oldRaw	   = inpRaw
 		
-		externalSensor=False
-		sensorList=[]
-		sensorsOld= copy.copy(sensors)
+		externalSensor = False
+		sensorList = []
+		sensorsOld = copy.copy(sensors)
 
-
-		
 		U.getGlobalParams(inp)
 		  
 		if "sensorList"			in inp:	 sensorList=			 (inp["sensorList"])
@@ -409,10 +455,17 @@ def readParams():
 
 		U.logger.log(10,"{} reading new parameters".format(G.program) )
 
+		if sensor not in sensorsOld:
+			sensorsOld[sensor] = {}
+
+
+
 		deltaX={}
 		restart = False
 		sendToIndigoSecs = G.sendToIndigoSecs	
 		for devId in sensors[sensor]:
+			if devId not in sensorsOld[sensor]:
+				 sensorsOld[sensor][devId] = {}
 
 			try:
 				if devId not in deltaX: deltaX[devId]  = 2
@@ -421,31 +474,31 @@ def readParams():
 			except:
 				deltaX[devId] = 2
 
+			delSens = False
 
-			if "autoCalibration" not in sensors[sensor][devId]: 
-				sensors[sensor][devId]["autoCalibration"] = "1"
+			if sensors[sensor][devId].get("altitudeCompensation","")  		!= sensorsOld[sensor][devId].get("altitudeCompensation",""):
+				delSens = True
+			if sensors[sensor][devId].get("autoCalibration","1")  			!= sensorsOld[sensor][devId].get("autoCalibration","1"):
+				delSens = True
+			if sensors[sensor][devId].get("sensorTemperatureOffset","")		!= sensorsOld[sensor][devId].get("sensorTemperatureOffset",""):
+				delSens = True
 
-			if sensor in sensorsOld and "autoCalibration" 		 in sensorsOld[sensor][devId]: 
-				if sensorsOld[sensor][devId]["autoCalibration"] != sensors[sensor][devId]["autoCalibration"]:
-					if devId in SENSOR:  del SENSOR[devId]
+			if "altitudeCompensation"		not in sensors[sensor][devId]:	sensors[sensor][devId]["altitudeCompensation"] 		= ""
+			if "autoCalibration" 			not in sensors[sensor][devId]:	sensors[sensor][devId]["autoCalibration"] 			= "1"
+			if "sensorTemperatureOffset" 	not in sensors[sensor][devId]:	sensors[sensor][devId]["sensorTemperatureOffset"] 	= ""
 
-
-			if "sensorTemperatureOffset" not in sensors[sensor][devId]: 
-				sensors[sensor][devId]["sensorTemperatureOffset"] = "0"
-
-			if sensor in sensorsOld and sensorsOld[sensor][devId]["sensorTemperatureOffset"] != sensors[sensor][devId]["sensorTemperatureOffset"]:
-					if devId in SENSOR: del SENSOR[devId]
-
+			if delSens:
+				if devId in SENSOR: del SENSOR[devId]
 
 			try:
 				if "minSendDelta" in sensors[sensor][devId]: 
-					minSendDelta= float(sensors[sensor][devId]["minSendDelta"])
+					minSendDelta = float(sensors[sensor][devId]["minSendDelta"])
 			except:
 				minSendDelta = 5.
 
 				
 			if devId not in SENSOR or  restart:
-				U.logger.log(30," new parameters read:  minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}".format( minSendDelta, deltaX[devId], sensorRefreshSecs) )
+				U.logger.log(20," new parameters read:  minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}".format( minSendDelta, deltaX[devId], sensorRefreshSecs) )
 				startSensor(devId)
 				if SENSOR[devId] == "":
 					return
@@ -468,42 +521,55 @@ def readParams():
 
 
 #################################
-def startSensor(devId):
+def startSensor(devId, Co2Target="", reset=False):
 	global sensors,sensor
 	global startTime
 	global SENSOR, i2c_bus
-	global deviceVersion, sensorTemperatureOffset, autoCalibration
+	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
 	startTime =time.time()
 
 	
-	try:
-		ii = SENSOR[devId]
-	except:
+	if devId  in SENSOR:
+		if reset:
+			U.logger.log(20," soft resetting sensor")
+			SENSOR[devId].scd30.soft_reset()
+			del SENSOR[devId]
+		if not reset and Co2Target != "": 
+			SENSOR[devId].scd30.set_Force_self_calibration(Co2Target)
+			sensorCo2Target[devId]			= SENSOR[devId].scd30.get_Force_self_calibration()
+
+	if devId not  in SENSOR:
 		try:
-			autoCalibration = True
-			time.sleep(1)
-			SENSOR[devId]			= SENSORclass()
-			deviceVersion			= SENSOR[devId].scd30.get_firmware_version()
-			AutocalibWas			= SENSOR[devId].scd30.get_auto_self_calibration_active()
-			sensorTemperatureOffset	= SENSOR[devId].scd30.get_temperature_offset()
-			U.logger.log(20," version: {}, calibration was set to:{}, temperature offset was:{}".format(deviceVersion, AutocalibWas, sensorTemperatureOffset) )
+			autoCalibration[devId]			= True
+			SENSOR[devId]					= SENSORclass()
+			deviceVersion[devId]			= SENSOR[devId].scd30.get_firmware_version()
+
+			if Co2Target != "": 
+				U.logger.log(20," setting co2 calib. to:{}".format(Co2Target))
+				if Co2Target != 400:
+					sensors[sensor][devId]["autoCalibration"] = "0"
+				SENSOR[devId].scd30.set_Force_self_calibration(Co2Target)
+
+			if sensors[sensor][devId]["altitudeCompensation"] != "": 
+				SENSOR[devId].scd30.set_AltitudeCompensation(int(sensors[sensor][devId]["altitudeCompensation"]))
+			if sensors[sensor][devId]["autoCalibration"] != "": 
+				SENSOR[devId].scd30.set_auto_self_calibration( sensors[sensor][devId]["autoCalibration"] == "1" )
+			if sensors[sensor][devId]["sensorTemperatureOffset"] != "": 
+				SENSOR[devId].scd30.set_temperature_offset( int(sensors[sensor][devId]["sensorTemperatureOffset"]) )
+				time.sleep(1)
+
+			AutocalibWas					= SENSOR[devId].scd30.get_auto_self_calibration_active()
+			altitudeCompensation[devId]		= SENSOR[devId].scd30.get_AltitudeCompensation()
+			sensorCo2Target[devId]			= SENSOR[devId].scd30.get_Force_self_calibration()
+			sensorTemperatureOffset[devId]	= SENSOR[devId].scd30.get_temperature_offset()
+			U.logger.log(20," version: {}, auto-calibration was set to: {:}, temperature offset was:{}, Co2 target:{}, altitudeCompensation:{}".format(deviceVersion[devId], AutocalibWas, sensorTemperatureOffset[devId], sensorCo2Target[devId], altitudeCompensation[devId]) )
 			# set auto calib 
-			if str(AutocalibWas) != sensors[sensor][devId]["autoCalibration"]:
-				U.logger.log(20," setting auto-calibration to:{}".format(sensors[sensor][devId]["autoCalibration"]) )
-				SENSOR[devId].scd30.set_auto_self_calibration( sensors[sensor][devId]["autoCalibration"]=="1" )
-				time.sleep(1)
-			# set temp offset  
-			toff =  min(10.,max(-10.,float(sensors[sensor][devId]["sensorTemperatureOffset"])))
-			if str(toff) != str(sensorTemperatureOffset): 
-				U.logger.log(20," setting temp offset to:{}".format(sensors[sensor][devId]["sensorTemperatureOffset"]) )
-				SENSOR[devId].scd30.set_temperature_offset( toff )
-				time.sleep(1)
 
 			ret = 	SENSOR[devId].getData()
 
 			U.logger.log(20,"  first data read: {}".format(ret ) )
-			autoCalibration			= SENSOR[devId].scd30.get_auto_self_calibration_active()
-			sensorTemperatureOffset	= SENSOR[devId].scd30.get_temperature_offset()
+			autoCalibration[devId]			= SENSOR[devId].scd30.get_auto_self_calibration_active()
+			sensorTemperatureOffset[devId]	= SENSOR[devId].scd30.get_temperature_offset()
 
 		except	Exception as e:
 			U.logger.log(30,"", exc_info=True)
@@ -517,7 +583,7 @@ def startSensor(devId):
 def getValues(devId):
 	global sensor, sensors,	 SENSOR, badSensor
 	global startTime, sendToIndigoSecs, sensorMode
-	global deviceVersion, sensorTemperatureOffset, autoCalibration
+	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
 
 	try:
 		if devId not in SENSOR:
@@ -536,7 +602,7 @@ def getValues(devId):
 		if "offsetTemp" in sensors[sensor][devId]: temp += float(sensors[sensor][devId]["offsetTemp"])
 		if "offsetHum"  in sensors[sensor][devId]: hum  += float(sensors[sensor][devId]["offsetHum"])
 		if "offsetCO2"  in sensors[sensor][devId]: CO2  += float(sensors[sensor][devId]["offsetCO2"])
-		data = {"temp":	round(temp,1), "CO2": int(CO2+0.5), "hum": int(hum+0.5), "deviceVersion":deviceVersion, "autoCalibration": autoCalibration, "sensorTemperatureOffset": sensorTemperatureOffset} 
+		data = {"temp":	round(temp,1), "CO2": int(CO2+0.5), "hum": int(hum+0.5), "deviceVersion":deviceVersion[devId], "autoCalibration": autoCalibration[devId], "sensorTemperatureOffset": sensorTemperatureOffset[devId],"sensorCo2Target":sensorCo2Target[devId], "altitudeCompensation":altitudeCompensation[devId]} 
 		badSensor = 0
 		return data
 	except	Exception as e:
@@ -556,10 +622,15 @@ def execSensor():
 	global oldRaw, lastRead
 	global startTime, sendToIndigoSecs, sensorRefreshSecs, lastMeasurement
 	global deviceVersion
+	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
 
-	deviceVersion				= ""
+	deviceVersion				= {}
+	sensorTemperatureOffset		= {}
+	autoCalibration				= {}
+	sensorCo2Target				= {}
+	altitudeCompensation		= {}
 	sensorMode					= {}
-	sendToIndigoSecs			= 80
+	sendToIndigoSecs			= 20
 	startTime					= time.time()
 	lastMeasurement				= time.time()
 	oldRaw						= ""
@@ -599,8 +670,9 @@ def execSensor():
 	lastData			= {}
 	lastSend			= 0
 	G.lastAliveSend		= time.time()
-
+	badsensorCountCO2		= {}
 	sensorWasBad 		= False
+
 	while True:
 		try:
 			tt = time.time()
@@ -609,29 +681,68 @@ def execSensor():
 			if sensor in sensors:
 				data = {"sensors": {sensor:{}}}
 				for devId in sensors[sensor]:
-					if devId not in lastValues: 
-						lastValues[devId]  =copy.copy(lastValues0)
-						lastValues2[devId] =copy.copy(lastValues0)
-					values = getValues(devId)
-					if values == "": 
-						continue
+					if devId not in badsensorCountCO2: badsensorCountCO2[devId] = 0
+					Co2Target = U.checkNewCalibration(G.program)
+					if Co2Target:
+						try:	del SENSOR[devId]
+						except:	pass
+						U.logger.log(20," Co2Target:{}".format(Co2Target))
 
-					data["sensors"][sensor][devId]={}
+						if type(Co2Target) == type({}):
+							Co2Target["value"] = max(400, int(Co2Target["value"]))
+							startSensor(devId, Co2Target=Co2Target["value"]) # set co2 to lowest value
+						else:	
+							startSensor(devId, Co2Target=440) # set co2 to lowest value
+
+					if U.checkResetFile(G.program):
+						U.logger.log(20," resetting sensor")
+						startSensor(devId, Co2Target=430, reset=True) # 
+
+
+					if devId not in lastValues: 
+						lastValues[devId]  = copy.copy(lastValues0)
+						lastValues2[devId] = copy.copy(lastValues0)
+					values = getValues(devId)
+
+					if values == "":
+				 		continue
+
+					if values["CO2"] < 400: 
+						badsensorCountCO2[devId] +=1
+						U.logger.log(20," badsensorCountCO2:{}, co2:{}".format(badsensorCountCO2[devId] , values["CO2"] ))
+						if badsensorCountCO2[devId]  > 12:
+							U.restartMyself(param="", reason="co2 value to low",doPrint=True,python3=True)
+
+						elif badsensorCountCO2[devId]  > 6:
+							sensorCo2Target[devId] += 30	
+							startSensor(devId, Co2Target=sensorCo2Target[devId], reset=True) # 
+							continue
+
+						elif badsensorCountCO2[devId]  > 3:
+							values = "badSensor"
+
+						else:
+							continue
+
+					data["sensors"][sensor][devId] = {}
 					if values == "badSensor":
 						sensorWasBad = True
-						data["sensors"][sensor][devId]="badSensor"
+						data["sensors"][sensor][devId] = "badSensor"
 						if badSensor < 5: 
-							U.logger.log(30," bad sensor")
+							U.logger.log(20,"bad sensor count  limit reached")
 							U.sendURL(data)
+							badSensor +=1
 						else:
-							U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
-						lastValues2[devId] =copy.copy(lastValues0)
-						lastValues[devId]  =copy.copy(lastValues0)
+							if badsensorCountCO2[devId] == 0:
+								U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
+						lastValues2[devId] = copy.copy(lastValues0)
+						lastValues[devId]  = copy.copy(lastValues0)
 						continue
-					elif values["CO2"] !="":
-					
+					elif values["CO2"] != "":
+						badsensorCountCO2[devId] = 0
+						badSensor = 0
 						data["sensors"][sensor][devId] = values
-						deltaN =0
+						deltaN = 0
 						for xx in lastValues0:
 							try:
 								current = float(values[xx])
@@ -654,6 +765,7 @@ def execSensor():
 
 			##U.makeDATfile(G.program, data)
 			quick = U.checkNowFile(G.program)				 
+							 
 			U.echoLastAlive(G.program)
 
 			tt= time.time()

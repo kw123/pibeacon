@@ -2154,6 +2154,7 @@ the msg and TLM messages are automatically recognized and the beacon is setup ac
 					<Option value="TLM-3000-2800"	>YES, use BLE-TLM message type with LiPo (CRxxx=3.2V)</Option>
 					<Option value="TLM-3000-2400"	>YES, use BLE-TLM message type with 2 AA(A) (3V)</Option>
 					<Option value="TLM-4500-3600"	>YES, use BLE-TLM message type with 3 AAA (4.5V)</Option>
+					<Option value="inherit"    	 	>inherit from beacon sensor device</Option>
 					<Option value="off"    	 		>OFF</Option>
 				</List>
 				<Label>.... get battery level:</Label>
@@ -10827,48 +10828,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>SensorStatus</TriggerLabel>
 				<ControlPageLabel>SensorStatus</ControlPageLabel>
 			</State>
-
-			<State id="AirQuality">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQuality</TriggerLabel>
-				<ControlPageLabel>AirQuality</ControlPageLabel>
-			</State>
-			<State id="AirQualityMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityMaxToday</TriggerLabel>
-				<ControlPageLabel>AirQualityMaxToday</ControlPageLabel>
-			</State>
-			<State id="AirQualityMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityMinToday</TriggerLabel>
-				<ControlPageLabel>AirQualityMinToday</ControlPageLabel>
-			</State>
-			<State id="AirQualityMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityMaxYesterday</TriggerLabel>
-				<ControlPageLabel>AirQualityMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="AirQualityMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityMinYesterday</TriggerLabel>
-				<ControlPageLabel>AirQualityMinYesterday</ControlPageLabel>
-			</State>
- 			<State id="AirQualityChange5Minutes">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityChange5Minutes</TriggerLabel>
-				<ControlPageLabel>PressurAirQualityChange5MinuteseChange5Minutes</ControlPageLabel>
-			</State>
-			<State id="AirQualityChange1Hour">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityChange1Hour</TriggerLabel>
-				<ControlPageLabel>AirQualityChange1Hour</ControlPageLabel>
-			</State>
-			<State id="AirQualityChange6Hours">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>AirQualityChange12Hours</TriggerLabel>
-				<ControlPageLabel>AirQualityChange12Hours</ControlPageLabel>
-			</State>
-
 			<State id="GasBaseline">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>GasBaseline</TriggerLabel>
@@ -11572,7 +11531,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="particles_25um"  >particles 2.5um Count/0.1L</Option>
 					<Option value="particles_50um"  >particles 5.0um Count/0.1L</Option>
 					<Option value="particles_100um" >particles 10 um Count/0.1L</Option>
-					<Option value="airQuality"      >air Quality Level USA definitions</Option>
+					<Option value="AirQualityText"  >air Quality Level USA definitions</Option>
 				</List>
 			</Field>
 
@@ -11671,10 +11630,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>particles_100um</TriggerLabel>
 				<ControlPageLabel>particles_100um</ControlPageLabel>
 			</State>
-			<State id="airQuality">
+			<State id="AirQualityText">
 				<ValueType>String</ValueType>
-				<TriggerLabel>airQuality</TriggerLabel>
-				<ControlPageLabel>airQuality</ControlPageLabel>
+				<TriggerLabel>AirQualityText</TriggerLabel>
+				<ControlPageLabel>AirQualityText</ControlPageLabel>
 			</State>
 
 		</States>
@@ -11820,7 +11779,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabel" type="label">
 				<Label>Setup scd30 CO2 temp hum sensor on individual rPis..
-    connect 3.3V, GND, SDA, SCL. ====
+    connect 3.3V, GND, SDA, SCL. 
+    the sensor need about a week to get to its final calibration level====
   </Label>
 			</Field>
 
@@ -11896,6 +11856,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="0"    > off</Option>
 					<Option value="1"    > on</Option>
 				</List>
+			</Field>
+
+			<Field id="altitudeCompensation"   type="textfield"     defaultValue=""> 
+				<Label>set the sensor internal altitude compensation[m]:</Label> 
 			</Field>
 
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
@@ -11977,8 +11941,20 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<State id="sensorTemperatureOffset">
 				<ValueType>number</ValueType>
-				<TriggerLabel>autoCasensorTemperatureOffsetlibration</TriggerLabel>
+				<TriggerLabel>sensorTemperatureOffset</TriggerLabel>
 				<ControlPageLabel>sensorTemperatureOffset</ControlPageLabel>
+			</State>
+
+			<State id="sensorCo2Target">
+				<ValueType>number</ValueType>
+				<TriggerLabel>sensorCo2Target</TriggerLabel>
+				<ControlPageLabel>sensorCo2Target</ControlPageLabel>
+			</State>
+
+			<State id="altitudeCompensation">
+				<ValueType>number</ValueType>
+				<TriggerLabel>altitudeCompensation</TriggerLabel>
+				<ControlPageLabel>altitudeCompensation</ControlPageLabel>
 			</State>
 
 
@@ -12308,7 +12284,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<States>
 
 			<State id="CO2calibration">
-				<ValueType>Float</ValueType>
+				<ValueType>String</ValueType>
 				<TriggerLabel>CO2calibration</TriggerLabel>
 				<ControlPageLabel>CO2calibration</ControlPageLabel>
 			</State>
@@ -12318,7 +12294,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ControlPageLabel>CO2offset</ControlPageLabel>
 			</State>
 			<State id="raw">
-				<ValueType>String</ValueType>
+				<ValueType>Float</ValueType>
 				<TriggerLabel>raw</TriggerLabel>
 				<ControlPageLabel>raw</ControlPageLabel>
 			</State>
@@ -25782,7 +25758,7 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 				<Label>=== Use light sensor to dim LED/ screen:</Label>
 			</Field>
 
-			<Field id="lightSensorForDisplay-DevId-type"  type="menu" defaultValue="-1" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
+			<Field id="lightSensorForDisplayDevIdType"  type="menu" defaultValue="-1" visibleBindingId="lightSensorOnForDisplay" visibleBindingValue="true" >
 				<List class="self" filter="" method="filterLightSensorOnRpi" dynamicReload="false"/>
 				<Label>.. use which light sensor:</Label>
 			</Field>

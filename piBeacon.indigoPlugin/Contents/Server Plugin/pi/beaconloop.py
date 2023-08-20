@@ -313,8 +313,8 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 
 			U.logger.log(30,"myBLEmac HCIs{}".format( HCIs))
 			useHCIForBeacon,  myBLEmac, devId, bus = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"USB", tryBLEmac=trymyBLEmac)
-			U.writeFile("temp/beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus}))
-			U.writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus}))
+			U.writeFile("temp/beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"beaconloop"}))
+			U.writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"beaconloop"}))
 			oText = ""
 			for iii in range(0,5):
 				hciX = "hci"+str(iii) 
@@ -417,8 +417,8 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 		return 0, "", -5
 
 
-	U.writeFile("temp/beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus}))
-	U.writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus}))
+	U.writeFile("temp/beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"beaconloop"}))
+	U.writeFile("beaconloop.hci", json.dumps({"usedHCI":useHCIForBeacon, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"beaconloop"}))
 
 
 	if rpiDataAcquistionMethod.find("hcidump" ) == 0:
@@ -2308,7 +2308,7 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Mi
 
 	"""
 		doPrint 		= False
-		#if mac == "48:57:43:00:10:FC": doPrint = True
+		#if mac == "E7:2E:01:41:5C:D9": doPrint = True
 		out 			= ""
 		testStringTEMP 	= "x"
 		testStringHUM  	= "x"
@@ -6006,8 +6006,9 @@ def checkWhichHCIForBeep():
 			useHCIForBeep = useHCIForBeacon
 			beepBatteryBusy = 1
 
-		hciCheckLastTime = time.time() + 100.
+		hciCheckLastTime = time.time() + 50.
 		hciUsedByBLEconnect, raw  = U.readJson("{}temp/BLEconnect.hci".format(G.homeDir))
+		#hciUsedBybeep, raw  = U.readJson("{}temp/beaconbeep.hci".format(G.homeDir))  # not needed 
 		#{'hci': {'hci1': {'bus': 'USB', 'numb': 1, 'upDown': 'UP', 'BLEmac': '5C:F3:70:6D:D9:4A'}, 'hci0': {'bus': 'USB', 'numb': 0, 'upDown': 'UP', 'BLEmac': '5C:F3:70:6D:D9:4D'}, 'hci2': {'bus': 'UART', 'numb': 2, 'upDown': 'UP', 'BLEmac': 'B8:27:EB:F4:B0:82'}}, 'ret': ['hci1:\tType: Primary  Bus: USB\n\tBD Address: 5C:F3:70:6D:D9:4A  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:3527 acl:0 sco:0 events:212 errors:0\n\tTX bytes:6047 acl:0 sco:0 commands:212 errors:0\n\nhci0:\tType: Primary  Bus: USB\n\tBD Address: 5C:F3:70:6D:D9:4D  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:161825 acl:47 sco:0 events:5462 errors:0\n\tTX bytes:8170 acl:40 sco:0 commands:336 errors:0\n\nhci2:\tType: Primary  Bus: UART\n\tBD Address: B8:27:EB:F4:B0:82  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:72804 acl:0 sco:0 events:4552 errors:0\n\tTX bytes:83050 acl:0 sco:0 commands:4552 errors:0\n\n', '']}	
 
 		HCIList = HCIs["hci"]
@@ -6028,6 +6029,7 @@ def checkWhichHCIForBeep():
 			useHCIForBeep = hci
 			cmd = "sudo hciconfig "+useHCIForBeep+" reset &"
 			readPopen(cmd)
+			U.writeFile("temp/beaconbeep.hci", json.dumps({"usedHCI":useHCIForBeep, "myBLEmac": HCIList[hci]["BLEmac"], "usedBus": HCIList[hci]["bus"],"pgm":"beaconbeep"}))
 			#U.logger.log(20,u"useHCIForBeacon:reset {}".format(useHCIForBeep))
 			return 
 
@@ -6037,6 +6039,7 @@ def checkWhichHCIForBeep():
 		U.logger.log(30,u" HCIs:{}".format(HCIs))
 
 	useHCIForBeep = useHCIForBeacon
+	U.writeFile("temp/beaconbeep.hci", json.dumps({"usedHCI":useHCIForBeep, "myBLEmac": HCIList[useHCIForBeacon]["BLEmac"], "usedBus": HCIList[useHCIForBeacon]["bus"]}))
 	beepBatteryBusy = 1
 	return 
 

@@ -77,21 +77,20 @@ def OUTPUTi2cRelay(command):
 				if sleepForxSecs(delayStart):
 					return 
 
+			pulseUp = float(command.get("pulseUp",1))
+			pulseDown = float(command.get("pulseDown",1))
+			nPulses = float(command.get("nPulses",1))
+
 			if "values" in command:
-				values =  command["values"]
-			else: 
-				values =""
-	
-			try:
-				if "pulseUp" in values:		pulseUp = float(values["pulseUp"])
-				else:						pulseUp = 0
-				if "pulseDown" in values:	pulseDown = float(values["pulseDown"])
-				else:						pulseDown = 0
-				if "nPulses" in values:		nPulses = int(values["nPulses"])
-				else:						nPulses = 0
-			except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
-				exit(0)
+				values =  command.get("values",{})
+				if values != {}:
+					try:
+						pulseUp = float(values.get("pulseUp",1))
+						pulseDown = float(values.get("pulseDown",1))
+						nPulses = int(values.get("nPulses",1))
+					except	Exception as e:
+						U.logger.log(20," error reading command values:{}".format(values))
+		
 
 			inverseGPIO = False
 			if "inverseGPIO" in command:
@@ -102,58 +101,54 @@ def OUTPUTi2cRelay(command):
 			else: devId = "0"
 
 
-			try:
-				if inverseGPIO: 
-					up   = 0x00
-					down = 0xff
-					on   = "low"
-					off  = "high" 
-				else:
-					up   = 0xff
-					down = 0x00
-					on   = "high"
-					off  = "low" 
+			if inverseGPIO: 
+				up   = 0x00
+				down = 0xff
+				on   = "low"
+				off  = "high" 
+			else:
+				up   = 0xff
+				down = 0x00
+				on   = "high"
+				off  = "low" 
 
-				if cmd == "up":
+			if cmd == "up":
+				bus.write_byte_data(i2cAddress, pin, up)
+				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, up))
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+
+			elif cmd == "down":
+				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
+				bus.write_byte_data(i2cAddress, pin,down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+
+			elif cmd == "pulseUp":
+				bus.write_byte_data(i2cAddress, pin, up)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				if sleepForxSecs(pulseUp): break
+				bus.write_byte_data(i2cAddress, pin, down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+
+			elif cmd == "pulseDown":
+				bus.write_byte_data(i2cAddress, pin, down)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+				if sleepForxSecs(pulseDown): break
+				bus.write_byte_data(i2cAddress, pin, up)
+				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+
+			elif cmd == "continuousUpDown":
+				for ii in range(nPulses):
+
 					bus.write_byte_data(i2cAddress, pin, up)
-					U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, up))
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
-				elif cmd == "down":
-					U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
-					bus.write_byte_data(i2cAddress, pin,down)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
-
-				elif cmd == "pulseUp":
-					bus.write_byte_data(i2cAddress, pin, up)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 					if sleepForxSecs(pulseUp): break
-					bus.write_byte_data(i2cAddress, pin, down)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
-				elif cmd == "pulseDown":
 					bus.write_byte_data(i2cAddress, pin, down)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+
 					if sleepForxSecs(pulseDown): break
-					bus.write_byte_data(i2cAddress, pin, up)
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
-				elif cmd == "continuousUpDown":
-					for ii in range(nPulses):
-
-						bus.write_byte_data(i2cAddress, pin, up)
-
-						if sleepForxSecs(pulseUp): break
-
-						bus.write_byte_data(i2cAddress, pin, down)
-
-						if sleepForxSecs(pulseDown): break
-
-				U.removeOutPutFromFutureCommands(pin, devType)
+			U.removeOutPutFromFutureCommands(pin, devType)
 			
-
-			except Exception as e:
-					U.logger.log(40,"", exc_info=True)
 	except Exception as e:
 			U.logger.log(40,"", exc_info=True)
 
@@ -170,7 +165,7 @@ def setGPIO(command):
 	#U.logger.log(G.debug*20, "{:.2f} into setGPIO ".format(time.time()) )
 
 	for iiii in range(1):
-		try:	PWM= command["PWM"] *100
+		try:	PWM= int(command["PWM"])
 		except: PWM = 100
 
 
@@ -185,14 +180,15 @@ def setGPIO(command):
 			typeForPWM = "GPIO"
 		
 
+
 		if "cmd" in command:
-			cmd= command["cmd"]
+			cmd = command["cmd"]
 			if cmd not in allowedCommands:
 				U.logger.log(20, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
 				exit(1)
 
 		if "pin" in command:
-			pin= int(command["pin"])
+			pin = int(command["pin"])
 		else:
 			U.logger.log(20, "setGPIO pid={}, pin not included,  bad command {}".format(myPID, command) )
 			exit(1)
@@ -204,23 +200,25 @@ def setGPIO(command):
 			if sleepForxSecs(delayStart):
 				return 
 
+		pulseUp = float(command.get("pulseUp",1))
+		pulseDown = float(command.get("pulseDown",1))
+		nPulses = float(command.get("nPulses",1))
+
 		if "values" in command:
-			values =  command["values"]
+			values =  command.get("values",{})
+			if values != {}:
+				try:
+					pulseUp = float(values.get("pulseUp",1))
+					pulseDown = float(values.get("pulseDown",1))
+					nPulses = int(values.get("nPulses",1))
+					bits = min(100,max(100,int(values.get("bits",50))))
+				except	Exception as e:
+					U.logger.log(20," error reading command values:{}".format(values))
+		
+		
 
 		#	 "values:{analogValue:"analogValue+",pulseUp:"+ pulseUp + ",pulseDown:" + pulseDown + ",nPulses:" + nPulses+"}
 
-		try:
-			if "pulseUp" in values:		pulseUp = float(values["pulseUp"])
-			else:						pulseUp = 0
-			if "pulseDown" in values:	pulseDown = float(values["pulseDown"])
-			else:						pulseDown = 0
-			if "nPulses" in values:		nPulses = int(values["nPulses"])
-			else:						nPulses = 0
-			if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
-			else:						bits = 0
-		except	Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			exit(0)
 
 		inverseGPIO = False
 		if "inverseGPIO" in command:
@@ -230,7 +228,7 @@ def setGPIO(command):
 			devId = str(command["devId"])
 		else: devId = "0"
 
-		U.logger.log(myDebug, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, command:{} ".format(time.time(), cmd, pin, command) )
+		U.logger.log(20, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, command:{} ".format(time.time(), cmd, pin, command) )
 		try:
 			if inverseGPIO: 
 				up   = 0
@@ -383,7 +381,7 @@ def execCMDS(next):
 						f.write("{}".format(fc)) 
 						f.close()
 						if "touchFile" in next and next["touchFile"]:
-							subprocess.call("echo	 "+str(time.time())+" > "+G.homeDir+"temp/touchFile" , shell=True)
+							subprocess.call("echo	 { } > {}temp/touchFile".format(time.time(), G.homeDir) , shell=True)
 						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
 					except	Exception as e:
 						U.logger.log(30,"", exc_info=True)
@@ -547,7 +545,7 @@ def execCMDS(next):
 						else:
 							list = [next["device"]]
 						for pgm in list:
-							subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".now", shell=True)
+							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".now", shell=True)
 						continue
 
 
@@ -559,7 +557,7 @@ def execCMDS(next):
 						else:
 							list = [next["device"]]
 						for pgm in list:
-							subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".reset", shell=True)
+							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".reset", shell=True)
 						continue
 
 
@@ -568,12 +566,23 @@ def execCMDS(next):
 			if	cmd == "startCalibration":
 						if next["device"].find(",")> 1:
 							list = next["device"].split(",")
-						elif next["device"]== "all":
+						elif next["device"] == "all":
 							list = G.specialSensorList
 						else:
 							list = [next["device"]]
-						for pgm in list:
-							subprocess.call("echo x > "+G.homeDir+"temp/"+pgm+".startCalibration", shell=True)
+						for xxx in list:
+							xxx = xxx.split(".")
+							#U.logger.log(30,"xxx= {}".format(xxx))
+							if len(xxx) > 0:
+								fname  = '{}temp/{}.startCalibration'.format(G.homeDir, xxx[0])
+								out = '{{"value":{}}}'.format(  xxx[1])
+								U.logger.log(30," start calibration..  pgm:{}, data:{}".format(xxx[0], out))
+								f = open(fname,"w")
+								f.write(out)
+								f.close()
+							else:
+								U.logger.log(30," start calibration ..  for pgm:{}".format(xxx[0]))
+								subprocess.call("touch {}temp/{}.startCalibration".format( G.homeDir, xxx[0]), shell=True)
 						continue
 
 
@@ -840,6 +849,9 @@ def setupexecThreads(next):
 	return False
 
 
+
+		
+
 ### ----------------------------------------- ###
 def stopExecCmd(threadName):
 	global inp
@@ -900,6 +912,63 @@ def getcurentCMDS():
 	return 
 
 
+
+### ----------------------------------------- ###
+### -- read from file in temp dir and then execute command--- ###
+### ----------------------------------------- ###
+def setupReadTempDirThread():
+	global threadsActive
+	threadName = "readTempDir"
+	try:
+		threadsActive[threadName] = {"state":"running", "thread": threading.Thread(name=threadName, target=readTempDirThread, args=())}	
+		threadsActive[threadName]["thread"].daemon = True
+		threadsActive[threadName]["thread"].start()
+		return True
+
+	except	Exception as e:
+		U.logger.log(30,"", exc_info=True)
+	return False
+
+### ----------------------------------------- ###
+def readTempDirThread():
+	global threadsActive
+	threadName = "readTempDir"
+	fName = G.homeDir+"temp/file.cmd"	
+
+	U.logger.log(20, u"readTempDirThread started:")
+	while  threadsActive[threadName]["state"] == "running":
+		#U.logger.log(20, u"readTempDirThread looping trough:{}".format(G.homeDir+"temp/fileCommand.inp"))
+		time.sleep(1.5)
+		commands = {}
+		if os.path.isfile(fName):
+			#U.logger.log(20, u"readTempDirThread file found:")
+			f = open(fName,"r")
+			try:
+				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
+				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "continuousUpDown", "values":{"nPulses":4, "pulseUp":2, "pulseDown":2},  "pin": "19"}]'
+				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "pulseUp", "values":{"pulseUp":2},  "pin": "19"}]'
+				reawRead = f.read().strip("\n")
+				commands = json.loads(reawRead)
+			except:
+				U.logger.log(20, u"readTempDirThread bad read:{}".format(reawRead))
+			f.close()
+			U.logger.log(20, u"readTempDirThread commands:{}".format(commands))
+
+			os.remove(fName)
+			if commands != {}:
+				for next in commands:
+					#U.logger.log(20, u"readTempDirThread next:{}".format(next))
+					if execSimple(next): continue
+					setupexecThreads(next)
+
+
+			#'[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
+
+### ----------------------------------------- ###
+### -- END read from file in temp dir and then execute command--- ###
+### ----------------------------------------- ###
+### ----------------------------------------- ###
+	
 				 
 ### ----------------------------------------- ###
 def readParams():
@@ -967,6 +1036,7 @@ if __name__ == "__main__":
 	if sys.version[0] == "3" or usePython3:
 		py3Cmd = "/usr/bin/python3"
 
+	setupReadTempDirThread()
 
 	U.logger.log(30,"started, listening to port: "+ str(PORT))
 	restartMaster = False

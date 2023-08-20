@@ -2637,6 +2637,14 @@ def calcStartTime(data,timeStamp):
 			return startAtDateTime
 		except:
 			pass
+	elif timeStamp.lower() in data:
+		try:
+			startAtDateTime =  float(data[timeStamp.lower()])
+			if startAtDateTime < 1000000.:
+				return time.time() + startAtDateTime
+			return startAtDateTime
+		except:
+			pass
 	return time.time()
 
 #################################
@@ -2653,9 +2661,22 @@ def checkNewCalibration(xxx):
 #################################
 def doFileCheck(xxx,extension):
 	try:
-		if os.path.isfile("{}temp/{}.{}".format(G.homeDir, xxx, extension)):
+		thefile = "{}temp/{}.{}".format(G.homeDir, xxx, extension)
+		if os.path.isfile(thefile):
 			try:
-				os.remove("{}temp/{}.{}".format(G.homeDir, xxx, extension))
+				if len(thefile) > 0:
+					f = open(thefile,"r")
+					raw = f.read()
+					f.close()
+					#logger.log(20, u"cBY:{:<20}  removing calibration file:{}".format(G.program, thefile))
+					os.remove(thefile)
+					try:
+						data = json.loads(raw)
+						return data
+					except	Exception as e:
+						pass
+				#logger.log(20, u"cBY:{:<20}  removing calibration file:{}".format(G.program, thefile))
+				os.remove(thefile)
 			except:
 				pass
 			return True

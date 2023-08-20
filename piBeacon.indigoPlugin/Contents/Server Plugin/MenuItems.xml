@@ -555,7 +555,7 @@ Other beacons that send the battery level every second
 				<Label>select beacon from list (or all):</Label>
 				<List class="self" filter="" method="filterBeaconsWithBattery" dynamicReload="false" />
 			</Field>
-			<Field id="beepTime" type="menu" defaultValue="0">
+			<Field id="beepTime" type="menu" defaultValue="1">
 				<Label>do a beep before battery cmd</Label>
 				<List>
 					<Option value= "-1">no beep</Option>
@@ -596,7 +596,7 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 				<Label>select the beacon</Label>
 				<List class="self" filter="beep" method="filterBeaconsThatCanBeepOrSetTime" dynamicReload="false" />
 			</Field>
-			<Field id="beepTime" type="menu" defaultValue="-1" tooltip="">
+			<Field id="beepTime" type="menu" defaultValue="1" tooltip="">
 				<List>
 					<Option value= "-1">send only beep off command</Option>
 					<Option value="1">1 sec</Option>
@@ -1166,6 +1166,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 					<Option value="ina219">ina219</Option>
 					<Option value="bno095">bno095</Option>
 					<Option value="sgp30">sgp30</Option>
+					<Option value="sensirionscd30">sensirion scd30</Option>
 					<Option value="mag3110">mag3110</Option>
 					<Option value="pmairquality">pmairquality</Option>
 					<Option value="myprogram">myprogram</Option>
@@ -1199,12 +1200,20 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 					<Option value="bme680">bme680 air quality sensor</Option>
 					<Option value="mhz-I2C,mhz-SERIAL">MH-Zxx CO2 sensor</Option>
 					<Option value="lidar360">lidar360</Option>
+					<Option value="sensirionscd30">sensirion scd30 (enter value 400+ ppm)</Option>
 					<Option value="sgp30">sgp30</Option>
 					<Option value="myprogram">myprogram</Option>
 					<Option value="mysensor">mysensor</Option>
 					<Option value="all">all</Option>
 				</List>
 				<Label>device type that should be asked to recalibrate:</Label>
+			</Field>
+			<Field id="explanation" type="label" visibleBindingId="typeId" visibleBindingValue="sensirionscd30">
+				<Label>use an external value to calibrate, the sensor should read this value now
+You must first switch off auto calibration in device edit </Label>
+			</Field>
+			<Field id="value" type="textfield" visibleBindingId="typeId" visibleBindingValue="sensirionscd30">
+				<Label>enter CO2 value >= 400 [ppm] </Label>
 			</Field>
 			<Field id="exec" type="button">
 				<Label> ....after selection click</Label>

@@ -165,10 +165,10 @@ def startHCI():
 				if len(HCIs["hci"]) > 2:
 					useHCI2,  myBLEmac2, BLEid2, bus2 = U.selectHCI(HCIs["hci"], "", "", doNotUseHCI=doNotUseHCI, doNotUseHCI2=useHCI)
 					if BLEid2 >= 0:
-						U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
+						U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"BLEconnect"}))
 						return useHCI,  myBLEmac, BLEid, bus, useHCI2  
 
-				U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus}))
+				U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"BLEconnect"}))
 				U.logger.log(20, "BLE(long)connect: using mac:{};  useHCI: {}; bus: {}; mode: {} searching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
 				return 	useHCI,  myBLEmac, BLEid, bus, useHCI
 

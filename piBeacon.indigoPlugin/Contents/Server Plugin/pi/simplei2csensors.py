@@ -4445,7 +4445,7 @@ global sensorRefreshSecs
 global output
 
 
-sensorRefreshSecs	= 75
+sensorRefreshSecs	= 30
 oldRaw				= ""
 lastRead			= 0
 tempUnits			="Celsius"
@@ -4501,7 +4501,7 @@ while True:
 			if "i2cBMP280"		in sensors: data = getBME("i2cBMP280",		 data,BMP=True)
 			if "i2cBMPxx"		in sensors: data = getBMP("i2cBMPxx",		 data)
 			if "i2cT5403"		in sensors: data = getT5403("i2cT5403",		 data)
-			if "i2cMS5803"		in sensors: data = getMS5803("i2cMS5803",data)
+			if "i2cMS5803"		in sensors: data = getMS5803("i2cMS5803",	 data)
 ## only temp 
 			if "i2cMCP9808"		in sensors: data = getMCP9808("i2cMCP9808",	 data)
 			if "i2cTMP102"		in sensors: data = getTMP102("i2cTMP102",	 data)
@@ -4511,7 +4511,7 @@ while True:
 ## light sensors 
 			if "i2cTCS34725"	in sensors: data = getTCS34725("i2cTCS34725",data)
 			if "i2cOPT3001"		in sensors: data = getOPT3001("i2cOPT3001",	 data)
-			if "i2cVEML7700"	in sensors: data = getVEML7700("i2cVEML7700",  data)
+			if "i2cVEML7700"	in sensors: data = getVEML7700("i2cVEML7700", data)
 			if "i2cVEML6030"	in sensors: data = getVEML6030("i2cVEML6030",data)
 			if "i2cVEML6040"	in sensors: data = getVEML6040("i2cVEML6040",data)
 			if "i2cVEML6070"	in sensors: data = getVEML6070("i2cVEML6070",data)
@@ -4524,7 +4524,7 @@ while True:
 			if "i2cPCF8591"		in sensors: data = getPCF8591("i2cPCF8591",	 data)
 			if "i2cADS1x15"		in sensors: data = getADS1x15("i2cADS1x15",	 data)
 			if "i2cADS1x15-1"	in sensors: data = getADS1x15("i2cADS1x15-1",data)
-			if "i2cADC121"		in sensors: data = getADC121("i2cADC121",data)
+			if "i2cADC121"		in sensors: data = getADC121("i2cADC121"    ,data)
 
 		U.logger.log(10, u"data:{}".format(data) )
 		doDisplay()
@@ -4538,19 +4538,19 @@ while True:
 			changed = 1
 		else:
 			for sens in data:
-				if changed>0: break
+				if changed > 0: break
 				if sens not in lastData:
-					changed= 2
+					changed = 2
 					break
 				for devid in data[sens]:
-					if changed>0: break
+					if changed > 0: break
 					if devid not in lastData[sens]:
-						changed= 3
+						changed = 3
 						break
 					for devType in data[sens][devid]:
-						if changed>0: changed = 4
+						if changed > 0: changed = 4
 						if devType not in lastData[sens][devid]:
-							changed= 5
+							changed = 5
 							break
 						try:
 							#print dd, lastData[sens][dd], data[sens][dd]
@@ -4564,9 +4564,9 @@ while True:
 							changed = 7
 							break
 		#U.logger.log(20, "changed:{},  tt-lastMsg:{}, G.sendToIndigoSecs:{} , tt-lastMsg:{}, G.deltaChangedSensor:{}, data:{}".format(changed, tt-lastMsg, G.sendToIndigoSecs ,	 tt-lastMsg, G.deltaChangedSensor,data)  )
-		if data !={} and ( changed >0 or( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
+		if data != {} and ( changed > 0 or ( (tt-lastMsg) >  G.sendToIndigoSecs  or (tt-lastMsg) > 200	 )		 ):
 			lastMsg = tt
-			lastData=copy.copy(data)
+			lastData = copy.copy(data)
 			try:
 				U.sendURL({"sensors":data})
 			except	Exception as e:

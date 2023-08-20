@@ -38,15 +38,17 @@ def getDATAdht(DHTpinI,Type,devId):
 			if startDHT =="":
 				startDHT  = {}
 				sensorDHT = {}
-			if devId not in lastSensorRead: 
-				lastSensorRead[devId] = 0
 			startDHT[str(DHTpinI)] = 1
 			if Type.lower() == "11":		
 				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT11
 			else:	  
 				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT22
 		try:
+			if devId not in lastSensorRead: 
+				lastSensorRead[devId] = time.time()
+
 			if time.time() - lastSensorRead[devId] < 3.: time.sleep( max(0, min(3.1, 3.5 - (time.time() - lastRead )) ) )
+
 			h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
 			if "{}".format(h) == "None" or "{}".format(t) == "None":
 				time.sleep(3.) # min wait between read -s 2.0 secs, give it a little more..
