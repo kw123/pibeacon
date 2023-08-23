@@ -1,4 +1,4 @@
-added features / changes in v2022.170.85 @ 2023-08-23
+added features / changes in v2022.170.86 @ 2023-08-23
 ==================================================
 
 1.   fixed bug introduced in v2022.169.84
@@ -8,6 +8,8 @@ added features / changes in v2022.170.85 @ 2023-08-23
      they draw 200mA when measuring and require a very stable voltage. 
      And connect the V pin to +5V make sure you set V-i2c to 3V on the board)
      not fully tested, pre version
+3.   optimized pi software updates
+
 
 
 added features / changes in v2022.169.84 @ 2023-08-20
