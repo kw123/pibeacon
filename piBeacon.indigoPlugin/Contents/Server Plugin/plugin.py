@@ -441,6 +441,7 @@ _GlobalConst_allowedSensors = [
 	 "ccs811",																   # co2 voc
 	 "mhzCO2",																# co2 temp
 	 "sensirionscd30",																# co2 temp
+	 "sensirionscd40",																# co2 temp
 	 "rainSensorRG11",
 	 "moistureSensor",
 	 "launchpgm",
@@ -633,10 +634,10 @@ _stateListToDevTypes["trigger"]					= {"vcnl4010Distance":1, "vl6180xDistance":1
 _stateListToDevTypes["distance"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distanceRaw"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1}
-_stateListToDevTypes["Temperature"]				= {"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["Temperature"]				= {"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
-_stateListToDevTypes["Humidity"]				= {"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1}
-_stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
+_stateListToDevTypes["Humidity"]				= {"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
+_stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
 _stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
 _stateListToDevTypes["VOC"]						= {"sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1}
 _stateListToDevTypes["AirQuality"]				= {"bme680":1}
@@ -9798,10 +9799,10 @@ class Plugin(indigo.PluginBase):
 				theType = valuesDict["typeId"] 
 				#self.indiLOG.log(20,"set calibration for sensirion co2 sensor : valuesDict:{}".format(valuesDict) )
 				valuesDict["typeId"] = valuesDict["typeId"] + "." + valuesDict["value"]
-				if theType == "sensirionscd30":
+				if theType in ["sensirionscd30","sensirionscd40"]:
 					for dev in indigo.devices.iter("props.isSensorDevice"):
 						#self.indiLOG.log(20,"set calibration checking typeId {}".format(dev.deviceTypeId) )
-						if dev.deviceTypeId != "sensirionscd30": continue
+						if dev.deviceTypeId != theType: continue
 						#self.indiLOG.log(20,"set calibration checking pi#:{}".format(dev.pluginProps["piServerNumber"] , valuesDict["piServerNumber"]) )
 						if dev.pluginProps["piServerNumber"] != valuesDict["piServerNumber"]: continue
 						props = dev.pluginProps
@@ -15364,6 +15365,13 @@ class Plugin(indigo.PluginBase):
 				if "deviceVersion" in data 				and "deviceVersion" in dev.states 			and "{}".format(data["deviceVersion"]) != "{}".format(dev.states["deviceVersion"]):
 									self.addToStatesUpdateDict(dev.id, "deviceVersion", 		data["deviceVersion"])
 
+				if "serialNumber" in data 				and "serialNumber" in dev.states 			and "{}".format(data["serialNumber"]) != "{}".format(dev.states["serialNumber"]):
+									self.addToStatesUpdateDict(dev.id, "serialNumber", 		data["serialNumber"])
+
+
+				if "fastSlowRead" in data 				and "fastSlowRead" in dev.states 			and "{}".format(data["fastSlowRead"]) != "{}".format(dev.states["fastSlowRead"]):
+									self.addToStatesUpdateDict(dev.id, "fastSlowRead", 		data["fastSlowRead"])
+
 
 				if "sensorCo2Target" in data 	and "sensorCo2Target" in dev.states and "{}".format(data["sensorCo2Target"]) != "{}".format(dev.states["sensorCo2Target"]):
 									self.addToStatesUpdateDict(dev.id, "sensorCo2Target", data["sensorCo2Target"])
@@ -16300,7 +16308,7 @@ class Plugin(indigo.PluginBase):
 			if stateToUpdate not in dev.pluginProps.get("isMememberOfChangedValues","").split(","): 
 				return 
 
-			if False and stateToUpdate == "Humidity": 
+			if False and dev.id == 94071339 and stateToUpdate == "Humidity": 
 				doPrint = True
 			else:
 				doPrint = False
@@ -16309,6 +16317,7 @@ class Plugin(indigo.PluginBase):
 
 			devIdS = str(dev.id)
 
+			# create teh measurement time stamps in minutes
 			for state in dev.states:
 				## state  eg =  "temperatureChange1Hour"
 				if state.find(stateToUpdate+"Change") == 0:
@@ -16316,8 +16325,8 @@ class Plugin(indigo.PluginBase):
 					if state.find("_ui") > 8: continue
 					upU = state.split("Change")[1]
 					if len(upU) < 2: continue
-					if upU.find("Hour") >-1:     updateN = "Hour";   updateMinutes = 3600
-					elif upU.find("Minute") >-1: updateN = "Minute"; updateMinutes = 60
+					if upU.find("Hour") > -1:     updateN = "Hour";   updateMinutes = 3600
+					elif upU.find("Minute") > -1: updateN = "Minute"; updateMinutes = 60
 					else: continue
 					amount = upU.split(updateN)[0]
 					updateList.append( {"state":state, "unit":updateN, "deltaSecs":updateMinutes * int(amount), "pointer":0, "changed":0} )
@@ -16333,8 +16342,8 @@ class Plugin(indigo.PluginBase):
 
 
 			updateList = sorted(updateList, key = lambda x: x["deltaSecs"])
-			#if doPrint: self.indiLOG.log(20,"{}: {}, = {}  updateList:{},  ".format(dev.name, stateToUpdate, value, updateList))
-			#if dev.id == 94071339: self.indiLOG.log(20,"{}: start changedValues:{},  ".format(dev.name, self.changedValues[devIdS][stateToUpdate+"list"]))
+			if doPrint: self.indiLOG.log(20,"{}: {}, = {}  updateList:{},  ".format(dev.name, stateToUpdate, value, updateList))
+			#if doPrint: self.indiLOG.log(20,"{}: start changedValues:{},  ".format(dev.name, self.changedValues[devIdS][stateToUpdate+"list"]))
 
 
 			if stateToUpdate+"list" in self.changedValues[devIdS]:
@@ -16343,22 +16352,21 @@ class Plugin(indigo.PluginBase):
 				valueList = [(0,0),(0,0)]
 
 
-			#decimalPlaces = 0
-			if False:
-				xx = str(value).split(".")
-				if len(xx) == 1: 
-					valueList.append([int(time.time()),int(value)])
-				elif len(xx) == 2: 
-					try:
-						decimalPlaces = len(xx[1])
-						valueList.append([int(time.time()), round(value,decimalPlaces)])
-					except:
-						self.indiLOG.log(20,"{}, error stateToUpdate:{}, value:>>{}<<,  xx>>{}<< ".format(dev.name, stateToUpdate,  value, xx))
-				else:
-					return
+			try: decimalPlaces = int(decimalPlaces)
+			except: 
+				self.indiLOG.log(20,"updateChangedValuesInLastXXMinutes dev{}: bad decimalPlaces {}: type:{}  must be >=0 and integer ".format(dev.name, decimalPlaces, type(decimalPlaces)))
+				return
+
+			if decimalPlaces == 0: 
+				valueList.append([int(time.time()),int(value)])
+			elif decimalPlaces > 0: 
+				valueList.append([int(time.time()), round(value,decimalPlaces)])
+			else:  
+				self.indiLOG.log(20,"updateChangedValuesInLastXXMinutes dev{}: bad decimalPlaces {}: type:{}  must be >=0 and integer ".format(dev.name, decimalPlaces, type(decimalPlaces)))
+				return
 
 			jj 		= len(updateList)
-			cutMax	= updateList[-1]["deltaSecs"]
+			cutMax	= updateList[-1]["deltaSecs"] # this is for 172800 secs = 48 hours
 			ll		= len(valueList)
 			for ii in range(ll):
 				if len(valueList) <= 2: break
@@ -16369,7 +16377,7 @@ class Plugin(indigo.PluginBase):
 			ll = len(valueList)
 			if ll > 1:
 				for kk in range(jj):
-					cut = updateList[kk]["deltaSecs"]
+					cut = updateList[kk]["deltaSecs"] # = 5 min = 300, 10 min = 600, 20 min=1200, 1 hour = 3600 ... 48hours = 172800 secs
 					updateList[kk]["pointer"] = 0
 					if cut != cutMax: # we can skip the largest, must be first and last entry
 						for ii in range(ll-1,-1,-1):
@@ -16378,7 +16386,7 @@ class Plugin(indigo.PluginBase):
 							else:
 								break
 
-					if decimalPlaces =="":
+					if decimalPlaces == "":
 						changed			 = round(( valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] ))
 					elif decimalPlaces == 0:
 						changed			 = int(valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] )
@@ -19384,7 +19392,7 @@ class Plugin(indigo.PluginBase):
 										"displayEnable","freeParameter","display","isBLElongConnectDevice",
 										"gpioEcho","gpioTrigger","xShutPin","gpio",
 										"calibrateSetting","recalibrateIfGT","setCalibrationFixedValue","deltaDist","deltaDistAbs","units","dUnits","multiply","offset",
-										"format","sensorTemperatureOffset","autoCalibration","altitudeCompensation","multTemp","offsetTemp","offsetCO2","offsetAlt","enableCalibration","multiplyPress","offsetPress","offsetGas","multiplyHum","offsetHum",
+										"format","sensorTemperatureOffset","autoCalibration","fastSlowRead","altitudeCompensation","multTemp","offsetTemp","offsetCO2","offsetAlt","enableCalibration","multiplyPress","offsetPress","offsetGas","multiplyHum","offsetHum",
 										"input","spiAddress","gpioPin","sps","gain","integrationTime","doAverage","LEDBlink","LEDmA","font","width","width1","width2","width3","pos1","pos2","pos3","pos3LinLog","logScale","displayText","normalizeDistance","colorOfDistanceBar","inverseDistance",
 										"intensity","freeParameter","refreshColor","deltaColor","refreshProximity","deltaProximity","enableGesture","interruptGPIO",
 										"actionPulseBurst","actionPulseContinuous","actionLEFT","actionRIGHT","actionUP","actionDOWN","actionDoubleClick","actionLongClick","actionNEAR","actionFAR","actionPROXup","actionPROXdown","acuracyDistanceMode","mode","waitIfNone","restartAfterNones",
@@ -20618,13 +20626,14 @@ configuration         - ==========  defined beacons ==============
 		startDate= time.strftime(_defaultDateStampFormat,time.localtime(self.dataStats["updates"]["startTime"]))
 		self.myLog( theText = "",mType=" " )
 		self.myLog( theText = "===    measuring started at: {}".format(startDate), mType="indigo update stats " )
-		self.myLog( theText = "updates: {:10d};   updates/sec: {:10.2f};   updates/minute: {:10.2f}".format(self.dataStats["updates"]["devs"], self.dataStats["updates"]["devs"] /nSecs, self.dataStats["updates"]["devs"]  /nMin), mType= "    device ")
-		out = "(#states #updates #updates/min) "
-		for ii in range(1,10):
-			out+= "({:1d} {:1d} {:3.1f}) ".format(ii, self.dataStats["updates"]["nstates"][ii], self.dataStats["updates"]["nstates"][ii]/nMin)
-		out+= "({:1d} {:1d} {:3.1f})".format(10, self.dataStats["updates"]["nstates"][10], self.dataStats["updates"]["nstates"][10]/nMin)
-		self.myLog( theText = "updates: {}".format(out), mType=  "    #states")
-		self.myLog( theText = "===	total time measured: {}".format( time.strftime("%H:%M:%S", time.gmtime(nSecs)) ), mType= "indigo update stats" )
+		self.myLog( theText = "total device updates: {:10d};   updates/sec: {:10.2f};   updates/minute: {:10.2f}".format(self.dataStats["updates"]["devs"], self.dataStats["updates"]["devs"] /nSecs, self.dataStats["updates"]["devs"]  /nMin), mType= "indigo update stats")
+		self.myLog( theText =    " #states   #updates   #updates/min  to indigo and logging" ,mType= "indigo update stats")
+		for ii in range(1,10): #  1234567   891234567891 123456789012
+			self.myLog( theText ="     {:2d}  {:10d}     {:6.1f}".format(ii, self.dataStats["updates"]["nstates"][ii], self.dataStats["updates"]["nstates"][ii]/nMin),mType= "indigo update stats")
+		ii = 10
+		self.myLog( theText     ="   >={:2d}  {:10d}     {:6.1f}".format(ii, self.dataStats["updates"]["nstates"][ii], self.dataStats["updates"]["nstates"][ii]/nMin),mType= "indigo update stats")
+
+		self.myLog( theText = "=== total time measured: Days:{}  HH:MM:SS {}".format( str(int(time.strftime("%d", time.gmtime(nSecs)))-1), str(time.strftime("%H:%M:%S", time.gmtime(nSecs))) ), mType= "indigo update stats" )
 		return
 
 
@@ -20901,6 +20910,7 @@ configuration         - ==========  defined beacons ==============
 				if onlyDevID !="0" and onlyDevID != devId: continue
 				if len(local) > 0:
 					dev =indigo.devices[int(devId)]
+					lastSensorChangePresent = False
 					nKeys = 0
 					#if dev.id ==739817084: self.indiLOG.log(20,	"image:{}, local:{} \nchangedOnly:{}".format(image, local[devId], changedOnly ))
 					for key in local[devId]:
@@ -20923,12 +20933,14 @@ configuration         - ==========  defined beacons ==============
 							if local[devId][key]["force"]:
 										upd = True
 							if upd:
-								nKeys +=1
+								nKeys += 1
 								if devId not in changedOnly: changedOnly[devId]={}
 								changedOnly[devId][key] = {"value":local[devId][key]["value"], "decimalPlaces":local[devId][key]["decimalPlaces"], "uiValue":local[devId][key]["uiValue"]}
-								if "lastSensorChange" in dev.states and key != "lastUpdateFromRPI" and  "lastSensorChange" not in changedOnly[devId]:
-									nKeys +=1
-									changedOnly[devId]["lastSensorChange"] = {"value":dateString, "decimalPlaces":"", "uiValue":""}
+								if not lastSensorChangePresent:
+									if "lastSensorChange" in dev.states and key not in ["lastUpdateFromRPI", "lastMessageFromRpi"] and  "lastSensorChange" not in changedOnly[devId]:
+										nKeys +=1
+										changedOnly[devId]["lastSensorChange"] = {"value":dateString, "decimalPlaces":"", "uiValue":""}
+										lastSensorChangePresent = True
 
 
 					#if dev.id ==739817084: self.indiLOG.log(20,	"image:{}, local:{} \nchangedOnly:{}".format(image, local[devId], changedOnly ))
@@ -20946,14 +20958,14 @@ configuration         - ==========  defined beacons ==============
 						if "created" in changedOnly[devId]:
 							createdSet = True
 						for key in changedOnly[devId]:
+							if key == "lastSensorChange": lastSensorChangePresent = True
 
 							if key == "status":
 								value =changedOnly[devId][key]["value"]
 								if "lastStatusChange" in dev.states and "lastStatusChange" not in changedOnly[devId]:
 									try:
-										st	= "{}".format(value).lower()
+										st	= "{}".format(value).lower().split(" ")[0] # remove strings after up down ie dates 
 										if st in ["up", "down", "expired", "on", "off", "1", "0"]:
-											props = dev.pluginProps
 											if dateString != dev.states["lastStatusChange"]:
 												chList.append({"key": "lastStatusChange", "value":dateString})
 									except: pass
@@ -20999,8 +21011,9 @@ configuration         - ==========  defined beacons ==============
 										else:
 											chList.append({"key":key,"value":changedOnly[devId][key]["value"]})
 
-									if "lastSensorChange"  in dev.states and (  (key != "lastSensorChange" and key != "lastUpdateFromRPI" ) or ( key == "lastSensorChange" and nKeys >0)):
-										chList.append({"key":"lastSensorChange", "value":dateString})
+									if not lastSensorChangePresent and "lastSensorChange"  in dev.states :
+										if  (key != "lastSensorChange" and key not in ["lastUpdateFromRPI","lastMessageFromRpi"] ) or ( key == "lastSensorChange" and nKeys >0):
+											chList.append({"key":"lastSensorChange", "value":dateString})
 
 							else: # not status 
 
@@ -21015,6 +21028,12 @@ configuration         - ==========  defined beacons ==============
 										chList.append({"key":key,"value":changedOnly[devId][key]["value"], "decimalPlaces":changedOnly[devId][key]["decimalPlaces"]})
 									else:
 										chList.append({"key":key,"value":changedOnly[devId][key]["value"]})
+
+								if not lastSensorChangePresent and "lastSensorChange"  in dev.states :
+									if  (key != "lastSensorChange" and key not in ["lastUpdateFromRPI","lastMessageFromRpi"] ) or ( key == "lastSensorChange" and nKeys >0):
+										chList.append({"key":"lastSensorChange", "value":dateString})
+										lastSensorChangePresent = True
+				
 
 
 								if key == "closestRPI":
@@ -21080,10 +21099,18 @@ configuration         - ==========  defined beacons ==============
 ####-------------------------------------------------------------------------####
 	def execUpdateStatesList(self, dev, chList):
 		try:
-			if len(chList) ==0: return
-			self.dataStats["updates"]["devs"]	  +=1
-			self.dataStats["updates"]["states"] +=len(chList)
-			self.dataStats["updates"]["nstates"][min(len(chList),10)]+=1
+			if len(chList) == 0: return
+			self.dataStats["updates"]["devs"]	+=1
+			self.dataStats["updates"]["states"] += len(chList)
+			self.dataStats["updates"]["nstates"][min(len(chList),10)] += 1
+
+			### debug 
+			if False and len(chList) == 2:
+				for xxx in chList:
+					if "lastSensorChange" == xxx["key"]:
+						self.indiLOG.log(20,"execUpdateStatesList, dev:{:40s};  change list:{:} ".format(dev.name, chList))
+						break
+
 
 			if self.indigoVersion >6:
 				try:

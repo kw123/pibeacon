@@ -37,22 +37,21 @@ expect "sftp>" {  send  "mkdir  /home/pi/pibeacon\r" }
 expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/soundfiles\r" }
 expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/fonts\r" }
 expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/displayfiles\r" }
-expect "sftp>" {  send  "put -r * /home/pi/pibeacon/ \r" }
-expect "sftp>" {  send  "lcd '$piPath//interfaceFiles' \r" }
-expect "sftp>" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
-expect "sftp>" {  send  "lcd '$piPath/rejected' \r" }
-expect "sftp>" {  send  "get /home/pi/pibeacon/rejects 'rejects.$ipParms'\r" }
-expect "sftp>" {  send  "rm /home/pi/pibeacon/reject* \r" }
-expect "sftp>" {  send  "lcd '$piPath//soundFiles' \r" }
-expect "sftp>" {  send  "put  -r * /home/pi/pibeacon/soundfiles/ \r" }
-expect "sftp>" {  send  "lcd '$piPath//displayfiles' \r" }
-expect "sftp>" {  send  "put -r * /home/pi/pibeacon/displayfiles/ \r" }
-expect "sftp>" {  send  "lcd '$indigoPath/fonts/' \r" }
-expect "sftp>" {  send  "put -r  * /home/pi/pibeacon/fonts/ \r" }
-expect "sftp>" {  send  "lcd '$indigoPath/images/' \r" }
-expect "sftp>" {  send  "put -r  * /home/pi/pibeacon/displayfiles/ \r" }
-expect "sftp>" {  send  "lcd '$piPath//all' \r" }
-expect "sftp>" {  send  "put *  /home/pi/pibeacon/ \r" }
+expect "sftp>" {  send  "mkdir  /home/pi/pibeacon/neopix2\r" }
+
+expect "sftp>" {  send  "put * /home/pi/pibeacon/ \r" }
+expect "sftp>" {  send  "put -r copyme/* /home/pi/pibeacon/ \r" }
+expect "sftp>" {  send  "put  neopix2/* /home/pi/pibeacon/neopix2 \r" }
+
+expect "sftp>" {  send  "lcd '$piPath' \r" }
+
+expect "sftp>" {  send  "put 'interfaceFiles/parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
+expect "sftp>" {  send  "put soundFiles/* /home/pi/pibeacon/soundfiles/ \r" }
+expect "sftp>" {  send  "put displayfiles/* /home/pi/pibeacon/displayfiles/ \r" }
+expect "sftp>" {  send  "put fonts/* /home/pi/pibeacon/fonts/ \r" }
+expect "sftp>" {  send  "put images/* /home/pi/pibeacon/displayfiles/ \r" }
+expect "sftp>" {  send  "put all/*  /home/pi/pibeacon/ \r" }
+
 expect "sftp>" {  send  "rm /home/pi/pibeacon/temp/touchFile  \r" }
 sleep 3
 expect "sftp>" {  send  "quit\r" }

@@ -1,7 +1,19 @@
-dded features / changes in v2022.169.84 @ 2023-08-20
+added features / changes in v2022.170.85 @ 2023-08-23
 ==================================================
 
-1.   general maintenace release
+1.   fixed bug introduced in v2022.169.84
+     changed values (5 min, 10 min, 1 hour ...)  for temp humidity .. values did not update
+2.   added sensirion scd40 41.. sensortypes they measure CO2 temp and hunidity, using i2c 
+     please get one with its own voltage regulator (eg adafruit.
+     they draw 200mA when measuring and require a very stable voltage. 
+     And connect the V pin to +5V make sure you set V-i2c to 3V on the board)
+     not fully tested, pre version
+
+
+added features / changes in v2022.169.84 @ 2023-08-20
+==================================================
+
+1.   general maintenance release
 2.   added battery level to veg trug beacons
 3.   added menu action to reset or calibrate co2 sensors sensirion scd30
      added device states to reflect calibration status

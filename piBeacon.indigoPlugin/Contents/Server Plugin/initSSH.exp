@@ -30,6 +30,7 @@ send  "mkdir /home/pi/pibeacon \r"
 send  "mkdir /home/pi/pibeacon/fonts \r" 
 send  "mkdir /home/pi/pibeacon/displayfiles \r" 
 send  "mkdir /home/pi/pibeacon/soundfiles \r" 
+send  "mkdir /home/pi/pibeacon/neopix2 \r" 
 send  "exit\r"
 expect eof
 

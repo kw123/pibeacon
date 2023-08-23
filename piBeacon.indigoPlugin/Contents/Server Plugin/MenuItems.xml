@@ -1167,6 +1167,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 					<Option value="bno095">bno095</Option>
 					<Option value="sgp30">sgp30</Option>
 					<Option value="sensirionscd30">sensirion scd30</Option>
+					<Option value="sensirionscd40">sensirion scd40</Option>
 					<Option value="mag3110">mag3110</Option>
 					<Option value="pmairquality">pmairquality</Option>
 					<Option value="myprogram">myprogram</Option>
@@ -1201,6 +1202,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 					<Option value="mhz-I2C,mhz-SERIAL">MH-Zxx CO2 sensor</Option>
 					<Option value="lidar360">lidar360</Option>
 					<Option value="sensirionscd30">sensirion scd30 (enter value 400+ ppm)</Option>
+					<Option value="sensirionscd40">sensirion scd40 (enter value 400+ ppm)</Option>
 					<Option value="sgp30">sgp30</Option>
 					<Option value="myprogram">myprogram</Option>
 					<Option value="mysensor">mysensor</Option>
@@ -1208,11 +1210,11 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				</List>
 				<Label>device type that should be asked to recalibrate:</Label>
 			</Field>
-			<Field id="explanation" type="label" visibleBindingId="typeId" visibleBindingValue="sensirionscd30">
+			<Field id="explanation" type="label" visibleBindingId="typeId" visibleBindingValue="sensirionscd30,sensirionscd40">
 				<Label>use an external value to calibrate, the sensor should read this value now
 You must first switch off auto calibration in device edit </Label>
 			</Field>
-			<Field id="value" type="textfield" visibleBindingId="typeId" visibleBindingValue="sensirionscd30">
+			<Field id="value" type="textfield" visibleBindingId="typeId" visibleBindingValue="sensirionscd30,sensirionscd40">
 				<Label>enter CO2 value >= 400 [ppm] </Label>
 			</Field>
 			<Field id="exec" type="button">

@@ -581,7 +581,7 @@ def startSensor(devId, Co2Target="", reset=False):
 
 #################################
 def getValues(devId):
-	global sensor, sensors,	 SENSOR, badSensor
+	global sensor, sensors,	 SENSOR, badsensorCountCO2
 	global startTime, sendToIndigoSecs, sensorMode
 	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
 
@@ -589,13 +589,11 @@ def getValues(devId):
 		if devId not in SENSOR:
 			startSensor(devId) 
 		if SENSOR[devId] == "": 
-			badSensor +=1
 			return "badSensor"
 
 		CO2, temp, hum = 	SENSOR[devId].getData()
-		if type(temp) != type(0.1): 
-			badSensor += 1
-			if badSensor > 5: return "badSensor"
+		if type(temp) != float: 
+			if badsensorCountCO2[devId] > 5: return "badSensor"
 			return ""
 
 		#U.logger.log(20, u"CO2:{}, temp:{}, hum:{}".format(CO2, temp, hum))
@@ -603,12 +601,11 @@ def getValues(devId):
 		if "offsetHum"  in sensors[sensor][devId]: hum  += float(sensors[sensor][devId]["offsetHum"])
 		if "offsetCO2"  in sensors[sensor][devId]: CO2  += float(sensors[sensor][devId]["offsetCO2"])
 		data = {"temp":	round(temp,1), "CO2": int(CO2+0.5), "hum": int(hum+0.5), "deviceVersion":deviceVersion[devId], "autoCalibration": autoCalibration[devId], "sensorTemperatureOffset": sensorTemperatureOffset[devId],"sensorCo2Target":sensorCo2Target[devId], "altitudeCompensation":altitudeCompensation[devId]} 
-		badSensor = 0
+		badsensorCountCO2[devId] = 0
 		return data
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
-	badSensor += 1
-	if badSensor > 5: return "badSensor"
+	if badsensorCountCO2[devId] > 5: return "badSensor"
 	return ""
 
 
@@ -617,7 +614,7 @@ def getValues(devId):
 
 ############################################
 def execSensor():
-	global sensor, sensors, badSensor, sensorList
+	global sensor, sensors, sensorList, badsensorCountCO2
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead
 	global startTime, sendToIndigoSecs, sensorRefreshSecs, lastMeasurement
@@ -643,7 +640,6 @@ def execSensor():
 	sensor						= G.program
 	quick						= False
 	output						= {}
-	badSensor					= 0
 	SENSOR						= {}
 	deltaX						= {}
 	myPID						= str(os.getpid())
@@ -670,7 +666,7 @@ def execSensor():
 	lastData			= {}
 	lastSend			= 0
 	G.lastAliveSend		= time.time()
-	badsensorCountCO2		= {}
+	badsensorCountCO2	= {}
 	sensorWasBad 		= False
 
 	while True:
@@ -704,10 +700,22 @@ def execSensor():
 						lastValues2[devId] = copy.copy(lastValues0)
 					values = getValues(devId)
 
-					if values == "":
-				 		continue
+					data["sensors"][sensor][devId] = {}
+					if values in ["badSensor",""]:
+						sensorWasBad = True
+						data["sensors"][sensor][devId] = "badSensor"
+						badsensorCountCO2[devId] +=1
+						if badsensorCountCO2[devId] == 5: 
+							U.logger.log(20,"bad sensor count  limit reached")
+							U.sendURL(data)
+						else:
+							if badsensorCountCO2[devId] == 0:
+								U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
+						lastValues2[devId] = copy.copy(lastValues0)
+						lastValues[devId]  = copy.copy(lastValues0)
+						continue
 
-					if values["CO2"] < 400: 
+					if values["CO2"] < 380: 
 						badsensorCountCO2[devId] +=1
 						U.logger.log(20," badsensorCountCO2:{}, co2:{}".format(badsensorCountCO2[devId] , values["CO2"] ))
 						if badsensorCountCO2[devId]  > 12:
@@ -718,41 +726,23 @@ def execSensor():
 							startSensor(devId, Co2Target=sensorCo2Target[devId], reset=True) # 
 							continue
 
-						elif badsensorCountCO2[devId]  > 3:
-							values = "badSensor"
-
+						elif badsensorCountCO2[devId]  == 7:
+							pass
 						else:
 							continue
 
-					data["sensors"][sensor][devId] = {}
-					if values == "badSensor":
-						sensorWasBad = True
-						data["sensors"][sensor][devId] = "badSensor"
-						if badSensor < 5: 
-							U.logger.log(20,"bad sensor count  limit reached")
-							U.sendURL(data)
-							badSensor +=1
-						else:
-							if badsensorCountCO2[devId] == 0:
-								U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
-						lastValues2[devId] = copy.copy(lastValues0)
-						lastValues[devId]  = copy.copy(lastValues0)
-						continue
-					elif values["CO2"] != "":
-						badsensorCountCO2[devId] = 0
-						badSensor = 0
-						data["sensors"][sensor][devId] = values
-						deltaN = 0
-						for xx in lastValues0:
-							try:
-								current = float(values[xx])
-								delta	= current-lastValues2[devId][xx]
-								delta  /=  max (0.5,(current+lastValues2[devId][xx])/2.)
-								deltaN	= max(deltaN,abs(delta) )
-								lastValues[devId][xx] = current
-							except: pass
-					else:
-						continue
+					badsensorCountCO2[devId] = 0
+					data["sensors"][sensor][devId] = values
+					deltaN = 0
+					for xx in lastValues0:
+						try:
+							current = float(values[xx])
+							delta	= current-lastValues2[devId][xx]
+							delta  /=  max (0.5,(current+lastValues2[devId][xx])/2.)
+							deltaN	= max(deltaN,abs(delta) )
+							lastValues[devId][xx] = current
+						except: pass
+
 					if (   ( deltaN > deltaX[devId]	 ) or  (  tt - abs(sendToIndigoSecs) > G.lastAliveSend  ) or quick ) and  ( tt - G.lastAliveSend > minSendDelta ):
 						sendData = True
 						lastValues2[devId] = copy.copy(lastValues[devId])
