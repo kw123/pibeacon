@@ -2635,7 +2635,12 @@ def tralingAv(sensor, mac, avType, retVal):
 def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min, sensor):
 	global BLEsensorMACs, sensors
 
-	""" format:
+
+
+	""" 
+ manufacturer  KAIPULE 
+
+format:
 																							
 - on/off sensors 
 									pos#      01 23 45  67 89 01 23 45 67 89 01 23 45  67 89 01 23 45 67 89 01 23 45   67 89 01 23 45 67 89 01 23   RSSI
@@ -2683,8 +2688,8 @@ def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		
 		hexData = hexData[14:]
 		if len(hexData) < 40: return tx, "", UUID, Maj, Min, False
-		TagPos1 	= hexData.find("02010609086953656E736F722009FF") 
-		TagPos2 	= hexData.find("02010609086953656E736F722011FF") 
+		TagPos1 	= hexData.find("02010609086953656E736F722009FF")  ## on off sensor
+		TagPos2 	= hexData.find("02010609086953656E736F722011FF")  # temp hum .. sensor 
 		#                                        i S e n s o r _
 		if TagPos1 !=0 and TagPos2 !=0: return tx, "", UUID, Maj, Min, False
 		remoteTrig = False

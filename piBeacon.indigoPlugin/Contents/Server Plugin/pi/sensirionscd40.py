@@ -429,7 +429,7 @@ def execSensor():
 							U.sendURL(data)
 							badsensorCountCO2[devId] += 1
 						else:
-							if badsensorCountCO2[devId] == 0:
+							if badsensorCountCO2[devId] == 10:
 								U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
 						lastValues2[devId] = copy.copy(lastValues0)
 						lastValues[devId]  = copy.copy(lastValues0)
@@ -439,10 +439,11 @@ def execSensor():
 						notReadyCountCO2[devId]  +=1
 						if notReadyCountCO2[devId]  == 10:
 							data["sensors"][sensor][devId] = "badSensor"
-							U.logger.log(20,"bad sensor count  limit reached")
+							U.logger.log(20,"notReadyCountCO2 bad sensor count  limit reached")
 							U.sendURL(data)
-							notReadyCountCO2[devId] = 0
 						self.sleep(5)
+						if notReadyCountCO2[devId] == 10:
+							U.restartMyself(param="", reason="notReadyCountCO2",doPrint=True,python3=True)
 						continue
 
 					if values["CO2"] < 380: 

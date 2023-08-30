@@ -2498,7 +2498,7 @@ def execSend():
 									data["ts"]			= {"time":round(time.time(),2),"tz":tz}
 
 								if MSGwasSend:
-									echoToMessageSend(dataC, "msg send ---")
+									echoToMessageSend(dataC, "msg send, {} ---".format(compressedTag))
 									if ii !=4:
 										logger.log(20, u"cBY:{:<20} +++ message was send sucessfully after initial error at {}. try +++".format(G.program, 5-ii))
 								else:

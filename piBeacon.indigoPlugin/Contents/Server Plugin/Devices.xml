@@ -59,15 +59,6 @@ Change here or in initial setup:</Label>
 			</Field>
 
 
-			<Field id="ipNumberRpiSetStatic" type="menu"     defaultValue="0">
-				<Label>... set ip # of the rpi to Static/Dynamic:</Label>
-				 <List>
-					<Option value="0"    >make ip number dynamic, let the rpi find the ip#</Option>
-					<Option value="1"    >fix the ip number to above value (static)</Option>
-				</List>
-			</Field>
-
-
 			<Field id="newuserIdPi" type="textfield"     defaultValue="">
 				<Label>... (over)write the current RPI-userId with:</Label>
 			</Field>
@@ -1092,14 +1083,6 @@ You can connect i2c, serial, onewire, spi, GPIO input, GPIO output,  display dev
 
 			<Field id="newIPNumber" type="textfield"     defaultValue="">
 				<Label>... (over)write the current IP number of RPI with:</Label>
-			</Field>
-
-			<Field id="ipNumberRpiSetStatic" type="menu"     defaultValue="0">
-				<Label>... set ip # of the rpi to Static/Dynamic:</Label>
-				 <List>
-					<Option value="0"    >make ip number dynamic, let the rpi find the ip#</Option>
-					<Option value="1"    >fix the ip number to above value (static)</Option>
-				</List>
 			</Field>
 
 			<Field id="RPINumberLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
@@ -7832,6 +7815,11 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
 			</State>
+			<State id="lastBatteryReplaced">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
+				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
+			</State>
 			<State id="tampered">
 				<ValueType>String</ValueType>
 				<TriggerLabel>tampered</TriggerLabel>
@@ -7867,12 +7855,12 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="false"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
@@ -7884,7 +7872,7 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 Find MAC number on back of beacon or use the plugin tool detect new beacon
 This sensor family sends messages when device button pressed ..
 This device type supports the Door Bell device.
-The device will only send a message "ON" when button is pressed: state "onOff" will go "ON". After 2 seconds the plugin will switch back to "off"
+The device will only send a message "ON" when button is pressed: state "onOff" will go "ON". After xx seconds the plugin will switch back to "off"
 ===
 </Label>
 			</Field>
@@ -8025,6 +8013,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
 			</State>
+			<State id="lastBatteryReplaced">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
+				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
+			</State>
 			<State id="tampered">
 				<ValueType>String</ValueType>
 				<TriggerLabel>tampered</TriggerLabel>
@@ -8049,6 +8042,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastAliveMessage</TriggerLabel>
 				<ControlPageLabel>lastAliveMessage</ControlPageLabel>
+			</State>
+			<State id="sendsAlive">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sendsAlive</TriggerLabel>
+				<ControlPageLabel>sendsAlive</ControlPageLabel>
 			</State>
 
 		</States>
@@ -8388,6 +8386,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
+			</State>
+			<State id="lastBatteryReplaced">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
+				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
 			</State>
 
 		</States>
@@ -9075,6 +9078,18 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>serialNumber</TriggerLabel>
 				<ControlPageLabel>serialNumber</ControlPageLabel>
+			</State>
+
+			<State id="busMaster">
+				<ValueType>String</ValueType>
+				<TriggerLabel>busMaster</TriggerLabel>
+				<ControlPageLabel>busMaster</ControlPageLabel>
+			</State>
+
+			<State id="gpioUsed">
+				<ValueType>String</ValueType>
+				<TriggerLabel>gpioUsed</TriggerLabel>
+				<ControlPageLabel>gpioUsed</ControlPageLabel>
 			</State>
 	</States>
 	</Device>
@@ -11782,12 +11797,6 @@ xx_Count_groupname_ .. Home, Away</Label>
     connect 3.3V, GND, SDA, SCL. 
     the sensor need about a week to get to its final calibration level====
   </Label>
-			</Field>
-
-			<Field id="i2cAddress" type="menu"     defaultValue="97"> <Label>i2c address of device:</Label>
-				<List>
-					<Option value="97"   >0x61 = 97 is fixed </Option>
-				</List>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -25023,10 +25032,10 @@ For the read settings from the device to work you need to set up the device on t
 			</State>
 
 			</State>
-			<State id="batteryLevelLastUpdate">
+			<State id="lastUpdateBatteryLevel">
 				<ValueType>string</ValueType>
-				<TriggerLabel>batteryLevelLastUpdate</TriggerLabel>
-				<ControlPageLabel>batteryLevelLastUpdate</ControlPageLabel>
+				<TriggerLabel>lastUpdateBatteryLevel</TriggerLabel>
+				<ControlPageLabel>lastUpdateBatteryLevel</ControlPageLabel>
 			</State>
 		</States>
 	</Device>
@@ -25102,10 +25111,10 @@ This device will get its battery level from its brother device,
 				<TriggerLabel>allowsConnection</TriggerLabel>
 				<ControlPageLabel>allowsConnection</ControlPageLabel>
 			</State>
-			<State id="batteryLevelLastUpdate">
+			<State id="lastUpdateBatteryLevel">
 				<ValueType>string</ValueType>
-				<TriggerLabel>batteryLevelLastUpdate</TriggerLabel>
-				<ControlPageLabel>batteryLevelLastUpdate</ControlPageLabel>
+				<TriggerLabel>lastUpdateBatteryLevel</TriggerLabel>
+				<ControlPageLabel>lastUpdateBatteryLevel</ControlPageLabel>
 			</State>
 			<State id="ServiceData">
 				<ValueType>string</ValueType>
