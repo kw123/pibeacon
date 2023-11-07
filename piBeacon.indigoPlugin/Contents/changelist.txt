@@ -1,5 +1,6 @@
-added features / changes in v2022.171.87 @ 2023-10-31
+added features / changes in v2022.171.88 @ 2023-11-07
 ==================================================
+
 
 1.   added option to use any GPIO on the rpi to read one wire sensor temperature (ie 18db20)
      you can now use all gpios (20+) to read multiple onewire sensors each
