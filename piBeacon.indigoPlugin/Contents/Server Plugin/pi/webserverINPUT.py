@@ -7,15 +7,15 @@
 ##	check logfiles sizes and manage
 import urllib
 import json
-import urlparse
+from urllib.parse import urljoin, unquote
+
 import os
 import time
 import piBeaconUtils   as U
 import piBeaconGlobals as G
 import sys
 
-from BaseHTTPServer import BaseHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class GetHandler(BaseHTTPRequestHandler):
 
@@ -32,70 +32,75 @@ class GetHandler(BaseHTTPRequestHandler):
 		self.send_response(200)
 		self.send_header("Content-type", "text/html")
 		self.end_headers()
-		x('<!DOCTYPE html>')
-		x('<html>')
-		x('<meta http-equiv="Pragma" content="no-cache">')
-		x('<meta http-equiv="Expires" content="-1″>')
-		x('<meta http-equiv="CACHE-CONTROL" content="NO-CACHE">')
-		x(	'<head>')
-		x(		'<h3 style="background-color:rgb(30, 0, 30); color:rgb(0, 255, 0); font-family:Courier; "><b>Enter parameters, eg SID and pass-code for your WiFi, ... </b></h3>')
-		x(	'</head>')
+		x('<!DOCTYPE html>'.encode("utf-8"))
+		x('<html>'.encode("utf-8"))
+		x('<meta http-equiv="Pragma" content="no-cache">'.encode("utf-8"))
+		x('<meta http-equiv="Expires" content="-1″>'.encode("utf-8"))
+		x('<meta http-equiv="CACHE-CONTROL" content="NO-CACHE">'.encode("utf-8"))
+		x(	'<head>'.encode("utf-8"))
+		x(		'<h3 style="background-color:rgb(30, 0, 30); color:rgb(0, 255, 0); font-family:Courier; "><b>Enter parameters, eg SID and pass-code for your WiFi, ... </b></h3>'.encode("utf-8"))
+		x(	'</head>'.encode("utf-8"))
 
-		x(	'<body style="background-color:rgb(30, 0, 30); font-family:Courier; color:rgb(0, 255, 0);">')
-		x(		'<form action = "/cgi-bin/get_UID_etc.cgi" method = "get" id="myForm">'+
-					'<hr size=4 width="100%">'+
-					'SSID................:  <input type = "text" name = "SSID"     value = "do+not+change" maxlength = "35" /> <br> '+
-					'passCode............:  <input type = "text" name = "passCode" value = "do+not+change" maxlength = "35" />  <br>')
-		x(			'. . . . . . . . . . .<br>')
-		x(			'Time Zone...........:  <select name="timezone">'+
-						'<option value="99">do+not+change+time+zone</option>'+
-						'<option value="12">Pacific/Auckland(+12)</option>'+
-						'<option value="11">Pacific/Pohnpei (+11)</option>'+
-						'<option value="10">Australia/Melbourne (+10)</option>'+
-						'<option value="9">Asia/Tokyo (+9)</option>'+
-						'<option value="8">Asia/Shanghai (+8)</option>'+
-						'<option value="7">Asia/Saigon (+7)</option>'+
-						'<option value="6">Asia/Dacca (+6)</option>'+
-						'<option value="5">Asia/Karachi (+5)</option>'+
-						'<option value="4">Asia/Dubai (+4)</option>'+
-						'<option value="3">/Europe/Moscow (+3)</option>'+
-						'<option value="2">/Europe/Helsinki (+2)</option>'+
-						'<option value="1">Central-EU (+1)</option>'+
-						'<option value="0">UK (GMT) </option>'+
-						'<option value="-5">US-East Coast (-5)</option>'+
-						'<option value="-6">US-Central (-6)</option>'+
-						'<option value="-7">US-Mountain< (-7)/option>'+
-						'<option value="-8">US-West Coast(-8)</option>'+
-						'<option value="-9">US-Alaska (-9)</option>'+
-						'<option value="-10">Pacific/Honolulu (-10)</option>'+
-						'<option value="-11">US-Samoa (-11)</option>'+
-					'</select> <br>')
-		x(			'<br>')
+		x(	'<body style="background-color:rgb(30, 0, 30); font-family:Courier; color:rgb(0, 255, 0);">'.encode("utf-8"))
+		x(		'<form action = "/cgi-bin/get_UID_etc.cgi" method = "get" id="myForm">'.encode("utf-8"))
+		x(			'<hr size=4 width="100%">'.encode("utf-8"))
+		x(			'SSID................:  <input type = "text" name = "SSID"     value = "do+not+change" maxlength = "35" /> <br> '.encode("utf-8"))
+		x(			'passCode............:  <input type = "text" name = "passCode" value = "do+not+change" maxlength = "35" />  <br>'.encode("utf-8"))
+		x(			'. . . . . . . . . . .<br>'.encode("utf-8"))
+		x(			'Time Zone...........:  <select name="timezone">'.encode("utf-8"))
+		x(				'<option value="99">do+not+change+time+zone</option>'.encode("utf-8"))
+		x(				'<option value="12">Pacific/Auckland(+12)</option>'.encode("utf-8"))
+		x(				'<option value="11">Pacific/Pohnpei (+11)</option>'.encode("utf-8"))
+		x(				'<option value="10">Australia/Melbourne (+10)</option>'.encode("utf-8"))
+		x(				'<option value="9">Asia/Tokyo (+9)</option>'.encode("utf-8"))
+		x(				'<option value="8">Asia/Shanghai (+8)</option>'.encode("utf-8"))
+		x(				'<option value="7">Asia/Saigon (+7)</option>'.encode("utf-8"))
+		x(				'<option value="6">Asia/Dacca (+6)</option>'.encode("utf-8"))
+		x(				'<option value="5">Asia/Karachi (+5)</option>'.encode("utf-8"))
+		x(				'<option value="4">Asia/Dubai (+4)</option>'.encode("utf-8"))
+		x(				'<option value="3">/Europe/Moscow (+3)</option>'.encode("utf-8"))
+		x(				'<option value="2">/Europe/Helsinki (+2)</option>'.encode("utf-8"))
+		x(				'<option value="1">Central-EU (+1)</option>'.encode("utf-8"))
+		x(				'<option value="0">UK (GMT) </option>'.encode("utf-8"))
+		x(				'<option value="-5">US-East Coast (-5)</option>'.encode("utf-8"))
+		x(				'<option value="-6">US-Central (-6)</option>'.encode("utf-8"))
+		x(				'<option value="-7">US-Mountain< (-7)/option>'.encode("utf-8"))
+		x(				'<option value="-8">US-West Coast(-8)</option>'.encode("utf-8"))
+		x(				'<option value="-9">US-Alaska (-9)</option>'.encode("utf-8"))
+		x(				'<option value="-10">Pacific/Honolulu (-10)</option>'.encode("utf-8"))
+		x(				'<option value="-11">US-Samoa (-11)</option>'.encode("utf-8"))
+		x(			'</select> <br>'.encode("utf-8"))
+		x(			'<br>'.encode("utf-8"))
 #		x(			'then--------------==> <input type = "submit" value = "Submit General Parameters" />')
-		x(			'then--------------==> <input type="button" onclick="submit()" value="Submit General Parameters"/>')
 
 		getwebServerInputHTML()
 		if webServerInputHTML != "":
-			x(webServerInputHTML)
+			x(webServerInputHTML.encode("utf-8"))
 
-		x(		'<hr size=4 width="100%">')
-		x(		'</form>')
-		x(		'<script>')
-		x(		'	function submit() {')
-		x(		'	  /*Put all the data posting code here*/')
-		x(		'	 document.getElementById("myForm").reset();')
-		x(		'		}')
-		x(		'</script>')
+#		x(			'<br>'.encode("utf-8"))
+		x(			'<br>'.encode("utf-8"))
+		x(			'then--------------==> <input type="button" onclick="submit()" value="Submit"/>'.encode("utf-8"))
+		x(			'<br>'.encode("utf-8"))
+		x(			'<br>'.encode("utf-8"))
+		x(		'<hr size=4 width="100%">'.encode("utf-8"))
+		x(		'</form>'.encode("utf-8"))
+		x(		'<script>'.encode("utf-8"))
+		x(		'	function submit() {'.encode("utf-8"))
+		x(		'	  /*Put all the data posting code here*/'.encode("utf-8"))
+		x(		'	 document.getElementById("myForm").reset();'.encode("utf-8"))
+		x(		'		}'.encode("utf-8"))
+		x(		'</script>'.encode("utf-8"))
  
-		x(	'</body>')
-		x('</html>')
+		x(	'</body>'.encode("utf-8"))
+		x('</html>'.encode("utf-8"))
 
-		items =  urlparse.urlparse(self.path)
+		#print (f" sel path:  {self.path:}\n")
+		items =  unquote(self.path.encode("utf-8")) ###  .decode("utf-8", errors="replace")##  .decode("utf-8") # urljoin(self.path)
 		if len(items) < 5: 		 return 
-		if len(items.query) < 5: return 
-		items = urllib.unquote(items.query)
-		items = (items).split("&")
-		U.logger.log(10,"1. #items:{}, #ofparamets expected:{}; items{}".format(len(items),len(defaultsExtra)+ len(defaults), items))
+		items = items.split("?")[1].split("&")
+		#print (f" items:  {items:}\n")
+
+		#U.logger.log(20,"1. #items:{}, #ofparamets expected:{}; items{}".format(len(items),len(defaultsExtra)+ len(defaults), items))
 
 	
 		output = {}
@@ -104,10 +109,6 @@ class GetHandler(BaseHTTPRequestHandler):
 			item = item1.split("=")
 			if len(item) !=2: continue
 			# skip input after start to not repeat submit of last cashed values
-			if False:
-				if item[0] not in lastCommand:
-					lastCommand[item[0]] = ""
-					continue
 			lastCommand[item[0]] = item[1] 
 			if   item[0] in defaults and item[1] != defaults[item[0]] and len(item[1]) > 0: 
 				output[item[0]] = item[1]

@@ -15,6 +15,9 @@ masterVersion			= 16.11
 import sys, os, subprocess, copy
 import time,datetime
 import json
+import socket
+import struct
+
 try:
 	import serial
 except: pass
@@ -323,7 +326,7 @@ def readNewParams(force=0, init=False):
 				U.logger.log(20, "output devices: {}".format(output))
 
 			py2OrPy3 = "3" if usePython3 else "2"
-			for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","sundial","setStepperMotor"]:
+			for pp in ["setTEA5767","OUTPUTgpio","neopixelClock","display","neopixel","neopixelClock","sundial","setStepperMotor","FBHtempshow"]:
 				if pp in output:
 						if init or force !=0:
 							U.logger.log(20, "setting Active {}".format(pp) ) 
@@ -334,7 +337,7 @@ def readNewParams(force=0, init=False):
 
 							elif pp == "neopixel":
 								activePGMOutput[pp] =  py2OrPy3
-								#U.logger.log(20, "checking neopix clock: pp:{}-{}".format(pp, activePGMOutput[pp][-1]))
+								U.logger.log(20, "checking neopix clock: pp:{}-{}".format(pp, activePGMOutput[pp][-1]))
 								checkIfNeopixelIsRunning(pgm= "neopixel"+ py2OrPy3)
 
 							elif pp == "neopixelClock":
@@ -696,7 +699,7 @@ def checkIfDisplayIsRunning():
 
 
 ####################      #########################
-def checkIfNeopixelIsRunning(pgm= "neopixel2"):
+def checkIfNeopixelIsRunning(pgm= "neopixel3"):
 	global lastcheckIfNeopixelIsRunning
 	tt = time.time()
 	if tt-G.tStart< 5: return
@@ -971,7 +974,7 @@ def checkIfNightReboot():
 	U.sendRebootHTML("regular_reboot_at_{}_hours_requested ".format(rebootHour))
  
 	U.doRebootThroughRUNpinReset(tt=20)
-	doReboot(tt=20, text=" rebooting due to daily reboot time ")
+	U.doReboot(tt=20, text=" rebooting due to daily reboot time ")
 	return 
 
 
@@ -2184,7 +2187,17 @@ def checkIfWOLsendToIndigoServer():
 			return 
 	
 		U.logger.log(20, "SENDING wakeonlan to MAC#:{}".format(macIfWOLsendToIndigoServer))
-		subprocess.call("wakeonlan  "+macIfWOLsendToIndigoServer+" &", shell=True)
+
+		mac = macIfWOLsendToIndigoServer.replace(":","")
+		if usePython3: 
+			sendData = bytes.fromhex("FF" * 6 + mac * 16)  #  <---- changed from py2
+		else:
+			data = ''.join(['FF' * 6, mac * 16])
+			sendData = data.decode("hex")
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+		sock.sendto(sendData, (ipPing, 9))
+
 		lastCheckWOL = time.time()
 
 	except Exception as e:

@@ -1,40 +1,47 @@
-added features / changes in v2022.171.87 @ 2023-08-30
+added features / changes in v2022.171.87 @ 2023-10-31
 ==================================================
 
-1.   added option to use any GPIO on the rpi to read one wire sensore temperature (ie 18db20)
-     you can now use all gpios to read multiple onewire sensors each
-     so with > 10 gpios and 10 onewire sensors on each gpio it can go > 100.
-     but reading one sensor takes ~ 1 secs. So for 100 that would take 100 secs.
-     you need to add at the bottom of /boot/config.txt:
-dtoverlay=w1-gpio
-dtparam=gpiopin=26       <-- this will be  busmaster 4
-dtoverlay=w1-gpio
-dtparam=gpiopin=5
-dtoverlay=w1-gpio
-dtparam=gpiopin=17
-dtoverlay=w1-gpio
-dtparam=gpiopin=4        <-- this will be  busmaster 1
-     that will result in GPIO 4,17,5, 26 be reading onewire temp sensors
-     to edit config.txt do sudo nano /boot/config.txt  and add the lines
-     with control-o and control-x  you can save and exit nano editor 
-     then reboot
-     with    ls -o /sys/bus/w1/devices/  you can check if the busmaster channels 1.. 4 in this case are ready. you should see something like this:
+1.   added option to use any GPIO on the rpi to read one wire sensor temperature (ie 18db20)
+     you can now use all gpios (20+) to read multiple onewire sensors each
+     you need to set the GPIOs in device edit for the RPI as it is set for all onewire sensrs on that RPI
+     With eg = 10 gpios and 10 onewire sensors on each gpio it can read 100 sensors
+     with    ls -o /sys/bus/w1/devices/  you can check if the busmaster channels are ok. You should see something like this:
 lrwxrwxrwx 1 root 0 Aug 29 02:06 28-000d770e64ff -> ../../../devices/w1_bus_master4/28-000d770e64ff
 ..
-lrwxrwxrwx 1 root 0 Aug 29 02:06 28-3ce10457da57 -> ../../../devices/w1_bus_master1/28-3ce10457da57
-lrwxrwxrwx 1 root 0 Aug 29 02:06 28-0516b33a17ff -> ../../../devices/w1_bus_master3/28-0516b33a17ff
 lrwxrwxrwx 1 root 0 Aug 29 02:06 28-3ce104570a38 -> ../../../devices/w1_bus_master2/28-3ce104570a38
 ...
 lrwxrwxrwx 1 root 0 Aug 29 02:06 w1_bus_master1 -> ../../../devices/w1_bus_master1
+
      where 28-3ce10457da57 are the IDs of the one wire sensors
 
-2. added "lastBatteryReplaced" state to isensor  devices
-      they will show when the state "lowVoltage" went from empty to false or from true to false, ie when a new battery was added or when 
+    added option to use a relay to reset the onewire setup (eg to disconnect power from the onewire sensors). Set this in RPI device edit
+    added option to reboot the RPI if reading onewire sensors is not successfull for xx read tries
+    It takes about 1 secs to read a sensor. With 10 sensors on one GPIO it would take about 11 secs to read 100 sensors with 10 GPIOs
 
-3. fixed bug for iSensor On devices (door button): the dev state onOffstate ui value was always "on". the onOffState itself was correct.
+2. fixed bug for iSensor On devices (door button): the dev state onOffstate ui value was always "on". the onOffState itself was correct.
+
+3. added "lastBatteryReplaced" state to isensor  devices
+      they will show when the state "lowVoltage" went from empty to false or from true to false, ie when a new battery was added 
  
+4. changed state lastBatteryUpdate:
+  was: if new batterylevel ==100 and old < 100: set lastBatteryUpdate to current date
+  now: added if lastBatteryUpdate is empty set to current date.
+  if the battery level is less than 100 when you start the plugin you might need to wait for a loooong time before this state gets set ie if the battery live is 2 years
+  this now gives you at east some date (when you load this plugin)
 
-     
+5. added device types:
+   MMK  beacons, must be configured with iphone app KBeaconpro. These devices transmit TML (google def) packages
+   they can be configured to send different packges of data. 
+   you need to setup these diffent packages (called slots in KBeaconpro)
+   add one slot for each package, single, doube, long press and if available for Temp/hum/acceleration
+   set Namespace ID to 1 for single press, 2 for double press, 3 for long press
+   then set trigger advertisement to "trigger only"  and "trigger by" to single, double long press respectively
+
+   A) SOS button can be used for eg a door buton, indigo can then trigger on button press, double press, long press
+
+   B) rechargeable beacon with ALSO temp,hum,acceleration info.
+  
+   It is a little tricky to setup but works well
 
 
 

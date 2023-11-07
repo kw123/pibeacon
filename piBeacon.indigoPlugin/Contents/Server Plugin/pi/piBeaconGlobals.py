@@ -214,6 +214,8 @@ appDoesNotExist			= ["INPUTcoincidence"]
 
 loggerSet = False
 
+apiKey = ""
+
 global logging, logger
 
 timeZones =[]

@@ -227,8 +227,8 @@ class bigScreen :
 							bigScreenSize = fullScreenSize[0]
 						else:
 							bigScreenSize = displayResolution
-						self.screen = self.pygame.display.set_mode(displayResolution, self.pygame.FULLSCREEN)
 						U.logger.log(20, u"Framebuffer 2.b size: set to indigo-dev output def: {} vs available {}".format( bigScreenSize, fullScreenSize) )
+						self.screen = self.pygame.display.set_mode(displayResolution, self.pygame.FULLSCREEN)
 					else:
 						bigScreenSize = fullScreenSize
 						self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
@@ -2663,9 +2663,10 @@ while runLoop:
 
 				f = open(G.homeDir+"temp/display.inp","r")
 				xxx= f.read().strip("\n") 
-				items=xxx.split("\n")
+				items = xxx.split("\n")
 				f.close()
 				os.remove(G.homeDir+"temp/display.inp")
+				#U.logger.log(20, " read new inputfile items:{}...".format(str(items)[0:100])) 	
 				if xxx == "stop":
 					try: outputDev.delPy()
 					except: pass
@@ -2677,7 +2678,7 @@ while runLoop:
 
 				newRead = True
 		except:	 
-			items=[]
+			items = []
 			try:
 				os.remove(G.homeDir+"temp/display.inp")
 			except:

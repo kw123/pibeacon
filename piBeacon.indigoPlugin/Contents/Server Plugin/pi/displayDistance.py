@@ -330,7 +330,7 @@ def displayDistance(dist, sensor, sensors, output, distanceUnits):
 			
 			if xDisplayLast == distText: return 
 			xDisplayLast = distText
-			out={"resetInitial": "", "repeat": 1,"command":[]}
+			out={"resetInitial": "", "repeat": 3,"command":[]}
 			out["command"].append({"type": "hBar","width":ymax,	 "fill":str(fill0),	 "position":pos0, "display": "wait"})
 			out["command"].append({"type": "text","width":width1,"fill":str(fill),	 "position":pos1, "display": "wait", "text":distDispl,"font":font})
 			out["command"].append({"type": "text","width":width2,"fill":str(fill),	 "position":pos2, "display": "wait", "text":distText, "font":font2})

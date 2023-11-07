@@ -325,9 +325,8 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="status" hidden="YES">
-				<Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Status" hidden="no"> <Label>Property to display in the State Column:</Label>
+     				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="status"  >status</Option>
 				</List>
@@ -399,18 +398,58 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="updateSignalValuesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>general parameters for sensors, can be overwritten by individual settings of sensor
+				<Label>general parameters for sensors for THIS rpi, can be overwritten by individual settings of sensor
 </Label>			</Field>
 
 
-			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0" tooltip="this option will turn itself off at restart and overnight to disable ramdon creation of new devices when there is a bad cable connection">
+
+			<Field id="OneWireLabel" type="label"  fontColor="darkgrey">
+				<Label>... The next section is for OneWire temperature sensors. You must set parameters here to enable the RPI system setup
+        Do NOT edit config.txt or use sudo raspi-config to enable one wire functionality on the RPI. The plugin will do this.
+        You can use as many GPIOs as you have available and attach as many onewire sensors as physically possible to each
+        After you enable add new one wire sensors here the plugin will auto create indigo devices for the sensors found on the rpi</Label>	
+			</Field>
+
+			<Field id="oneWireAddNewSensors" type="menu"     defaultValue="0" tooltip="this option will turn itself off after 2 hours or at restart of plugin">
 				<Label>... add new ONEWIRE sensors as they get detected:</Label>
 				<List>
-					<Option value="1"  >yes, automatically add new ONEwire sensors, see help</Option>
+					<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
 					<Option value="0"  >No, ignore new sensors, should be off if all sensors defined</Option>
 				</List>
 			</Field>
 
+			<Field id="oneWireGpios" type="textfield"     defaultValue="" tooltip="">
+				<Label>... enable GPIO pins to read one wire sensors, default GPIO:4 - enter: eg 4,17,19 (no spaces):</Label>
+			</Field>
+
+
+			<Field id="oneWireResetIsUpDown" type="menu"     defaultValue="0" tooltip="this option will turn itself off at restart and overnight to disable ramdon creation of new devices when there is a bad cable connection">
+				<Label>... enable a gpio/relay to reset the onewire sensor:</Label>
+				<List>
+					<Option value="up"  > enable gpio: UP to start reset</Option>
+					<Option value="down"  > enable gpio: DOWN to start reset </Option>
+					<Option value="0"  >disable</Option>
+				</List>
+			</Field>
+			<Field id="oneWireResetGpio"   type="menu" defaultValue="-1" visibleBindingId="oneWireResetIsUpDown" visibleBindingValue="up,down"  tooltip="select a gpio to enable a reset mechanism (gpio to relay to switch off power to onewire sensors">
+				<Label>... select the reset gpio for onewire sensor:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+			<Field id="oneWireForceReboot"   type="menu" defaultValue="-1"   tooltip="enable to force a hard reboot sudo shutdwn -f ">
+				<Label>... enable a force hard reboot after 10 regular unsucessful reesets:</Label>
+				<List>
+					<Option value="10" > enable force reboot after 10 tries</Option>
+					<Option value="5"  > enable force reboot after 5 tries</Option>
+					<Option value="1"  > enable force reboot after 1 tries</Option>
+					<Option value="-1"  >disable</Option>
+				</List>
+			</Field>
+
+
+
+			<Field id="enableMuxI2CLabel" type="label" fontColor="darkgrey">
+				<Label>.... if you want to use the "multiplexing" device TCA9548A confire configure the following parameter then in sensor device edit select the proper i2c channel  </Label>	
+			</Field>
 			<Field id="enableMuxI2C" type="menu"     defaultValue="0">
 				<Label>... enable TCA9548A select i2c for multiplexing:</Label>
 				<List>
@@ -1219,13 +1258,15 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
-			<Field id="updateSignalValuesSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>general parameters for sensors, can be overwritten by individual settings of sensor
 
-</Label>
+			<Field id="OneWireLabel" type="label" fontColor="darkgrey">
+				<Label>... The next section is for OneWire temperature sensors. You must set parameters here to enable the RPI system setup
+        Do NOT edit config.txt or use sudo raspi-config to enable one wire functionality on the RPI. The plugin will do this.
+        You can use as many GPIOs as you have available and attach as many onewire sensors as physically possible to each
+        After you enable add new one wire sensors here the plugin will auto create indigo devices for the sensors found on the rpi</Label>	
 			</Field>
 
-			<Field id="addNewOneWireSensors" type="menu"     defaultValue="0">
+			<Field id="oneWireAddNewSensors" type="menu"     defaultValue="0" tooltip="this option will turn itself off after 2 hours or at restart of plugin">
 				<Label>... add new ONEWIRE sensors as they get detected:</Label>
 				<List>
 					<Option value="1"  >yes, automatically add new ONEwire sensors</Option>
@@ -1233,8 +1274,40 @@ Change here or in initial setup:</Label>
 				</List>
 			</Field>
 
+			<Field id="oneWireGpios" type="textfield"     defaultValue="" tooltip="">
+				<Label>... enable GPIO pins to read one wire sensors default GPIO:4 - enter: eg 4,17,19 (no spaces):</Label>
+			</Field>
+
+
+			<Field id="oneWireResetIsUpDown" type="menu"     defaultValue="0" tooltip="this option will turn itself off at restart and overnight to disable ramdon creation of new devices when there is a bad cable connection">
+				<Label>... enable a gpio/relay to reset the onewire sensor:</Label>
+				<List>
+					<Option value="up"  > enable gpio: UP to start reset</Option>
+					<Option value="down"  > enable gpio: DOWN to start reset </Option>
+					<Option value="0"  >disable</Option>
+				</List>
+			</Field>
+			<Field id="oneWireResetGpio"   type="menu" defaultValue="-1" visibleBindingId="oneWireResetIsUpDown" visibleBindingValue="up,down"  tooltip="select a gpio to enable a reset mechanism (gpio to relay to switch off power to onewire sensors">
+				<Label>... select the reset gpio for onewire sensor:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+			<Field id="oneWireForceReboot"   type="menu" defaultValue="-1"   tooltip="enable to force a hard reboot sudo shutdwn -f ">
+				<Label>... enable a force hard reboot after 10 regular unsucessful reesets:</Label>
+				<List>
+					<Option value="10" > enable force reboot after 10 tries</Option>
+					<Option value="5"  > enable force reboot after 5 tries</Option>
+					<Option value="1"  > enable force reboot after 1 tries</Option>
+					<Option value="-1"  >disable</Option>
+				</List>
+			</Field>
+
+
+
+			<Field id="enableMuxI2CLabel" type="label" fontColor="darkgrey">
+				<Label>.... if you want to use the "multiplexing" device TCA9548A confire configure the following parameter then in sensor device edit select the proper i2c channel  </Label>	
+			</Field>
 			<Field id="enableMuxI2C" type="menu"     defaultValue="0">
-				<Label>...enable TCA9548A select i2c for multiplexing:</Label>
+				<Label>... enable TCA9548A select i2c for multiplexing:</Label>
 				<List>
 					<Option value="0"     >off </Option>
 					<Option value="112"   >0x70 = 112  </Option>
@@ -2954,36 +3027,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<States>
 
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
 			<State id="movementCount">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>movementCount</TriggerLabel>
@@ -5358,36 +5401,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<States>
 
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -5625,41 +5638,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
-
-
-
-
 
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
@@ -6042,6 +6020,254 @@ xx_Count_groupname_ .. Home, Away</Label>
 	</Device>
 
 
+	<Device type="sensor" id="BLEMKKsensor">     <Name>BLE-MKK sensors</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLElongConnectDevice" 		type="checkbox" defaultValue="false" hidden="true"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"   type="label" alignText="left" fontColor="orange"> >
+				<Label>=== MKK  sensor types.
+On off for single and doible click as well as accelleration, temp and humdity ===</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+				<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"   type="label" >
+				<Label>Select RPI(s) that should monitor this sensor,
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ !!! ONLY USE ONE RPI !!! </Label>
+			</Field>
+
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+
+
+			
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+
+
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="false">
+				<Label>device has (temp, acceleration..), not just button:</Label>
+			</Field>	
+
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+				<List>
+					<Option value="Temperature"  >Temperature[C/F]</Option>
+					<Option value="Humidity"  >Humidity[%]</Option>
+					<Option value="button"  >button</Option>
+				</List>
+			</Field>
+
+			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
+
+			<Field id="delayOff" type="menu"     defaultValue="1" tooltip="if sensor send quick off after on with this you can keep display onState on for longer." >
+				<Label>delay OFF by xx secs, keep state ON for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+
+
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="180" hidden="no" tooltip="">
+				<Label>send data to indigo every:</Label>
+				<List>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+					<Option value="240" >  4 minutes</Option>
+				</List>
+			</Field>
+
+
+			<Field id="statusColorLabel" type="label" >
+				<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="x>28">		<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="x>24">		<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x>-100">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot;
+  &quot;x &lt; 33&quot;
+  &quot;33 &lt;= x and x &lt;= 66&quot;
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+
+			<State id="trigger">
+				<ValueType>string</ValueType>
+				<TriggerLabel>trigger</TriggerLabel>
+				<ControlPageLabel>trigger</ControlPageLabel>
+			</State>
+
+			<State id="button">
+				<ValueType>string</ValueType>
+				<TriggerLabel>button</TriggerLabel>
+				<ControlPageLabel>button</ControlPageLabel>
+			</State>
+
+			<State id="currentOnEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+
+
+			<State id="previousOnEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>previousOnEvent</TriggerLabel>
+				<ControlPageLabel>previousOnEvent</ControlPageLabel>
+			</State>
+
+			<State id="currentOnEvent">
+				<ValueType>string</ValueType>
+				<TriggerLabel>currentOnEvent</TriggerLabel>
+				<ControlPageLabel>currentOnEvent</ControlPageLabel>
+			</State>
+
+			<State id="batteryVoltage">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>batteryVoltage</TriggerLabel>
+				<ControlPageLabel>batteryVoltage</ControlPageLabel>
+			</State>
+
+			<State id="softwareVersion">
+				<ValueType>string</ValueType>
+				<TriggerLabel>softwareVersion</TriggerLabel>
+				<ControlPageLabel>softwareVersion</ControlPageLabel>
+			</State>
+
+			<State id="modelId">
+				<ValueType>string</ValueType>
+				<TriggerLabel>modelId</TriggerLabel>
+				<ControlPageLabel>modelId</ControlPageLabel>
+			</State>
+
+			<State id="mfg_info">
+				<ValueType>string</ValueType>
+				<TriggerLabel>mfg_info</TriggerLabel>
+				<ControlPageLabel>mfg_info</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
 
 	<Device type="sensor" id="BLEaprilAccel">     	<Name>BLE-april(ABN03) XYZ Acceleration </Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -6307,38 +6533,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>string</ValueType>
 				<TriggerLabel>previousMove</TriggerLabel>
 				<ControlPageLabel>previousMove</ControlPageLabel>
-			</State>
-
-
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
 			</State>
 
 		</States>
@@ -6744,36 +6938,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ControlPageLabel>button</ControlPageLabel>
 			</State>
 
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -6999,36 +7163,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -7455,36 +7589,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ControlPageLabel>chipTemperature</ControlPageLabel>
 			</State>
 
-			<State id="accelerationVectorDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationVectorDelta</TriggerLabel>
-				<ControlPageLabel>accelerationVectorDelta</ControlPageLabel>
-			</State>
-			<State id="accelerationX">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationX</TriggerLabel>
-				<ControlPageLabel>accelerationX</ControlPageLabel>
-			</State>
-			<State id="accelerationY">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationY</TriggerLabel>
-				<ControlPageLabel>accelerationY</ControlPageLabel>
-			</State>
-			<State id="accelerationZ">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationZ</TriggerLabel>
-				<ControlPageLabel>accelerationZ</ControlPageLabel>
-			</State>
-			<State id="accelerationTotal">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationTotal</TriggerLabel>
-				<ControlPageLabel>accelerationTotal</ControlPageLabel>
-			</State>
-			<State id="accelerationXYZMaxDelta">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>accelerationXYZMaxDelta</TriggerLabel>
-				<ControlPageLabel>accelerationXYZMaxDelta</ControlPageLabel>
-			</State>
 			<State id="batteryVoltage">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
@@ -8981,12 +9085,18 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 
-	<Device type="sensor" id="Wire18B20">     	<Name>INPUT-Temp-Wire18B20</Name>
+	<Device type="sensor" id="Wire18B20">     	<Name>INPUT-Temp-OneWire18B20</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 			<Field id="infoLabelWire18B201" type="label">
-				<Label>Setup 18DB20 Onewire Temp sensor on individual rPis .. connect 3.3V, GND,signal and 4.7K resistor</Label>
+				<Label>Setup 18DB20 Onewire Temp sensor on individual rPis .. connect 3.3V, GND,signal and 4.7K resistor.
+Please edit the RPI indigo device to enable one wire functionality on the RPI. The default GPIO for oneWire sensors is GPIO#4.
+if you want to use multiple GPIOs to read multiple OneWire sensors edit the RPI and setup the GPIOs to be used for these sensors
+You can use any GPIO, so up to 20+ GPIOs with multiple OneWire Sensors connected to each
+Each GPIO needs about 1 sec to read a sensor. With 10 GPIOs and 2 sensors each it will take about 2.5 secs to read all.
+After you enable "add new onewire sensors" in RPi device edit the plugin will auto create indigo devices for the sensors found on the rpi
+</Label>
 			</Field>
 
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
@@ -9000,6 +9110,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
 				<Label>select rPi-server to which the sensor is connect to:</Label>
+			</Field>
+
+			<Field id="newSerialNumber"   type="textfield" defaultValue="" tooltip="" >
+				<Label>Overwrite serial number must be 28-.....:</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
@@ -9073,6 +9187,18 @@ xx_Count_groupname_ .. Home, Away</Label>
 	</ConfigUI>
 	<States>
 
+
+			<State id="lastReset">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastReset</TriggerLabel>
+				<ControlPageLabel>lastReset</ControlPageLabel>
+			</State>
+
+			<State id="lastBadRead">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastBadRead</TriggerLabel>
+				<ControlPageLabel>lastBadRead</ControlPageLabel>
+			</State>
 
 			<State id="serialNumber">
 				<ValueType>String</ValueType>
@@ -11531,8 +11657,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="airQuality"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="AirQualityText" hidden="no">  <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="pm10_standard"   >pm 1.0_standard</Option>
 					<Option value="pm25_standard"   >pm 2.5_standard</Option>
@@ -26970,6 +27095,32 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 					<Option value= "0">no</Option>
 					<Option value= "1"> yes</Option>
 				</List>
+			</Field>
+
+
+		</ConfigUI>
+
+		<States>
+		</States>
+
+	</Device>
+
+
+
+	<Device type="custom" id="FBHtempshow">     	<Name>OUTPUT- show FBH temperatures on display</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="infoLabelINPUT" type="label">
+				<Label>Setup parameters for display to show temperatures from FBH sensors </Label>
+			</Field>
+
+
+			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
+				<Label>select rPi-server to which the device is connect to:</Label>
 			</Field>
 
 

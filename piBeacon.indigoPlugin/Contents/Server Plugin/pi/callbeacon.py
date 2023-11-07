@@ -29,12 +29,6 @@ def getOsVersion():
 def checkIfmustUsePy3():
 	if getOsVersion() >= 11:  return True
 	if sys.version[0] == "3": return True
-	try: 
-		ppp = f.read().decode('utf_8')
-		f.close()
-		if json.loads(ppp).get("usePython3","") == "1": return True
-	except:
-		pass
 	return False
 
 #################################

@@ -7,15 +7,13 @@
 ##	check logfiles sizes and manage
 import urllib
 import json
-import urlparse
 import os, sys 
 import time
 import piBeaconUtils   as U
 import piBeaconGlobals as G
 import sys
 
-from BaseHTTPServer import BaseHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 class GetHandler(BaseHTTPRequestHandler):
 
@@ -42,26 +40,25 @@ class GetHandler(BaseHTTPRequestHandler):
 		if len(data) < 2: 
 			U.logger.log(40, u"data read {}".format(data))
 
-		#print "webserverSTATUS", data
-		x('<!DOCTYPE html>')
-		x('<html>')
-		x('<style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>')
-		x('<meta http-equiv="Pragma" content="no-cache">')
-		x('<meta http-equiv="Expires" content="-1″>')
-		x('<meta http-equiv="CACHE-CONTROL" content="NO-CACHE">')
-		x('<meta http-equiv="refresh" content="30"">')
-		x('<head style="background-color:rgb(0, 50,50);"> ')
-		x('   <style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>')
-		x('</head>')
-		x('<body style="background-color:rgb(30, 0,30); color:rgb(0, 255,0); font-family:Courier;">')
-		x(	'<b>')
+		x('<!DOCTYPE html>'.encode("utf-8"))
+		x('<html>'.encode("utf-8"))
+		x('<style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>'.encode("utf-8"))
+		x('<meta http-equiv="Pragma" content="no-cache">'.encode("utf-8"))
+		x('<meta http-equiv="Expires" content="-1″>'.encode("utf-8"))
+		x('<meta http-equiv="CACHE-CONTROL" content="NO-CACHE">'.encode("utf-8"))
+		x('<meta http-equiv="refresh" content="30"">'.encode("utf-8"))
+		x('<head style="background-color:rgb(0, 50,50);"> '.encode("utf-8"))
+		x('   <style> a:link { color: green;  background-color: transparent; text-decoration: none; } </style>'.encode("utf-8"))
+		x('</head>'.encode("utf-8"))
+		x('<body style="background-color:rgb(30, 0,30); color:rgb(0, 255,0); font-family:Courier;">'.encode("utf-8"))
+		x('<b>'.encode("utf-8"))
 		try:
 			if len(data) > 0:
-				x(data)
+				x(data.encode("utf-8"))
 		except: 
 			U.logger.log(20," web server data {}".format(data) )
-		x(	'</body>')
-		x('</html>')
+		x('</body>'.encode("utf-8"))
+		x('</html>'.encode("utf-8"))
  
 global pid, dataFile
 G.program= "webserverSTATUS"

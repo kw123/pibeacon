@@ -978,10 +978,11 @@ class ADS1x15:
 
 class TSL2561:
 
-	def __init__(self, address=0x39, debug=0):
+	def __init__(self, address=0x29, debug=0):
 		self.bus = smbus.SMBus(1)
 		self.address = address
 		self.debug = debug
+		#U.logger.log(20,f"\n\naddress: hex:{address:}\n\n")
 		self.bus.write_byte_data(self.address, 0x80, 0x03)
 		self.bus.write_byte_data(self.address, 0x86, 0x00)
 		self.defGain	= -1

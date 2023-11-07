@@ -82,7 +82,7 @@ def setLogging():
 	# console output
 	streamhandler = logging.StreamHandler()
 	streamhandler.setLevel(logging.WARNING)
-	streamformatter = logging.Formatter('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%d-%H:%M:%S')
+	streamformatter = logging.Formatter('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%Y-%d-%H:%M:%S')
 	streamhandler.setFormatter(streamformatter)
 	logger.addHandler(streamhandler)
 
@@ -698,69 +698,12 @@ def cleanUpSensorlist(sens, theSENSORlist):
 def doReboot(tt=10., text="", cmd="", force=False):
 	try:
 		setRebootedToday()
-		setRebootingNow()
-
-		### looks like w shell =True: /bin/sh -c /usr/bin/sudo , need to add ' ' around cmd 
-		logger.log(30, "cBY:{:<20}  rebooting / shutdown  delay:{}, force:{}; with cmd={}; remarks= {}".format(G.program, tt, force, cmd, text))
-		
-		if force:
-			try: 
-				doCmd = "sudo sleep 2;/usr/bin/sudo /usr/bin/killall -9 python;/usr/bin/sudo /usr/bin/killall -9 python3;/usr/bin/sudo /bin/sleep 4; /usr/bin/sudo /sbin/reboot -f"
-				ret = subprocess.Popen(doCmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-				logger.log(50, "cBY:{:<20}  rebooting / shutdown force did not work: {}, ret :{}".format(G.program, doCmd, ret))
-			except	Exception as e:
-				try:
-					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-					logger.log(50, "cBY:{:<20}  rebooting / shutdown forced did not work, ret :{}".format(G.program, ret))
-					doCmd = "'/usr/bin/sudo /sbin/reboot -f'"
-					ret = subprocess.Popen(doCmd,shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-					logger.log(50, "cBY:{:<20}   simple /usr/bin/sudo /sbin/reboot -f  did not work:{}, ret:{}".format(G.program, doCmd, ret))
-				except	Exception as e:
-					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-			try: logger.log(50, "cBY:{:<20}  rebooting did not work; ret:{}".format(G.program, ret))
-			except: pass
-
-		cmd = cmd.replace("/bin/sh -c sudo  ","sudo ")
-		cmd = cmd.replace("; ",";")
-		if cmd == "":
-			doCmd= G.rebootCommand
+		setRebootingNow(text=text)
+		time.sleep(tt)
+		if cmd =="":
+			subprocess.call("sh /home/pi/pibeacon/forceReboot.sh &",shell=True)
 		else:
-			doCmd = cmd
-		try:     G.sendThread["run"] = False
-		except: pass
-
-		cmd   = cmd.replace("/bin/sh -c sudo  ","sudo ").replace("; ",";")
-		doCmd = doCmd.replace("/bin/sh -c sudo  ","sudo ").replace("; ",";")
-
-
-		if doCmd.find("python3") ==-1: doCmd = ""
-		try: logger.log(50, "cBY:{:<20}  rebooting / shutdown with cmd={} .. remarks= {}".format(G.program, doCmd, text))
-		except: pass
-
-
-		time.sleep(tt+0.1)
-
-
-		if doCmd.find("halt") >-1 or doCmd.find("shut") >-1:
-			cc = "sudo killall -9 pigpiod&"
-			try: logger.log(50, "cBY:{:<20} killing pigpiod cmd={}".format(G.program, cc))
-			except: pass
-			ret = subprocess.Popen(cc, shell=True)
-			time.sleep(0.1)
-
-		if cmd == "":
-			cmds = [doCmd+";sudo sleep 2;sudo  reboot -f","sudo  killall -9 python;sudo  killall -9 python3;sleep 4;sudo  reboot -f", "sudo sync;sudo  halt"]
-			for cc in cmds:
-				ret = subprocess.Popen(cc, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-				try: logger.log(50, "cBY:{:<20} rebooting / shutdown with cmd={} did not work, ret:{}".format(G.program, cc, ret))
-				except: pass
-				time.sleep(10)
-		else:
-			ret = subprocess.Popen(doCmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			try: logger.log(50, "cBY:{:<20} rebooting / shutdown with cmd={} did not work:{}".format(G.program, doCmd, ret))
-			except: pass
-			time.sleep(20)
-			subprocess.Popen("sudo sync;sudo sleep 2;sudo halt",shell=True)
+			subprocess.call(cmd,shell=True)
 
 		doRebootThroughRUNpinReset()
 	except	Exception as e:
@@ -785,8 +728,8 @@ def resetRebootedToday():
 	return 
 
 #################################
-def setRebootedToday():
-	subprocess.call("echo 'rebooted' > {}rebootedToday".format(G.homeDir), shell=True)
+def setRebootedToday(text=""):
+	subprocess.call("echo 'rebooted {} ' >> {}rebootedToday".format(text, G.homeDir), shell=True)
 	return 
 
 #################################
@@ -796,8 +739,8 @@ def resetRebootingNow():
 	return 
 
 #################################
-def setRebootingNow():
-	subprocess.call("echo 'rebooting / shutdown' > {}temp/rebooting.now".format(G.homeDir), shell=True)
+def setRebootingNow(text=""):
+	subprocess.call("echo 'rebooting / shutdown {}' >> {}temp/rebooting.now".format(text, G.homeDir), shell=True)
 	return 
 
 
@@ -818,7 +761,7 @@ def sendRebootHTML(reason,reboot=True, force=False, wait=10.):
 	if reboot:
 	   doReboot(tt=wait, text=reason,force=force)
 	else:
-	   doReboot(tt=wait, text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python; sleep 1; shutdown -h now ")
+	   doReboot(tt=wait, text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python3; sleep 1; shutdown -h now ")
 
 	return
 
@@ -1421,7 +1364,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "/usr/bin/sudo /usr/bin/python {}webserverINPUT.py  {} {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile, G.sundialActive)
+			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverINPUT.py  {} {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile, G.sundialActive)
 			logger.log(20, u"cBY:{:<20} starting web server:{}".format( G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
@@ -1453,7 +1396,7 @@ def startwebserverSTATUS(port, useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "/usr/bin/sudo /usr/bin/python {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
+			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
 			logger.log(20, u"cBY:{:<20} starting web server:{}".format(G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
@@ -1662,10 +1605,10 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 		currTZHH  = int((subprocess.Popen("date  +'%z'" ,shell=True,stdout=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip("\r"))/100
 		storediTZr, raw = readJson("{}timezone.set".format(G.homeDir))
 
-		deltaSW 		=  winterHH - summerHH
+		deltaSW 		=  int(winterHH - summerHH)
 		if currTZHH == winterHH: deltaSW = 0
 		iTZC 			= iTZ
-		currTZC 		= currTZHH + deltaSW
+		currTZC 		=  int(currTZHH + deltaSW)
 		setNewStored 	= 99
 		setNewStoredC	= 99
 		storediTZ		= 99
@@ -1673,15 +1616,15 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 			storediTZ = int(storediTZr["timezone"])
 		if storediTZ != 99:
 			try:
-				setNewStored  = storediTZ
-				setNewStoredC = setNewStored + deltaSW
+				setNewStored  =  int(storediTZ)
+				setNewStoredC =  int(setNewStored + deltaSW)
 			except:
 				subprocess.call("rm {}timezone.set".format(G.homeDir), shell=True)
 
 		logger.log(10, "cBY:{:<20}  iTZ:{},  iTZC:{}, newTZ:{},  summerHH:{},  winterHH:{},  currTZHH:{}, currTZC:{}, deltaSW:{}, storediTZ:{}, storediTZr:{}, setNewStored:{},  setNewStoredC:{}, force:{}".format(G.program, iTZ, iTZC, newTZ, summerHH, winterHH, currTZHH, currTZC, deltaSW, storediTZ, storediTZr, setNewStored, setNewStoredC, force))
 
-		setNew = iTZ
-		if setNewStored < 30: setNew = setNewStored
+		setNew =  int(iTZ)
+		if setNewStored < 30: setNew =  int(setNewStored)
 
 		G.timeZone = "{}  {}".format(setNew, G.timeZones[setNew+12])
 
@@ -1701,8 +1644,18 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 								inp["timeZone"] = u"{} {}".format(setNew, G.timeZones[setNew+12])
 								writeJson(u"{}parameters".format(G.homeDir), inp, sort_keys=True)
 								subprocess.call("touch {}temp\touchFile".format(G.homeDir), shell=True)
+					# must restart master to get clean restart w new time 
+						if sys.version_info[0] == 3:
+							cmd = "/usr/bin/sudo /usr/bin/python3 master.py &".format(G.homeDir)
+						else:
+							cmd = "/usr/bin/sudo /usr/bin/python master.py &".format(G.homeDir)
+						subprocess.call(cmd, shell=True)
 					else:
 						logger.log(20, u"cBY:{:<20} error bad timezone:{}".format(G.program, G.timeZones[setNew+12]) )
+
+
+
+
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
@@ -2327,7 +2280,7 @@ def execSend():
 					data["program"]	  = G.program
 					data["pi"]		  = str(G.myPiNumber)
 					data["ipAddress"] = G.ipAddress.strip(" ").strip("\n").strip(" ")
-					if len(text) >0:
+					if len(text) > 0:
 						data["text"] = text
 
 					if (time.time() - G.tStart > 40):#dont send time if we have just started .. wait for ntp etc to get time

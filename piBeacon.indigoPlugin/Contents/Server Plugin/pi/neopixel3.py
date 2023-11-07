@@ -1010,7 +1010,7 @@ while True:
 											time.sleep(3)
 											continue
 
-										sleepTime = max(0.05, pos[0])
+										sleepTime = max(0.05, pos[0]) # sleep
 										nsteps  = pos[1]
 										xstart = pos[2]
 										xend   = pos[3]
@@ -1211,7 +1211,7 @@ while True:
 			U.logger.log(30,"", exc_info=True)
 				
 		if loop %20 ==0:
-			if readParams() ==1:
+			if readParams() == 1:
 				restartNEOpixel()
 			U.echoLastAlive(G.program)
 		loop +=1 

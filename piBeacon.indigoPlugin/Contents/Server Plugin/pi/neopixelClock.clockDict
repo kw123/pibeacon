@@ -1,0 +1,174 @@
+{
+  "DMAchannel": "5",
+  "GPIOdown": "19",
+  "GPIOsetA": "13",
+  "GPIOsetB": "21",
+  "GPIOsetC": "12",
+  "GPIOup": "26",
+  "LEDstart": [
+    0,
+    60,
+    108,
+    148,
+    180,
+    204,
+    220,
+    232,
+    240
+  ],
+  "LEDsum": [
+    60,
+    108,
+    148,
+    180,
+    204,
+    220,
+    232,
+    240,
+    241
+  ],
+  "OrderOfMatrix": "lrrl",
+  "PWMchannel": "0",
+  "clockLightSet": "auto",
+  "devType": "1x241",
+  "devTypeLEDs": "241",
+  "devTypeROWs": "1",
+  "extraLED": "",
+  "frequency": "800000",
+  "intensity": "90",
+  "lightOnOff": 1.0,
+  "lightSensorSlope": 1.0,
+  "marks": {
+    "DD": {
+      "LEDstart": 0,
+      "LEDsum": 0,
+      "RGB": [
+        0,
+        0,
+        0
+      ],
+      "marks": [],
+      "ringNo": []
+    },
+    "HH": {
+      "LEDstart": 0,
+      "LEDsum": 0,
+      "RGB": [
+        0,
+        0,
+        0
+      ],
+      "marks": [],
+      "ringNo": []
+    },
+    "MM": {
+      "LEDstart": 0,
+      "LEDsum": 0,
+      "RGB": [
+        0,
+        0,
+        0
+      ],
+      "marks": [],
+      "ringNo": []
+    },
+    "SS": {
+      "LEDstart": 0,
+      "LEDsum": 0,
+      "RGB": [
+        0,
+        0,
+        0
+      ],
+      "marks": [],
+      "ringNo": []
+    }
+  },
+  "minLightNotOff": "1",
+  "rings": [
+    60,
+    48,
+    40,
+    32,
+    24,
+    16,
+    12,
+    8,
+    1
+  ],
+  "signalPin": "18",
+  "speed": "1",
+  "speedOfChange": "",
+  "ticks": {
+    "DD": {
+      "LEDstart": 148,
+      "LEDsum": 32,
+      "RGB": [
+        65,
+        0,
+        50
+      ],
+      "blink": [
+        1,
+        0
+      ],
+      "npix": 0,
+      "ringNo": [
+        3
+      ]
+    },
+    "HH": {
+      "LEDstart": 220,
+      "LEDsum": 36,
+      "RGB": [
+        255,
+        0,
+        0
+      ],
+      "blink": [
+        59,
+        1
+      ],
+      "npix": 1,
+      "ringNo": [
+        6,
+        4
+      ]
+    },
+    "MM": {
+      "LEDstart": 0,
+      "LEDsum": 60,
+      "RGB": [
+        0,
+        0,
+        255
+      ],
+      "blink": [
+        1,
+        0
+      ],
+      "npix": 1,
+      "ringNo": [
+        0
+      ]
+    },
+    "SS": {
+      "LEDstart": 0,
+      "LEDsum": 60,
+      "RGB": [
+        0,
+        255,
+        0
+      ],
+      "blink": [
+        1,
+        0
+      ],
+      "npix": 1,
+      "ringNo": [
+        0
+      ]
+    }
+  },
+  "timeZone": "1 Europe/Amsterdam"
+}
