@@ -23,6 +23,11 @@ import math
 import atexit
 
 
+def dummyExit(): 
+	return 
+
+atexit.register(dummyExit)
+
 #============================= this is from adafruit
 class pix():
 	def __init__(self, numberOfLed, pin, bytesPerPixel=3, pixel_order= "RGB", auto_write=False, setBrightness=1.):
@@ -41,8 +46,6 @@ class pix():
 		elif pin == 13: self.pixels = neopixel.NeoPixel(board.D13, self.numberOfLed, bpp=self.bytesPerPixel  , brightness=self.setBrightness, auto_write=auto_write)
 		elif pin == 19: self.pixels = neopixel.NeoPixel(board.D19, self.numberOfLed, bpp=self.bytesPerPixel  , brightness=self.setBrightness, auto_write=auto_write)
 
-		# Substitute for __del__, traps an exit condition and cleans up properly
-		atexit.register(self._cleanup)
 		return 
 
 	def __del__(self):
@@ -370,10 +373,10 @@ class draw():
 					#print " in show ",steps,speedOfChange,linearDATA, linearOld
 					for ii in range(int(steps)):
 						for index in range(LED_COUNT):
-							 red = max(0,min(255,int(  (linearDATA[index][0]- linearOld[index][0])*value+ linearOld[index][0]  )))
-							 gre = max(0,min(255,int(  (linearDATA[index][1]- linearOld[index][1])*value+ linearOld[index][1]  )))
-							 blu = max(0,min(255,int(  (linearDATA[index][2]- linearOld[index][2])*value+ linearOld[index][2]  )))
-							 doPix.setPixels(index,[red,gre,blu])
+							red = max(0,min(255,int(  (linearDATA[index][0]- linearOld[index][0])*value+ linearOld[index][0]  )))
+							gre = max(0,min(255,int(  (linearDATA[index][1]- linearOld[index][1])*value+ linearOld[index][1]  )))
+							blu = max(0,min(255,int(  (linearDATA[index][2]- linearOld[index][2])*value+ linearOld[index][2]  )))
+							doPix.setPixels(index,[red,gre,blu])
 						#print "in loop", delta,steps,value,red,gre,blu
 						doPix.show() 
 						value	  += delta 
@@ -830,370 +833,396 @@ while True:
 		if redoItems and lastItems != []: 
 			items = copy.copy(lastItems)
 
-		for item in items:
+		if len(items) == 0:
+			if not os.path.isfile(G.homeDir+"temp/neopixel.waiting"): 
+				f = open(G.homeDir+"temp/neopixel.waiting","w")
+				f.write(json.dumps({"time":time.time()}))	
+				f.close()
+			if os.path.isfile(G.homeDir+"temp/neopixel.busy"): 
+				os.remove(G.homeDir+"temp/neopixel.busy")
+			time.sleep(1)
+
+		else:
+
+			for item in items:
 		
-			#print item
-			try:
-				if len(item) < 1: continue
-				try:	
-					data = json.loads(item)
-				except	Exception as e:
-					if loop > -1:
-						U.logger.log(30,"", exc_info=True)
-						U.logger.log(30,"{}".format(item)[0:100])
-					data = item
-				#print json.dumps(data,sort_keys=True, indent=2)
-			except	Exception as e:
-				U.logger.log(30,"bad input {}".format(item) )
-				U.logger.log(30,"", exc_info=True)
-				continue
-
-			restoreAfterBoot = False
-			if items !=[] and "restoreAfterBoot" in data:
-				try: 
-					restoreAfterBoot = "{}".format(data["restoreAfterBoot"]).lower() 
-					if restoreAfterBoot == "true" or  restoreAfterBoot == "1" :
-						U.logger.log(10, " do a restore after reboot:{}".format(restoreAfterBoot))
-						saveLastCommands(items)
-					else:
-						deleteLastCommands()
-				except: pass
-
-			if "resetInitial" in data or "res" in data:
-				try: 
-					if   "res" in data:				resetInitial= data["res"]
-					elif "resetInitial" in data:	resetInitial= data["resetInitial"]
-					if resetInitial !=[] and resetInitial !="":
-						try:resetInitial= json.loads(resetInitial)
-						except: pass
-						U.logger.log(10, "resetting initial:".format(resetInitial))
-						image.resetImage(resetInitial)
-						image.show()
-				except: pass
-
-			if "startAtDateTime" in data:
+				#print item
 				try:
-					startAtDateTime =  float(data["startAtDateTime"]) -time.time()
-					if startAtDateTime > 0:
-						time.sleep(startAtDateTime)
+					if len(item) < 1: continue
+					try:	
+						data = json.loads(item)
+					except	Exception as e:
+						if loop > -1:
+							U.logger.log(30,"", exc_info=True)
+							U.logger.log(30,"{}".format(item)[0:100])
+						data = item
+					#print json.dumps(data,sort_keys=True, indent=2)
+				except	Exception as e:
+					U.logger.log(30,"bad input {}".format(item) )
+					U.logger.log(30,"", exc_info=True)
+					continue
+
+				restoreAfterBoot = False
+				if items !=[] and "restoreAfterBoot" in data:
+					try: 
+						restoreAfterBoot = "{}".format(data["restoreAfterBoot"]).lower() 
+						if restoreAfterBoot == "true" or  restoreAfterBoot == "1" :
+							U.logger.log(10, " do a restore after reboot:{}".format(restoreAfterBoot))
+							saveLastCommands(items)
+						else:
+							deleteLastCommands()
+					except: pass
+
+				if "resetInitial" in data or "res" in data:
+					try: 
+						if   "res" in data:				resetInitial= data["res"]
+						elif "resetInitial" in data:	resetInitial= data["resetInitial"]
+						if resetInitial !=[] and resetInitial !="":
+							try:resetInitial= json.loads(resetInitial)
+							except: pass
+							U.logger.log(10, "resetting initial:".format(resetInitial))
+							image.resetImage(resetInitial)
+							image.show()
+					except: pass
+
+				if "startAtDateTime" in data:
+					try:
+						startAtDateTime =  float(data["startAtDateTime"]) -time.time()
+						if startAtDateTime > 0:
+							time.sleep(startAtDateTime)
+					except:
+						pass
+
+			
+				repeat = 1
+				try:
+					if "repeat" in data: repeat		 = int(data["repeat"])
 				except:
 					pass
 
-			
-			repeat=1
-			try:
-				if "repeat" in data: repeat		 = int(data["repeat"])
-			except:
-				pass
+				setClock = ""
+				try:
+					if "setClock" in data: 
+						setClock	  = data["setClock"]
+					if setClock == "off":
+						image.resetImage([0,0,0])
+						image.show()
+						exit()
+				except:
+					pass
 
-			setClock = ""
-			try:
-				if "setClock" in data: 
-					setClock	  = data["setClock"]
-				if setClock == "off":
-					image.resetImage([0,0,0])
-					image.show()
-					exit()
-			except:
-				pass
+				if not os.path.isfile(G.homeDir+"temp/neopixel.busy"): 
+					f = open(G.homeDir+"temp/neopixel.busy","w")
+					f.write(json.dumps({"time":time.time()}))	
+					f.close()
+					if os.path.isfile(G.homeDir+"temp/neopixel.waiting"): 
+						os.remove(G.homeDir+"temp/neopixel.waiting")
 
 
-			intensity=1.
-			try:
-				if "intensity" in data: intensity	   = float(data["intensity"])/100.
-			except:
-				pass
+				intensity = 1.
+				try:
+					if "intensity" in data: intensity	   = float(data["intensity"])/100.
+				except:
+					pass
 							
-			cType =""
-			nnxx =0		
-			while nnxx < repeat or repeat < 0:
-					tt0 =time.time()
-					nnxx+=1
-					if "command" not in data: break 
-					loopCount+=1
-					#print "comand", data["command"]
-					try: ncmds = len(data["command"])
-					except:
-						U.logger.log(20, " read error type:{} and data:{}".format(type(item), type(data), data))
-						continue
-					npage=-1
-					waited =False
-					for cmd in data["command"]:
-						try:
+				cType =""
+				nnxx =0		
+				while nnxx < repeat or repeat < 0:
+						tt0 =time.time()
+						nnxx+=1
+						if "command" not in data: break 
+						loopCount+=1
+						#print "comand", data["command"]
+						try: ncmds = len(data["command"])
+						except:
+							U.logger.log(20, " read error type:{} and data:{}".format(type(item), type(data), data))
+							continue
+						npage=-1
+						waited =False
+						for cmd in data["command"]:
+							try:
 								 
-								tt= time.time()
-								U.logger.log(10, "cmd:{}".format(cmd) )
-								if "type" not in cmd: continue
-								cType = cmd["type"]
-								if cType == "" or cType == "0":	 continue
+									tt= time.time()
+									U.logger.log(10, "cmd:{}".format(cmd) )
+									if "type" not in cmd: continue
+									cType = cmd["type"]
+									if cType == "" or cType == "0":	 continue
 			
 
-								reset =""
-								if "reset" in cmd:
-									reset = cmd["reset"]
-									if reset !=[]:
-										try:		image.resetImage(reset)
-										except:		U.logger.log(30, " reset error :{}".format(reset))
+									reset =""
+									if "reset" in cmd:
+										reset = cmd["reset"]
+										if reset !=[]:
+											try:		image.resetImage(reset)
+											except:		U.logger.log(30, " reset error :{}".format(reset))
 
 
-								if loopCount%100000 ==0:
-									#print " resetting due to loopcount",loopCount
-									if devType!="":
-										pass
+									if loopCount%100000 ==0:
+										#print " resetting due to loopcount",loopCount
+										if devType!="":
+											pass
 
 
-								if "display" not in cmd or cmd["display"] != "wait": 
-									delayStart=0
-									if "delayStart" in cmd:
-										try: 
-											delayStart = float(cmd["delayStart"])
-											time.sleep(delayStart)
-										except: pass
+									if "display" not in cmd or cmd["display"] != "wait": 
+										delayStart=0
+										if "delayStart" in cmd:
+											try: 
+												delayStart = float(cmd["delayStart"])
+												time.sleep(delayStart)
+											except: pass
 								
-								if cType == "NOP" :
-										U.logger.log(10,u"skipping display .. NOP")
-										continue
+									if cType == "NOP" :
+											U.logger.log(10,u"skipping display .. NOP")
+											continue
 
-								rotate=0
-								if "rotate" in cmd :
-									try:
-										rotate = int(cmd["rotate"])
-									except: rotate = 0
+									rotate=0
+									if "rotate" in cmd :
+										try:
+											rotate = int(cmd["rotate"])
+										except: rotate = 0
 
-								rotateSeconds=0.
-								if "rotateSeconds" in cmd:
-									try:
-										rotateSeconds = float(cmd["rotateSeconds"])
-									except: rotateSeconds = 0
+									rotateSeconds=0.
+									if "rotateSeconds" in cmd:
+										try:
+											rotateSeconds = float(cmd["rotateSeconds"])
+										except: rotateSeconds = 0
 
-								speedOfChange=0
-								if "speedOfChange" in cmd:
-									try:
-										speedOfChange = int(cmd["speedOfChange"])
-									except: speedOfChange = 0
+									speedOfChange=0
+									if "speedOfChange" in cmd:
+										try:
+											speedOfChange = int(cmd["speedOfChange"])
+										except: speedOfChange = 0
 				
-								pos = [0,0,0,0,0]
-								if "p" in cmd or "position" in cmd:
-									if "p" in 	   		cmd: pos = cmd["p"]
-									if "position" in 	cmd: pos = cmd["position"]
+									pos = [0,0,0,0,0]
+									if "p" in cmd or "position" in cmd:
+										if "p" in 	   		cmd: pos = cmd["p"]
+										if "position" in 	cmd: pos = cmd["position"]
 
 						
-								#U.logger.log(10,u"type:"+cType+" pos:{}".format(pos)[0:20] )
-								if cType == "line"  or cType.lower() == "l": # 2 d line
-									image.line(pos)
+									#U.logger.log(10,u"type:"+cType+" pos:{}".format(pos)[0:20] )
+									if cType == "line"  or cType.lower() == "l": # 2 d line
+										image.line(pos)
 							
-								elif cType.lower() == "sline"  or cType.lower() == "sl": # one d line  [xs,xe,R,G,B]
-									image.sLine(pos)
+									elif cType.lower() == "sline"  or cType.lower() == "sl": # one d line  [xs,xe,R,G,B]
+										image.sLine(pos)
 				
 							
-								elif cType == "rectangle" or cType == "r":
-									image.rectangle(pos)
+									elif cType == "rectangle" or cType == "r":
+										image.rectangle(pos)
 				
  
-								elif cType.lower() == "spoint" or cType == "sp":
-									image.point(pos)
+									elif cType.lower() == "spoint" or cType == "sp":
+										image.point(pos)
 					
-								elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:
-										U.logger.log(10,u"type:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"])
-										pass
-
-								elif cType == "matrix":
-									image.matrix(pos)
-
-								elif cType == "points":
-									image.points(pos)
-
-
-								elif cType == "knightrider" or cType == "kr":
-										if len(pos) != 7:
-											U.logger.log(20,u"not enough parameters for postion:{}, should be 7".format(pos))
-											time.sleep(3)
-											continue
-
-										sleepTime = max(0.05, pos[0]) # sleep
-										nsteps  = pos[1]
-										xstart = pos[2]
-										xend   = pos[3]
-										RGB = pos[4:]
-
-										resetLEDS = [0, xstart, 0, xend+nsteps, 0, 0, 0]
-										xx = [0, xstart + iknightriderInd, 0, xend+ iknightriderInd] + RGB
-										if xx[1] <= xstart: 			iknightriderDir = 1
-										if iknightriderInd >= nsteps: 	iknightriderDir = -1
-										iknightriderInd += iknightriderDir
-										#U.logger.log(20,u" sleep:{},  iRaiderInd{}, iRaiderDir:{}, pos:{} xx:{} ".format(pos[0], iRaiderInd, iRaiderDir, pos, xx))
-										image.line(resetLEDS)
-										image.line(xx)
-										time.sleep(sleepTime) 
-
-								elif cType == "colorknightrider" or cType == "ckr":
-										if len(pos) < 6:
-											U.logger.log(20,u"not enough parameters for postion:{}, should be > +3/6/9/...".format(pos))
-											time.sleep(3)
-											continue
-
-										sleepTime = max(0.05, pos[0])
-										nsteps  = pos[1]
-										xstart = pos[2]
-										nLEDs  = int((len(pos) - 3 )/3)
-										LEDs   = pos[3:]
-										xend = xstart + nLEDs
-										resetLEDS = [0, xstart-nLEDs, 0, xend+nsteps, 0, 0, 0]
-										image.line(resetLEDS)
-
-										#U.logger.log(20,u" pos:{},, xstart:{},, xend:{},, nLEDs:{},, resetLEDS:{}, ".format(pos, xstart, xend, nLEDs, resetLEDS ))
-										for nn in range(nLEDs):
-											x = xstart + iknightriderInd+nn
-											nl = nn*3
-											#U.logger.log(20,u"  iRaiderInd{}, iRaiderDir:{},x:{}, nl:{} ".format(iknightriderInd, iknightriderDir, x, nl))
-											xx = [0, x] + LEDs[nl:nl+3]
-											image.point(xx)
-										time.sleep(sleepTime) 
-										if xx[1] <= xstart: 			iknightriderDir = 1
-										if iknightriderInd >= nsteps: 	iknightriderDir = -1
-										iknightriderInd += iknightriderDir
-
-								elif cType == "clock":
-									tt1 = time.time()
-									if setClock == "off":
-										image.resetImage([0,0,0])
-										image.show()
-										exit()
-									speed = 1
-									if len("{}".format(pos)) < 20: 
-										U.logger.log(30, u"clock:  bad data, exiting")
-										time.sleep(1)
-										exit()
-									if "speed" in pos:
-										try: speed = int(pos["speed"])
-										except: 
+									elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:
+											U.logger.log(10,u"type:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"])
 											pass
-									if tt- lastClock < 1 and speed ==1 and setClock =="":
-										#print	"tt- lastClock", tt- lastClock
-										continue 
-									#print speed, pos
-									if speed == 1 and setClock == "":
-										lastClock = int(tt)
-										dd = datetime.datetime.now()
-										hh = dd.hour
-										if hh > 11: hh -=12	 # 0-11
-										mm = dd.minute	# 0..59
-										ss = dd.second	# 0..59
-										smh={"SS":dd.second,"MM":dd.minute,"HH":hh,"DD":dd.day} 
-									elif setClock != "":
-										dhms = setClock.split(":")
-										hh = int(dhms[1])
-										if hh > 11: hh -=12	 # 0-11
-										smh={"SS":int(dhms[3]),"MM":int(dhms[2]),"HH":hh,"DD":int(dhms[0])} 
-										#print hms, smh
-									else:
-										try:
-											s+=2
-										except:
-											s = 0
-											m = 0
-											h = 0
-											d = 0
-										if s > 59: 
-											s = 0
-											m+= 2
-										if m >59:
-											m = 0
-											h+= 1
-										if h > 11: 
-											d+=1
-											h =0
-										smh={"SS":s,"MM":m,"HH":h,"DD":d} 
-										#print "sped >1", smh 
-									lin	  = [[0,i,0,0,0] for i in range(len(linMAP))]
-									if "marks" in pos:
-										ma = pos["marks"]
-										if ma !="":
-											for aa in ["HH","SS","MM","DD"]:
-												if aa not in ma: continue
-												rgb = ma[aa]["RGB"]
-												for kk in ma[aa]["index"]:
-													for ii in kk:
-														if ii < 0:			continue
-														if ii >= LED_COUNT: continue
-														lin[ii] =  [0,ii, int(rgb[0]),int(rgb[1]),int(rgb[2])]
-									for aa in ["SS","MM","HH","DD","extraLED"]:
-										if aa in pos and pos[aa] !="":
+
+									elif cType == "matrix":
+										image.matrix(pos)
+
+									elif cType == "points":
+										image.points(pos)
+
+
+									elif cType == "knightrider" or cType == "kr":
+											if len(pos) != 7:
+												U.logger.log(20,u"not enough parameters for postion:{}, should be 7".format(pos))
+												time.sleep(3)
+												continue
+
+											sleepTime = max(0.05, pos[0]) # sleep
+											nsteps  = pos[1]
+											xstart = pos[2]
+											xend   = pos[3]
+											RGB = pos[4:]
+
+											resetLEDS = [0, xstart, 0, xend+nsteps, 0, 0, 0]
+											xx = [0, xstart + iknightriderInd, 0, xend+ iknightriderInd] + RGB
+											if xx[1] <= xstart: 			iknightriderDir = 1
+											if iknightriderInd >= nsteps: 	iknightriderDir = -1
+											iknightriderInd += iknightriderDir
+											#U.logger.log(20,u" sleep:{},  iRaiderInd{}, iRaiderDir:{}, pos:{} xx:{} ".format(pos[0], iRaiderInd, iRaiderDir, pos, xx))
+											image.line(resetLEDS)
+											image.line(xx)
+											time.sleep(sleepTime) 
+
+									elif cType == "colorknightrider" or cType == "ckr" or cType == "ckrr":
+											if len(pos) < 6:
+												U.logger.log(20,u"not enough parameters for postion:{}, should be > +3/6/9/...".format(pos))
+												time.sleep(3)
+												continue
+
+											sleepTime = max(0.08, pos[0])
+											nsteps  = pos[1]
+											xstart  = pos[2]
+
+											if cType == "ckrr": 	
+												nLEDs = pos[3]
+												LEDs = []
+												for i23 in range(nLEDs//3):
+													LEDs += [ pos[4], pos[5], pos[6], pos[7], pos[8], pos[9], pos[10], pos[11], pos[12] ]
+
+											else: 					
+												nLEDs  = int((len(pos) - 3 )/3)
+												LEDs   = pos[3:]
+											xend = xstart + nLEDs
+											resetLEDS = [0, xstart-nLEDs, 0, xend+nsteps, 0, 0, 0]
+											image.line(resetLEDS)
+
+											#U.logger.log(20,u" pos:{},, xstart:{},, xend:{},, nLEDs:{},, resetLEDS:{}, LEDs:{}".format(pos, xstart, xend, nLEDs, resetLEDS, LEDs ))
+											for nn in range(nLEDs):
+												x = xstart + iknightriderInd+nn
+												nl = nn*3
+												#U.logger.log(20,u"  iRaiderInd{}, iRaiderDir:{},x:{}, nl:{} ".format(iknightriderInd, iknightriderDir, x, nl))
+												xx = [0, x] + LEDs[nl:nl+3]
+												image.point(xx)
+											time.sleep(sleepTime) 
+											if xx[1] <= xstart: 			iknightriderDir = 1
+											if iknightriderInd >= nsteps: 	iknightriderDir = -1
+											iknightriderInd += iknightriderDir
+
+									elif cType == "clock":
+										tt1 = time.time()
+										if setClock == "off":
+											image.resetImage([0,0,0])
+											image.show()
+											exit()
+										speed = 1
+										if len("{}".format(pos)) < 20: 
+											U.logger.log(30, u"clock:  bad data, exiting")
+											time.sleep(1)
+											exit()
+										if "speed" in pos:
+											try: speed = int(pos["speed"])
+											except: 
+												pass
+										if tt- lastClock < 1 and speed ==1 and setClock =="":
+											#print	"tt- lastClock", tt- lastClock
+											continue 
+										#print speed, pos
+										if speed == 1 and setClock == "":
+											lastClock = int(tt)
+											dd = datetime.datetime.now()
+											hh = dd.hour
+											if hh > 11: hh -=12	 # 0-11
+											mm = dd.minute	# 0..59
+											ss = dd.second	# 0..59
+											smh={"SS":dd.second,"MM":dd.minute,"HH":hh,"DD":dd.day} 
+										elif setClock != "":
+											dhms = setClock.split(":")
+											hh = int(dhms[1])
+											if hh > 11: hh -=12	 # 0-11
+											smh={"SS":int(dhms[3]),"MM":int(dhms[2]),"HH":hh,"DD":int(dhms[0])} 
+											#print hms, smh
+										else:
 											try:
-												xx	   = pos[aa]["index"]
-												rgb	   = pos[aa]["RGB"]
-												blink  = [1,1]
-												try:	blink  = pos[aa]["blink"]
-												except: blink  = [1,1]
-												for jj in range(len(xx)):
-													if aa in smh and jj !=smh[aa]: continue
-													for ii in xx[jj]:
-														if ii < 0:			continue
-														if ii >= LED_COUNT: continue
-														if ((blink ==[1,0]						) or  
-															(blink ==[1,1]	and smh["SS"]%2 >  0) or
-															(blink ==[2,1]	and smh["SS"]%3 >  0) or
-															(blink ==[3,1]	and smh["SS"]%4 >  0) or
-															(blink ==[4,1]	and smh["SS"]%5 >  0) or
-															(blink ==[9,1]	and smh["SS"]%10 > 0) or
-															(blink ==[14,1] and smh["SS"]%15 > 0) or
-															(blink ==[29,1] and smh["SS"]%30 > 0) or
-															(blink ==[59,1] and smh["SS"]%60 > 0) or
-															(blink ==[0,1]	and smh["SS"]%2 == 0) or
-															(blink ==[2,1]	and smh["SS"]%3	 < 2) or
-															(blink ==[2,2]	and smh["SS"]%4	 < 2) or
-															(blink ==[3,1]	and smh["SS"]%4	 < 3) or
-															(blink ==[3,2]	and smh["SS"]%5	 < 3) or
-															(blink ==[3,3]	and smh["SS"]%6	 < 3) or
-															(blink ==[0,2]	and smh["SS"]%3 == 0) or
-															(setClock !=""						)):
-															#print aa,"ii",ii
-															ll = lin[ii][2:]
-															lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
-											except	Exception as e:
-												U.logger.log(30,"", exc_info=True)
-												U.logger.log(30, aa +"  {}".format(pos[aa]))
-									for ii in range(len(lin)):
-										lin[ii] =  [0,lin[ii][1], min(255,max(lin[ii][2],0)),min(255,max(lin[ii][3],0)),min(255,max(lin[ii][4],0)) ]
+												s+=2
+											except:
+												s = 0
+												m = 0
+												h = 0
+												d = 0
+											if s > 59: 
+												s = 0
+												m+= 2
+											if m >59:
+												m = 0
+												h+= 1
+											if h > 11: 
+												d+=1
+												h =0
+											smh={"SS":s,"MM":m,"HH":h,"DD":d} 
+											#print "sped >1", smh 
+										lin	  = [[0,i,0,0,0] for i in range(len(linMAP))]
+										if "marks" in pos:
+											ma = pos["marks"]
+											if ma !="":
+												for aa in ["HH","SS","MM","DD"]:
+													if aa not in ma: continue
+													rgb = ma[aa]["RGB"]
+													for kk in ma[aa]["index"]:
+														for ii in kk:
+															if ii < 0:			continue
+															if ii >= LED_COUNT: continue
+															lin[ii] =  [0,ii, int(rgb[0]),int(rgb[1]),int(rgb[2])]
+										for aa in ["SS","MM","HH","DD","extraLED"]:
+											if aa in pos and pos[aa] !="":
+												try:
+													xx	   = pos[aa]["index"]
+													rgb	   = pos[aa]["RGB"]
+													blink  = [1,1]
+													try:	blink  = pos[aa]["blink"]
+													except: blink  = [1,1]
+													for jj in range(len(xx)):
+														if aa in smh and jj !=smh[aa]: continue
+														for ii in xx[jj]:
+															if ii < 0:			continue
+															if ii >= LED_COUNT: continue
+															if ((blink ==[1,0]						) or  
+																(blink ==[1,1]	and smh["SS"]%2 >  0) or
+																(blink ==[2,1]	and smh["SS"]%3 >  0) or
+																(blink ==[3,1]	and smh["SS"]%4 >  0) or
+																(blink ==[4,1]	and smh["SS"]%5 >  0) or
+																(blink ==[9,1]	and smh["SS"]%10 > 0) or
+																(blink ==[14,1] and smh["SS"]%15 > 0) or
+																(blink ==[29,1] and smh["SS"]%30 > 0) or
+																(blink ==[59,1] and smh["SS"]%60 > 0) or
+																(blink ==[0,1]	and smh["SS"]%2 == 0) or
+																(blink ==[2,1]	and smh["SS"]%3	 < 2) or
+																(blink ==[2,2]	and smh["SS"]%4	 < 2) or
+																(blink ==[3,1]	and smh["SS"]%4	 < 3) or
+																(blink ==[3,2]	and smh["SS"]%5	 < 3) or
+																(blink ==[3,3]	and smh["SS"]%6	 < 3) or
+																(blink ==[0,2]	and smh["SS"]%3 == 0) or
+																(setClock !=""						)):
+																#print aa,"ii",ii
+																ll = lin[ii][2:]
+																lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
+												except	Exception as e:
+													U.logger.log(30,"", exc_info=True)
+													U.logger.log(30, aa +"  {}".format(pos[aa]))
+										for ii in range(len(lin)):
+											lin[ii] =  [0,lin[ii][1], min(255,max(lin[ii][2],0)),min(255,max(lin[ii][3],0)),min(255,max(lin[ii][4],0)) ]
 											
-									tt2 = time.time()
-									image.points(lin)
+										tt2 = time.time()
+										image.points(lin)
 
-								if "display" not in cmd or cmd["display"] != "wait": 
-									U.logger.log(10, u"displaying	 {}".format(cmd["type"]) )
-									tt3 = time.time()
-									image.show(rotate=rotate, rotateSeconds=rotateSeconds, speedOfChange=speedOfChange)
-								if cType == "clock":
-									if speed !=1:
-										time.sleep(0.2)
-										#print "neopixel sleep 0.2"
-									else:
-										tt = time.time()
-										slTime = max( 0,0.3 - (	 max(tt-int(tt), tt - lastClock) )	)
-										#print "sleep for ",tt-int(tt), slTime, speed,	tt-tt0, tt-tt1,tt-tt2,tt-tt3
-										time.sleep(slTime)
-										#print "neopixel sleep", slTime,tt-tt2, tt-tt3, tt-tt0, tt-int(tt) , tt- tclockLast
-									if setClock !="":
-										time.sleep(1)
+									if "display" not in cmd or cmd["display"] != "wait": 
+										U.logger.log(10, u"displaying	 {}".format(cmd["type"]) )
+										tt3 = time.time()
+										image.show(rotate=rotate, rotateSeconds=rotateSeconds, speedOfChange=speedOfChange)
+									if cType == "clock":
+										if speed != 1:
+											time.sleep(0.2)
+											#print "neopixel sleep 0.2"
+										else:
+											tt = time.time()
+											slTime = max( 0.05, 0.3 - (	 max(tt-int(tt), tt - lastClock) )	)
+											#print "sleep for ",tt-int(tt), slTime, speed,	tt-tt0, tt-tt1,tt-tt2,tt-tt3
+											time.sleep(slTime)
+											#print "neopixel sleep", slTime,tt-tt2, tt-tt3, tt-tt0, tt-int(tt) , tt- tclockLast
+										if setClock != "":
+											time.sleep(1)
 										
-								waited = True
+									waited = True
 							
-								tt= time.time()
-								if tt - lastAlive > 20.:  
-									lastAlive =tt
-									#print "echo alive"
-									U.echoLastAlive(G.program)
-									if readParams() ==1:
-										restartNEOpixel()
+									tt= time.time()
+									if tt - lastAlive > 20.:  
+										lastAlive =tt
+										#print "echo alive"
+										U.echoLastAlive(G.program)
+										if readParams() ==1:
+											restartNEOpixel()
 
-								if checkIfnewInput(): break
+									if checkIfnewInput(): break
 								
-						except	Exception as e:
-							U.logger.log(30,"", exc_info=True)
-					if checkIfnewReboot(): break
-					if checkIfnewInput(): break
-					if cType == "clock": 
-						time.sleep(min(0.1, max(0,time.time()- lastClock)))
+							except	Exception as e:
+								U.logger.log(30,"", exc_info=True)
+						if checkIfnewReboot(): break
+						if checkIfnewInput(): break
+						if cType == "clock": 
+							time.sleep(min(0.1, max(0,time.time()- lastClock)))
 					#print "neopixel sleep end repeat ", time.time() -tt0
 		time.sleep(0.05) 
 		if items != []:
@@ -1224,6 +1253,5 @@ while True:
 
 U.logger.log(30, u"exiting at end")
 
-atexit.register()
-		
+	
 sys.exit(0)		   

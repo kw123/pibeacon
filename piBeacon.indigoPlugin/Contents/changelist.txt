@@ -1,3 +1,33 @@
+added features / changes in v2022.173.89 @ 2024-01-11
+==================================================
+
+
+1. added Thermopro beacon & sensors
+
+2. added Shelly BLU button and Motion and Window sensor
+   this is a newer line of SHELLY products that use BLE to communicat. They Broadcast various infos:
+   battery level, button:press/short/double/tripple/long, illuminance (in Lux), door open/closed/ rotation, motion.
+   some of they can beep, but only thru the shelly phone app shelly BLU
+   YOU MUST SETUP EACH DEVICE IN THAT APP AND ENBALE broadcast (BC) and disable encryption 
+   you can add them with menu/accept new beacons.. selcet the proper shelly dev type.
+   then a beacon device is created as well as a sensor device that shows the open/close montion/. button press. values.
+   you need to edit the created sensor device to select the proper RPi to be used to trac the button info. you can select several RPi to do this.
+   with a single shelly button device you can trigger up to 4 actions in indigo. (press/double/tripple/long press)
+   trigger on dev/state[on/offstate] == True, then with condition dev/state[currentEvntType]  == press/ double_press/ tripple_press / long_press
+   then you can have ONE button that can eg: open house/ garage/ light on/ away
+   the beacon behaves like a regular beacon (although it broadcast alive only every 8 secs, otehr beacosn every second or faster)
+       it hence can be used as "present" indicator like all otehr beacons
+   
+3. fixed state indicator red/green/grey for delayed action (eg button press goes green but never grey.. afetr x seconds as intended). It was always set to sensor ON
+
+!!! IMPORTANT !!! 
+4. fixed issue for python2 installs on rpi w older ssd image:  removed new format statement that only work under py3: f" {xx}" replaced by " {}.format(xx)"
+if you are using an older RPI image w/o python3 as default (older than 2022) PLEASE install this version. beacon detection will not work otherwise
+ 
+
+
+
+
 added features / changes in v2022.171.88 @ 2023-11-07
 ==================================================
 

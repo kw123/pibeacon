@@ -2205,13 +2205,13 @@ def checkIfWOLsendToIndigoServer():
 	return 
 
 def getadhocIpNumber():
-	adhocIP = "192.168.1.10"
+	adhocIP = "192.168.5.10"
 	try:
 		if	os.path.isfile(G.homeDir+"interfaces-adhoc"):
 			f=open(G.homeDir+"interfaces-adhoc") 
 			lines = f.read()
 			f.close()
-			ip = lines.split(" address ")[1]
+			ip = lines.split("address ")[1]
 			adhocIP = ip.split("\n")[0].strip()
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -2284,6 +2284,14 @@ def makeNeopix2Work():
 
 
 ####################      #########################
+def copySupplicantToBoot(adhocWifi):
+	if adhocWifi != -1: return 
+	cmd = "sudo cp /etc/wpa_supplicant/wpa_supplicant.conf /boot/wpa_supplicant.saveme_as_conf"
+	U.logger.log(20,"copying supplicant file to /boot to enable easy editing for new wifi sid  cmd:{}".format(cmd))
+	subprocess.call(cmd, shell=True)
+	
+
+####################      #########################
 #################### main #########################
 ####################      #########################
 
@@ -2333,7 +2341,7 @@ def execMaster():
 		programsThatShouldBeRunningOld ={}
 
 		RTCpresent						= False
-		ipNumberForAdhoc				= "192.168.1.10"
+		ipNumberForAdhoc				= "192.168.5.10"
 		adhocWifiStarted				= -1
 		typeOfUPS						= ""
 		checkIfShutDownVoltageLastCheck	= 0
@@ -2507,8 +2515,7 @@ def execMaster():
 		U.whichWifi() 
 
 		adhocWifiStarted = U.checkWhenAdhocWifistarted()
-		U.prepNextNormalRestartFromAdhocWifi()
-		U.clearAdhocWifi()
+		if adhocWifiStarted < 0: U.clearAdhocWifi()
 
 
 		if adhocWifiStarted > 10: U.logger.log(20, "adhocWifi active, {} sec left bf restart".format(600 - (time.time() - adhocWifiStarted)) )
@@ -2576,6 +2583,7 @@ def execMaster():
 		if os.path.isfile(G.homeDir+"temp/rebootNeeded"): 	os.remove(G.homeDir+"temp/rebootNeeded")
 		if os.path.isfile(G.homeDir+"temp/restartNeeded"):	os.remove(G.homeDir+"temp/restartNeeded")
 
+		copySupplicantToBoot(adhocWifiStarted)
 
 		beforeLoop			 = False
 		# main loop every 30 seconds
@@ -2692,7 +2700,7 @@ def execMaster():
 						U.stopAdhocWifi()
 						time.sleep(20) # symbolic, will reboot before
 
-				if (startWebServerSTATUS >0 or U.checkIfStartwebserverSTATUS()) and adhocWifiStarted < 10:
+				if (startWebServerSTATUS > 0 or U.checkIfStartwebserverSTATUS()) and adhocWifiStarted < 10:
 					if not U.checkIfwebserverSTATUSrunning():
 							U.startwebserverSTATUS(startWebServerSTATUS)
 

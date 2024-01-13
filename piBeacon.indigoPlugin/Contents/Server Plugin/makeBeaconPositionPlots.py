@@ -380,7 +380,7 @@ try:
 	try:
 		if imageOutfile != piPositionsDir+"beaconPositions.png":
 			logger.log(20,"time used {:4.2f} --   moving file to destination: '{}'".format((time.time()-tStart), imageOutfile) )
-			if os.path.isfile(imageOutfile): os.remove((imageOutfile))
+			if os.path.isfile(imageOutfile): os.remove(imageOutfile)
 			if os.path.isfile(piPositionsDir+"beaconPositions.png"):
 				pass		
 				os.rename( "{}beaconPositions.png".format(piPositionsDir), "{}".format(imageOutfile) )

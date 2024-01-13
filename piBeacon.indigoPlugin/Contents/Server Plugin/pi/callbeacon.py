@@ -22,7 +22,6 @@ def getOsVersion():
 	for line in osInfo:
 		if line .find("VERSION_ID=") == 0:
 			return int( line.strip('"').split('="')[1] )
-	f = open("{}parameters".format(homeDir),"r")
 	return 0 
 
 #################################

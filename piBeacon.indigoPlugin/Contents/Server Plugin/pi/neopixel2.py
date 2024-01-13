@@ -1267,8 +1267,25 @@ while True:
 										sleepTime = max(0.05, pos[0])
 										nsteps  = pos[1]
 										xstart = pos[2]
-										nLEDs  = int((len(pos) - 3 )/3)
-										LEDs   = pos[3:]
+
+										if cType == "ckrr": 	
+											nLEDs = pos[3]
+											LEDs = []
+											for i23 in range(nLEDs):
+												LEDs.append(pos[4])
+												LEDs.append(pos[5])
+												LEDs.append(pos[6])
+												LEDs.append(pos[7])
+												LEDs.append(pos[8])
+												LEDs.append(pos[9])
+												LEDs.append(pos[10])
+												LEDs.append(pos[11])
+												LEDs.append(pos[12])
+
+										else: 					
+											nLEDs  = int((len(pos) - 3 )/3)
+											LEDs   = pos[3:]
+
 										xend = xstart + nLEDs
 										resetLEDS = [0, xstart-nLEDs, 0, xend+nsteps, 0, 0, 0]
 										image.line(resetLEDS)

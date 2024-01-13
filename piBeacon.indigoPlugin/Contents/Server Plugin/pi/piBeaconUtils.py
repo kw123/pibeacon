@@ -1197,7 +1197,9 @@ def startAdhocWifi():
 		#subprocess.call('/usr/bin/sudo iwconfig wlan0 essid "clock"', shell=True)
 		#subprocess.call("/usr/bin/sudo ifconfig wlan0 192.168.5.5 netmask 255.255.255.0", shell=True)
 		subprocess.call("/usr/bin/sudo cp /etc/network/interfaces {}interfaces-fromBeforeAdhoc".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/sudo cp /etc/wpa_supplicant/wpa_supplicant.conf {}wpa_supplicant.conf-fromBeforeAdhoc".format(G.homeDir), shell=True)
 		subprocess.call("/usr/bin/sudo cp {}interfaces-adhoc /etc/network/interfaces".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/sudo rm /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
 		writeJson("{}adhocWifistarted.time".format(G.homeDir), {"startTime":time.time()})
 		time.sleep(2)
 		doReboot(tt=0)
@@ -1211,10 +1213,9 @@ def prepNextNormalRestartFromAdhocWifi():
 		if  os.path.isfile("{}interfaces-fromBeforeAdhoc".format(G.homeDir)):
 			logger.log(20, "cBY:{:<20}  restoring wifi /etc/network/interface file from before wifi adhoc start ".format(G.program))
 			subprocess.call('/usr/bin/sudo cp {}interfaces-fromBeforeAdhoc /etc/network/interfaces'.format(G.homeDir), shell=True)
+			subprocess.call('/usr/bin/sudo cp {}wpa_supplicant.conf-fromBeforeAdhoc /etc/wpa_supplicant/wpa_supplicant.conf'.format(G.homeDir), shell=True)
+			subprocess.call("/usr/bin/sudo rm {}interfaces-fromBeforeAdhoc".format(G.homeDir), shell=True)
 			time.sleep(0.1)
-			subprocess.call("/usr/bin/sudo rm {}interfaces-fromBeforeAdhoc ".format(G.homeDir), shell=True)
-			subprocess.call("echo  /etc/network/interfaces >> {}permanent.log ".format(G.homeDir), shell=True)
-			subprocess.call("cat  /etc/network/interfaces >> {}permanent.log ".format(G.homeDir), shell=True)
 		else:
 			logger.log(20, "cBY:{:<20}  restoring wifi /etc/network/interface not needed, adhoc file not present ".format(G.program))
 	except	Exception as e :
@@ -1364,7 +1365,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverINPUT.py  {} {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile, G.sundialActive)
+			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverINPUT.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile ) #, G.sundialActive)
 			logger.log(20, u"cBY:{:<20} starting web server:{}".format( G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
@@ -1725,6 +1726,8 @@ def checkifWifiJsonFileInBootDir():
 #################################
 def makeNewSupplicantFile(data):
 	try:
+		logger.log(50, "cBY:{:<20} enter with {}".format(G.program, data))
+
 		if "SSID"      not in data: 			return False
 		if "passCode"  not in data: 			return False
 		if len(data["SSID"]) < 1:				return False
@@ -1734,22 +1737,35 @@ def makeNewSupplicantFile(data):
 		if data["passCode"] == "do not change": return False
 		if data["passCode"] == "do+not+change": return False
 
+		tryFileAdhoc = "{}wpa_supplicant.conf-fromBeforeAdhoc".format(G.homeDir)
+		tryFileActive = "/etc/wpa_supplicant/wpa_supplicant.conf"
+
 		minFile = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\mnetwork={}\n"
 
-		logger.log(30, "cBY:{:<20} making new supplicant file with: {}".format(G.program, data))
-		if os.path.isfile("/etc/wpa_supplicant/wpa_supplicant.conf"):
-			subprocess.call("/usr/bin/sudo cp  /etc/wpa_supplicant/wpa_supplicant.conf {}wpa_supplicant.conf-temp ".format(G.homeDir), shell=True)
-			f = open("{}wpa_supplicant.conf-temp".format(G.homeDir),"r")
-			old = f.read()
-			f.close()
-			if old.find('"'+data["SSID"]+'"') >-1 and  old.find('"'+data["passCode"]+'"') >-1:
-				logger.log(20, "cBY:{:<20} ssid and passcode already in wpa_supplicant.conf file.. no update".format(G.program))
-				return False
+		useFile = "{}wpa_supplicant.conf-temp".format(G.homeDir)
+
+		if os.path.isfile(tryFileActive): # does supplicant file exist, if yes use it 
+			subprocess.call("/usr/bin/sudo cp  {} {}".format(tryFileActive, useFile), shell=True)
+		elif os.path.isfile(tryFileAdhoc):# does supplicant adhoc file exist, if yes use it 
+			subprocess.call("/usr/bin/sudo cp  {} {}".format(tryFileAdhoc, useFile), shell=True)
+		else:
+			writeFile(useFile, minFile, useHomeDir=False) # nothing exists: start from scratch 
+
+		# from now on only work with wpa_supplicant.conf-temp	
+
+		logger.log(50, "cBY:{:<20} making new supplicant file with: {}".format(G.program, data))
+
+		f = open(useFile,"r")
+		old = f.read()
+		f.close()
+
 
 		if old.find("network={") == -1:
 			old = minFile
-	
-		subprocess.call("cp {}wpa_supplicant.conf-DEFAULT {}wpa_supplicant.conf-temp".format(G.homeDir, G.homeDir), shell=True)
+
+		if old.find('"'+data["SSID"]+'"') >-1 and  old.find('"'+data["passCode"]+'"') >-1:
+			logger.log(50, "cBY:{:<20} ssid and passcode already in wpa_supplicant.conf file.. no update".format(G.program))
+			return False
 
 		oldSidFound = old.find('"'+data["SSID"]+'"')
 
@@ -1761,22 +1777,27 @@ def makeNewSupplicantFile(data):
 				break
 		maxprio +=1
 
+		newF = ""
+
 		if oldSidFound > -1: # replace only password
 			part1 = old[:oldSidFound] + '"' +data["SSID"]+'"\n'  # up to and including ssid
 			n1  = old[oldSidFound:].find("\n") # next line end
 			part2 = old[oldSidFound+n1:].lstrip("\n") #the rest
 			n1  = part2.find("\n")  # replace next line w new passcode
 			part2 = '  psk="'+data["passCode"]+ '"'+part2[n1:]
-			addToS = part1+part2
-			writeFile("wpa_supplicant.conf-temp", addToS)
-			logger.log(20, "cBY:{:<20} added to network = SSID..,  changed passcode in wpa_supplicant.conf file: {}".format(G.homeDir, addToS))
+			newF = part1+part2
+			writeFile(useFile, newF, useHomeDir=False)
+			logger.log(20, "cBY:{:<20} added to network = SSID..,  changed passcode in file {}".format(G.homeDir, tryFileActive))
 
 		else: # add network={ssid="xxx" psk="yyy"}
-			newF = old +'\nnetwork={\n  ssid="'+data["SSID"]+'"\n  psk="'+data["passCode"]+'"\n  priority='+str(maxprio)+'\n}\n'
-			writeFile("wpa_supplicant.conf-temp", newF)
-			logger.log(20, "cBY:{:<20} added network = ... SSID and passcode to supplicant file {}".format(G.homeDir,newF))
+			newF = old +'\nnetwork={\n  ssid="'+data["SSID"]+'"\n  psk="'+data["passCode"]+'"\n }\n' # priority='+str(maxprio)+'\n
+			writeFile(useFile, newF, useHomeDir=False)
+			logger.log(50, "cBY:{:<20} added network = ... SSID and passcode in file: {}".format(G.homeDir,tryFileActive))
 
-		subprocess.call("/usr/bin/sudo cp {}wpa_supplicant.conf-temp /etc/wpa_supplicant/wpa_supplicant.conf".format(G.homeDir), shell=True)
+		logger.log(50, "cBY:{:<20} copying files back in place file:{} and :{}, contents:{}".format(G.homeDir,useFile, tryFileAdhoc, newF))
+
+		subprocess.call("/usr/bin/sudo cp {} {}".format(useFile, tryFileActive), shell=True)
+		subprocess.call("/usr/bin/sudo cp {} {}".format(useFile, tryFileAdhoc), shell=True)
 
 		## need to reboot to get the new configs loaded
 		if whichWifi().find("adhoc") > -1:
@@ -2654,9 +2675,13 @@ def checkForNewCommand(fname):
 	return ""
 
 #################################
-def writeFile(outFile, text, writeOrAppend="w"):
+def writeFile(outFile, text, writeOrAppend="w", useHomeDir=True):
 	try:
-		f = open("{}{}".format(G.homeDir, outFile), writeOrAppend)
+		if useHomeDir:
+			f = open("{}{}".format(G.homeDir, outFile), writeOrAppend)
+		else:
+			f = open(outFile, writeOrAppend)
+
 		f.write(text)
 		f.close()
 		#logger.log(20, u"===== writing to {}{} text:{}".format(G.homeDir, outFile, text))

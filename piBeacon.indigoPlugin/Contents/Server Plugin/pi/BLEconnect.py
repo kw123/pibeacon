@@ -551,7 +551,7 @@ def tryToConnectSocket(thisMAC,BLEtimeout,devId):
 			if os.path.isfile(G.homeDir + "temp/sending"):
 				time.sleep(0.5)
 			else:
-				 break
+				break
 
 		hci_sock = bt.hci_open_dev(devId)
 		hci_fd	 = hci_sock.fileno()
@@ -622,7 +622,7 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 				#print "delaying hci"
 				time.sleep(0.5)
 			else:
-				 break
+				break
 		# Connection timed out
 		# Input/output error ok for 1. step, not ok for step 2
 		#  stop:  "Device is not available."
@@ -1361,7 +1361,7 @@ def doSwitchBot():
 							return 
 
 						elif cmd == "pulses":
-							 # echo '{"mac": "F9:A6:49:9A:DF:85", "cmd": "pulses", "pulses": "2","pulseLengthOn":"0","pulseLengthOff":"0","pulseDelay":"3","mode":"interactive"}' > temp/switchbot.cmd
+							# echo '{"mac": "F9:A6:49:9A:DF:85", "cmd": "pulses", "pulses": "2","pulseLengthOn":"0","pulseLengthOff":"0","pulseDelay":"3","mode":"interactive"}' > temp/switchbot.cmd
 							##### simple clock  ##########
 							if pulseLengthOn == 0: # switchbot should be in press mode 
 								for kk in range(repeat):

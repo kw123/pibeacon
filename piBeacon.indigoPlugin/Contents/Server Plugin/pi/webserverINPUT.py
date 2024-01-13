@@ -172,8 +172,8 @@ U.setLogging()
 
 defaults		= {"SSID":"do+not+change", "timezone":"99","passCode":"do+not+change"}
 try:
-	ipNumber	= sys.argv[1]
-	port		= int(sys.argv[2])
+	ipNumber				= sys.argv[1]
+	port					= int(sys.argv[2])
 	regularOutputFile		= sys.argv[3]
 
 except: 
