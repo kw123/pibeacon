@@ -27,7 +27,7 @@ pgmToKill = ""
 delList = []
 param1 = ""
 param2 = ""
-verbose = False
+verbose = True
 count = 0
 try: 
 	myPID 		= sys.argv[1]
@@ -37,12 +37,14 @@ try:
 except:pass
 
 if myPID == "": sys.exit() 
-if verbose: U.logger.log(20,"== ext-kill== 1 argv: {};  myOwnPID:{}".format(sys.argv, myOwnPID) )
+if verbose: 
+	print("== ext-kill== 1 argv: {};  myOwnPID:{}".format(sys.argv, myOwnPID) )
+	U.logger.log(20,"== ext-kill== 1 argv: {};  myOwnPID:{}".format(sys.argv, myOwnPID) )
 
 try:
 
 		#print "killOldPgm ",pgmToKill,str(myPID)
-		cmd= "ps -ef | grep '{}' | grep -v grep | grep -v ' {} ' | grep -v ' {} '".format(pgmToKill, myOwnPID, myPID  )
+		cmd= "ps -ef | grep '{}' | grep -v grep | grep -v ' {} ' | grep -v ' {} ' | grep -v sudo".format(pgmToKill, myOwnPID, myPID  )
 		if param1 !="":
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":

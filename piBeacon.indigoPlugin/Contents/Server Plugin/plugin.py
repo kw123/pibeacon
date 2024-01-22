@@ -563,6 +563,14 @@ _devtypesToStates["BLEconnect"]["lastUp"] = "String"
 _devtypesToStates["BLEconnect"]["lastStatusChange"] = "String"	
 _devtypesToStates["BLEconnect"]["lastStatusChange"] = "String"	
 
+_devtypesToStates["beaconOn"] = {}
+_devtypesToStates["beaconOn"]["txPower"] = "Integer"	
+_devtypesToStates["beaconOn"]["rssi"] = "Integer"	
+_devtypesToStates["beaconOn"]["trigger"] = "String"	
+_devtypesToStates["beaconOn"]["lastSensorChange"] = "String"	
+_devtypesToStates["beaconOn"]["groupMember"] = "String"
+_devtypesToStates["beaconOn"]["lastUpdateFromRPI"] = "String"	
+
 
 _devtypesToStates["beaconSensor"] = {}
 _devtypesToStates["beaconSensor"]["txPower"] = "Integer"	
@@ -597,6 +605,7 @@ _addingstates["distanceRaw"]					= {"addTag":False, "States":{"distanceRaw":"Rea
 _addingstates["trigger"]						= {"addTag":False, "States":{"trigger":"String"}}
 _addingstates["stopped"]						= {"addTag":False, "States":{"stopped":"boolean"}}
 _addingstates["speed"]							= {"addTag":False, "States":{"speed":"Real"}}
+_addingstates["rotation"]						= {"addTag":False, "States":{"rotation":"Integer"}}
 _addingstates["illuminance"]					= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["AmbientTemperature"]				= {"addTag":True, "States":_devtypesToStates["realSensor"]}
 _addingstates["Temperature"]					= {"addTag":True, "States":_devtypesToStates["realSensor"]}
@@ -617,9 +626,9 @@ _addingstates["rPI"]							= {"addTag":False, "States":_devtypesToStates["rpi"]}
 _addingstates["allDevHaveTheseStates"]			= {"addTag":False, "States":_devtypesToStates["allDevHaveThese"]}
 _addingstates["beaconSensorStates"]				= {"addTag":False, "States":_devtypesToStates["beaconSensor"]}
 _addingstates["sensorStates"]					= {"addTag":False, "States":_devtypesToStates["sensor"]}
+_addingstates["beaonOn"]						= {"addTag":False, "States":_devtypesToStates["beaconOn"]}
 _addingstates["output"]							= {"addTag":False, "States":_devtypesToStates["output"]}
 _addingstates["lastBatteryReplaced"]			= {"addTag":False, "States":{"lastBatteryReplaced":"String"}}
-
 
 _addingstates["accelerationX"]					= {"addTag":False, "States":{"accelerationX":"Integer"}}
 _addingstates["accelerationY"]					= {"addTag":False, "States":{"accelerationY":"Integer"}}
@@ -628,7 +637,23 @@ _addingstates["accelerationVectorDelta"]		= {"addTag":False, "States":{"accelera
 _addingstates["accelerationTotal"]				= {"addTag":False, "States":{"accelerationTotal":"Integer"}}
 _addingstates["accelerationXYZMaxDelta"]		= {"addTag":False, "States":{"accelerationXYZMaxDelta":"Integer"}}
 
+
+_addingstates["trigger"]						= {"addTag":False, "States":{"trigger":"String"}}
+_addingstates["packetId"]						= {"addTag":False, "States":{"packetId":"Integer"}}
+_addingstates["currentEvent"]					= {"addTag":False, "States":{"currentEvent":"String"}}
+_addingstates["previousEvent"]					= {"addTag":False, "States":{"previousEvent":"String"}}
+_addingstates["currentEventType"]				= {"addTag":False, "States":{"currentEventType":"String"}}
+_addingstates["previousEventType"]				= {"addTag":False, "States":{"previousEventType":"String"}}
+
 _stateListToDevTypes = {}
+_stateListToDevTypes["trigger"]					= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
+_stateListToDevTypes["packetId"]				= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
+_stateListToDevTypes["currentEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
+_stateListToDevTypes["previousEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
+_stateListToDevTypes["currentEventType"]		= {"BLEShellyButton":1}
+_stateListToDevTypes["previousEventType"]		= {"BLEShellyButton":1}
+
+
 _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
 _stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
@@ -636,7 +661,8 @@ _stateListToDevTypes["distanceEvent"]			= {"vcnl4010Distance":1, "vl6180xDistanc
 _stateListToDevTypes["trigger"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distance"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distanceRaw"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
-_stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1}
+_stateListToDevTypes["rotation"]				= {"BLEShellyDoor":1}
+_stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1,"BLEShellyDoor":1,"BLEShellyMotion":1}
 _stateListToDevTypes["Temperature"]				= {"BLEMKKsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
 _stateListToDevTypes["Humidity"]				= {"BLEMKKsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
@@ -651,6 +677,7 @@ _stateListToDevTypes["rpiAndSensor"]			= {"rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["rPI"]						= {"rPI":1}
 _stateListToDevTypes["beacon"]					= {"beacon":1}
 _stateListToDevTypes["BLEconnect"]				= {"BLEconnect":1}
+_stateListToDevTypes["beaconOn"]				= {"BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
 _stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
 _stateListToDevTypes["rpiAndBeaconAndBLEconnect"] = {"beacon":1, "rPI":1, "BLEconnect":1}
 _stateListToDevTypes["accelerationVectorDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEMKKsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
@@ -676,6 +703,10 @@ for xx in _BLEsensorTypes:
 for xx in ["AmbientTemperature","Temperature","CO2","Pressure","VOC","Formaldehyde", "beaconSensorStates"]:
 	for dd in _stateListToDevTypes[xx]:
 		_stateListToDevTypes["sensorStates"][dd] = 1
+
+for xx in ["beaconOn"]:
+	for dd in _stateListToDevTypes[xx]:
+		_stateListToDevTypes["beaconOn"][dd] = 1
 
 _stateListToDevTypes["allDevHaveTheseStates"]	= {"*":1}
 
@@ -6766,7 +6797,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def buttonSendAllAllandRebootsshCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonSendAllAllandRebootsshCALLBACK")
-		return self.execButtonConfig(valuesDict, level="0,", action=["initSSH", "updateAllAllFilesFTP", "rebootSSH"], Text="rPi configure and reboot pi# ")
+		return self.execButtonConfig(valuesDict, level="0,", action=["initSSH", "updateAllAllFilesFTP", "restartmasterSSH"], Text="rPi configure and reboot pi# ")
 
 
 ####-------------------------------------------------------------------------####
@@ -6787,6 +6818,10 @@ class Plugin(indigo.PluginBase):
 	def buttonGetSystemParametersCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		return self.execButtonConfig(valuesDict, level="0,", action=["getStatsSSH"], Text="get stats from rpi")
 
+
+###-------------------------------------------------------------------------####
+	def buttonUpgradeCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		return self.execButtonConfig(valuesDict, level="0,", action=["upgradeSSH"], Text="apt-get update and apt-get upgrade")
 
 ####-------------------------------------------------------------------------####
 	def buttonbuttonGetpiBeaconLogCALLBACK(self, valuesDict=None, typeId="", devId=0):
@@ -6883,6 +6918,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"hard reboot of rpi{};   {}".format(self.RPI[piU]["ipNumberPi"], out) )
 				self.presendtoRPI(piU,out)
 		return
+
+
 
 
 ####-------------------------------------------------------------------------####
@@ -11386,8 +11423,8 @@ class Plugin(indigo.PluginBase):
 		self.RPI[piU]["piOnOff"] = "1"
 		self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + "RPIconf", fmtOn=self.RPIFileSort)
 		self.startUpdateRPIqueues("restart", piSelect=piU)
-		self.setONErPiV(piU, "piUpToDate", ["updateAllFilesFTP"])
-		self.rePopulateStates = "save server config after chnage in config"
+		self.setONErPiV(piU, "piUpToDate", ["initSSH","updateAllAllFilesFTP","restartmasterSSH"])
+		self.rePopulateStates = "save server config after change in config"
 
 
 		return valuesDict
@@ -12280,6 +12317,9 @@ class Plugin(indigo.PluginBase):
 
 						if "restartmasterSSH" in self.RPI[piU]["piUpToDate"]:
 							self.sshToRPI(piU, expFile="restartmasterSSH.exp")
+
+						if "upgradeSSH" in self.RPI[piU]["piUpToDate"]:
+							self.sshToRPI(piU, expFile="upgradeSSH.exp")
 
 						if self.updateRejectListsCount < _GlobalConst_numberOfRPI:
 							self.updateRejectListsCount +=1
@@ -15507,7 +15547,7 @@ class Plugin(indigo.PluginBase):
 									self.addToStatesUpdateDict(dev.id, "sensorType", 			data["sensorType"])
 
 				if "sendsAlive" 	in data  			and "sendsAlive" 	in dev.states 			and "{}".format(data["sendsAlive"]) != "{}".format(dev.states["sendsAlive"]):	
-									self.addToStatesUpdateDict(dev.id, "sendsAlive", 			data["sendsAlive"])
+									self.addToStatesUpdateDict(dev.id, "sendsAlive", 			"{}".format(data["sendsAlive"]))
 
 				if "lowVoltage"		 in data  			and "lowVoltage" 	in dev.states:	
 									if "lastBatteryReplaced" in dev.states and  "{}".format(data["lowVoltage"]).lower()  == "false" and (
@@ -15517,8 +15557,9 @@ class Plugin(indigo.PluginBase):
 									if "{}".format(data["lowVoltage"]) != "{}".format(dev.states["lowVoltage"]):	
 										self.addToStatesUpdateDict(dev.id, "lowVoltage", 			"{}".format(dev.states["lowVoltage"]))
 
-				if "tampered" in data:
-					self.addToStatesUpdateDict(dev.id, "tampered", 					data["tampered"])
+				if "tampered" in data and data["tampered"] !="":
+					#if True or  dev.id == 1544693341: self.indiLOG.log(20, "{}, setting state.. tampered: to {}".format(dev.name, data["tampered"] ))
+					self.addToStatesUpdateDict(dev.id, "tampered", 					"{}".format(data["tampered"]))
 
 				if "distanceEvent" in data:
 					self.setStatusCol(dev, "distanceEvent",					data["distanceEvent"],						"{}".format(data["distanceEvent"]),							whichKeysToDisplay,"","",decimalPlaces=0)
@@ -15871,28 +15912,28 @@ class Plugin(indigo.PluginBase):
 			inverse = self.getpropForonOffTrueFalse(props)
 			uiValue = self.getpropForonOffText(dev, props, data)
 
-			if dev.states.get("counter",-991) == data.get("counter",-9999): return 
+			if dev.states.get("packetId",-991) == data.get("packetId",-9999): return 
 			#self.indiLOG.log(20, "updateBLEShelly; dev:{}, data:{}".format(dev.name, data))
 
-			self.addToStatesUpdateDict(dev.id, "counter",  			data["counter"] )
+			self.addToStatesUpdateDict(dev.id, "packetId",  								data["packetId"] )
 
-			if "onOff" in data:
-				if data["onOff"] == "None":
+			if "button" in data:
+				if data["button"] == "None":
 					if dev.states["onOffState"]:
 						#self.indiLOG.log(20, "updateBLEMusegear; dev:{}, uiValue:{}".format(dev.name, uiValue))
-						self.addToStatesUpdateDict(dev.id, "onOffState",  		False)
-						self.addToStatesUpdateDict(dev.id, "status",  			data["onOff"] )
+						self.addToStatesUpdateDict(dev.id, "onOffState",  				False)
+						self.addToStatesUpdateDict(dev.id, "status",  					data["button"] )
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:
 					if not dev.states["onOffState"]:
 					#self.indiLOG.log(20, "updateBLEMusegear; dev:{}, uiValue:{}".format(dev.name, uiValue))
 						if "currentEventType" in dev.states:
 							self.addToStatesUpdateDict(dev.id, "previousEventType", 	dev.states["currentEventType"])
-							self.addToStatesUpdateDict(dev.id, "currentEventType", 		data["onOff"] )
-						self.addToStatesUpdateDict(dev.id, "previousEvent", 		dev.states["currentEvent"])
-						self.addToStatesUpdateDict(dev.id, "status",  				data["onOff"])
-						self.addToStatesUpdateDict(dev.id, "onOffState",  			True)
-						self.addToStatesUpdateDict(dev.id, "currentEvent", 			datetime.datetime.now().strftime(_defaultDateStampFormat))
+							self.addToStatesUpdateDict(dev.id, "currentEventType", 		data["button"] )
+						self.addToStatesUpdateDict(dev.id, "previousEvent", 			dev.states["currentEvent"])
+						self.addToStatesUpdateDict(dev.id, "status",  					data["button"])
+						self.addToStatesUpdateDict(dev.id, "onOffState",  				True)
+						self.addToStatesUpdateDict(dev.id, "currentEvent", 				datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 						indigo.variable.updateValue("lastButtonOnBeaconDevId", "{}".format(dev.pluginProps.get("beaconDevId","0")))
 						indigo.variable.updateValue("lastButtonOnDevId", "{}".format(dev.id))
@@ -15901,10 +15942,10 @@ class Plugin(indigo.PluginBase):
 
 			elif "motion" in data:
 				if not dev.states["onOffState"] and  data["motion"] == "motion":
-						self.addToStatesUpdateDict(dev.id, "previousEvent", 		dev.states["currentEvent"])
-						self.addToStatesUpdateDict(dev.id, "status",  				data["motion"])
-						self.addToStatesUpdateDict(dev.id, "onOffState",  			True)
-						self.addToStatesUpdateDict(dev.id, "currentEvent", 			datetime.datetime.now().strftime(_defaultDateStampFormat))
+						self.addToStatesUpdateDict(dev.id, "previousEvent", 			dev.states["currentEvent"])
+						self.addToStatesUpdateDict(dev.id, "status",  					data["motion"])
+						self.addToStatesUpdateDict(dev.id, "onOffState",  				True)
+						self.addToStatesUpdateDict(dev.id, "currentEvent", 				datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 						indigo.variable.updateValue("lastButtonOnBeaconDevId", "{}".format(dev.pluginProps.get("beaconDevId","0")))
 						indigo.variable.updateValue("lastButtonOnDevId", "{}".format(dev.id))
@@ -15913,18 +15954,18 @@ class Plugin(indigo.PluginBase):
 
 						#self.indiLOG.log(20, "updateBLEMusegear; dev:{}, uiValue:{}".format(dev.name, uiValue))
 				if dev.states["onOffState"] and  data["motion"] != "motion":
-						self.addToStatesUpdateDict(dev.id, "onOffState",  		False)
-						self.addToStatesUpdateDict(dev.id, "status",  			data["motion"] )
+						self.addToStatesUpdateDict(dev.id, "onOffState",  				False)
+						self.addToStatesUpdateDict(dev.id, "status",  					data["motion"] )
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
 			elif "isOpen" in data:
 				if data["isOpen"] != dev.states["status"]:
-						self.addToStatesUpdateDict(dev.id, "status",  				data["isOpen"])
+						self.addToStatesUpdateDict(dev.id, "status",  					data["isOpen"])
 
 				if not dev.states["onOffState"] and  data["isOpen"] == "isOpen":
-						self.addToStatesUpdateDict(dev.id, "previousEvent", 		dev.states["currentEvent"])
-						self.addToStatesUpdateDict(dev.id, "onOffState",  			True)
-						self.addToStatesUpdateDict(dev.id, "currentEvent", 			datetime.datetime.now().strftime(_defaultDateStampFormat))
+						self.addToStatesUpdateDict(dev.id, "previousEvent", 			dev.states["currentEvent"])
+						self.addToStatesUpdateDict(dev.id, "onOffState",  				True)
+						self.addToStatesUpdateDict(dev.id, "currentEvent", 				datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 						indigo.variable.updateValue("lastButtonOnBeaconDevId", "{}".format(dev.pluginProps.get("beaconDevId","0")))
 						indigo.variable.updateValue("lastButtonOnDevId", "{}".format(dev.id))
@@ -18455,7 +18496,8 @@ class Plugin(indigo.PluginBase):
 					if mac == devTest.pluginProps.get("mac","xx"):
 						return 
 				devType 									= subtypeOfBeacon
-				isSens 										= True
+				if devType.find("-on") == -1:
+					isSens 										= True
 				newprops["isBLESensorDevice"]				= True
 				name 										= "s-{}-{}-{}".format(devType, mac, fromPiU)
 
@@ -18546,7 +18588,7 @@ class Plugin(indigo.PluginBase):
 			newprops["mac"] 								= mac
 			if isSens:
 				newprops["isSensorDevice"] 					= True
-				if devType != "SwitchbotContact" and correspondingShellyButtonDevice == "":
+				if devType != "SwitchbotContact" and correspondingShellyButtonDevice == "" and devType.find("-on") == --1:
 					newprops["SupportsSensorValue"] 		= True
 				else:
 					newprops["SupportsSensorValue"] 		= False
@@ -18555,7 +18597,7 @@ class Plugin(indigo.PluginBase):
 				newprops["AllowOnStateChange"] 				= False
 				newprops["AllowSensorValueChange"] 			= False
 				newprops["SupportsBatteryLevel"] 			= True
-				newprops["SupportsOnState"] 				= motion or contact or swit or button
+				newprops["SupportsOnState"] 				= motion or contact or swit or button or devType.find("-on") >-1
 				rPiEnable 									= "rPiEnable{}".format(fromPiU)
 				newprops[rPiEnable]							= True
 			if swit:
@@ -19587,7 +19629,6 @@ class Plugin(indigo.PluginBase):
 						out = self.updateSensProps(out, props, "useRTC", elseSet="")
 						out = self.updateSensProps(out, props, "pin_webAdhoc")
 						out = self.updateSensProps(out, props, "useRamDiskForLogfiles", elseSet="0")
-						out = self.updateSensProps(out, props, "rebootCommand")
 						out = self.updateSensProps(out, props, "BLEserial", elseSet="sequential")
 						out = self.updateSensProps(out, props, "sendToIndigoSecs")
 
@@ -20455,7 +20496,7 @@ class Plugin(indigo.PluginBase):
 					f = open(self.MAChome+'/.ssh/known_hosts', "w")
 					for line in lines:
 						if len(line) < 10: continue
-						if line.find(ipN) >-1:
+						if line.find(ipN) > -1:
 							self.indiLOG.log(30,"removing line:{}".format(line))
 							continue
 						f.write(line.strip("\n")+"\n")

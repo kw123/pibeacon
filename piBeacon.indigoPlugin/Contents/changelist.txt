@@ -1,4 +1,27 @@
-added features / changes in v2022.173.89 @ 2024-01-11
+added features / changes in v2022.174.89 @ 2024-01-22
+==================================================
+
+1. now supports RPI opsys bookworm - 32 bit version, released in Dec 2023
+  it was a little bit of work to make everything work again.
+  behaviour of links between programs programs changed, ie sudo python xxx.py now requires sudo python xx.py & to invoke
+  previously  xxx.py canceled the sudo process w/o impaction xxx.py. That is not true anymore. It is used quit extenisveley in pibeacon
+  Several other chnages required modigications
+  NO  python2 programs are available, everything is now py3 o the new RPI OP sys
+
+2. you now can use the regular RPI SD IMAGE INSTALLER tool to create your SD.
+   see  https://forums.indigodomo.com/viewtopic.php?f=187&t=15482&p=109421#p109421
+   The plugin will auto install all needed software and set all required configs on the RPI
+
+==> I will not supply a precanned image anymore to be copied onto the SD 
+    you can now create that yourself. It is actually more user friendly.
+
+In the future I will need to stop supporting py2 compatibility.
+That means new plugin versions MIGHT not run on older SD versions anymore.
+This one still does, but might be the last one. I hope you understand.
+
+
+
+added features / changes in v2022.173.89 @ 2024-01-13
 ==================================================
 
 

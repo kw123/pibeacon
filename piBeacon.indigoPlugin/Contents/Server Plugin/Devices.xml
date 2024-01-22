@@ -704,14 +704,6 @@ if you want to keep it running add an "&amp;" to the end </Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python3;sudo killall -9 python;sleep 6;sudo reboot now" >
-				<Label>...reboot command:</Label>
-				<List>
-					<Option value="sudo killall -9 python3;sudo killall -9 python;sleep 6;sudo reboot now"           >sudo killall -9 python3,sudo killall -9 python;sleep 6;sudo reboot now</Option>
-					<Option value="sudo killall -9 python3;sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f" >sudo killall -9 python3;sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f</Option>
-				</List>
-			</Field>
-
 
 			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
 				<Label>...wait after boot before master.py (set in callbeacon.py):</Label>
@@ -1587,13 +1579,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="rebootCommand"   type="menu" defaultValue="sudo killall -9 python;sleep 6;sudo reboot now" >
-				<Label>...reboot command:</Label>
-				<List>
-					<Option value="sudo killall -9 python;sleep 6;sudo reboot now"           >sudo killall -9 python;sleep 6;sudo reboot now</Option>
-					<Option value="sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f" >sudo killall -9 python;sudo sync;sleep 6; sudo reboot -f</Option>
-				</List>
-			</Field>
 
 
 			<Field id="sleepAfterBoot"   type="menu" defaultValue="0" >
@@ -8066,37 +8051,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="currentEvent">
-				<ValueType>String</ValueType>
-				<TriggerLabel>currentEvent</TriggerLabel>
-				<ControlPageLabel>currentEvent</ControlPageLabel>
-			</State>
-			<State id="previousEvent">
-				<ValueType>String</ValueType>
-				<TriggerLabel>previousEvent</TriggerLabel>
-				<ControlPageLabel>previousEvent</ControlPageLabel>
-			</State>
-			<State id="illuminance">
-				<ValueType>number</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="rotation">
-				<ValueType>number</ValueType>
-				<TriggerLabel>rotation</TriggerLabel>
-				<ControlPageLabel>rotation</ControlPageLabel>
-			</State>
-			<State id="counter">
-				<ValueType>Integer</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -8213,16 +8167,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="currentEvent">
-				<ValueType>String</ValueType>
-				<TriggerLabel>currentEvent</TriggerLabel>
-				<ControlPageLabel>currentEvent</ControlPageLabel>
-			</State>
 			<State id="currentEventType">
 				<ValueType>String</ValueType>
 				<TriggerLabel>currentEventType</TriggerLabel>
@@ -8233,17 +8177,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>previousEventType</TriggerLabel>
 				<ControlPageLabel>previousEventType</ControlPageLabel>
 			</State>
-			<State id="previousEvent">
-				<ValueType>String</ValueType>
-				<TriggerLabel>previousEvent</TriggerLabel>
-				<ControlPageLabel>previousEvent</ControlPageLabel>
-			</State>
-			<State id="counter">
-				<ValueType>Integer</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -8359,32 +8292,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="currentEvent">
-				<ValueType>String</ValueType>
-				<TriggerLabel>currentEvent</TriggerLabel>
-				<ControlPageLabel>currentEvent</ControlPageLabel>
-			</State>
-			<State id="illuminance">
-				<ValueType>number</ValueType>
-				<TriggerLabel>illuminance</TriggerLabel>
-				<ControlPageLabel>illuminance</ControlPageLabel>
-			</State>
-			<State id="previousEvent">
-				<ValueType>String</ValueType>
-				<TriggerLabel>previousEvent</TriggerLabel>
-				<ControlPageLabel>previousEvent</ControlPageLabel>
-			</State>
-			<State id="counter">
-				<ValueType>Integer</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -8522,11 +8429,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
 			<State id="currentOnEvent">
 				<ValueType>String</ValueType>
 				<TriggerLabel>currentOnEvent</TriggerLabel>
@@ -8748,9 +8650,9 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 	<Device type="sensor" id="BLEiSensor-on">     	<Name>BLE-iSensor - on</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
-			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="false"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="false"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="false"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>

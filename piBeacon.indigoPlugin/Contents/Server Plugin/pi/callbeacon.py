@@ -5,13 +5,29 @@ import time
 import subprocess
 import sys
 
-homeDir  = "/home/pi/pibeacon/"
-homeDir0 = "/home/pi/"
+sys.path.append(os.getcwd())
+try:
+	import	piBeaconGlobals as G
+	import	piBeaconUtils	as U
+	homeDir  = G.homeDir
+	homeDir0 = G.homeDir0
+except:
+	homeDir		= "/home/pi/pibeacon/"
+	homeDir0	= "/home/pi/"
 
-#################################
+
+################################
 def readPopen(cmd):
 	try:
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		return ret.decode('utf_8'), err.decode('utf_8')
+	except Exception as e:
+		return "","" 
+
+#################################
+def simpleCall(cmd):
+	try:
+		ret, err = subprocess.Popen(cmd, shell=True)
 		return ret.decode('utf_8'), err.decode('utf_8')
 	except Exception as e:
 		return "","" 
@@ -33,12 +49,15 @@ def checkIfmustUsePy3():
 #################################
 
 
+simpleCall("/usr/bin/sudo /usr/bin/systemctl daemon-reload")
+
 if checkIfmustUsePy3(): usePython3 = "yes" 
 else:					usePython3 = "" 
 
 #set GPIOs if requested BEFOR master.py runs just once after boot 
-if usePython3 == "":	subprocess.call("/usr/bin/python {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir), shell=True)
-else:					subprocess.call("/usr/bin/python3 -E {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir), shell=True)
+if usePython3 == "":	simpleCall("/usr/bin/sudo /usr/bin/python {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
+else:					simpleCall("/usr/bin/sudo /usr/bin/python3 -E {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
+
 
 
 # make new directories if they do not exist 

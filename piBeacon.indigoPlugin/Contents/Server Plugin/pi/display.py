@@ -185,12 +185,14 @@ class bigScreen :
 					except	Exception as e:
 						U.logger.log(30,"", exc_info=True)
 						U.logger.log(30, u"Driver: {0} failed.".format(driver))
+						time.sleep(20)
 						continue
 					found = driver
 					break
 	
 				if found == "":
 					U.logger.log(30, u"bigscreen no driver out of :{};  found -- exiting".format(found) )
+					time.sleep(20)
 					raise Exception('No suitable video driver found!')
 					return 
 				U.logger.log(20, u"found: {}".format(driver)  )		 
@@ -246,6 +248,7 @@ class bigScreen :
 			self.pygame.display.update()
 		except	Exception as e:
 			U.logger.log(30,"", exc_info=True)
+			exit()
 
 
 	def __del__(self):
@@ -1855,6 +1858,7 @@ digitalclockInitialized		= ""
 analogclockInitialized		= ""
 
 U.logger.log(20,"looping over input" )
+time.sleep(30)
 
 while runLoop:
 	try:

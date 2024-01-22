@@ -113,9 +113,9 @@ Then the rPi will start sending data to plugin
 				<Title>send program and config files and restart master</Title>
 				<CallbackMethod>buttonSendAllandsshCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="buttonSendAllAllandReboot" type="button" tooltip="">
+			<Field id="buttonSendAllAllandReboot" type="button" tooltip="create directories, send programs, static files, config. Will do a reboot after 100 secs if done at first RPI setup">
 				<Label>click to</Label>
-				<Title>send all of above + fonts etc and REBOOT (do only once after rpi install)</Title>
+				<Title>send  init + pgms + config + fonts etc (do only once after rpi install)</Title>
 				<CallbackMethod>buttonSendAllAllandRebootsshCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="buttonReboot" type="button" tooltip="login to rPi and issue sudo reboot">
@@ -142,6 +142,11 @@ Then the rPi will start sending data to plugin
 				<Label>click to</Label>
 				<Title>Reboot rPi Force through socket</Title>
 				<CallbackMethod>buttonRebootHardSocketCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="buttonUpgrade" type="button" tooltip=" apt-get updae and apt-get upgrade">
+				<Label>click to</Label>
+				<Title>Upgrade opsys on rpi</Title>
+				<CallbackMethod>buttonUpgradeCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="buttonsetTime" type="button" tooltip="only usefull if NTP is not enabled">
 				<Label>click to</Label>

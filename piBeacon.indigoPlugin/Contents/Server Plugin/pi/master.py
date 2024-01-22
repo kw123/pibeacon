@@ -1833,8 +1833,8 @@ def checknetwork0():
 def checkIfFirstStart():
 	global configured, adhocWifiStarted
 	try:
-		U.logger.log(20,"RPistrt configured at>{}<, userIdOfServer:{}".format(configured, G.userIdOfServer) )
-		if configured == "" and G.userIdOfServer == "xxstartxx": 
+		U.logger.log(20,"RPistrt configured at>{}<, userIdOfServer:{}, myPiNumber:{}".format(configured, G.userIdOfServer, G.myPiNumber) )
+		if (configured == "" and G.userIdOfServer == "xxstartxx") or str(G.myPiNumber ) in ["","-1"]: 
 			U.logger.log(20,"RPi not configured yet, waiting for config or wifi; networkType:{}; useNetwork:{}, wifiType:{}".format(G.networkType,G.useNetwork,G.wifiType) )
 			if G.networkType  in G.useNetwork and G.wifiType == "normal":
 				wifiWaiting  = True
@@ -1853,15 +1853,15 @@ def checkIfFirstStart():
 									time.sleep(10)
 									break
 
-				if G.userIdOfServer	 == "xxstartxx":
+				if G.userIdOfServer	 == "xxstartxx"  or G.myPiNumber < 0:
 						for ii in range(300):
-							if G.userIdOfServer	 == "xxstartxx":
+							if G.userIdOfServer	 == "xxstartxx" or str(G.myPiNumber ) in ["","-1"]:
 								U.logger.log(30, " master not configured yet, lets wait for new config files")
 								if ii >298:
 									startProgam("master.py", params="", reason="..not configured yet")
 									exit(0)
 								time.sleep(5)
-								readNewParams()
+								readNewParams(force=1)
 							else:
 								break
 						U.stopAdhocWifi()
@@ -2446,14 +2446,19 @@ def execMaster():
 
 
 		if usePython3:
-			subprocess.call("/usr/bin/python3 -E "+G.homeDir+"doOnce.py", shell=True)
+			pyCommand = "/usr/bin/python3 "
 		else:
-			subprocess.call("/usr/bin/python "+G.homeDir+"doOnce.py", shell=True)
+			pyCommand = "/usr/bin/python "
 
+		subprocess.call(pyCommand+"  -E "+G.homeDir+"doOnce.py", shell=True)
+
+		U.setLogging()
 		U.logger.log(20, "" )
 		U.logger.log(20, "=========START.. MASTER  v:{}".format(masterVersion) )
 
 
+		# set to autologin on commandline
+		subprocess.Popen("/usr/bin/sudo {} {}setStartupParams.py &".format(pyCommand, G.homeDir), shell=True)
 
 		try:
 			import RPi.GPIO as GPIO
@@ -2476,12 +2481,9 @@ def execMaster():
 		# just in case the file is present, is created by calling master w nohup. it is terminal output, can be Gbytes
 		subprocess.call("sudo rm {}nohup.out > /dev/null 2>&1".format(G.homeDir), shell=True)
 
+		U.logger.log(20, "=========START.. MASTER  bf kill")
 		killOldPrograms()
-
-		if usePython3:
-			subprocess.call("/usr/bin/python3 "+G.homeDir+"copyToTemp.py", shell=True)
-		else:
-			subprocess.call("/usr/bin/python "+G.homeDir+"copyToTemp.py", shell=True)
+		subprocess.call(pyCommand+G.homeDir+"copyToTemp.py", shell=True)
 
 		test = ""
 		if usePython3: test = "yes"
@@ -2633,9 +2635,13 @@ def execMaster():
 
 		# start voltage checker 
 
+
 		while True:
 			if loopCount > 1000000000: loopCount = 0
 			loopCount += 1
+
+			if loopCount == 3 or loopCount%20 == 0:
+		 		subprocess.call(pyCommand+" killSudos.py &", shell=True)
 
 			if abs(tAtLoopSTart	 - time.time()) > 30:
 				if G.networkType.find("indigo") >-1 and G.wifiType == "normal":

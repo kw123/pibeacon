@@ -7,15 +7,14 @@ set timeout [lindex $argv 4 ]
 
 
 set timeout $timeout
-if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
-
-
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
+ 
 if {$authKeyOrPassword == "assword"} { 
     expect {
         "(yes/no" { 
             send "yes\r"
             sleep 0.1
-            expect "$authKeyOrPassword" { send "$password\r"}
+            expect "$authKeyOrPassword"  { send "$password\r"}
         }    
         "$authKeyOrPassword" { 
             send "$password\r" 
@@ -23,11 +22,11 @@ if {$authKeyOrPassword == "assword"} {
     }
 }
 
-
 expect "Last login:" { }
-sleep 3
-send "sudo killall -9 python;sudo killall -9 python3;sudo killall -9 python2;sleep 1;sudo shutdown -f\r"
-sleep 3
-set timeout 1
-expect "closed by remote host" {}
+sleep 1
+send "cd /home/pi/pibeacon \r"
+send  "/usr/bin/sudo /usr/bin/python upgrade.py &\r"
+send  "exit\r"
 expect eof
+
+

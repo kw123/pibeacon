@@ -105,18 +105,18 @@ def setLogLevel():
 
 #################################
 def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,wait=False):
-	global failedURLimport
+	global failedURLimport, logger
 
 	#print ("cBY:{:<20} sys info:{}".format(G.program, sys.version_info))
 	#print ("cBY:{:<20} urllib:{}".format(G.program, urllib))
 	#print ("cBY:{:<20} failedURLimport:{}".format(G.program, failedURLimport))
 
-	##if True or verbose: logger.log(20, u"cBY:{:<20} ======== kill pgm myPID:s{}, pgmToKill:{}".format(G.program,myPID,pgmToKill ) )
+	ps = "{}".format(subprocess.Popen("ps -ef | grep .py", shell=True,stdout=subprocess.PIPE).communicate())
 	count = 0
 	try:		
 		if int(myPID) > 10 and len(delList) == 0:
 			cmd= ["/usr/bin/sudo","/usr/bin/python","{}killOldPgm.py".format(G.homeDir), str(myPID), pgmToKill, param1, param2]
-			if verbose: logger.log(20, u"cBY:{:<20} kill pgm using external, cmd:{}".format(G.program, cmd) )
+			if True or verbose: logger.log(20, u"cBY:{:<20} kill pgm using external, myPID:{}, cmd:{}".format(G.program, myPID, cmd) )
 			ret = subprocess.Popen(cmd)
 			return 1
 	except Exception as e:
@@ -130,7 +130,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
 			cmd = "{} | grep ".format(cmd,param2)
-		if verbose: logger.log(20, u"cBY:{:<20} kill command {}, {}".format(G.program, cmd, delList) )
+		if verbose: logger.log(20, u"cBY:{:<20} kill mypid:{}, command {}, {}, \nps:{}".format(G.program, myPID, cmd, delList, ps) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 		lines=ret.split("\n")
@@ -155,7 +155,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			xlist += str(pid)+ " "
 			count += 1
 		if verbose: 
-			logger.log(40, u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
+			logger.log(20, u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
 		if len(xlist) > 2:
 			cmd = "/usr/bin/sudo kill -9 {}".format(xlist)
 			if not wait: cmd += " &"
@@ -624,9 +624,7 @@ def getGlobalParams(inp):
 		G.BLEconnectUseHCINo =		inp.get("BLEconnectUseHCINo",G.BLEconnectUseHCINo)
 		G.enableRebootCheck =		inp.get("enableRebootCheck",G.enableRebootCheck)
 		G.rpiIPNumber =				inp.get("rpiIPNumber",G.rpiIPNumber)
-		G.rebootCommand =			inp.get("rebootCommand",G.rebootCommand)
 		G.networkType =				inp.get("networkType",G.networkType)
-		G.rebootCommand =			inp.get("rebootCommand",G.rebootCommand)
 		G.getBatteryMethod =		inp.get("getBatteryMethod",G.getBatteryMethod)
 		G.debug =					inp.get("debug",G.debug)
 		G.ipNumberRpiStatic =		inp.get("ipNumberRpiStatic", G.ipNumberRpiStatic) == "1"
@@ -2503,7 +2501,7 @@ def execSend():
 ######## un decode i2c ether from in or from hex
 def echoToMessageSend(data, wasSend):
 	try:
-		if len(data) > 6000: data = data[0:6000]+" ... "+data[-100:]
+		if len(data) > 6000: data = data[0:5000]+"    ...    "+data[-990:]
 		logger.log(10, "cBY:{:<20}  {} {}\n".format(G.program, wasSend, data) )
 		writeFile("temp/messageSend", "{} {} {}: {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"), wasSend, G.program , data) )
 	except	Exception as e:
