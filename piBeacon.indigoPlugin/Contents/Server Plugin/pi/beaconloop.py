@@ -3954,11 +3954,11 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2700.):
 	try:
 		## correction  formula voltage & temp --> level 
-		## at >=10C:correction = 0                 --> 100*(VB -2700)/(300)   ==>  > 3000 --> 100%  < 2700 == 0%
-		## at 0C:   1-0.07 = 0.93 * 2700 = 2500 mV --> 100*(VB -2500)/(500)   ==>  > 3000 --> 100%  < 2500 == 0%
-		## at -10C: 1-0.3  = 0.70 * 2700 = 1890 mV --> 100*(VB -1890)/(1110)  ==>  > 3000 --> 100%  < 1889 == 0%
+		## at >=10C:correction = 0                 --> 100*(VB -2700)/(300)   ==>  > 3000 --> 100%  < 2.7 == 0%
+		## at 0C:   1-0.07 = 0.93 * 2700 = 2.5 V --> 100*(VB -2500)/(500)   ==>  > 3000 --> 100%  < 2.5== 0%
+		## at -10C: 1-0.14  = 0.86 * 2700 = 2.3 V --> 100*(VB -2.3)/(1110)   ==>  > 3000 --> 100%  < 2.3 == 0%
 		##   
-		batteryLowVsTemp			= (1. + 0.7*min(0.,(temp-10)/100.)) * batteryVoltAt0  
+		batteryLowVsTemp			= (1. + 0.7*min(0.,(temp-10.)/100.)) * batteryVoltAt0  
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
 		return batteryLevel
 	except	Exception as e:

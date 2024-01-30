@@ -472,10 +472,6 @@ _GlobalConst_i2cSensors	  = [
 _GlobalConst_allowedOUTPUT = [
 	"neopixel", "neopixel-dimmer", "neopixelClock", "OUTPUTswitchbotRelay", "OUTPUTswitchbotCurtain", "OUTPUTgpio-1-ONoff", "OUTPUTgpio-1", "OUTPUTi2cRelay", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26", "setMCP4725", "OUTPUTxWindows", "display", "setPCF8591dac", "setTEA5767", "sundial", "setStepperMotor", "FBHtempshow"]
 
-_GlobalConst_allowedpiSends = [
-	"updateParamsFTP", "updateBeaconParamsFTP", "updateAllFilesFTP", "updateAllAllFilesFTP", "rebootSSH", "resetOutputSSH", "shutdownSSH", "getStatsSSH", "initSSH", "upgradeOpSysSSH"]
-
-
 _GlobalConst_groupList = ["Family", "Guests", "Other1", "Other2", "Other3", "Other4", "Other5"]
 _GlobalConst_groupListDef = ["BEACON","PI","BLEconnect","SENSOR"]
 
@@ -1446,7 +1442,10 @@ class Plugin(indigo.PluginBase):
 				for d in _debugAreas:
 					if self.pluginPrefs.get("debug"+d, False): self.debugLevel.append(d)
 				self.showLoginTest = self.pluginPrefs.get("showLoginTest", True)
-				self.debugRPI		= int(self.pluginPrefs.get("debugRPI","-1"))
+				try:
+					self.debugRPI		= int(self.pluginPrefs.get("debugRPI","-1"))
+				except:
+					self.debugRPI		= -1
 
 			else:
 				for d in _debugAreas:
@@ -3119,7 +3118,7 @@ class Plugin(indigo.PluginBase):
 
 			delList={}
 
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if type(self.beacons[beacon]) !=type({}):
 					self.indiLOG.log(10,"beacon: {}, type:{}".format(beacon, type(self.beacons[beacon])))
 					self.indiLOG.log(10,"beacons: {}".format(self.beacons[beacon]))
@@ -3471,7 +3470,7 @@ class Plugin(indigo.PluginBase):
 			changed = False
 
 			self.beaconPositionsData["mac"]={}
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 					try:
 						if self.beacons[beacon]["showBeaconOnMap"] ==0: continue
 						indigoId = self.beacons[beacon]["indigoId"]
@@ -3893,7 +3892,7 @@ class Plugin(indigo.PluginBase):
 				if "all" in checkOnly or "beacon" in checkOnly:
 					# remove junk:
 					remove = []
-					for beacon in self.beacons:
+					for beacon in copy.deepcopy(self.beacons):
 						if not self.isValidMAC(beacon):  # !=17 length, remove junk
 							remove.append(beacon)
 							anyChange = True
@@ -3992,7 +3991,7 @@ class Plugin(indigo.PluginBase):
 
 			try:
 				if "rpi" in checkOnly or "all" in checkOnly:
-					for beacon in self.beacons:
+					for beacon in copy.deepcopy(self.beacons):
 						try:
 							pi = int(self.beacons[beacon]["RPINumber"])
 						except:
@@ -6771,10 +6770,6 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def buttonConfirmConfigureCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		return self.execButtonConfig(valuesDict, level="reboot,", action=["updateParamsFTP"], Text="send Config Files and restart rPI")
-
-	def buttonUpgradeCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		return self.execButtonConfig(valuesDict, level="0,", action=["upgradeOpSysSSH"], Text="upgrade rPi")
-
 ####-------------------------------------------------------------------------####
 	def buttonResetOutputCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		return self.execButtonConfig(valuesDict, level="0,", action=["resetOutputSSH"], Text="reset output file  and reboot pi# ")
@@ -6829,6 +6824,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def execButtonConfig(self, valuesDict, level="0,", action=[], Text=""):
+		valuesDict["MSG"] = "Error"
 		try:
 			try:
 				pi = int(valuesDict["configurePi"])
@@ -6844,13 +6840,17 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"{} {}  action string:{}".format(Text,piU, action)	 )
 				self.rPiRestartCommand[pi] = level	## which part need to restart on rpi
 				self.setONErPiV(piU, "piUpToDate", action, resetQueue=True)
+			valuesDict["MSG"] = "command {} submitted".format(action)
+			return valuesDict
 		except Exception as e:
 			self.exceptionHandler(40, e)
+		valuesDict["MSG"] = "Error, see log"
 		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
 	def buttonConfirmWiFiCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		valuesDict["MSG"] = "Error"
 		try:
 			pi = int(valuesDict["configurePi"])
 		except:
@@ -6872,6 +6872,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.indiLOG.log(10,"buttonConfirmWiFiCALLBACK configuring WiFi: SSID and password not set")
 
+		valuesDict["MSG"] = "command submitted"
 		return valuesDict
 
 
@@ -6881,6 +6882,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonShutdownHardSocketCALLBACK(self, valuesDict=None ,typeId="", devId=0):
+		valuesDict["MSG"] = "Error"
 		try:
 			pi = int(valuesDict["configurePi"])
 		except:
@@ -6894,6 +6896,7 @@ class Plugin(indigo.PluginBase):
 		else:
 				self.indiLOG.log(10,"hard shutdown of rpi {};   {}".format(self.RPI[piU]["ipNumberPi"], out) )
 				self.presendtoRPI(piU,out)
+		valuesDict["MSG"] = "command halt submitted"
 		return
 
 
@@ -6903,6 +6906,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonRebootHardSocketCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		valuesDict["MSG"] = "Error"
 		pi = valuesDict["configurePi"]
 		try:
 			pi = int(valuesDict["configurePi"])
@@ -6917,6 +6921,7 @@ class Plugin(indigo.PluginBase):
 		else:
 				self.indiLOG.log(10,"hard reboot of rpi{};   {}".format(self.RPI[piU]["ipNumberPi"], out) )
 				self.presendtoRPI(piU,out)
+		valuesDict["MSG"] = "command reboot -f submitted"
 		return
 
 
@@ -6928,6 +6933,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def buttonRebootSocketCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		valuesDict["MSG"] = "Error"
 		try:
 			pi = int(valuesDict["configurePi"])
 		except:
@@ -6943,42 +6949,44 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"regular reboot of rpi {};  {}".format(self.RPI[piU]["ipNumberPi"], out) )
 				self.presendtoRPI(piU,out)
 
-		return
+		valuesDict["MSG"] = "command reboot submitted"
+		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
 	def setTimeCALLBACKaction(self, action1=None, typeId="", devId=0):
 		self.doActionSetTime(action1.props["configurePi"])# do it now
-		return
+		return 
 
 ####-------------------------------------------------------------------------####
 	def buttonsetTimeCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		self.actionList["setTime"].append({"action":"setTime", "value":valuesDict["configurePi"]}) # put it into queue and return to menu
-		return
+		valuesDict["MSG"] = "command setTime started"
+		return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def refreshNTPCALLBACKaction(self, action1=None, typeId="", devId=0):
 		valuesDict = action1.props
 		self.buttonrefreshNTPCALLBACK(valuesDict)
-		return
+		return 
 
 ####-------------------------------------------------------------------------####
 	def buttonrefreshNTPCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		valuesDict["anyCmdText"] = "refreshNTP"
 		self.buttonAnycommandCALLBACK(valuesDict)
-		return
+		valuesDict["MSG"] = "command refreshNTP started"
+		return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def stopNTPCALLBACKaction(self,	 action1=None, typeId="", devId=0):
 		valuesDict = action1.props
 		self.buttonstopNTPCALLBACK(valuesDict)
-		return
+		return 
 
 ####-------------------------------------------------------------------------####
 	def buttonstopNTPCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		valuesDict["anyCmdText"] = "stopNTP"
 		self.buttonAnycommandCALLBACK(valuesDict)
-		return
+		valuesDict["MSG"] = "command "+valuesDict["anyCmdText"] +" started"
+		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
@@ -7725,14 +7733,10 @@ class Plugin(indigo.PluginBase):
 ### not used
 	def buttonConfirmMACnonactiveCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		try:
-			delB = []
 			ll0 = len(self.beacons)
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["indigoId"] != 0:		continue
 				if int(self.beacons[beacon]["ignore"]) == 0:	continue
-				delB.append(beacon)
-
-			for beacon in delB:
 				del self.beacons[beacon]
 
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonConfirmMACnonactiveCALLBACK")
@@ -7746,7 +7750,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			delB = []
 			ll0 = len(self.beacons)
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				#self.indiLOG.log(10,"beacon= {} testing  , indigoID:{}".format(beacon, self.beacons[beacon]["indigoId"]) )
 				if self.beacons[beacon]["indigoId"] != 0:
 					try:
@@ -7784,7 +7788,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def buttonSetAllExistingDevicesToActiveCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		try:
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["indigoId"] != 0:
 					self.beacons[beacon]["ignore"] = 0
 					try:
@@ -7804,7 +7808,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def buttonSetAllExistingDevicesToOFFCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		try:
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["indigoId"] != 0:
 					self.beacons[beacon]["ignore"] = 1
 					try:
@@ -11483,10 +11487,13 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.getDebugLevels(useMe=valuesDict)
 
-			try:
-				if self.debugRPI	!= int(valuesDict["debugRPI"]): self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
-				self.debugRPI		= int(valuesDict["debugRPI"])
-			except: pass
+			test = valuesDict["debugRPI"]
+			try: 	test = int(test)
+			except:	test = -1
+			if self.debugRPI != test: self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
+			self.debugRPI		= test
+			valuesDict["debugRPI"] = str(test)
+
 
 			self.cycleVariables = valuesDict["cycleVariables"]
 
@@ -12045,13 +12052,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			xList = ""
 			for piU in self.RPI:
-				ok = True
-				for action	in self.RPI[piU]["piUpToDate"]:
-					if action not in _GlobalConst_allowedpiSends:
-						ok = False
-						break
 				xList += piU+":{}".format(self.RPI[piU]["piUpToDate"])+"; "
-				if not ok: self.RPI[piU]["piUpToDate"]=[]
 			if self.decideMyLog("OfflineRPI"): self.indiLOG.log(5,"printpiUpToDate list .. pi#:[actionLeft];.. ([]=ok): "+ xList	 )
 		except Exception as e:
 			self.exceptionHandler(40, e)
@@ -12171,7 +12172,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def checkIfNotBeepableExpired(self):
 		try:
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if "lastBusy" not in self.beacons[beacon] or self.beacons[beacon]["lastBusy"] < 20000:
 					self.beacons[beacon]["lastBusy"] = time.time() - 1000
 				if self.beacons[beacon]["indigoId"] > 0:
@@ -12600,7 +12601,7 @@ class Plugin(indigo.PluginBase):
 					self.lastUPtoDown  = time.time()+90
 				return False # noting for the next x minutes due to reboot
 			anyChange = False
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if not self.beacons[beacon]["enabled"]: continue
 				if self.beacons[beacon]["ignore"] > 0 : continue
 
@@ -12793,7 +12794,7 @@ class Plugin(indigo.PluginBase):
 
 			self.saveCARS(force=True)
 			try:
-				for beacon in self.beacons:	 # sync with indigo
+				for beacon in copy.deepcopy(self.beacons):	 # sync with indigo
 					if beacon.find("00:00:00:00") ==0: continue
 					if self.beacons[beacon]["indigoId"] != 0:	# sync with indigo
 						try :
@@ -15440,23 +15441,30 @@ class Plugin(indigo.PluginBase):
 
 
 
-	def setlastBatteryReplaced(self, dev, batL):
+	def setlastBatteryReplaced(self, dev, newBatL):
 		try:	
 
 			if "lastBatteryReplaced"  not in dev.states: return 
 			if "batteryLevel"  not in dev.states: return 
 
+			upd = False
 			# remember the last datetime when batlevel was 100%
 			if len(dev.states["lastBatteryReplaced"]) < 5:
+					upd = True
+
+			if  newBatL == 100:
+				if len(str(dev.states["batteryLevel"])) < 1:# not set yet
+					upd = True
+
+				elif  dev.states["batteryLevel"] < 95: # update if new 100, and old < 95% dot do 99-100-99-100, switch back and forth 
+					upd = True
+
+			elif newBatL - dev.states["batteryLevel"] > 30: # update if new > 30% of old
+					upd = True
+
+			if upd:
 				self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
-				return 
 
-			if  batL == 100:
-				if len(str(dev.states["batteryLevel"])) < 1:# empty 
-					self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
-
-				elif dev.states["batteryLevel"] < batL: # update if new 100%
-					self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 		except Exception as e:
 			self.exceptionHandler(40, e)
@@ -19251,7 +19259,7 @@ class Plugin(indigo.PluginBase):
 			xx6 = {}
 			xx8 = {}
 			xx9 = {}
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["ignore"] >= 1 or self.beacons[beacon]["ignore"] == -1:  xx1.append(beacon)
 				devId = self.beacons[beacon]["indigoId"]
 				if devId > 0:
@@ -19415,7 +19423,7 @@ class Plugin(indigo.PluginBase):
 				out["myPiNumber"]					= piU
 				out["enableRebootCheck"]			= self.RPI[piU]["enableRebootCheck"]
 				out["rPiCommandPORT"]				= self.rPiCommandPORT
-				out["sendToIndigoSecs"]				 = self.RPI[piU]["sendToIndigoSecs"]
+				out["sendToIndigoSecs"]				= self.RPI[piU]["sendToIndigoSecs"]
 				out["enableiBeacons"]				= self.RPI[piU]["enableiBeacons"]
 				out["pressureUnits"]				= self.pluginPrefs.get("pressureUnits", "hPascal")
 				out["distanceUnits"]				= self.pluginPrefs.get("distanceUnits", "1.0")
@@ -20556,7 +20564,7 @@ class Plugin(indigo.PluginBase):
 		#				  1234567890123456	1234567890123456789012 1234567890 123456 123456789
 		#				  75:66:B5:0A:9F:DB beacon-75:66:B5:0A:9   expired		   0	  1346
 		self.myLog( theText = "#	defined beacons-------------", mType="pi configuration")
-		self.myLog( theText = "#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ", mType= "pi configuration")
+		self.myLog( theText = "indigoName                 indigoId Status enabled               type txMin ignore Pos X,Y,Z   fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ", mType= "pi configuration")
 		for status in ["ignored", ""]:
 			for beaconDeviceType in self.knownBeaconTags:
 				self.printBeaconInfoLine(status, beaconDeviceType)
@@ -20724,7 +20732,7 @@ class Plugin(indigo.PluginBase):
 			self.myLog( theText = "port# on rPi 4 GPIO commands {}" .format(self.rPiCommandPORT),											mType= "pi configuration")
 			self.myLog( theText = " ",																										mType= "pi configuration")
 
-			self.myLog( theText = "  # R# 0/1 IP#             beacon-MAC        indigoName                 Pos X,Y,Z    indigoID UserID    Password       If-rPI-Hangs   SensorAttached",mType= "pi configuration")
+			self.myLog( theText = "beacon-MAC        indigoName                 Pos X,Y,Z    indigoID UserID    Password       If-rPI-Hangs   SensorAttached",mType= "Raspberry Pis")
 			for piU  in self.RPI:
 				try:
 					pi = int(piU)
@@ -20740,10 +20748,8 @@ class Plugin(indigo.PluginBase):
 						self.exceptionHandler(40, e)
 						self.indiLOG.log(40,"self.RPI[piU][piDevId] not defined for pi: {}".format(piU))
 						continue
-					line = piU.rjust(3) + " "
-					line += piU.rjust(2) + " "
-					line += self.RPI[piU]["piOnOff"].ljust(3) + " "
-					line += self.RPI[piU]["ipNumberPi"].ljust(15) + " "
+					line = ""
+					#line += self.RPI[piU]["ipNumberPi"].ljust(15) + " "
 					line += self.RPI[piU]["piMAC"].rjust(17) + " "
 					line += (dev.name).ljust(25) + " "
 					if piU  in _rpiBeaconList:
@@ -20754,17 +20760,20 @@ class Plugin(indigo.PluginBase):
 					line += self.RPI[piU]["userIdPi"].ljust(10) + " "
 					line += self.RPI[piU]["passwordPi"].ljust(15)
 					line += self.RPI[piU]["enableRebootCheck"].ljust(14)
-					line += "{}".format(self.RPI[piU]["sensorList"]).strip("[]").ljust(15)
-					self.myLog( theText = line, mType="pi configuration")
+					## make nice list at end of line
+					line += self.makLineForSensors(piU)
+					onOff= " on"
+					if self.RPI[piU]["piOnOff"] != "1": onOff = "off"
+					self.myLog( theText = line, mType= f"pi#: {pi:2d} {onOff} {self.RPI[piU]['ipNumberPi']}")
 				except Exception as e:
 					self.exceptionHandler(40, e)
 					self.indiLOG.log(40,"RPI#{} has problem:  disabled?".format(piU))
-
+		
 
 
 			self.myLog( theText = "", mType="pi configuration")
 			if len(self.CARS["carId"]) > 0:
-				self.myLog( theText = " ==========  CARS =========================", mType="pi configuration")
+				self.myLog( theText = " ===================================", mType="CARS")
 				self.myLog( theText = "CAR device-------------       HomeS     AwayS    BAT-beacon                     USB-beacon                     KEY0-beacon                    KEY1-beacon                    KEY2-beacon", mType= "pi configuration")
 				bNames = ["beaconBattery", "beaconUSB", "beaconKey0", "beaconKey1", "beaconKey2"]
 				bN = [" ", " ", " ", " ", " "]
@@ -20796,43 +20805,77 @@ class Plugin(indigo.PluginBase):
 					out =  carName +" "+homeSince+" - "+awaySince
 					for n in range(len(bNames)):
 						out += " " + bN[n].strip().ljust(30)
-					self.myLog( theText = out, mType= "pi configuration")
-					out =  "         ....FastDown".ljust(30)+ " ".ljust(18)
+
+					self.myLog( theText = out, mType= "CARS")
+					out =  "         ....FastDown beacons".ljust(30)+ " ".ljust(18)
 					for n in range(len(bNames)):
 						if bF[n] !=" ":
 							out += " " + (bF[n]+"[sec]").strip().ljust(30)
 						else:
 							out += " " + (" ").ljust(30)
 
-					self.myLog( theText = out, mType= "pi configuration")
+					self.myLog( theText = out, mType= "CARS")
 				self.myLog( theText = "", mType= "pi configuration")
 				"""
 configuration         - ==========  defined beacons ==============
-  08:31:46 pi configuration         -#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min on/off battery UUIDlastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created
+  08:31:46 pi configuration         -#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore  Pos X,Y,Z    fastDw sigDlt min on/off battery UUIDlastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created
   08:31:46 pi configuration         -1  24:DA:11:27:E5:D4 b-iHere_black-C          1940213429 up       True         Nonda_iHere   -55      0      0    999 -999/-999                                              45     120        0 2019-01-09 23:58:14 2020-09-14 08:06:47
   08:31:46 pi configuration         -6  00:EA:23:11:2B:E4 b-xy-Mazda -red-1-2        60052985 up       True                XY_1   -59      0      0    999 -999/-999random127/100 -09-05 09:20:18,l=0             45      90        0 2017-09-07 23:44:36 2020-09-14 08:07:49
 				"""
 			if True:
-				self.myLog( theText = " ==========  defined beacons ==============", mType= "pi configuration")
-				self.myLog( theText = "#  Beacon MAC        indigoName                 indigoId Status enabled               type txMin ignore fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ", mType= "pi configuration")
+				self.myLog( theText = " ========================", mType= "")
+				self.myLog( theText = " indigoName                 indigoId Status enabled               type txMin ignore  Pos X,Y,Z  fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ", mType= "defined beacons")
 				for status in ["up", "down", "expired"]:
 					for beaconDeviceType in self.knownBeaconTags:
 						self.printBeaconInfoLine(status, beaconDeviceType)
 
-				self.myLog( theText = "", mType= "pi configuration")
+				self.myLog( theText = "", mType= "pi configuration --")
 
 			if True:
-				self.myLog( theText = "update-thread status", mType= "pi configuration")
-				self.myLog( theText = "pi# state       lastCheck lastActive   lastData", mType= "pi configuration")
+				self.myLog( theText = " ========================", mType= "update-thread status")
+				self.myLog( theText = "lastCheck lastActive   lastData", mType= "update-thread status")
 				if "state" in self.rpiQueues:
 					for piU in self.RPI:
 						if piU not in self.rpiQueues["state"]: continue
-						self.myLog( theText = "{:3s} {:10s} {:10.1f} {:10.1f}   >{:} ...".format( piU, self.rpiQueues["state"][piU], time.time()-self.rpiQueues["lastCheck"][piU], time.time()-self.rpiQueues["lastActive"][piU], self.rpiQueues["lastData"][piU][0:99] ),  mType= "pi configuration")
+						self.myLog( theText = "{:10.1f} {:10.1f}   >{:} ...".format(time.time()-self.rpiQueues["lastCheck"][piU], time.time()-self.rpiQueues["lastActive"][piU], self.rpiQueues["lastData"][piU][0:120] ),  mType=  "{:3s} {:10s}".format( piU, self.rpiQueues["state"][piU]))
 					self.myLog( theText = "", mType= "pi configuration")
 
 		except Exception as e:
 			self.exceptionHandler(40, e)
 
+
+
+####-------------------------------------------------------------------------####
+	def makLineForSensors(self, piU):
+		try:
+			line = ""
+			sLine = ""
+			eofl = 1
+			lastName = ""
+			for xx in self.RPI[piU]["sensorList"].strip(",").split(","):
+				yy = xx.split("*")
+				sName =  yy[0]
+				sId   =  yy[1]
+
+				if eofl != 1:
+					line+= "\n                                                                                                                                                                                   "
+				eofl = 1
+				if sName != lastName: 
+					if sLine !="": sLine+= " "
+					sLine += sName+":"
+					lastName = sName
+				sLine +=  sId+","
+				if len(sLine) > 70: 
+					line += sLine.strip(",")
+					eofl = 0
+					sLine = ""
+			if sLine != "": line += sLine	
+			return line.strip(",").strip("\n")
+
+		except Exception as e:
+			self.exceptionHandler(40, e)
+			self.indiLOG.log(40,"RPI#{} has problem:  disabled?".format(piU))
+		return ""
 
 ####-------------------------------------------------------------------------####
 	def printGroups(self):
@@ -20845,7 +20888,7 @@ configuration         - ==========  defined beacons ==============
 
 			out+= "\n"
 			out+= "\n========== beacon groups    ===================================="
-			out+= "\ndev                                            groupMember in"
+			out+= "\ndev                                                           groupMember in"
 
 			groupMemberNames = {}
 			for group in _GlobalConst_groupList+_GlobalConst_groupListDef:
@@ -20855,7 +20898,7 @@ configuration         - ==========  defined beacons ==============
 				if not dev.enabled:  continue
 				if "groupMember" not in dev.states:  continue
 				if dev.states["groupMember"] == "": continue
-				out+= "\n{:47s}: {}".format(dev.name, dev.states["groupMember"])
+				out+= "\n{:57s}: {}".format(dev.name, dev.states["groupMember"])
 
 				gps = dev.states["groupMember"].split("/")
 				if len(gps) >0:
@@ -20982,7 +21025,7 @@ configuration         - ==========  defined beacons ==============
 
 		try:
 			cc = 0
-			for beacon in self.beacons:
+			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["typeOfBeacon"] != xType: continue
 				if self.beacons[beacon]["status"] 		!= status: continue
 				lastUpdateBatteryLevel = ""
@@ -21012,12 +21055,13 @@ configuration         - ==========  defined beacons ==============
 
 				cc += 1
 				if len(name) > 22: name = name[:21] + ".."
-				line = "{}".format(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " " +  "{}".format(self.beacons[beacon]["indigoId"]).rjust(10) + " "+\
+				line = name.ljust(24) + " " +  "{}".format(self.beacons[beacon]["indigoId"]).rjust(10) + " "+\
 					   self.beacons[beacon]["status"].ljust(8) +\
 					   "{}".format(dev.enabled).rjust(5) + \
 					   self.beacons[beacon]["typeOfBeacon"].rjust(20)+\
 					   "{}".format(self.beacons[beacon]["beaconTxPower"]).rjust(6) + " " + \
 					   "{}".format(self.beacons[beacon]["ignore"]).rjust(6) + " " + \
+					   ("{}".format(dev.states["PosX"]).split(".")[0] + ",{}".format(dev.states["PosY"]).split(".")[0] + ",{}".format(dev.states["PosZ"]).split(".")[0]).rjust(10)+\
 					   "{}".format(props["fastDown"]).rjust(6) + " " + \
 					   "{}".format(props["signalDelta"]).rjust(6) + " " + \
 					   "{}".format(props["minSignalOn"]).rjust(4) +"/{}".format(props["minSignalOff"]).rjust(4) + \
@@ -21028,16 +21072,16 @@ configuration         - ==========  defined beacons ==============
 					   "{}".format(min(9999999,  int(self.beacons[beacon]["updateSignalValuesSeconds"]) ) ).rjust(8)  + " " + \
 					   "{}".format(self.beacons[beacon]["created"]).ljust(19) +" "+\
 					   lastStatusChange.ljust(19)
-				self.myLog( theText = line, mType= "pi configuration")
+				self.myLog( theText = line, mType=  f"pi {cc:3d} {beacon:}")
 
 			if status == "ignored":
-				for beacon in self.beacons:
+				for beacon in copy.deepcopy(self.beacons):
 					if self.beacons[beacon]["typeOfBeacon"] != type: continue
 					if self.beacons[beacon]["status"] != status: continue
 					if self.beacons[beacon]["ignore"] == 1:
 						name = " "
 						cc += 1
-						line = "{}".format(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " ".ljust(11) + " "+ \
+						line = name.ljust(24) + " ".ljust(11) + " "+ \
 							   self.beacons[beacon]["status"].ljust(8)  + \
 							   "{}".format(dev.enabled).rjust(5) + \
 							   self.beacons[beacon]["typeOfBeacon"].rjust(20)  + \
@@ -21050,14 +21094,14 @@ configuration         - ==========  defined beacons ==============
 							   "{}".format(min(999999,int(self.beacons[beacon]["expirationTime"]))).rjust(7) + " " + \
 							   "{}".format(min(9999999,int(self.beacons[beacon]["updateSignalValuesSeconds"]))).rjust(8) + " " + \
 							   "{}".format(self.beacons[beacon]["created"]).ljust(19)
-						self.myLog( theText = line, mType=	 "pi configuration")
-				for beacon in self.beacons:
+						self.myLog( theText = line, mType=	 f"pi {cc:3d} {beacon:}")
+				for beacon in copy.deepcopy(self.beacons):
 					if self.beacons[beacon]["typeOfBeacon"] != type: continue
 					if self.beacons[beacon]["status"] != status:	  continue
 					if self.beacons[beacon]["ignore"] == 2:
 						name = " "
 						cc += 1
-						line = "{}".format(cc).ljust(2) + " " + beacon + " " + name.ljust(24) + " ".ljust(11) + " "+ \
+						line = name.ljust(24) + " ".ljust(11) + " "+ \
 							   self.beacons[beacon]["status"].ljust(8) + \
 							   "     "  + \
 							   self.beacons[beacon]["typeOfBeacon"].rjust(10) + " " + \
@@ -21070,7 +21114,7 @@ configuration         - ==========  defined beacons ==============
 							   "{}".format(min(999999,int(self.beacons[beacon]["expirationTime"]))).rjust(7) + " " + \
 							   "{}".format(min(9999999,int(self.beacons[beacon]["updateSignalValuesSeconds"]))).rjust(8) + " " + \
 							   "{}".format(self.beacons[beacon]["created"]).ljust(19)
-						self.myLog( theText = line, mType= "pi configuration")
+						self.myLog( theText = line, mType=  f"pi {cc:3d} {beacon:}")
 
 
 		except Exception as e:

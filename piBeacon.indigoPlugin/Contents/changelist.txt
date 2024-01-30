@@ -1,3 +1,12 @@
+added features / changes in v2022.174.90 @ 2024-01-31
+==================================================
+
+1. fixed restart master on rpi through ssh did not work
+
+2. added a check around debugRPI, it now makes sure that the variable is properly, set even if not initialized
+
+
+
 added features / changes in v2022.174.89 @ 2024-01-22
 ==================================================
 

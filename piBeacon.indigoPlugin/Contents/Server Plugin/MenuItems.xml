@@ -14,7 +14,7 @@
 		<Name>-------------setup RPI  ---------------------------</Name>
 	</MenuItem>
 	<MenuItem id="setupPiServer">
-		<Name>Initial BASIC setup of rPi servers, Do this to create rPi devices..</Name>
+		<Name>Initial BASIC setup of rPi servers, Do this to create/delete rPi devices..</Name>
 		<ConfigUI>
 			<Field id="enablePiEntries" type="checkbox" defaultValue="false" hidden="yes"></Field>
 			<Field id="infoLabel11" type="label">
@@ -89,6 +89,10 @@ Then the rPi will start sending data to plugin
 	<MenuItem id="configurePiServer">
 		<Name>Send/get Config/Restart/PGM/Sound/logs etc to/from rPi server..</Name>
 		<ConfigUI>
+			<Field id="MSG" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
+			</Field>
+
 			<Field id="configurePi" type="menu" defaultValue="999" tooltip="This will send all config files/ reboot .. to the selected rpi server ">
 				<Label>Select rPi server #:</Label>
 				<List class="self" filter="" method="filterPi" dynamicReload="false" />
@@ -148,21 +152,13 @@ Then the rPi will start sending data to plugin
 				<Title>Upgrade opsys on rpi</Title>
 				<CallbackMethod>buttonUpgradeCALLBACK</CallbackMethod>
 			</Field>
+
 			<Field id="buttonsetTime" type="button" tooltip="only usefull if NTP is not enabled">
 				<Label>click to</Label>
 				<Title>setTime on rPi to MAC time</Title>
 				<CallbackMethod>buttonsetTimeCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="buttonrefreshNTP" type="button" tooltip="only usefull if NTP is not enabled">
-				<Label>click to</Label>
-				<Title>restart NTP connection to get time from internet</Title>
-				<CallbackMethod>buttonrefreshNTPCALLBACK</CallbackMethod>
-			</Field>
-			<Field id="buttonstopNTP" type="button" tooltip="only usefull if NTP is not enabled">
-				<Label>click to</Label>
-				<Title>stop NTP service</Title>
-				<CallbackMethod>buttonstopNTPCALLBACK</CallbackMethod>
-			</Field>
+
 			<Field id="logsStart" type="label">
 				<Label> -------- get info / logs </Label>
 			</Field>
@@ -202,25 +198,6 @@ Then the rPi will start sending data to plugin
 				<Title>send YOUR command</Title>
 				<CallbackMethod>buttonAnycommandCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="upgrade0" type="label">
-				<Label> -------------------------------------------------------------- </Label>
-			</Field>
-			<Field id="upgrade" type="label">3
-				<Label>you can do a complete upgrade/refresh of the op-sys on the rPi MANUALLY  with the command </Label>
-			</Field>
-			<Field id="upgCommand" type="textfield" defaultValue=" --- sudo python installLibs.py force --- " readonly="yes"></Field>
-			<Field id="upgrade3" type="label">
-				<Label>within eg wheezy or jessie..  but not from whezzy to jessie </Label>
-			</Field>
-			<Field id="upgrade4" type="label">
-				<Label>you must "ssh pi@ x.x.x.x" to the rPi and issue the command there </Label>
-			</Field>
-			<!--
-           <Field   id="buttonUpgrade" type="button"	tooltip="  ">
-				<Label> OR CLICK </Label><Title>start upgrade NOW</Title>
-				<CallbackMethod>buttonUpgradeCALLBACK</CallbackMethod>
-			</Field>
--->
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="changeIP">
