@@ -377,7 +377,7 @@ def readParams():
 
 				
 			if devId not in tmp006sensor:
-				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
+				U.logger.log(30,"==== Start {} ===== @ i2c= {}".format(G.program, i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				tmp006sensor[devId] = TMP006(i2cAddress=i2cAdd)
 				tmp006sensor[devId].begin()

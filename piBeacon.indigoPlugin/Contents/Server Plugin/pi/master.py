@@ -648,16 +648,16 @@ def startProgam(pgm, params="", reason="", force=False):
 		if not os.path.isfile(G.homeDir+pgm1+".py"): return 
 
 		if mustUsePy3:
-			py = 3
+			py = "3"
 
 		else:
-			py = 2
-			if   pgm1 in G.python2SensorsMustDo: py = 2
-			elif pgm1 in G.python3SensorsMustDo: py = 3
-			elif usePython3 and ( pgm1 in G.python3Apps  or pgm1 in G.python3SensorsCanDo): py = 3
-			else: py = 2
+			py = "2"
+			if   pgm1 in G.python2SensorsMustDo: py = "2"
+			elif pgm1 in G.python3SensorsMustDo: py = "3"
+			elif usePython3 and ( pgm1 in G.python3Apps  or pgm1 in G.python3SensorsCanDo): py = "3"
+			else: py = "2"
 
-		cmd = "sudo /usr/bin/python{} {}.py {} &".format(py, G.homeDir+pgm1, params)
+		cmd = "sudo /usr/bin/python{} -E {}.py {} &".format(py, G.homeDir+pgm1, params)
 
 		U.logger.log(30, ">>>> starting usePython3:{};  {:20s}, reason:{:10s};--  with cmd: {};".format(usePython3, pgm1, reason, cmd)  )
 		#U.logger.log(30, ">>>> : test:{}; {}; {}; {}; {}; ".format(pgm1 not in G.python2SensorsMustDo , G.python3SensorsMustDo , usePython3 , pgm1 in G.python3Apps , pgm1 in G.python3SensorsCanDo )  )
@@ -2458,7 +2458,7 @@ def execMaster():
 
 
 		# set to autologin on commandline
-		subprocess.Popen("/usr/bin/sudo {} {}setStartupParams.py &".format(pyCommand, G.homeDir), shell=True)
+		subprocess.Popen("/usr/bin/sudo {} -E {}setStartupParams.py &".format(pyCommand, G.homeDir), shell=True)
 
 		try:
 			import RPi.GPIO as GPIO
@@ -2483,7 +2483,7 @@ def execMaster():
 
 		U.logger.log(20, "=========START.. MASTER  bf kill")
 		killOldPrograms()
-		subprocess.call(pyCommand+G.homeDir+"copyToTemp.py", shell=True)
+		subprocess.call(pyCommand+" -E "+G.homeDir+"copyToTemp.py", shell=True)
 
 		test = ""
 		if usePython3: test = "yes"

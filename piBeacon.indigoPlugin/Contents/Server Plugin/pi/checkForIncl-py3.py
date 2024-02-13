@@ -40,7 +40,7 @@ def execInstall():
 
 	if True:
 		ret = readPopen("gpio -v",doPrint=False)
-		if ret[0].find("version:") ==-1:
+		if ret[0].find("version:") == -1:
 			readPopen("rm -R /tmp/wiringPi")
 			installGPIO = "cd /tmp; wget https://project-downloads.drogon.net/wiringpi-latest.deb; sudo dpkg -i wiringpi-latest.deb ; rm -R /tmp/wiringPi"
 			ret = readPopen(installGPIO)
@@ -63,7 +63,15 @@ def execInstall():
 		try:
 			from adafruit_seesaw.seesaw import Seesaw
 		except:
-			readPopen("sudo pip3 install adafruit-circuitpython-seesaw")
+			readPopen("sudo pip3 install --break-system-packages  adafruit-circuitpython-seesaw")
+
+	if True:
+		logger.log(20,"check board neopixel"  )
+		try:
+			import board
+			import neopixel
+		except Exception as e:
+			readPopen("sudo pip3 install --break-system-packages  rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install adafruit-blinka") # it is now ...../pibeacon no .log
 
 
 
@@ -72,30 +80,23 @@ def execInstall():
 		try:
 			import adafruit_lidarlite
 		except:
-			readPopen("sudo pip3 install adafruit-circuitpython-lidarlite")
+			readPopen("sudo pip3 install --break-system-packages  adafruit-circuitpython-lidarlite")
+
+	if True:
+		logger.log(20,"check adafruit_tmp117"  )
+		try:
+			import adafruit_tmp117
+		except:
+			readPopen("sudo pip3 install --break-system-packages adafruit-circuitpython-tmp117")
+
 
 	if True:
 		logger.log(20,"check adafruit-circuitpython-dht"  )
 		try:
 			import adafruit_dht
 		except:
-			readPopen("sudo pip3 install adafruit-circuitpython-dht")
+			readPopen("sudo pip3 install --break-system-packages  adafruit-circuitpython-dht")
 
-	if True:
-		logger.log(20,"check board neopixel"  )
-		try:
-			import board
-			import neopixel
-		except Exception as e:
-			readPopen("sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install adafruit-blinka") # it is now ...../pibeacon no .log
-
-	if True:
-		logger.log(20,"check board neopixel"  )
-		try:
-			import board
-			import neopixel
-		except Exception as e:
-			readPopen("sudo pip3 install rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install adafruit-blinka") # it is now ...../pibeacon no .log
 
 
 	if True:
@@ -103,14 +104,14 @@ def execInstall():
 		try:
 			import Adafruit_DHT
 		except Exception as e:
-			readPopen("sudo pip3 install Adafruit_DHT") # it is now ...../pibeacon no .log
+			readPopen("sudo pip3 install --break-system-packages Adafruit_DHT") # it is now ...../pibeacon no .log
 
 	if True:
 		logger.log(20,"check pexpect"  )
 		try:
 			import pexpect
 		except:
-			readPopen("sudo pip3 install pexpect")
+			readPopen("sudo pip3 install --break-system-packages pexpect")
 
 	if True:
 		logger.log(20,"check expect"  )

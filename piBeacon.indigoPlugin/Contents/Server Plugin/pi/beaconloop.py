@@ -60,7 +60,7 @@ def hex2str(inString):
 		else:
 			return  inString.decode("hex")
 	except Exception as e:
-		U.logger.log(20,"hexstring: >>{}<<".format(inString), exc_info=True)
+		U.logger.log(20,"hexstring: >>{}<< can not be converted,ret 00".format(inString))
 	return "00"
 	
 ####-------------------------------------------------------------------------####

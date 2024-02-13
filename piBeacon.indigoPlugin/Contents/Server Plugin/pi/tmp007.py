@@ -310,12 +310,12 @@ def readParams():
 
 				
 			if devId not in tmp007sensor:
-				U.logger.log(30"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
+				U.logger.log(30,"==== Start {} ===== @ i2c= {}".format(G.program, i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				tmp007sensor[devId] = TMP007(i2cAddress=i2cAdd)
 				tmp007sensor[devId].begin()
 				U.muxTCA9548Areset()
-				U.logger.log(30" started ")
+				U.logger.log(30," started ")
 				
 		deldevID={}		   
 		for devId in tmp007sensor:
@@ -432,7 +432,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["Current"]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30" bad sensor")
+						U.logger.log(30," bad sensor")
 						U.sendURL(data)
 					lastValue[devId] =-100.
 					continue

@@ -15,6 +15,8 @@ import datetime
 import json
 import random
 import math
+import matplotlib as mlp
+mlp.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import logging
@@ -48,23 +50,29 @@ logLevel = plotData["logLevel"]
 logfileName=plotData["logFile"]
 #logLevel = True
 
-logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
+logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(asctime)s %(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
 
-if not logLevel:
-	logger.setLevel(logging.WARNING)
-else:
-	logger.setLevel(logging.DEBUG)
+
+
 
 ## disable fontmanager logging output 
 logging.getLogger('matplotlib.font_manager').disabled = True
 logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
+#logging.getLogger('pyplot').setLevel(logging.CRITICAL+1) # does not work
 
 
 try:
 	# print start to logfile 
+	logger.setLevel(logging.INFO)
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	logger.log(20,"called as:\n{}".format(sys.argv) )
+	if not logLevel:
+		logger.setLevel(logging.WARNING)
+	else:
+		logger.setLevel(logging.DEBUG)
+
+
 	tStart= time.time()
 
 	distanceUnits			= max(0.01, float(plotData["distanceUnits"]))
@@ -169,7 +177,10 @@ try:
 	#
 	logger.log(20,"time used {:4.2f} --   setup fig, ax".format((time.time()-tStart)) )
 	if labelTextSize !="": plt.rcParams.update({'font.size': int(labelTextSize)})
+	logger.setLevel(logging.CRITICAL)
 	plt.figure()
+	logger.setLevel(logging.WARNING)
+
 	fig = plt.gcf()
 	ax = fig.add_axes([0, 0, 1, 1], frameon=False)
 

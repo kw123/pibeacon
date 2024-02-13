@@ -13,7 +13,8 @@ import sys, os, subprocess
 import time
 import datetime 
 import json
-import matplotlib as mpl
+import matplotlib as mlp
+mlp.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np

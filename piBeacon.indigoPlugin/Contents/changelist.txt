@@ -1,3 +1,13 @@
+added features / changes in v2022.175.90 @ 2024-02-13
+==================================================
+
+1. added precision temperature sensor tmp117
+
+2. some py3 fixes on rpi, to import adafruit libraries
+
+
+
+
 added features / changes in v2022.174.90 @ 2024-01-31
 ==================================================
 

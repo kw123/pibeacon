@@ -172,6 +172,7 @@ specialSensorList =[ 	"amg88xx",
 						"si7021",
 						"tmp006",
 						"tmp007",
+						"tmp117",
 						"Wire18B20",
 						"max31865",
 						"ina219",
@@ -197,7 +198,7 @@ parameterFileList   =[	"beacon_parameters",
 						"knownBeaconTags"]
 
 python2SensorsMustDo	= ["neopixel2"]
-python3SensorsMustDo	= ["lidar360","moistureSensor", "sensirionscd30","neopixel3","vl503l0xDistance","vl503l1xDistance","vcnl4010Distance","vl6180xDistance","ultrasoundDistance","pmairquality"]
+python3SensorsMustDo	= ["tmp117","lidar360","moistureSensor", "sensirionscd30","neopixel3","vl503l0xDistance","vl503l1xDistance","vcnl4010Distance","vl6180xDistance","ultrasoundDistance","pmairquality"]
 python3SensorsCanDo		= [	"ADS1x15", 
 							"simplei2csensors",
 							"INPUTgpio","INPUTpulse",

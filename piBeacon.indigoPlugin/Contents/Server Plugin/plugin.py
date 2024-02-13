@@ -176,7 +176,7 @@ kDefaultPluginPrefs = {
 				"debugSpecial":									False,
 				"debugDelayedActions":							False,
 				"debugall":										False,
-				"showLoginTest":								True,
+				"showLoginTest":								False,
 				"execcommandsListAction":						"delete",
 				"getBatteryMethod":								"interactive",
 				"do_cProfile":									"on/off/print"
@@ -430,7 +430,8 @@ _GlobalConst_allowedSensors = [
 	 "bmp388",																   # temp / press/ alt
 	 "tmp006",																   # temp rmote infrared
 	 "tmp007",																   # temp rmote infrared
-	 "max31865",																# platinum temp resistor
+	 "tmp117",																   # temp rmote infrared
+	 "max31865",															# prec temp i2c sensor
 	 "pmairquality",
 	 "amg88xx", "mlx90640",													# infrared camera
 	 "lidar360",															# rd lidar
@@ -659,7 +660,7 @@ _stateListToDevTypes["distance"]				= {"vcnl4010Distance":1, "vl6180xDistance":1
 _stateListToDevTypes["distanceRaw"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["rotation"]				= {"BLEShellyDoor":1}
 _stateListToDevTypes["illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1,"BLEShellyDoor":1,"BLEShellyMotion":1}
-_stateListToDevTypes["Temperature"]				= {"BLEMKKsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["Temperature"]				= {"BLEMKKsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
 _stateListToDevTypes["Humidity"]				= {"BLEMKKsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
 _stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
@@ -1002,7 +1003,8 @@ class Plugin(indigo.PluginBase):
 ####-----------------	 ---------
 	def initMac2Vendor(self):
 		self.waitForMAC2vendor = "initializing"
-		self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get("enableMACtoVENDORlookup", "21"))
+		try:	self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get("enableMACtoVENDORlookup", "21"))
+		except:	self.enableMACtoVENDORlookup	= 21
 		if self.enableMACtoVENDORlookup != "0":
 			self.M2V =  MAC2Vendor.MAP2Vendor( pathToMACFiles=self.indigoPreferencesPluginDir+"mac2Vendor/", refreshFromIeeAfterDays = self.enableMACtoVENDORlookup, myLogger = self.indiLOG.log )
 			self.waitForMAC2vendor = self.M2V.makeFinalTable()
@@ -1442,10 +1444,8 @@ class Plugin(indigo.PluginBase):
 				for d in _debugAreas:
 					if self.pluginPrefs.get("debug"+d, False): self.debugLevel.append(d)
 				self.showLoginTest = self.pluginPrefs.get("showLoginTest", True)
-				try:
-					self.debugRPI		= int(self.pluginPrefs.get("debugRPI","-1"))
-				except:
-					self.debugRPI		= -1
+				try: 	self.debugRPI		= int(self.pluginPrefs.get("debugRPI","-1"))
+				except:	self.debugRPI		= -1
 
 			else:
 				for d in _debugAreas:
@@ -1470,8 +1470,8 @@ class Plugin(indigo.PluginBase):
 			self.isBLESensorDevice			= {}
 			self.isBLElongConnectDevice		= {}
 			self.isSwitchbotDevice			= {}
-			self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get("enableMACtoVENDORlookup", "21"))
-			self.changedValues 				= {}
+			try: 	self.enableMACtoVENDORlookup	= int(self.pluginPrefs.get("enableMACtoVENDORlookup", "21"))
+			except: self.enableMACtoVENDORlookup	= 21
 
 
 			self.oneWireResetNewDevices		= 0
@@ -1604,7 +1604,7 @@ class Plugin(indigo.PluginBase):
 			try:				self.pressureUnits			= self.pluginPrefs.get("pressureUnits", "mBar")
 			except:				self.pressureUnits			= "hPascal"
 			if 	self.pressureUnits==  "mbar": 				self.pressureUnits = "mBar"
-			self.pluginPrefs["pressureUnits"] = self.pressureUnits
+			self.pluginPrefs["pressureUnits"] 				= self.pressureUnits
 
 
 			try:				self.distanceUnits			= max(0.0254, float(self.pluginPrefs.get("distanceUnits", 1.)))
@@ -1655,7 +1655,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-			self.indigoInputPORT			= int(self.pluginPrefs.get("indigoInputPORT", 0))
+			try: 	self.indigoInputPORT	= int(self.pluginPrefs.get("indigoInputPORT", 12087))
+			except: self.indigoInputPORT	= 12087
 			self.IndigoOrSocket				= self.pluginPrefs.get("IndigoOrSocket", "indigo")
 			self.dataStats					= {"startTime": time.time()}
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get("maxSocksErrorTime", "600."))
@@ -1671,7 +1672,7 @@ class Plugin(indigo.PluginBase):
 			self.myIpNumber					= self.pluginPrefs.get("myIpNumber", "192.168.1.130")
 			self.blockNonLocalIp			= self.pluginPrefs.get("blockNonLocalIp", False)
 			self.checkRPIipForReject		= self.pluginPrefs.get("checkRPIipForReject", True)
-			self.GPIOpwm					= self.pluginPrefs.get("GPIOpwm", 1)
+			self.GPIOpwm					= self.pluginPrefs.get("GPIOpwm", "1")
 
 
 			self.delayFastDownBy 			= 3.5  # delay of fast down, give an Up signbal a change to cancel down.
@@ -12012,7 +12013,7 @@ class Plugin(indigo.PluginBase):
 			indigo.server.log("stop requested from indigo ")
 		## stop and processing of messages received
 		if self.quitNow !="": indigo.server.log( " .. quitNow: {}--- you might see an indigo error message, can be ignored ".format(self.quitNow))
-		else: indigo.server.log(" .. quitNow:  empty")
+		else: indigo.server.log(" .. stopping plugin  from external source")
 
 		self.saveChangedValues()
 
@@ -12156,7 +12157,7 @@ class Plugin(indigo.PluginBase):
 				self.getDebugLevels()
 			if self.rePopulateStates != "" or force:
 				if force: self.debugNewDevStates = True
-				self.indiLOG.log(20,"updating dev states, trying to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for more info , trigger:{}".format(self.rePopulateStates))
+				self.indiLOG.log(20,"updating dev states, trying to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for more info , trigger is:{}".format(self.rePopulateStates))
 				for dev in indigo.devices.iter(self.pluginId):
 					dev.stateListOrDisplayStateIdChanged()	# update  states, add keys if missing
 		except Exception as e:
@@ -15471,7 +15472,7 @@ class Plugin(indigo.PluginBase):
 
 
 ###-------------------------------------------------------------------------####
-	def updateCommonStates(self, dev, props, data, whichKeysToDisplay,pi):
+	def updateCommonStates(self, dev, props, data, whichKeysToDisplay, pi):
 		try:
 				if "deviceVersion" in data 				and "deviceVersion" in dev.states 			and "{}".format(data["deviceVersion"]) != "{}".format(dev.states["deviceVersion"]):
 									self.addToStatesUpdateDict(dev.id, "deviceVersion", 		data["deviceVersion"])
@@ -15519,7 +15520,7 @@ class Plugin(indigo.PluginBase):
 									if  int(props.get("beaconDevId",0)) > 0:
 										devBatid =  int(props["beaconDevId"])
 										if devBatid not in indigo.devices:
-											self.indiLOG.log(30, f"updateCommonStates: updating batterylevels, devices w devid:{devBatid:} is not an existing indigo device, please check; incoming data:\n{data:}")
+											self.indiLOG.log(30, f"updateCommonStates: from {pi:} updating batterylevels, dev:(dev.id:)/{dev.name:} linked beacon device w devid:{devBatid:} is not an existing indigo device, please check; incoming data:\n{data:}\n try to delete the sensor dev it should fix itself then ")
 										else:
 											devBeacon = indigo.devices[devBatid]
 											if devBeacon.pluginProps.get("SupportsBatteryLevel","") != True:
@@ -20710,8 +20711,8 @@ class Plugin(indigo.PluginBase):
 			self.myLog( theText = "data path used               {}" .format(self.indigoPreferencesPluginDir),								mType= "pi configuration")
 			self.myLog( theText = "path for Pi_IN_xx            {}" .format(self.iBeaconFolderVariableDataTransferVarsName),				mType= "pi configuration")
 			self.myLog( theText = "path for status variables    {}" .format(self.iBeaconFolderVariablesName),								mType= "pi configuration")
-			self.myLog( theText = "debugLevel Indigo            {}-" .format(self.debugLevel),												mType= "pi configuration")
-			self.myLog( theText = "debug which Pi#              {} " .format(self.debugRPI),												mType= "pi configuration")
+			self.myLog( theText = "debugLevel Indigo            {}-".format(self.debugLevel),												mType= "pi configuration")
+			self.myLog( theText = "debug which Pi#              {} ".format(self.debugRPI),													mType= "pi configuration")
 			self.myLog( theText = "maxSizeOfLogfileOnRPI        {}" .format(self.pluginPrefs.get("maxSizeOfLogfileOnRPI", 10000000)),		mType= "pi configuration")
 			self.myLog( theText = "automaticRPIReplacement      {}" .format(self.automaticRPIReplacement),									mType= "pi configuration")
 			self.myLog( theText = "myIp Number                  {}" .format(self.myIpNumber),												mType= "pi configuration")
@@ -21219,7 +21220,7 @@ configuration         - ==========  defined beacons ==============
 							newStates[key] = {}
 
 				self.updateStatesDict[devId][key] = {"value":value, "decimalPlaces":decimalPlaces, "force":force, "uiValue":uiValue, "image":image}
-				#if devId == "1687104152": self.indiLOG.log(20,	"updateStatesDict[devId]:{}".format(self.updateStatesDict[devId] ))
+				if isinstance(value, float) and  math.isnan(value): self.indiLOG.log(10,	"updateStatesDict[devId]:{}, key:{}, value:{} is NaN string".format(self.updateStatesDict[devId] , key,  value))
 
 				if newStates != "": newStates[key] = value
 
@@ -21346,7 +21347,7 @@ configuration         - ==========  defined beacons ==============
 							if key == "lastSensorChange": lastSensorChangePresent = True
 
 							if key == "status":
-								value =changedOnly[devId][key]["value"]
+								value = changedOnly[devId][key]["value"]
 								if "lastStatusChange" in dev.states and "lastStatusChange" not in changedOnly[devId]:
 									try:
 										st	= "{}".format(value).lower().split(" ")[0] # remove strings after up down ie dates 
