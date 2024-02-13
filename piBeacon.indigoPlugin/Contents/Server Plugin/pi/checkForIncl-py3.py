@@ -29,13 +29,19 @@ def checkOsVersionis3():
 
 def execInstall():
 
+	v = checkIfOSlt9() 
 
-	logger.log(20,"------ starting" )
+	logger.log(20,"------ starting on os v :{}".format(v) )
 
-	if checkIfOSlt9() < 9: 
+	if v < 9:
 		logger.log(20,"finished, due to OS < 9, py 3 not completely installed" )
 		readPopen('echo "done" > "/home/pi/pibeacon/includep3.done"')
 		exit()
+
+		usebreakOption = ""
+
+	if v >11: 	usebreakOption = "--break-system-packages "
+	else:		usebreakOption = ""
 
 
 	if True:
@@ -71,7 +77,7 @@ def execInstall():
 			import board
 			import neopixel
 		except Exception as e:
-			readPopen("sudo pip3 install --break-system-packages  rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install adafruit-blinka") # it is now ...../pibeacon no .log
+			readPopen("sudo pip3 install "+usebreakOption+ " rpi_ws281x adafruit-circuitpython-neopixel;sudo pip3 install  "+usebreakOption+ "  adafruit-blinka") # it is now ...../pibeacon no .log
 
 
 
@@ -80,14 +86,14 @@ def execInstall():
 		try:
 			import adafruit_lidarlite
 		except:
-			readPopen("sudo pip3 install --break-system-packages  adafruit-circuitpython-lidarlite")
+			readPopen("sudo pip3 install  "+usebreakOption+ "  adafruit-circuitpython-lidarlite")
 
 	if True:
 		logger.log(20,"check adafruit_tmp117"  )
 		try:
 			import adafruit_tmp117
 		except:
-			readPopen("sudo pip3 install --break-system-packages adafruit-circuitpython-tmp117")
+			readPopen("sudo pip3 install  "+usebreakOption+ " adafruit-circuitpython-tmp117")
 
 
 	if True:
@@ -95,7 +101,7 @@ def execInstall():
 		try:
 			import adafruit_dht
 		except:
-			readPopen("sudo pip3 install --break-system-packages  adafruit-circuitpython-dht")
+			readPopen("sudo pip3 install  "+usebreakOption+ "   adafruit-circuitpython-dht")
 
 
 
@@ -104,14 +110,14 @@ def execInstall():
 		try:
 			import Adafruit_DHT
 		except Exception as e:
-			readPopen("sudo pip3 install --break-system-packages Adafruit_DHT") # it is now ...../pibeacon no .log
+			readPopen("sudo pip3 install  "+usebreakOption+ " Adafruit_DHT") # it is now ...../pibeacon no .log
 
 	if True:
 		logger.log(20,"check pexpect"  )
 		try:
 			import pexpect
 		except:
-			readPopen("sudo pip3 install --break-system-packages pexpect")
+			readPopen("sudo pip3 install  "+usebreakOption+ "  pexpect")
 
 	if True:
 		logger.log(20,"check expect"  )

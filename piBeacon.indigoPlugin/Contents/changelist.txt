@@ -1,3 +1,14 @@
+added features / changes in v2022.175.91 @ 2024-02-13
+==================================================
+
+1. fixed for older rpi mgaes install of tmp177 library
+   the pip3 environment changed with v rpi of 12
+   with v 11 it is 
+		sudo pip3 install  adafruit-circuitpython-tmp117
+	with v 12:
+		sudo pip3 install --break-system-packages adafruit-circuitpython-tmp117
+
+
 added features / changes in v2022.175.90 @ 2024-02-13
 ==================================================
 

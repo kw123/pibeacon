@@ -1776,7 +1776,7 @@ def checkIfclearHostsFile():
 def checkPythonLibs():
 	try:
 		if not U.pgmStillRunning("checkForIncl-py3"):
-			subprocess.call("sudo /usr/bin/python3 {}checkForIncl-py3.py & ".format(G.homeDir), shell=True)
+			subprocess.call("sudo /usr/bin/python3 -E {}checkForIncl-py3.py & ".format(G.homeDir), shell=True)
 		if not U.pgmStillRunning("checkForIncl-py2"):
 			subprocess.call("sudo /usr/bin/python {}checkForIncl-py2.py & ".format(G.homeDir), shell=True)
 	except Exception as e:
