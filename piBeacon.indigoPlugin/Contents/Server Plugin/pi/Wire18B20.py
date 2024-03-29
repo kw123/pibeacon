@@ -146,7 +146,7 @@ oneWireGpios set in rpi device edit = [1,4,6,7,8..]
 		if (oneWireGpios) == 0: #(use /boot/config.txt to check)
 			f = open("/boot/config.txt","r")
 			configTxt = f.read().split("\n")
-			f.close
+			f.close()
 			pinsFound = []
 			for lll in configTxt:	
 				if doPrint: U.logger.log(20,"next line in config.txt>>{}<<  ".format(lll))
@@ -224,7 +224,7 @@ def enableoneWireGPIO():
 
 		# all done?
 		if len(bmActive) == len(oneWireGpios):
-			U.logger.log(20,"all busmasters active: {} vs {} ".format(bmActive, len(oneWireGpios)))
+			U.logger.log(20,"all busmasters active: {}  n: {} done ".format(bmActive, len(oneWireGpios)))
 			return
 
 		# here we do the work, setup the pgms and busmasters
@@ -276,7 +276,7 @@ def enableoneWireGPIO():
 # ===========================================================================
 def readOneChannel(busMaster):
 	global retData, threadCMD, readQueue, devIdToSerialNumber, busMasterToGPIO
-	doPrint = True
+	doPrint = False
 	doPrint1 = False
 	doPrint2 = False
 	retData["data"][busMaster] = {}
@@ -304,7 +304,7 @@ def readOneChannel(busMaster):
 				gpio = int(gpio)
 				if doPrint1: U.logger.log(20,"{:>5.2f}.. busmaster{} readQueue loop not empty Nsensors:{} sn:{}, devId:{}, gpio:{} ".format(time.time()-tStart, busMaster, Nsensors, sn, devId, gpio ))
 				retData["data"][busMaster][sn] = {"temp": -995,"devId":  serialNumberToDevId.get(sn,"-1"), "gpioUsed":gpio }
-				for tries in range(2):
+				for tries in range(10):
 					if doPrint1: U.logger.log(20,"{:>5.2f}.. try to read  busMaster{}, sn{}".format(time.time()-tStart, busMaster, sn))
 					if os.path.isfile("/sys/bus/w1/devices/"+sn+"/w1_slave"): 
 						f = open("/sys/bus/w1/devices/"+sn+"/w1_slave","r")
@@ -343,7 +343,7 @@ def readOneChannel(busMaster):
 							else:
 								if doPrint: U.logger.log(20,"{:>5.2f}.. bad data3: {}".format(time.time()-tStart, dataW))
 					time.sleep(1)
-				if doPrint2: U.logger.log(20,"{:>5.2f}.. {} end of while not empty  goodSensors:{}/{}, state:{}, empty?{}".format(time.time()-tStart, busMaster, goodSensors, Nsensors, threadCMD[busMaster]["state"] , readQueue[busMaster].empty()))
+				if doPrint2: U.logger.log(20,"{:>5.2f}.. {} end of while loop goodSensors:{}/{}, state:{}, empty?{}".format(time.time()-tStart, busMaster, goodSensors, Nsensors, threadCMD[busMaster]["state"] , readQueue[busMaster].empty()))
 			break
 
 	except  Exception as e:
@@ -365,7 +365,7 @@ def get18B20(sensor):
 	global serialNumberToDevId, devIdToSerialNumber
 	global busMasterToGPIO, gpioUsed
 	global retData, threadCMD, readQueue
-	global sendMetaData
+	global sendMetaData, lastBadRead
 
 	data = {}
 	if sensor not in sensors:		return data, False
@@ -510,7 +510,13 @@ looking for the string at the end, eg: 28-3ce104570a38 and bus master # here 1..
 				elif "serialNumber" in sensors[sensor][devId0]:
 						iii = 0
 						#if doPrint: U.logger.log(20,"{:>5.2f}..  serialNumber in sensors".format(time.time()-tStart))
-						lastGoodRead[serialNumber] = {"time":time.time(), "temp":round(temp,1) ,  "busMaster":busMaster, "devId":devId}
+						if serialNumber in lastGoodRead and abs(lastGoodRead[serialNumber]["temp"] - temp) > 10 and (time.time() - lastGoodRead[serialNumber]["time"] < 50):
+							if True: U.logger.log(
+												20,"{:>5.2f}..  {} has too big a change;  newV: {:.1f}, oldV: {}  ignore for {} secs".format(time.time()-tStart, serialNumber, temp, lastGoodRead[serialNumber]["temp"], 50 - (time.time() - lastGoodRead[serialNumber]["time"]) )
+												)
+							continue 
+						else:
+							lastGoodRead[serialNumber] = {"time":time.time(), "temp":round(temp,1) ,  "busMaster":busMaster, "devId":devId}
 
 						foundId = -1
 						iii +=1
@@ -700,6 +706,7 @@ def readParams():
 		if "distanceUnits"			in inp: distanceUnits=			(inp["distanceUnits"])
 		if "sensors"				in inp: sensors =				(inp["sensors"])
 		if "sensorRefreshSecs"		in inp: sensorRefreshSecs = 	float(inp["sensorRefreshSecs"])
+		sensorRefreshSecs = 20
 		if "oneWireAddNewSensors" 	in inp: oneWireAddNewSensors = 	(inp["oneWireAddNewSensors"])
 		oneWireForceReboot = 	int(inp.get("oneWireForceReboot","-1"))
 
@@ -792,7 +799,7 @@ def execWire():
 	lastGoodRead			= {}
 	serialNumberToDevId		= {}
 	oneWireAddNewSensors	="0"
-	sensorRefreshSecs   	= 90
+	sensorRefreshSecs   	= 20
 	oldRaw			  		= ""
 	lastRead				= 0
 	tempUnits		   		="Celsius"

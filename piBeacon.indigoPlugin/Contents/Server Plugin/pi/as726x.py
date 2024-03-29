@@ -730,7 +730,7 @@ while True:
 				if ( ( deltaN > deltaX[devId]							) or 
 					 (	tt - G.lastAliveSend  > abs(G.sendToIndigoSecs) ) or  
 					 ( quick											)	
-					)  and	(		   \
+					)  and	(
 					 ( doAverage == 0  and	 tt - minSendDelta	> G.lastAliveSend  )  or avsend		)	: 
 						sendURLnow = True
 						lastValue[devId]  = values

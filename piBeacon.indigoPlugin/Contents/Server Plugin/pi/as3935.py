@@ -420,7 +420,7 @@ def startSensor(devId):
 		if	as3935sensor[devId].calibrate(tuneCapacitor)  ==-1:
 			time.sleep(10)
 			data={"sensors":{sensor:{devId:{"eventType":"badsensor"}}}}
-			badSensor
+			badSensor = True
 		else: badSensor = False
 						
 	except	Exception as e:

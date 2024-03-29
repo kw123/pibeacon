@@ -26070,6 +26070,91 @@ This device will get its battery level from its brother device,
 
 
 
+	<Device type="dimmer" id="OUTPUTswitchbotCurtain3">     	<Name>OUTPUT-switch bot Curtain v3s</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" > </Field>
+			<Field id="isSwitchbotDevice"       type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
+			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
+			<Field id="SupportsStatusRequest"   type="checkbox"  defaultValue="False" hidden="yes"><Label>Supports StatusRequest:</Label></Field>
+			<Field id="SupportsBatteryLevel"    type="checkbox"  defaultValue="true"  hidden="yes"></Field>
+			<Field id="onstateDisabled"         type="textfield" defaultValue=""      hidden="yes"><Label>onstateDisabled:</Label></Field>
+			<Field id="MSG"                     type="textfield" defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="infoLabelOUTPUT" type="label">
+				<Label>Setup switchbot  "curtain"  on individual rPis through BLE-connect
+These mechanical devices get their commands through bluetooth messages. 
+Indigo sends the messages to one RPI via tcpip, 
+  that rpi sends the commands via BLE
+This works reliable when 2 BLE dongles are on an rpi, eg the internal +1 external
+you can also set the switchbot remotely through an ssh command (eg iPhone shortcut through vpn):
+ ssh pi@ip# of the selected RPi;  then 
+ echo '{"mac":"xx:xx:xx:xx:xx","pos":"100"}' &gt; ~/pibeacon/temp/switchbot.cmd  for close
+ or "pos":"x" for move to position x  or "pos":"p" for pause
+This device will get its battery level from its brother device, 
+   the beacon device with the same mac number,
+   IF it is set to beacon type = switchbotCurtain </Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+				<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
+				<Label>select rPi-server to which the relay is connect to:</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""> <Label>mac number of  switch bot:</Label>
+			</Field>
+
+			<Field id="modeOfDevice" type="menu"     defaultValue="donotset"  >
+				<Label>mode of device(speed):</Label>
+				<List>
+						<Option value="00" >slow </Option>
+						<Option value="ff" >fast</Option>
+						<Option value="donotset"  >do not set</Option>
+				</List>
+			</Field>
+
+			<Field id="displayState" type="textfield"      defaultValue="brightnessLevel" hidden="YES"> </Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="light">
+				<ValueType>number</ValueType>
+				<TriggerLabel>light</TriggerLabel>
+				<ControlPageLabel>light</ControlPageLabel>
+			</State>
+			<State id="inMotion">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>inMotion</TriggerLabel>
+				<ControlPageLabel>inMotion</ControlPageLabel>
+			</State>
+			<State id="calibrated">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>calibrated</TriggerLabel>
+				<ControlPageLabel>calibrated</ControlPageLabel>
+			</State>
+			<State id="allowsConnection">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>allowsConnection</TriggerLabel>
+				<ControlPageLabel>allowsConnection</ControlPageLabel>
+			</State>
+			<State id="lastUpdateBatteryLevel">
+				<ValueType>string</ValueType>
+				<TriggerLabel>lastUpdateBatteryLevel</TriggerLabel>
+				<ControlPageLabel>lastUpdateBatteryLevel</ControlPageLabel>
+			</State>
+			<State id="ServiceData">
+				<ValueType>string</ValueType>
+				<TriggerLabel>ServiceData</TriggerLabel>
+				<ControlPageLabel>ServiceData</ControlPageLabel>
+			</State>
+
+		</States>
+	</Device>
+
+
+
 
 
 
@@ -27924,32 +28009,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 	</Device>
 
 
-
-	<Device type="custom" id="FBHtempshow">     	<Name>OUTPUT- show FBH temperatures on display</Name>
-	<UiDisplayStateId>status</UiDisplayStateId>
-
-		<ConfigUI>
-			<Field id="infoLabelINPUT" type="label">
-				<Label>Setup parameters for display to show temperatures from FBH sensors </Label>
-			</Field>
-
-
-			<Field id="MSG" type="textfield" readonly="yes"  defaultValue="ok"> <Label>msg from plugin</Label>	</Field>
-
-			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiOUT" dynamicReload="false"/>
-				<Label>select rPi-server to which the device is connect to:</Label>
-			</Field>
-
-
-		</ConfigUI>
-
-		<States>
-		</States>
-
-	</Device>
-
-
 	<Device type="custom" id="setStepperMotor">     	<Name>OUTPUT-stepper-motor</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
@@ -28334,6 +28393,285 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>LastLeaveFromHome</TriggerLabel>
 				<ControlPageLabel>LastLeaveFromHome</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
+
+	<Device type="sensor" id="FBHtempshow">     	<Name>FBH info </Name>
+		<UiDisplayStateId>displayStatus</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isOutputDevice" type="checkbox"  defaultValue="true" 	hidden="True">	</Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+			<Field id="label1"  type="label" alignText="left"  fontColor="orange">
+				<Label>Setup devices that are in the underground heatiung ssytem:
+==select onewire temp sensor at distributor
+   then add the room target temp regulator device  </Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPi" dynamicReload="false"/>
+				<Label>select rPi-server to which the device is connect to:</Label>
+			</Field>
+
+			<Field id="onewireTempSensor-01"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 1:</Label>
+			</Field>
+			<Field id="HMIP-WTH-01"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-01"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-02"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 2:</Label>
+			</Field>
+			<Field id="HMIP-WTH-02"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-02"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-03"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 3:</Label>
+			</Field>
+			<Field id="HMIP-WTH-03"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-03"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-04"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 4:</Label>
+			</Field>
+			<Field id="HMIP-WTH-04"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-04"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-05"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 5:</Label>
+			</Field>
+			<Field id="HMIP-WTH-05"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-05"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-06"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 6:</Label>
+			</Field>
+			<Field id="HMIP-WTH-06"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-06"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-07"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 7:</Label>
+			</Field>
+			<Field id="HMIP-WTH-07"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-07"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-08"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 8:</Label>
+			</Field>
+			<Field id="HMIP-WTH-08"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-08"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-09"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 3:</Label>
+			</Field>
+			<Field id="HMIP-WTH-09"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-09"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-10"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 10:</Label>
+			</Field>
+			<Field id="HMIP-WTH-10"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-10"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-11"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 11:</Label>
+			</Field>
+			<Field id="HMIP-WTH-11"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-11"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-12"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 12:</Label>
+			</Field>
+			<Field id="HMIP-WTH-12"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-12"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-13"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 13:</Label>
+			</Field>
+			<Field id="HMIP-WTH-13"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-13"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-14"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 14:</Label>
+			</Field>
+			<Field id="HMIP-WTH-14"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-14"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-15"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 15:</Label>
+			</Field>
+			<Field id="HMIP-WTH-15"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-15"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-16"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 16:</Label>
+			</Field>
+			<Field id="HMIP-WTH-16"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-16"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-17"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 17:</Label>
+			</Field>
+			<Field id="HMIP-WTH-17"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-17"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-18"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 18:</Label>
+			</Field>
+			<Field id="HMIP-WTH-18"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-18"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-19"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 19:</Label>
+			</Field>
+			<Field id="HMIP-WTH-19"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-19"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="onewireTempSensor-20"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterOnewireSensors" dynamicReload="false"/> 
+				<Label>one wire sensor at Valve 20:</Label>
+			</Field>
+			<Field id="HMIP-WTH-20"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicWTH" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall thermostat:</Label>
+			</Field>
+			<Field id="HMIP-FALMOT-20"   type="menu" defaultValue="0" ><List class="self" filter="" method="filterHomematicFALMOT" dynamicReload="false"/> 
+				<Label>Corresponding homatic wall valve:</Label>
+			</Field>
+
+
+			<Field id="displayState"       type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="status">
+				<ValueType>String</ValueType>
+				<TriggerLabel>engine</TriggerLabel>
+				<ControlPageLabel>engine</ControlPageLabel>
 			</State>
 		</States>
 	</Device>

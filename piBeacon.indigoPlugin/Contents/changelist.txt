@@ -1,8 +1,23 @@
+added features / changes in v2022.175.93 @ 2024-03-26
+==================================================
+
+1. NaN == "Not a Number" 
+   Replaced any "NaN" received from an RPI  sensor to -9999
+   This is not a problem for any std pibeacon or sensor data. Only if you use a user extension (your own program) that can create a NaN.
+   A sensor might return an error when reading , that in turn could lead to a NaN. 
+   In all data from std sensors I have converted a read error to a "bad Sensor" message or a -999 or a -9999 data element
+   Indigo has serious issues with NaN data in some funtions, hence the new filter.
+   This has happened to one user and if you dont know about it you are not impacted.
+
+2. Added Switchbot curtain version 3 support
+   The version 3  has a changed ble handler (0x08->0x10) and a new device id (c -> { )
+
+
 added features / changes in v2022.175.91 @ 2024-02-13
 ==================================================
 
-1. fixed for older rpi mgaes install of tmp177 library
-   the pip3 environment changed with v rpi of 12
+1. fixed for older rpi imgaes install of tmp177 library
+   the pip3 environment changed with os v rpi of 12
    with v 11 it is 
 		sudo pip3 install  adafruit-circuitpython-tmp117
 	with v 12:

@@ -1170,7 +1170,7 @@ def doSwitchBot():
 
 	switchbotAction = time.time() 
 	verbose = True
-	verbose2 = False
+	verbose2 = False#mac == "D1:AD:6B:3D:AB:2D"
 	# jData= {"mac":mac#,"onOff":"0/1","statusRequest":True}
 	if  switchbotQueue.empty(): 
 		switchbotActive	= ""
@@ -1233,7 +1233,10 @@ def doSwitchBot():
 		cmd  			= newData.get("cmd","onOff").lower()
 		mode 			= newData.get("mode","batch").lower()
 
-		if switchBotConfig[thisMAC]["sType"] == "switchbotbot":
+		if switchBotConfig[thisMAC]["sType"] == "OUTPUTswitchbotRelay":
+			retData0 = {"outputs": {"OUTPUTswitchbotRelay": {switchBotConfig[thisMAC]["devId"]: {} }}}
+			retData  = retData0["outputs"]["OUTPUTswitchbotRelay"][switchBotConfig[thisMAC]["devId"]]
+			retData["mac"] = thisMAC
 
 			try:	onOff 			= int(newData.get("onoff",1))
 			except:	onOff			= 1
@@ -1473,7 +1476,7 @@ def doSwitchBot():
 				#status  5702: 01 60 31 64 00 00 00 be 00 10 02 00 00 
 
 				for ii in range(2):
-					# just read ststus, later check what status received
+					# just read status, later check what status received
 					result =  readGattcmd(thisMAC, "char-read-hnd {}".format(readHandle),  "Characteristic value/descriptor:", -1, 5, verbose=verbose)
 					if len(result) == 3:
 						if verbose2: U.logger.log(20, "{} statusRequest: return ok;  result: {}, retData:{}, actualStatus:{}".format(thisMAC, result, retData, actualStatus))
@@ -1554,7 +1557,10 @@ def doSwitchBot():
 
 
 		##############  switchbotcurtain  ############## 
-		if switchBotConfig[thisMAC]["sType"] == "switchbotcurtain":
+		if switchBotConfig[thisMAC]["sType"] in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
+			retData0 = {"outputs": {switchBotConfig[thisMAC]["sType"]: {switchBotConfig[thisMAC]["devId"]: {} }}}
+			retData  = retData0["outputs"][switchBotConfig[thisMAC]["sType"]][switchBotConfig[thisMAC]["devId"]]
+			retData["mac"] = thisMAC
 
 			if verbose2: U.logger.log(20, "{} switchbotcurtain, jData:{}".format(thisMAC, newData))
 
@@ -1613,7 +1619,7 @@ def readParams():
 		global oldRaw, lastRead, BLEconnectMode
 		global sensor
 		global oneisBLElongConnectDevice
-		global switchBotConfig, switchbotActive, switchBotPresent
+		global switchBotConfig, switchbotActive, switchBotPresent, knownBeaconTags
 
 
 
@@ -1635,7 +1641,14 @@ def readParams():
 		oldSensor		  = sensorList
 
 		try:
+			f = open("{}temp/knownBeaconTags".format(G.homeDir),"r")
+			xx = json.loads(f.read().strip("\n"))
+			knownBeaconTags = xx["output"]
+			f.close()
+		except:	pass	
 
+
+		try:
 			sensors = {}
 			
 			U.getGlobalParams(inp)
@@ -1786,26 +1799,10 @@ def readParams():
 					for devId in inp["output"][devType]:
 						if "mac" not in inp["output"][devType][devId]: continue
 						thisMAC = inp["output"][devType][devId]["mac"]
-						switchBotConfig[thisMAC] = {"sType":"switchbotbot",
-											 "devType":					devType,
-											 "blehandle":				"16",
-											 "blehandleStatus":			"13",
-											 "statusCmd":				"5702",   # the use blehandleStatus to get basic settings
-											 "moveToNextPosCmd": 		"570100", # press/off/press/off ...
-											 "onCmd": 					"570101", # on
-											 "offCmd":					"570102", # off
-											 "onHoldCmd": 				"570103", # on and hold 
-											 "modeOfDevice":			"donotchange",
-											 "holdSeconds":	 			-1,
-											 "cmdPressNormal":			"57036400",
-											 "cmdPressInverse":			"57036401",
-											 "cmdSwitchNormal":			"57036410",
-											 "cmdSwitchInverse": 		"57036411",
-											 "cmdHoldtime": 			"570F08", # + secs to hold 
-											 "lastFailedTryTime":		0,
-											 "lastFailedTryCount":		0,
-											 "suppressQuickSecond":		-10,
-											 "devId": 			devId }
+						switchBotConfig[thisMAC] = copy.copy(knownBeaconTags[devType])
+						switchBotConfig[thisMAC]["sType"] = devType
+						switchBotConfig[thisMAC]["devId"] = devId
+
 						if "modeOfDevice" in inp["output"][devType][devId]:
 							switchBotConfig[thisMAC]["modeOfDevice"] = 	inp["output"][devType][devId]["modeOfDevice"]
 						switchBotConfig[thisMAC]["suppressQuickSecond"] = float(inp["output"][devType][devId].get("suppressQuickSecond",-10.))
@@ -1816,24 +1813,15 @@ def readParams():
 
 							#U.logger.log(30, u"=== holdSeconds:{}".format(inp["output"]["OUTPUTswitchbotRelay"][devId]["holdSeconds"]))
 						switchBotPresent = True
-			for devType in ["OUTPUTswitchbotCurtain"]:
+			for devType in ["OUTPUTswitchbotCurtain", "OUTPUTswitchbotCurtain3"]:
 				if devType in inp["output"]:
 					for devId in inp["output"][devType]:
 						if "mac" not in inp["output"][devType][devId]: continue
 						thisMAC = inp["output"][devType][devId]["mac"]
-						switchBotConfig[thisMAC] = {"sType":"switchbotcurtain",
-											 "devType":					devType,
-											 "blehandle":				"0d",
-											 "blehandleStatus":			"0f",
-											 "statusCmd":				"5702",
-											 "openCmd": 				"570f450105",
-											 "closeCmd":				"570f450105",
-											 "pauseCmd": 				"570f450105",
-											 "positionCmd": 			"570f450105", 
-											 "modeOfDevice": 			"ff", 
-											 "lastFailedTryTime":		0,
-											 "lastFailedTryCount":		0,
-											 "devId": 			devId }
+						thisMAC = inp["output"][devType][devId]["mac"]
+						switchBotConfig[thisMAC] = copy.copy(knownBeaconTags[devType])
+						switchBotConfig[thisMAC]["sType"] = devType
+						switchBotConfig[thisMAC]["devId"] = devId
 						if "modeOfDevice" in inp["output"][devType][devId] and inp["output"][devType][devId]["modeOfDevice"] in ["00","ff"]:
 							switchBotConfig[thisMAC]["modeOfDevice"] = 	inp["output"][devType][devId]["modeOfDevice"]
 						switchBotConfig[thisMAC]["devType"] = 	devType

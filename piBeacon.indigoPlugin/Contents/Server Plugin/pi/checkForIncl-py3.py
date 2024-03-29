@@ -42,7 +42,15 @@ def execInstall():
 
 	if v >11: 	usebreakOption = "--break-system-packages "
 	else:		usebreakOption = ""
+	logger.log(20,"------ starting on os v :{} withoption: --{}".format(v, usebreakOption) )
 
+
+	for ii in range(10):
+		logger.log(20,"check if apt-get ist still running"  )
+		ret = readPopen("ps -ef | grep apt-get")
+		if ret[0].find("apt-get install") == -1:
+			break
+		time.sleep(20)		
 
 	if True:
 		ret = readPopen("gpio -v",doPrint=False)
@@ -62,14 +70,15 @@ def execInstall():
 	if True:
 		logger.log(20,"check hcidump"  )
 		ret = readPopen("which hcidump")
-		if ret[0].find("/usr/bin/hcidump") == -1:
+		if ret[0].find("hcidump") == -1:
 			readPopen("sudo apt-get install -y bluez-hcidump")
+
 	if True:
 		logger.log(20,"check adafruit-circuitpython-seesaw"  )
 		try:
 			from adafruit_seesaw.seesaw import Seesaw
 		except:
-			readPopen("sudo pip3 install --break-system-packages  adafruit-circuitpython-seesaw")
+			readPopen("sudo pip3 install {}  adafruit-circuitpython-seesaw".format(usebreakOption))
 
 	if True:
 		logger.log(20,"check board neopixel"  )

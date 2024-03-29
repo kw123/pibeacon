@@ -17,6 +17,7 @@ import PIL
 import numpy as np
 #import pygame
 
+import pygame
 
 import	json
 import	smbus
@@ -159,7 +160,7 @@ class bigScreen :
 	
 	def __init__(self,overwriteXmax=0,overwriteYmax=0, name="pibeacon display"):
 		global bigScreenSize, pygameInitialized
-		import pygame
+		U.echoLastAlive(G.program)
 		self.pygame=pygame
 		if not pygameInitialized:
 			self.pygame.init()
@@ -191,7 +192,6 @@ class bigScreen :
 					break
 	
 				if found == "":
-					U.logger.log(30, u"bigscreen no driver out of :{};  found -- exiting".format(found) )
 					time.sleep(20)
 					raise Exception('No suitable video driver found!')
 					return 
@@ -1489,10 +1489,7 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 			xmax = 160
 		elif devType.lower().find("screen")>-1:
 			if reset !="":
-				try: 
-					U.logger.log(20, u"resetting  screen output device")
-					##outputDev.delPy()
-				except: pass
+				U.logger.log(20, u"resetting  screen output device")
 				outputDev = ""
 				if reset == "stop": return 
 
@@ -1515,6 +1512,7 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 			U.logger.log(30,"", exc_info=True)
 			if "{}".format(e).find("fontDir") > 0:
 				U.logger.log(30," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
+			time.sleep(2)
 			sys.exit()
 
 	return fontDir,xmin,xmax,ymin,ymax,matrix,outputDev
@@ -1824,15 +1822,14 @@ items			 			= []
 myPID			 			= str(os.getpid())
 
 U.setLogLevel()
-U.logger.log(30,"starting display")
+U.logger.log(0,"starting display")
 U.killOldPgm(myPID,G.program+".py")
 U.echoLastAlive(G.program)
 
-#setupKillMyself()
-
+#
 try:
 	if len(sys.argv[1]) > 10:
-		items=[sys.argv[1]]
+		items = [sys.argv[1]]
 	else: 
 		items  = [json.dumps({"restoreAfterBoot": False, "resetInitial": "","scrollxy":scrollxy,"startAtDateTime":startAtDateTime})]
 		subprocess.call("cp "+G.homeDir+"display.inp "+G.homeDir+"temp/display.inp ", shell=True )
@@ -1842,6 +1839,7 @@ except:
 
 time.sleep(0.1)
 #data = json.loads(items[0])
+U.echoLastAlive(G.program)
 
 fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev,matrix)
 
@@ -1858,19 +1856,20 @@ digitalclockInitialized		= ""
 analogclockInitialized		= ""
 
 U.logger.log(20,"looping over input" )
-time.sleep(30)
+time.sleep(1)
 
 while runLoop:
 	try:
 		lastPos =[]
 		for item in items:
 			try:
-				if len(item) < 10: continue
+				U.echoLastAlive(G.program)
+				if len(item) < 4: continue
 				data		= json.loads(item)
-				#print json.dumps(data,sort_keys=True, indent=2)
+				#U.logger.log(20," data:{} .. ".format(str(data)[0:100]))
 			except	Exception as e:
-				U.logger.log(30,"bad input {}".format(item) )
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"bad input {}".format(item) )
+				U.logger.log(20,"", exc_info=True)
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
@@ -1973,11 +1972,19 @@ while runLoop:
 				imageDefined=True
 
 	
-			repeat=1
+			repeat = 1
 			try:
 				if "repeat" in data: repeat		 = int(data["repeat"])
 			except:
 				pass
+
+			delayAfterRepeat = 0.
+			try:
+				if "delayAfterRepeat" in data: delayAfterRepeat		 = float(data["delayAfterRepeat"])
+				#U.logger.log(20, "reading delayAfterRepeat:{}".format(delayAfterRepeat))
+			except	Exception as e:
+				U.logger.log(30,"", exc_info=True)
+				time.sleep(3)
 
 			if "startAtDateTime" in data:
 				try:
@@ -1987,18 +1994,21 @@ while runLoop:
 				except:
 					pass
 
-			
-							
-	
-			nnxx =0
+
+			nnxx = 0
 			startRepeatTime = int(time.time())	   
 			while nnxx < repeat:
-				nnxx+=1
+				if nnxx > 0 and delayAfterRepeat > 0: 
+					for kk123 in range(10):
+						if os.path.isfile(G.homeDir+"temp/display.inp"): break
+						time.sleep(delayAfterRepeat/10.)
+						U.echoLastAlive(G.program)
+				nnxx += 1
 				if "command" not in data: break 
 				loopCount+=1
 				ncmds = len(data["command"])
 				npage=-1
-				waited =False
+				waited = False
 				checkLightSensor()
 				U.logger.log(10, "item:"+item )
 				for cmd in data["command"]:
@@ -2416,7 +2426,7 @@ while runLoop:
 
 							U.logger.log(10, u"displaying  "+ cmd["type"]+ "  scrollxy:"+scrollxy+"  delay:"+str(scrollDelay))
 							
-							if flipDisplay =="1":
+							if flipDisplay == "1":
 								imData = imData.transpose(PIL.Image.ROTATE_180)
 
 							if devType.lower().find("screen")>-1 :
@@ -2648,7 +2658,7 @@ while runLoop:
 				if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 
 		time.sleep(0.1) 
-		items=[]
+		items = []
 		try:
 			if os.path.isfile(G.homeDir+"temp/rebooting.now"):
 				try: outputDev.delPy()

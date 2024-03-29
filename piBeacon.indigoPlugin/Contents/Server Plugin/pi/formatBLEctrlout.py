@@ -13,7 +13,6 @@ import	piBeaconGlobals as G
 G.program = "execcommands"
 
 
-print "reading", sys.argv[1]
 
 hci = sys.argv[1]
 
@@ -24,13 +23,8 @@ subprocess.Popen("sudo rm "+G.homeDir+"temp/hcidump.temp",shell=True,stdout=subp
 subprocess.Popen("sudo rm "+G.homeDir+"temp/bluetoothctl.data",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 starttime = time.time()
-print "hciconfig",time.time()-starttime , subprocess.Popen("sudo hciconfig "+hci+" reset",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-print "hcitool",time.time()-starttime ,subprocess.Popen("sudo timeout -s SIGINT 10s hcitool -i "+hci+" lescan > "+G.homeDir+"temp/lescan.data &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 time.sleep(1)
-print "hcidump1",time.time()-starttime ,subprocess.Popen("sudo timeout -s SIGINT 9s hcidump -i "+hci+" --raw  > "+G.homeDir+"temp/hcidump.temp &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 time.sleep(10)
-print "bluetoothctl",time.time()-starttime ,subprocess.Popen("sudo timeout -s SIGINT 9s bluetoothctl scan on > "+G.homeDir+"temp/bluetoothctl.data &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-print "hcidump2",time.time()-starttime ,subprocess.Popen("cat "+G.homeDir+"temp/hcidump.temp | sed -e :a -e '$!N;s/\\n  //;ta' -e 'P;D' > "+G.homeDir+"temp/hcidump.data",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate
 subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 time.sleep(10)
 

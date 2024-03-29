@@ -471,7 +471,7 @@ _GlobalConst_i2cSensors	  = [
 	"l3g4200", "bno055", "mag3110", "mpu6050", "hmc5883L", "mpu9255", "lsm303", "vl6180xDistance", "vcnl4010Distance", "apds9960", "MAX44009"]
 
 _GlobalConst_allowedOUTPUT = [
-	"neopixel", "neopixel-dimmer", "neopixelClock", "OUTPUTswitchbotRelay", "OUTPUTswitchbotCurtain", "OUTPUTgpio-1-ONoff", "OUTPUTgpio-1", "OUTPUTi2cRelay", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26", "setMCP4725", "OUTPUTxWindows", "display", "setPCF8591dac", "setTEA5767", "sundial", "setStepperMotor", "FBHtempshow"]
+	"neopixel", "neopixel-dimmer", "neopixelClock", "OUTPUTswitchbotRelay", "OUTPUTswitchbotCurtain", "OUTPUTswitchbotCurtain3", "OUTPUTgpio-1-ONoff", "OUTPUTgpio-1", "OUTPUTi2cRelay", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26", "setMCP4725", "OUTPUTxWindows", "display", "setPCF8591dac", "setTEA5767", "sundial", "setStepperMotor", "FBHtempshow"]
 
 _GlobalConst_groupList = ["Family", "Guests", "Other1", "Other2", "Other3", "Other4", "Other5"]
 _GlobalConst_groupListDef = ["BEACON","PI","BLEconnect","SENSOR"]
@@ -1465,8 +1465,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.debugNewDevStates 			= False
 			self.cameraImagesDir			= self.indigoPreferencesPluginDir+"cameraImages/"
-			self.knownBeaconTags 			= {}
-			self.knownBeaconMfgNames 		= {}
+			self.knownBeaconTags 			= {"input":{}, "output":{},"mfgNames":{}}
 			self.isBLESensorDevice			= {}
 			self.isBLElongConnectDevice		= {}
 			self.isSwitchbotDevice			= {}
@@ -3263,7 +3262,7 @@ class Plugin(indigo.PluginBase):
 			if os.path.isfile(self.indigoPreferencesPluginDir+"knownBeaconTags"):
 				os.remove(self.indigoPreferencesPluginDir+"knownBeaconTags")
 
-			self.knownBeaconTags = {}
+			self.knownBeaconTags = {"input":{}, "output":{},"mfgNames":{}}
 			try:
 				f = open(self.pathToPlugin + "knownBeaconTags.json", "r")
 				self.knownBeaconTags = json.loads(f.read())
@@ -3274,26 +3273,17 @@ class Plugin(indigo.PluginBase):
 				except: pass
 				return False
 			
-			try:
-				f = open(self.pathToPlugin + "knownBeaconMfgNames.json", "r")
-				self.knownBeaconMfgNames = json.loads(f.read())
-				f.close()
-			except Exception as e:
-				self.knownBeaconMfgNames = {}
-				self.exceptionHandler(40, e)
-				try: f.close()
-				except: pass
-				return False
-			
-
 			saveToFile = ""
-			for tag in self.knownBeaconTags:
+			for tag in self.knownBeaconTags["input"]:
 				for tt in ["text","Maj","Min","commands","comment","correspondingSwitchbotDevice","dBm","pos","posDelta","useOnlyThisTagToAcceptBeaconMsgDefault","sequence","sensorFunctions","comment","subType","hexCode2","hexCode"]:
-					if tt not in self.knownBeaconTags[tag]:
-						self.knownBeaconTags[tag][tt] = ""
+					if tt not in self.knownBeaconTags["input"][tag]:
+						self.knownBeaconTags["input"][tag][tt] = ""
 						saveToFile = "missing: {}  {} ".format(tag, tt) 
-			for tag in self.knownBeaconTags:
-				self.knownBeaconTags[tag]["hexCode"] = self.knownBeaconTags[tag]["hexCode"].upper()
+
+			for xx in self.knownBeaconTags:
+				for tag in self.knownBeaconTags[xx]:
+					if "hexCode" in self.knownBeaconTags[xx][tag]:
+						self.knownBeaconTags[xx][tag]["hexCode"] = self.knownBeaconTags[xx][tag].get("hexCode","").upper()
 
 			if saveToFile !="" :
 				self.writeJson( self.knownBeaconTags, fName=self.pathToPlugin + "knownBeaconTags.json", fmtOn=True,  toLog=20, printText=saveToFile )
@@ -3306,16 +3296,17 @@ class Plugin(indigo.PluginBase):
 			knownBeaconTagsSupplicant 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"knownBeaconTags.supplicant")
 			if len(knownBeaconTagsSupplicant)> 0:
 				self.indiLOG.log(10,"adding  tags from  knownBeaconTags.supplicant: {} ".format(knownBeaconTagsSupplicant))
+
 				for tag in knownBeaconTagsSupplicant:
-					if tag not in self.knownBeaconTags:
-						self.knownBeaconTags[tag] = copy.copy(self.knownBeaconTags["other"])
-						for item in self.knownBeaconTags["other"]:
-							if type(self.knownBeaconTags["other"][item]) == type(1):
-								try:	self.knownBeaconTags[tag][item] = int(knownBeaconTagsSupplicant[tag][item])
+					if tag not in self.knownBeaconTags["input"]:
+						self.knownBeaconTags["input"][tag] = copy.copy(self.knownBeaconTags["input"]["other"])
+						for item in self.knownBeaconTags["input"]["other"]:
+							if type(self.knownBeaconTags["input"]["other"][item]) == type(1):
+								try:	self.knownBeaconTags["input"][tag][item] = int(knownBeaconTagsSupplicant[tag][item])
 								except:
-										self.indiLOG.log(30,"bad item in knownBeaconTags.supplicant: {} {}".format(item,knownBeaconTagsSupplicant[tag][item] ))
+										self.indiLOG.log(30,"bad item in knownBeaconTags.supplicant: {} {}".format(item,knownBeaconTagsSupplicant["input"][tag][item] ))
 										continue
-							self.knownBeaconTags[tag][item] = copy.copy(knownBeaconTagsSupplicant[tag][item])
+							self.knownBeaconTags["input"][tag][item] = copy.copy(knownBeaconTagsSupplicant[tag][item])
 							self.indiLOG.log(10,"added  item from knownBeaconTags.supplicant: {} {}".format(item,knownBeaconTagsSupplicant[tag][item] ))
 
 			self.writeJson( self.knownBeaconTags, fName=self.indigoPreferencesPluginDir + "knownBeaconTags.full_copy_to_use_as_example", fmtOn=True)
@@ -4212,8 +4203,8 @@ class Plugin(indigo.PluginBase):
 					props["typeOfBeacon"] = "rPI"
 					updateProps = True
 
-			if props["typeOfBeacon"] in self.knownBeaconTags and int(props["beaconTxPower"]) == 999:
-				props["beaconTxPower"] = self.knownBeaconTags[props["typeOfBeacon"]]["dBm"]
+			if props["typeOfBeacon"] in self.knownBeaconTags["input"] and int(props["beaconTxPower"]) == 999:
+				props["beaconTxPower"] = self.knownBeaconTags["input"][props["typeOfBeacon"]]["dBm"]
 				updateProps = True
 
 			if "updateSignalValuesSeconds" not in props:
@@ -4243,8 +4234,8 @@ class Plugin(indigo.PluginBase):
 					props["typeOfBeacon"] = "other"
 					updateProps = True
 
-				if props["typeOfBeacon"] not in self.knownBeaconTags:
-					for tag in self.knownBeaconTags:
+				if props["typeOfBeacon"] not in self.knownBeaconTags["input"]:
+					for tag in self.knownBeaconTags["input"]:
 						if tag.upper() == props["typeOfBeacon"].upper():
 							props["typeOfBeacon"] = tag
 							updateProps = True
@@ -4316,9 +4307,9 @@ class Plugin(indigo.PluginBase):
 			if dev.deviceTypeId == "beacon":
 				typeOfBeacon = props["typeOfBeacon"]
 				beepable = False 
-				if typeOfBeacon in self.knownBeaconTags:
-					if "commands" in self.knownBeaconTags[typeOfBeacon]:
-						if "beep" in self.knownBeaconTags[typeOfBeacon]["commands"]:
+				if typeOfBeacon in self.knownBeaconTags["input"]:
+					if "commands" in self.knownBeaconTags["input"][typeOfBeacon]:
+						if "beep" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
 							beepable = True
 				if beepable:
 					if dev.states["isBeepable"] != "YES":
@@ -4527,12 +4518,12 @@ class Plugin(indigo.PluginBase):
 						if beacon in self.beacons:
 							typeOfBeacon = self.beacons[beacon]["typeOfBeacon"]
 							if "batteryLevelUUID" not in theDictList[0]: # only for new devices
-								if typeOfBeacon in self.knownBeaconTags:
-									if "commands" in self.knownBeaconTags[typeOfBeacon] and "batteryLevel" in self.knownBeaconTags[typeOfBeacon]["commands"]:
-										if  self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"].get("type","") == "BLEconnect" and "gattcmd" in self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]:
+								if typeOfBeacon in self.knownBeaconTags["input"]:
+									if "commands" in self.knownBeaconTags["input"][typeOfBeacon] and "batteryLevel" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
+										if  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"].get("type","") == "BLEconnect" and "gattcmd" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]:
 											theDictList[0]["SupportsBatteryLevel"]	= True
 											theDictList[0]["batteryLevelUUID"]  	= "gatttool"
-										if  self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"].get("type","") == "msgGet" and "params" in self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]:
+										if  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"].get("type","") == "msgGet" and "params" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]:
 											theDictList[0]["SupportsBatteryLevel"]	= True
 											theDictList[0]["batteryLevelUUID"]  	= "msg"
 
@@ -4647,6 +4638,7 @@ class Plugin(indigo.PluginBase):
 
 		try:
 
+			#.indiLOG.log(20,"validateDeviceConfigUi    typeId={}".format(typeId))
 			# fix STATUS state, INPUT_x was split into several devices, each has "INPUT" not INPUT_0/1/2/3/4..
 			if "displayS" in valuesDict and valuesDict["displayS"].find("INPUT_") >-1:
 				fix = True
@@ -4677,6 +4669,10 @@ class Plugin(indigo.PluginBase):
 
 			elif typeId.find("OUTPUTgpio-") > -1 or typeId.find("OUTPUTi2cRelay") > -1:
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_OUTPUTG(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+
+			elif typeId in ["FBHtempshow"]:
+													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_FBHtempshow(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
+
 
 			elif typeId in _GlobalConst_allowedSensors or typeId in _BLEsensorTypes or valuesDict.get("isBLElongConnectDevice",False):
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_sensors(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
@@ -5470,6 +5466,61 @@ class Plugin(indigo.PluginBase):
 			return ( False, valuesDict, errorDict )
 
 
+############ OUTPUTG  -------
+	def validateDeviceConfigUi_FBHtempshow(self, valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev):
+		try:
+			update = 0
+			active = ""
+			piU = (valuesDict["piServerNumber"])
+			for piU0 in self.RPI:
+				if piU == piU0:												continue
+				if "output" not in self.RPI[piU0]:							continue
+				if typeId not in self.RPI[piU0]["output"]:					continue
+				if "{}".format(dev.id) not in self.RPI[piU0]["output"][typeId]: continue
+				del self.RPI[piU0]["output"][typeId]["{}".format(dev.id)]
+				self.setONErPiV(piU0,"piUpToDate",["updateParamsFTP"])
+
+			if int(piU) >= 0:
+				if "piServerNumber" in props:
+					if piU != props["piServerNumber"]:
+						self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
+						update = 1
+
+			if "output" not in self.RPI[piU]: self.RPI[piU]["output"] = {}
+			if typeId not in self.RPI[piU]["output"]: self.RPI[piU]["output"][typeId] = {}
+
+			devidS = "{}".format(dev.id)
+			self.RPI[piU]["output"][typeId][devidS] = {}
+			#self.indiLOG.log(20,"onewireTempSensor  out:{}".format(self.RPI[piU]["output"] ))
+			for xx in valuesDict:
+				if xx.find("onewireTempSensor-") == 0:
+					#self.indiLOG.log(20,"onewireTempSensor ={} :{}".format(xx, valuesDict[xx]))
+					if valuesDict[xx] in ["-1","0"]: continue
+					nn = xx.split("-")[1]
+					if valuesDict["HMIP-WTH-"+nn] in ["-1","0"]: continue
+					if valuesDict["HMIP-FALMOT-"+nn] in ["-1","0"]: continue
+					self.RPI[piU]["output"][typeId][devidS][valuesDict[xx]] =  {"setpointHeat":valuesDict["HMIP-WTH-"+nn],"LEVEL":valuesDict["HMIP-FALMOT-"+nn]}
+			#self.indiLOG.log(20,"onewireTempSensor end:{} ".format(self.RPI[piU]["output"][typeId][devidS] ))
+
+			if update == 1:
+				self.rPiRestartCommand[int(piU)] += typeId+","
+				self.updateNeeded += " fixConfig "
+				self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
+
+			valuesDict["piDone"] = False
+			valuesDict["stateDone"] = False
+			return (True, valuesDict, errorDict)
+
+		except Exception as e:
+			self.indiLOG.log(40,"setting up OUTPUT-FBHLine {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
+			try:
+				valuesDict, errorDict  = self.setErrorCode(valuesDict, errorDict, "pgm error, check log")
+			except Exception as e:
+				self.indiLOG.log(40,"setting up OUTPUT-FBH Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
+			return ( False, valuesDict, errorDict )
+
+
+
 
 ############ OUTPUTG  -------
 	def validateDeviceConfigUi_OUTPUTG(self, valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev):
@@ -5699,7 +5750,7 @@ class Plugin(indigo.PluginBase):
 						self.RPI[piU]["output"][typeId]["{}".format(dev.id)]["mac"] = valuesDict["mac"]
 
 					sendupdateSwitchBot = False
-					if typeId in ["OUTPUTswitchbotCurtain", "OUTPUTswitchbotRelay"]:
+					if typeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3", "OUTPUTswitchbotRelay"]:
 						if "modeOfDevice" in valuesDict:
 							if "modeOfDevice" not in self.RPI[piU]["output"][typeId]["{}".format(dev.id)]:
 								self.RPI[piU]["output"][typeId]["{}".format(dev.id)]["modeOfDevice"] = "donotset"
@@ -6055,12 +6106,12 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def filterBeaconTags_and_all(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList = []
-		for dd in self.knownBeaconTags:
-			if "text" not in self.knownBeaconTags[dd] or "pos" not in self.knownBeaconTags[dd]:
-				self.indiLOG.log(30, "filterBeaconTypes:  tag:{}, not complete:{}\n contact author".format(dd,self.knownBeaconTags[dd] ))
+		for dd in self.knownBeaconTags["input"]:
+			if "text" not in self.knownBeaconTags["input"][dd] or "pos" not in self.knownBeaconTags["input"][dd]:
+				self.indiLOG.log(30, "filterBeaconTypes:  tag:{}, not complete:{}\n contact author".format(dd,self.knownBeaconTags["input"][dd] ))
 				continue
-			if self.knownBeaconTags[dd]["pos"] >= 0:
-				xList.append((dd,self.knownBeaconTags[dd]["text"]))
+			if self.knownBeaconTags["input"][dd]["pos"] >= 0:
+				xList.append((dd,self.knownBeaconTags["input"][dd]["text"]))
 		xList = sorted(xList, key=lambda tup: tup[1])
 		xList.append(("all", "USE ALL KNOWN"))
 		xList.append(("off", "none = OFF"))
@@ -6069,8 +6120,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def filterBeaconKnownMfgNames(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList = []
-		for dd in self.knownBeaconMfgNames:
-			xList.append((dd,"{} - {} ".format(dd, self.knownBeaconMfgNames[dd])))
+		for dd in self.knownBeaconTags["mfgNames"]:
+			xList.append((dd,"{} - {} ".format(dd, self.knownBeaconTags["mfgNames"][dd])))
 		xList = sorted(xList, key=lambda tup: tup[1])
 		xList.append(["off","off"])
 		return xList
@@ -6079,11 +6130,11 @@ class Plugin(indigo.PluginBase):
 	def filterBeaconTypes(self, filter="", valuesDict=None, typeId="", devId=""):
 		xList = []
 
-		for dd in self.knownBeaconTags:
-			if "text" not in self.knownBeaconTags[dd] or "dBm" not in self.knownBeaconTags[dd]:
-				self.indiLOG.log(30, "filterBeaconTypes:  tag:{}, not complete:{}\n contact author".format(dd,self.knownBeaconTags[dd] ))
+		for dd in self.knownBeaconTags["input"]:
+			if "text" not in self.knownBeaconTags["input"][dd] or "dBm" not in self.knownBeaconTags["input"][dd]:
+				self.indiLOG.log(30, "filterBeaconTypes:  tag:{}, not complete:{}\n contact author".format(dd,self.knownBeaconTags["input"][dd] ))
 				continue
-			xList.append((dd,self.knownBeaconTags[dd]["text"]+" txPower: "+self.knownBeaconTags[dd]["dBm"]+"dBm"))
+			xList.append((dd,self.knownBeaconTags["input"][dd]["text"]+" txPower: "+self.knownBeaconTags["input"][dd]["dBm"]+"dBm"))
 		xList = sorted(xList, key=lambda tup: tup[1])
 		return xList
 
@@ -6107,16 +6158,62 @@ class Plugin(indigo.PluginBase):
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass2, -{} ".format( props.get("typeOfBeacon","") ))
 				if props.get("typeOfBeacon","") == "": continue
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass3, {}".format(props["typeOfBeacon"]))
-				if props["typeOfBeacon"] not in self.knownBeaconTags: continue
+				if props["typeOfBeacon"] not in self.knownBeaconTags["input"]: continue
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass4,{} ".format(self.knownBeaconTags[props["typeOfBeacon"]]))
-				if "commands" not in self.knownBeaconTags[props["typeOfBeacon"]]: continue 
-				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass5, {}".format(self.knownBeaconTags[props["typeOfBeacon"]]["commands"]))
-				if "beep" not in self.knownBeaconTags[props["typeOfBeacon"]]["commands"]: continue 
-				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass6, {}".format(self.knownBeaconTags[props["typeOfBeacon"]]["commands"]["beep"]["type"] ))
-				if self.knownBeaconTags[props["typeOfBeacon"]]["commands"]["beep"]["type"] == "BLEconnect":
+				if "commands" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]: continue 
+				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass5, {}".format(self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]))
+				if "beep" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]: continue 
+				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass6, {}".format(self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]["beep"]["type"] ))
+				if self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]["beep"]["type"] == "BLEconnect":
 					xList.append( ("{}".format(dev.id), dev.name ) )
 
 		return xList
+
+
+
+
+####-------------------------------------------------------------------------####
+	def filterOnewireSensors(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList = []
+		for dev in indigo.devices.iter("props.isSensorDevice"):
+				if dev.deviceTypeId != "Wire18B20": continue
+				xList.append( ("{}".format(dev.id), dev.name ) )
+		xList.append( ("-1","off") )
+		return xList
+
+
+
+####-------------------------------------------------------------------------####
+	def filterHomematicWTH(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList = []
+		for dev in indigo.devices:
+				if dev.deviceTypeId != "HMIP-WTH": continue
+				xList.append( ("{}".format(dev.id), dev.name ) )
+		xList.append( ("-1","off") )
+		return xList
+
+
+
+####-------------------------------------------------------------------------####
+	def filterHomematicFALMOT(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList = []
+		deb = False
+		for dev in indigo.devices.iter("props.numberOfPhysicalChannels"):
+			if deb: self.indiLOG.log(20, "filterHomematicFALMOT :  dev:{}".format(dev.name ))
+			if dev.deviceTypeId != "HMIP-FALMOT": continue
+			valves = json.loads(dev.states.get("childInfo","{}"))
+			if deb: self.indiLOG.log(20, "filterHomematicFALMOT :  valves:{}".format(valves ))
+			for nn in valves:
+				if deb: self.indiLOG.log(20, "filterHomematicFALMOT : nn:{} valve:{}".format(nn, valves[nn] ))
+				try: int(nn)
+				except: continue
+				devId, valveNumber, childDevType = valves[nn]
+				if childDevType != "HMIP-LEVEL" : continue
+				if devId not in indigo.devices: continue
+				xList.append(("{}".format(devId), "{}-{}".format(dev.name, valveNumber)))
+		xList.append( ("-1","off") )
+		return xList
+
 
 
 ####-------------------------------------------------------------------------####
@@ -9570,11 +9667,11 @@ class Plugin(indigo.PluginBase):
 				cmdToSend = {}
 				typeOfBeacon = self.beacons[mac]["typeOfBeacon"]
 				if typeOfBeacon !="":
-					if typeOfBeacon not in self.knownBeaconTags: 						 						continue
-					if "commands" not in self.knownBeaconTags[typeOfBeacon]:			 						continue
-					if "batteryLevel" not in self.knownBeaconTags[typeOfBeacon]["commands"]: 					continue
-					if "type" not in self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]: 			continue 
-					if self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]["type"] != "BLEconnect": 	continue 
+					if typeOfBeacon not in self.knownBeaconTags["input"]: 						 						continue
+					if "commands" not in self.knownBeaconTags["input"][typeOfBeacon]:			 						continue
+					if "batteryLevel" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]: 					continue
+					if "type" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]: 			continue 
+					if self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]["type"] != "BLEconnect": 	continue 
 					if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"getBeaconParameters checking  passed check 1;" )
 
 					# check if we should do battery time check at this hour, some beacons beep (nutale) if battery level is checked
@@ -9608,14 +9705,14 @@ class Plugin(indigo.PluginBase):
 								if stateDist not in dev.states: continue
 								dist = float( dev.states[stateDist] )
 								if dist < 99.:
-									cmdToSend = {"battCmd":copy.copy(self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"])}
+									cmdToSend = {"battCmd":copy.copy(self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"])}
 									if beepTime != -1:
-										if "beep" in self.knownBeaconTags[typeOfBeacon]["commands"] and "cmdOff" in self.knownBeaconTags[typeOfBeacon]["commands"] ["beep"]:
+										if "beep" in self.knownBeaconTags["input"][typeOfBeacon]["commands"] and "cmdOff" in self.knownBeaconTags["input"][typeOfBeacon]["commands"] ["beep"]:
 											if beepTime == 0:
-												if self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]["cmdOff"] != self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]["cmdON"]:
-													cmdToSend["battCmd"]["gattcmd"] = self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]["cmdOff"] + cmdToSend["battCmd"]["gattcmd"]
+												if self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]["cmdOff"] != self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]["cmdON"]:
+													cmdToSend["battCmd"]["gattcmd"] = self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]["cmdOff"] + cmdToSend["battCmd"]["gattcmd"]
 											else:
-												cmdToSend["battCmd"]["gattcmd"] = self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]["cmdON"] + [beepTime] +  self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]["cmdOff"] + cmdToSend["battCmd"]["gattcmd"]
+												cmdToSend["battCmd"]["gattcmd"] = self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]["cmdON"] + [beepTime] +  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]["cmdOff"] + cmdToSend["battCmd"]["gattcmd"]
 
 									minTime[piU] += 10
 									self.beacons[mac]["lastBusy"] = time.time() + 3
@@ -9688,10 +9785,10 @@ class Plugin(indigo.PluginBase):
 				typeOfBeacon = self.beacons[mac]["typeOfBeacon"]
 
 				batlevel  = "         off"
-				if typeOfBeacon not in self.knownBeaconTags:										continue
-				if "commands" not in self.knownBeaconTags[typeOfBeacon]:			 				continue
-				if "batteryLevel" not in self.knownBeaconTags[typeOfBeacon]["commands"]: 			continue
-				if "type" not in self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]:	continue 
+				if typeOfBeacon not in self.knownBeaconTags["input"]:										continue
+				if "commands" not in self.knownBeaconTags["input"][typeOfBeacon]:			 				continue
+				if "batteryLevel" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]: 			continue
+				if "type" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]:	continue 
 				if "batteryLevel" in dev.states:
 					batlevel = "{:12d}".format(dev.states["batteryLevel"])
 
@@ -9794,14 +9891,14 @@ class Plugin(indigo.PluginBase):
 			typeOfBeacon = props["typeOfBeacon"]
 			if self.decideMyLog("Beep"): self.indiLOG.log(10,"beep beacon... beacon type: {}".format(typeOfBeacon) )
 			if typeOfBeacon != "":
-				if typeOfBeacon not in self.knownBeaconTags:
+				if typeOfBeacon not in self.knownBeaconTags["input"]:
 					if self.decideMyLog("Beep"): self.indiLOG.log(10,"beep beacon... beacon type not known" )
 				else:
-					if "commands" in self.knownBeaconTags[typeOfBeacon]:
-						if self.decideMyLog("Beep"): self.indiLOG.log(10,"beep beacon checking params  for pi{} and beacon:{}.".format(piU, self.knownBeaconTags[typeOfBeacon]["commands"]) )
-						if "beep" in self.knownBeaconTags[typeOfBeacon]["commands"]:
-							if "type" in self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]:
-								cmd 					= self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]
+					if "commands" in self.knownBeaconTags["input"][typeOfBeacon]:
+						if self.decideMyLog("Beep"): self.indiLOG.log(10,"beep beacon checking params  for pi{} and beacon:{}.".format(piU, self.knownBeaconTags["input"][typeOfBeacon]["commands"]) )
+						if "beep" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
+							if "type" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]:
+								cmd 					= self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]
 								cmd["beepTime"] 		= beepTime
 								cmd["mustBeUp"] 		= mustBeUp
 								xx 						= {"cmd":"beepBeacon", "piServerNumber":piU, "typeId":json.dumps({beacon:cmd})}
@@ -10184,7 +10281,7 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
 				return 
 
-			elif dev0.deviceTypeId == "OUTPUTswitchbotCurtain":
+			elif dev0.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
 				piU = props0["piServerNumber"]
 				moveTo = "position"
 				position = 50
@@ -10207,7 +10304,7 @@ class Plugin(indigo.PluginBase):
 
 				fileContents = {"mac":props0["mac"], "cmd":"moveTo", "moveTo":moveTo, "position":position, "mode":"interactive"}
 
-				toSend = [{"device": "OUTPUTswitchbotCurtain", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
+				toSend = [{"device": dev0.deviceTypeId, "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotCurtainSet")
 
 				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
@@ -12186,7 +12283,7 @@ class Plugin(indigo.PluginBase):
 									if dev.enabled:
 										if "isBeepable" in dev.states:  # wait until created, next reload
 											tag = dev.states["typeOfBeacon"].split("-")[0]
-											if tag in self.knownBeaconTags and "commands" in self.knownBeaconTags[tag] and "beep" in self.knownBeaconTags[tag]["commands"] and self.knownBeaconTags[tag]["commands"]["beep"]["type"] == "BLEconnect":
+											if tag in self.knownBeaconTags["input"] and "commands" in self.knownBeaconTags["input"][tag] and "beep" in self.knownBeaconTags["input"][tag]["commands"] and self.knownBeaconTags["input"][tag]["commands"]["beep"]["type"] == "BLEconnect":
 												dev.updateStateOnServer("isBeepable", "YES")
 												self.beacons[beacon]["lastBusy"] = time.time() - 1000
 											else:
@@ -13298,7 +13395,11 @@ class Plugin(indigo.PluginBase):
 		try:
 			if newVar.name.find("pi_IN_") != 0:   return
 			if len(newVar.value) < 3:			   return
-			self.addToDataQueue(newVar.name,json.loads(newVar.value), newVar.value )
+			theValue = newVar.value
+
+			if theValue.find("NaN") > -1:
+				theValue = theValue.replace("NaN","-9999")
+			self.addToDataQueue(newVar.name, json.loads(theValue), theValue )
 			return
 		except Exception as e:
 			self.exceptionHandler(40, e)
@@ -14562,7 +14663,7 @@ class Plugin(indigo.PluginBase):
 							else:
 								dev.updateStateOnServer("actualStatus", "connectionError")
 
-						if dev.deviceTypeId == "OUTPUTswitchbotCurtain":
+						if dev.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
 							self.addToStatesUpdateDict(dev.id, "status", "posCmd:{}".format(str(data[xx])[0:17]) )
 						connectionStatusUpdated = True
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
@@ -14629,7 +14730,7 @@ class Plugin(indigo.PluginBase):
 
 					elif xx == "position" and "brightnessLevel" in dev.states: 
 						#self.indiLOG.log(20,"sensor pi: {}-{}; dev.deviceTypeId:{};  data {}" .format(piU, dev.name, dev.deviceTypeId , data))
-						if dev.deviceTypeId == "OUTPUTswitchbotCurtain":
+						if dev.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
 							self.addToStatesUpdateDict(dev.id, "status", "posCmd=ok" )
 						else:
 							self.addToStatesUpdateDict(dev.id, "brightnessLevel", int(data["position"]) )
@@ -18292,19 +18393,19 @@ class Plugin(indigo.PluginBase):
 				batteryLevelUUID	 		= "off"
 				beaconBeepUUID 		 		= "off"
 				useOnlyPrioTagMessageTypes	= "0"
-				if typeOfBeacon in self.knownBeaconTags:
-					if "commands" in self.knownBeaconTags[typeOfBeacon]:
-						if "batteryLevel" in self.knownBeaconTags[typeOfBeacon]["commands"]:
-							if  self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]["type"] == "BLEconnect" and "gattcmd" in self.knownBeaconTags[typeOfBeacon]["commands"].get("batteryLevel",""):
+				if typeOfBeacon in self.knownBeaconTags["input"]:
+					if "commands" in self.knownBeaconTags["input"][typeOfBeacon]:
+						if "batteryLevel" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
+							if  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]["type"] == "BLEconnect" and "gattcmd" in self.knownBeaconTags["input"][typeOfBeacon]["commands"].get("batteryLevel",""):
 								SupportsBatteryLevel = True
 								batteryLevelUUID	 = "gatttool"
-							if  self.knownBeaconTags[typeOfBeacon]["commands"]["batteryLevel"]["type"].find("msg") >-1:
+							if  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]["type"].find("msg") >-1:
 								SupportsBatteryLevel = True
 								batteryLevelUUID	 = "msg"
-						if "beep" in self.knownBeaconTags[typeOfBeacon]["commands"]:
-							if  "cmdON" in self.knownBeaconTags[typeOfBeacon]["commands"]["beep"]:
+						if "beep" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
+							if  "cmdON" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]:
 								beaconBeepUUID	 = "gatttool"
-					useOnlyPrioTagMessageTypes = self.knownBeaconTags[typeOfBeacon]["useOnlyThisTagToAcceptBeaconMsgDefault"]
+					useOnlyPrioTagMessageTypes = self.knownBeaconTags["input"][typeOfBeacon]["useOnlyThisTagToAcceptBeaconMsgDefault"]
 
 				newprops = copy.copy(_GlobalConst_emptyBeaconProps)
 				newprops["typeOfBeacon"] 				= typeOfBeacon
@@ -18396,37 +18497,35 @@ class Plugin(indigo.PluginBase):
 	def autoCreateCorrespondingSensorDev(self, mac, fromPiU, typeOfBeacon, msg):
 		try:
 			# check if type is supported
-			if typeOfBeacon not in self.knownBeaconTags:  return 
+			if typeOfBeacon not in self.knownBeaconTags["input"]:  return 
 
+			verbose = mac == "xxxD1:AD:6B:3D:AB:2D"
+			if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev received mac:{}  typeOfBeacon:{}, isSwitchbotDevice:{},..{}?..{}?;  msg:{}".format(mac, typeOfBeacon, mac in self.isSwitchbotDevice,  mac in self.isBLESensorDevice,  mac in self.isBLElongConnectDevice, msg))
 			# check if dev already exists
-			if mac in self.isBLESensorDevice: 		return 
-			if mac in self.isBLElongConnectDevice: 	return 
-			if mac in self.isSwitchbotDevice: 
+			if mac in self.isSwitchbotDevice: # only after it is already created
 				try: 
 					try:
 						devBot = indigo.devices[self.isSwitchbotDevice[mac]]
 					except:
-						self.indiLOG.log(30,"removing mac:{} from switchbot dict".format(mac))
+						self.indiLOG.log(20,"autoCreateCorrespondingSensorDev removing mac:{} from switchbot dict".format(mac))
 						del self.isSwitchbotDevice[mac]
 						return 
 
 						
-					if typeOfBeacon in ["Switchbot", "SwitchbotCurtain"]:
-						verbose = mac == "xxC6:8F:F7:A5:8C:14"
+					if typeOfBeacon in ["Switchbot", "SwitchbotCurtain", "SwitchbotCurtain3"]:
 						botProps = devBot.pluginProps
+						if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev passed 2, from right piu:{}?".format(botProps.get("piServerNumber","") == fromPiU))
 						if botProps.get("piServerNumber","") == fromPiU:
 
 							if botProps.get("mac","") == mac:
 								if  "analyzed" in msg and "ServiceData" in msg["analyzed"] and "ServiceData" in devBot.states:
 									if msg["analyzed"]["ServiceData"] != devBot.states["ServiceData"]:
-													self.addToStatesUpdateDict(devBot.id, "ServiceData", msg["analyzed"]["ServiceData"])
+										self.addToStatesUpdateDict(devBot.id, "ServiceData", msg["analyzed"]["ServiceData"])
 
 								if verbose: self.indiLOG.log(20,"mac:{}, fromPiU:{}, msg:{}".format(mac, fromPiU, msg))
 								for xx in ["light", "calibrated", "position", "onOffState", "mode", "batteryLevel", "inMotion", "allowsConnection"]:
 									if xx == "position": statename = "brightnessLevel"
 									else:				 statename = xx 
-
-
 
 									if xx == "onOffState" and xx in msg and xx in devBot.states:
 										if "mode" in msg and msg["mode"] == "pressMode": msg[xx] = "off"
@@ -18456,7 +18555,7 @@ class Plugin(indigo.PluginBase):
 										self.addToStatesUpdateDict(devBot.id, statename,	msg[xx] )
 
 										if "onOffState" in devBot.states:
-											if devBot.deviceTypeId == "OUTPUTswitchbotCurtain":  # onOffstates confuses position and visa versa, cant switch it of for a dimmer device, so set text to "ignore"
+											if devBot.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:  # onOffstates confuses position and visa versa, cant switch it of for a dimmer device, so set text to "ignore"
 												if botProps.get("onstateDisabled","") != "ignore":
 													self.addToStatesUpdateDict(devBot.id,"onOffState", True, uiValue="ignore")
 													botProps["onstateDisabled"] = "ignore"
@@ -18476,10 +18575,12 @@ class Plugin(indigo.PluginBase):
 					self.exceptionHandler(40, e)
 				return		
 
+			if mac in self.isBLESensorDevice: 		return 
+			if mac in self.isBLElongConnectDevice: 	return 
 			#indigo.server.log("mac:{}, msg:{}".format(mac, msg))
 
 			newprops 							= {}
-			sensorInfo 							= self.knownBeaconTags[typeOfBeacon]
+			sensorInfo 							= self.knownBeaconTags["input"][typeOfBeacon]
 			isSens 								= False
 			correspondingiTrackButtonDevice 	= sensorInfo.get("correspondingiTrackButtonDevice", "")
 			correspondingShellyButtonDevice 	= sensorInfo.get("correspondingShellyButtonDevice", "")
@@ -18489,11 +18590,11 @@ class Plugin(indigo.PluginBase):
 			subtypeOfBeacon 					= msg.get("subtypeOfBeacon", "")
 			
 			if subtypeOfBeacon != "":
-				for tag in self.knownBeaconTags:
-					if "subtypeOfBeacon" not in self.knownBeaconTags[tag]: continue
-					if "devTypeID" not in self.knownBeaconTags[tag]["subtypeOfBeacon"]: continue
-					for subtypeID in self.knownBeaconTags[tag]["subtypeOfBeacon"]["devTypeID"]:
-						if self.knownBeaconTags[tag]["subtypeOfBeacon"]["devTypeID"][subtypeID] == subtypeOfBeacon:
+				for tag in self.knownBeaconTags["input"]:
+					if "subtypeOfBeacon" not in self.knownBeaconTags["input"][tag]: continue
+					if "devTypeID" not in self.knownBeaconTags["input"][tag]["subtypeOfBeacon"]: continue
+					for subtypeID in self.knownBeaconTags["input"][tag]["subtypeOfBeacon"]["devTypeID"]:
+						if self.knownBeaconTags["input"][tag]["subtypeOfBeacon"]["devTypeID"][subtypeID] == subtypeOfBeacon:
 							correspondingSensorType = tag
 							break
 
@@ -18661,7 +18762,7 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(30,"corresponding BLE-sensor device not found, will try to create one:{}.. details in plugin.log".format(name))
 			self.indiLOG.log(30,"=====> please finish setup for new device {} in device edit, ie which RPI this device is linked to;  etc<=== ".format(name))
 			self.indiLOG.log(10,"... beacontype: {}".format(typeOfBeacon))
-			self.indiLOG.log(10,"... info:       {}".format(self.knownBeaconTags[typeOfBeacon]))
+			self.indiLOG.log(10,"... info:       {}".format(self.knownBeaconTags["input"][typeOfBeacon]))
 			self.indiLOG.log(10,"... props:      {}".format(newprops))
 
 			try:
@@ -18692,7 +18793,7 @@ class Plugin(indigo.PluginBase):
 
 			elif correspondingSwitchbotDevice != "":
 				self.isSwitchbotDevice[mac]			= dev.id
-				if correspondingSwitchbotDevice in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotRelay"]:
+				if correspondingSwitchbotDevice in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3","OUTPUTswitchbotRelay"]:
 					props = dev.pluginProps
 					props["address"] ="Pi-"+fromPiU
 					props["piServerNumber"] = fromPiU
@@ -18794,7 +18895,7 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(10,"msg not complete  mac:{}; pi#={:2s}; msg:{}".format(mac, fromPiU, msg) )
 						continue
 					typeOfBeacon = msg["typeOfBeacon"]
-					keepNew = (self.acceptNewTagiBeacons == "all" and typeOfBeacon in self.knownBeaconTags) or typeOfBeacon == self.acceptNewTagiBeacons or ( len(self.acceptNewMFGNameBeacons) >1 and mfgName.lower().find(self.acceptNewMFGNameBeacons.lower()) == 0 )
+					keepNew = (self.acceptNewTagiBeacons == "all" and typeOfBeacon in self.knownBeaconTags["input"]) or typeOfBeacon == self.acceptNewTagiBeacons or ( len(self.acceptNewMFGNameBeacons) >1 and mfgName.lower().find(self.acceptNewMFGNameBeacons.lower()) == 0 )
 					acceptMAC   = mac == self.acceptNewBeaconMAC
 					if acceptMAC:
 						self.acceptNewBeaconMAC = ""
@@ -19276,8 +19377,8 @@ class Plugin(indigo.PluginBase):
 						try:
 							xx2[beacon]["useOnlyIfTagged"] = int(self.beacons[beacon]["useOnlyPrioTagMessageTypes"])
 						except:
-							if tag in self.knownBeaconTags:
-								xx2[beacon]["useOnlyIfTagged"] = self.knownBeaconTags[tag]["useOnlyThisTagToAcceptBeaconMsgDefault"]
+							if tag in self.knownBeaconTags["input"]:
+								xx2[beacon]["useOnlyIfTagged"] = self.knownBeaconTags["input"][tag]["useOnlyThisTagToAcceptBeaconMsgDefault"]
 
 					if  "batteryLevelUUID" in props and props["batteryLevelUUID"].find("TLM") == 0:
 							#self.indiLOG.log(30,"beacon:{};  batteryLevelUUID:{}".format(beacon, props["batteryLevelUUID"]))
@@ -19334,15 +19435,6 @@ class Plugin(indigo.PluginBase):
 				f.close()
 			except Exception as e:
 					self.exceptionHandler(40, e)
-			try:
-				f = open(self.indigoPreferencesPluginDir + "all/knownBeaconMfgNames", "w")
-				f.write(json.dumps(self.knownBeaconMfgNames))
-				f.close()
-			except Exception as e:
-				f = open(self.indigoPreferencesPluginDir + "all/knownBeaconMfgNames", "w")
-				f.write("{}")
-				f.close()
-				self.exceptionHandler(40, e)
 
 		except Exception as e:
 			self.exceptionHandler(40, e)
@@ -19868,8 +19960,36 @@ class Plugin(indigo.PluginBase):
 						if typeId.find("sundial") >-1:
 								out["output"][typeId][devIdoutS][0] = self.updateSensProps(out["output"][typeId][devIdoutS][0], propsOut, "updateDownloadEnable")
 
-						if typeId.find("FBHtempshow") >-1:
-								pass
+
+
+						if typeId.find("FBHtempshow") > -1:
+							out["output"][typeId][devIdoutS][0] = {"name":dev.name,"data":{}}
+							#self.indiLOG.log(20, "FBHtempshow    bef devIdoutS:{}".format(self.RPI[piU]["output"][typeId][devIdoutS]))
+							for devS in self.RPI[piU]["output"][typeId][devIdoutS]:
+								if devS == "": continue
+								dev1Id  = self.RPI[piU]["output"][typeId][devIdoutS][devS].get("LEVEL","0")
+								dev2Id  = self.RPI[piU]["output"][typeId][devIdoutS][devS].get("setpointHeat","0")
+								try:
+									dev1Id = int(dev1Id)
+									dev1Name =  indigo.devices[dev1Id].name
+									LEVEL = indigo.devices[dev1Id].states["LEVEL"]
+								except: 
+									LEVEL = 0
+									dev1Name = ""
+								try:
+									dev2Id = int(dev2Id)
+									dev2Name =  indigo.devices[dev2Id].name
+									setpointHeat = indigo.devices[dev2Id].states["setpointHeat"]
+									roomTemperature = indigo.devices[dev2Id].states["temperatureInput1"]
+								except: 
+									setpointHeat = 0
+									roomTemperature = -1
+									dev2Name =  ""
+								#self.indiLOG.log(20, "FBHtempshow     devS:{}, dev1Id:{}, LEVEL:{}, dev2Id:{}, setpointHeat:{}".format(devS, dev1Id, LEVEL, dev2Id, setpointHeat))
+
+								out["output"][typeId][devIdoutS][0]["data"][devS] = {"setpointHeat":setpointHeat,"roomName":dev2Name,"LEVELName":dev1Name, "LEVEL":LEVEL, "roomTemperature": roomTemperature}
+							#self.indiLOG.log(20, "FBHtempshow after  out:{}".format(json.dumps(out["output"][typeId], sort_keys=True, indent=2)))
+
 
 						if typeId.find("setStepperMotor") >-1:
 								theDict={}
@@ -19991,7 +20111,7 @@ class Plugin(indigo.PluginBase):
 					updateItems[] =
 							{statename:name, value: value, uiValue;uiValue,image = on/off/trip }
 							{remove: statename} will remove any update for a state with name statename
-							"setParameters" if present = set paraemetrs for setichbot curtain
+							"setParameters" if present = set parameters for set switchbot curtain
 							"setupCARS" if present = start cars in plugin
 
 	"""
@@ -20567,7 +20687,7 @@ class Plugin(indigo.PluginBase):
 		self.myLog( theText = "#	defined beacons-------------", mType="pi configuration")
 		self.myLog( theText = "indigoName                 indigoId Status enabled               type txMin ignore Pos X,Y,Z   fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ", mType= "pi configuration")
 		for status in ["ignored", ""]:
-			for beaconDeviceType in self.knownBeaconTags:
+			for beaconDeviceType in self.knownBeaconTags["input"]:
 				self.printBeaconInfoLine(status, beaconDeviceType)
 
 ####-------------------------------------------------------------------------####
@@ -20827,7 +20947,7 @@ configuration         - ==========  defined beacons ==============
 				self.myLog( theText = " ========================", mType= "")
 				self.myLog( theText = " indigoName                 indigoId Status enabled               type txMin ignore  Pos X,Y,Z  fastDw sigDlt min-on/off batteryUUID lastUpdate/level         LastUp[s] ExpTime updDelay lastStatusChange    created ", mType= "defined beacons")
 				for status in ["up", "down", "expired"]:
-					for beaconDeviceType in self.knownBeaconTags:
+					for beaconDeviceType in self.knownBeaconTags["input"]:
 						self.printBeaconInfoLine(status, beaconDeviceType)
 
 				self.myLog( theText = "", mType= "pi configuration --")
@@ -21220,7 +21340,7 @@ configuration         - ==========  defined beacons ==============
 							newStates[key] = {}
 
 				self.updateStatesDict[devId][key] = {"value":value, "decimalPlaces":decimalPlaces, "force":force, "uiValue":uiValue, "image":image}
-				if isinstance(value, float) and  math.isnan(value): self.indiLOG.log(10,	"updateStatesDict[devId]:{}, key:{}, value:{} is NaN string".format(self.updateStatesDict[devId] , key,  value))
+				if isinstance(value, float) and  math.isnan(value): self.indiLOG.log(20,"updateStatesDict[devId]:{}, key:{}, value:{} is NaN, please check rpi program, contact KW".format(self.updateStatesDict[devId] , key,  value))
 
 				if newStates != "": newStates[key] = value
 
@@ -22179,6 +22299,8 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					if indigo.activePlugin.decideMyLog("Socket"): indigo.activePlugin.indiLOG.log(10,"TCPIP socket  listener pi:{}, compressed:{}/ uncompressedfile len:{}".format(piName, len(actualData), len(dataJIn)) )
 				else:
 					dataJIn = actualData.decode('utf-8')
+				if dataJIn.find("NaN") > -1:
+					dataJIn.replace("NaN","-9999")
 				dataJ = json.loads(dataJIn)  
 			except Exception as e:
 				indigo.activePlugin.indiLOG.log(30, "ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))

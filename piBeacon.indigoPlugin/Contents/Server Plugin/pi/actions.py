@@ -67,7 +67,6 @@ readParams()
 # check if everything is installed
 
 lastAliveFile	= time.time()
-print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" action: setting alive file"
 subprocess.call("echo "+str(lastAliveFile)+" > "+ G.homeDir+"temp/alive.action  &", shell=True)
 
 
@@ -79,7 +78,7 @@ while True:
 		tt= time.time()
 		loopCount =1
 
-		if loopCount%(20) == 0 or tt-lastAliveFile > 100:	# update alive	every 10 seconds or faster
+		if loopCount%20 == 0 or tt-lastAliveFile > 100:	# update alive	every 10 seconds or faster
 			lastAliveFile = tt
 			#print "Updating alive.sensors"
 			subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive.action	&", shell=True )

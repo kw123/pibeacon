@@ -654,7 +654,7 @@ def startSensor(devId, restart=False):
 					sensorCLASS[devId]  = Lidar('/dev/'+usbPortUsed[devId], mSpeed = motorFrequency[devId])#  U.getSerialDEV())
 					time.sleep(0.5)	
 					info = sensorCLASS[devId].get_info()
-					if info == None: continue 	
+					if info is None: continue
 					U.logger.log(20, u"{}-lidar info: {}".format(usbPortUsed[devId], info) )
 					time.sleep(0.5)	
 					health = sensorCLASS[devId].get_health()		

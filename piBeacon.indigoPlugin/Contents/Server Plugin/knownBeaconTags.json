@@ -1,4 +1,6 @@
 {
+"input":
+{
   "BLERuuviTag": {
     "Maj": "",
     "Min": "",
@@ -1220,9 +1222,9 @@
     "correspondingSensorType": "BLEswitchbotContact",
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
-    "hexCode": "02010610FF6909MAC#########",
+    "hexCode": "0D0C163DFD64-",
     "hexCode2": "",
-    "pos": 2,
+    "pos": 0,
     "posDelta": 0,
     "sensorFunctions": "",
     "sequence": 0,
@@ -1291,7 +1293,7 @@
       }
     },
     "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
-    "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain",
+    "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain3",
     "dBm": "-61",
     "hexCode": "0A09163DFD63-",
     "hexCode2": "",
@@ -1304,6 +1306,80 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 1
   },
+   "SwitchbotCurtain3": {
+    "Maj": "",
+    "Min": "",
+    "commands": {
+      "allowsConnection": {
+        "params": {
+          "and": 128,
+          "nType": "bool",
+          "norm": 128,
+          "pos": 6
+        },
+        "type": "msgGet"
+      },
+      "batteryLevel": {
+        "params": {
+          "and": 127,
+          "nType": "int",
+          "norm": 1,
+          "pos": 7
+        },
+        "type": "msgGet"
+      },
+      "calibrated": {
+        "params": {
+          "and": 64,
+          "nType": "bool",
+          "norm": 64,
+          "pos": 6
+        },
+        "type": "msgGet"
+      },
+      "inMotion": {
+        "params": {
+          "and": 128,
+          "nType": "bool",
+          "norm": 1,
+          "pos": 8
+        },
+        "type": "msgGet"
+      },
+      "light": {
+        "params": {
+          "and": 240,
+          "nType": "int",
+          "norm": 16,
+          "pos": 9
+        },
+        "type": "msgGet"
+      },
+      "position": {
+        "params": {
+          "and": 127,
+          "nType": "int",
+          "norm": 1,
+          "pos": 8
+        },
+        "type": "msgGet"
+      }
+    },
+    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+    "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain3",
+    "dBm": "-61",
+    "hexCode": "0A09163DFD7B-",
+    "hexCode2": "",
+    "pos": 0,
+    "posDelta": 0,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "SwitchBot curtain v3",
+	"version":"3",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 1
+  },
   "SwitchbotMotion": {
     "Maj": "",
     "Min": "",
@@ -1312,9 +1388,9 @@
     "correspondingSensorType": "BLEswitchbotMotion",
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
-    "hexCode": "0201060DFF6909MAC#########",
+    "hexCode": "0A09163DFD73",
     "hexCode2": "",
-    "pos": 2,
+    "pos": 0,
     "posDelta": 0,
     "sensorFunctions": "",
     "sequence": 0,
@@ -1849,4 +1925,67 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   }
+},
+"output":{
+	"OUTPUTswitchbotRelay":{
+		 "blehandle":				"16",
+		 "blehandleStatus":			"13",
+		 "statusCmd":				"5702",   
+		 "moveToNextPosCmd": 		"570100",
+		 "onCmd": 					"570101", 
+		 "offCmd":					"570102", 
+		 "onHoldCmd": 				"570103", 
+		 "modeOfDevice":			"donotchange",
+		 "holdSeconds":	 			-1,
+		 "cmdPressNormal":			"57036400",
+		 "cmdPressInverse":			"57036401",
+		 "cmdSwitchNormal":			"57036410",
+		 "cmdSwitchInverse": 		"57036411",
+		 "cmdHoldtime": 			"570F08", 
+		 "lastFailedTryTime":		0,
+		 "lastFailedTryCount":		0,
+		 "suppressQuickSecond":		-10,
+		 "devId": 			0 
+	},
+	"OUTPUTswitchbotCurtain":{
+		 "blehandle":				"0d",
+		 "blehandleStatus":			"0f",
+		 "statusCmd":				"5702",
+		 "openCmd": 				"570f450105",
+		 "closeCmd":				"570f450105",
+		 "pauseCmd": 				"570f450105",
+		 "positionCmd": 			"570f450105", 
+		 "modeOfDevice": 			"ff", 
+		 "lastFailedTryTime":		0,
+		 "lastFailedTryCount":		0,
+		 "devId": 			0 
+	},
+	"OUTPUTswitchbotCurtain3":{
+		 "blehandle":				"10",
+		 "blehandleStatus":			"0f",
+		 "statusCmd":				"5702",
+		 "openCmd": 				"570f450105",
+		 "closeCmd":				"570f450105",
+		 "pauseCmd": 				"570f450105",
+		 "positionCmd": 			"570f450105", 
+		 "modeOfDevice": 			"ff", 
+		 "lastFailedTryTime":		0,
+		 "lastFailedTryCount":		0,
+		 "devId": 			0 
+	}
+
+},
+"mfgNames":{
+	"ruuvi":"Ruuvi, all versions",
+	"abeacon":"April",
+	"safedome":"all versions",
+	"GVH":"goove",
+	"Innway":"chip, tag, ..",
+	"MJ":"xiaomi MJ versions",
+	"LY":"xiaomi LY versions",
+	"Flower":"xiaomi Flower care",
+	"nut":" nutale, pro etc ",
+	"FSC":" feasy all version ",
+	"itrack":"musegear, spotypal, rinex nojii"
+	}
 }

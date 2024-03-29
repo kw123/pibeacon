@@ -130,7 +130,7 @@ def writeRejects():
 	
 	if nRejects>0:
 		logger.log(20,nunber of macs rejected: %d"%nRejects) 
-		out1[n-1]=out1[n-1].strip(",")
+		out1[n-1] = out1[n-1].strip(",")
 		f=open(dataDir+"rejectedByPi.json","w")
 		f.write("{")
 		for line in out1:

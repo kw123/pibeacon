@@ -195,7 +195,7 @@ class ADS1x15:
 
 			# With invalid channel return -1
 			if channel not in [0,1,2,3,"0-1","0-3","1-3","2-3"] :
-				if True or (self.debug):
+				if True or self.debug:
 					U.logger.log(30, "ADS1x15: Invalid channel specified: {}".format(channel))
 				return -1
 			#U.logger.log(20, "ADS1x15: channel:{}, pga:{}, sps:{}, singleOrDiff:{}".format(channel, pga, sps, singleOrDiff))

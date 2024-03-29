@@ -2322,6 +2322,7 @@ def execSend():
 					if G.IndigoOrSocket == "indigo" and  G.authentication != "bearer":  # use indigo http restful
 								var = "/variables/{}".format(name)
 								data0 = json.dumps(data, separators=(',',':'))
+								if data0.find("NaN") > 0: data0 = data0.replace("NaN","-9999")
 								if squeeze: data0 = data0.replace(" ","")
 								if escape:  data0 = urllib.quote(data0)
 								###print data0
@@ -2366,7 +2367,7 @@ def execSend():
 											varAlive  = "pi_IN_Alive"
 
 											cmd = "http://{}:{}/v2/api/indigo.variables?api-key={}".format(G.ipOfServer, G.portOfServer, G.apiKey)
-											logger.log(20, "cBY:{:<20} cmd:{}\n".format(G.program , cmd) )
+											#logger.log(20, "cBY:{:<20} cmd:{}\n".format(G.program , cmd) )
 
 											req = Request(cmd)
 											with urlopen(req) as request:
@@ -2380,12 +2381,13 @@ def execSend():
 													if vv["name"] == varAlive:
 														aliveId =  vv["id"]
 														ff += 1
-											logger.log(20, "cBY:{:<20}  {}:{}, {}:{} \n".format(G.program , varNanme, varId, varAlive, aliveId) )
+											#logger.log(20, "cBY:{:<20}  {}:{}, {}:{} \n".format(G.program , varNanme, varId, varAlive, aliveId) )
 
 								if name == "pi_IN_Alive":	useId = aliveId
 								else:						useId = varId
 
 								data0 = json.dumps(data, separators=(',',':'))
+								if data0.find("NaN") > 0: data0 = data0.replace("NaN","-9999")
 								if squeeze: data0 = data0.replace(" ","")
 								if escape:  data0 = urllib.parse.quote(data0)
 
@@ -2414,6 +2416,7 @@ def execSend():
 								while ii > 0: 
 									ii -= 1
 									dataC = json.dumps(data, separators=(',',':'))
+									if dataC.find("NaN") > 0: dataC = dataC.replace("NaN","-9999")
 									lenStart = len(dataC)
 									if squeeze: dataC = dataC.replace(" ","")
 									if  len(dataC) > G.compressRPItoPlugin: 
@@ -2456,8 +2459,8 @@ def execSend():
 											time.sleep(1.)
 
 									except	Exception as e:
-										logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-										logger.log(30, u"cBY:{:<20} trying to send  bytes: {} --{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
+										logger.log(20, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+										logger.log(20, u"cBY:{:<20} trying to send  bytes: {} --{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
 										try:	soc.shutdown(socket.SHUT_RDWR)
 										except: pass
 										try:	soc.close()
@@ -2480,12 +2483,6 @@ def execSend():
 								except: pass
 								try:	soc.close()
 								except: pass
-
-
-					#print " send time ",time.time()- tStart
-
-
-
 
 				except	Exception as e:
 					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

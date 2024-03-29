@@ -5,7 +5,6 @@
 import pigpio, time
 
 PIGPIO = pigpio.pi()
-print "enter pwmRange,freq eg 8000,100" 
 inp = input()
 if len(inp) !=2: exit()
 pwmRange = int(inp[0])

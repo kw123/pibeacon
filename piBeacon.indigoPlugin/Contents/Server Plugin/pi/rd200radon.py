@@ -259,6 +259,5 @@ rd200m.getData()
 
 time.sleep(2)
 rd200m.getData()
-()
 exit()
 

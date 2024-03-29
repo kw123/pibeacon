@@ -557,7 +557,6 @@ def checkForNewImput():
 				subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 			if stopMoveNOW[devId]: 
-				print" clear queue bf " ,actionQueue[devId].qsize() 
 				actionQueue[devId].queue.clear()
 			actionQueue[devId].put((repeat,actions)) 
 
@@ -667,11 +666,6 @@ U.echoLastAlive(G.program)
 
 G.lastAliveSend	 = time.time() -1000
 
-
-print "motorType", motorType
-print "nStepsInSequence, SeqCoils", nStepsInSequence, SeqCoils
-print "gpiopinSET",gpiopinSET
-print "minStayON", minStayON
 
 
 printON 	= True

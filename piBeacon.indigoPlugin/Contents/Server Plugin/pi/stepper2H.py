@@ -58,9 +58,7 @@ if False:
 		for nn in range(4):
 			Seq[ii][nn] = not Seq[ii][nn]
 
-print Seq
 
-print coil 
 
 pwmRange = 40000
 

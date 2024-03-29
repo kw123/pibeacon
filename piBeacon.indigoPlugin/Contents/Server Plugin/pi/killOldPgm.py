@@ -44,7 +44,7 @@ if verbose:
 try:
 
 		#print "killOldPgm ",pgmToKill,str(myPID)
-		cmd= "ps -ef | grep '{}' | grep -v grep | grep -v ' {} ' | grep -v ' {} ' | grep -v sudo".format(pgmToKill, myOwnPID, myPID  )
+		cmd = "ps -ef | grep '{}' | grep -v grep | grep -v ' {} ' | grep -v ' {} ' | grep -v sudo".format(pgmToKill, myOwnPID, myPID  )
 		if param1 !="":
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":

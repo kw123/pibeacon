@@ -26,7 +26,7 @@ version = 1.0
 #################################		 
 def readParams():
 	global sensor, output, inpRaw, inp
-	global oldRaw, lastRead
+	global oldRaw, lastRead, targetData
 
 	try:
 
@@ -54,6 +54,11 @@ def readParams():
 			U.logger.log(30," {} is not in parameters = not enabled, stopping" .format(G.program ))
 			exit()
 
+		try:
+			for idx in output[G.program]:
+				targetData = output[G.program][idx][0]["data"]
+				break
+		except: targetData = {}
 		#U.logger.log(20, ":{}".format())
 
 		return changed
@@ -65,6 +70,7 @@ def readParams():
 
 #################################		 
 def checkNewtempfile():
+	global lastOut, lastRaw, targetData
 	try:
 
 		#U.logger.log(20," checkNewtempfile: start ".format())
@@ -72,23 +78,43 @@ def checkNewtempfile():
 		if len(raw) < 2: 
 			U.logger.log(20," checkNewtempfile: no new data ".format())
 			return 
+		if raw == lastRaw and time.time() - lastOut > 60: return 
+		lastRaw = raw
+		U.logger.log(20,"targetData:{}".format(targetData))
+
+		# all in pixels
+		lineSpacing			= 32 # line spacing
+		y0 					= int(lineSpacing *.5)
+		y 					= y0 + int(lineSpacing *.5)
+
+		font 				= "Arial.ttf"
+		frameTextSize 		= 30
+		tempTextSize 		= lineSpacing -3
+		tempTextSizeHalf	= int(tempTextSize/2.)
+		totalFrame			= [0,0,1280,800]
+
+		# positons and sizes 
+		dateWidthPix 		= 60
+		datePosPix 			= [500,				totalFrame[3]-dateWidthPix-5]
+		legendPix1 			= [10,				totalFrame[3]-lineSpacing-5]
+		legendPix2 			= [tempTextSize*5,	totalFrame[3]-lineSpacing-5]
+		legendPix3 			= [tempTextSize*5*2,totalFrame[3]-lineSpacing-5]
+
+		valvePosPix			= 125
+		tempNumberPosPix 	= 180
+		scaleStartDotsX		= 250
+		dotsPerC			= 50 
+		maxDotsX 			= 1000
 
 
-		dy = 32
-		y0 = int(dy *.5)
-		y = y0 + int(dy *.5)
-
-		font = "Arial.ttf"
-		frameTextSize = 30
-		tempTextSize = dy -3
-		totalFrame = [0,0,1280,800]
-
-
-		# colors
+		# colors in EGB
 		colorGrey 			= [40,40,40]
 		colorWhite 			= [150,150,150]
 		colorHeader 		= [100,100,100]
 		colorTempLabel 		= [100,100,100]
+		colorTarget			= [0,100,100]
+		colorRoomT			= [200,0,200]
+		colorValvePos		= [100,100,0]
 		colorTempOK 		= [0,100,0]
 		colorTempHIGH		= [100,0,0]
 		colorTempLOW		= [0,0,100]
@@ -96,81 +122,107 @@ def checkNewtempfile():
 		colorTempBadLow		= [0,0,200]
 		tempOK 				= [0,200,0]
 
-		# temp limits
-		tHighVeryBad 	= 75
-		tHighBad 		= 50
-		tHigh 			= 24
-		tLow  			= 18
-		tLowBad  		= 10
-		tLowVeryBad  	= 0
+		# temp limits in C
+		tHighVeryBad 		= 36
+		tHighBad 			= 35
+		tHigh 				= 30
+		tLow  				= 18
+		tLowBad  			= 15
+		tLowVeryBad  		= 14.5
+		tposZero  			= 15 
 
 
-		# positons and sizes 
-		dateWidth = 60
-		datePos = [500,totalFrame[3]-dateWidth-5]
-
-		scaleStart 	= 250
-		dxperC	  	= 40
-		tposZero  	= 15
-		xmax 		= 1000
 
 		theList = []
 		for devId in data:
-			name = data[devId]["name"].split("_")[1]
+			name = "{}".format(data[devId]["name"].split("_")[1])
+			if devId in targetData: 	
+				U.logger.log(20," devId:{}, targetData:{}".format(devId, targetData[devId]))
+				LEVEL = targetData[devId].get("LEVEL",-1)
+				setpointHeat = int(targetData[devId].get("setpointHeat",0))
+				roomTemperature = int(targetData[devId].get("roomTemperature",0))
+			else: 
+				roomTemperature = -1
+				setpointHeat = -1
+				LEVEL = -1
 			if "temp" not in data[devId]: continue
 			for nextT in data[devId]["temp"]:
 				for serN in nextT:
 					temp = nextT[serN]
 					if  temp < tLowVeryBad:
-						xpos = scaleStart
-						tempText = "--------- bad sensor read   --:{:.1f} < {}".format(temp,tLowVeryBad)
+						xpos = scaleStartDotsX
+						tempText = "  ----- bad sensor read   --:{:.1f} < {}".format(temp,tLowVeryBad)
 						color= colorTempBadLow
 
 					elif temp > tHighVeryBad:
-						xpos = scaleStart
-						tempText = "--------- bad sensor to high--:{:.1f} > {}".format(temp, tHighVeryBad)
+						xpos = scaleStartDotsX
+						tempText = " ---- bad sensor to high--:{:.1f} > {}".format(temp, tHighVeryBad)
 						color= colorTempBadHigh
 
 					else:
 						tempText = "{:.1f}".format(temp)
-						xpos = int( scaleStart +  max(0,min(xmax, (temp-tposZero)*dxperC -1.5*tempTextSize)) )
+						xpos = int( scaleStartDotsX +  max(0,min(maxDotsX, (temp-tposZero)*dotsPerC - tempTextSizeHalf)) )
 						if   temp > tHighBad: 	color = colorTempBadHigh
 						elif temp > tHigh: 		color = colorTempHIGH
 						elif temp < tLowBad: 	color = colorTempBadLow
 						elif temp < tLow: 		color = colorTempLOW
 						else: 					color = tempOK
 
-					theList.append([name, tempText, color ,xpos])
+					if setpointHeat > 0: setpointHeat = int( scaleStartDotsX +  max(0,min(maxDotsX, (setpointHeat-tposZero)*dotsPerC - tempTextSizeHalf)) )
+					if roomTemperature > 0: roomTemperature = int( scaleStartDotsX +  max(0,min(maxDotsX, (roomTemperature-tposZero)*dotsPerC - tempTextSizeHalf)) )
+					theList.append([name, tempText,  color ,xpos, setpointHeat, LEVEL, roomTemperature])
 
-		theList = sorted(theList, key=lambda x: (x[0], x[1], x[2]))
+		theList = sorted(theList, key=lambda x: (x[0], x[1]))
 		
 
-		#U.logger.log(20," theList:{}".format(theList))
+		U.logger.log(20," theList:{}".format(theList))
 
 
-		out = {"resetInitial": "", "repeat": 100000000,"command":[]}
-		out["command"].append({"type":"rectangle", 								"fill": colorGrey, 			"position":totalFrame, 	"display":"wait", 		"reset":[50, 50, 50]})
-		for ii in range(6):
-				temp = ii*5
-				xpos = int(  scaleStart +  max(0,min(xmax, temp*dxperC - tempTextSize)) )
-				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTempLabel,	 	"position":[xpos,y0], 	"display": "wait", 		"text":"{}".format(temp+tposZero), "font":font})
+		out = {"resetInitial": "", "repeat": 100000000, "delayAfterRepeat":7., "command":[]}
+		# frame
+		out["command"].append({"type":"rectangle", 								"fill": colorGrey, 			"position":totalFrame, 				"display":"wait", 		"reset":[50, 50, 50]})
+		for ii in range(11):
+				temp = ii*2
+				xpos = int(  scaleStartDotsX +  max(-10,min(maxDotsX, temp*dotsPerC - tempTextSize) ))
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTempLabel,	 	"position":[xpos,y0], 				"display": "wait", 		"text":"{}".format(temp+tposZero), "font":font})
 
-		for name, text, color, xpos in theList:
-			y += dy
-			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":colorTempLabel,		"position":[40,y], 		"display": "wait", 		"text":name, 		"font":font})
-			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,	 			"position":[xpos,y], 	"display": "wait", 		"text":text, 					"font":font})
-		out["command"].append({"type":"dateString",  	"width":dateWidth,  	"fill":colorWhite,			"position": datePos,   	"display":"wait", 		"text":"%a, %b  %d, %Y %H:%M:%S", 	"font":font} )
-		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorHeader,	 		"position":[30,y0], 	"display": "immediate", "text":"Temperatures", 				"font":font })
+		# values
+		for name, value, color, xpos, setpointHeat, LEVEL, roomTemperature in theList:
+			y += lineSpacing
+			dyAst= int(lineSpacing*.2)
 
+			if setpointHeat >= 0:
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTarget,	 		"position":[setpointHeat,y], 		"display": "wait", 		"text":"T", 						"font":font})
+			if roomTemperature >= 0:
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorRoomT,	 		"position":[roomTemperature,y], 	"display": "wait", 		"text":"R", 						"font":font})
+
+			if LEVEL > 0:
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorValvePos, 		"position":[valvePosPix,y], 		"display": "wait", 		"text":"{:3d}".format(LEVEL), 	"font":font})
+
+			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":colorTempLabel,		"position":[10,y], 					"display": "wait", 		"text":name, 						"font":font})
+			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,	 			"position":[tempNumberPosPix,y], 	"display": "wait", 		"text":value, 						"font":font})
+			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,	 			"position":[xpos,y+dyAst],			"display": "wait", 		"text":"*", 						"font":font})
+
+		out["command"].append({"type":"dateString",  	"width":dateWidthPix,  	"fill":colorWhite,			"position": datePosPix,   			"display": "wait", 		"text":"%a, %b  %d, %Y %H:%M:%S", 	"font":font} )
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorTarget,	 		"position":legendPix1, 				"display": "wait", 		"text":"T=Target", 					"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorRoomT,	 		"position":legendPix2, 				"display": "wait", 		"text":"R=RoomT", 					"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":tempOK,	 			"position":legendPix3, 				"display": "wait", 		"text":"*=WaterT", 					"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorHeader,	 		"position":[10,y0], 				"display": "immediate", "text":"V#,       Pos,  T", 		"font":font })
+
+		lastOut = time.time()
 		outName = G.homeDir+"temp/display.inp"
-		#U.logger.log(20,"\n\n out:{}\n outfile: {}\n\n".format(out, outName))
-		f = open(outName,"a")
+		#U.logger.log(20,"outfile: {}; json:{}".format( outName, str(out)[0:50] ))
+		f = open(outName,"w")
 		f.write(json.dumps(out)+"\n")
 		f.close()
+		if time.time() - lastOut  < 15:
+			time.sleep(15 -(time.time() - lastOut))
 	
 
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
+		lastOut = 0
+		time.sleep(3)
 	return 
 
 
@@ -181,10 +233,11 @@ def checkNewtempfile():
 #################################
 def fbhexec():
 	global sensor, output, inpRaw, lastCl,clockMarks,maRGB
-	global oldRaw,	lastRead, inp
+	global oldRaw,	lastRead, inp, lastOut, lastRaw, output
 
-
-
+	output						= {}
+	lastRaw						= ""
+	lastOut						= 0
 	oldRaw						= ""
 	lastRead					= 0
 	inpRaw						= ""
@@ -207,7 +260,7 @@ def fbhexec():
 	myPID		= str(os.getpid())
 	U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
-	subprocess.call("sudo /usr/bin/python3 {}display.py &".format(G.homeDir) , shell=True )
+	#subprocess.call("sudo /usr/bin/python3 {}display.py &".format(G.homeDir) , shell=True )
 
 
 	U.echoLastAlive(G.program)

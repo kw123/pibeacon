@@ -62,7 +62,7 @@ class bmp388():
 
 	def uint8_int(self,num):
 		if(num>127):
-		  num = num - 256
+			num = num - 256
 		return num
 
 	def parse_calib_data(self,calib):
@@ -129,9 +129,9 @@ class bmp388():
 		#set_pwr_ctrl_settings
 		reg_data = self.bmp3_get_regs(0x1b,1)[0]
 		if(settings_sel & 2):
-		  reg_data = (reg_data&~(0x01))|(0x01&0x01)
+			reg_data = (reg_data&~(0x01))|(0x01&0x01)
 		if(settings_sel & 4):
-		  reg_data = (reg_data&~(0x02))|((0x01<<0x01)&0x02)
+			reg_data = (reg_data&~(0x02))|((0x01<<0x01)&0x02)
 		data = [reg_data]
 		self.bmp3_set_regs(0x1b,data)
 	
@@ -180,9 +180,9 @@ class bmp388():
   
 	def compensate_data(self,sensor_comp,uncomp_pressure,uncomp_temperature):
 		if(sensor_comp & 0x03):
-		  value = self.compensate_temperature(uncomp_temperature)
+			value = self.compensate_temperature(uncomp_temperature)
 		if(sensor_comp & 0x01):
-		  value = self.compensate_pressure(uncomp_pressure,value)
+			value = self.compensate_pressure(uncomp_pressure,value)
 		return value
 	
 	def compensate_temperature(self,uncomp_temperature):

@@ -104,8 +104,8 @@ class max31865(object):
 
 		#one shot
 		outByte=  0b10100010
-		if self.hertz50_60 ==50: outByte | 0b00000001
-		if self.nWires     ==3:  outByte | 0b00010000
+		#if self.hertz50_60 ==50: outByte | 0b00000001
+		#if self.nWires     ==3:  outByte | 0b00010000
 		self.writeRegister(0, outByte&0xff)
 
 		# conversion time is less than 100ms
@@ -155,7 +155,7 @@ class max31865(object):
 		GPIO.output(self.csPin, GPIO.LOW)
 		
 		# 0x8x to specify 'write register value'
-		addressByte = 0x80 | regNum;
+		addressByte = 0x80 | regNum
 		
 		# first byte is address byte
 		self.sendByte(addressByte)

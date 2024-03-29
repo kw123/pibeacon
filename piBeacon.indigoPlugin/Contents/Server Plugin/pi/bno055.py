@@ -329,7 +329,7 @@ class BNO055():
 		self._write_byte(BNO055_TEMP_SOURCE_ADDR, 0x01)
 
 		#print self.Calibration
-		if self.Calibration !=[]:
+		if self.Calibration != []:
 			self.set_calibration(self.Calibration,setMode=False)
 
 

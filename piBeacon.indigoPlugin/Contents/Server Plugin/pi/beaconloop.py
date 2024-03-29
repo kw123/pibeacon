@@ -174,11 +174,11 @@ def intFrom16(hexString, start):
 
 
 def rshift(val, n):
-    """
-    Arithmetic right shift, preserves sign bit.
-    https://stackoverflow.com/a/5833119 .
-    """
-    return (val % 0x100000000) >> n
+	"""
+	Arithmetic right shift, preserves sign bit.
+	https://stackoverflow.com/a/5833119 .
+	"""
+	return (val % 0x100000000) >> n
 
 
 def returnnumberpacket(pkt):
@@ -877,7 +877,8 @@ def readParams(init=False):
 	batteryLevelUUID = {}
 	try:
 		f = open("{}temp/knownBeaconTags".format(G.homeDir),"r")
-		knownBeaconTags = json.loads(f.read().strip("\n"))
+		xx = json.loads(f.read().strip("\n"))
+		knownBeaconTags = xx["input"]
 		f.close()
 	except:	pass	
 
@@ -2082,7 +2083,7 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, UUID,
 																						^^ light level / device chain
 
 		   11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   06-
-        1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD   DA
+        1C 11 07 1B C5 D5 A5 02 00 		B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD   DA
 																		 start ------------------
 																			   ^^ =type:
 																					48 = H = switchbot (Hand),  63 = c = curtain,  73=s= motion sensor, 64= d= contactsensor, 54=T= temp , see: https://github.com/Danielhiversen/pySwitchbot/blob/master/switchbot/adv_parser.py
@@ -6132,7 +6133,7 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse, Maj="", Min="
 			dPos 		= posFound - tagPos
 
 		if lTag2 > 0 and posFound > -1 and dPos == 0:
-			if inputString.find(tagString2) == -1: posFound == -1; dPos = 99
+			if inputString.find(tagString2) == -1: posFound = -1; dPos = 99
 
 		if len(inputString) < lTag + tagPos: posFound =-1; dPos = 100
 
@@ -6350,10 +6351,12 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 	global trackMac, logCountTrackMac
 	global getMsgInfoCmds
 	try:
+
+
 		if mac == trackMac and logCountTrackMac >0:
 			writeTrackMac("Val-0   ","tag:{}; tagFound:{}; tagin:{}; hexstr:{}".format(tag, tagFound, tag in knownBeaconTags, hexstr), mac )
-		results = {}
-		verbose = mac =="xxxC6:8F:F7:A5:8C:14"
+		decodedData = {}
+		verbose = mac == "xxD1:AD:6B:3D:AB:2D"
 		if verbose:	U.logger.log(20,"mac:{}, tag:{}, tagFound:{}, hexstr:{}".format(mac, tag, tagFound, hexstr[12:]))
 		if tag in knownBeaconTags and tagFound == "found" and "commands" in knownBeaconTags[tag]:
 			for cmdName in knownBeaconTags[tag]["commands"]:
@@ -6365,7 +6368,7 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 				if cmdDict.get("type","") != "msgGet": continue
 				if "params" not in cmdDict: continue
 				params = cmdDict["params"]
-				results[cmdName] = ""
+				decodedData[cmdName] = ""
 				try:
 					if  verbose:
 						#U.logger.log(20,"mac:{}, tag:{}, cmd:{}, params:{}".format(mac, tag, cmdName, params))
@@ -6400,27 +6403,27 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 
 						if reverse:
 							Bstring = Bstring[2:4]+Bstring[0:2]
-						if nType =="float":	results[cmdName] = float(int(Bstring,16)&andWith)/norm
-						else:				results[cmdName] = (int(Bstring,16)&andWith)//norm
+						if nType =="float":	decodedData[cmdName] = float(int(Bstring,16)&andWith)/norm
+						else:				decodedData[cmdName] = (int(Bstring,16)&andWith)//norm
 
-						if nType == "int": 		results[cmdName] = int(results[cmdName]+0.5)
-						if nType == "bool": 	results[cmdName] = results[cmdName] != 0
-						if nType == "float": 	results[cmdName] = float(results[cmdName])
-						if nType == "string": 	results[cmdName] = resultON if results[cmdName] else resultOFF
-						if nType == "bits": 	results[cmdName] = "{:08b}".format(results[cmdName])
-						if verbose:  U.logger.log(20,"{}: cmdName:{:15s}, bHexStr:{} pos:{}, hex:{}, norm:{}, length:{}, andWith:{}, reverse:{}, Bstring:{}, andResult:{}, resultON:{}, resultOFF:{}, res:{}".format(mac, cmdName, bHexStr, pos, Bstring, norm, length, andWith, reverse, Bstring, int(Bstring,16)&andWith, resultON, resultOFF, results[cmdName] ) )
+						if nType == "int": 		decodedData[cmdName] = int(decodedData[cmdName]+0.5)
+						if nType == "bool": 	decodedData[cmdName] = decodedData[cmdName] != 0
+						if nType == "float": 	decodedData[cmdName] = float(decodedData[cmdName])
+						if nType == "string": 	decodedData[cmdName] = resultON if decodedData[cmdName] else resultOFF
+						if nType == "bits": 	decodedData[cmdName] = "{:08b}".format(decodedData[cmdName])
+						if verbose:  U.logger.log(20,"{}: cmdName:{:15s}, bHexStr:{} pos:{}, hex:{}, norm:{}, length:{}, andWith:{}, reverse:{}, Bstring:{}, andResult:{}, resultON:{}, resultOFF:{}, res:{}".format(mac, cmdName, bHexStr, pos, Bstring, norm, length, andWith, reverse, Bstring, int(Bstring,16)&andWith, resultON, resultOFF, decodedData[cmdName] ) )
 						if mac == trackMac and logCountTrackMac >0:
-							writeTrackMac(cmd[0:3]+"-4   ", "val:{}".format(cmd[0:3],results[cmdName] ),  mac )
+							writeTrackMac(cmd[0:3]+"-4   ", "val:{}".format(cmd[0:3],decodedData[cmdName] ),  mac )
 
 				except	Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					if mac == trackMac and logCountTrackMac >0:
 						U.logger.log(20,"", exc_info=True)
-					results[cmdName] = ""
+					decodedData[cmdName] = ""
 
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
-	return results
+	return decodedData
 
 
 #################################
@@ -6577,13 +6580,13 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 					#print " new beacon :", mac, rssi, acceptNewiBeacons
 					rejectThisMessage = "new"
 
-		results = checkForValueInfo( typeOfBeacon, tagFound, mac, hexstr )
-		if batteryLevel != "" or "batteryLevel" not in results: results["batteryLevel"] = batteryLevel
+		decodedDatas = checkForValueInfo( typeOfBeacon, tagFound, mac, hexstr )
+		if batteryLevel != "" or "batteryLevel" not in decodedDatas: decodedDatas["batteryLevel"] = batteryLevel
 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-			writeTrackMac("tag-9   ", "batteryLevel>{}<".format(results["batteryLevel"]) ,mac)
+			writeTrackMac("tag-9   ", "batteryLevel>{}<".format(decodedDatas["batteryLevel"]) ,mac)
 
-		if results["batteryLevel"] == "" and batteryVoltage !=0: 
+		if decodedDatas["batteryLevel"] == "" and batteryVoltage !=0: 
 			batteryVoltAt100 = 3000.
 			batteryVoltAt0   = 2700.
 			if mac in  batteryLevelUUID and batteryLevelUUID[mac].find("TLM") == 0: # format is TLM-Vol@0-Volt@100%
@@ -6592,10 +6595,10 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 					batteryVoltAt100 = float(levels[1]) 
 					batteryVoltAt0   = float(levels[2]) 
 				#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,"mac {}; 0:{};  100:{}".format(mac, batteryVoltAt0,batteryVoltAt100))
-			results["batteryLevel"] = batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=batteryVoltAt100, batteryVoltAt0=batteryVoltAt0)
+			decodedDatas["batteryLevel"] = batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=batteryVoltAt100, batteryVoltAt0=batteryVoltAt0)
 
-		#if mac =="F3:4C:96:A2:CC:13": U.logger.log(20,"mac {}; results[]:{};  batteryLevel:{}".format(mac, results["batteryLevel"] , batteryLevel))
-		fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, results, parsedData["analyzed"])
+		#if mac =="F3:4C:96:A2:CC:13": U.logger.log(20,"mac {}; decodedDatas[]:{};  batteryLevel:{}".format(mac, decodedDatas["batteryLevel"] , batteryLevel))
+		fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedDatas, parsedData["analyzed"])
 
 		if not checkMinMaxSignalAcceptMessage(mac, rssi): rejectThisMessage = "reject"
 
@@ -6610,7 +6613,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 	if rejectThisMessage == mfg_info:
 		pass
 		#U.logger.log(20,"{} accepted .. rejectThisMessage:{}".format(mac, rejectThisMessage) )
-	#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} 5 rejectThisMessage:{}, typeOfBeacon:{}, results:{}".format(mac, rejectThisMessage, typeOfBeacon, results) )
+	#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} 5 rejectThisMessage:{}, typeOfBeacon:{}, decodedDatas:{}".format(mac, rejectThisMessage, typeOfBeacon, decodedData) )
 	return rejectThisMessage
 
 
@@ -6638,7 +6641,7 @@ def getBasicData(hexstr):
 
 
 #################################
-def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, result, analyzed):
+def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedData, analyzed):
 	global beaconsThisReadCycle
 	try:
 		if mac not in beaconsThisReadCycle: setEmptybeaconsThisReadCycle(mac)
@@ -6657,10 +6660,12 @@ def fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon
 		if subtypeOfBeacon !="":		beaconsThisReadCycle[mac]["subtypeOfBeacon"]= subtypeOfBeacon
 		if typeOfBeacon != "other": 	beaconsThisReadCycle[mac]["typeOfBeacon"]	= typeOfBeacon # 
 
-		for  ii in result:
-			if result[ii] != "":		beaconsThisReadCycle[mac][ii]				= result[ii]
+		for  ii in decodedData:
+			if decodedData[ii] != "":		beaconsThisReadCycle[mac][ii]				= decodedData[ii]
 		beaconsThisReadCycle[mac]["analyzed"]				= analyzed
-	
+		if mac == "xxC6:8F:F7:A5:8C:14":
+			U.logger.log(20,"mac:{}, decodedData:{}".format(mac, decodedData))
+
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 

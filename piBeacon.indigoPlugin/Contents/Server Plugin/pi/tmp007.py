@@ -100,7 +100,7 @@ class TMP007:
 
 	# read voltage
 	def readVoltage(self):
-		raw = self.readU16BE(_TMP007_VOBJ);
+		raw = self.readU16BE(_TMP007_VOBJ)
 		if raw > 32767:
 			raw = (raw & 0x7fff) - 32768
 		return raw
