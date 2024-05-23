@@ -1,0 +1,43 @@
+set argsCount [llength $argv]
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set authKeyOrPassword [lindex $argv 2 ] 
+set ipNumber [lindex $argv 3 ] 
+set ipParms  [lindex $argv 4 ] 
+set piPath   [lindex $argv 5 ] 
+set indigoPath   [lindex $argv 6 ] 
+set timeout [lindex $argv 7 ] 
+
+set timeout $timeout
+
+if {$argsCount > 8} {spawn sftp [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn sftp -o ConnectTimeout=20 $userID@$ipNumber}
+ 
+if {$authKeyOrPassword == "assword"} {  
+    expect {
+        "(yes/no" { 
+            send "yes\r"
+            sleep 0.1
+            expect "$authKeyOrPassword"  { send "$password\r"}
+        }    
+        "$authKeyOrPassword" { 
+            send "$password\r" 
+        }
+    }
+}
+expect "sftp>"
+set timeout $timeout
+send "\r"
+sleep .001
+expect "sftp" {  send  "cd /home/pi/pibeacon \r" }
+sleep .1 
+expect "sftp" {  send  "lcd '$piPath//all' \r" }
+sleep .1 
+expect "sftp" {  send  "put 'beacon_parameters'  /home/pi/pibeacon/beacon_parameters\r" }
+sleep .2
+expect "sftp" {  send  "rm /home/pi/pibeacon/temp/touchFile \r" }
+sleep 3
+expect "sftp" {  send  "quit\r" }
+set timeout 0.1
+expect eof
+
+
