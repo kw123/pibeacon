@@ -76,10 +76,10 @@ def readParams():
 
  
 	   
-def getINPUTgpio(all,sens):
+def getINPUTgpio(all, sens):
 		global INPUTlastvalue, INPUTcount
-		d={}
-		new=False
+		d = {}
+		new = False
 		try:
 				#U.logger.log(20, u" all{}, sens:{}".format(all, sens))
 				for n in range(len(sens["INPUTS"])):

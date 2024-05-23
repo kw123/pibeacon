@@ -284,23 +284,23 @@ if not os.path.isdir(G.logDir):
 
 U.setLogging()
 
-debug=1
+debug = 1
 
 readNewParams()
 
 
 U.logger.log(30," installLibs starting ")
 
-test=[False for ii in range(10)]
+test = [False for ii in range(10)]
 try:
-	f=open(G.homeDir+"installLibs.done","r")
-	test[0]= float(f.read())
+	f = open(G.homeDir+"installLibs.done","r")
+	test[0] = float(f.read())
 	f.close()
 except: test[0] = -1
 
 myPID			= str(os.getpid())
 
-upgradeOpSys =""
+upgradeOpSys = ""
 try:
 	upgradeOpSys = sys.argv[1]
 	U.logger.log(30," installLibs     will do a complete upgrade of the opsys , this might take a LOOONG time")

@@ -5,6 +5,7 @@ set authKeyOrPassword [lindex $argv 2 ]
 set ipNumber [lindex $argv 3 ] 
 set timeout [lindex $argv 4 ] 
 
+newsdigest@insideapple.apple.com
 
 set timeout $timeout
 if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
@@ -23,7 +24,7 @@ if {$authKeyOrPassword == "assword"} {
 }
 expect "Last login:"
 sleep 3
-send "cd /home/pi/pibeacon;nohup sudo /usr/bin/python master.py &\r"
+send "cd /home/pi/pibeacon;nohup sudo /usr/bin/python -E master.py &\r"
 sleep 2
 set timeout 1
 expect eof

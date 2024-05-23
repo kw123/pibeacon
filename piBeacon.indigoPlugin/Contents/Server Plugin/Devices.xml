@@ -5638,7 +5638,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="False"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -5745,13 +5745,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="offsetTemp" type="textfield"     defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
 			<Field id="offsetHum" type="textfield"     defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
+
 			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="false">
-				<Label>switch on onOff state for button press display </Label>
+				<Label>Show "onOff state"  from button press on device</Label>
 			</Field>
 
 			<Field id="updateIndigoTiming"    type="menu"     defaultValue="180" hidden="no" tooltip="">
 				<Label>send data to indigo every:</Label>
 				<List>
+					<Option value="60" >   1 minutes</Option>
 					<Option value="120" >  2 minutes</Option>
 					<Option value="180" >  3 minutes</Option>
 					<Option value="240" >  4 minutes</Option>
@@ -18852,7 +18854,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="INPUT_0" hidden="no"> <Label>Property to display in the State Column:</Label>
      defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT_0"  >INPUT 0</Option>
@@ -22127,6 +22129,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off-on"      >show 1 as on; 0 as off</Option>
 					<Option value="open-closed" >show 1 as open; 0 as closed</Option>
 					<Option value="closed-open" >show 1 as closed; 0 as open</Option>
+					<Option value="clear-blocked" >show 1 as clear; 0 as blocked</Option>
+					<Option value="blocked-clear" >show 1 as blocked; 0 as clear</Option>
 					<Option value="up-down"     >show 1 as up; 0 as down</Option>
 					<Option value="down-up"     >show 1 as down; 0 as up</Option>
 				</List>
@@ -22145,7 +22149,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="unit"   type="textfield" defaultValue="[mV]"      visibleBindingId="onOff"    visibleBindingValue="x">	<Label>unit:</Label></Field>
-			<Field id="offset" type="textfield"         	defaultValue="0"         visibleBindingId="onOff"    visibleBindingValue="x">	<Label>add offset:</Label></Field>
+			<Field id="offset" type="textfield" defaultValue="0"         visibleBindingId="onOff"    visibleBindingValue="x">	<Label>add offset:</Label></Field>
 			<Field id="mult"   type="textfield" defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">	<Label>multiply number by :</Label></Field>
 			<Field id="format" type="textfield" defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">	<Label>format number (eg %3.1f):</Label></Field>
 			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
