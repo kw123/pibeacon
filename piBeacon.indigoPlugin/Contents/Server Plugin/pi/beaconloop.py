@@ -53,6 +53,11 @@ else:					  usePython3 = False
 try:	import codecs
 except:	pass
 
+
+iTrackDevTypes = {"0":"0","1":"","2":""   ,"3":"Musgear-Regular-3","4":"Musgear-Wallet-4",  "5":"",  "6":"Musgear-Mini-6",  "7":"",  "8":"Musgear-Rechargeable-7",   "9":"9","A":"A","B":"B","C":"C","D":"D","E":"E","F":"F"}
+
+
+
 def hex2str(inString):
 	try:
 		if sys.version[0] == '3':
@@ -1542,13 +1547,13 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 	#                                    == counter is following: 
 	#                                       32 is the counter number 
 	#                                    		01: bat is following
-	#                                          			  3A button press event
+	#                                          		   3A button press event
 	#                                           		  01 = press
 	#                                           		  02 = double press
 	#                                           		  03 = tripple press
 	#                                           		  04 = long press
-	#                                           		  05 = long double press
-	#                                           		  06 = long double press
+	#                                           		  FE = button Hold
+	
 	#
 	#  14  02 01 06  10 16 D2 FC 44 00 0E  01 64   05 00 00 00  21 01 3A 01  
 	#  15  02 01 06  11 16 D2 FC 44 00 09  01 64   05 B8 50 01  2D 01  3F 00 00  
@@ -1596,11 +1601,12 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 			"09":{"name":"count",			"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
 			"3D":{"name":"count",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
 			"3E":{"name":"count",			"bytes":4,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
+			"3C":{"name":"dimmer",			"bytes":2,	"type":"intLR",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									}, # need to fix
 			"21":{"name":"motion",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"motion"}		},
 			"2D":{"name":"isOpen",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"isClosed","01":"isOpen"}	},
-			"3A":{"name":"button",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"press","02":"double_press","03":"tripple_press","04":"long_press","05":"None","06":"None","07":"None","08":"None","09":"None"}	}
+			"3A":{"name":"button",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"press","02":"double_press","03":"tripple_press","04":"long_press","05":"long_double_press","06":"long_triple_press","80":"hold_press","FE":"button_hold"}	}
 		}
-		if False and doPrint: U.logger.log(20, "mac:{}, hexdata:{}".format(mac, hexData))
+		if False and  doPrint: U.logger.log(20, "mac:{}, hexdata:{}".format(mac, hexData))
 
 		BLEsensorMACs[mac][sensor]["updateIndigoTiming"] = 90
 
@@ -1613,8 +1619,9 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 		while True:
 			if jj+2 >= len(hexData): break
 
-			tag = tagToProperty.get(hexData[jj:jj+2],[""])
-			if tag["name"] == "": 
+			tag = tagToProperty.get(hexData[jj:jj+2],{})
+			if False and doPrint: U.logger.log(20, "mac:{}, tag:{}, hexdata:{}".format(mac, tag, hexData))
+			if tag.get("name","") == "": 
 				jj += 2
 				continue
 
@@ -1647,6 +1654,16 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min,
 
 					elif tag["typeFinal"].find("int") == 0:
 						itemsValues[tag["name"]] = int(itemsValues[tag["name"]])
+
+					trigValue[tag["name"]] =  tag["trigValue"]
+					jj =  ii + nn 
+					continue
+
+			if  tag["type"] == "intLR":
+					itemsValues[tag["name"]] = intfrom8( hexData[ii+2:],0)
+					if hexData[ii:ii+2] == "02": itemsValues[tag["name"]] = -itemsValues[tag["name"]]
+
+					if tag["factor"] != 1: itemsValues[tag["name"]]  = itemsValues[tag["name"]] * tag["factor"] 
 
 					trigValue[tag["name"]] =  tag["trigValue"]
 					jj =  ii + nn 
@@ -3662,47 +3679,70 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 	global fastBLEReaction, trackMacNumber
 
 	try:
-		HexStr0 				= hexData[12:] # skip mac 
-		if len(HexStr0) < 40: 
+		HexStr0 				= hexData[12:] # skip mac data 
+		if len(HexStr0) < 40: #( = 20 bytes)
 			return tx, "", UUID, Maj, Min, False
 
-		# IGNORE APP OFF:
-		# 1B 02 01 05   03 02 02 18   0B FF 4B 4D 42 28 89 F9 A7 DD E2 65 
-		# 1B 02 01 06   03 02 02 18   0B FF 4B 4D 42 28 89 F9 A7 DD E2 66 070969547261636BBC
-		# 01 23 45 67   08 90 12 34   56 78 90 12 34 56 78 90 12 34 56 78 90 
-		#           x                             zy
-		# regular on / beep:
-		# 1B 02 01 05   03 02 02 18   0B FF 4B 4D 30 EC 36 5E 3F CA DB 64 070969547261636BBC
+		# 01 23 45 67   89 01 23 45   67  89 01 23 45 67 89 01 23 45 67 89   01 23 45 67 89 01 23 45  position characters
+		#  1  2  3  4    5  6  7  8    9  10 11 1  13 14 15 16 17 18 19 20   21 22 23 24 25 26 27 28  position bytes 
+
+		# IGNORE APP OFF:                             r MAC ----------- cc
+		# 1B 02 01 05   03 02 02 18   0B  FF 4B 4D 42 28 89 F9 A7 DD E2 65         i   T  r  a  c  k    
+		# 1B 02 01 06   03 02 02 18   0B  FF 4B 4D 42 28 89 F9 A7 DD E2 66   07 09 69 54 72 61 63 6B  BC
+		# LL ll tp fl   ll tp
+		#    id1---     id2--------
+		#          wx                 ll           yz                        ll tp
+		# regular on / button press:
+		# 1B 02 01 05   03 02 02 18   0B  FF 4B 4D 30 EC 36 5E 3F CA DB 64   07 09 69 54 72 61 63 6B  BC
 		# regular off 
-		# 1B 02 01 06   03 02 02 18   0B FF 4B 4D 42 28 89 F9 A7 DD E2 65   07 09 69 54 72 61 63 6B C5
-		# 01 23 45 67   89 01 23 45   67 89 01 23 45 67 89 01 23 45 67 89 
-		#           x                             zy
+		# 1B 02 01 06   03 02 02 18   0B  FF 4B 4D 42 28 89 F9 A7 DD E2 65   07 09 69 54 72 61 63 6B  C5
+		#          wx                 ll  TP       yz                   bh   LL TP  i  T  r  a  c  k
+		#                             11  FF ---------------------------??   07 09 -----------------
+		# ll = length of next section 
+		# TP = type
 		#					 beep: x=5, y=0
-		# 					 normal off: x=5,6, y=2
-		#   				 back from app rule (a) 30+sec : x=5, y=2
-		#   				 back from app rule after (a) off : x=6, y=2
-		#   				z= 2,3,4,5,8 varying
+		# 					 normal off: x=5,6, z=2
+		#   				 back from app rule (a) 30+sec : x=5, z=2
+		#   				 back from app rule after (a) off : x=6, z=2
+		#   				 y= 2,3,4,5,8 varying
 
 
 		infostart 			= 12 #EC365E3FCADB1B02   #  
 		HexStr				= hexData[infostart:]
-		if HexStr[2:7] 		!= "02010": 	return tx, "", UUID, Maj, Min, False 
-		if HexStr[8:17] 	!= "030202180":	return tx, "", UUID, Maj, Min, False 
 
-		findMAC = trackMacNumber
-		if  mac == findMAC:
-			U.logger.log(20, "mac:{} {}, {}x{}, hex:{}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], HexStr[6:8], HexStr[24:26],  HexStr))
+		id1  = HexStr[2:7]
+		id2  = HexStr[8:16]
+		rmac = HexStr[26:38]
+
+		if  mac in findMAC:
+			U.logger.log(20, "mac:{} {}, rmac:{},  hex:{}".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], rmac,  HexStr))
+		if id1	!= "02010": 		return tx, "", UUID, Maj, Min, False 
+		if id2 	!= "03020218":		return tx, "", UUID, Maj, Min, False 
+		if rmac != macplainReverse:	return tx, "", UUID, Maj, Min, False 
+
+		bh = HexStr[38:40]
+		batLevel = intFrom8(bh,0)
+
+		w  = HexStr[6:7]		# = 0
+		x  = HexStr[7:8] 		# = 5/6
+		y  = HexStr[24:25]		# = 2/3/4/5/6/7/8
+		z  = HexStr[25:26]		# = 0/2
+
+		if  mac in findMAC:
+			U.logger.log(20, "mac:{} {},  id1:{}?, id2:{}?, w:{}, x:{} y:{}, z:{}, batH :{}, batint:{:3d}, rmac:{}, hex:{}".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], id1, id2, w, x, y, z, bh, batLevel, rmac,  HexStr))
+
+
 
 		UUID				= sensor
 		Maj					= "sensor"
 		devId				= BLEsensorMACs[mac][sensor]["devId"]
 		data   = {sensor:{devId:{}}}
 
-		if HexStr[6:8] == "05" and HexStr[24:25] != "0"and HexStr[25:26] == "0":	onOff = True
-		else:																		onOff = False
+		if w == "0" and x ==  "5" and  y != "0" and z == "0":	onOff = True
+		else:													onOff = False
 
-		stateOfBeacon = HexStr[7:8] + "-" + HexStr[25:26]
-		devType = HexStr[24:25] 
+		stateOfBeacon = x + "-" + z
+		devType = iTrackDevTypes.get(y,y)
 
 		trig 				= ""
 		if BLEsensorMACs[mac][sensor]["trigx"]  != stateOfBeacon:		trig = "stateOfBeacon"
@@ -3715,15 +3755,16 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 		data[sensor][devId]["onOff"] =  onOff
 		data[sensor][devId]["stateOfBeacon"] =  stateOfBeacon
 		data[sensor][devId]["devType"] =  devType
+		data[sensor][devId]["batteryLevel"] =  batLevel
 		#U.logger.log(20, "mac:{}  hex:{},   onOff:{},".format(mac, HexStr[0:16], onOff ))
 
 		if onOff:
 			if BLEsensorMACs[mac][sensor]["lastUpdate2"] == 0:
 				BLEsensorMACs[mac][sensor]["lastUpdate3"] 	= time.time()
 			BLEsensorMACs[mac][sensor]["lastUpdate2"] 	+=1
-			if  mac == findMAC: U.logger.log(20, "mac:{} {}, onOff:{:1}, count:{:3}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], onOff, BLEsensorMACs[mac][sensor]["lastUpdate2"]))
+			if  mac in findMAC: U.logger.log(20, "mac:{} {}, onOff:{:1}, count:{:3}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], onOff, BLEsensorMACs[mac][sensor]["lastUpdate2"]))
 		else:
-			if  mac == findMAC and BLEsensorMACs[mac][sensor]["lastUpdate2"] !=0:
+			if  mac in findMAC and BLEsensorMACs[mac][sensor]["lastUpdate2"] !=0:
 				U.logger.log(20, "mac:{} {}, onOff:{:1}, count:{:3}\n".format(mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], onOff, BLEsensorMACs[mac][sensor]["lastUpdate2"]))
 			BLEsensorMACs[mac][sensor]["lastUpdate2"] 	= 0
 
@@ -3737,8 +3778,9 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, UUID, Maj, Min
 			BLEsensorMACs[mac][sensor]["lastUpdate1"] 					= time.time()
 			BLEsensorMACs[mac][sensor]["onOff"] 	 					= onOff#  = ALL OR JUST BUTTON 
 			BLEsensorMACs[mac][sensor]["trigx"] 	 					= stateOfBeacon#  = ALL OR JUST BUTTON 
+			BLEsensorMACs[mac][sensor]["batteryLevel"] 	 				= batLevel#  = ALL OR JUST BUTTON 
 
-		return tx, "", sensor, mac, "sensor", False
+		return tx, batLevel, sensor, mac, "sensor", False
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return tx, "", UUID, Maj, Min, False
@@ -6578,6 +6620,7 @@ def checkIfTagged(mac, macplain, macplainReverse, UUID, Min, Maj, isOnlySensor, 
 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac("tag-E   ", "beaconsThisReadCycle ..mfg_info: {}, rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel) ,mac)
+		#if mac in findMAC: U.logger.log(20, "mac:{}  after end of  decodedDatas:{}".format(mac, decodedDatas ))
 
 
 	except	Exception as e:
@@ -7211,10 +7254,12 @@ def execbeaconloop(test):
 										dtinner[4] = max(dtinner[4], time.time() - startofInnerLoop )
 										#if mac =="F3:4C:96:A2:CC:13": U.logger.log(20, "mac:{}  after do sensors BL:{}".format(mac, batteryLevel ))
 
-										# cehc if only sensor, not beacon
+										# check if only sensor, not beacon
 										if isOnlySensor:
 											lastMSGwithDataPassed = int(time.time())
 											continue
+										#if mac in findMAC: U.logger.log(20, "mac:{}  after do sensors BL:{}".format(mac, batteryLevel ))
+				
 
 										# check if known rejected mac
 										if mac in ignoreMAC: 
@@ -7336,6 +7381,7 @@ def execbeaconloop(test):
 	try: 	G.sendThread["run"] = False; time.sleep(1)
 	except: pass
 
+findMAC = [] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
 
 U.echoLastAlive(G.program)
 try: test = sys.argv[1]

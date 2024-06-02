@@ -5,8 +5,6 @@ set authKeyOrPassword [lindex $argv 2 ]
 set ipNumber [lindex $argv 3 ] 
 set timeout [lindex $argv 4 ] 
 
-newsdigest@insideapple.apple.com
-
 set timeout $timeout
 if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
 

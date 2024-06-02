@@ -3032,6 +3032,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>batteryVoltage</TriggerLabel>
 				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
+			<State id="lastUpdateBatteryLevel">
+				<ValueType>string</ValueType>
+				<TriggerLabel>lastUpdateBatteryLevel</TriggerLabel>
+				<ControlPageLabel>lastUpdateBatteryLevel</ControlPageLabel>
+			</State>
 
 		</States>
 	</Device>
@@ -8308,7 +8313,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
-			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
@@ -8431,6 +8436,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
+			<State id="is_charged">
+				<ValueType>string</ValueType>
+				<TriggerLabel>is_charged</TriggerLabel>
+				<ControlPageLabel>is_charged</ControlPageLabel>
+			</State>
+			<State id="lastUpdateBatteryLevel">
+				<ValueType>string</ValueType>
+				<TriggerLabel>lastUpdateBatteryLevel</TriggerLabel>
+				<ControlPageLabel>lastUpdateBatteryLevel</ControlPageLabel>
+			</State>
 			<State id="currentOnEvent">
 				<ValueType>String</ValueType>
 				<TriggerLabel>currentOnEvent</TriggerLabel>
@@ -25948,42 +25963,49 @@ For the read settings from the device to work you need to set up the device on t
 		</ConfigUI>
 
 		<States>
+
 			<State id="actualStatus">
 				<ValueType>String</ValueType>
 				<TriggerLabel>actualStatus</TriggerLabel>
 				<ControlPageLabel>actualStatus</ControlPageLabel>
 			</State>
+
 			<State id="version">
 				<ValueType>String</ValueType>
 				<TriggerLabel>version</TriggerLabel>
 				<ControlPageLabel>version</ControlPageLabel>
 			</State>
+
 			<State id="holdSeconds">
 				<ValueType>String</ValueType>
 				<TriggerLabel>holdSeconds</TriggerLabel>
 				<ControlPageLabel>holdSeconds</ControlPageLabel>
 			</State>
+
 			<State id="mode">
 				<ValueType>String</ValueType>
 				<TriggerLabel>mode</TriggerLabel>
 				<ControlPageLabel>mode</ControlPageLabel>
 			</State>
+
 			<State id="inverseDirection">
 				<ValueType>String</ValueType>
 				<TriggerLabel>inverseDirection</TriggerLabel>
 				<ControlPageLabel>inverseDirection</ControlPageLabel>
+			</State>
+
 			<State id="ServiceData">
 				<ValueType>string</ValueType>
 				<TriggerLabel>ServiceData</TriggerLabel>
 				<ControlPageLabel>ServiceData</ControlPageLabel>
 			</State>
 
-			</State>
 			<State id="lastUpdateBatteryLevel">
 				<ValueType>string</ValueType>
 				<TriggerLabel>lastUpdateBatteryLevel</TriggerLabel>
 				<ControlPageLabel>lastUpdateBatteryLevel</ControlPageLabel>
 			</State>
+
 		</States>
 	</Device>
 
