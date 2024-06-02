@@ -1,8 +1,8 @@
-added features / changes in v2022.176.97 @ 2024-06002
+added features / changes in v2022.176.98 @ 2024-06002
 ==================================================
 
 1. added in "print beacon battery stats" check for bad device (not in beacons dict)
-2. reduced number of updates for lastBatterylevelUpdate to 1/10 minutes.
+2. reduced number of updates for lastBatterylevelUpdate to 1/10 minutes or if bat level has chnaged.
 3. added dev type dev state for itrack type beacons (musegear mini, regular, recharge, wallet) 
 4. added get battery level from message for itrack beacon, no need to connect and get battery level
 5. added charged dev state for itrack beacons, ie for rechargeable beacons 

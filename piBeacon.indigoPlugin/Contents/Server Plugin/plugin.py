@@ -11499,7 +11499,7 @@ class Plugin(indigo.PluginBase):
 			except:
 				pass
 			self.RPI[piU]["piOnOff"] = "1"
-			self.startOneUpdateRPIqueue(piU, reason="; from basic setup")
+			self.startOneUpdateRPIqueue(piU, reason="; from basic setup", force=True)
 
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonConfirmPiServerConfigCALLBACK")
 
@@ -14711,7 +14711,14 @@ class Plugin(indigo.PluginBase):
 								self.addToStatesUpdateDict(dev.id, "actualStatus", onT)
 
 					elif xx == "batteryLevel":
-						self.updatelastUpdateBatteryLevel(dev, dtNow)
+						if  "batteryLevel" in dev.states:
+							if	"{}".format(batL) != "{}".format(dev.states["batteryLevel"]):
+								blChanged = True
+								self.addToStatesUpdateDict(dev.id, "batteryLevel",		 	batL)
+								self.setlastBatteryReplaced(dev, batL)
+							else:
+								blChanged = True
+							self.updatelastUpdateBatteryLevel(dev, dtNow, blChanged)
 
 					elif xx == "position" and "brightnessLevel" in dev.states: 
 						#self.indiLOG.log(20,"sensor pi: {}-{}; dev.deviceTypeId:{};  data {}" .format(piU, dev.name, dev.deviceTypeId , data))
@@ -15611,10 +15618,13 @@ class Plugin(indigo.PluginBase):
 								if "is_charged" in dev.states:
 									self.addToStatesUpdateDict(dev.id, "is_charged", "{}-{}".format(max(0,batteryLR-100), batteryLR-100>0))
 								if	"{}".format(batL) != "{}".format(dev.states["batteryLevel"]):
+									blChanged = True
 									self.addToStatesUpdateDict(dev.id, "batteryLevel",		 	batL)
-
 									self.setlastBatteryReplaced(dev, batL)
-								self.updatelastUpdateBatteryLevel(dev, dtNow)
+								else:
+									blChanged = True
+							
+								self.updatelastUpdateBatteryLevel(dev, dtNow, blChanged)
 
 								if props.get("isBLElongConnectDevice",False):
 									if  int(props.get("beaconDevId",0)) > 0:
@@ -15630,7 +15640,7 @@ class Plugin(indigo.PluginBase):
 												devBeacon.replacePluginPropsOnServer(props)
 
 											self.addToStatesUpdateDict(devBeacon.id, "batteryLevel",		 	batL)
-											self.updatelastUpdateBatteryLevel(devBeacon, dtNow)
+											self.updatelastUpdateBatteryLevel(devBeacon, dtNow,  "{}".format(batL) != "{}".format(devBeacon.states["batteryLevel"]))
 											self.setlastBatteryReplaced(devBeacon, batL)
 											if "is_charged" in dev.states:
 												self.addToStatesUpdateDict(dev.id, "is_charged", "{}-{}".format(max(0,batteryLR-100), batteryLR-100>0))
@@ -15821,8 +15831,9 @@ class Plugin(indigo.PluginBase):
 
 
 ###-------------------------------------------------------------------------####
-	def updatelastUpdateBatteryLevel(self, dev, dtNow):
-		if "lastUpdateBatteryLevel" in dev.states and dtNow[0:-4] != dev.states["lastUpdateBatteryLevel"][0:-4]:
+	def updatelastUpdateBatteryLevel(self, dev, dtNow, blChanged):
+		if "lastUpdateBatteryLevel" not in dev.states: return 
+		if blChanged or  dtNow[0:-4] != dev.states["lastUpdateBatteryLevel"][0:-4]:
 			self.addToStatesUpdateDict(dev.id, "lastUpdateBatteryLevel", dtNow)
 
 
@@ -16894,7 +16905,7 @@ class Plugin(indigo.PluginBase):
 									if  data[beacon][state] > 0:
 										if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"GetBeaconParameters updating state:{} with:{}".format(state, data[beacon][state]) )
 										self.addToStatesUpdateDict(indigoId, state, data[beacon][state])
-										self.updatelastUpdateBatteryLevel(dev, dtNow)
+										self.updatelastUpdateBatteryLevel(dev, dtNow,  "{}".format(data[beacon][state] ) != "{}".format(dev.states["batteryLevel"]))
 										self.setlastBatteryReplaced(dev, data[beacon][state])
 									else:
 										if time.time() - lastUpdateBatteryLevel > 24*3600: self.indiLOG.log(10,"GetBeaconParameters update received pi:{} beacon:{} .. {};  bad data read; last good update was {}, current batterylevel status: {}".format(pi,beacon, data[beacon], dev.states["lastUpdateBatteryLevel"], dev.states["batteryLevel"]  ) )
@@ -18595,7 +18606,7 @@ class Plugin(indigo.PluginBase):
 										self.addToStatesUpdateDict(devBot.id, statename,	msg[xx] )
 								
 								
-								self.updatelastUpdateBatteryLevel(devBot, dtNow)
+								self.updatelastUpdateBatteryLevel(devBot, dtNow, False)
 								self.executeUpdateStatesDict(onlyDevID=devBot.id, calledFrom="updateBeaconStates isSwitchbotDevice")
 				except Exception as e:
 					self.exceptionHandler(40, e)
@@ -19023,7 +19034,7 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id, "is_charged", "{}-{}".format(max(0,batteryLR-100), batteryLR-100>0))
 
 						newStates = self.addToStatesUpdateDict(dev.id, "batteryLevel", batteryLevel, newStates=newStates)
-						self.updatelastUpdateBatteryLevel(dev, dtNow)
+						self.updatelastUpdateBatteryLevel(dev, dtNow,  "{}".format(batteryLevel) != "{}".format(dev.states["batteryLevel"]))
 						self.setlastBatteryReplaced(dev, batteryLevel)
 
 				self.autoCreateCorrespondingSensorDev(mac, fromPiU, typeOfBeacon, msg)
@@ -20294,8 +20305,11 @@ class Plugin(indigo.PluginBase):
 						if self.RPI[piU]["piOnOff"] != "1": continue
 						if piSelect == "all" or piU == piSelect:
 							if piU not in self.rpiQueues["state"]: 
-								self.startOneUpdateRPIqueue(piU, reason="not running")
+								self.startOneUpdateRPIqueue(piU, reason="not running", force=True)
 								self.sleep(0.2)
+							if piU not in self.rpiQueues["lastCheck"]: 
+								self.startOneUpdateRPIqueue(piU, reason="not running", force=True)
+
 							if time.time() - self.rpiQueues["lastCheck"][piU] > 100:
 								self.stopUpdateRPIqueues(piSelect=piU)
 								time.sleep(0.5)
@@ -20320,7 +20334,7 @@ class Plugin(indigo.PluginBase):
 		self.rpiQueues["busy"] 			= {}
 		return 
 ####-------------------------------------------------------------------------####
-	def startOneUpdateRPIqueue(self, piU, reason=""):
+	def startOneUpdateRPIqueue(self, piU, reason="", force=False):
 		try:		
 			if "state"  not in self.rpiQueues: 
 				self.initrpiQueues()
@@ -20328,7 +20342,7 @@ class Plugin(indigo.PluginBase):
 			if self.RPI[piU]["piOnOff"] != "1": return
 
 
-			if piU in self.rpiQueues["state"]:
+			if piU in self.rpiQueues["state"] and not force:
 				if self.rpiQueues["state"][piU] == "running":
 					self.indiLOG.log(10,"no need to start Thread, pi# {} thread already running".format(piU) )
 					return
@@ -20340,6 +20354,7 @@ class Plugin(indigo.PluginBase):
 				self.rpiQueues["lastCheck"][piU]	= time.time() - 900000
 				self.rpiQueues["lastData"][piU]		= ""
 				self.rpiQueues["busy"][piU]			= 0
+				self.rpiQueues["thread"][piU]		= ""
 
 			self.indiLOG.log(10," .. (re)starting   thread for pi# {}, state was : {} - {}".format(piU, self.rpiQueues["state"][piU], reason) )
 			self.rpiQueues["lastCheck"][piU] = time.time()
@@ -20379,6 +20394,9 @@ class Plugin(indigo.PluginBase):
 		return
 ####-------------------------------------------------------------------------####
 	def sshToRPI(self, piU, expFile="", endAction="repeatUntilFinished"):
+		if piU not in self.rpiQueues["lastCheck"]: 
+			self.startOneUpdateRPIqueue(piU, reason="not running", force=True)
+
 		if time.time() - self.rpiQueues["lastCheck"][piU] > 100:
 			self.startUpdateRPIqueues("restart", piSelect=piU)
 
@@ -20409,6 +20427,7 @@ class Plugin(indigo.PluginBase):
 	def rpiUpdateThread(self,piU):
 		try:
 			if piU not in self.rpiQueues["state"]: return 
+			if piU not in self.rpiQueues["data"]: return 
 			self.rpiQueues["state"][piU] = "running"
 			self.rpiQueues["busy"][piU]	= 0
 			if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"rpiUpdateThread starting  for pi# {}".format(piU) )
